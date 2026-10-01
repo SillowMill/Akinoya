@@ -1,0 +1,6 @@
+{
+  "name": "Sillow Mill — Äkinoya",
+  "description": "An atmospheric coming-soon portal to Äkinoya. Enter your VIP access code to unlock the hidden pass perks and exclusive lore.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
