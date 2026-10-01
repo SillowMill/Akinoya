@@ -167,7 +167,7 @@ export default function App() {
 
       {/* Luxury Minimalist Footer */}
       {!backdropOnly && (
-        <footer className="relative z-20 w-full border-t border-white/5 bg-black/60 backdrop-blur-md py-4 px-4 sm:px-6 text-center space-y-2.5">
+        <footer className="relative z-10 w-full border-t border-white/5 bg-black/60 backdrop-blur-md py-4 px-4 sm:px-6 text-center space-y-2.5">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-white/40">
             <div>
               © 2027 SILLOW MILL <span className="text-white/20">/</span> ALL RIGHTS RESERVED
