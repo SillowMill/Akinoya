@@ -13,6 +13,8 @@ import {
   Download,
   Eye,
   Globe2,
+  Bell,
+  Mail,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 
@@ -30,6 +32,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [activeTab, setActiveTab] = useState<'pass' | 'edition'>('pass');
   const [isCopied, setIsCopied] = useState(false);
   const [isReserved, setIsReserved] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [showWaitlistForm, setShowWaitlistForm] = useState(false);
+  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
 
@@ -272,90 +277,92 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 </div>
               </div>
-
-              {/* Surface Vista Preview Card */}
-              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-                <div className="w-full sm:w-36 h-24 rounded-xl overflow-hidden shrink-0 border border-white/10 relative">
-                  <img
-                    src={akinoyaVistaImg}
-                    alt="The Surface Crossing"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                  <span className="absolute bottom-1.5 left-2 text-[10px] font-mono text-cyan-300">
-                    SURFACE VISTA
-                  </span>
-                </div>
-                <div className="flex-1 text-center sm:text-left">
-                  <div className="text-[10px] sm:text-xs font-mono text-cyan-400 mb-1">EXPEDITION LOG · SECTOR 01</div>
-                  <div className="text-xs sm:text-sm font-semibold text-white/90 mb-1">
-                    The Glass Sea of Äkinoya
-                  </div>
-                  <p className="text-[11px] sm:text-xs text-white/60">
-                    Reflective mirror waters that hold the resonance of the planetary core.
-                  </p>
-                </div>
-                <button
-                  onClick={() => onToggleViewMode('surface')}
-                  className="w-full sm:w-auto px-4 py-2.5 text-xs font-mono text-white bg-cyan-900/60 hover:bg-cyan-800/80 border border-cyan-400/40 rounded-xl transition-all whitespace-nowrap cursor-pointer min-h-[44px]"
-                >
-                  Immerse Vista
-                </button>
-              </div>
             </div>
           )}
 
-          {/* Tab 3: Physical Hardcover Drop Reservation */}
+          {/* Tab 2: Physical Hardcover Drop Reservation & Waitlist */}
           {activeTab === 'edition' && (
-            <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Radio className="w-4 h-4 text-cyan-400" />
-                <span className="text-[11px] sm:text-xs font-mono text-cyan-300">2027 LIMITED HARDCOVER DROP</span>
+            <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-6 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-cyan-400" />
+                  <span className="text-[11px] sm:text-xs font-mono text-cyan-300 uppercase tracking-wider">
+                    2027 LIMITED HARDCOVER DROP
+                  </span>
+                </div>
+                {/* Status Label: [ SOLD OUT - 125 / 125 COPIES CLAIMED ] */}
+                <span className="text-[10px] sm:text-xs font-mono text-amber-300 bg-amber-950/70 border border-amber-500/40 px-2.5 py-1 rounded-full font-semibold shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                  [ SOLD OUT - 125 / 125 COPIES CLAIMED ]
+                </span>
               </div>
-              <h3 className="text-base sm:text-lg font-display font-bold text-white mb-1.5">
-                Physical Edition Priority Whitelist
-              </h3>
-              <p className="text-[11px] sm:text-xs text-white/60 mb-4 leading-relaxed">
-                As a verified code entrant, your session token qualifies you for guaranteed allocation of
-                the first 500 foil-stamped, clothbound copies of Sillow Mill / Äkinoya.
-              </p>
 
-              <div className="grid grid-cols-3 gap-2 p-3 sm:p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/20 mb-4 text-center sm:text-left">
+              <div>
+                <h3 className="text-base sm:text-lg font-display font-bold text-white mb-1">
+                  Physical Edition Priority Waitlist
+                </h3>
+                <p className="text-[11px] sm:text-xs text-white/60 leading-relaxed">
+                  All 125 clothbound, foil-stamped collector copies of Wave 1 have been claimed. Sign up below to get notified when the next wave drops.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 p-3 sm:p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/20 text-center sm:text-left">
                 <div>
-                  <div className="text-[10px] font-mono text-white/50">LAUNCH</div>
-                  <div className="text-xs sm:text-sm font-semibold text-cyan-200">Q1 2027</div>
+                  <div className="text-[10px] font-mono text-white/50">WAVE 1</div>
+                  <div className="text-xs sm:text-sm font-semibold text-amber-400">Sold Out (125/125)</div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-mono text-white/50">EDITION</div>
-                  <div className="text-xs sm:text-sm font-semibold text-cyan-200">500 Units</div>
+                  <div className="text-[10px] font-mono text-white/50">NEXT WAVE</div>
+                  <div className="text-xs sm:text-sm font-semibold text-cyan-200">Wave 2 (Q2 2027)</div>
                 </div>
                 <div>
                   <div className="text-[10px] font-mono text-white/50">STATUS</div>
-                  <div className="text-xs sm:text-sm font-semibold text-emerald-400">Guaranteed</div>
+                  <div className="text-xs sm:text-sm font-semibold text-cyan-300">Waitlist Open</div>
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  setIsReserved(true);
-                  soundManager.playUnlockChime();
-                }}
-                disabled={isReserved}
-                className="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-display font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer bg-gradient-to-r from-cyan-500/20 to-blue-600/30 hover:from-cyan-500/30 hover:to-blue-600/40 border border-cyan-400/40 text-cyan-200 shadow-[0_0_20px_rgba(56,189,248,0.2)] min-h-[46px]"
-              >
-                {isReserved ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>PRIORITY CONFIRMED · RESERVATION #48</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-                    <span>RESERVE COLLECTOR HARDCOVER</span>
-                  </>
-                )}
-              </button>
+              {!showWaitlistForm && !isWaitlistSubmitted ? (
+                <button
+                  onClick={() => setShowWaitlistForm(true)}
+                  className="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-display font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white shadow-[0_0_15px_rgba(56,189,248,0.2)] min-h-[46px]"
+                >
+                  <Bell className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <span>Get notified when it's the next wave</span>
+                </button>
+              ) : isWaitlistSubmitted ? (
+                <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 flex items-center gap-2.5 text-xs font-mono">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>✓ You're on the priority whitelist for Wave 2! We'll email you first.</span>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (waitlistEmail.trim()) {
+                      setIsWaitlistSubmitted(true);
+                      soundManager.playUnlockChime();
+                    }
+                  }}
+                  className="flex flex-col sm:flex-row gap-2"
+                >
+                  <div className="relative flex-1">
+                    <Mail className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="email"
+                      required
+                      value={waitlistEmail}
+                      onChange={(e) => setWaitlistEmail(e.target.value)}
+                      placeholder="Enter your email for Wave 2..."
+                      className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/40 outline-none font-mono"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl text-xs font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-colors cursor-pointer whitespace-nowrap min-h-[42px]"
+                  >
+                    Notify Me
+                  </button>
+                </form>
+              )}
             </div>
           )}
         </div>

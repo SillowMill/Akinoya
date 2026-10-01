@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import exactPlanetDesktop from '../assets/images/akinoya_hero_bg.jpg';
 import exactPlanetMobile from '../assets/images/akinoya_hero_bg.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
@@ -6,6 +7,7 @@ import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_17908526409
 interface AkinoyaPlanetCanvasProps {
   viewMode?: 'orbit' | 'surface';
   hideOverlay?: boolean;
+  isUnlocked?: boolean;
 }
 
 interface Particle {
@@ -21,6 +23,7 @@ interface Particle {
 
 export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
   viewMode = 'orbit',
+  isUnlocked = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -102,33 +105,52 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
     };
   }, []);
 
+  // Determine active background image (Background 1 vs Background 2)
+  const isBackground2 = isUnlocked ? viewMode !== 'orbit' || true : false;
+  const currentBgKey = isUnlocked ? (viewMode === 'orbit' ? 'bg2-world' : 'bg1-landing') : 'bg1-landing';
+
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden bg-[#050505] z-0">
-      {/* Background exact photograph representation */}
+      {/* Background exact photograph representation with Framer Motion smooth cross-fade */}
       <div className="absolute inset-0">
-        {viewMode === 'orbit' ? (
-          <picture className="w-full h-full block">
-            {/* Mobile portrait view: 9:16 aspect ratio */}
-            <source
-              media="(max-width: 767px)"
-              srcSet={exactPlanetMobile}
-            />
-            {/* Desktop landscape view: 16:9 aspect ratio */}
-            <img
-              src={exactPlanetDesktop}
-              alt="Planet Äkinoya in cosmic orbit with lightning and icy silhouette"
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover object-center filter brightness-[0.92] contrast-[1.05]"
-            />
-          </picture>
-        ) : (
-          <img
-            src={akinoyaVistaImg}
-            alt="Äkinoya Twilight Surface Vista"
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover object-center filter brightness-80 contrast-110"
-          />
-        )}
+        <AnimatePresence mode="sync">
+          {!isUnlocked ? (
+            <motion.div
+              key="bg1-locked"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: 'easeInOut' }}
+              className="absolute inset-0"
+            >
+              <picture className="w-full h-full block">
+                <source media="(max-width: 767px)" srcSet={exactPlanetMobile} />
+                <img
+                  src={exactPlanetDesktop}
+                  alt="Background 1: Planet Äkinoya Locked Landing State"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover object-center filter brightness-[0.92] contrast-[1.05]"
+                />
+              </picture>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={viewMode === 'orbit' ? 'bg2-unlocked-world' : 'bg1-unlocked-orbit'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: 'easeInOut' }}
+              className="absolute inset-0"
+            >
+              <img
+                src={viewMode === 'orbit' ? akinoyaVistaImg : exactPlanetDesktop}
+                alt="Background 2: Unlocked Äkinoya World State"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover object-center filter brightness-90 contrast-105"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Atmospheric depth overlay for legible typography while retaining artwork beauty */}

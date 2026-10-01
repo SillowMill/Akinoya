@@ -44,7 +44,7 @@ export default function App() {
   return (
     <main className="relative min-h-[100dvh] w-full bg-[#050505] text-white flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Immersive Planet Äkinoya Canvas with exact user background & particles */}
-      <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} />
+      <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isUnlocked} />
 
       {/* Top Bar Navigation (Zone 1, 2, 3) */}
       {!backdropOnly && <TopBar isUnlocked={isUnlocked} />}
