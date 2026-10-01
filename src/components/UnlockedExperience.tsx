@@ -27,7 +27,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   onToggleViewMode,
   currentViewMode,
 }) => {
-  const [activeTab, setActiveTab] = useState<'pass' | 'lore' | 'edition'>('pass');
+  const [activeTab, setActiveTab] = useState<'pass' | 'edition'>('pass');
   const [isCopied, setIsCopied] = useState(false);
   const [isReserved, setIsReserved] = useState(false);
   const [rotateX, setRotateX] = useState(0);
@@ -199,10 +199,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           </p>
         </div>
 
-        {/* Right Column: Perks, Lore Reader, and Physical Drop */}
+        {/* Right Column: Perks and Physical Drop */}
         <div className="lg:col-span-7 space-y-4 sm:space-y-6">
           {/* Navigation Tabs (Mobile optimized scrollable / grid) */}
-          <div className="grid grid-cols-3 gap-1 p-1 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl">
+          <div className="grid grid-cols-2 gap-1 p-1 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl">
             <button
               onClick={() => setActiveTab('pass')}
               className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
@@ -213,17 +213,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             >
               <Compass className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Pass Perks</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('lore')}
-              className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
-                activeTab === 'lore'
-                  ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Prologue</span>
             </button>
             <button
               onClick={() => setActiveTab('edition')}
@@ -313,35 +302,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 >
                   Immerse Vista
                 </button>
-              </div>
-            </div>
-          )}
-
-          {/* Tab 2: Lore & Prologue Dispatch */}
-          {activeTab === 'lore' && (
-            <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-6 relative">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-cyan-400" />
-                  <span className="text-[11px] sm:text-xs font-mono text-cyan-300">CHAPTER ZERO · THE COLD PULSE</span>
-                </div>
-                <span className="text-[10px] font-mono text-white/40">ARCHIVE EXCERPT</span>
-              </div>
-
-              <div className="font-sans text-xs sm:text-sm text-white/80 space-y-3 sm:space-y-4 leading-relaxed max-w-prose">
-                <p className="italic text-cyan-200/90 font-serif text-sm sm:text-base border-l-2 border-cyan-400/60 pl-3">
-                  "They spoke of Äkinoya not as a dead ice sphere, but as a dreaming consciousness. Beneath
-                  forty leagues of blue glacial crust, something ancient was stirring."
-                </p>
-                <p>
-                  The coordinates in the book led directly to the southern tectonic divide. Every compass
-                  fluctuated in harmony with the celestial rotation, casting an ethereal azure aurora across
-                  the atmosphere.
-                </p>
-                <p className="text-white/60 text-xs">
-                  Your VIP pass confirms your designation as an archive custodian. As the release approaches
-                  in 2027, the remaining encrypted data will unlock automatically on this frequency.
-                </p>
               </div>
             </div>
           )}
