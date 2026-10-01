@@ -29,7 +29,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
 
     if (!trimmed) {
       setHasError(true);
-      setErrorMessage('Vul een toegangscode in.');
+      setErrorMessage('Please enter an access code.');
       soundManager.playDenyTone();
       return;
     }
@@ -86,7 +86,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
         className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2.5 bg-black/80 backdrop-blur-md border border-cyan-400/40 text-cyan-200 text-xs font-mono rounded-full shadow-lg hover:bg-black transition-all cursor-pointer"
       >
         <EyeOff className="w-4 h-4" />
-        <span>Toon Interface</span>
+        <span>Show Interface</span>
       </button>
     );
   }
@@ -128,10 +128,10 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                 type="button"
                 onClick={onToggleBackdropMode}
                 className="flex items-center gap-1 text-[11px] font-mono text-white/50 hover:text-cyan-300 transition-colors cursor-pointer py-1 px-2 rounded hover:bg-white/5"
-                title="Bekijk de Äkinoya afbeelding op volledig scherm"
+                title="View the Äkinoya artwork in full screen"
               >
                 <Eye className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">Achtergrond</span>
+                <span className="hidden xs:inline">Background</span>
               </button>
             )}
           </div>
@@ -159,7 +159,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                   onClick={handleQuickFill}
                   className="text-[11px] font-mono text-cyan-300 hover:text-cyan-200 underline underline-offset-2 cursor-pointer"
                 >
-                  Vul 'SillowMill2027' in
+                  Use 'SillowMill2027'
                 </button>
               </div>
 
@@ -219,7 +219,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                   className="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-sans"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Toegang verleend! Opening portal...</span>
+                  <span>Access granted! Opening portal...</span>
                 </motion.div>
               )}
             </div>
@@ -236,12 +236,12 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                 {isVerifying ? (
                   <span className="flex items-center gap-2">
                     <span className="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-                    VERIFIËREN...
+                    VERIFYING...
                   </span>
                 ) : isSuccess ? (
                   <span className="flex items-center gap-2 text-emerald-300">
                     <Sparkles className="w-4 h-4 text-emerald-400" />
-                    ÄKINOYA GEOPEND...
+                    ÄKINOYA UNLOCKED...
                   </span>
                 ) : (
                   <>
@@ -255,7 +255,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
 
           {/* Book Reference */}
           <div className="mt-5 pt-4 border-t border-white/10 w-full flex items-center justify-between text-[11px] text-white/50 font-mono">
-            <span>BOEK CODE: Achterkant</span>
+            <span>BOOK CODE: Back cover</span>
             <span className="text-cyan-400/80">SillowMill2027</span>
           </div>
         </div>

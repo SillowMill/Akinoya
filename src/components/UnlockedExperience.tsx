@@ -100,7 +100,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
           <button
             onClick={onLockPortal}
-            title="Vergrendel de portal en keer terug naar de code gate"
+            title="Lock the portal and return to the access gate"
             className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 text-xs font-mono text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all cursor-pointer min-h-[40px]"
           >
             <Lock className="w-3.5 h-3.5 text-white/60" />
@@ -179,7 +179,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </>
                   ) : (
                     <>
-                      <span>KOPIEER PASS ID</span>
+                      <span>COPY PASS ID</span>
                     </>
                   )}
                 </button>
@@ -195,7 +195,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           </div>
 
           <p className="text-[11px] font-mono text-white/40 mt-2.5 text-center">
-            ✦ Beweeg of touch over de kaart voor holografische reflectie
+            ✦ Hover or touch the card for a holographic reflection
           </p>
         </div>
 
@@ -387,12 +387,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 {isReserved ? (
                   <>
                     <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>PRIORITY BEVESTIGD · RESERVERING #48</span>
+                    <span>PRIORITY CONFIRMED · RESERVATION #48</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-                    <span>RESERVEER COLLECTOR HARDCOVER</span>
+                    <span>RESERVE COLLECTOR HARDCOVER</span>
                   </>
                 )}
               </button>
