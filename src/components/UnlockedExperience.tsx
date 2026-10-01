@@ -333,19 +333,25 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     soundManager.playTone(660, 0.1);
 
     try {
-      const fullAddress = checkoutAptBus.trim()
-        ? `${checkoutAddress.trim()}, ${checkoutAptBus.trim()}`
-        : checkoutAddress.trim();
+      const sanitizedEmail = checkoutEmail.trim().toLowerCase();
+      const sanitizedName = checkoutName.trim();
+      const sanitizedAddress = checkoutAddress.trim();
+      const sanitizedAptBus = checkoutAptBus.trim();
+      const sanitizedCity = checkoutCity.trim();
+
+      const fullAddress = sanitizedAptBus
+        ? `${sanitizedAddress}, ${sanitizedAptBus}`
+        : sanitizedAddress;
 
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerEmail: checkoutEmail,
-          customerName: checkoutName,
+          customerEmail: sanitizedEmail,
+          customerName: sanitizedName,
           shippingAddress: fullAddress,
-          apartmentBus: checkoutAptBus.trim(),
-          shippingCity: checkoutCity.trim(),
+          apartmentBus: sanitizedAptBus,
+          shippingCity: sanitizedCity,
         }),
       });
 
@@ -354,14 +360,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         window.location.href = data.url;
         return;
       } else {
-        throw new Error(data.error || "Failed to initialize Stripe Checkout session");
+        const friendlyError = data.error?.includes('pattern')
+          ? 'Please check your email or address — one of the fields has an invalid format.'
+          : data.error || 'Failed to initialize checkout. Please try again.';
+        throw new Error(friendlyError);
       }
     } catch (err: any) {
       console.error("Stripe Checkout Error:", err);
-      alert("Stripe error: " + (err.message || "Could not initiate checkout."));
+      alert("⚠️ " + (err.message || "Could not initiate checkout. Please check your details and try again."));
       setIsOrderProcessing(false);
     }
   };
+
 
   const handleResetCheckout = () => {
     setIsCheckoutOpen(false);

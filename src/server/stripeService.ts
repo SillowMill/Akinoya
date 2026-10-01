@@ -68,6 +68,26 @@ export function getInventoryStatus() {
   };
 }
 
+/**
+ * Parse a combined "city postal" string like "1050 Etterbeek" or "Antwerpen 2000"
+ * Returns { city, postalCode }
+ */
+function parseCityPostal(raw: string): { city: string; postalCode: string } {
+  const trimmed = raw.trim();
+  // Match leading digits (postal code first, e.g. "1050 Etterbeek")
+  const leadingPostal = trimmed.match(/^(\d{4,5})\s+(.+)$/);
+  if (leadingPostal) {
+    return { postalCode: leadingPostal[1], city: leadingPostal[2].trim() };
+  }
+  // Match trailing digits (city first, e.g. "Etterbeek 1050")
+  const trailingPostal = trimmed.match(/^(.+?)\s+(\d{4,5})$/);
+  if (trailingPostal) {
+    return { city: trailingPostal[1].trim(), postalCode: trailingPostal[2] };
+  }
+  // No postal code found — return raw as city
+  return { city: trimmed, postalCode: '' };
+}
+
 export async function createComicCheckoutSession(params: {
   customerEmail?: string;
   customerName?: string;
@@ -78,7 +98,20 @@ export async function createComicCheckoutSession(params: {
 }) {
   const baseUrl = params.origin || 'https://sillowmill.com';
 
-  const lineItems = [
+  // Sanitize inputs
+  const sanitizedEmail = (params.customerEmail || '').trim().toLowerCase() || undefined;
+  const sanitizedName = (params.customerName || '').trim() || undefined;
+  const sanitizedLine1 = (params.shippingAddress || '').trim() || undefined;
+  const sanitizedLine2 = (params.apartmentBus || '').trim() || undefined;
+
+  // Parse city + postal code from combined field (e.g. "1050 Etterbeek")
+  const rawCityPostal = (params.shippingCity || '').trim();
+  const { city: parsedCity, postalCode: parsedPostal } = parseCityPostal(rawCityPostal);
+
+  // Truncate metadata values to Stripe's 500-char limit
+  const truncate = (s: string, max = 480) => s.slice(0, max);
+
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
     {
       price_data: {
         currency: 'eur',
@@ -96,26 +129,27 @@ export async function createComicCheckoutSession(params: {
   const sessionConfig: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
     line_items: lineItems,
-    customer_email: params.customerEmail || undefined,
+    customer_email: sanitizedEmail,
     metadata: {
       wave: 'Wave 2',
       product: 'bingaa_comic_drop',
-      customer_name: params.customerName || '',
-      shipping_address: params.shippingAddress || '',
-      apartment_bus: params.apartmentBus || '',
-      shipping_city: params.shippingCity || '',
+      customer_name: truncate(sanitizedName || ''),
+      shipping_address: truncate(sanitizedLine1 || ''),
+      apartment_bus: truncate(sanitizedLine2 || ''),
+      shipping_city: truncate(parsedCity),
+      shipping_postal: truncate(parsedPostal),
     },
     success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/comic?canceled=true`,
     billing_address_collection: 'auto',
     shipping_address_collection: {
       allowed_countries: [
-        'BE', 'NL', 'DE', 'FR', 'LU', 'GB', 'US', 'ES', 'IT', 'CH', 'AT', 'DK', 'SE', 'NO', 'FI', 'IE', 'PT', 'CA', 'AU', 'JP'
+        'BE', 'NL', 'DE', 'FR', 'LU', 'GB', 'US', 'ES', 'IT', 'CH', 'AT', 'DK', 'SE', 'NO', 'FI', 'IE', 'PT', 'CA', 'AU', 'JP',
       ],
     },
   };
 
-  // Attempt with card, bancontact, ideal
+  // Attempt with card + bancontact + ideal; fall back gracefully
   try {
     const session = await stripe.checkout.sessions.create({
       ...sessionConfig,
@@ -123,9 +157,9 @@ export async function createComicCheckoutSession(params: {
     } as any);
     return session;
   } catch (err: any) {
-    // If 'ideal' is not activated on this Stripe account, fallback to ['card', 'bancontact']
-    if (err.message && err.message.includes('ideal')) {
-      console.warn('[StripeService] iDEAL not active on account; falling back to card and bancontact');
+    const msg: string = err.message || '';
+    if (msg.includes('ideal') || msg.includes('payment_method_types')) {
+      console.warn('[StripeService] iDEAL not active; falling back to card + bancontact');
       const session = await stripe.checkout.sessions.create({
         ...sessionConfig,
         payment_method_types: ['card', 'bancontact'],
@@ -169,7 +203,6 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
   orders.push(newOrder);
   saveOrders(orders);
 
-  // Decrement Wave 2 inventory and log fulfillment notifications
   const inventory = getInventoryStatus();
   console.log(`[StripeService] Order fulfilled: ${newOrder.id}`);
   console.log(`[StripeService] Customer: ${name} <${email}>`);
