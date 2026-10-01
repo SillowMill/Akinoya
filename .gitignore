@@ -28,3 +28,8 @@ npm-debug.log*
 
 # Vite cache
 .vite/
+
+# Temporary root raw assets
+/BWS.wav
+
+

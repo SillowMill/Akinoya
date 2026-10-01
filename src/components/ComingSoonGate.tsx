@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
+import { planetSoundtrack } from '../utils/soundtrack';
 import { KeyRound, Sparkles, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
 interface ComingSoonGateProps {
@@ -44,6 +45,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
         setIsSuccess(true);
         setIsVerifying(false);
         soundManager.playUnlockChime();
+        planetSoundtrack.play();
 
         try {
           sessionStorage.setItem('akinoya_vip_unlocked', 'true');
