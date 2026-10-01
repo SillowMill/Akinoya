@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import exactPlanetDesktop from '../assets/images/akinoya_exact_planet_1790853678690.jpg';
-import exactPlanetMobile from '../assets/images/akinoya_mobile_bg_1790853703270.jpg';
+import exactPlanetDesktop from '../assets/images/akinoya_hero_bg.jpg';
+import exactPlanetMobile from '../assets/images/akinoya_hero_bg.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
 
 interface AkinoyaPlanetCanvasProps {
