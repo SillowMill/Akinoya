@@ -139,6 +139,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
+  // Detect touch-only devices — tilt is disabled to keep pan-y scrolling smooth
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  useEffect(() => {
+    setIsTouchDevice(window.matchMedia('(hover: none)').matches);
+  }, []);
 
   // 4 VIP Entitlements independent state
   const [perkInputs, setPerkInputs] = useState<Record<string, string>>({
@@ -181,8 +186,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     setPerkInputs((prev) => ({ ...prev, [id]: '' }));
   };
 
-  // Mouse & Touch tilt for luxury 3D card
+  // Mouse & Touch tilt for luxury 3D card (mouse-only; skipped on touch devices)
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isTouchDevice || e.pointerType === 'touch') return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
@@ -442,11 +448,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           <div
             onPointerMove={handlePointerMove}
             onPointerLeave={handlePointerLeave}
-            style={{
-              transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
-              transition: 'transform 0.15s ease-out',
-            }}
-            className="relative w-full max-w-sm lg:max-w-[340px] xl:max-w-[360px] rounded-2xl overflow-hidden bg-black/70 border border-cyan-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_40px_rgba(56,189,248,0.25)] group cursor-pointer touch-none"
+            style={isTouchDevice
+              ? { touchAction: 'pan-y' }
+              : {
+                  transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+                  transition: 'transform 0.15s ease-out',
+                  touchAction: 'none',
+                }
+            }
+            className="relative w-full max-w-sm lg:max-w-[340px] xl:max-w-[360px] rounded-2xl overflow-hidden bg-black/70 border border-cyan-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_40px_rgba(56,189,248,0.25)] group cursor-pointer"
           >
             {/* Holographic dynamic gradient sheen */}
             <div

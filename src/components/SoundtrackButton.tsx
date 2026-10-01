@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Music, Volume2, VolumeX, Disc3 } from 'lucide-react';
+import { Music } from 'lucide-react';
 import { planetSoundtrack } from '../utils/soundtrack';
 
 export const SoundtrackButton: React.FC = () => {
@@ -22,13 +22,13 @@ export const SoundtrackButton: React.FC = () => {
       type="button"
       aria-label={isPlaying ? 'Pause Sillow Mill - Bingäa' : 'Play Sillow Mill - Bingäa'}
       title={isPlaying ? 'Pause Soundtrack: Sillow Mill - Bingäa' : 'Play Soundtrack: Sillow Mill - Bingäa'}
-      className={`group relative flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all duration-300 cursor-pointer select-none ${
+      className={`group relative flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-xl border text-xs font-mono transition-all duration-300 cursor-pointer select-none max-w-[160px] sm:max-w-none overflow-hidden ${
         isPlaying
           ? 'bg-cyan-950/80 border-cyan-400/60 text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.35)]'
           : 'bg-black/50 hover:bg-black/80 border-white/20 hover:border-cyan-400/50 text-white/80 hover:text-cyan-200 shadow-md hover:shadow-[0_0_12px_rgba(103,232,249,0.2)]'
       }`}
     >
-      {/* Dynamic Soundwave / Equalizer or Spinning Disc icon */}
+      {/* Dynamic Soundwave / Equalizer or Music icon */}
       <div className="relative flex items-center justify-center w-4 h-4 shrink-0">
         {isPlaying ? (
           <div className="flex items-end justify-center gap-[2px] w-4 h-3.5">
@@ -41,19 +41,19 @@ export const SoundtrackButton: React.FC = () => {
         )}
       </div>
 
-      {/* Track Label */}
-      <div className="flex items-center gap-1.5 overflow-hidden">
-        <span className="font-medium tracking-wide truncate max-w-[110px] sm:max-w-[160px]">
-          Sillow Mill - Bingäa
+      {/* Track Label — hidden on very small screens to prevent overflow */}
+      <div className="flex items-center gap-1 sm:gap-1.5 overflow-hidden min-w-0">
+        <span className="font-medium tracking-wide truncate max-w-[72px] xs:max-w-[90px] sm:max-w-[160px]">
+          Bingäa
         </span>
         <span
-          className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${
+          className={`hidden xs:inline text-[10px] uppercase tracking-wider px-1 sm:px-1.5 py-0.5 rounded shrink-0 ${
             isPlaying
               ? 'bg-cyan-400/20 text-cyan-300 border border-cyan-400/40'
               : 'bg-white/10 text-white/50 group-hover:bg-cyan-950 group-hover:text-cyan-300'
           }`}
         >
-          {isPlaying ? 'PLAYING' : 'AUDIO'}
+          {isPlaying ? '▶' : 'BWS'}
         </span>
       </div>
     </button>
