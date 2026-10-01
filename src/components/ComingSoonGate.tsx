@@ -119,7 +119,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
           <div className="flex items-center justify-between w-full mb-3">
             <span className="text-[10px] sm:text-xs font-mono tracking-[0.2em] uppercase text-cyan-300 border border-cyan-500/40 px-2.5 py-0.5 rounded-full bg-cyan-950/60 shadow-[0_0_12px_rgba(103,232,249,0.25)] flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              COMING SOON
+              09.01.2027
             </span>
 
             {/* Quick toggle to see full background artwork without UI */}
