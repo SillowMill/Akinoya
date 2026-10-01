@@ -45,7 +45,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
         setIsSuccess(true);
         setIsVerifying(false);
         soundManager.playUnlockChime();
-        planetSoundtrack.play();
+        // Audio does NOT auto-play — user must press Play manually in the header widget.
 
         try {
           sessionStorage.setItem('akinoya_vip_unlocked', 'true');
