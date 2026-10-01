@@ -2,12 +2,14 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, Plugin } from 'vite';
-import { apiApp } from './src/server/apiRouter';
 
 function stripeApiPlugin(): Plugin {
   return {
     name: 'stripe-api-middleware',
-    configureServer(server) {
+    async configureServer(server) {
+      // Only load the API router in dev mode to avoid pulling in
+      // Node-only modules (stripe, express, fs) during production build.
+      const { apiApp } = await import('./src/server/apiRouter');
       server.middlewares.use(apiApp);
     },
   };
