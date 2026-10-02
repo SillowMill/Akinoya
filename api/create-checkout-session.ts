@@ -1,13 +1,45 @@
-import type { IncomingMessage, ServerResponse } from 'http';
-import { createComicCheckoutSession } from '../src/server/stripeService';
+import Stripe from 'stripe';
 
-interface CustomRequest extends IncomingMessage {
-  body?: any;
-  query?: Record<string, string>;
+function getStripe(): Stripe {
+  const key =
+    process.env.STRIPE_SECRET_KEY ||
+    process.env.STRIPE_API_KEY ||
+    process.env.STRIPE_KEY ||
+    '';
+
+  if (!key) {
+    throw new Error(
+      'STRIPE_SECRET_KEY is not configured in Vercel. Please check Project Settings > Environment Variables.'
+    );
+  }
+
+  return new Stripe(key, {
+    apiVersion: '2026-09-30.endive' as any,
+  });
 }
 
-export default async function handler(req: CustomRequest, res: ServerResponse) {
-  // Always return application/json
+function parseCityPostal(raw: string): { city: string; postalCode: string } {
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return { city: 'Unknown', postalCode: '1000' };
+
+  const postalMatch = trimmed.match(/\d{4,5}/);
+  const postalCode = postalMatch ? postalMatch[0] : '1000';
+  const city = trimmed.replace(/\d{4,5}/, '').replace(/\s+/g, ' ').trim() || trimmed;
+
+  return { city: city || 'Unknown', postalCode };
+}
+
+function sanitizeStripeString(s: string): string {
+  return (s || '')
+    .trim()
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\u2013|\u2014/g, '-')
+    .replace(/[^\x20-\x7E\u00C0-\u024F]/g, '')
+    .trim();
+}
+
+export default async function handler(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -26,7 +58,6 @@ export default async function handler(req: CustomRequest, res: ServerResponse) {
   }
 
   try {
-    // Read and parse JSON body
     let body = req.body;
     if (!body || typeof body === 'string') {
       const buffers: Buffer[] = [];
@@ -39,17 +70,57 @@ export default async function handler(req: CustomRequest, res: ServerResponse) {
 
     const { customerEmail, customerName, shippingAddress, shippingCity, apartmentBus } = body || {};
 
-    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const host = req.headers['x-forwarded-host'] || req.headers?.host;
     const proto = req.headers['x-forwarded-proto'] || 'https';
-    const origin = req.headers.origin || (host ? `${proto}://${host}` : 'https://sillowmill.com');
+    const baseUrl = req.headers?.origin || (host ? `${proto}://${host}` : 'https://sillowmill.com');
 
-    const session = await createComicCheckoutSession({
-      customerEmail,
-      customerName,
-      shippingAddress,
-      shippingCity,
-      apartmentBus,
-      origin: typeof origin === 'string' ? origin : 'https://sillowmill.com',
+    const stripe = getStripe();
+
+    const sanitizedEmail = (customerEmail || '').trim().toLowerCase() || undefined;
+    const sanitizedName = sanitizeStripeString(customerName || '') || undefined;
+    const sanitizedLine1 = sanitizeStripeString(shippingAddress || '') || undefined;
+    const sanitizedLine2 = sanitizeStripeString(apartmentBus || '') || undefined;
+
+    const rawCityPostal = (shippingCity || '').trim();
+    const { city: parsedCity, postalCode: parsedPostal } = parseCityPostal(rawCityPostal);
+
+    const truncate = (s: string, max = 480) => (s || '').slice(0, max);
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: 'Bingaa - Limited Edition Comic',
+              description: 'Physical First Edition Comic Drop with Scannable QR Priority Verification (Wave 2)',
+              images: [`${baseUrl}/images/bingaa_comic_cover.jpg`],
+            },
+            unit_amount: 1499, // €14,99
+          },
+          quantity: 1,
+        },
+      ],
+      customer_email: sanitizedEmail,
+      metadata: {
+        wave: 'Wave 2',
+        product: 'bingaa_comic_drop',
+        customer_name: truncate(sanitizedName || ''),
+        shipping_address: truncate(sanitizedLine1 || ''),
+        apartment_bus: truncate(sanitizedLine2 || ''),
+        shipping_city: truncate(parsedCity),
+        shipping_postal: truncate(parsedPostal),
+      },
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/?canceled=true`,
+      billing_address_collection: 'auto',
+      shipping_address_collection: {
+        allowed_countries: [
+          'BE', 'NL', 'DE', 'FR', 'LU', 'GB', 'US', 'ES', 'IT', 'CH', 'AT',
+          'DK', 'SE', 'NO', 'FI', 'IE', 'PT', 'CA', 'AU', 'JP',
+        ],
+      },
     });
 
     res.statusCode = 200;

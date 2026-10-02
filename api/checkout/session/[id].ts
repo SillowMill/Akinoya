@@ -1,17 +1,29 @@
-import type { IncomingMessage, ServerResponse } from 'http';
-import { getStripe, loadOrders } from '../../../src/server/stripeService';
+import Stripe from 'stripe';
 
-interface CustomRequest extends IncomingMessage {
-  query?: Record<string, string>;
+function getStripe(): Stripe {
+  const key =
+    process.env.STRIPE_SECRET_KEY ||
+    process.env.STRIPE_API_KEY ||
+    process.env.STRIPE_KEY ||
+    '';
+
+  if (!key) {
+    throw new Error(
+      'STRIPE_SECRET_KEY is not configured in Vercel. Please check Project Settings > Environment Variables.'
+    );
+  }
+
+  return new Stripe(key, {
+    apiVersion: '2026-09-30.endive' as any,
+  });
 }
 
-export default async function handler(req: CustomRequest, res: ServerResponse) {
+export default async function handler(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   try {
     const url = new URL(req.url || '', 'https://sillowmill.com');
-    // Extract ID from path /api/checkout/session/:id or query param
     const pathParts = url.pathname.split('/');
     const sessionId = pathParts[pathParts.length - 1] || url.searchParams.get('id') || req.query?.id;
 
@@ -23,15 +35,12 @@ export default async function handler(req: CustomRequest, res: ServerResponse) {
 
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    const orders = loadOrders();
-    const matchedOrder = orders.find((o) => o.id === sessionId);
 
     res.statusCode = 200;
     res.end(
       JSON.stringify({
         session,
-        order: matchedOrder || null,
-        passId: matchedOrder ? matchedOrder.passId : `PASS-BINGAA-${session.id.slice(-8).toUpperCase()}`,
+        passId: `PASS-BINGAA-${session.id.slice(-8).toUpperCase()}`,
         status: session.payment_status,
         customerEmail: session.customer_details?.email,
         customerName: session.customer_details?.name,
