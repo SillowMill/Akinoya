@@ -144,8 +144,8 @@ export async function createComicCheckoutSession(params: {
       price_data: {
         currency: 'eur',
         product_data: {
-          name: 'Bingaa - Limited Edition Comic',
-          description: 'Physical First Edition Comic Drop with Scannable QR Priority Verification (Wave 2)',
+          name: 'Sillow Mill - Bingaa (Collectors Graphic Novel)',
+          description: 'Physical First Edition Graphic Novel Drop with Scannable QR Priority Verification (Wave 2)',
           images: [`${baseUrl}/images/bingaa_comic_cover.jpg`],
         },
         unit_amount: 1499, // €14,99

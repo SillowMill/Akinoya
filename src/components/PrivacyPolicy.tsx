@@ -100,7 +100,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBackToHome }) =>
           <ul className="list-disc list-inside text-xs sm:text-sm text-white/70 space-y-1.5 pl-2 font-mono">
             <li>First and last name for collector registration and parcel dispatch;</li>
             <li>Email address for instant order confirmation, digital verification keys, and tracking notices;</li>
-            <li>Shipping address (street, postal code, city, country) for physical comic delivery;</li>
+            <li>Shipping address (street, postal code, city, country) for physical graphic novel delivery;</li>
             <li>Payment reference (ORD code) for automated SEPA wire transfer reconciliation via KBC Bank;</li>
             <li>Technical session identifiers and IP logs for fraud prevention and secure protocol access.</li>
           </ul>
@@ -116,7 +116,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBackToHome }) =>
             Data processing is conducted pursuant to Article 6(1)(b) GDPR (performance of a pre-order purchase contract) and Article 6(1)(c) GDPR (compliance with Belgian tax and statutory commercial accounting laws):
           </p>
           <ul className="list-disc list-inside text-xs sm:text-sm text-white/70 space-y-1.5 pl-2 font-mono">
-            <li>Execution and physical fulfillment of the limited edition comic "Bingäa" pre-orders (€14.99);</li>
+            <li>Execution and physical fulfillment of "Sillow Mill — Bingäa (Collector's Graphic Novel)" pre-orders (€14.99);</li>
             <li>Authenticating priority access keys tied to the embedded QR code collector edition;</li>
             <li>Issuance of formal transaction receipts and VAT-compliant invoices.</li>
           </ul>

@@ -1033,7 +1033,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="relative group w-full aspect-[3/4] rounded-2xl overflow-hidden border-2 border-cyan-500/40 shadow-[0_0_35px_rgba(56,189,248,0.25)] bg-[#050505] transition-transform duration-500 hover:scale-[1.02]">
                       <img
                         src={bingaaComicCover}
-                        alt="Bingäa — Limited Edition Comic Cover"
+                        alt="Sillow Mill — Bingäa (Collector's Graphic Novel) Cover"
                         className="w-full h-full object-cover object-center"
                       />
 
@@ -1076,14 +1076,42 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                     <div>
                       <h3 className="text-xl sm:text-2xl font-display font-bold text-white mb-1">
-                        Bingäa — Limited Edition Comic
+                        Sillow Mill — Bingäa (Collector's Graphic Novel)
                       </h3>
-                      <div className="text-xs font-mono text-cyan-400 mb-2">
+                      <div className="text-xs font-mono text-cyan-400 mb-3">
                         ISSUE #01: THE ORIGIN OF BINGÄA
                       </div>
-                      <p className="text-xs sm:text-sm text-white/70 leading-relaxed">
-                        The definitive physical graphic story of Äkinoya and Sillow Mill. Printed on heavyweight 170gsm archival paper with bioluminescent foil stamping, this collector's volume details the descent into the core world, the emergence of Bingäa, and hidden transmissions. Each copy features an exclusive embedded QR code verification protocol granting priority access to confidential lore, animated side-stories, and subsequent wave drops.
-                      </p>
+                      <div className="space-y-3 text-xs sm:text-sm text-white/80 leading-relaxed font-sans">
+                        <p>
+                          The definitive physical graphic story and official 2D blueprint of the Sillow Mill universe. Printed on heavyweight 170gsm archival paper with bioluminescent foil stamping, this collector's volume details the origin story—from an iconic snow dance in Leuven to the first convergence of Sillow, Odi, and Mill on the core world of Äkinoya.
+                        </p>
+
+                        <div className="pt-1">
+                          <span className="font-semibold text-white tracking-wide block mb-1.5 font-display text-xs sm:text-sm">
+                            Key Features:
+                          </span>
+                          <ul className="space-y-2 text-white/70 text-xs sm:text-[13px]">
+                            <li className="flex items-start gap-2">
+                              <span className="text-cyan-400 mt-1 shrink-0 text-sm leading-none">•</span>
+                              <span>
+                                <strong className="text-white font-medium">The Origin Story:</strong> Features hand-drawn 2D blueprint panels, production sketches, and final 3D character renders.
+                              </span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-cyan-400 mt-1 shrink-0 text-sm leading-none">•</span>
+                              <span>
+                                <strong className="text-white font-medium">Integrated Lore:</strong> Explains the foundational lore driving all upcoming EPs and animated releases.
+                              </span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-cyan-400 mt-1 shrink-0 text-sm leading-none">•</span>
+                              <span>
+                                <strong className="text-white font-medium">Äkinoya Pass Access:</strong> Embedded QR code verification protocol grants priority access to confidential lore, animated visualizers ("Don't Need" &amp; "Bingäa"), unreleased music, and future wave drops.
+                              </span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Prominent Price & Order Action Bar */}
@@ -1446,7 +1474,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-display font-bold text-white mb-4">
-                    Bingäa — Limited Edition Comic
+                    Sillow Mill — Bingäa (Collector's Graphic Novel)
                   </h3>
 
                   {/* Order Summary Line */}

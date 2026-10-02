@@ -149,7 +149,7 @@ export const KycVerification: React.FC<KycVerificationProps> = ({ onBackToHome }
             Invoicing, Pre-Orders & Payment Verification
           </h3>
           <p>
-            Each pre-order of the official <strong>"Bingäa — Limited Edition Comic"</strong> (€14.99) is linked to a unique verification code (ORD reference) and registered under Belgian enterprise number <strong>1041.720.513</strong> (VAT: BE 1041.720.513).
+            Each pre-order of the official <strong>"Sillow Mill — Bingäa (Collector's Graphic Novel)"</strong> (€14.99) is linked to a unique verification code (ORD reference) and registered under Belgian enterprise number <strong>1041.720.513</strong> (VAT: BE 1041.720.513).
           </p>
           <p>
             Upon payment via KBC Bank SEPA transfer or credit/debit card, a proof of purchase is dispatched to the provided email address, featuring the official Belgian VAT credentials for personal and corporate accounting.

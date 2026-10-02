@@ -113,7 +113,7 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
           </h1>
 
           <p className="text-xs sm:text-sm text-white/70 font-mono max-w-lg mx-auto leading-relaxed">
-            Your pre-order for <strong className="text-white">Bingäa — Limited Edition Comic</strong> (€14,99) has been verified via Stripe.
+            Your pre-order for <strong className="text-white">Sillow Mill — Bingäa (Collector's Graphic Novel)</strong> (€14,99) has been verified via Stripe.
           </p>
         </div>
 
