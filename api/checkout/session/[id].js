@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 
-function getStripe(): Stripe {
+function getStripe() {
   const key =
     process.env.STRIPE_SECRET_KEY ||
     process.env.STRIPE_API_KEY ||
@@ -8,17 +8,15 @@ function getStripe(): Stripe {
     '';
 
   if (!key) {
-    throw new Error(
-      'STRIPE_SECRET_KEY is not configured in Vercel. Please check Project Settings > Environment Variables.'
-    );
+    throw new Error('STRIPE_SECRET_KEY is not configured in Vercel.');
   }
 
   return new Stripe(key, {
-    apiVersion: '2026-09-30.endive' as any,
+    apiVersion: '2026-09-30.endive',
   });
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -46,7 +44,7 @@ export default async function handler(req: any, res: any) {
         customerName: session.customer_details?.name,
       })
     );
-  } catch (err: any) {
+  } catch (err) {
     console.error('[API checkout/session] Error:', err);
     res.statusCode = 404;
     res.end(JSON.stringify({ error: err?.message || 'Session not found.' }));

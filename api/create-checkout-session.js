@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 
-function getStripe(): Stripe {
+function getStripe() {
   const key =
     process.env.STRIPE_SECRET_KEY ||
     process.env.STRIPE_API_KEY ||
@@ -14,11 +14,11 @@ function getStripe(): Stripe {
   }
 
   return new Stripe(key, {
-    apiVersion: '2026-09-30.endive' as any,
+    apiVersion: '2026-09-30.endive',
   });
 }
 
-function parseCityPostal(raw: string): { city: string; postalCode: string } {
+function parseCityPostal(raw) {
   const trimmed = (raw || '').trim();
   if (!trimmed) return { city: 'Unknown', postalCode: '1000' };
 
@@ -29,7 +29,7 @@ function parseCityPostal(raw: string): { city: string; postalCode: string } {
   return { city: city || 'Unknown', postalCode };
 }
 
-function sanitizeStripeString(s: string): string {
+function sanitizeStripeString(s) {
   return (s || '')
     .trim()
     .replace(/[\u2018\u2019]/g, "'")
@@ -39,7 +39,7 @@ function sanitizeStripeString(s: string): string {
     .trim();
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -60,7 +60,7 @@ export default async function handler(req: any, res: any) {
   try {
     let body = req.body;
     if (!body || typeof body === 'string') {
-      const buffers: Buffer[] = [];
+      const buffers = [];
       for await (const chunk of req) {
         buffers.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
       }
@@ -84,7 +84,7 @@ export default async function handler(req: any, res: any) {
     const rawCityPostal = (shippingCity || '').trim();
     const { city: parsedCity, postalCode: parsedPostal } = parseCityPostal(rawCityPostal);
 
-    const truncate = (s: string, max = 480) => (s || '').slice(0, max);
+    const truncate = (s, max = 480) => (s || '').slice(0, max);
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -130,7 +130,7 @@ export default async function handler(req: any, res: any) {
         sessionId: session.id,
       })
     );
-  } catch (err: any) {
+  } catch (err) {
     console.error('[API create-checkout-session] Error:', err);
     res.statusCode = 500;
     res.end(

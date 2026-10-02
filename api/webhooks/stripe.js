@@ -1,7 +1,6 @@
-import type { IncomingMessage, ServerResponse } from 'http';
 import Stripe from 'stripe';
 
-function getStripe(): Stripe {
+function getStripe() {
   const key =
     process.env.STRIPE_SECRET_KEY ||
     process.env.STRIPE_API_KEY ||
@@ -13,7 +12,7 @@ function getStripe(): Stripe {
   }
 
   return new Stripe(key, {
-    apiVersion: '2026-09-30.endive' as any,
+    apiVersion: '2026-09-30.endive',
   });
 }
 
@@ -23,7 +22,7 @@ export const config = {
   },
 };
 
-export default async function handler(req: IncomingMessage, res: ServerResponse) {
+export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
   if (req.method !== 'POST') {
@@ -35,21 +34,21 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  const buffers: Buffer[] = [];
+  const buffers = [];
   for await (const chunk of req) {
     buffers.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
   }
   const rawPayload = Buffer.concat(buffers);
 
-  let event: any;
+  let event;
   try {
     const stripe = getStripe();
     if (webhookSecret && sig) {
-      event = stripe.webhooks.constructEvent(rawPayload, sig as string, webhookSecret);
+      event = stripe.webhooks.constructEvent(rawPayload, sig, webhookSecret);
     } else {
       event = JSON.parse(rawPayload.toString('utf-8'));
     }
-  } catch (err: any) {
+  } catch (err) {
     console.error('[Webhook] Signature/parse error:', err.message);
     res.statusCode = 400;
     res.end(JSON.stringify({ error: `Webhook error: ${err.message}` }));
