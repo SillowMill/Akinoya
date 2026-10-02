@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import {
   stripe,
   createComicCheckoutSession,
@@ -10,7 +10,13 @@ import {
 export const apiApp = express();
 export const apiRouter = express.Router();
 
-// Mount Stripe webhook with raw body handling BEFORE json parser
+// ─── Middleware: always set JSON content-type for all /api responses ──────────
+apiApp.use('/api', (_req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Content-Type', 'application/json');
+  next();
+});
+
+// ─── Stripe Webhook (raw body BEFORE json parser) ─────────────────────────────
 apiApp.post(
   '/api/webhooks/stripe',
   express.raw({ type: '*/*' }),
@@ -30,7 +36,7 @@ apiApp.post(
       }
     } catch (err: any) {
       console.error(`[API Webhook] Webhook error: ${err.message}`);
-      res.status(400).send(`Webhook Error: ${err.message}`);
+      res.status(400).json({ error: `Webhook Error: ${err.message}` });
       return;
     }
 
@@ -56,11 +62,18 @@ apiApp.post(
   }
 );
 
-// Standard JSON middleware for remaining API routes
+// ─── Standard JSON middleware for remaining routes ────────────────────────────
 apiApp.use(express.json());
 
-// 1. Create Checkout Session
+// ─── 1. Create Checkout Session ───────────────────────────────────────────────
 apiRouter.post('/create-checkout-session', async (req: Request, res: Response): Promise<void> => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    res.status(503).json({
+      error: 'Stripe is not configured. Please set the STRIPE_SECRET_KEY environment variable in your Vercel project settings.',
+    });
+    return;
+  }
+
   try {
     const { customerEmail, customerName, shippingAddress, shippingCity, apartmentBus } = req.body || {};
     const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
@@ -81,19 +94,32 @@ apiRouter.post('/create-checkout-session', async (req: Request, res: Response): 
   } catch (err: any) {
     console.error('[API] create-checkout-session error:', err);
     res.status(500).json({
-      error: err.message || 'Failed to initialize Stripe Checkout session',
+      error: err?.message || 'Failed to initialize Stripe Checkout session',
     });
   }
 });
 
-// 2. Inventory Status Endpoint
+// ─── 2. Inventory Status ──────────────────────────────────────────────────────
 apiRouter.get('/inventory/status', (_req: Request, res: Response): void => {
-  const inventory = getInventoryStatus();
-  res.status(200).json(inventory);
+  try {
+    const inventory = getInventoryStatus();
+    res.status(200).json(inventory);
+  } catch (err: any) {
+    console.error('[API] inventory/status error:', err);
+    // Return safe defaults so the UI still renders
+    res.status(200).json({ wave: 'Wave 2', total: 125, claimed: 0, available: 125 });
+  }
 });
 
-// 3. Session Verification Endpoint
+// ─── 3. Session Verification ──────────────────────────────────────────────────
 apiRouter.get('/checkout/session/:id', async (req: Request, res: Response): Promise<void> => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    res.status(503).json({
+      error: 'Stripe is not configured on this server.',
+    });
+    return;
+  }
+
   try {
     const sessionId = req.params.id;
     const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -103,15 +129,26 @@ apiRouter.get('/checkout/session/:id', async (req: Request, res: Response): Prom
     res.status(200).json({
       session,
       order: matchedOrder || null,
-      passId: matchedOrder ? matchedOrder.passId : `PASS-BINGAA-${session.id.slice(-8).toUpperCase()}`,
+      passId: matchedOrder
+        ? matchedOrder.passId
+        : `PASS-BINGAA-${session.id.slice(-8).toUpperCase()}`,
       status: session.payment_status,
       customerEmail: session.customer_details?.email,
       customerName: session.customer_details?.name,
     });
   } catch (err: any) {
     console.error('[API] Retrieve session error:', err);
-    res.status(404).json({ error: 'Session not found or invalid' });
+    res.status(404).json({ error: 'Session not found or invalid.' });
   }
 });
 
+// ─── Mount router ─────────────────────────────────────────────────────────────
 apiApp.use('/api', apiRouter);
+
+// ─── Global error handler (always JSON, never plain text) ─────────────────────
+apiApp.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('[API] Unhandled error:', err?.message || err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: err?.message || 'Internal server error.' });
+  }
+});

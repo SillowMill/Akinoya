@@ -42,7 +42,12 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
 
     if (sid) {
       fetch(`/api/checkout/session/${sid}`)
-        .then((res) => (res.ok ? res.json() : null))
+        .then(async (res) => {
+          if (!res.ok) return null;
+          const ct = res.headers.get('content-type') || '';
+          if (!ct.includes('application/json')) return null;
+          return res.json().catch(() => null);
+        })
         .then((data) => {
           if (data) {
             setOrderDetails({

@@ -321,10 +321,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     available: 125,
   });
 
-  // Load real-time inventory from Stripe/server
+  // Load real-time inventory from server — safe JSON parsing guards against plain-text errors
   useEffect(() => {
     fetch("/api/inventory/status")
-      .then((res) => (res.ok ? res.json() : null))
+      .then(async (res) => {
+        if (!res.ok) return null;
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) return null;
+        return res.json().catch(() => null);
+      })
       .then((data) => {
         if (data && typeof data.available === "number") {
           setWaveInventory({ total: data.total || 125, available: data.available });
