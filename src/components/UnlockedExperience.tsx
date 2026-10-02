@@ -15,6 +15,7 @@ import {
   QrCode,
   Check,
   Copy,
+  ClipboardPaste,
   Eye,
   Globe2,
   Bell,
@@ -204,6 +205,50 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   // Pass ID Visualizer Hub State
   const [passIdInput, setPassIdInput] = useState('');
   const [passIdError, setPassIdError] = useState('');
+  const [pasteFeedback, setPasteFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const handlePastePassId = async (target: 'hub' | 'track' = 'hub') => {
+    try {
+      let text = '';
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+        text = await navigator.clipboard.readText();
+      }
+
+      const trimmed = text ? text.trim() : '';
+      const valueToFill = trimmed || FOUNDING_PASS_ID;
+
+      if (target === 'hub') {
+        setPassIdInput(valueToFill);
+        if (passIdError) setPassIdError('');
+      } else {
+        setTrackUnlockInput(valueToFill);
+        if (trackUnlockError) setTrackUnlockError('');
+      }
+
+      soundManager.playTone(880, 0.08);
+      setPasteFeedback({
+        message: trimmed ? `Pasted: ${trimmed}` : `Filled Pass ID: #${FOUNDING_PASS_ID}`,
+        type: 'success',
+      });
+      setTimeout(() => setPasteFeedback(null), 2500);
+    } catch (err) {
+      console.warn('Clipboard read error, fallback to FOUNDING_PASS_ID:', err);
+      if (target === 'hub') {
+        setPassIdInput(FOUNDING_PASS_ID);
+        if (passIdError) setPassIdError('');
+      } else {
+        setTrackUnlockInput(FOUNDING_PASS_ID);
+        if (trackUnlockError) setTrackUnlockError('');
+      }
+      soundManager.playTone(880, 0.08);
+      setPasteFeedback({
+        message: `Filled Pass ID: #${FOUNDING_PASS_ID}`,
+        type: 'success',
+      });
+      setTimeout(() => setPasteFeedback(null), 2500);
+    }
+  };
+
   const [isVisualizerUnlocked, setIsVisualizerUnlocked] = useState<boolean>(() => {
     return typeof window !== 'undefined' && sessionStorage.getItem('akinoya_visualizers_unlocked') === 'true';
   });
@@ -650,7 +695,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </p>
 
                       <form onSubmit={handleUnlockVisualizers} className="space-y-3">
-                        <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-2">
                           <div className="relative flex-1">
                             <Key className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                             <input
@@ -661,17 +706,37 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 if (passIdError) setPassIdError('');
                               }}
                               placeholder={`Enter Pass ID (e.g. ${FOUNDING_PASS_ID})`}
-                              className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/40 outline-none font-mono tracking-wide transition-colors"
+                              className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-32 sm:pr-36 py-2.5 sm:py-2.5 text-xs sm:text-sm text-white placeholder-white/40 outline-none font-mono tracking-wide transition-colors min-h-[44px]"
                             />
+                            <button
+                              type="button"
+                              onClick={() => handlePastePassId('hub')}
+                              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 sm:px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 hover:text-white text-[10px] sm:text-[11px] font-mono font-semibold tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.2)] active:scale-95"
+                              title="Paste Pass ID from clipboard"
+                            >
+                              <ClipboardPaste className="w-3.5 h-3.5 text-cyan-400" />
+                              <span>PASTE PASS ID</span>
+                            </button>
                           </div>
                           <button
                             type="submit"
-                            className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer whitespace-nowrap min-h-[42px] shadow-[0_0_15px_rgba(56,189,248,0.3)] flex items-center justify-center gap-2"
+                            className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer whitespace-nowrap min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.3)] flex items-center justify-center gap-2 shrink-0 active:scale-95"
                           >
                             <Lock className="w-3.5 h-3.5 text-black" />
                             <span>UNLOCK VISUALIZERS</span>
                           </button>
                         </div>
+
+                        {pasteFeedback && (
+                          <div className={`flex items-center gap-2 text-xs font-mono rounded-xl px-3.5 py-2 transition-all ${
+                            pasteFeedback.type === 'success'
+                              ? 'text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 shadow-[0_0_12px_rgba(56,189,248,0.15)]'
+                              : 'text-amber-300 bg-amber-950/40 border border-amber-500/30'
+                          }`}>
+                            <Check className="w-4 h-4 text-cyan-400 shrink-0" />
+                            <span>{pasteFeedback.message}</span>
+                          </div>
+                        )}
 
                         {passIdError && (
                           <div className="flex items-center gap-1.5 text-xs font-mono text-rose-400 bg-rose-950/40 border border-rose-500/30 rounded-lg px-3 py-2">
@@ -1155,9 +1220,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
               <form onSubmit={handleVerifyTrackCode} className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-mono text-white/60 mb-1.5">
-                    CIPHER CODE (HINT: {selectedTrackForUnlock.code} OR SillowMill2027)
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-[11px] font-mono text-white/60">
+                      CIPHER CODE (HINT: {selectedTrackForUnlock.code} OR SillowMill2027)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handlePastePassId('track')}
+                      className="text-[10px] font-mono text-cyan-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Paste Pass ID from clipboard"
+                    >
+                      <ClipboardPaste className="w-3 h-3 text-cyan-400" />
+                      <span>PASTE PASS ID</span>
+                    </button>
+                  </div>
                   <div className="relative">
                     <Key className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
@@ -1168,9 +1244,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         setTrackUnlockInput(e.target.value);
                         if (trackUnlockError) setTrackUnlockError('');
                       }}
-                      placeholder={`Enter cipher (e.g. ${selectedTrackForUnlock.code})`}
-                      className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/40 outline-none font-mono tracking-wider transition-colors"
+                      placeholder={`Enter cipher or #${FOUNDING_PASS_ID}`}
+                      className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-28 sm:pr-36 py-3 text-sm text-white placeholder-white/40 outline-none font-mono tracking-wider transition-colors"
                     />
+                    <button
+                      type="button"
+                      onClick={() => handlePastePassId('track')}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 sm:px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 hover:text-white text-[10px] sm:text-[11px] font-mono font-semibold tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.2)] active:scale-95"
+                    >
+                      <ClipboardPaste className="w-3 h-3 text-cyan-400" />
+                      <span className="hidden xs:inline">PASTE PASS ID</span>
+                      <span className="xs:hidden">PASTE</span>
+                    </button>
                   </div>
                 </div>
 
