@@ -345,6 +345,29 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       const sanitizedAptBus = checkoutAptBus.trim();
       const sanitizedCity = checkoutCity.trim();
 
+      // JS email validation (replaces Safari-incompatible type="email" browser pattern)
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(sanitizedEmail)) {
+        setIsOrderProcessing(false);
+        alert('⚠️ Please enter a valid email address (e.g. alex@example.com).');
+        return;
+      }
+      if (!sanitizedName) {
+        setIsOrderProcessing(false);
+        alert('⚠️ Please enter your full name.');
+        return;
+      }
+      if (!sanitizedAddress) {
+        setIsOrderProcessing(false);
+        alert('⚠️ Please enter your street and house number.');
+        return;
+      }
+      if (!sanitizedCity) {
+        setIsOrderProcessing(false);
+        alert('⚠️ Please enter your city and postal code.');
+        return;
+      }
+
       const fullAddress = sanitizedAptBus
         ? `${sanitizedAddress}, ${sanitizedAptBus}`
         : sanitizedAddress;
@@ -1397,7 +1420,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           </label>
                           <input
                             type="text"
-                            required
+                            autoComplete="name"
                             value={checkoutName}
                             onChange={(e) => setCheckoutName(e.target.value)}
                             placeholder="Alex Thorne"
@@ -1409,8 +1432,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             EMAIL ADDRESS
                           </label>
                           <input
-                            type="email"
-                            required
+                            type="text"
+                            inputMode="email"
+                            autoComplete="email"
                             value={checkoutEmail}
                             onChange={(e) => setCheckoutEmail(e.target.value)}
                             placeholder="alex@example.com"
@@ -1427,7 +1451,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           </label>
                           <input
                             type="text"
-                            required
+                            autoComplete="street-address"
                             value={checkoutAddress}
                             onChange={(e) => setCheckoutAddress(e.target.value)}
                             placeholder="Street & House No. (e.g. Keizersstraat 10)"
@@ -1440,6 +1464,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           </label>
                           <input
                             type="text"
+                            autoComplete="address-line2"
                             value={checkoutAptBus}
                             onChange={(e) => setCheckoutAptBus(e.target.value)}
                             placeholder="Bus / Apt (Optional)"
@@ -1455,7 +1480,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         </label>
                         <input
                           type="text"
-                          required
+                          autoComplete="postal-code"
                           value={checkoutCity}
                           onChange={(e) => setCheckoutCity(e.target.value)}
                           placeholder="e.g. 2000 Antwerpen"
