@@ -680,23 +680,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_25px_rgba(56,189,248,0.12)]">
                       <div className="absolute top-0 right-0 w-36 h-36 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
 
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
                         <Key className="w-4 h-4 text-cyan-400" />
                         <span className="text-[11px] sm:text-xs font-mono text-cyan-300 uppercase tracking-wider font-semibold">
                           VIP VISUALIZER ARCHIVE GATEWAY
                         </span>
                       </div>
 
-                      <h3 className="text-base sm:text-lg font-display font-bold text-white mb-1.5">
+                      <h3 className="text-base sm:text-lg font-display font-bold text-white mb-1.5 text-center sm:text-left">
                         Visualizer Hub Access
                       </h3>
-                      <p className="text-[11px] sm:text-xs text-white/60 leading-relaxed mb-4">
+                      <p className="text-[11px] sm:text-xs text-white/60 leading-relaxed mb-4 text-center sm:text-left">
                         Enter your exact Pass ID (copied from your Founding Holder card above) to unlock all 11 visualizers, video telemetry, and early releases.
                       </p>
 
-                      <form onSubmit={handleUnlockVisualizers} className="space-y-3">
-                        <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-2">
-                          <div className="relative flex-1">
+                      <form onSubmit={handleUnlockVisualizers} className="space-y-3 sm:space-y-3.5">
+                        {/* Desktop: Input + Paste Button side-by-side | Mobile: Stacked full width */}
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3">
+                          <div className="sm:col-span-8 relative">
                             <Key className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                             <input
                               type="text"
@@ -706,26 +707,31 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 if (passIdError) setPassIdError('');
                               }}
                               placeholder={`Enter Pass ID (e.g. ${FOUNDING_PASS_ID})`}
-                              className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-32 sm:pr-36 py-2.5 sm:py-2.5 text-xs sm:text-sm text-white placeholder-white/40 outline-none font-mono tracking-wide transition-colors min-h-[44px]"
+                              className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm text-white placeholder-white/40 outline-none font-mono tracking-wide transition-colors min-h-[46px]"
                             />
+                          </div>
+
+                          <div className="sm:col-span-4">
                             <button
                               type="button"
                               onClick={() => handlePastePassId('hub')}
-                              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 sm:px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 hover:text-white text-[10px] sm:text-[11px] font-mono font-semibold tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.2)] active:scale-95"
+                              className="w-full h-full min-h-[46px] px-4 py-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 hover:text-white text-xs sm:text-sm font-mono font-semibold tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(56,189,248,0.15)] active:scale-[0.98]"
                               title="Paste Pass ID from clipboard"
                             >
-                              <ClipboardPaste className="w-3.5 h-3.5 text-cyan-400" />
+                              <ClipboardPaste className="w-4 h-4 text-cyan-400 shrink-0" />
                               <span>PASTE PASS ID</span>
                             </button>
                           </div>
-                          <button
-                            type="submit"
-                            className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer whitespace-nowrap min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.3)] flex items-center justify-center gap-2 shrink-0 active:scale-95"
-                          >
-                            <Lock className="w-3.5 h-3.5 text-black" />
-                            <span>UNLOCK VISUALIZERS</span>
-                          </button>
                         </div>
+
+                        {/* Unlock Visualizers Primary Action Button */}
+                        <button
+                          type="submit"
+                          className="w-full py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer whitespace-nowrap min-h-[48px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 active:scale-[0.99] tracking-wider"
+                        >
+                          <Lock className="w-4 h-4 text-black" />
+                          <span>UNLOCK VISUALIZERS</span>
+                        </button>
 
                         {pasteFeedback && (
                           <div className={`flex items-center gap-2 text-xs font-mono rounded-xl px-3.5 py-2 transition-all ${
@@ -1245,17 +1251,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         if (trackUnlockError) setTrackUnlockError('');
                       }}
                       placeholder={`Enter cipher or #${FOUNDING_PASS_ID}`}
-                      className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-28 sm:pr-36 py-3 text-sm text-white placeholder-white/40 outline-none font-mono tracking-wider transition-colors"
+                      className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/40 outline-none font-mono tracking-wider transition-colors"
                     />
-                    <button
-                      type="button"
-                      onClick={() => handlePastePassId('track')}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 sm:px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 hover:text-white text-[10px] sm:text-[11px] font-mono font-semibold tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.2)] active:scale-95"
-                    >
-                      <ClipboardPaste className="w-3 h-3 text-cyan-400" />
-                      <span className="hidden xs:inline">PASTE PASS ID</span>
-                      <span className="xs:hidden">PASTE</span>
-                    </button>
                   </div>
                 </div>
 
