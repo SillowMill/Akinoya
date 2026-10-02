@@ -315,6 +315,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [checkoutAddress, setCheckoutAddress] = useState("");
   const [checkoutAptBus, setCheckoutAptBus] = useState("");
   const [checkoutCity, setCheckoutCity] = useState("");
+  const [checkoutError, setCheckoutError] = useState("");
   const [isOrderProcessing, setIsOrderProcessing] = useState(false);
   const [waveInventory, setWaveInventory] = useState<{ total: number; available: number }>({
     total: 125,
@@ -340,6 +341,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   const handlePreOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCheckoutError("");
     setIsOrderProcessing(true);
     soundManager.playTone(660, 0.1);
 
@@ -350,26 +352,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       const sanitizedAptBus = checkoutAptBus.trim();
       const sanitizedCity = checkoutCity.trim();
 
-      // Minimal validation — just ensure required fields are not empty
-      // and email contains an @ sign. No strict regex to avoid false negatives.
       if (!sanitizedEmail || !sanitizedEmail.includes('@')) {
         setIsOrderProcessing(false);
-        alert('⚠️ Please enter a valid email address.');
+        setCheckoutError('Please enter a valid email address.');
         return;
       }
       if (!sanitizedName) {
         setIsOrderProcessing(false);
-        alert('⚠️ Please enter your full name.');
+        setCheckoutError('Please enter your full name.');
         return;
       }
       if (!sanitizedAddress) {
         setIsOrderProcessing(false);
-        alert('⚠️ Please enter your street and house number.');
+        setCheckoutError('Please enter your street and house number.');
         return;
       }
       if (!sanitizedCity) {
         setIsOrderProcessing(false);
-        alert('⚠️ Please enter your city and postal code.');
+        setCheckoutError('Please enter your city and postal code.');
         return;
       }
 
@@ -389,25 +389,33 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         }),
       });
 
-      const data = await res.json();
-      if (data.url) {
+      let data: any = null;
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        data = await res.json().catch(() => null);
+      }
+
+      if (res.ok && data?.url) {
         window.location.href = data.url;
         return;
       } else {
-        throw new Error(data.error || 'Failed to initialize checkout. Please try again.');
+        const errorMsg =
+          data?.error ||
+          (await res.text().catch(() => '')) ||
+          'Could not initialize checkout. Please try again.';
+        throw new Error(errorMsg);
       }
     } catch (err: any) {
       console.error("Stripe Checkout Error:", err);
-      alert("⚠️ " + (err.message || "Could not initiate checkout. Please check your details and try again."));
+      setCheckoutError(err.message || "Could not initiate checkout. Please try again.");
       setIsOrderProcessing(false);
-
     }
   };
-
 
   const handleResetCheckout = () => {
     setIsCheckoutOpen(false);
     setIsOrderProcessing(false);
+    setCheckoutError("");
     setCheckoutAptBus("");
   };
 
@@ -1491,6 +1499,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         />
                       </div>
                     </div>
+
+                    {/* Inline Error Message */}
+                    {checkoutError && (
+                      <div className="p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-xs font-mono flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 leading-relaxed">{checkoutError}</div>
+                      </div>
+                    )}
 
                     {/* Submit Action Button */}
                     <button

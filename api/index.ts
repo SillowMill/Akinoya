@@ -1,18 +1,17 @@
-import type { Request, Response, NextFunction } from 'express';
-import { apiApp } from '../src/server/apiRouter';
+import type { IncomingMessage, ServerResponse } from 'http';
+import { getInventoryStatus } from '../src/server/stripeService';
 
-// Global JSON error handler — catches any unhandled errors and always
-// returns JSON (never plain text or HTML) so the frontend can parse it.
-apiApp.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('[API] Unhandled error:', err?.message || err);
-  if (!res.headersSent) {
-    res.status(500).json({ error: err?.message || 'A server error occurred.' });
-  }
-});
+export default function handler(req: IncomingMessage, res: ServerResponse) {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
 
-// Catch-all for unknown routes — return JSON 404
-apiApp.use((_req: Request, res: Response) => {
-  res.status(404).json({ error: 'API route not found.' });
-});
-
-export default apiApp;
+  const inventory = getInventoryStatus();
+  res.statusCode = 200;
+  res.end(
+    JSON.stringify({
+      status: 'online',
+      message: 'Äkinoya VIP Protocol API is active',
+      inventory,
+    })
+  );
+}

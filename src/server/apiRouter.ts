@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import {
-  stripe,
+  getStripe,
   createComicCheckoutSession,
   processCompletedCheckout,
   getInventoryStatus,
@@ -27,12 +27,12 @@ apiApp.post(
     let event: any;
 
     try {
+      const stripe = getStripe();
       if (webhookSecret && sig) {
         event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
       } else {
         const rawPayload = typeof req.body === 'string' ? req.body : req.body.toString('utf8');
         event = JSON.parse(rawPayload);
-        console.log('[API Webhook] Signature verification bypassed for local test event');
       }
     } catch (err: any) {
       console.error(`[API Webhook] Webhook error: ${err.message}`);
@@ -67,13 +67,6 @@ apiApp.use(express.json());
 
 // ─── 1. Create Checkout Session ───────────────────────────────────────────────
 apiRouter.post('/create-checkout-session', async (req: Request, res: Response): Promise<void> => {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    res.status(503).json({
-      error: 'Stripe is not configured. Please set the STRIPE_SECRET_KEY environment variable in your Vercel project settings.',
-    });
-    return;
-  }
-
   try {
     const { customerEmail, customerName, shippingAddress, shippingCity, apartmentBus } = req.body || {};
     const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
@@ -106,22 +99,15 @@ apiRouter.get('/inventory/status', (_req: Request, res: Response): void => {
     res.status(200).json(inventory);
   } catch (err: any) {
     console.error('[API] inventory/status error:', err);
-    // Return safe defaults so the UI still renders
     res.status(200).json({ wave: 'Wave 2', total: 125, claimed: 0, available: 125 });
   }
 });
 
 // ─── 3. Session Verification ──────────────────────────────────────────────────
 apiRouter.get('/checkout/session/:id', async (req: Request, res: Response): Promise<void> => {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    res.status(503).json({
-      error: 'Stripe is not configured on this server.',
-    });
-    return;
-  }
-
   try {
     const sessionId = req.params.id;
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     const orders = loadOrders();
     const matchedOrder = orders.find((o) => o.id === sessionId);

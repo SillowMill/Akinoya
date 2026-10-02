@@ -5,12 +5,30 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
+// Lazy Stripe initialization — NEVER crash at module evaluation time
+let _stripeInstance: Stripe | null = null;
 
-export const stripe = new Stripe(STRIPE_KEY, {
-  // Must match the API version bundled with stripe@23 SDK
-  apiVersion: '2026-09-30.endive' as any,
-});
+export function getStripe(): Stripe {
+  if (_stripeInstance) return _stripeInstance;
+
+  const key =
+    process.env.STRIPE_SECRET_KEY ||
+    process.env.STRIPE_API_KEY ||
+    process.env.STRIPE_KEY ||
+    '';
+
+  if (!key) {
+    throw new Error(
+      'STRIPE_SECRET_KEY is not configured in Vercel. Please check Project Settings > Environment Variables.'
+    );
+  }
+
+  _stripeInstance = new Stripe(key, {
+    apiVersion: '2026-09-30.endive' as any,
+  });
+
+  return _stripeInstance;
+}
 
 const ORDERS_FILE = path.resolve(process.cwd(), 'data/orders.json');
 const INITIAL_WAVE_INVENTORY = 125;
@@ -39,7 +57,7 @@ export function loadOrders(): ComicOrder[] {
       return JSON.parse(data);
     }
   } catch (err) {
-    console.error('[StripeService] Error reading orders file:', err);
+    console.warn('[StripeService] Could not read orders file:', err);
   }
   return [];
 }
@@ -52,48 +70,50 @@ export function saveOrders(orders: ComicOrder[]): void {
     }
     fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), 'utf-8');
   } catch (err) {
-    console.error('[StripeService] Error saving orders file:', err);
+    // Expected on serverless environments where filesystem is read-only
+    console.warn('[StripeService] Read-only filesystem, skipped file write:', err);
   }
 }
 
 export function getInventoryStatus() {
-  const orders = loadOrders();
-  const claimedCount = orders.filter((o) => o.status === 'paid' && o.wave === 'Wave 2').length;
-  const availableCount = Math.max(0, INITIAL_WAVE_INVENTORY - claimedCount);
+  try {
+    const orders = loadOrders();
+    const claimedCount = orders.filter((o) => o.status === 'paid' && o.wave === 'Wave 2').length;
+    const availableCount = Math.max(0, INITIAL_WAVE_INVENTORY - claimedCount);
 
-  return {
-    wave: 'Wave 2',
-    total: INITIAL_WAVE_INVENTORY,
-    claimed: claimedCount,
-    available: availableCount,
-  };
+    return {
+      wave: 'Wave 2',
+      total: INITIAL_WAVE_INVENTORY,
+      claimed: claimedCount,
+      available: availableCount,
+    };
+  } catch {
+    return {
+      wave: 'Wave 2',
+      total: INITIAL_WAVE_INVENTORY,
+      claimed: 0,
+      available: INITIAL_WAVE_INVENTORY,
+    };
+  }
 }
 
-/**
- * Defensively parse a combined city+postal string like "1050 Etterbeek" or "Antwerpen 2000".
- * Falls back gracefully when no postal code digits are found.
- */
 function parseCityPostal(raw: string): { city: string; postalCode: string } {
   const trimmed = (raw || '').trim();
   if (!trimmed) return { city: 'Unknown', postalCode: '1000' };
 
-  // Extract first run of 4-5 digits as postal code
   const postalMatch = trimmed.match(/\d{4,5}/);
-  const postalCode = postalMatch ? postalMatch[0] : '';
+  const postalCode = postalMatch ? postalMatch[0] : '1000';
   const city = trimmed.replace(/\d{4,5}/, '').replace(/\s+/g, ' ').trim() || trimmed;
 
-  return { city: city || 'Unknown', postalCode: postalCode || '1000' };
+  return { city: city || 'Unknown', postalCode };
 }
 
-/** Strip non-printable / non-ASCII characters Stripe rejects */
 function sanitizeStripeString(s: string): string {
   return (s || '')
     .trim()
-    // Replace curly quotes, em dash, etc. with ASCII equivalents
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/\u2013|\u2014/g, '-')
-    // Remove any remaining non-printable characters
     .replace(/[^\x20-\x7E\u00C0-\u024F]/g, '')
     .trim();
 }
@@ -106,19 +126,17 @@ export async function createComicCheckoutSession(params: {
   shippingCity?: string;
   origin?: string;
 }) {
+  const stripe = getStripe();
   const baseUrl = params.origin || 'https://sillowmill.com';
 
-  // Sanitize all string inputs
   const sanitizedEmail = (params.customerEmail || '').trim().toLowerCase() || undefined;
   const sanitizedName = sanitizeStripeString(params.customerName || '') || undefined;
   const sanitizedLine1 = sanitizeStripeString(params.shippingAddress || '') || undefined;
   const sanitizedLine2 = sanitizeStripeString(params.apartmentBus || '') || undefined;
 
-  // Defensive city + postal parsing with fallback defaults
   const rawCityPostal = (params.shippingCity || '').trim();
   const { city: parsedCity, postalCode: parsedPostal } = parseCityPostal(rawCityPostal);
 
-  // Truncate metadata values to Stripe's 500-char limit
   const truncate = (s: string, max = 480) => (s || '').slice(0, max);
 
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
@@ -150,12 +168,7 @@ export async function createComicCheckoutSession(params: {
       shipping_postal: truncate(parsedPostal),
     },
     success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${baseUrl}/comic?canceled=true`,
-    // Use automatic_payment_methods so Stripe picks the right methods
-    // for the customer's region without needing manual payment_method_types
-    automatic_payment_methods: {
-      enabled: true,
-    },
+    cancel_url: `${baseUrl}/?canceled=true`,
     billing_address_collection: 'auto',
     shipping_address_collection: {
       allowed_countries: [
@@ -174,7 +187,6 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
   const existingOrder = orders.find((o) => o.id === session.id);
 
   if (existingOrder) {
-    console.log(`[StripeService] Order ${session.id} already processed`);
     return existingOrder;
   }
 
@@ -201,13 +213,6 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
 
   orders.push(newOrder);
   saveOrders(orders);
-
-  const inventory = getInventoryStatus();
-  console.log(`[StripeService] Order fulfilled: ${newOrder.id}`);
-  console.log(`[StripeService] Customer: ${name} <${email}>`);
-  console.log(`[StripeService] Pass ID Granted: ${passId}`);
-  console.log(`[StripeService] Wave 2 remaining inventory: ${inventory.available}/${inventory.total}`);
-  console.log(`[StripeService] Confirmation dispatched to: ${email} (cc: Odi@sillowmill.com)`);
 
   return newOrder;
 }
