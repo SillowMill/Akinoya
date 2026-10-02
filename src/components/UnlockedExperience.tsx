@@ -707,7 +707,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 if (passIdError) setPassIdError('');
                               }}
                               placeholder={`Enter Pass ID (e.g. ${FOUNDING_PASS_ID})`}
-                              className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm text-white placeholder-white/40 outline-none font-mono tracking-wide transition-colors min-h-[46px]"
+                              className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-3 text-base sm:text-sm text-white placeholder-white/40 outline-none font-mono tracking-wide transition-colors min-h-[46px]"
                             />
                           </div>
 
@@ -859,7 +859,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                         value={perkInputs[perk.id] || ''}
                                         onChange={(e) => handlePerkInputChange(perk.id, e.target.value)}
                                         placeholder={`Enter code (e.g. ${perk.defaultCode} or Pass ID)`}
-                                        className="w-full bg-black/60 border border-white/10 focus:border-cyan-400/60 rounded-lg pl-8 pr-2.5 py-1.5 text-[11px] text-white placeholder-white/30 outline-none font-mono tracking-wide transition-colors"
+                                        className="w-full bg-black/60 border border-white/10 focus:border-cyan-400/60 rounded-lg pl-8 pr-2.5 py-1.5 text-base sm:text-[11px] text-white placeholder-white/30 outline-none font-mono tracking-wide transition-colors"
                                       />
                                     </div>
                                     <button
@@ -1169,7 +1169,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               value={waitlistEmail}
                               onChange={(e) => setWaitlistEmail(e.target.value)}
                               placeholder="Enter your email for Wave 2 updates..."
-                              className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-3.5 py-2 text-xs text-white placeholder-white/40 outline-none font-mono"
+                              className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-3.5 py-2 text-base sm:text-xs text-white placeholder-white/40 outline-none font-mono"
                             />
                           </div>
                           <button
@@ -1251,7 +1251,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         if (trackUnlockError) setTrackUnlockError('');
                       }}
                       placeholder={`Enter cipher or #${FOUNDING_PASS_ID}`}
-                      className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/40 outline-none font-mono tracking-wider transition-colors"
+                      className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-3 text-base sm:text-sm text-white placeholder-white/40 outline-none font-mono tracking-wider transition-colors"
                     />
                   </div>
                 </div>
@@ -1517,7 +1517,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             value={checkoutName}
                             onChange={(e) => setCheckoutName(e.target.value)}
                             placeholder="Alex Thorne"
-                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30 outline-none font-mono"
+                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
                           />
                         </div>
                         <div>
@@ -1531,7 +1531,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             value={checkoutEmail}
                             onChange={(e) => setCheckoutEmail(e.target.value)}
                             placeholder="alex@example.com"
-                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30 outline-none font-mono"
+                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
                           />
                         </div>
                       </div>
@@ -1548,7 +1548,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             value={checkoutAddress}
                             onChange={(e) => setCheckoutAddress(e.target.value)}
                             placeholder="Street & House No. (e.g. Keizersstraat 10)"
-                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30 outline-none font-mono"
+                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
                           />
                         </div>
                         <div>
@@ -1561,7 +1561,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             value={checkoutAptBus}
                             onChange={(e) => setCheckoutAptBus(e.target.value)}
                             placeholder="Bus / Apt (Optional)"
-                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30 outline-none font-mono"
+                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
                           />
                         </div>
                       </div>
@@ -1577,7 +1577,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           value={checkoutCity}
                           onChange={(e) => setCheckoutCity(e.target.value)}
                           placeholder="e.g. 2000 Antwerpen"
-                          className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30 outline-none font-mono"
+                          className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
                         />
                       </div>
                     </div>
