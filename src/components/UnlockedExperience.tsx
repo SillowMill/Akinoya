@@ -22,7 +22,7 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
-  Video,
+  AudioWaveform,
   Play,
   Pause,
   X,
@@ -626,7 +626,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         onClick={() => setPassSubView('hub')}
                         className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer whitespace-nowrap min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
                       >
-                        <Video className="w-4 h-4 text-black" />
+                        <AudioWaveform className="w-4 h-4 text-black" />
                         <span>OPEN VISUALIZER HUB →</span>
                       </button>
                     </div>
@@ -713,7 +713,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 {/* Left Side: Video Icon, Section Number, Title */}
                                 <div className="flex items-center gap-2 min-w-0">
                                   <div className="w-7 h-7 rounded-lg bg-cyan-950/50 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 shadow-[0_0_8px_rgba(56,189,248,0.15)] group-hover:border-cyan-400/50 transition-colors">
-                                    <Video className="w-3.5 h-3.5 text-cyan-400" />
+                                    <AudioWaveform className="w-3.5 h-3.5 text-cyan-400" />
                                   </div>
                                   <span className="text-[11px] font-mono text-cyan-400 font-semibold shrink-0">
                                     {perk.number}.
@@ -890,7 +890,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                   {isUnlocked ? (
                                     <Play className="w-4 h-4 fill-emerald-400 text-emerald-400 ml-0.5" />
                                   ) : (
-                                    <Video className="w-4 h-4" />
+                                    <AudioWaveform className="w-4 h-4" />
                                   )}
                                 </div>
 
@@ -1203,27 +1203,27 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Modal 2: Playable Video Stream Visualizer Player */}
+      {/* Modal 2: Audio Stream Visualizer Player */}
       <AnimatePresence>
         {activePlayingTrack && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 lg:p-8 bg-black/85 backdrop-blur-xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 xs:p-3 sm:p-6 lg:p-8 bg-black/85 backdrop-blur-xl">
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 15 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-3xl lg:max-w-4xl bg-[#05080e] border border-cyan-400/40 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(56,189,248,0.25)] flex flex-col"
+              className="relative w-full max-w-3xl lg:max-w-4xl bg-[#05080e] border border-cyan-400/40 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(56,189,248,0.25)] flex flex-col max-h-[92dvh] sm:max-h-none overflow-y-auto sm:overflow-visible"
             >
               {/* Header Bar */}
-              <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 bg-black/60 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
+              <div className="flex items-center justify-between px-3.5 sm:px-6 py-3 sm:py-3.5 bg-black/60 border-b border-white/10 shrink-0">
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
                   <div>
-                    <div className="text-[10px] font-mono text-cyan-400 tracking-wider">
-                      VISUALIZER STREAM · TRACK #{activePlayingTrack.id}
+                    <div className="text-[9px] sm:text-[10px] font-mono text-cyan-400 tracking-wider">
+                      AUDIO TRANSMISSION · TRACK #{activePlayingTrack.id}
                     </div>
-                    <h3 className="text-sm sm:text-base font-display font-bold text-white">
-                      {activePlayingTrack.title} — Sector 04 Feed
+                    <h3 className="text-xs sm:text-base font-display font-bold text-white truncate max-w-[200px] xs:max-w-[260px] sm:max-w-none">
+                      {activePlayingTrack.title} — Sector 04 Audio Feed
                     </h3>
                   </div>
                 </div>
@@ -1235,48 +1235,48 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       planetSoundtrack.pause();
                     }
                   }}
-                  className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Main Visualizer Stage */}
-              <div className="relative aspect-video w-full bg-slate-950 overflow-hidden flex items-center justify-center">
+              <div className="relative min-h-[270px] xs:min-h-[300px] sm:min-h-0 sm:aspect-video w-full bg-slate-950 overflow-hidden flex items-center justify-center">
                 {/* Background cosmic vista with glowing ambient motion */}
                 <img
                   src={akinoyaVistaImg}
                   alt="Äkinoya Vista"
-                  className="absolute inset-0 w-full h-full object-cover opacity-60 scale-105 animate-pulse"
+                  className="absolute inset-0 w-full h-full object-cover object-center opacity-60 scale-105 animate-pulse"
                   style={{ animationDuration: '8s' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,black_80%)]" />
 
-                {/* Animated holographic audio/video telemetry overlay */}
-                <div className="relative z-10 flex flex-col items-center text-center p-6 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_30px_rgba(56,189,248,0.4)]">
-                    <Video className="w-7 h-7 text-cyan-400 animate-pulse" />
+                {/* Animated holographic audio telemetry overlay */}
+                <div className="relative z-10 flex flex-col items-center text-center p-3.5 xs:p-4 sm:p-6 space-y-2.5 sm:space-y-4 w-full max-w-lg mx-auto">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_30px_rgba(56,189,248,0.4)] shrink-0">
+                    <AudioWaveform className="w-5 h-5 sm:w-7 sm:h-7 text-cyan-400 animate-pulse" />
                   </div>
 
                   <div>
-                    <span className="text-[10px] font-mono px-3 py-1 rounded-full bg-emerald-950/90 border border-emerald-400/40 text-emerald-300 font-semibold tracking-wider">
-                      ● BROADCAST ACTIVE · 4K 60FPS VIP FEED
+                    <span className="text-[9px] sm:text-[10px] font-mono px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-950/90 border border-emerald-400/40 text-emerald-300 font-semibold tracking-wider uppercase">
+                      ● TRANSMISSION ACTIVE · HQ AUDIO FEED
                     </span>
-                    <h2 className="text-xl sm:text-2xl font-display font-extrabold text-white mt-2">
+                    <h2 className="text-lg xs:text-xl sm:text-2xl font-display font-extrabold text-white mt-1.5 sm:mt-2">
                       {activePlayingTrack.title}
                     </h2>
-                    <p className="text-xs font-mono text-cyan-300/80 mt-1">
+                    <p className="text-[10px] xs:text-xs font-mono text-cyan-300/80 mt-1 max-w-xs sm:max-w-none mx-auto leading-tight sm:leading-normal">
                       AUDIO MATRIX FREQUENCY · SECTOR 04 TRANSMISSION
                     </p>
                   </div>
 
-                  {/* Pulsing Audio/Telemetry Waveform Bars */}
-                  <div className="flex items-center gap-1.5 h-12 pt-2">
+                  {/* Pulsing Audio Telemetry Waveform Bars */}
+                  <div className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-12 pt-1 sm:pt-2">
                     {[35, 60, 90, 45, 80, 100, 75, 40, 65, 85, 55, 95, 70, 50, 85, 60, 40, 75].map((h, i) => (
                       <div
                         key={i}
-                        className="w-1 rounded-full bg-gradient-to-t from-cyan-500 to-emerald-400 transition-all duration-300"
+                        className="w-0.5 sm:w-1 rounded-full bg-gradient-to-t from-cyan-500 to-emerald-400 transition-all duration-300"
                         style={{
                           height: `${isPlayingAudio || activePlayingTrack.id !== '02' ? h : 15}%`,
                           animation: 'pulse 1.2s ease-in-out infinite alternate',
@@ -1289,8 +1289,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               </div>
 
               {/* Player Controls Bar */}
-              <div className="px-4 sm:px-6 py-4 bg-[#080d16] border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+              <div className="px-3.5 sm:px-6 py-3.5 sm:py-4 bg-[#080d16] border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
                   <button
                     onClick={() => {
                       if (activePlayingTrack.id === '02') {
@@ -1300,7 +1300,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         soundManager.playTone(520, 0.1);
                       }
                     }}
-                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-mono font-semibold transition-all cursor-pointer shadow-[0_0_12px_rgba(56,189,248,0.3)] min-h-[40px]"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-mono font-semibold transition-all cursor-pointer shadow-[0_0_12px_rgba(56,189,248,0.3)] min-h-[42px] sm:min-h-[40px]"
                   >
                     {isPlayingAudio ? (
                       <>
@@ -1315,9 +1315,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     )}
                   </button>
 
-                  <div className="flex items-center gap-1.5 text-xs font-mono text-white/60">
-                    <Volume2 className="w-4 h-4 text-cyan-400" />
-                    <span>
+                  <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[11px] sm:text-xs font-mono text-white/70 text-center sm:text-left py-0.5 sm:py-0">
+                    <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 shrink-0" />
+                    <span className="truncate">
                       {activePlayingTrack.id === '02'
                         ? 'Master Planetary Soundtrack (BWS)'
                         : 'Sector Audio Synthesizer Matrix'}
@@ -1325,7 +1325,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 </div>
 
-                <div className="text-[11px] font-mono text-cyan-400/80">
+                <div className="text-[10px] sm:text-[11px] font-mono text-cyan-400/80 text-center sm:text-right pt-2 sm:pt-0 border-t border-white/5 sm:border-0">
                   TOKEN #AKN-2027 · VIP EXCLUSIVE
                 </div>
               </div>
