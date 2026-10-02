@@ -345,11 +345,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       const sanitizedAptBus = checkoutAptBus.trim();
       const sanitizedCity = checkoutCity.trim();
 
-      // JS email validation (replaces Safari-incompatible type="email" browser pattern)
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(sanitizedEmail)) {
+      // Minimal validation — just ensure required fields are not empty
+      // and email contains an @ sign. No strict regex to avoid false negatives.
+      if (!sanitizedEmail || !sanitizedEmail.includes('@')) {
         setIsOrderProcessing(false);
-        alert('⚠️ Please enter a valid email address (e.g. alex@example.com).');
+        alert('⚠️ Please enter a valid email address.');
         return;
       }
       if (!sanitizedName) {
@@ -389,15 +389,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         window.location.href = data.url;
         return;
       } else {
-        const friendlyError = data.error?.includes('pattern')
-          ? 'Please check your email or address — one of the fields has an invalid format.'
-          : data.error || 'Failed to initialize checkout. Please try again.';
-        throw new Error(friendlyError);
+        throw new Error(data.error || 'Failed to initialize checkout. Please try again.');
       }
     } catch (err: any) {
       console.error("Stripe Checkout Error:", err);
       alert("⚠️ " + (err.message || "Could not initiate checkout. Please check your details and try again."));
       setIsOrderProcessing(false);
+
     }
   };
 

@@ -8,7 +8,8 @@ dotenv.config();
 const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
 
 export const stripe = new Stripe(STRIPE_KEY, {
-  apiVersion: '2025-02-24.acacia' as any,
+  // Must match the API version bundled with stripe@23 SDK
+  apiVersion: '2026-09-30.endive' as any,
 });
 
 const ORDERS_FILE = path.resolve(process.cwd(), 'data/orders.json');
@@ -69,23 +70,32 @@ export function getInventoryStatus() {
 }
 
 /**
- * Parse a combined "city postal" string like "1050 Etterbeek" or "Antwerpen 2000"
- * Returns { city, postalCode }
+ * Defensively parse a combined city+postal string like "1050 Etterbeek" or "Antwerpen 2000".
+ * Falls back gracefully when no postal code digits are found.
  */
 function parseCityPostal(raw: string): { city: string; postalCode: string } {
-  const trimmed = raw.trim();
-  // Match leading digits (postal code first, e.g. "1050 Etterbeek")
-  const leadingPostal = trimmed.match(/^(\d{4,5})\s+(.+)$/);
-  if (leadingPostal) {
-    return { postalCode: leadingPostal[1], city: leadingPostal[2].trim() };
-  }
-  // Match trailing digits (city first, e.g. "Etterbeek 1050")
-  const trailingPostal = trimmed.match(/^(.+?)\s+(\d{4,5})$/);
-  if (trailingPostal) {
-    return { city: trailingPostal[1].trim(), postalCode: trailingPostal[2] };
-  }
-  // No postal code found — return raw as city
-  return { city: trimmed, postalCode: '' };
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return { city: 'Unknown', postalCode: '1000' };
+
+  // Extract first run of 4-5 digits as postal code
+  const postalMatch = trimmed.match(/\d{4,5}/);
+  const postalCode = postalMatch ? postalMatch[0] : '';
+  const city = trimmed.replace(/\d{4,5}/, '').replace(/\s+/g, ' ').trim() || trimmed;
+
+  return { city: city || 'Unknown', postalCode: postalCode || '1000' };
+}
+
+/** Strip non-printable / non-ASCII characters Stripe rejects */
+function sanitizeStripeString(s: string): string {
+  return (s || '')
+    .trim()
+    // Replace curly quotes, em dash, etc. with ASCII equivalents
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\u2013|\u2014/g, '-')
+    // Remove any remaining non-printable characters
+    .replace(/[^\x20-\x7E\u00C0-\u024F]/g, '')
+    .trim();
 }
 
 export async function createComicCheckoutSession(params: {
@@ -98,25 +108,25 @@ export async function createComicCheckoutSession(params: {
 }) {
   const baseUrl = params.origin || 'https://sillowmill.com';
 
-  // Sanitize inputs
+  // Sanitize all string inputs
   const sanitizedEmail = (params.customerEmail || '').trim().toLowerCase() || undefined;
-  const sanitizedName = (params.customerName || '').trim() || undefined;
-  const sanitizedLine1 = (params.shippingAddress || '').trim() || undefined;
-  const sanitizedLine2 = (params.apartmentBus || '').trim() || undefined;
+  const sanitizedName = sanitizeStripeString(params.customerName || '') || undefined;
+  const sanitizedLine1 = sanitizeStripeString(params.shippingAddress || '') || undefined;
+  const sanitizedLine2 = sanitizeStripeString(params.apartmentBus || '') || undefined;
 
-  // Parse city + postal code from combined field (e.g. "1050 Etterbeek")
+  // Defensive city + postal parsing with fallback defaults
   const rawCityPostal = (params.shippingCity || '').trim();
   const { city: parsedCity, postalCode: parsedPostal } = parseCityPostal(rawCityPostal);
 
   // Truncate metadata values to Stripe's 500-char limit
-  const truncate = (s: string, max = 480) => s.slice(0, max);
+  const truncate = (s: string, max = 480) => (s || '').slice(0, max);
 
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
     {
       price_data: {
         currency: 'eur',
         product_data: {
-          name: 'Bingäa — Limited Edition Comic',
+          name: 'Bingaa - Limited Edition Comic',
           description: 'Physical First Edition Comic Drop with Scannable QR Priority Verification (Wave 2)',
           images: [`${baseUrl}/images/bingaa_comic_cover.jpg`],
         },
@@ -141,33 +151,22 @@ export async function createComicCheckoutSession(params: {
     },
     success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/comic?canceled=true`,
+    // Use automatic_payment_methods so Stripe picks the right methods
+    // for the customer's region without needing manual payment_method_types
+    automatic_payment_methods: {
+      enabled: true,
+    },
     billing_address_collection: 'auto',
     shipping_address_collection: {
       allowed_countries: [
-        'BE', 'NL', 'DE', 'FR', 'LU', 'GB', 'US', 'ES', 'IT', 'CH', 'AT', 'DK', 'SE', 'NO', 'FI', 'IE', 'PT', 'CA', 'AU', 'JP',
+        'BE', 'NL', 'DE', 'FR', 'LU', 'GB', 'US', 'ES', 'IT', 'CH', 'AT',
+        'DK', 'SE', 'NO', 'FI', 'IE', 'PT', 'CA', 'AU', 'JP',
       ],
     },
   };
 
-  // Attempt with card + bancontact + ideal; fall back gracefully
-  try {
-    const session = await stripe.checkout.sessions.create({
-      ...sessionConfig,
-      payment_method_types: ['card', 'bancontact', 'ideal'],
-    } as any);
-    return session;
-  } catch (err: any) {
-    const msg: string = err.message || '';
-    if (msg.includes('ideal') || msg.includes('payment_method_types')) {
-      console.warn('[StripeService] iDEAL not active; falling back to card + bancontact');
-      const session = await stripe.checkout.sessions.create({
-        ...sessionConfig,
-        payment_method_types: ['card', 'bancontact'],
-      } as any);
-      return session;
-    }
-    throw err;
-  }
+  const session = await stripe.checkout.sessions.create(sessionConfig);
+  return session;
 }
 
 export async function processCompletedCheckout(session: Stripe.Checkout.Session): Promise<ComicOrder> {
@@ -208,7 +207,7 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
   console.log(`[StripeService] Customer: ${name} <${email}>`);
   console.log(`[StripeService] Pass ID Granted: ${passId}`);
   console.log(`[StripeService] Wave 2 remaining inventory: ${inventory.available}/${inventory.total}`);
-  console.log(`[StripeService] Automated Confirmation Dispatched to: ${email} (cc: Odi@sillowmill.com)`);
+  console.log(`[StripeService] Confirmation dispatched to: ${email} (cc: Odi@sillowmill.com)`);
 
   return newOrder;
 }
