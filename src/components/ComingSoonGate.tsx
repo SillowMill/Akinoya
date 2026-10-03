@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
@@ -11,6 +11,44 @@ interface ComingSoonGateProps {
   backdropOnly?: boolean;
 }
 
+// Release Target: January 9, 2027 (00:00:00 CET)
+const TARGET_RELEASE_DATE = new Date('2027-01-09T00:00:00+01:00').getTime();
+
+interface CountdownTime {
+  days: string;
+  hours: string;
+  minutes: string;
+  seconds: string;
+  isComplete: boolean;
+}
+
+const calculateTimeRemaining = (): CountdownTime => {
+  const diff = TARGET_RELEASE_DATE - Date.now();
+
+  if (diff <= 0) {
+    return {
+      days: '00',
+      hours: '00',
+      minutes: '00',
+      seconds: '00',
+      isComplete: true,
+    };
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+
+  return {
+    days: String(days).padStart(2, '0'),
+    hours: String(hours).padStart(2, '0'),
+    minutes: String(minutes).padStart(2, '0'),
+    seconds: String(seconds).padStart(2, '0'),
+    isComplete: false,
+  };
+};
+
 export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
   onUnlockSuccess,
   onToggleBackdropMode,
@@ -21,6 +59,14 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [countdown, setCountdown] = useState<CountdownTime>(calculateTimeRemaining);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown(calculateTimeRemaining());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -110,7 +156,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
               }
             : {}
         }
-        className="relative bg-black/60 sm:bg-black/45 backdrop-blur-xl border border-white/15 rounded-2xl p-5 sm:p-8 md:p-9 lg:p-10 max-w-md md:max-w-lg lg:max-w-xl w-full mx-auto shadow-[0_8px_32px_0_rgba(0,0,0,0.7)] glow-cyan-sm overflow-hidden"
+        className="relative bg-black/60 sm:bg-black/45 backdrop-blur-xl border border-white/15 rounded-2xl p-5 sm:p-7 md:p-8 lg:p-9 max-w-md sm:max-w-lg md:max-w-xl w-full mx-auto shadow-[0_8px_32px_0_rgba(0,0,0,0.7)] glow-cyan-sm overflow-hidden"
       >
         {/* Subtle decorative celestial grid shimmer inside card */}
         <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-transparent to-blue-500/10 pointer-events-none" />
@@ -118,22 +164,30 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
 
         <div className="relative z-10 flex flex-col items-center text-center">
           {/* Header & Minimalist Badge */}
-          <div className="flex items-center justify-between w-full mb-3">
-            <span className="text-[10px] sm:text-xs font-mono tracking-[0.2em] uppercase text-cyan-300 border border-cyan-500/40 px-2.5 py-0.5 rounded-full bg-cyan-950/60 shadow-[0_0_12px_rgba(103,232,249,0.25)] flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              09.01.2027
-            </span>
+          <div className="flex items-start sm:items-center justify-between w-full mb-4 sm:mb-5 gap-2.5">
+            <div className="inline-flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1 rounded-xl sm:rounded-full bg-cyan-950/60 backdrop-blur-md border border-cyan-500/40 shadow-[0_0_14px_rgba(103,232,249,0.2)] text-[10px] sm:text-xs font-mono text-cyan-300">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.9)] shrink-0" />
+                <span className="font-semibold text-cyan-200 tracking-wider whitespace-nowrap">
+                  RELEASE DATE: 09.01.2027
+                </span>
+              </div>
+              <span className="hidden sm:inline text-cyan-500/40 select-none">|</span>
+              <span className="text-[9.5px] sm:text-[11px] font-mono tracking-widest text-cyan-300/90 tabular-nums whitespace-nowrap pl-3 sm:pl-0 font-medium">
+                [ T- {countdown.days}D : {countdown.hours}H : {countdown.minutes}M : {countdown.seconds}S ]
+              </span>
+            </div>
 
             {/* Quick toggle to see full background artwork without UI */}
             {onToggleBackdropMode && (
               <button
                 type="button"
                 onClick={onToggleBackdropMode}
-                className="flex items-center gap-1 text-[11px] font-mono text-white/50 hover:text-cyan-300 transition-colors cursor-pointer py-1 px-2 rounded hover:bg-white/5"
+                className="flex items-center gap-1.5 text-[11px] font-mono text-white/50 hover:text-cyan-300 transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 shrink-0 mt-0.5 sm:mt-0"
                 title="View the Äkinoya artwork in full screen"
               >
                 <Eye className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">Background</span>
+                <span className="hidden sm:inline">Background</span>
               </button>
             )}
           </div>
