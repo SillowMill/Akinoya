@@ -156,24 +156,25 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
               }
             : {}
         }
-        className="relative bg-black/60 sm:bg-black/45 backdrop-blur-xl border border-white/15 rounded-2xl p-5 sm:p-7 md:p-8 lg:p-9 max-w-md sm:max-w-lg md:max-w-xl w-full mx-auto shadow-[0_8px_32px_0_rgba(0,0,0,0.7)] glow-cyan-sm overflow-hidden"
+        className="relative bg-black/60 sm:bg-black/45 backdrop-blur-xl border border-white/15 rounded-2xl p-5 sm:p-7 md:p-8 lg:p-9 max-w-md sm:max-w-xl md:max-w-2xl w-full mx-auto shadow-[0_8px_32px_0_rgba(0,0,0,0.7)] glow-cyan-sm overflow-hidden"
       >
         {/* Subtle decorative celestial grid shimmer inside card */}
         <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-transparent to-blue-500/10 pointer-events-none" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/15 rounded-full blur-2xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col items-center text-center">
-          {/* Header & Minimalist Badge */}
-          <div className="flex items-start sm:items-center justify-between w-full mb-4 sm:mb-5 gap-2.5">
-            <div className="inline-flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1 rounded-xl sm:rounded-full bg-cyan-950/60 backdrop-blur-md border border-cyan-500/40 shadow-[0_0_14px_rgba(103,232,249,0.2)] text-[10px] sm:text-xs font-mono text-cyan-300">
+          {/* Header & Minimalist Controls */}
+          <div className="flex items-center justify-end sm:justify-between w-full mb-4 sm:mb-5 gap-3">
+            {/* Desktop Release Date Badge (Hidden on mobile) */}
+            <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 backdrop-blur-md border border-cyan-500/40 shadow-[0_0_14px_rgba(103,232,249,0.2)] text-[10.5px] md:text-xs font-mono text-cyan-300">
               <div className="flex items-center gap-1.5 shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.9)] shrink-0" />
                 <span className="font-semibold text-cyan-200 tracking-wider whitespace-nowrap">
                   RELEASE DATE: 09.01.2027
                 </span>
               </div>
-              <span className="hidden sm:inline text-cyan-500/40 select-none">|</span>
-              <span className="text-[9.5px] sm:text-[11px] font-mono tracking-widest text-cyan-300/90 tabular-nums whitespace-nowrap pl-3 sm:pl-0 font-medium">
+              <span className="text-cyan-500/40 select-none">|</span>
+              <span className="text-[10px] md:text-[11px] font-mono tracking-wider text-cyan-300/90 tabular-nums whitespace-nowrap font-medium">
                 [ T- {countdown.days}D : {countdown.hours}H : {countdown.minutes}M : {countdown.seconds}S ]
               </span>
             </div>
@@ -183,11 +184,11 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
               <button
                 type="button"
                 onClick={onToggleBackdropMode}
-                className="flex items-center gap-1.5 text-[11px] font-mono text-white/50 hover:text-cyan-300 transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 shrink-0 mt-0.5 sm:mt-0"
+                className="flex items-center gap-1.5 text-[11px] font-mono text-white/50 hover:text-cyan-300 transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 shrink-0"
                 title="View the Äkinoya artwork in full screen"
               >
                 <Eye className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Background</span>
+                <span>Background</span>
               </button>
             )}
           </div>
@@ -195,6 +196,21 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
           <h1 className="text-2xl sm:text-3xl font-display font-extrabold tracking-[0.16em] text-white/95 uppercase mb-1.5">
             SILLOW MILL
           </h1>
+
+          {/* Mobile Release Date Badge (Centered underneath title) */}
+          <div className="sm:hidden flex justify-center w-full my-3">
+            <div className="inline-flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl bg-cyan-950/60 backdrop-blur-md border border-cyan-500/40 shadow-[0_0_14px_rgba(103,232,249,0.2)] text-[10.5px] font-mono text-cyan-300 text-center">
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.9)] shrink-0" />
+                <span className="font-semibold text-cyan-200 tracking-wider">
+                  RELEASE DATE: 09.01.2027
+                </span>
+              </div>
+              <span className="text-[10px] font-mono tracking-wider text-cyan-300/90 tabular-nums font-medium">
+                [ T- {countdown.days}D : {countdown.hours}H : {countdown.minutes}M : {countdown.seconds}S ]
+              </span>
+            </div>
+          </div>
 
           <p className="text-xs sm:text-sm text-white/70 font-sans max-w-xs md:max-w-sm leading-relaxed mb-6">
             Enter your Äkinoya access code to unlock the portal.
