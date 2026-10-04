@@ -1070,7 +1070,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         </span>
                       </div>
                       <span
-                        className={`text-[10px] sm:text-xs font-mono px-2.5 py-1 rounded-full font-semibold inline-flex items-center gap-1.5 backdrop-blur-sm transition-all ${
+                        className={`text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-semibold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm transition-all ${
                           waveInventory.available > 0
                             ? 'text-emerald-300 bg-emerald-950/70 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
                             : 'text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
@@ -1085,8 +1085,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         />
                         <span>
                           {waveInventory.available > 0
-                            ? `[ AVAILABLE - ${waveInventory.available} / ${waveInventory.total} COPIES AVAILABLE ]`
-                            : `[ SOLD OUT - 0 / ${waveInventory.total} COPIES CLAIMED ]`}
+                            ? `AVAILABLE - ${waveInventory.available} / ${waveInventory.total} COPIES AVAILABLE`
+                            : `SOLD OUT - 0 / ${waveInventory.total} COPIES CLAIMED`}
                         </span>
                       </span>
                     </div>
