@@ -1069,8 +1069,25 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           2027 LIMITED COMIC DROP
                         </span>
                       </div>
-                      <span className="text-[10px] sm:text-xs font-mono text-amber-300 bg-amber-950/70 border border-amber-500/40 px-2.5 py-1 rounded-full font-semibold shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-                        [ SOLD OUT - 125 / 125 COPIES CLAIMED ]
+                      <span
+                        className={`text-[10px] sm:text-xs font-mono px-2.5 py-1 rounded-full font-semibold inline-flex items-center gap-1.5 backdrop-blur-sm transition-all ${
+                          waveInventory.available > 0
+                            ? 'text-emerald-300 bg-emerald-950/70 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                            : 'text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            waveInventory.available > 0
+                              ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]'
+                              : 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]'
+                          } animate-pulse shrink-0`}
+                        />
+                        <span>
+                          {waveInventory.available > 0
+                            ? `[ AVAILABLE - ${waveInventory.available} / ${waveInventory.total} COPIES AVAILABLE ]`
+                            : `[ SOLD OUT - 0 / ${waveInventory.total} COPIES CLAIMED ]`}
+                        </span>
                       </span>
                     </div>
 
