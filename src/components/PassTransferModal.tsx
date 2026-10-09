@@ -160,60 +160,48 @@ export const PassTransferModal: React.FC<PassTransferModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 16 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full max-w-xl bg-[#060a12]/95 border border-cyan-400/40 rounded-3xl p-5 sm:p-7 text-white shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(34,211,238,0.2)] my-8 overflow-hidden"
+          className="relative w-full max-w-lg bg-[#0a0d14] border border-white/10 rounded-2xl p-5 sm:p-6 text-white shadow-2xl my-8 overflow-hidden"
         >
-          {/* Ambient Cyber Grid Glow */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="absolute top-4 right-4 p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             title="Close modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
 
           {/* Header */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.25)] shrink-0">
-              <Key className="w-5 h-5 text-cyan-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-widest">
-                  OWNERSHIP PROTOCOL
-                </span>
-                <span className="text-white/20">·</span>
-                <span className="text-[10px] font-mono text-white/60">PASS #{tokenId}</span>
-              </div>
-              <h3 className="text-base sm:text-lg font-display font-bold text-white tracking-wide">
-                Digital Pass Transfer Protocol
-              </h3>
-            </div>
+          <div className="border-b border-white/10 pb-3 mb-4">
+            <h3 className="text-base font-display font-bold text-white tracking-wide">
+              Transfer Pass Ownership
+            </h3>
+            <p className="text-xs font-mono text-white/50 mt-0.5">
+              Secure single-use key generation for Pass #{tokenId}
+            </p>
           </div>
 
           {/* Mode Switcher Tabs */}
-          <div className="grid grid-cols-2 gap-2 p-1 bg-black/60 rounded-xl border border-white/10 mb-6">
+          <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/50 rounded-xl border border-white/10 mb-5">
             <button
               onClick={() => setActiveTab('transfer')}
-              className={`py-2 px-3 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
+              className={`py-1.5 px-3 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
                 activeTab === 'transfer'
-                  ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/40 shadow-[0_0_12px_rgba(34,211,238,0.2)]'
+                  ? 'bg-white/10 text-white font-semibold'
                   : 'text-white/50 hover:text-white'
               }`}
             >
-              Transfer Pass Ownership
+              Transfer Pass
             </button>
             <button
               onClick={() => setActiveTab('claim')}
-              className={`py-2 px-3 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
+              className={`py-1.5 px-3 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
                 activeTab === 'claim'
-                  ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/40 shadow-[0_0_12px_rgba(34,211,238,0.2)]'
+                  ? 'bg-white/10 text-white font-semibold'
                   : 'text-white/50 hover:text-white'
               }`}
             >
-              Claim Transferred Pass
+              Claim Pass
             </button>
           </div>
 
@@ -244,7 +232,7 @@ export const PassTransferModal: React.FC<PassTransferModalProps> = ({
                   <button
                     onClick={handleGenerateTransferKey}
                     disabled={isGenerating}
-                    className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-cyan-500 hover:bg-cyan-400 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.35)] disabled:opacity-50"
+                    className="w-full py-3 px-4 rounded-xl font-mono text-xs sm:text-sm font-semibold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                   >
                     {isGenerating ? (
                       <>
@@ -395,7 +383,7 @@ export const PassTransferModal: React.FC<PassTransferModalProps> = ({
               <button
                 type="submit"
                 disabled={isClaiming}
-                className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-cyan-500 hover:bg-cyan-400 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.35)] disabled:opacity-50 mt-2"
+                className="w-full py-3 px-4 rounded-xl font-mono text-xs sm:text-sm font-semibold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 mt-2"
               >
                 {isClaiming ? (
                   <>

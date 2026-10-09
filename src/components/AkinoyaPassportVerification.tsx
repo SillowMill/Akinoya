@@ -1,30 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import QRCode from 'qrcode';
 import confetti from 'canvas-confetti';
 import {
-  ShieldCheck,
-  ShieldAlert,
-  Sparkles,
-  Key,
   Copy,
   Check,
-  Globe,
-  Radio,
-  BookOpen,
-  AudioWaveform,
-  Vote,
-  QrCode,
-  ArrowRight,
   ArrowLeft,
-  UserCheck,
-  RefreshCw,
-  ExternalLink,
-  Layers,
-  Cpu,
-  Lock,
-  Unlock,
-  AlertTriangle,
+  AudioWaveform,
+  Key,
+  AlertCircle,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { useVipAccess, setDeviceSession } from '../context/VipAccessContext';
@@ -41,7 +25,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   onNavigateHome,
   onOpenVisualizerHub,
 }) => {
-  const { unlockVip, isVipUnlocked } = useVipAccess();
+  const { unlockVip } = useVipAccess();
 
   // Extract query params: token / id, enc (NTAG 424 DNA dynamic cipher), claim (transfer key)
   const [queryParams, setQueryParams] = useState<{
@@ -77,8 +61,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const [isValidating, setIsValidating] = useState<boolean>(true);
   const [isDnaAuthentic, setIsDnaAuthentic] = useState<boolean>(false);
   const [dnaError, setDnaError] = useState<string | null>(null);
-  const [statusText, setStatusText] = useState<string>('VERIFIED ORIGINAL / FOUNDING HOLDER');
-  const [tapCounter, setTapCounter] = useState<number>(1);
+  const [statusText, setStatusText] = useState<string>('VERIFIED');
 
   // Pass details
   const [passData, setPassData] = useState<{
@@ -111,7 +94,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     queryParams.claim ? 'claim' : 'transfer'
   );
 
-  // Registration Form state
+  // Registration Form state (inline)
   const [isRegistering, setIsRegistering] = useState(false);
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
@@ -119,19 +102,16 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const [regError, setRegError] = useState<string | null>(null);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
-  // Test dynamic tap generator
-  const [isGeneratingTestCipher, setIsGeneratingTestCipher] = useState(false);
-
   // Generate QR code for passport URL
   useEffect(() => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sillowmill.com';
     const passportUrl = `${origin}/verify/${activeToken}`;
     QRCode.toDataURL(passportUrl, {
       margin: 1,
-      width: 280,
+      width: 200,
       color: {
-        dark: '#22d3ee',
-        light: '#030712',
+        dark: '#ffffff',
+        light: '#070a0e',
       },
     })
       .then((url) => setQrDataUrl(url))
@@ -158,10 +138,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
       if (res.ok && data.valid) {
         setIsDnaAuthentic(Boolean(data.isAuthentic));
-        setStatusText(data.status || 'AUTHENTIC FOUNDING PASS VERIFIED');
-        if (typeof data.counter === 'number') {
-          setTapCounter(data.counter);
-        }
+        setStatusText(data.isAuthentic ? 'AUTHENTIC' : 'VERIFIED');
 
         if (data.pass) {
           setPassData(data.pass);
@@ -176,24 +153,24 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
         if (data.isAuthentic) {
           confetti({
-            particleCount: 65,
-            spread: 60,
+            particleCount: 50,
+            spread: 50,
             origin: { y: 0.5 },
-            colors: ['#22d3ee', '#34d399', '#38bdf8'],
+            colors: ['#22d3ee', '#34d399', '#ffffff'],
           });
         }
       } else {
         // Validation failed or cloned transmission detected!
         setIsDnaAuthentic(false);
-        setStatusText(data.status || 'INVALID / CLONED TRANSMISSION DETECTED');
-        setDnaError(data.message || 'INVALID / CLONED TRANSMISSION DETECTED');
+        setStatusText('INVALID / CLONED');
+        setDnaError(data.message || 'Invalid or cloned transmission detected.');
         soundManager.playError();
       }
     } catch (err: any) {
       console.error('Verification error:', err);
       setIsDnaAuthentic(false);
-      setStatusText('INVALID / CLONED TRANSMISSION DETECTED');
-      setDnaError('Network or cryptographic gateway offline. Re-transmission required.');
+      setStatusText('OFFLINE / RE-TRY');
+      setDnaError('Cryptographic gateway unreachable. Please re-try.');
       soundManager.playError();
     } finally {
       setIsValidating(false);
@@ -216,7 +193,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const handleRegisterHolder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regName.trim()) {
-      setRegError('Please provide your name or collector handle.');
+      setRegError('Please provide your name or handle.');
       return;
     }
 
@@ -243,7 +220,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         setTimeout(() => {
           setRegSuccess(false);
           setShowRegistrationForm(false);
-        }, 2200);
+        }, 1800);
       } else {
         throw new Error(data.message || 'Registration failed');
       }
@@ -256,495 +233,220 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     }
   };
 
-  // Diagnostic Test Actions (Simulate authentic tap vs cloned tap)
-  const handleSimulateAuthenticTap = async () => {
-    setIsGeneratingTestCipher(true);
-    try {
-      const res = await fetch(`/api/nfc/generate-test-cipher?token=${encodeURIComponent(activeToken)}`);
-      const data = await res.json();
-      if (res.ok && data.cipher) {
-        setQueryParams((prev) => ({ ...prev, enc: data.cipher }));
-        executeVerification(activeToken, data.cipher, null);
-      }
-    } catch (err) {
-      console.warn('Simulate tap error:', err);
-    } finally {
-      setIsGeneratingTestCipher(false);
-    }
-  };
-
-  const handleSimulateClonedTap = () => {
-    setQueryParams((prev) => ({ ...prev, enc: 'cloned' }));
-    executeVerification(activeToken, 'cloned', null);
-  };
-
   return (
-    <div className="relative z-20 w-full max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-10 text-white font-sans">
-      {/* Top Breadcrumb & Navigation */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 sm:mb-8 pb-4 border-b border-white/10">
+    <div className="relative z-20 w-full max-w-lg mx-auto px-4 py-8 sm:py-12 text-white font-sans">
+      {/* Top Simple Back Navigation */}
+      <div className="flex items-center justify-between mb-5">
         <button
           onClick={onNavigateHome}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-cyan-300 hover:text-white transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 text-xs font-mono text-white/60 hover:text-white transition-colors cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4 text-cyan-400" />
-          <span>Return to Äkinoya Portal</span>
+          <ArrowLeft className="w-3.5 h-3.5 text-white/50" />
+          <span>Back to Portal</span>
         </button>
-
-        <div className="flex items-center gap-2 font-mono text-xs">
-          <span className="text-white/40">PROTOCOL:</span>
-          <span className="px-2.5 py-0.5 rounded-full bg-cyan-950 border border-cyan-400/40 text-cyan-300 font-bold text-[11px] shadow-[0_0_10px_rgba(34,211,238,0.2)]">
-            NTAG 424 DNA AES-128
-          </span>
-        </div>
+        <span className="text-[11px] font-mono text-white/30 uppercase tracking-wider">
+          Äkinoya 2027
+        </span>
       </div>
 
-      {/* Main Verification Card / HUD Passport Certificate */}
+      {/* Single Streamlined Central Card */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-[#060b14]/95 via-[#03060c]/98 to-[#020306] border border-cyan-400/40 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_50px_rgba(34,211,238,0.18)] p-5 sm:p-8 lg:p-10"
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="rounded-2xl bg-[#0a0d14] border border-white/10 p-5 sm:p-7 space-y-5 shadow-2xl"
       >
-        {/* Holographic Watermark Sheen */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Status Alert Banner if Cloned/Invalid or Authentic */}
-        {dnaError ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-6 p-4 sm:p-5 rounded-2xl bg-rose-950/60 border border-rose-500/50 text-rose-200 flex items-start gap-3.5 shadow-[0_0_30px_rgba(244,63,94,0.3)]"
-          >
-            <ShieldAlert className="w-6 h-6 text-rose-400 shrink-0 mt-0.5 animate-pulse" />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs sm:text-sm font-mono font-bold tracking-wider text-rose-300 uppercase mb-1">
-                SECURITY ALERT — INVALID / CLONED TRANSMISSION DETECTED
-              </div>
-              <p className="text-xs font-mono text-rose-200/90 leading-relaxed">
-                {dnaError}
-              </p>
-              <div className="mt-2 text-[11px] font-mono text-rose-400/80">
-                Tap counter rollback or cryptographic signature mismatch detected. Access to gated sectors restricted.
-              </div>
-            </div>
-          </motion.div>
-        ) : isDnaAuthentic ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-6 p-4 sm:p-5 rounded-2xl bg-emerald-950/60 border border-emerald-400/50 text-emerald-200 flex items-center justify-between gap-3 shadow-[0_0_30px_rgba(16,185,129,0.25)]"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-950 border border-emerald-400/50 flex items-center justify-center text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                <ShieldCheck className="w-5 h-5 text-emerald-400 animate-pulse" />
-              </div>
-              <div>
-                <div className="text-xs sm:text-sm font-mono font-bold tracking-wider text-emerald-300 uppercase">
-                  AUTHENTIC FOUNDING PASS VERIFIED
-                </div>
-                <div className="text-[11px] font-mono text-emerald-200/80">
-                  Dynamic NXP NTAG 424 DNA transmission confirmed · Hardware Tap #{tapCounter} · Single-Device Secured
-                </div>
-              </div>
-            </div>
-
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-mono text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              GENUINE PASS
-            </span>
-          </motion.div>
-        ) : null}
-
-        {/* Certificate Header Row */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-cyan-500/20">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] sm:text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest">
-                ÄKINOYA DIGITAL PASSPORT & CERTIFICATE
-              </span>
-              <span className="text-white/20">·</span>
-              <span className="text-[10px] sm:text-xs font-mono text-white/50">GENESIS FOUNDING PROTOCOL</span>
-            </div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-extrabold tracking-wide text-white">
-              Official Digital Passport HUD
-            </h1>
-          </div>
-
-          {/* Action buttons (Transfer & Visualizer Hub) */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={() => {
-                setTransferModalMode('transfer');
-                setShowTransferModal(true);
-              }}
-              className="px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-300 hover:text-white font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_12px_rgba(34,211,238,0.15)]"
-            >
-              <Key className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Transfer Pass Ownership</span>
-            </button>
-
-            {onOpenVisualizerHub && (
-              <button
-                onClick={onOpenVisualizerHub}
-                className="px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_15px_rgba(34,211,238,0.3)]"
-              >
-                <AudioWaveform className="w-3.5 h-3.5 text-black" />
-                <span>Open Visualizer Hub →</span>
-              </button>
-            )}
-          </div>
+        {/* Clean Main Title */}
+        <div className="border-b border-white/10 pb-4">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
+            Official Digital Passport
+          </h1>
+          <p className="text-xs font-mono text-white/50 mt-1">
+            Founding Holder Verification Certificate
+          </p>
         </div>
 
-        {/* Passport Grid: Details + Hologram QR */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 py-6 items-start">
-          {/* Left Column: Metadata & Verified Credentials */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* Core Verification Badges */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* Token ID Card */}
-              <div className="p-4 rounded-2xl bg-black/60 border border-cyan-500/30 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider">
-                    UNIQUE TOKEN ID
-                  </span>
-                  <button
-                    onClick={handleCopyToken}
-                    className="p-1 rounded text-cyan-400 hover:text-white transition-colors cursor-pointer"
-                    title="Copy Token ID"
-                  >
-                    {copiedToken ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-                <div className="text-base sm:text-lg font-mono font-extrabold text-white tracking-wider">
-                  {passData.tokenId}
-                </div>
-                <div className="text-[10px] font-mono text-white/50">
-                  Cryptographically Bound Genesis Pass
-                </div>
-              </div>
-
-              {/* Ownership Status Card */}
-              <div className="p-4 rounded-2xl bg-black/60 border border-emerald-500/30 space-y-1.5">
-                <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>OWNERSHIP STATUS</span>
-                </span>
-                <div className="text-sm sm:text-base font-display font-bold text-white tracking-wide truncate">
-                  {dnaError ? 'INVALID / CLONED TRANSMISSION' : statusText}
-                </div>
-                <div className="text-[10px] font-mono text-emerald-300/80">
-                  {dnaError ? 'Access Suspended' : 'Whitelisted Tier I Original'}
-                </div>
-              </div>
+        {/* Security Warning if Cloned/Invalid */}
+        {dnaError && (
+          <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-200 text-xs font-mono space-y-1">
+            <div className="font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>INVALID / CLONED TRANSMISSION DETECTED</span>
             </div>
+            <p className="text-[11px] text-rose-200/80 leading-relaxed">
+              {dnaError}
+            </p>
+          </div>
+        )}
 
-            {/* Sector & Coordinates Metadata Grid */}
-            <div className="p-5 rounded-2xl bg-black/40 border border-white/10 space-y-3.5">
-              <div className="text-xs font-mono text-cyan-300 font-bold tracking-wider uppercase flex items-center gap-2">
-                <Globe className="w-4 h-4 text-cyan-400" />
-                <span>Sector Coordinates & Issue Metadata</span>
-              </div>
+        {/* Unified Details List (Flat, clean, vertical key-value list) */}
+        <div className="space-y-2">
+          <div className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase px-1">
+            DETAILS
+          </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                <div>
-                  <div className="text-[10px] text-white/40">SECTOR</div>
-                  <div className="font-semibold text-white mt-0.5">{passData.sector}</div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-white/40">ISSUE DATE</div>
-                  <div className="font-semibold text-white mt-0.5">{passData.issueDate}</div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-white/40">CORE COORDINATES</div>
-                  <div className="font-semibold text-cyan-300 mt-0.5">{passData.coordinates}</div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-white/40">EDITION STATUS</div>
-                  <div className="font-semibold text-emerald-400 mt-0.5">{passData.edition}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Registered Holder Badge & Form */}
-            <div className="p-5 rounded-2xl bg-black/50 border border-cyan-500/30 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-mono text-cyan-300 font-bold">
-                  <UserCheck className="w-4 h-4 text-cyan-400" />
-                  <span>REGISTERED DIGITAL HOLDER</span>
-                </div>
-
+          <div className="divide-y divide-white/5 rounded-xl bg-black/40 border border-white/5 px-4 font-mono text-xs">
+            {/* Token ID */}
+            <div className="py-2.5 flex items-center justify-between gap-3">
+              <span className="text-white/45">ID</span>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-semibold">{passData.tokenId}</span>
                 <button
-                  onClick={() => setShowRegistrationForm(!showRegistrationForm)}
-                  className="text-[11px] font-mono text-cyan-400 hover:text-white underline cursor-pointer"
+                  onClick={handleCopyToken}
+                  className="p-1 text-white/40 hover:text-white transition-colors cursor-pointer"
+                  title="Copy Token ID"
                 >
-                  {showRegistrationForm ? 'Cancel' : 'Register / Update'}
-                </button>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-cyan-950/40 rounded-xl border border-cyan-500/20">
-                <div>
-                  <div className="text-sm font-display font-bold text-white">
-                    {passData.ownerName}
-                  </div>
-                  {passData.ownerEmail && (
-                    <div className="text-xs font-mono text-white/50">{passData.ownerEmail}</div>
+                  {copiedToken ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
                   )}
-                </div>
-
-                <div className="text-[10px] font-mono text-cyan-300/80 px-2 py-1 rounded bg-black/60 border border-cyan-400/30 self-start sm:self-auto">
-                  {passData.registeredAt
-                    ? `Registered on ${new Date(passData.registeredAt).toLocaleDateString()}`
-                    : 'Unclaimed Identity / Anonymous Pass'}
-                </div>
-              </div>
-
-              {/* Collapsible Registration Form */}
-              <AnimatePresence>
-                {showRegistrationForm && (
-                  <motion.form
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    onSubmit={handleRegisterHolder}
-                    className="pt-3 border-t border-white/10 space-y-3 overflow-hidden"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-mono text-cyan-300 mb-1">
-                          HOLDER NAME / DISPLAY HANDLE *
-                        </label>
-                        <input
-                          type="text"
-                          value={regName}
-                          onChange={(e) => setRegName(e.target.value)}
-                          placeholder="e.g. Odi or BelgianCollector"
-                          className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-mono text-white/60 mb-1">
-                          EMAIL (OPTIONAL)
-                        </label>
-                        <input
-                          type="email"
-                          value={regEmail}
-                          onChange={(e) => setRegEmail(e.target.value)}
-                          placeholder="holder@example.com"
-                          className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    {regError && (
-                      <div className="text-xs font-mono text-rose-400">{regError}</div>
-                    )}
-                    {regSuccess && (
-                      <div className="text-xs font-mono text-emerald-400">
-                        Holder identity successfully bound to Pass #{passData.tokenId}.
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={isRegistering}
-                      className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-mono font-bold cursor-pointer disabled:opacity-50"
-                    >
-                      {isRegistering ? 'SAVING...' : 'SAVE & BIND HOLDER IDENTITY'}
-                    </button>
-                  </motion.form>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Holder Privileges Interactive Grid */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-2 text-xs font-mono text-cyan-300 font-bold uppercase">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
-                <span>Founding Holder Entitlements & Claim Status</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* 1. Graphic Novel */}
-                <div className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-1.5 hover:border-cyan-500/30 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-cyan-400 font-semibold flex items-center gap-1">
-                      <BookOpen className="w-3.5 h-3.5" />
-                      <span>GRAPHIC NOVEL</span>
-                    </span>
-                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-950 border border-emerald-400/40 text-emerald-300">
-                      CLAIMABLE
-                    </span>
-                  </div>
-                  <div className="text-xs font-display font-bold text-white">
-                    Sillow Mill — Bingäa (Collector's Graphic Novel)
-                  </div>
-                  <p className="text-[11px] font-mono text-white/50 leading-relaxed">
-                    170gsm archival paper with bioluminescent foil stamping. Detailed Leuven origin story.
-                  </p>
-                </div>
-
-                {/* 2. Visualizers */}
-                <div className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-1.5 hover:border-cyan-500/30 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-cyan-400 font-semibold flex items-center gap-1">
-                      <AudioWaveform className="w-3.5 h-3.5" />
-                      <span>VISUALIZERS</span>
-                    </span>
-                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-950 border border-emerald-400/40 text-emerald-300">
-                      11 TRACKS ACTIVE
-                    </span>
-                  </div>
-                  <div className="text-xs font-display font-bold text-white">
-                    Äkinoya Visualizer Hub Access
-                  </div>
-                  <p className="text-[11px] font-mono text-white/50 leading-relaxed">
-                    Unlocked telemetry streams and audio sector logs across all 11 project tracks.
-                  </p>
-                </div>
-
-                {/* 3. Unreleased Audio */}
-                <div className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-1.5 hover:border-cyan-500/30 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-cyan-400 font-semibold flex items-center gap-1">
-                      <Radio className="w-3.5 h-3.5" />
-                      <span>UNRELEASED AUDIO</span>
-                    </span>
-                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-950 border border-cyan-400/40 text-cyan-300">
-                      PRIORITY ACCESS
-                    </span>
-                  </div>
-                  <div className="text-xs font-display font-bold text-white">
-                    Sector 04 Acoustic Masters Vault
-                  </div>
-                  <p className="text-[11px] font-mono text-white/50 leading-relaxed">
-                    Direct access to unreleased soundscapes and early masters prior to streaming launch.
-                  </p>
-                </div>
-
-                {/* 4. Governance */}
-                <div className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-1.5 hover:border-cyan-500/30 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-cyan-400 font-semibold flex items-center gap-1">
-                      <Vote className="w-3.5 h-3.5" />
-                      <span>COUNCIL GOVERNANCE</span>
-                    </span>
-                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-950 border border-cyan-400/40 text-cyan-300">
-                      WHITELISTED
-                    </span>
-                  </div>
-                  <div className="text-xs font-display font-bold text-white">
-                    Universe Canon Voting Ballot
-                  </div>
-                  <p className="text-[11px] font-mono text-white/50 leading-relaxed">
-                    Direct ballot influence over universe lore, narrative character decisions, and drops.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Holographic QR Code & NFC Encryption Engine HUD */}
-          <div className="lg:col-span-4 space-y-5 flex flex-col items-center">
-            {/* Holographic Dynamic QR Card */}
-            <div className="w-full max-w-[280px] p-4 rounded-2xl bg-black/80 border border-cyan-400/40 shadow-[0_0_25px_rgba(34,211,238,0.2)] flex flex-col items-center text-center space-y-3">
-              <div className="flex items-center justify-between w-full text-[10px] font-mono text-cyan-300 font-bold">
-                <span>DIGITAL PASSPORT QR</span>
-                <span className="text-emerald-400">ACTIVE</span>
-              </div>
-
-              {qrDataUrl ? (
-                <div className="relative p-2 rounded-xl bg-black border border-cyan-500/30 shadow-[inset_0_0_15px_rgba(34,211,238,0.15)]">
-                  <img
-                    src={qrDataUrl}
-                    alt="Äkinoya Passport QR"
-                    className="w-48 h-48 rounded-lg"
-                  />
-                  {/* Glowing scanline */}
-                  <div className="absolute inset-x-2 h-0.5 bg-cyan-400/60 shadow-[0_0_8px_rgba(34,211,238,1)] animate-bounce pointer-events-none" />
-                </div>
-              ) : (
-                <div className="w-48 h-48 flex items-center justify-center text-xs font-mono text-white/40">
-                  Generating QR...
-                </div>
-              )}
-
-              <div className="text-[10px] font-mono text-white/50 leading-relaxed">
-                Scan with any NFC/Camera device to authenticate this passport.
-              </div>
-            </div>
-
-            {/* NXP NTAG 424 DNA Telemetry HUD Card */}
-            <div className="w-full max-w-[280px] p-4 rounded-2xl bg-black/70 border border-white/10 space-y-2.5 text-xs font-mono">
-              <div className="text-[10px] font-bold text-cyan-300 uppercase flex items-center gap-1.5">
-                <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-                <span>NTAG 424 DNA Telemetry</span>
-              </div>
-
-              <div className="space-y-1.5 text-[11px] text-white/70">
-                <div className="flex justify-between">
-                  <span className="text-white/40">Chip Engine:</span>
-                  <span className="text-cyan-300 font-semibold">SUN AES-128</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/40">Replay Defense:</span>
-                  <span className="text-emerald-400 font-semibold">Monotonic Counter</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/40">Hardware Tap:</span>
-                  <span className="text-white">#{tapCounter}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/40">Session Binding:</span>
-                  <span className="text-cyan-300">Single-Device Lock</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Diagnostic / Testing Controls Panel */}
-            <div className="w-full max-w-[280px] p-3.5 rounded-2xl bg-cyan-950/20 border border-cyan-500/20 space-y-2 text-center">
-              <div className="text-[10px] font-mono text-white/40 uppercase">
-                TEST & SIMULATION SUITE
-              </div>
-              <div className="grid grid-cols-2 gap-1.5">
-                <button
-                  type="button"
-                  onClick={handleSimulateAuthenticTap}
-                  disabled={isGeneratingTestCipher}
-                  className="py-1.5 px-2 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-[10px] font-mono cursor-pointer disabled:opacity-50"
-                  title="Simulate authentic dynamic AES-128 NFC tap"
-                >
-                  {isGeneratingTestCipher ? 'Testing...' : 'Simulate Valid Tap'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSimulateClonedTap}
-                  className="py-1.5 px-2 rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 text-[10px] font-mono cursor-pointer"
-                  title="Simulate cloned / counterfeit transmission"
-                >
-                  Simulate Clone
                 </button>
               </div>
+            </div>
+
+            {/* Status */}
+            <div className="py-2.5 flex items-center justify-between gap-3">
+              <span className="text-white/45">STATUS</span>
+              <span
+                className={`font-semibold ${
+                  dnaError ? 'text-rose-400' : 'text-emerald-400'
+                }`}
+              >
+                {dnaError ? 'INVALID / CLONED' : statusText}
+              </span>
+            </div>
+
+            {/* Edition */}
+            <div className="py-2.5 flex items-center justify-between gap-3">
+              <span className="text-white/45">EDITION</span>
+              <span className="text-white/90 font-medium">{passData.edition}</span>
+            </div>
+
+            {/* Holder */}
+            <div className="py-2.5 flex items-center justify-between gap-3">
+              <span className="text-white/45">HOLDER</span>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-medium">{passData.ownerName}</span>
+                <button
+                  type="button"
+                  onClick={() => setShowRegistrationForm(!showRegistrationForm)}
+                  className="text-[10px] text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                >
+                  {showRegistrationForm ? 'Cancel' : 'Edit'}
+                </button>
+              </div>
+            </div>
+
+            {/* Issue Date */}
+            <div className="py-2.5 flex items-center justify-between gap-3">
+              <span className="text-white/45">ISSUE DATE</span>
+              <span className="text-white/80">{passData.issueDate}</span>
+            </div>
+
+            {/* Section / Sector */}
+            <div className="py-2.5 flex items-center justify-between gap-3">
+              <span className="text-white/45">SECTION</span>
+              <span className="text-white/80">{passData.sector}</span>
+            </div>
+
+            {/* Coordinates */}
+            <div className="py-2.5 flex items-center justify-between gap-3">
+              <span className="text-white/45">COORDINATES</span>
+              <span className="text-white/80">{passData.coordinates}</span>
             </div>
           </div>
         </div>
 
-        {/* Bottom Gateway Access Row */}
-        <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs font-mono text-white/40 text-center sm:text-left">
-            <span>Enterprise Registry: BE 1041.720.513 · Sector 04 Archives Locked</span>
-          </div>
+        {/* Inline Simple Holder Registration Form (if user clicks Edit) */}
+        <AnimatePresence>
+          {showRegistrationForm && (
+            <motion.form
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              onSubmit={handleRegisterHolder}
+              className="p-4 rounded-xl bg-black/60 border border-white/10 space-y-3 font-mono text-xs overflow-hidden"
+            >
+              <div className="text-[11px] font-bold text-white/70 uppercase">
+                Update Holder Name
+              </div>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  placeholder="Holder name or handle"
+                  className="w-full bg-black border border-white/20 focus:border-cyan-400 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                />
+                <input
+                  type="email"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  placeholder="Email (optional)"
+                  className="w-full bg-black border border-white/20 focus:border-cyan-400 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                />
+              </div>
 
+              {regError && <div className="text-[11px] text-rose-400">{regError}</div>}
+              {regSuccess && <div className="text-[11px] text-emerald-400">Holder details updated.</div>}
+
+              <button
+                type="submit"
+                disabled={isRegistering}
+                className="w-full py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold cursor-pointer disabled:opacity-50"
+              >
+                {isRegistering ? 'Saving...' : 'Save Holder Name'}
+              </button>
+            </motion.form>
+          )}
+        </AnimatePresence>
+
+        {/* QR Code Standalone Clean Card */}
+        <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col items-center justify-center space-y-2">
+          {qrDataUrl ? (
+            <img
+              src={qrDataUrl}
+              alt="Digital Passport QR"
+              className="w-32 h-32 rounded-lg bg-[#070a0e] p-1 border border-white/10"
+            />
+          ) : (
+            <div className="w-32 h-32 flex items-center justify-center text-xs font-mono text-white/30">
+              Loading QR...
+            </div>
+          )}
+          <span className="text-[10px] font-mono text-white/40">
+            Scan to authenticate passport
+          </span>
+        </div>
+
+        {/* Merged Prioritized Button Stack */}
+        <div className="space-y-2.5 pt-1">
+          {/* 1. Primary (Glow / Solid Accent): Open Visualizer Hub */}
           <button
-            onClick={onNavigateHome}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-mono font-bold text-xs sm:text-sm tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.35)] transition-all"
+            onClick={() => {
+              if (onOpenVisualizerHub) {
+                onOpenVisualizerHub();
+              } else {
+                onNavigateHome();
+              }
+            }}
+            className="w-full py-3 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.35)]"
           >
-            <span>ENTER ÄKINOYA VIP PORTAL</span>
-            <ArrowRight className="w-4 h-4 text-black" />
+            <AudioWaveform className="w-4 h-4 text-black" />
+            <span>Open Visualizer Hub</span>
+          </button>
+
+          {/* 2. Secondary (Outline): Transfer Pass Ownership */}
+          <button
+            onClick={() => {
+              setTransferModalMode('transfer');
+              setShowTransferModal(true);
+            }}
+            className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-semibold text-white/80 hover:text-white bg-transparent hover:bg-white/5 border border-white/15 hover:border-white/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
+          >
+            <Key className="w-3.5 h-3.5 text-white/60" />
+            <span>Transfer Pass Ownership</span>
           </button>
         </div>
       </motion.div>
