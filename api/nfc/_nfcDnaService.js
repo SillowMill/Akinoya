@@ -72,6 +72,9 @@ export function loadStore() {
       const data = JSON.parse(fs.readFileSync(TMP_FILE, 'utf8'));
       if (data && data.passes) {
         _store = data;
+        _store.claimedKeys = Array.isArray(_store.claimedKeys) ? _store.claimedKeys : [];
+        _store.transferKeys = _store.transferKeys || {};
+        _store.passes = _store.passes || {};
         return _store;
       }
     }
@@ -84,10 +87,17 @@ export function loadStore() {
       const data = JSON.parse(fs.readFileSync(LOCAL_FILE, 'utf8'));
       if (data && data.passes) {
         _store = data;
+        _store.claimedKeys = Array.isArray(_store.claimedKeys) ? _store.claimedKeys : [];
+        _store.transferKeys = _store.transferKeys || {};
+        _store.passes = _store.passes || {};
         return _store;
       }
     }
   } catch {}
+
+  _store.claimedKeys = Array.isArray(_store.claimedKeys) ? _store.claimedKeys : [];
+  _store.transferKeys = _store.transferKeys || {};
+  _store.passes = _store.passes || {};
 
   if (!_store.passes['AKN-VIP-2027-X0914']) {
     _store.passes['AKN-VIP-2027-X0914'] = createDefaultPassRecord('AKN-VIP-2027-X0914');
@@ -262,13 +272,13 @@ export function generateTransferKey(tokenId, deviceId) {
   loadStore();
   const pass = getPassRecord(tokenId);
 
-  const rand = crypto.randomBytes(6).toString('hex').toUpperCase();
-  const keyPart1 = rand.slice(0, 4);
-  const keyPart2 = rand.slice(4, 8);
-  const keyPart3 = rand.slice(8, 12);
-  const transferKey = `TRF-AKN-${keyPart1}-${keyPart2}-${keyPart3}`;
+  const expiresAtMs = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const expiresAt = new Date(expiresAtMs).toISOString();
+  const nonce = crypto.randomBytes(4).toString('hex').toUpperCase();
 
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const dataPayload = Buffer.from(`${pass.normalizedId}|${expiresAtMs}|${nonce}`).toString('base64url');
+  const sig = crypto.createHmac('sha256', AES_MASTER_KEY).update(dataPayload).digest('hex').slice(0, 8).toUpperCase();
+  const transferKey = `TRF-AKN-${dataPayload}-${sig}`;
 
   pass.activeTransferKey = {
     key: transferKey,
@@ -297,10 +307,62 @@ export function generateTransferKey(tokenId, deviceId) {
 
 export function claimTransferKey(transferKey, newOwnerName, newOwnerEmail, newDeviceId) {
   loadStore();
-  const cleanKey = transferKey.trim().toUpperCase();
+  const cleanKey = transferKey.trim();
 
-  const lookup = _store.transferKeys[cleanKey];
-  if (!lookup) {
+  _store.claimedKeys = _store.claimedKeys || [];
+  if (_store.claimedKeys.includes(cleanKey)) {
+    return {
+      success: false,
+      error: 'ALREADY_CLAIMED',
+      message: 'This transfer key has already been claimed and redeemed.',
+    };
+  }
+
+  let targetTokenId = null;
+
+  // 1. Check local lookup table
+  if (_store.transferKeys[cleanKey]) {
+    const lookup = _store.transferKeys[cleanKey];
+    if (new Date(lookup.expiresAt).getTime() < Date.now()) {
+      delete _store.transferKeys[cleanKey];
+      saveStore();
+      return {
+        success: false,
+        error: 'EXPIRED_TRANSFER_KEY',
+        message: 'This transfer key has expired. Please request a new key.',
+      };
+    }
+    targetTokenId = lookup.tokenId;
+    delete _store.transferKeys[cleanKey];
+  } else if (cleanKey.startsWith('TRF-AKN-')) {
+    // 2. Cryptographic HMAC validation (cross-serverless verification)
+    const stripped = cleanKey.replace(/^TRF-AKN-/, '');
+    const lastDash = stripped.lastIndexOf('-');
+    if (lastDash > 0) {
+      const dataPayload = stripped.slice(0, lastDash);
+      const providedSig = stripped.slice(lastDash + 1).toUpperCase();
+      const expectedSig = crypto.createHmac('sha256', AES_MASTER_KEY).update(dataPayload).digest('hex').slice(0, 8).toUpperCase();
+
+      if (providedSig === expectedSig) {
+        try {
+          const [tId, expMsStr] = Buffer.from(dataPayload, 'base64url').toString('utf8').split('|');
+          const expMs = parseInt(expMsStr, 10);
+          if (Date.now() > expMs) {
+            return {
+              success: false,
+              error: 'EXPIRED_TRANSFER_KEY',
+              message: 'This transfer key has expired. Please request a new key.',
+            };
+          }
+          targetTokenId = tId;
+        } catch {
+          // Decode error
+        }
+      }
+    }
+  }
+
+  if (!targetTokenId) {
     return {
       success: false,
       error: 'INVALID_TRANSFER_KEY',
@@ -308,17 +370,7 @@ export function claimTransferKey(transferKey, newOwnerName, newOwnerEmail, newDe
     };
   }
 
-  if (new Date(lookup.expiresAt).getTime() < Date.now()) {
-    delete _store.transferKeys[cleanKey];
-    saveStore();
-    return {
-      success: false,
-      error: 'EXPIRED_TRANSFER_KEY',
-      message: 'This transfer key has expired. Please request a new key.',
-    };
-  }
-
-  const pass = getPassRecord(lookup.tokenId);
+  const pass = getPassRecord(targetTokenId);
   const previousOwner = pass.ownerName;
   pass.ownerName = newOwnerName.trim() || 'New Founding Holder';
   pass.ownerEmail = newOwnerEmail ? newOwnerEmail.trim().toLowerCase() : null;
@@ -326,7 +378,7 @@ export function claimTransferKey(transferKey, newOwnerName, newOwnerEmail, newDe
   pass.boundDeviceId = newDeviceId || 'NEW_DEVICE';
   pass.activeTransferKey = null;
 
-  delete _store.transferKeys[cleanKey];
+  _store.claimedKeys.push(cleanKey);
   saveStore();
 
   return {
