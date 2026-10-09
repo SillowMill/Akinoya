@@ -9,6 +9,7 @@ export const HOLDER_NAME_KEY = 'akinoya_holder_name';
 export const VIP_ROUTE_ACTIVE_KEY = 'akinoya_vip_route_active';
 const HOLDER_EVENT = 'akinoya-holder-updated';
 export const HOLDER_NAME_MAX_LENGTH = 40;
+export const TOTAL_EDITION_LIMIT = 100;
 const PASS_ID_PATTERNS = [
   /^AKN-VIP-\d{4}-[A-Z]\d{4}$/, // AKN-VIP-2027-X0914
   /^AKN-\d{4}$/, // AKN-9941

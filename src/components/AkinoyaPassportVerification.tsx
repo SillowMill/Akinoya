@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import QRCode from 'qrcode';
 import confetti from 'canvas-confetti';
 import {
   Copy,
@@ -95,7 +94,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     registeredAt: string | null;
   }>({
     tokenId: `#${activeToken}`,
-    edition: '1 of 125',
+    edition: '1 of 100',
     editionNumber: 1,
     sector: 'Sector 04 (Leuven Origin)',
     issueDate: '09.01.2027',
@@ -107,7 +106,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
   // UI helpers
   const [copiedToken, setCopiedToken] = useState(false);
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [showTransferModal, setShowTransferModal] = useState(Boolean(queryParams.claim));
   const [transferModalMode, setTransferModalMode] = useState<'transfer' | 'claim'>(
     queryParams.claim ? 'claim' : 'transfer'
@@ -120,22 +118,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const [regSuccess, setRegSuccess] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
-
-  // Generate QR code for passport URL
-  useEffect(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sillowmill.com';
-    const passportUrl = `${origin}/verify/${activeToken}`;
-    QRCode.toDataURL(passportUrl, {
-      margin: 1,
-      width: 200,
-      color: {
-        dark: '#ffffff',
-        light: '#070a0e',
-      },
-    })
-      .then((url) => setQrDataUrl(url))
-      .catch((err) => console.warn('QR code gen error:', err));
-  }, [activeToken]);
 
   // Execute verification against server-side NTAG 424 DNA engine
   const executeVerification = async (token: string, enc: string | null, cmac: string | null) => {
@@ -320,9 +302,9 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   };
 
   return (
-    <div className="relative z-20 w-full max-w-lg mx-auto px-4 py-8 sm:py-12 text-white font-sans">
+    <div className="relative z-20 w-full max-w-lg mx-auto px-3 sm:px-4 py-5 sm:py-10 text-white font-sans">
       {/* Top Simple Back Navigation */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-3.5 sm:mb-5">
         <button
           onClick={() => {
             if (isClaimed && onOpenVisualizerHub) {
@@ -336,7 +318,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           <ArrowLeft className="w-3.5 h-3.5 text-white/50" />
           <span>Back to Portal</span>
         </button>
-        <span className="text-[11px] font-mono text-white/30 uppercase tracking-wider">
+        <span className="text-[10px] sm:text-[11px] font-mono text-white/30 uppercase tracking-wider">
           Äkinoya 2027
         </span>
       </div>
@@ -346,14 +328,14 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-2xl bg-[#0a0d14] border border-white/10 p-5 sm:p-7 space-y-5 shadow-2xl"
+        className="rounded-2xl bg-[#0a0d14] border border-white/10 p-4 sm:p-7 space-y-4 sm:space-y-5 shadow-2xl"
       >
         {/* Clean Main Title */}
-        <div className="border-b border-white/10 pb-4">
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
+        <div className="border-b border-white/10 pb-3 sm:pb-4">
+          <h1 className="text-lg sm:text-2xl font-display font-bold text-white tracking-wide">
             Official Digital Passport
           </h1>
-          <p className="text-xs font-mono text-white/50 mt-1">
+          <p className="text-[11px] sm:text-xs font-mono text-white/50 mt-1">
             Founding Holder Verification Certificate
           </p>
         </div>
@@ -377,7 +359,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             DETAILS
           </div>
 
-          <div className="divide-y divide-white/5 rounded-xl bg-black/40 border border-white/5 px-4 font-mono text-xs">
+          <div className="divide-y divide-white/5 rounded-xl bg-black/40 border border-white/5 px-3 sm:px-4 font-mono text-xs">
             {/* Token ID */}
             <div className="py-2.5 flex items-center justify-between gap-3">
               <span className="text-white/45">ID</span>
@@ -529,24 +511,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             </motion.form>
           )}
         </AnimatePresence>
-
-        {/* QR Code Standalone Clean Card */}
-        <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col items-center justify-center space-y-2">
-          {qrDataUrl ? (
-            <img
-              src={qrDataUrl}
-              alt="Digital Passport QR"
-              className="w-32 h-32 rounded-lg bg-[#070a0e] p-1 border border-white/10"
-            />
-          ) : (
-            <div className="w-32 h-32 flex items-center justify-center text-xs font-mono text-white/30">
-              Loading QR...
-            </div>
-          )}
-          <span className="text-[10px] font-mono text-white/40">
-            Scan to authenticate passport
-          </span>
-        </div>
 
         {/* Merged Prioritized Button Stack */}
         <div className="space-y-2.5 pt-1">

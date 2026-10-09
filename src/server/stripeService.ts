@@ -31,7 +31,7 @@ export function getStripe(): Stripe {
 }
 
 const ORDERS_FILE = path.resolve(process.cwd(), 'data/orders.json');
-const INITIAL_WAVE_INVENTORY = 125;
+const INITIAL_WAVE_INVENTORY = 100;
 
 export interface ComicOrder {
   id: string;

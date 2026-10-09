@@ -138,7 +138,7 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
             </div>
             <div className="text-right">
               <span className="text-[10px] text-white/40 block">ALLOCATION</span>
-              <span className="text-xs text-white font-semibold">WAVE 2 (1/125)</span>
+              <span className="text-xs text-white font-semibold">WAVE 2 (1/100)</span>
             </div>
           </div>
 

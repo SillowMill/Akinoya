@@ -108,7 +108,7 @@ apiRouter.get('/inventory/status', (_req: Request, res: Response): void => {
     res.status(200).json(inventory);
   } catch (err: any) {
     console.error('[API] inventory/status error:', err);
-    res.status(200).json({ wave: 'Wave 2', total: 125, claimed: 0, available: 125 });
+    res.status(200).json({ wave: 'Wave 2', total: 100, claimed: 0, available: 100 });
   }
 });
 

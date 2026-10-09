@@ -78,19 +78,19 @@ export function isValidPassId(raw?: string | null): boolean {
 
 function deriveEdition(tokenId: string): { edition: string; editionNumber: number } {
   if (tokenId.includes('X0914') || tokenId === 'AKN-VIP-2027-X0914') {
-    return { edition: '1 of 125', editionNumber: 1 };
+    return { edition: '1 of 100', editionNumber: 1 };
   }
   // Check if matches numbers
   const match = tokenId.match(/(\d+)/g);
   if (match && match.length > 0) {
     const lastNum = parseInt(match[match.length - 1], 10);
-    const editionNum = (lastNum % 125) || 1;
+    const editionNum = (lastNum % 100) || 1;
     return {
-      edition: `${editionNum} of 125`,
+      edition: `${editionNum} of 100`,
       editionNumber: editionNum,
     };
   }
-  return { edition: '1 of 125', editionNumber: 1 };
+  return { edition: '1 of 100', editionNumber: 1 };
 }
 
 function createDefaultPassRecord(tokenId: string): PassRecord {

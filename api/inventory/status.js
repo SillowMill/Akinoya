@@ -7,9 +7,9 @@ export default function handler(req, res) {
   res.end(
     JSON.stringify({
       wave: 'Wave 2',
-      total: 125,
+      total: 100,
       claimed: 0,
-      available: 125,
+      available: 100,
     })
   );
 }

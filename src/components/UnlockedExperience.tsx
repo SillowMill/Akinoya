@@ -383,8 +383,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [checkoutError, setCheckoutError] = useState("");
   const [isOrderProcessing, setIsOrderProcessing] = useState(false);
   const [waveInventory, setWaveInventory] = useState<{ total: number; available: number }>({
-    total: 125,
-    available: 125,
+    total: 100,
+    available: 100,
   });
 
   // Load real-time inventory from server — safe JSON parsing guards against plain-text errors
@@ -398,7 +398,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       })
       .then((data) => {
         if (data && typeof data.available === "number") {
-          setWaveInventory({ total: data.total || 125, available: data.available });
+          setWaveInventory({ total: data.total || 100, available: data.available });
         }
       })
       .catch(() => {});
@@ -490,10 +490,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-8 lg:py-10"
+      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-2.5 xs:px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-8 lg:py-10"
     >
       {/* Top Status & Lock Control (Mobile friendly wrapping) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 lg:mb-8 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:px-6 lg:px-8 lg:py-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-3 xs:p-4 sm:px-6 lg:px-8 lg:py-5">
         <div className="flex items-center gap-3 min-w-0 max-w-full">
           <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
             <ShieldCheck className="w-5 h-5 text-cyan-400" />
@@ -663,39 +663,39 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         {/* Right Column: Perks and Physical Drop */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-6">
           {/* Navigation Tabs (Mobile optimized scrollable / grid) */}
-          <div className={`grid ${isVipMode ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
+          <div className={`grid ${isVipMode ? 'grid-cols-3' : 'grid-cols-2'} gap-1 xs:gap-1.5 p-1 xs:p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
             <button
               onClick={() => setActiveTab('pass')}
-              className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
+              className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[38px] sm:min-h-[40px] ${
                 activeTab === 'pass'
                   ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                   : 'text-white/60 hover:text-white'
               }`}
             >
-              <Compass className="w-3.5 h-3.5 shrink-0" />
+              <Compass className="w-3 h-3 xs:w-3.5 xs:h-3.5 shrink-0" />
               <span className="truncate">Pass Perks</span>
             </button>
             <button
               onClick={() => setActiveTab('edition')}
-              className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
+              className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[38px] sm:min-h-[40px] ${
                 activeTab === 'edition'
                   ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                   : 'text-white/60 hover:text-white'
               }`}
             >
-              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+              <BookOpen className="w-3 h-3 xs:w-3.5 xs:h-3.5 shrink-0" />
               <span className="truncate">Comic</span>
             </button>
             {isVipMode && (
               <button
                 onClick={() => setActiveTab('assets')}
-                className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
+                className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[38px] sm:min-h-[40px] ${
                   activeTab === 'assets'
                     ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                     : 'text-white/60 hover:text-white'
                 }`}
               >
-                <Gem className="w-3.5 h-3.5 shrink-0" />
+                <Gem className="w-3 h-3 xs:w-3.5 xs:h-3.5 shrink-0" />
                 <span className="truncate">My Assets</span>
               </button>
             )}
@@ -1230,7 +1230,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 lg:p-5 rounded-xl bg-cyan-950/30 border border-cyan-500/20 text-center sm:text-left">
                       <div>
                         <div className="text-[10px] font-mono text-white/50">WAVE 1</div>
-                        <div className="text-xs sm:text-sm font-semibold text-amber-400">Sold Out (125/125)</div>
+                        <div className="text-xs sm:text-sm font-semibold text-amber-400">Sold Out (100/100)</div>
                       </div>
                       <div>
                         <div className="text-[10px] font-mono text-white/50">NEXT WAVE</div>
@@ -1318,10 +1318,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-sm sm:text-base font-display font-bold text-white leading-tight">
-                        Äkinoya Founding Pass
+                        Äkinoya Founding Pass — Limited Edition (#1 of 100)
                       </h3>
                       <p className="text-[11px] sm:text-xs font-mono text-cyan-300/80 truncate">
-                        #AKN-VIP-2027
+                        #{FOUNDING_PASS_ID}
                       </p>
                     </div>
                   </div>
@@ -1352,7 +1352,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                   <div className="py-2.5 flex items-center justify-between gap-3">
                     <span className="text-white/45">EDITION</span>
-                    <span className="text-white/80">1 of 125</span>
+                    <span className="text-white/80">1 of 100</span>
                   </div>
                   <div className="py-2.5 flex items-center justify-between gap-3">
                     <span className="text-white/45">SECTOR</span>
