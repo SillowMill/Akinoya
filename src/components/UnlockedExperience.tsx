@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
+import { useVipAccess } from '../context/VipAccessContext';
 
 export const FOUNDING_PASS_ID = 'AKN-VIP-2027-X0914';
 
@@ -249,9 +250,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
+  const { isVipUnlocked } = useVipAccess();
+
   const [isVisualizerUnlocked, setIsVisualizerUnlocked] = useState<boolean>(() => {
     return typeof window !== 'undefined' && sessionStorage.getItem('akinoya_visualizers_unlocked') === 'true';
   });
+
+  useEffect(() => {
+    if (isVipUnlocked) {
+      setIsVisualizerUnlocked(true);
+    }
+  }, [isVipUnlocked]);
 
   // Track specific unlock state
   const [unlockedTracks, setUnlockedTracks] = useState<Record<string, boolean>>(() => {
@@ -309,7 +318,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   };
 
   const handleTrackCardClick = (track: VisualizerTrack) => {
-    const isUnlocked = unlockedTracks[track.id] || track.defaultUnlocked;
+    const isUnlocked = isVipUnlocked || unlockedTracks[track.id] || track.defaultUnlocked;
     if (isUnlocked) {
       setActivePlayingTrack(track);
       if (track.id === '02') {
@@ -649,7 +658,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   className="space-y-4 lg:space-y-6"
                 >
                   {/* If already unlocked, provide a prominent shortcut banner to jump right into the Hub */}
-                  {isVisualizerUnlocked ? (
+                  {(isVipUnlocked || isVisualizerUnlocked) ? (
                     <div className="bg-gradient-to-r from-emerald-950/40 via-cyan-950/40 to-black/60 backdrop-blur-xl border border-emerald-500/40 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(16,185,129,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -766,7 +775,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
                       {PERK_MODULES.map((perk) => {
                         const Icon = perk.icon;
-                        const isSubmitted = Boolean(perkSubmitted[perk.id]);
+                        const isSubmitted = Boolean(isVipUnlocked || perkSubmitted[perk.id]);
 
                         return (
                           <motion.div
@@ -932,7 +941,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     {/* 11 Track Visualizer Widgets Grid (Clean 3-column layout on wide screens) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                       {VISUALIZER_TRACKS.map((track, index) => {
-                        const isUnlocked = Boolean(unlockedTracks[track.id] || track.defaultUnlocked);
+                        const isUnlocked = Boolean(isVipUnlocked || unlockedTracks[track.id] || track.defaultUnlocked);
 
                         return (
                           <motion.div

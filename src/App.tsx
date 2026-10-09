@@ -13,9 +13,19 @@ import { FloatingAudioControl } from './components/FloatingAudioControl';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { KycVerification } from './components/KycVerification';
 import { CheckoutSuccess } from './components/CheckoutSuccess';
+import { useVipAccess } from './context/VipAccessContext';
+import { NfcHudToast } from './components/NfcHudToast';
 
 export default function App() {
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+  const { isVipUnlocked, unlockVip, lockVip } = useVipAccess();
+  const [sessionUnlocked, setSessionUnlocked] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('akinoya_vip_unlocked') === 'true';
+    }
+    return false;
+  });
+
+  const isUnlocked = isVipUnlocked || sessionUnlocked;
   const [viewMode, setViewMode] = useState<'orbit' | 'surface'>('orbit');
   const [backdropOnly, setBackdropOnly] = useState<boolean>(false);
   const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success'>(() => {
@@ -62,7 +72,7 @@ export default function App() {
     try {
       const savedState = sessionStorage.getItem('akinoya_vip_unlocked');
       if (savedState === 'true') {
-        setIsUnlocked(true);
+        setSessionUnlocked(true);
       }
     } catch {
       // Fallback if sessionStorage is inaccessible
@@ -70,7 +80,8 @@ export default function App() {
   }, []);
 
   const handleUnlockSuccess = () => {
-    setIsUnlocked(true);
+    setSessionUnlocked(true);
+    unlockVip();
   };
 
   const handleLockPortal = () => {
@@ -79,12 +90,16 @@ export default function App() {
     } catch {
       // Fallback
     }
-    setIsUnlocked(false);
+    setSessionUnlocked(false);
+    lockVip();
     setViewMode('orbit');
   };
 
   return (
     <main className="relative min-h-[100dvh] w-full bg-[#050505] text-white flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Global NFC Magic Link Verification HUD Toast */}
+      <NfcHudToast />
+
       {/* Immersive Planet Äkinoya Canvas with exact user background & particles */}
       <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isUnlocked} />
 
@@ -104,7 +119,8 @@ export default function App() {
         <div className="relative z-20 flex-1 w-full">
           <CheckoutSuccess
             onEnterPortal={() => {
-              setIsUnlocked(true);
+              setSessionUnlocked(true);
+              unlockVip();
               navigateTo('home', '/');
             }}
             onBackToComic={() => navigateTo('home', '/')}

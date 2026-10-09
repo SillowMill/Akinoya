@@ -128,6 +128,59 @@ apiRouter.get('/checkout/session/:id', async (req: Request, res: Response): Prom
   }
 });
 
+// ─── 4. NFC Magic Link Token Redemption & Device Binding ──────────────────────
+const _nfcRedemptions = new Map<string, { deviceId: string; redeemedAt: string }>();
+
+apiRouter.all(['/nfc/redeem', '/nfc/verify'], (req: Request, res: Response): void => {
+  const token = ((req.body?.token || req.query?.token) as string)?.trim().toUpperCase();
+  const deviceId = (((req.body?.deviceId || req.query?.deviceId) as string) || 'UNKNOWN_DEVICE').trim();
+
+  if (!token) {
+    res.status(400).json({
+      success: false,
+      error: 'MISSING_TOKEN',
+      message: 'Token parameter is required for NFC redemption.',
+    });
+    return;
+  }
+
+  const existing = _nfcRedemptions.get(token);
+
+  if (existing) {
+    if (existing.deviceId === deviceId) {
+      res.status(200).json({
+        success: true,
+        bound: true,
+        isExistingDevice: true,
+        token,
+        message: 'NFC Pass verified for authorized device session.',
+      });
+      return;
+    } else {
+      res.status(403).json({
+        success: false,
+        error: 'TOKEN_ALREADY_BOUND',
+        token,
+        message: 'This NFC magic link has already been bound to another device. Transfer not permitted.',
+      });
+      return;
+    }
+  }
+
+  _nfcRedemptions.set(token, {
+    deviceId,
+    redeemedAt: new Date().toISOString(),
+  });
+
+  res.status(200).json({
+    success: true,
+    bound: true,
+    isNewRedemption: true,
+    token,
+    message: 'NFC Pass successfully redeemed and bound to device.',
+  });
+});
+
 // ─── Mount router ─────────────────────────────────────────────────────────────
 apiApp.use('/api', apiRouter);
 

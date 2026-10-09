@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
 import { KeyRound, Sparkles, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { useVipAccess } from '../context/VipAccessContext';
 
 interface ComingSoonGateProps {
   onUnlockSuccess: () => void;
@@ -54,6 +55,14 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
   onToggleBackdropMode,
   backdropOnly = false,
 }) => {
+  const { isVipUnlocked } = useVipAccess();
+
+  useEffect(() => {
+    if (isVipUnlocked) {
+      onUnlockSuccess();
+    }
+  }, [isVipUnlocked, onUnlockSuccess]);
+
   const [accessCode, setAccessCode] = useState('');
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
