@@ -6,6 +6,14 @@ import {
   getInventoryStatus,
   loadOrders,
 } from './stripeService';
+import {
+  getPassRecord,
+  verifyDnaCipher,
+  generateAuthenticDnaCipher,
+  registerPassHolder,
+  generateTransferKey,
+  claimTransferKey,
+} from './nfcDnaService';
 
 export const apiApp = express();
 export const apiRouter = express.Router();
@@ -178,6 +186,110 @@ apiRouter.all(['/nfc/redeem', '/nfc/verify'], (req: Request, res: Response): voi
     isNewRedemption: true,
     token,
     message: 'NFC Pass successfully redeemed and bound to device.',
+  });
+});
+
+// ─── 5. NXP NTAG 424 DNA Dynamic Verification Endpoint ────────────────────────
+apiRouter.all('/nfc/verify-dna', (req: Request, res: Response): void => {
+  const token = ((req.body?.token || req.body?.id || req.query?.token || req.query?.id) as string) || 'AKN-VIP-2027-X0914';
+  const enc = (req.body?.enc || req.query?.enc) as string | undefined;
+  const cmac = (req.body?.cmac || req.query?.cmac) as string | undefined;
+
+  const result = verifyDnaCipher(token, enc, cmac);
+  const pass = getPassRecord(token);
+
+  if (!result.valid) {
+    res.status(403).json({
+      valid: false,
+      isAuthentic: false,
+      status: result.status,
+      error: result.error,
+      message: result.message,
+      pass,
+    });
+    return;
+  }
+
+  res.status(200).json({
+    valid: true,
+    isAuthentic: Boolean(enc && result.valid),
+    status: enc ? 'AUTHENTIC FOUNDING PASS VERIFIED' : result.status,
+    message: result.message,
+    counter: result.counter,
+    pass,
+  });
+});
+
+// ─── 6. Holder Pass Registration ──────────────────────────────────────────────
+apiRouter.post('/nfc/register', (req: Request, res: Response): void => {
+  const token = (req.body?.token || req.body?.id) as string;
+  const ownerName = (req.body?.ownerName || req.body?.displayName) as string;
+  const ownerEmail = (req.body?.ownerEmail || req.body?.email) as string | undefined;
+  const deviceId = req.body?.deviceId as string | undefined;
+
+  if (!token) {
+    res.status(400).json({ success: false, error: 'MISSING_TOKEN', message: 'Token is required' });
+    return;
+  }
+
+  if (!ownerName || !ownerName.trim()) {
+    res.status(400).json({ success: false, error: 'MISSING_NAME', message: 'Owner name or handle is required' });
+    return;
+  }
+
+  const result = registerPassHolder(token, ownerName, ownerEmail, deviceId);
+  res.status(200).json(result);
+});
+
+// ─── 7. Ownership Transfer Protocol ───────────────────────────────────────────
+apiRouter.post('/nfc/transfer', (req: Request, res: Response): void => {
+  const token = (req.body?.token || req.body?.id) as string;
+  const deviceId = req.body?.deviceId as string | undefined;
+
+  if (!token) {
+    res.status(400).json({ success: false, error: 'MISSING_TOKEN', message: 'Token is required' });
+    return;
+  }
+
+  const result = generateTransferKey(token, deviceId);
+  res.status(200).json(result);
+});
+
+// ─── 8. Claim Transferred Pass ────────────────────────────────────────────────
+apiRouter.post('/nfc/claim-transfer', (req: Request, res: Response): void => {
+  const transferKey = (req.body?.transferKey || req.body?.key) as string;
+  const newOwnerName = (req.body?.newOwnerName || req.body?.ownerName || req.body?.name) as string;
+  const newOwnerEmail = (req.body?.newOwnerEmail || req.body?.email) as string | undefined;
+  const deviceId = req.body?.deviceId as string | undefined;
+
+  if (!transferKey || !transferKey.trim()) {
+    res.status(400).json({ success: false, error: 'MISSING_TRANSFER_KEY', message: 'Transfer key is required' });
+    return;
+  }
+
+  if (!newOwnerName || !newOwnerName.trim()) {
+    res.status(400).json({ success: false, error: 'MISSING_NAME', message: 'New owner display name is required' });
+    return;
+  }
+
+  const result = claimTransferKey(transferKey, newOwnerName, newOwnerEmail, deviceId);
+  if (!result.success) {
+    res.status(400).json(result);
+    return;
+  }
+
+  res.status(200).json(result);
+});
+
+// ─── 9. Generate Test Dynamic Cipher ──────────────────────────────────────────
+apiRouter.get('/nfc/generate-test-cipher', (req: Request, res: Response): void => {
+  const token = ((req.query?.token as string) || 'AKN-VIP-2027-X0914').trim();
+  const cipher = generateAuthenticDnaCipher(token);
+  res.status(200).json({
+    token,
+    cipher,
+    sampleAuthenticUrl: `https://sillowmill.com/verify?token=${token}&enc=${cipher}`,
+    message: 'Generated authentic dynamic AES-128 cipher for testing.',
   });
 });
 

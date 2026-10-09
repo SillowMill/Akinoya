@@ -128,7 +128,10 @@ export const VipAccessProvider: React.FC<{ children: ReactNode }> = ({ children 
       searchParams.get('nfc') ||
       searchParams.get('pass');
 
-    if (rawToken && rawToken.trim()) {
+    const isVerifyRoute = window.location.pathname.startsWith('/verify');
+    const hasEnc = Boolean(searchParams.get('enc'));
+
+    if (rawToken && rawToken.trim() && !isVerifyRoute && !hasEnc) {
       const cleanToken = rawToken.trim().toUpperCase();
 
       // Step 2: Immediately wipe the ?token=... query parameter from browser address bar

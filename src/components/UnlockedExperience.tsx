@@ -38,6 +38,7 @@ import {
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
 import { useVipAccess } from '../context/VipAccessContext';
+import { PassTransferModal } from './PassTransferModal';
 
 export const FOUNDING_PASS_ID = 'AKN-VIP-2027-X0914';
 
@@ -125,15 +126,18 @@ interface UnlockedExperienceProps {
   onLockPortal: () => void;
   onToggleViewMode: (mode: 'orbit' | 'surface') => void;
   currentViewMode: 'orbit' | 'surface';
+  onNavigateToVerify?: (tokenId?: string) => void;
 }
 
 export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   onLockPortal,
   onToggleViewMode,
   currentViewMode,
+  onNavigateToVerify,
 }) => {
   const [activeTab, setActiveTab] = useState<'pass' | 'edition'>('pass');
   const [passSubView, setPassSubView] = useState<'overview' | 'hub'>('overview');
+  const [showTransferModal, setShowTransferModal] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isReserved, setIsReserved] = useState(false);
   const [waitlistEmail, setWaitlistEmail] = useState('');
@@ -591,7 +595,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               </div>
 
               {/* Quick action button (Download button completely removed) */}
-              <div className="pt-3 border-t border-white/10">
+              <div className="pt-3 border-t border-white/10 space-y-2">
                 <button
                   onClick={handleCopyPassId}
                   className="w-full flex items-center justify-center gap-2 py-2.5 px-4 text-xs font-mono text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.15)] group"
@@ -608,6 +612,32 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </>
                   )}
                 </button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      if (onNavigateToVerify) {
+                        onNavigateToVerify(FOUNDING_PASS_ID);
+                      } else if (typeof window !== 'undefined') {
+                        window.location.href = `/verify/${FOUNDING_PASS_ID}`;
+                      }
+                    }}
+                    className="flex items-center justify-center gap-1.5 py-2 px-2 text-[10.5px] font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.1)]"
+                    title="View Digital Passport HUD & Verification"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span className="truncate">Digital Passport</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowTransferModal(true)}
+                    className="flex items-center justify-center gap-1.5 py-2 px-2 text-[10.5px] font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.1)]"
+                    title="Transfer Pass Ownership to a new collector"
+                  >
+                    <Key className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span className="truncate">Transfer Pass</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1677,6 +1707,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           </div>
         )}
       </AnimatePresence>
+
+      {/* Ownership Transfer Protocol Modal */}
+      <PassTransferModal
+        isOpen={showTransferModal}
+        onClose={() => setShowTransferModal(false)}
+        tokenId={FOUNDING_PASS_ID}
+      />
     </motion.div>
   );
 };

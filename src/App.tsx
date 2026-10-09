@@ -15,6 +15,7 @@ import { KycVerification } from './components/KycVerification';
 import { CheckoutSuccess } from './components/CheckoutSuccess';
 import { useVipAccess } from './context/VipAccessContext';
 import { NfcHudToast } from './components/NfcHudToast';
+import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerification';
 
 export default function App() {
   const { isVipUnlocked, unlockVip, lockVip } = useVipAccess();
@@ -28,12 +29,21 @@ export default function App() {
   const isUnlocked = isVipUnlocked || sessionUnlocked;
   const [viewMode, setViewMode] = useState<'orbit' | 'surface'>('orbit');
   const [backdropOnly, setBackdropOnly] = useState<boolean>(false);
-  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success'>(() => {
+  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify'>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
       if (path === '/privacy' || path.startsWith('/privacy/')) return 'privacy';
       if (path === '/kyc' || path.startsWith('/kyc/')) return 'kyc';
       if (path === '/success' || path.startsWith('/success/')) return 'success';
+      if (
+        path === '/verify' ||
+        path.startsWith('/verify/') ||
+        search.includes('enc=') ||
+        search.includes('claim=')
+      ) {
+        return 'verify';
+      }
     }
     return 'home';
   });
@@ -48,6 +58,8 @@ export default function App() {
         setRoute('kyc');
       } else if (path === '/success' || path.startsWith('/success/')) {
         setRoute('success');
+      } else if (path === '/verify' || path.startsWith('/verify/')) {
+        setRoute('verify');
       } else {
         setRoute('home');
       }
@@ -57,7 +69,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigateTo = (newRoute: 'home' | 'privacy' | 'kyc' | 'success', path: string) => {
+  const navigateTo = (newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify', path: string) => {
     try {
       window.history.pushState({}, '', path);
     } catch {
@@ -104,7 +116,12 @@ export default function App() {
       <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isUnlocked} />
 
       {/* Top Bar Navigation (Zone 1, 2, 3) */}
-      {!backdropOnly && <TopBar isUnlocked={isUnlocked} />}
+      {!backdropOnly && (
+        <TopBar
+          isUnlocked={isUnlocked}
+          onNavigateToVerify={() => navigateTo('verify', '/verify')}
+        />
+      )}
 
       {/* Route-Based Dynamic Content */}
       {route === 'privacy' ? (
@@ -124,6 +141,17 @@ export default function App() {
               navigateTo('home', '/');
             }}
             onBackToComic={() => navigateTo('home', '/')}
+          />
+        </div>
+      ) : route === 'verify' ? (
+        <div className="relative z-20 flex-1 w-full">
+          <AkinoyaPassportVerification
+            onNavigateHome={() => navigateTo('home', '/')}
+            onOpenVisualizerHub={() => {
+              setSessionUnlocked(true);
+              unlockVip();
+              navigateTo('home', '/');
+            }}
           />
         </div>
       ) : (
@@ -174,6 +202,7 @@ export default function App() {
                   onLockPortal={handleLockPortal}
                   onToggleViewMode={setViewMode}
                   currentViewMode={viewMode}
+                  onNavigateToVerify={(id) => navigateTo('verify', id ? `/verify/${id}` : '/verify')}
                 />
               </motion.div>
             )}
