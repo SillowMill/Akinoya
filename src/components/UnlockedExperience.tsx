@@ -34,11 +34,14 @@ import {
   CreditCard,
   ShoppingBag,
   CheckCircle2,
+  Gem,
+  User,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
 import { useVipAccess } from '../context/VipAccessContext';
 import { PassTransferModal } from './PassTransferModal';
+import { useHolderName } from '../utils/holder';
 
 export const FOUNDING_PASS_ID = 'AKN-VIP-2027-X0914';
 
@@ -135,7 +138,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   currentViewMode,
   onNavigateToVerify,
 }) => {
-  const [activeTab, setActiveTab] = useState<'pass' | 'edition'>('pass');
+  const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'assets'>('pass');
+  const holderName = useHolderName();
   const [passSubView, setPassSubView] = useState<'overview' | 'hub'>('overview');
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -487,18 +491,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     >
       {/* Top Status & Lock Control (Mobile friendly wrapping) */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 lg:mb-8 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:px-6 lg:px-8 lg:py-5">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 max-w-full">
           <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
             <ShieldCheck className="w-5 h-5 text-cyan-400" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] sm:text-xs font-mono text-cyan-400 tracking-wider">PORTAL ACTIVE</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-[10px] sm:text-xs font-mono text-cyan-400 tracking-wider shrink-0">PORTAL ACTIVE</span>
               <span className="text-white/30 text-xs">·</span>
-              <span className="text-[10px] sm:text-xs text-white/60 font-mono">TOKEN #AKN-2027</span>
+              <span className="text-[10px] sm:text-xs text-white/60 font-mono truncate">
+                {holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
+              </span>
             </div>
-            <h2 className="text-sm sm:text-lg font-display font-bold text-white tracking-wide">
-              Welcome to Äkinoya — Unlocked
+            <h2 className="text-sm sm:text-lg font-display font-bold text-white tracking-wide break-words">
+              {holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
             </h2>
           </div>
         </div>
@@ -650,7 +656,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         {/* Right Column: Perks and Physical Drop */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-6">
           {/* Navigation Tabs (Mobile optimized scrollable / grid) */}
-          <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl">
+          <div className="grid grid-cols-3 gap-1.5 p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl">
             <button
               onClick={() => setActiveTab('pass')}
               className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
@@ -672,6 +678,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             >
               <BookOpen className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Comic</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('assets')}
+              className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
+                activeTab === 'assets'
+                  ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <Gem className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">My Assets</span>
             </button>
           </div>
 
@@ -1269,6 +1286,172 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Tab 3: My Assets — claimed physical pass, perks & ownership */}
+          {activeTab === 'assets' && (
+            <motion.div
+              key="assets-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-4 lg:space-y-5"
+            >
+              {/* Physical Pass Status */}
+              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-6">
+                <div className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase mb-3">
+                  Physical Pass
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-11 h-11 rounded-xl bg-cyan-950/70 border border-cyan-400/30 flex items-center justify-center shrink-0">
+                      <ShieldCheck className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm sm:text-base font-display font-bold text-white leading-tight">
+                        Äkinoya Founding Pass
+                      </h3>
+                      <p className="text-[11px] sm:text-xs font-mono text-cyan-300/80 truncate">
+                        #AKN-VIP-2027
+                      </p>
+                    </div>
+                  </div>
+                  <span className="self-start sm:self-center inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[10px] sm:text-[11px] font-mono font-semibold tracking-wider text-emerald-300 whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    STATUS: CLAIMED &amp; ACTIVE
+                  </span>
+                </div>
+
+                <div className="mt-4 divide-y divide-white/5 rounded-xl bg-black/40 border border-white/5 px-4 font-mono text-xs">
+                  <div className="py-2.5 flex items-center justify-between gap-3">
+                    <span className="text-white/45">HOLDER</span>
+                    {holderName ? (
+                      <span className="text-white font-medium truncate">{holderName}</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onNavigateToVerify?.(FOUNDING_PASS_ID)}
+                        className="text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                      >
+                        Register holder name
+                      </button>
+                    )}
+                  </div>
+                  <div className="py-2.5 flex items-center justify-between gap-3">
+                    <span className="text-white/45">PASS ID</span>
+                    <span className="text-white/80 truncate">#{FOUNDING_PASS_ID}</span>
+                  </div>
+                  <div className="py-2.5 flex items-center justify-between gap-3">
+                    <span className="text-white/45">EDITION</span>
+                    <span className="text-white/80">1 of 125</span>
+                  </div>
+                  <div className="py-2.5 flex items-center justify-between gap-3">
+                    <span className="text-white/45">SECTOR</span>
+                    <span className="text-white/80">Sector 04 (Leuven Origin)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Claimed Perks */}
+              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-6">
+                <div className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase mb-3">
+                  Claimed Perks
+                </div>
+                <ul className="space-y-2">
+                  {[
+                    {
+                      id: 'novel',
+                      icon: BookOpen,
+                      title: "Bingäa Collector's Graphic Novel",
+                      meta: 'Physical · Wave 2',
+                      action: 'View',
+                      onClick: () => setActiveTab('edition'),
+                    },
+                    {
+                      id: 'visualizers',
+                      icon: AudioWaveform,
+                      title: '11 Audio Visualizers Streams',
+                      meta: 'Digital · Streaming',
+                      action: 'Open',
+                      onClick: () => {
+                        setActiveTab('pass');
+                        setPassSubView(isVipUnlocked || isVisualizerUnlocked ? 'hub' : 'overview');
+                      },
+                    },
+                    {
+                      id: 'vault',
+                      icon: Radio,
+                      title: 'Sector 04 Unreleased Audio Vault',
+                      meta: 'Digital · Vault access',
+                      action: null,
+                      onClick: undefined,
+                    },
+                  ].map((perk) => {
+                    const Icon = perk.icon;
+                    return (
+                      <li
+                        key={perk.id}
+                        className="flex items-center justify-between gap-3 p-3 rounded-xl bg-black/40 border border-white/5"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                            <Icon className="w-4 h-4 text-cyan-300" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs sm:text-sm font-medium text-white leading-snug">
+                              {perk.title}
+                            </div>
+                            <div className="text-[10px] font-mono text-white/40">{perk.meta}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-emerald-300">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            CLAIMED
+                          </span>
+                          {perk.action && perk.onClick ? (
+                            <button
+                              type="button"
+                              onClick={perk.onClick}
+                              className="px-3 py-1.5 rounded-lg text-[10px] font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 transition-colors cursor-pointer min-h-[32px]"
+                            >
+                              {perk.action}
+                            </button>
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400 sm:hidden" />
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              {/* Ownership Actions */}
+              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-6">
+                <div className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase mb-3">
+                  Ownership
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowTransferModal(true)}
+                    className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-white/85 hover:text-white bg-transparent hover:bg-white/5 border border-white/15 hover:border-white/30 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
+                  >
+                    <Key className="w-3.5 h-3.5 text-white/60" />
+                    <span>Transfer Pass Ownership</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onNavigateToVerify?.(FOUNDING_PASS_ID)}
+                    className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/30 hover:border-cyan-400 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>View Digital Passport</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           )}
         </div>
       </div>

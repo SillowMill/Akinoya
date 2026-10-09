@@ -9,10 +9,19 @@ import {
   AudioWaveform,
   Key,
   AlertCircle,
+  ShieldCheck,
+  Lock,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { useVipAccess, setDeviceSession } from '../context/VipAccessContext';
 import { PassTransferModal } from './PassTransferModal';
+import {
+  useHolderName,
+  getHolderName,
+  saveHolderName,
+  sanitizeHolderName,
+  HOLDER_NAME_MAX_LENGTH,
+} from '../utils/holder';
 
 interface AkinoyaPassportVerificationProps {
   tokenIdFromRoute?: string;
@@ -26,6 +35,14 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   onOpenVisualizerHub,
 }) => {
   const { unlockVip } = useVipAccess();
+
+  // First-scan claim flow: a holder name is mandatory before the pass is activated
+  const holderName = useHolderName();
+  const isClaimed = holderName.length > 0;
+  const [claimInput, setClaimInput] = useState('');
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [isClaiming, setIsClaiming] = useState(false);
+  const claimNameValid = sanitizeHolderName(claimInput).length > 0;
 
   // Extract query params: token / id, enc (NTAG 424 DNA dynamic cipher), claim (transfer key)
   const [queryParams, setQueryParams] = useState<{
@@ -146,9 +163,12 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           if (data.pass.ownerEmail) setRegEmail(data.pass.ownerEmail);
         }
 
-        // Grant persistent VIP access across device
-        setDeviceSession(token);
-        unlockVip(token);
+        // Grant persistent VIP access only once the pass is claimed (holder name bound).
+        // First-time scans unlock via the mandatory claim form below.
+        if (getHolderName()) {
+          setDeviceSession(token);
+          unlockVip(token);
+        }
         soundManager.playUnlockChime();
 
         if (data.isAuthentic) {
@@ -216,6 +236,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       if (res.ok && data.success) {
         soundManager.playUnlockChime();
         setPassData(data.pass);
+        saveHolderName(regName);
         setRegSuccess(true);
         setTimeout(() => {
           setRegSuccess(false);
@@ -231,6 +252,57 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     } finally {
       setIsRegistering(false);
     }
+  };
+
+  // First-scan mandatory claim: bind holder name & activate pass on this device
+  const handleClaimPass = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = sanitizeHolderName(claimInput);
+    if (!name) {
+      setClaimError('A holder name is required to claim this pass.');
+      soundManager.playError();
+      return;
+    }
+    if (dnaError) {
+      setClaimError('This pass could not be verified and cannot be claimed.');
+      soundManager.playError();
+      return;
+    }
+
+    setIsClaiming(true);
+    setClaimError(null);
+
+    // Device-level claim is the source of truth for the personalized portal
+    saveHolderName(name);
+    setRegName(name);
+    setPassData((prev) => ({ ...prev, ownerName: name }));
+    setDeviceSession(activeToken);
+    unlockVip(activeToken);
+
+    // Best-effort server-side binding (never blocks activation)
+    try {
+      const res = await fetch('/api/nfc/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: activeToken, ownerName: name }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success && data.pass) {
+        setPassData({ ...data.pass, ownerName: name });
+      }
+    } catch (err) {
+      console.warn('Holder binding deferred (offline):', err);
+    } finally {
+      setIsClaiming(false);
+    }
+
+    soundManager.playUnlockChime();
+    confetti({
+      particleCount: 60,
+      spread: 55,
+      origin: { y: 0.55 },
+      colors: ['#22d3ee', '#34d399', '#ffffff'],
+    });
   };
 
   return (
@@ -324,19 +396,55 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             </div>
 
             {/* Holder */}
-            <div className="py-2.5 flex items-center justify-between gap-3">
-              <span className="text-white/45">HOLDER</span>
-              <div className="flex items-center gap-2">
-                <span className="text-white font-medium">{passData.ownerName}</span>
-                <button
-                  type="button"
-                  onClick={() => setShowRegistrationForm(!showRegistrationForm)}
-                  className="text-[10px] text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
-                >
-                  {showRegistrationForm ? 'Cancel' : 'Edit'}
-                </button>
+            {isClaimed ? (
+              <div className="py-2.5 flex items-center justify-between gap-3">
+                <span className="text-white/45">HOLDER</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-white font-medium truncate">{holderName}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!showRegistrationForm) setRegName(holderName);
+                      setShowRegistrationForm(!showRegistrationForm);
+                    }}
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 underline cursor-pointer shrink-0"
+                  >
+                    {showRegistrationForm ? 'Cancel' : 'Edit'}
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="py-3 space-y-2">
+                <label
+                  htmlFor="holder-claim-name"
+                  className="flex items-center justify-between gap-2 text-[10px] tracking-wider"
+                >
+                  <span className="text-cyan-300 font-semibold">
+                    HOLDER NAME <span className="text-white/45">(REQUIRED TO CLAIM PASS)</span>
+                  </span>
+                  <span className="text-amber-300/90 shrink-0">UNCLAIMED</span>
+                </label>
+                <input
+                  id="holder-claim-name"
+                  form="claim-pass-form"
+                  type="text"
+                  required
+                  autoComplete="name"
+                  maxLength={HOLDER_NAME_MAX_LENGTH}
+                  value={claimInput}
+                  disabled={Boolean(dnaError) || isValidating}
+                  onChange={(e) => {
+                    setClaimInput(e.target.value);
+                    if (claimError) setClaimError(null);
+                  }}
+                  placeholder="Enter your name or handle"
+                  className="w-full bg-black border border-white/20 focus:border-cyan-400 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition-colors disabled:opacity-40"
+                />
+                {claimError && (
+                  <div className="text-[11px] text-rose-400">{claimError}</div>
+                )}
+              </div>
+            )}
 
             {/* Issue Date */}
             <div className="py-2.5 flex items-center justify-between gap-3">
@@ -422,6 +530,33 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
         {/* Merged Prioritized Button Stack */}
         <div className="space-y-2.5 pt-1">
+          {!isClaimed ? (
+            <form id="claim-pass-form" onSubmit={handleClaimPass} noValidate className="space-y-2">
+              {/* Mandatory first-scan claim — portal entry stays locked until a holder name is bound */}
+              <button
+                type="submit"
+                disabled={!claimNameValid || isClaiming || isValidating || Boolean(dnaError)}
+                className="w-full py-3 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.35)] disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none disabled:cursor-not-allowed"
+              >
+                {claimNameValid ? (
+                  <ShieldCheck className="w-4 h-4" />
+                ) : (
+                  <Lock className="w-4 h-4" />
+                )}
+                <span>
+                  {isValidating
+                    ? 'VERIFYING PASS...'
+                    : isClaiming
+                    ? 'ACTIVATING...'
+                    : 'CLAIM & ACTIVATE PASS'}
+                </span>
+              </button>
+              <p className="text-[10px] font-mono text-white/40 text-center">
+                Enter a holder name to claim this pass and unlock the portal.
+              </p>
+            </form>
+          ) : (
+            <>
           {/* 1. Primary (Glow / Solid Accent): Open Visualizer Hub */}
           <button
             onClick={() => {
@@ -448,6 +583,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             <Key className="w-3.5 h-3.5 text-white/60" />
             <span>Transfer Pass Ownership</span>
           </button>
+            </>
+          )}
         </div>
       </motion.div>
 
@@ -458,6 +595,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         tokenId={activeToken}
         initialMode={transferModalMode}
         onTransferClaimed={(newToken, newOwner) => {
+          if (newOwner) saveHolderName(newOwner);
           setPassData((prev) => ({
             ...prev,
             tokenId: `#${newToken}`,
