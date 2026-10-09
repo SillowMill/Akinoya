@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { isValidPassId } from './_nfcDnaService.js';
 
 // In-memory cache for fast lookups within active container instances
 const _redemptionsMemory = new Map();
@@ -90,6 +91,18 @@ export default async function handler(req, res) {
     rawDeviceId && typeof rawDeviceId === 'string'
       ? rawDeviceId.trim()
       : 'UNKNOWN_DEVICE';
+
+  if (!isValidPassId(token)) {
+    res.statusCode = 403;
+    return res.end(
+      JSON.stringify({
+        success: false,
+        error: 'INVALID_PASS_ID',
+        token,
+        message: 'This Pass ID is not recognized. Please use an authentic Äkinoya NFC pass.',
+      })
+    );
+  }
 
   loadRedemptions();
 

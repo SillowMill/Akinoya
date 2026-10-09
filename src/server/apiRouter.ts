@@ -13,6 +13,7 @@ import {
   registerPassHolder,
   generateTransferKey,
   claimTransferKey,
+  isValidPassId,
 } from './nfcDnaService';
 
 export const apiApp = express();
@@ -152,6 +153,16 @@ apiRouter.all(['/nfc/redeem', '/nfc/verify'], (req: Request, res: Response): voi
     return;
   }
 
+  if (!isValidPassId(token)) {
+    res.status(403).json({
+      success: false,
+      error: 'INVALID_PASS_ID',
+      token,
+      message: 'This Pass ID is not recognized. Please use an authentic Äkinoya NFC pass.',
+    });
+    return;
+  }
+
   const existing = _nfcRedemptions.get(token);
 
   if (existing) {
@@ -191,9 +202,20 @@ apiRouter.all(['/nfc/redeem', '/nfc/verify'], (req: Request, res: Response): voi
 
 // ─── 5. NXP NTAG 424 DNA Dynamic Verification Endpoint ────────────────────────
 apiRouter.all('/nfc/verify-dna', (req: Request, res: Response): void => {
-  const token = ((req.body?.token || req.body?.id || req.query?.token || req.query?.id) as string) || 'AKN-VIP-2027-X0914';
+  const token = (req.body?.token || req.body?.id || req.query?.token || req.query?.id) as string;
   const enc = (req.body?.enc || req.query?.enc) as string | undefined;
   const cmac = (req.body?.cmac || req.query?.cmac) as string | undefined;
+
+  if (!isValidPassId(token)) {
+    res.status(403).json({
+      valid: false,
+      isAuthentic: false,
+      status: 'INVALID PASS ID',
+      error: 'INVALID_PASS_ID',
+      message: 'This Pass ID is not recognized. Use the verification link from your physical Äkinoya pass.',
+    });
+    return;
+  }
 
   const result = verifyDnaCipher(token, enc, cmac);
   const pass = getPassRecord(token);

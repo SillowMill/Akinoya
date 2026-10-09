@@ -16,12 +16,18 @@ import { CheckoutSuccess } from './components/CheckoutSuccess';
 import { useVipAccess } from './context/VipAccessContext';
 import { NfcHudToast } from './components/NfcHudToast';
 import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerification';
+import { isExplicitVipRouteActive, setExplicitVipRouteActive } from './utils/holder';
 
 export default function App() {
   const { isVipUnlocked, unlockVip, lockVip } = useVipAccess();
   const [sessionUnlocked, setSessionUnlocked] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('akinoya_vip_unlocked') === 'true';
+      const isRouteActive = isExplicitVipRouteActive();
+      // Only inherit session if an explicit verification route has been active
+      if (isRouteActive) {
+        return sessionStorage.getItem('akinoya_vip_unlocked') === 'true';
+      }
+      return false;
     }
     return false;
   });
@@ -40,7 +46,8 @@ export default function App() {
         path === '/verify' ||
         path.startsWith('/verify/') ||
         search.includes('enc=') ||
-        search.includes('claim=')
+        search.includes('claim=') ||
+        search.includes('token=')
       ) {
         return 'verify';
       }
@@ -52,13 +59,20 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
       if (path === '/privacy' || path.startsWith('/privacy/')) {
         setRoute('privacy');
       } else if (path === '/kyc' || path.startsWith('/kyc/')) {
         setRoute('kyc');
       } else if (path === '/success' || path.startsWith('/success/')) {
         setRoute('success');
-      } else if (path === '/verify' || path.startsWith('/verify/')) {
+      } else if (
+        path === '/verify' ||
+        path.startsWith('/verify/') ||
+        search.includes('enc=') ||
+        search.includes('claim=') ||
+        search.includes('token=')
+      ) {
         setRoute('verify');
       } else {
         setRoute('home');
@@ -79,12 +93,18 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Check sessionStorage on mount for persistent VIP unlock across page reloads
+  // Check sessionStorage on mount for persistent VIP unlock across page reloads ONLY if explicit route was active
   useEffect(() => {
     try {
-      const savedState = sessionStorage.getItem('akinoya_vip_unlocked');
-      if (savedState === 'true') {
-        setSessionUnlocked(true);
+      const isRouteActive = isExplicitVipRouteActive();
+      if (isRouteActive) {
+        const savedState = sessionStorage.getItem('akinoya_vip_unlocked');
+        if (savedState === 'true') {
+          setSessionUnlocked(true);
+        }
+      } else {
+        // Direct domain visit: MUST ALWAYS see the standard locked public site / password gate.
+        setSessionUnlocked(false);
       }
     } catch {
       // Fallback if sessionStorage is inaccessible
@@ -102,6 +122,7 @@ export default function App() {
     } catch {
       // Fallback
     }
+    setExplicitVipRouteActive(false);
     setSessionUnlocked(false);
     lockVip();
     setViewMode('orbit');
@@ -109,8 +130,8 @@ export default function App() {
 
   return (
     <main className="relative min-h-[100dvh] w-full bg-[#050505] text-white flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Global NFC Magic Link Verification HUD Toast */}
-      <NfcHudToast />
+      {/* Global NFC Magic Link Verification HUD Toast (Strictly restricted to explicit VIP access routes) */}
+      {(route === 'verify' || isExplicitVipRouteActive()) && <NfcHudToast />}
 
       {/* Immersive Planet Äkinoya Canvas with exact user background & particles */}
       <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isUnlocked} />

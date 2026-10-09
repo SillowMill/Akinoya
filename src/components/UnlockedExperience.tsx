@@ -41,7 +41,7 @@ import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
 import { useVipAccess } from '../context/VipAccessContext';
 import { PassTransferModal } from './PassTransferModal';
-import { useHolderName } from '../utils/holder';
+import { useHolderName, isExplicitVipRouteActive } from '../utils/holder';
 
 export const FOUNDING_PASS_ID = 'AKN-VIP-2027-X0914';
 
@@ -140,6 +140,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'assets'>('pass');
   const holderName = useHolderName();
+  const isVipRoute = isExplicitVipRouteActive();
   const [passSubView, setPassSubView] = useState<'overview' | 'hub'>('overview');
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -500,11 +501,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <span className="text-[10px] sm:text-xs font-mono text-cyan-400 tracking-wider shrink-0">PORTAL ACTIVE</span>
               <span className="text-white/30 text-xs">·</span>
               <span className="text-[10px] sm:text-xs text-white/60 font-mono truncate">
-                {holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
+                {isVipRoute && holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
               </span>
             </div>
             <h2 className="text-sm sm:text-lg font-display font-bold text-white tracking-wide break-words">
-              {holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
+              {isVipRoute && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
             </h2>
           </div>
         </div>
@@ -656,7 +657,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         {/* Right Column: Perks and Physical Drop */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-6">
           {/* Navigation Tabs (Mobile optimized scrollable / grid) */}
-          <div className="grid grid-cols-3 gap-1.5 p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl">
+          <div className={`grid ${isVipRoute ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
             <button
               onClick={() => setActiveTab('pass')}
               className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
@@ -679,17 +680,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <BookOpen className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Comic</span>
             </button>
-            <button
-              onClick={() => setActiveTab('assets')}
-              className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
-                activeTab === 'assets'
-                  ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <Gem className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">My Assets</span>
-            </button>
+            {isVipRoute && (
+              <button
+                onClick={() => setActiveTab('assets')}
+                className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
+                  activeTab === 'assets'
+                    ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <Gem className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">My Assets</span>
+              </button>
+            )}
           </div>
 
           {/* Tab 1: VIP Perks & Visualizer Hub */}
@@ -1288,8 +1291,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </div>
           )}
 
-          {/* Tab 3: My Assets — claimed physical pass, perks & ownership */}
-          {activeTab === 'assets' && (
+          {/* Tab 3: My Assets — claimed physical pass, perks & ownership (strictly gated to explicit VIP verification route) */}
+          {isVipRoute && activeTab === 'assets' && (
             <motion.div
               key="assets-view"
               initial={{ opacity: 0, y: 15 }}

@@ -53,6 +53,17 @@ export function getOrCreateDeviceId(): string {
 export function hasActiveDeviceSession(): boolean {
   if (typeof window === 'undefined') return false;
   try {
+    const isExplicitRoute =
+      window.location.pathname.startsWith('/verify') ||
+      Boolean(new URLSearchParams(window.location.search).get('token')) ||
+      Boolean(new URLSearchParams(window.location.search).get('nfc_token')) ||
+      Boolean(new URLSearchParams(window.location.search).get('nfc')) ||
+      Boolean(new URLSearchParams(window.location.search).get('pass')) ||
+      sessionStorage.getItem('akinoya_vip_route_active') === 'true';
+
+    // Strict security rule: direct visits never inherit VIP status automatically
+    if (!isExplicitRoute) return false;
+
     const hasLocal = localStorage.getItem(STORAGE_KEY_ACCESS) === 'true';
     const hasCookie = document.cookie
       .split(';')
@@ -74,6 +85,7 @@ export function setDeviceSession(token?: string) {
     document.cookie = `${COOKIE_NAME}=true; max-age=31536000; path=/; SameSite=Lax`;
     sessionStorage.setItem('akinoya_vip_unlocked', 'true');
     sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+    sessionStorage.setItem('akinoya_vip_route_active', 'true');
   } catch (err) {
     console.warn('[VIP] Could not persist device session:', err);
   }
@@ -88,6 +100,7 @@ export function clearDeviceSession() {
     sessionStorage.removeItem('akinoya_vip_unlocked');
     sessionStorage.removeItem('akinoya_visualizers_unlocked');
     sessionStorage.removeItem('akinoya_unlocked_tracks');
+    sessionStorage.removeItem('akinoya_vip_route_active');
   } catch (err) {
     console.warn('[VIP] Could not clear device session:', err);
   }
@@ -200,9 +213,11 @@ export const VipAccessProvider: React.FC<{ children: ReactNode }> = ({ children 
           }
         });
     } else {
-      // No token in query params: verify device session
+      // Direct visits or non-token page loads
       if (hadExistingAccess) {
         setIsVipUnlocked(true);
+      } else {
+        setIsVipUnlocked(false);
       }
     }
   }, [triggerToast]);

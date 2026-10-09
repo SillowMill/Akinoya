@@ -20,6 +20,8 @@ import {
   getHolderName,
   saveHolderName,
   sanitizeHolderName,
+  setExplicitVipRouteActive,
+  isValidPassId,
   HOLDER_NAME_MAX_LENGTH,
 } from '../utils/holder';
 
@@ -140,6 +142,16 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     setIsValidating(true);
     setDnaError(null);
 
+    // Validate the Pass ID parameter
+    if (!isValidPassId(token)) {
+      setIsDnaAuthentic(false);
+      setStatusText('INVALID PASS ID');
+      setDnaError('This Pass ID is not recognized. Please use an authentic Äkinoya NFC pass link.');
+      soundManager.playError();
+      setIsValidating(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/nfc/verify-dna', {
         method: 'POST',
@@ -166,6 +178,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         // Grant persistent VIP access only once the pass is claimed (holder name bound).
         // First-time scans unlock via the mandatory claim form below.
         if (getHolderName()) {
+          setExplicitVipRouteActive(true);
           setDeviceSession(token);
           unlockVip(token);
         }
@@ -273,6 +286,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     setClaimError(null);
 
     // Device-level claim is the source of truth for the personalized portal
+    setExplicitVipRouteActive(true);
     saveHolderName(name);
     setRegName(name);
     setPassData((prev) => ({ ...prev, ownerName: name }));

@@ -27,6 +27,29 @@ function normalizeTokenId(raw) {
   return clean;
 }
 
+// ─── Strict Pass ID validation (security gate for /verify/[id] + magic links) ───
+// If NFC_VALID_PASS_IDS is configured (comma-separated), ONLY those exact IDs are accepted.
+// Otherwise IDs must match the issued Founding Pass formats.
+const PASS_ID_PATTERNS = [
+  /^AKN-VIP-\d{4}-[A-Z]\d{4}$/, // AKN-VIP-2027-X0914
+  /^AKN-\d{4}$/, // AKN-9941
+  /^SM\d{3}-[A-Z0-9]{4}$/, // SM001-A9B2
+];
+
+export function isValidPassId(raw) {
+  if (!raw || typeof raw !== 'string') return false;
+  const clean = raw.trim().toUpperCase().replace(/^#/, '');
+  if (clean.length > 32) return false;
+
+  const allowlist = (process.env.NFC_VALID_PASS_IDS || '')
+    .split(',')
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+  if (allowlist.length > 0) return allowlist.includes(clean);
+
+  return PASS_ID_PATTERNS.some((re) => re.test(clean));
+}
+
 function deriveEdition(tokenId) {
   if (tokenId.includes('X0914') || tokenId === 'AKN-VIP-2027-X0914') {
     return { edition: '1 of 125', editionNumber: 1 };

@@ -1,4 +1,4 @@
-import { getPassRecord, verifyDnaCipher } from './_nfcDnaService.js';
+import { getPassRecord, verifyDnaCipher, isValidPassId } from './_nfcDnaService.js';
 
 export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
@@ -22,9 +22,22 @@ export default async function handler(req, res) {
     body = req.query || {};
   }
 
-  const token = body.token || body.id || req.query.token || req.query.id || 'AKN-VIP-2027-X0914';
+  const token = body.token || body.id || req.query.token || req.query.id;
   const enc = body.enc || req.query.enc;
   const cmac = body.cmac || req.query.cmac;
+
+  if (!isValidPassId(token)) {
+    res.statusCode = 403;
+    return res.end(
+      JSON.stringify({
+        valid: false,
+        isAuthentic: false,
+        status: 'INVALID PASS ID',
+        error: 'INVALID_PASS_ID',
+        message: 'This Pass ID is not recognized. Use the verification link from your physical Äkinoya pass.',
+      })
+    );
+  }
 
   const result = verifyDnaCipher(token, enc, cmac);
   const pass = getPassRecord(token);
