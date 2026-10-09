@@ -39,9 +39,8 @@ import {
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
-import { useVipAccess } from '../context/VipAccessContext';
 import { PassTransferModal } from './PassTransferModal';
-import { useHolderName, isExplicitVipRouteActive } from '../utils/holder';
+import { useHolderName } from '../utils/holder';
 
 export const FOUNDING_PASS_ID = 'AKN-VIP-2027-X0914';
 
@@ -130,6 +129,8 @@ interface UnlockedExperienceProps {
   onToggleViewMode: (mode: 'orbit' | 'surface') => void;
   currentViewMode: 'orbit' | 'surface';
   onNavigateToVerify?: (tokenId?: string) => void;
+  isVip?: boolean;
+  onNavigateToPassport?: () => void;
 }
 
 export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
@@ -137,10 +138,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   onToggleViewMode,
   currentViewMode,
   onNavigateToVerify,
+  isVip = false,
+  onNavigateToPassport,
 }) => {
   const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'assets'>('pass');
   const holderName = useHolderName();
-  const isVipRoute = isExplicitVipRouteActive();
+  const isVipMode = Boolean(isVip);
   const [passSubView, setPassSubView] = useState<'overview' | 'hub'>('overview');
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -259,17 +262,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
-  const { isVipUnlocked } = useVipAccess();
-
   const [isVisualizerUnlocked, setIsVisualizerUnlocked] = useState<boolean>(() => {
+    if (isVipMode) return true;
     return typeof window !== 'undefined' && sessionStorage.getItem('akinoya_visualizers_unlocked') === 'true';
   });
 
   useEffect(() => {
-    if (isVipUnlocked) {
+    if (isVipMode) {
       setIsVisualizerUnlocked(true);
     }
-  }, [isVipUnlocked]);
+  }, [isVipMode]);
 
   // Track specific unlock state
   const [unlockedTracks, setUnlockedTracks] = useState<Record<string, boolean>>(() => {
@@ -327,7 +329,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   };
 
   const handleTrackCardClick = (track: VisualizerTrack) => {
-    const isUnlocked = isVipUnlocked || unlockedTracks[track.id] || track.defaultUnlocked;
+    const isUnlocked = isVipMode || unlockedTracks[track.id] || track.defaultUnlocked;
     if (isUnlocked) {
       setActivePlayingTrack(track);
       if (track.id === '02') {
@@ -501,11 +503,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <span className="text-[10px] sm:text-xs font-mono text-cyan-400 tracking-wider shrink-0">PORTAL ACTIVE</span>
               <span className="text-white/30 text-xs">·</span>
               <span className="text-[10px] sm:text-xs text-white/60 font-mono truncate">
-                {isVipRoute && holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
+                {isVipMode && holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
               </span>
             </div>
             <h2 className="text-sm sm:text-lg font-display font-bold text-white tracking-wide break-words">
-              {isVipRoute && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
+              {isVipMode && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
             </h2>
           </div>
         </div>
@@ -620,31 +622,35 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   )}
                 </button>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => {
-                      if (onNavigateToVerify) {
-                        onNavigateToVerify(FOUNDING_PASS_ID);
-                      } else if (typeof window !== 'undefined') {
-                        window.location.href = `/verify/${FOUNDING_PASS_ID}`;
-                      }
-                    }}
-                    className="flex items-center justify-center gap-1.5 py-2 px-2 text-[10.5px] font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.1)]"
-                    title="View Digital Passport HUD & Verification"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                    <span className="truncate">Digital Passport</span>
-                  </button>
+                {isVipMode && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        if (onNavigateToPassport) {
+                          onNavigateToPassport();
+                        } else if (onNavigateToVerify) {
+                          onNavigateToVerify(FOUNDING_PASS_ID);
+                        } else if (typeof window !== 'undefined') {
+                          window.location.href = `/verify/${FOUNDING_PASS_ID}`;
+                        }
+                      }}
+                      className="flex items-center justify-center gap-1.5 py-2 px-2 text-[10.5px] font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.1)]"
+                      title="View Digital Passport HUD & Verification"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <span className="truncate">Digital Passport</span>
+                    </button>
 
-                  <button
-                    onClick={() => setShowTransferModal(true)}
-                    className="flex items-center justify-center gap-1.5 py-2 px-2 text-[10.5px] font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.1)]"
-                    title="Transfer Pass Ownership to a new collector"
-                  >
-                    <Key className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                    <span className="truncate">Transfer Pass</span>
-                  </button>
-                </div>
+                    <button
+                      onClick={() => setShowTransferModal(true)}
+                      className="flex items-center justify-center gap-1.5 py-2 px-2 text-[10.5px] font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.1)]"
+                      title="Transfer Pass Ownership to a new collector"
+                    >
+                      <Key className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <span className="truncate">Transfer Pass</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -657,7 +663,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         {/* Right Column: Perks and Physical Drop */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-6">
           {/* Navigation Tabs (Mobile optimized scrollable / grid) */}
-          <div className={`grid ${isVipRoute ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
+          <div className={`grid ${isVipMode ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
             <button
               onClick={() => setActiveTab('pass')}
               className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
@@ -680,7 +686,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <BookOpen className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">Comic</span>
             </button>
-            {isVipRoute && (
+            {isVipMode && (
               <button
                 onClick={() => setActiveTab('assets')}
                 className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] ${
@@ -708,13 +714,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   className="space-y-4 lg:space-y-6"
                 >
                   {/* If already unlocked, provide a prominent shortcut banner to jump right into the Hub */}
-                  {(isVipUnlocked || isVisualizerUnlocked) ? (
+                  {(isVipMode || isVisualizerUnlocked) ? (
                     <div className="bg-gradient-to-r from-emerald-950/40 via-cyan-950/40 to-black/60 backdrop-blur-xl border border-emerald-500/40 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(16,185,129,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-400/40 text-emerald-300 font-semibold tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
                             <Unlock className="w-3 h-3 text-emerald-400" />
-                            VIP ACCESS ACTIVE
+                            {isVipMode ? 'VIP ACCESS ACTIVE' : 'ARCHIVE ACCESS ACTIVE'}
                           </span>
                           <span className="text-[10px] font-mono text-cyan-400/80">11 TRACKS DECRYPTED</span>
                         </div>
@@ -825,7 +831,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
                       {PERK_MODULES.map((perk) => {
                         const Icon = perk.icon;
-                        const isSubmitted = Boolean(isVipUnlocked || perkSubmitted[perk.id]);
+                        const isSubmitted = Boolean(isVipMode || perkSubmitted[perk.id]);
 
                         return (
                           <motion.div
@@ -991,7 +997,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     {/* 11 Track Visualizer Widgets Grid (Clean 3-column layout on wide screens) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                       {VISUALIZER_TRACKS.map((track, index) => {
-                        const isUnlocked = Boolean(isVipUnlocked || unlockedTracks[track.id] || track.defaultUnlocked);
+                        const isUnlocked = Boolean(isVipMode || unlockedTracks[track.id] || track.defaultUnlocked);
 
                         return (
                           <motion.div
@@ -1292,7 +1298,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           )}
 
           {/* Tab 3: My Assets — claimed physical pass, perks & ownership (strictly gated to explicit VIP verification route) */}
-          {isVipRoute && activeTab === 'assets' && (
+          {isVipMode && activeTab === 'assets' && (
             <motion.div
               key="assets-view"
               initial={{ opacity: 0, y: 15 }}
@@ -1333,7 +1339,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => onNavigateToVerify?.(FOUNDING_PASS_ID)}
+                        onClick={() => (onNavigateToPassport ? onNavigateToPassport() : onNavigateToVerify?.(FOUNDING_PASS_ID))}
                         className="text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
                       >
                         Register holder name
@@ -1378,7 +1384,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       action: 'Open',
                       onClick: () => {
                         setActiveTab('pass');
-                        setPassSubView(isVipUnlocked || isVisualizerUnlocked ? 'hub' : 'overview');
+                        setPassSubView(isVipMode || isVisualizerUnlocked ? 'hub' : 'overview');
                       },
                     },
                     {
@@ -1446,7 +1452,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onNavigateToVerify?.(FOUNDING_PASS_ID)}
+                    onClick={() => (onNavigateToPassport ? onNavigateToPassport() : onNavigateToVerify?.(FOUNDING_PASS_ID))}
                     className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/30 hover:border-cyan-400 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
                   >
                     <User className="w-3.5 h-3.5" />

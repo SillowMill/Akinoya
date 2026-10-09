@@ -324,7 +324,13 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       {/* Top Simple Back Navigation */}
       <div className="flex items-center justify-between mb-5">
         <button
-          onClick={onNavigateHome}
+          onClick={() => {
+            if (isClaimed && onOpenVisualizerHub) {
+              onOpenVisualizerHub();
+            } else {
+              onNavigateHome();
+            }
+          }}
           className="inline-flex items-center gap-2 text-xs font-mono text-white/60 hover:text-white transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5 text-white/50" />
@@ -433,8 +439,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                   htmlFor="holder-claim-name"
                   className="flex items-center justify-between gap-2 text-[10px] tracking-wider"
                 >
-                  <span className="text-cyan-300 font-semibold">
-                    HOLDER NAME <span className="text-white/45">(REQUIRED TO CLAIM PASS)</span>
+                  <span className="text-cyan-300 font-bold uppercase tracking-wider">
+                    HOLDER NAME REQUIRED TO CLAIM
                   </span>
                   <span className="text-amber-300/90 shrink-0">UNCLAIMED</span>
                 </label>

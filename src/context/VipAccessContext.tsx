@@ -145,73 +145,13 @@ export const VipAccessProvider: React.FC<{ children: ReactNode }> = ({ children 
     const hasEnc = Boolean(searchParams.get('enc'));
 
     if (rawToken && rawToken.trim() && !isVerifyRoute && !hasEnc) {
-      const cleanToken = rawToken.trim().toUpperCase();
-
-      // Step 2: Immediately wipe the ?token=... query parameter from browser address bar
-      // so the URL cannot be copied or shared with the token attached
-      const cleanPath =
-        window.location.pathname === '/vip' ? '/' : window.location.pathname;
+      const cleanToken = rawToken.trim().toUpperCase().replace(/^#/, '');
       try {
-        window.history.replaceState({}, document.title, cleanPath);
-      } catch (err) {
-        console.warn('[VIP] Could not replace state:', err);
+        window.location.replace(`/verify/${cleanToken}`);
+      } catch {
+        window.location.href = `/verify/${cleanToken}`;
       }
-
-      // Step 3: Redeem and bind token to this single-device session
-      const currentDeviceId = getOrCreateDeviceId();
-
-      fetch('/api/nfc/redeem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: cleanToken, deviceId: currentDeviceId }),
-      })
-        .then(async (res) => {
-          const ct = res.headers.get('content-type') || '';
-          if (ct.includes('application/json')) {
-            return res.json();
-          }
-          return { success: res.ok };
-        })
-        .then((data) => {
-          if (data && data.success) {
-            // Successfully redeemed & bound to this device!
-            setDeviceSession(cleanToken);
-            setIsVipUnlocked(true);
-            setIsNfcVerified(true);
-            setNfcToken(cleanToken);
-            triggerToast('VIP PASS UNLOCKED — WELCOME TO ÄKINOYA', 'success');
-            soundManager.playUnlockChime();
-          } else if (data && data.error === 'TOKEN_ALREADY_BOUND') {
-            // Token is already bound to another device!
-            if (!hadExistingAccess) {
-              // Reject auto-authentication on this device to prevent link forwarding
-              clearDeviceSession();
-              setIsVipUnlocked(false);
-              setIsNfcVerified(false);
-              triggerToast('ACCESS DENIED: NFC PASS BOUND TO ANOTHER DEVICE', 'error');
-              soundManager.playDenyTone();
-            }
-          } else {
-            // Invalid token
-            if (!hadExistingAccess) {
-              triggerToast('INVALID NFC PASS TOKEN', 'error');
-              soundManager.playDenyTone();
-            }
-          }
-        })
-        .catch(() => {
-          // If offline or network error: allow access if device had session or bind locally
-          if (hadExistingAccess) {
-            setIsVipUnlocked(true);
-          } else {
-            setDeviceSession(cleanToken);
-            setIsVipUnlocked(true);
-            setIsNfcVerified(true);
-            setNfcToken(cleanToken);
-            triggerToast('VIP PASS UNLOCKED — WELCOME TO ÄKINOYA', 'success');
-            soundManager.playUnlockChime();
-          }
-        });
+      return;
     } else {
       // Direct visits or non-token page loads
       if (hadExistingAccess) {

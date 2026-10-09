@@ -13,28 +13,24 @@ import { FloatingAudioControl } from './components/FloatingAudioControl';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { KycVerification } from './components/KycVerification';
 import { CheckoutSuccess } from './components/CheckoutSuccess';
-import { useVipAccess } from './context/VipAccessContext';
 import { NfcHudToast } from './components/NfcHudToast';
 import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerification';
-import { isExplicitVipRouteActive, setExplicitVipRouteActive } from './utils/holder';
 
 export default function App() {
-  const { isVipUnlocked, unlockVip, lockVip } = useVipAccess();
-  const [sessionUnlocked, setSessionUnlocked] = useState<boolean>(() => {
+  // Public Site Unlock (strictly isolated from VIP status; only unlocked via entering passcode 'SillowMill2027' in ComingSoonGate)
+  const [publicUnlocked, setPublicUnlocked] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      const isRouteActive = isExplicitVipRouteActive();
-      // Only inherit session if an explicit verification route has been active
-      if (isRouteActive) {
-        return sessionStorage.getItem('akinoya_vip_unlocked') === 'true';
-      }
-      return false;
+      return sessionStorage.getItem('akinoya_public_unlocked') === 'true';
     }
     return false;
   });
 
-  const isUnlocked = isVipUnlocked || sessionUnlocked;
   const [viewMode, setViewMode] = useState<'orbit' | 'surface'>('orbit');
   const [backdropOnly, setBackdropOnly] = useState<boolean>(false);
+
+  // VIP Sub-view inside /verify route: 'passport' (HUD Certificate) | 'portal' (Personalized VIP Unlocked Portal)
+  const [vipSubView, setVipSubView] = useState<'passport' | 'portal'>('passport');
+
   const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify'>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
@@ -45,15 +41,34 @@ export default function App() {
       if (
         path === '/verify' ||
         path.startsWith('/verify/') ||
+        path === '/vip' ||
         search.includes('enc=') ||
         search.includes('claim=') ||
-        search.includes('token=')
+        search.includes('token=') ||
+        search.includes('nfc=') ||
+        search.includes('pass=')
       ) {
         return 'verify';
       }
     }
     return 'home';
   });
+
+  // Redirect incoming token parameters from root domain directly to /verify/[id]
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const token =
+      searchParams.get('token') ||
+      searchParams.get('nfc_token') ||
+      searchParams.get('nfc') ||
+      searchParams.get('pass');
+    if (token) {
+      const cleanToken = token.trim().toUpperCase().replace(/^#/, '');
+      window.history.replaceState({}, '', `/verify/${cleanToken}`);
+      setRoute('verify');
+    }
+  }, []);
 
   // Handle browser back/forward navigation
   useEffect(() => {
@@ -69,9 +84,12 @@ export default function App() {
       } else if (
         path === '/verify' ||
         path.startsWith('/verify/') ||
+        path === '/vip' ||
         search.includes('enc=') ||
         search.includes('claim=') ||
-        search.includes('token=')
+        search.includes('token=') ||
+        search.includes('nfc=') ||
+        search.includes('pass=')
       ) {
         setRoute('verify');
       } else {
@@ -93,54 +111,42 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Check sessionStorage on mount for persistent VIP unlock across page reloads ONLY if explicit route was active
-  useEffect(() => {
+  const handlePublicUnlockSuccess = () => {
     try {
-      const isRouteActive = isExplicitVipRouteActive();
-      if (isRouteActive) {
-        const savedState = sessionStorage.getItem('akinoya_vip_unlocked');
-        if (savedState === 'true') {
-          setSessionUnlocked(true);
-        }
-      } else {
-        // Direct domain visit: MUST ALWAYS see the standard locked public site / password gate.
-        setSessionUnlocked(false);
-      }
-    } catch {
-      // Fallback if sessionStorage is inaccessible
-    }
-  }, []);
-
-  const handleUnlockSuccess = () => {
-    setSessionUnlocked(true);
-    unlockVip();
-  };
-
-  const handleLockPortal = () => {
-    try {
-      sessionStorage.removeItem('akinoya_vip_unlocked');
+      sessionStorage.setItem('akinoya_public_unlocked', 'true');
     } catch {
       // Fallback
     }
-    setExplicitVipRouteActive(false);
-    setSessionUnlocked(false);
-    lockVip();
+    setPublicUnlocked(true);
+  };
+
+  const handlePublicLock = () => {
+    try {
+      sessionStorage.removeItem('akinoya_public_unlocked');
+    } catch {
+      // Fallback
+    }
+    setPublicUnlocked(false);
     setViewMode('orbit');
   };
 
+  const isCanvasUnlocked = route === 'verify' ? true : publicUnlocked;
+  const isVipRoute = route === 'verify';
+
   return (
     <main className="relative min-h-[100dvh] w-full bg-[#050505] text-white flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Global NFC Magic Link Verification HUD Toast (Strictly restricted to explicit VIP access routes) */}
-      {(route === 'verify' || isExplicitVipRouteActive()) && <NfcHudToast />}
+      {/* Global NFC Magic Link Verification HUD Toast (Strictly restricted to explicit VIP access route) */}
+      {isVipRoute && <NfcHudToast />}
 
-      {/* Immersive Planet Äkinoya Canvas with exact user background & particles */}
-      <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isUnlocked} />
+      {/* Immersive Planet Äkinoya Canvas */}
+      <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isCanvasUnlocked} />
 
       {/* Top Bar Navigation (Zone 1, 2, 3) */}
       {!backdropOnly && (
         <TopBar
-          isUnlocked={isUnlocked}
-          onNavigateToVerify={() => navigateTo('verify', '/verify')}
+          isUnlocked={isVipRoute ? true : publicUnlocked}
+          isVip={isVipRoute}
+          onNavigateToVerify={isVipRoute ? () => setVipSubView('passport') : undefined}
         />
       )}
 
@@ -157,29 +163,38 @@ export default function App() {
         <div className="relative z-20 flex-1 w-full">
           <CheckoutSuccess
             onEnterPortal={() => {
-              setSessionUnlocked(true);
-              unlockVip();
+              handlePublicUnlockSuccess();
               navigateTo('home', '/');
             }}
             onBackToComic={() => navigateTo('home', '/')}
           />
         </div>
       ) : route === 'verify' ? (
+        /* Exclusive VIP Verification & Personal Portal Route (/verify/[id]) */
         <div className="relative z-20 flex-1 w-full">
-          <AkinoyaPassportVerification
-            onNavigateHome={() => navigateTo('home', '/')}
-            onOpenVisualizerHub={() => {
-              setSessionUnlocked(true);
-              unlockVip();
-              navigateTo('home', '/');
-            }}
-          />
+          {vipSubView === 'passport' ? (
+            <AkinoyaPassportVerification
+              onNavigateHome={() => navigateTo('home', '/')}
+              onOpenVisualizerHub={() => setVipSubView('portal')}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-2 sm:px-4 md:px-6 lg:px-8 max-w-7xl w-full mx-auto">
+              <UnlockedExperience
+                isVip={true}
+                onLockPortal={() => setVipSubView('passport')}
+                onNavigateToPassport={() => setVipSubView('passport')}
+                onToggleViewMode={setViewMode}
+                currentViewMode={viewMode}
+                onNavigateToVerify={() => setVipSubView('passport')}
+              />
+            </div>
+          )}
         </div>
       ) : (
-        /* Dynamic Center Content (Gate or Unlocked VIP Experience) */
+        /* Public Root Domain (100% Locked Site) */
         <div className="relative z-20 flex-1 flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-2 sm:px-4 md:px-6 lg:px-8 max-w-7xl w-full mx-auto">
           <AnimatePresence mode="wait">
-            {!isUnlocked ? (
+            {!publicUnlocked ? (
               <motion.div
                 key="gate-view"
                 initial={{ opacity: 0 }}
@@ -189,7 +204,7 @@ export default function App() {
                 className="w-full flex flex-col items-center"
               >
                 <ComingSoonGate
-                  onUnlockSuccess={handleUnlockSuccess}
+                  onUnlockSuccess={handlePublicUnlockSuccess}
                   onToggleBackdropMode={() => setBackdropOnly(!backdropOnly)}
                   backdropOnly={backdropOnly}
                 />
@@ -220,10 +235,10 @@ export default function App() {
                 className="w-full flex items-center justify-center"
               >
                 <UnlockedExperience
-                  onLockPortal={handleLockPortal}
+                  isVip={false}
+                  onLockPortal={handlePublicLock}
                   onToggleViewMode={setViewMode}
                   currentViewMode={viewMode}
-                  onNavigateToVerify={(id) => navigateTo('verify', id ? `/verify/${id}` : '/verify')}
                 />
               </motion.div>
             )}

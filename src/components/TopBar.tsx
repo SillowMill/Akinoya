@@ -4,10 +4,11 @@ import { SoundtrackButton } from './SoundtrackButton';
 
 interface TopBarProps {
   isUnlocked: boolean;
+  isVip?: boolean;
   onNavigateToVerify?: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, onNavigateToVerify }) => {
+export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, isVip = false, onNavigateToVerify }) => {
   return (
     <header className="relative z-30 w-full border-b border-white/10 bg-black/50 backdrop-blur-md px-4 sm:px-6 py-2.5 sm:py-3.5">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
@@ -24,7 +25,7 @@ export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, onNavigateToVerify }
           <a href="#archives" className="hover:text-white transition-colors">
             Archive
           </a>
-          {onNavigateToVerify && (
+          {isVip && onNavigateToVerify && (
             <button
               type="button"
               onClick={onNavigateToVerify}
@@ -41,12 +42,19 @@ export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, onNavigateToVerify }
           <SoundtrackButton />
 
           {isUnlocked ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono text-emerald-300 bg-emerald-950/60 border border-emerald-400/30 rounded-xl">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>VIP VERIFIED</span>
-            </div>
+            isVip ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono text-emerald-300 bg-emerald-950/60 border border-emerald-400/30 rounded-xl">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>VIP VERIFIED</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-400/30 rounded-xl">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                <span>ACCESS GRANTED</span>
+              </div>
+            )
           ) : (
-            onNavigateToVerify && (
+            isVip && onNavigateToVerify && (
               <button
                 type="button"
                 onClick={onNavigateToVerify}
