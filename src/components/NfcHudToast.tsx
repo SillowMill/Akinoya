@@ -66,7 +66,7 @@ export const NfcHudToast: React.FC = () => {
                       : 'bg-cyan-950 text-cyan-300 border-cyan-400/40 shadow-[0_0_10px_rgba(34,211,238,0.25)]'
                   }`}
                 >
-                  {toast.type === 'error' ? 'AUTHENTICATION REJECTED' : 'NFC PROTOCOL ACTIVE'}
+                  {toast.type === 'error' ? 'AUTHENTICATION REJECTED' : 'VIP PROTOCOL ACTIVE'}
                 </span>
                 {toast.type !== 'error' && (
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.9)]" />

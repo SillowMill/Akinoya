@@ -163,7 +163,7 @@ export const VipAccessProvider: React.FC<{ children: ReactNode }> = ({ children 
             setIsVipUnlocked(true);
             setIsNfcVerified(true);
             setNfcToken(cleanToken);
-            triggerToast('NFC PASS VERIFIED — WELCOME TO ÄKINOYA', 'success');
+            triggerToast('VIP PASS UNLOCKED — WELCOME TO ÄKINOYA', 'success');
             soundManager.playUnlockChime();
           } else if (data && data.error === 'TOKEN_ALREADY_BOUND') {
             // Token is already bound to another device!
@@ -192,7 +192,7 @@ export const VipAccessProvider: React.FC<{ children: ReactNode }> = ({ children 
             setIsVipUnlocked(true);
             setIsNfcVerified(true);
             setNfcToken(cleanToken);
-            triggerToast('NFC PASS VERIFIED — WELCOME TO ÄKINOYA', 'success');
+            triggerToast('VIP PASS UNLOCKED — WELCOME TO ÄKINOYA', 'success');
             soundManager.playUnlockChime();
           }
         });
