@@ -196,9 +196,9 @@ export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = ({
                   sessionStorage.setItem('akinoya_patron_role', 'PATRON MEMBER');
                   window.location.href = '/community';
                 }}
-                className="py-1.5 px-3 rounded-lg text-[11px] font-mono font-bold text-black bg-amber-400 hover:bg-amber-300 transition-all cursor-pointer whitespace-nowrap shadow-[0_0_12px_rgba(245,158,11,0.3)] hover:scale-[1.02] flex items-center justify-center gap-1 shrink-0"
+                className="py-1.5 px-3.5 rounded-lg text-[11px] font-mono font-bold text-black bg-amber-400 hover:bg-amber-300 transition-all cursor-pointer whitespace-nowrap shadow-[0_0_12px_rgba(245,158,11,0.3)] hover:scale-[1.02] flex items-center justify-center gap-1 shrink-0"
               >
-                <span>🧪 DEMO / TEST ACCESS</span>
+                <span>🧪 PREVIEW CREATIVE VAULT</span>
               </button>
             </div>
 

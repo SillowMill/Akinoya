@@ -1,44 +1,98 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Hash,
-  Volume2,
-  Play,
-  Pause,
-  Send,
-  Image as ImageIcon,
-  Heart,
-  MessageSquare,
+  Download,
+  Film,
   Sparkles,
   ShieldCheck,
   CheckCircle2,
-  Crown,
-  Radio,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  FileText,
+  Music,
+  Layers,
+  Image as ImageIcon,
+  Send,
+  ThumbsUp,
+  MessageSquare,
+  MessageCircle,
   Vote,
-  Film,
+  X,
+  ArrowLeft,
+  Maximize2,
+  ChevronRight,
+  ChevronDown,
   Lock,
   Unlock,
-  Key,
-  Users,
-  Bell,
-  ArrowLeft,
-  X,
+  Radio,
+  Cpu,
+  Eye,
   Share2,
-  Flame,
-  ThumbsUp,
-  MessageCircle,
-  HelpCircle,
-  LogOut,
-  ChevronRight,
   ExternalLink,
+  Users,
+  Compass,
+  Key,
+  FolderDown,
+  Sliders,
+  Flame,
+  Check,
+  Crown,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
+import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
+import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME, BINGAA_COVER_URL, BINGAA_COVER_FILENAME } from '../utils/certificate';
 
-export type CommunityChannel = 'announcements' | 'general' | 'vault' | 'governance';
+export type CreativeHubSection = 'downloads' | 'workflows' | 'visualizer' | 'discussion' | 'governance';
 
-interface ChatMessage {
+interface AssetVaultItem {
+  id: string;
+  title: string;
+  category: string;
+  fileFormat: string;
+  fileSize: string;
+  description: string;
+  downloadUrl: string;
+  fileName: string;
+  thumbnailUrl: string;
+  isAudio?: boolean;
+}
+
+interface WorkflowItem {
+  id: string;
+  title: string;
+  toolstack: string;
+  duration: string;
+  description: string;
+  videoPlaceholderUrl: string;
+  metrics: { fps: string; engine: string; resolution: string };
+  comments: WorkflowComment[];
+}
+
+interface WorkflowComment {
+  id: string;
+  author: string;
+  role: 'CREATOR' | 'PATRON MEMBER' | 'FOUNDING VIP';
+  timestamp: string;
+  text: string;
+}
+
+interface VisualizerTrackItem {
+  id: string;
+  trackNumber: string;
+  title: string;
+  status: string;
+  duration: string;
+  fps: string;
+  renderEngine: string;
+  synopsis: string;
+  previewImage: string;
+}
+
+interface DiscussionPost {
   id: string;
   author: string;
   role: 'CREATOR' | 'PATRON MEMBER' | 'FOUNDING VIP';
@@ -48,10 +102,10 @@ interface ChatMessage {
   imageUrl?: string;
   likes: number;
   hasLiked?: boolean;
-  replies?: ChatReply[];
+  replies: DiscussionReply[];
 }
 
-interface ChatReply {
+interface DiscussionReply {
   id: string;
   author: string;
   role: 'CREATOR' | 'PATRON MEMBER' | 'FOUNDING VIP';
@@ -60,20 +114,14 @@ interface ChatReply {
   content: string;
 }
 
-interface PollOption {
-  id: string;
-  text: string;
-  votes: number;
-}
-
-interface GovernancePoll {
+interface GovernanceBallot {
   id: string;
   title: string;
-  badge: string;
+  category: string;
   description: string;
-  options: PollOption[];
-  userVotedId?: string;
   totalVotes: number;
+  userVoteId?: string;
+  options: { id: string; label: string; votes: number }[];
 }
 
 interface CommunityHubProps {
@@ -81,10 +129,7 @@ interface CommunityHubProps {
   onOpenAuthModal?: () => void;
 }
 
-export const CommunityHub: React.FC<CommunityHubProps> = ({
-  onBackToHome,
-  onOpenAuthModal,
-}) => {
+export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpenAuthModal }) => {
   // Authentication & Patron preview state
   const [patronToken, setPatronToken] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
@@ -108,177 +153,257 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     return 'Patron Member #042';
   });
 
-  const [activeChannel, setActiveChannel] = useState<CommunityChannel>('general');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [membersDrawerOpen, setMembersDrawerOpen] = useState(false);
+  // Active Hub Section
+  const [activeSection, setActiveSection] = useState<CreativeHubSection>('downloads');
 
-  // Chat state
-  const [messageText, setMessageText] = useState('');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
+  // Download Toast
+  const [downloadToast, setDownloadToast] = useState<string | null>(null);
 
-  // Thread reply drawer state
-  const [activeThreadMessage, setActiveThreadMessage] = useState<ChatMessage | null>(null);
-  const [threadReplyText, setThreadReplyText] = useState('');
+  // Audio Preview state in Asset Vault
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
 
-  // Vault audio/video state
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [openVaultCommentId, setOpenVaultCommentId] = useState<string | null>(null);
-  const [vaultCommentText, setVaultCommentText] = useState('');
+  // Visualizer Theater state
+  const [activeVisualizerTrack, setActiveVisualizerTrack] = useState<number>(0);
+  const [isTheaterPlaying, setIsTheaterPlaying] = useState<boolean>(false);
+  const [isTheaterMuted, setIsTheaterMuted] = useState<boolean>(false);
 
-  // Initial Pre-populated Messages
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  // Workflows Comments Drawer state
+  const [openWorkflowDrawerId, setOpenWorkflowDrawerId] = useState<string | null>(null);
+  const [workflowCommentInputs, setWorkflowCommentInputs] = useState<Record<string, string>>({});
+
+  // Discussion state
+  const [discussionInput, setDiscussionInput] = useState('');
+  const [discussionImage, setDiscussionImage] = useState<string | null>(null);
+  const discussionFileInputRef = useRef<HTMLInputElement>(null);
+  const [activeReplyPost, setActiveReplyPost] = useState<DiscussionPost | null>(null);
+  const [replyInputText, setReplyInputText] = useState('');
+
+  const isSimulatedPatron = patronToken === 'PATRON-TEST-ACCESS';
+
+  // 1. ASSET & DOWNLOAD VAULT DATA
+  const assetVaultItems: AssetVaultItem[] = [
     {
-      id: 'm1',
-      author: 'Odi',
-      role: 'CREATOR',
-      avatarBg: 'from-amber-400 to-amber-600',
-      timestamp: 'Today at 12:30',
-      content:
-        'Welcome to the Äkinoya Community Hub! This space is reserved for Patrons and Founding Pass holders. Chat in #general, check unreleased animation in #early-access-vault, and cast your votes in #lore-governance.',
-      likes: 19,
-      hasLiked: false,
-      replies: [
+      id: 'asset-pdf',
+      title: 'Bingäa Issue #01 — Complete 32-Page Master Print Edition',
+      category: 'GRAPHIC NOVEL MASTER',
+      fileFormat: 'PDF ARCHIVE',
+      fileSize: '114.8 MB · 300 DPI CMYK',
+      description:
+        'Uncompressed production print file including full 32-page narrative sequence, wraparound cover art, author lore glossary, and high-resolution typography vectors.',
+      downloadUrl: BINGAA_PDF_URL,
+      fileName: BINGAA_PDF_FILENAME,
+      thumbnailUrl: bingaaComicCover,
+    },
+    {
+      id: 'asset-stems',
+      title: 'Sub-Orbital Drift — 16-Track Studio Audio Stem Archive',
+      category: 'UNRELEASED MUSIC STEMS',
+      fileFormat: 'ZIP STEMS',
+      fileSize: '348.2 MB · 24-BIT / 96kHz WAV',
+      description:
+        'Isolated studio stems: analog modular synth arpeggios, sub-bass 808 transient beds, spatial reverb tails, and binaural atmosphere channels for remixing and production study.',
+      downloadUrl: '/assets/SubOrbitalDrift_Stems.zip',
+      fileName: 'SubOrbitalDrift_Stems_96kHz.zip',
+      thumbnailUrl: visualizerThumbnailImg,
+      isAudio: true,
+    },
+    {
+      id: 'asset-4k-render',
+      title: 'Äkinoya Twilight World — 4K Volumetric Environment Render',
+      category: '3D CONCEPT ASSET',
+      fileFormat: '4K PNG',
+      fileSize: '28.4 MB · 3840 x 2160 UHD',
+      description:
+        'Raw cinematic beauty render illustrating the ionized stratosphere and obsidian spires of Planet Äkinoya. Zero compression, full dynamic range with alpha channel.',
+      downloadUrl: akinoyaVistaImg,
+      fileName: 'Akinoya_Twilight_World_4K_Master.png',
+      thumbnailUrl: akinoyaVistaImg,
+    },
+    {
+      id: 'asset-cover-art',
+      title: 'Bingäa Official Cover Art — High-Res Vector Illustration',
+      category: 'OFFICIAL ARTWORK',
+      fileFormat: 'PNG + SVG VECTORS',
+      fileSize: '18.2 MB · ULTRA-RES',
+      description:
+        'Original digital painting and layer comp for the official graphic novel cover, suitable for large format poster prints and digital wallpaper collections.',
+      downloadUrl: BINGAA_COVER_URL,
+      fileName: BINGAA_COVER_FILENAME,
+      thumbnailUrl: bingaaComicCover,
+    },
+  ];
+
+  // 2. WORKFLOWS & CREATIVE LAB DATA
+  const [workflows, setWorkflows] = useState<WorkflowItem[]>([
+    {
+      id: 'wf-volumetric',
+      title: 'Atmospheric Ionization & Twilight Horizon Simulation',
+      toolstack: 'Blender 4.2 · Octane Render · DaVinci Resolve',
+      duration: '14:28 Breakdown',
+      description:
+        'Behind-the-scenes breakdown of how we achieved the signature twilight purple-cyan color transitions using volumetric scatter nodes, velocity particle emitters, and spectral grading curves.',
+      videoPlaceholderUrl: akinoyaVistaImg,
+      metrics: { fps: '60.00', engine: 'OCTANE SPECTRAL', resolution: '4K DCI' },
+      comments: [
         {
-          id: 'r1',
+          id: 'wfc-1',
           author: 'Elena Vance',
           role: 'PATRON MEMBER',
-          avatarBg: 'from-cyan-400 to-blue-600',
-          timestamp: 'Today at 12:35',
-          content: 'Incredible setup. Love the dark sci-fi aesthetic!',
+          timestamp: '2h ago',
+          text: 'The density multiplier you used for the high-altitude cloud rim creates incredible cinematic depth.',
+        },
+        {
+          id: 'wfc-2',
+          author: 'Odi',
+          role: 'CREATOR',
+          timestamp: '1h ago',
+          text: 'Thanks Elena! We layered two separate absorption shaders with subtle chromatic aberration at the horizon edge.',
         },
       ],
     },
     {
-      id: 'm2',
-      author: 'Elena Vance',
-      role: 'PATRON MEMBER',
-      avatarBg: 'from-cyan-400 to-blue-600',
-      timestamp: 'Today at 13:05',
-      content:
-        'Just finished reading the 32-page high-res Bingäa digital release. The character designs and atmospheric lore on the twilight world are stunning!',
-      likes: 12,
-      hasLiked: false,
+      id: 'wf-audio-synthesis',
+      title: 'Sound Design: Modular Analog Synthesis for Planetary Signals',
+      toolstack: 'Ableton Live 12 · Eurorack Modular · Moog Sub 37',
+      duration: '18:40 Breakdown',
+      description:
+        'Deep dive into the harmonic FM synthesis techniques used to construct the extraterrestrial radio telemetry audio loops that play across the Äkinoya surface.',
+      videoPlaceholderUrl: visualizerThumbnailImg,
+      metrics: { fps: 'N/A', engine: 'BINAURAL 3D STEREO', resolution: '96kHz/24bit' },
+      comments: [
+        {
+          id: 'wfc-3',
+          author: 'Kaelen Thorne',
+          role: 'PATRON MEMBER',
+          timestamp: '3h ago',
+          text: 'Can you share the filter envelope settings for the low-frequency drone in the opening sequence?',
+        },
+      ],
     },
     {
-      id: 'm3',
-      author: 'Kaelen Thorne',
-      role: 'PATRON MEMBER',
-      avatarBg: 'from-emerald-400 to-teal-600',
-      timestamp: 'Today at 13:42',
-      content:
-        'The soundtrack in orbit mode is pure immersion. Has anyone checked out Council Ballot #01 in the governance channel yet?',
-      likes: 8,
-      hasLiked: false,
+      id: 'wf-storyboard',
+      title: 'Graphic Novel Composition: Visual Pacing from Thumbnails to Inks',
+      toolstack: 'Clip Studio Paint EX · Adobe Photoshop',
+      duration: '11:15 Breakdown',
+      description:
+        'Deconstruction of page 12 to 16 in Bingäa Issue #01. Examining panel flow, negative space, mechanical line weights, and traditional screentone application.',
+      videoPlaceholderUrl: bingaaComicCover,
+      metrics: { fps: 'N/A', engine: 'RASTER 600DPI', resolution: 'B4 MANUSCRIPT' },
+      comments: [],
+    },
+  ]);
+
+  // 3. EARLY ACCESS VISUALIZER HUB DATA
+  const visualizerTracks: VisualizerTrackItem[] = [
+    {
+      id: 'vt-1',
+      trackNumber: '01',
+      title: "Don't Need — Kinetic Typographic Visualizer (Draft 02)",
+      status: 'EARLY ACCESS PREVIEW',
+      duration: '03:18',
+      fps: '60 FPS',
+      renderEngine: 'UNREAL ENGINE 5.4 · LUMEN',
+      synopsis:
+        'High-energy typographic sequence with volumetric camera sweeps across the neon skyline of Upper Äkinoya.',
+      previewImage: visualizerThumbnailImg,
     },
     {
-      id: 'm4',
+      id: 'vt-2',
+      trackNumber: '02',
+      title: 'Bingäa — Twilight Descent (Cinematic Sequence Render)',
+      status: '4K ANIMATION PREVIEW',
+      duration: '04:02',
+      fps: '60 FPS',
+      renderEngine: 'BLENDER OCTANE · VOLUMETRICS',
+      synopsis:
+        'Full atmospheric entry sequence showing the pilot vessel gliding across the ionizing cloud ceiling into Sector 02.',
+      previewImage: akinoyaVistaImg,
+    },
+    {
+      id: 'vt-3',
+      trackNumber: '03',
+      title: 'Memories — Ambient Synthesizer World Loop',
+      status: 'WORK IN PROGRESS',
+      duration: '03:45',
+      fps: '30 FPS',
+      renderEngine: 'AFTER EFFECTS · PARTICLE ILLUSION',
+      synopsis:
+        'Meditative environmental loop depicting the slow rotation of Äkinoya against the binary star backdrop.',
+      previewImage: akinoyaVistaImg,
+    },
+  ];
+
+  // 4. CREATOR DISCUSSION BOARD DATA
+  const [discussionPosts, setDiscussionPosts] = useState<DiscussionPost[]>([
+    {
+      id: 'dp-1',
+      author: 'Odi',
+      role: 'CREATOR',
+      avatarBg: 'from-amber-400 to-amber-600',
+      timestamp: 'Today at 14:15',
+      content:
+        'Welcome to the official Sillow Mill Creative Vault & Product Hub! This environment consolidates all production downloads, workflow breakdowns, visualizer test reels, and community governance into one command center.\n\nDownload the raw print PDF for Bingäa below, and check out the new 4K animation preview in the Visualizer Hub!',
+      imageUrl: bingaaComicCover,
+      likes: 28,
+      hasLiked: false,
+      replies: [
+        {
+          id: 'dpr-1',
+          author: 'Elena Vance',
+          role: 'PATRON MEMBER',
+          avatarBg: 'from-cyan-400 to-blue-600',
+          timestamp: 'Today at 14:32',
+          content: 'The download vault layout is clean and fast. Stems sound immaculate in the DAW!',
+        },
+      ],
+    },
+    {
+      id: 'dp-2',
       author: 'Cygnus-9',
       role: 'FOUNDING VIP',
       avatarBg: 'from-purple-400 to-indigo-600',
-      timestamp: 'Today at 14:10',
+      timestamp: 'Today at 15:04',
       content:
-        'Voted for the Obsidian Spire! Looking forward to hearing how the audio synthesizer matrix develops in the upcoming chapter.',
-      likes: 15,
+        'Just reviewed the volumetric cloud breakdown in the Creative Lab. The lighting workflow at 08:30 is super insightful. Looking forward to casting my ballot for Chapter 2!',
+      likes: 14,
       hasLiked: false,
+      replies: [],
     },
   ]);
 
-  // Announcements Channel Posts
-  const [announcements] = useState([
+  // 5. LORE & GOVERNANCE DATA
+  const [governanceBallots, setGovernanceBallots] = useState<GovernanceBallot[]>([
     {
-      id: 'a1',
-      author: 'Odi (Director & Creator)',
-      role: 'CREATOR' as const,
-      timestamp: 'OCTOBER 10, 2026 · TRANSMISSION 001',
-      title: 'Transmission Genesis: Äkinoya Graphic Novel & Phase 01 Visualizers are LIVE',
-      content:
-        'Founding Pass holders & Patron community: We have officially deployed the unified Visualizer Hub and the complete 32-page digital graphic novel for Bingäa Issue #01. Work is now underway on the cinematic animation pipeline.',
-      imageUrl: bingaaComicCover,
-      reactions: { flame: 32, lightning: 24, gem: 41, cosmos: 19 },
-    },
-    {
-      id: 'a2',
-      author: 'Odi (Director & Creator)',
-      role: 'CREATOR' as const,
-      timestamp: 'OCTOBER 08, 2026 · TRANSMISSION 002',
-      title: 'Lore Reveal: Coordinates of the Sillow Resonance Field',
-      content:
-        'Telemetry confirmed at RA 04h 35m / +16° 30\'. The atmospheric density of Äkinoya operates on deterministic vibrational harmonics. Check the early access vault for raw sound stems from our upcoming studio session.',
-      imageUrl: akinoyaVistaImg,
-      reactions: { flame: 28, lightning: 17, gem: 36, cosmos: 22 },
-    },
-  ]);
-
-  // Governance Polls
-  const [polls, setPolls] = useState<GovernancePoll[]>([
-    {
-      id: 'poll-1',
+      id: 'ballot-territory',
       title: 'Council Ballot #01: Chapter 2 Planetary Territory Exploration',
-      badge: 'ACTIVE COUNCIL BALLOT',
+      category: 'NARRATIVE DIRECTIVE',
       description:
-        'Patron members vote to determine which territory within Planet Äkinoya will serve as the primary setting for Chapter 2 of the animated story.',
-      totalVotes: 89,
+        'Verified patrons vote to decide which territory within Planet Äkinoya will serve as the primary setting for Chapter 2 of the animated story.',
+      totalVotes: 94,
       options: [
-        { id: 'opt-1', text: 'Sector 04 — The Obsidian Spire & Resonance Core', votes: 41 },
-        { id: 'opt-2', text: 'The Neon Archipelago of Upper Äkinoya', votes: 29 },
-        { id: 'opt-3', text: 'Sub-Surface Crystal Caverns & Bioluminescent Vault', votes: 19 },
+        { id: 'opt-spire', label: 'Sector 04 — The Obsidian Spire & Resonance Core', votes: 46 },
+        { id: 'opt-archipelago', label: 'The Neon Archipelago of Upper Äkinoya', votes: 31 },
+        { id: 'opt-caverns', label: 'Sub-Surface Crystal Caverns & Bioluminescent Vault', votes: 17 },
       ],
-      userVotedId: undefined,
+      userVoteId: undefined,
     },
     {
-      id: 'poll-2',
-      title: 'Council Ballot #02: Wave 2 Exclusive Physical Artifact',
-      badge: 'COMMUNITY PRIORITY',
+      id: 'ballot-merch',
+      title: 'Council Ballot #02: Wave 2 Exclusive Physical Artifact Drop',
+      category: 'PHYSICAL MERCHANDISE',
       description:
-        'Which limited physical merchandise item should accompany the next limited drop for verified members?',
-      totalVotes: 64,
+        'Which physical collector piece should be prioritized for the upcoming batch release for Founding Pass & Patron members?',
+      totalVotes: 72,
       options: [
-        { id: 'opt-2a', text: 'Heavyweight Screenprinted Graphic Hoodie', votes: 28 },
-        { id: 'opt-2b', text: 'Embroidered Äkinoya Pilot Flight Jacket', votes: 24 },
-        { id: 'opt-2c', text: 'Anodized Titanium VIP Keycard & Medallion', votes: 12 },
+        { id: 'opt-jacket', label: 'Embroidered Äkinoya Pilot Flight Jacket', votes: 34 },
+        { id: 'opt-hoodie', label: 'Heavyweight Screenprinted Graphic Hooded Fleece', votes: 26 },
+        { id: 'opt-keycard', label: 'Anodized Titanium VIP Keycard & NFC Medallion', votes: 12 },
       ],
-      userVotedId: undefined,
+      userVoteId: undefined,
     },
   ]);
 
-  // Vault items and dedicated comment threads
-  const [vaultComments, setVaultComments] = useState<Record<string, ChatReply[]>>({
-    'vault-video': [
-      {
-        id: 'vc1',
-        author: 'Elena Vance',
-        role: 'PATRON MEMBER',
-        avatarBg: 'from-cyan-400 to-blue-600',
-        timestamp: '1h ago',
-        content: 'The lighting transitions at 00:24 are cinematic perfection.',
-      },
-      {
-        id: 'vc2',
-        author: 'Odi',
-        role: 'CREATOR',
-        avatarBg: 'from-amber-400 to-amber-600',
-        timestamp: '30m ago',
-        content: 'Thanks Elena! We are rendering the final 4K volumetric fog this week.',
-      },
-    ],
-    'vault-audio': [
-      {
-        id: 'vc3',
-        author: 'Kaelen Thorne',
-        role: 'PATRON MEMBER',
-        avatarBg: 'from-emerald-400 to-teal-600',
-        timestamp: '2h ago',
-        content: 'That sub-bass frequency around 01:15 vibrates through studio monitors. Master quality is incredible.',
-      },
-    ],
-  });
-
-  const isSimulatedPatron = patronToken === 'PATRON-TEST-ACCESS';
-
-  // Handle instant test login
+  // Test Access Activator
   const handleActivateTestAccess = () => {
     soundManager.playUnlockChime();
     sessionStorage.setItem('akinoya_patron_token', 'PATRON-TEST-ACCESS');
@@ -294,157 +419,184 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     setPatronToken(null);
   };
 
-  // Chat message submit
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!messageText.trim() && !selectedImage) return;
+  // Trigger Real File Download
+  const handleDownloadAsset = (asset: AssetVaultItem) => {
+    soundManager.playUnlockChime();
+    setDownloadToast(`Initiating download for: ${asset.fileName}`);
 
-    soundManager.playTone(720, 0.06);
+    // If it's a known static asset, download directly
+    if (asset.downloadUrl.startsWith('/assets/') || asset.downloadUrl.includes('jpg') || asset.downloadUrl.includes('png')) {
+      const link = document.createElement('a');
+      link.href = asset.downloadUrl;
+      link.download = asset.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // Create deterministic text manifest blob for demo/stems
+      const blob = new Blob(
+        [
+          `SILLOW MILL CREATIVE VAULT · ASSET DOWNLOAD MANIFEST\n\n` +
+            `Asset Title: ${asset.title}\n` +
+            `Format: ${asset.fileFormat}\n` +
+            `Size: ${asset.fileSize}\n` +
+            `Patron Token: ${patronToken || 'PATRON-TEST-ACCESS'}\n` +
+            `Timestamp: ${new Date().toISOString()}\n` +
+            `Integrity Verification: SHA256-AUTHENTICATED\n\n` +
+            `Your high-res audio stem and production archive is authenticated.`,
+        ],
+        { type: 'text/plain' }
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = asset.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
 
-    const newMsg: ChatMessage = {
-      id: `m_${Date.now()}`,
-      author: patronName,
-      role: 'PATRON MEMBER',
-      avatarBg: 'from-cyan-400 to-indigo-600',
-      timestamp: 'Just now',
-      content: messageText.trim(),
-      imageUrl: selectedImage || undefined,
-      likes: 0,
-      hasLiked: false,
-    };
-
-    setMessages((prev) => [...prev, newMsg]);
-    setMessageText('');
-    setSelectedImage(null);
-
-    // Scroll chat to bottom
     setTimeout(() => {
-      chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+      setDownloadToast(null);
+    }, 4500);
   };
 
-  // Handle Like
-  const handleToggleLike = (msgId: string) => {
-    soundManager.playTone(840, 0.08);
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.id === msgId) {
-          const hasLiked = !msg.hasLiked;
-          return {
-            ...msg,
-            hasLiked,
-            likes: hasLiked ? msg.likes + 1 : Math.max(0, msg.likes - 1),
-          };
-        }
-        return msg;
-      })
-    );
+  // Toggle Audio Play in Vault
+  const handleToggleAudio = (id: string) => {
+    if (playingAudioId === id) {
+      setPlayingAudioId(null);
+      soundManager.playTone(480, 0.06);
+    } else {
+      setPlayingAudioId(id);
+      soundManager.playTone(660, 0.08);
+    }
   };
 
-  // Handle Image Selection
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setSelectedImage(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Submit Thread Reply
-  const handleSendThreadReply = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!threadReplyText.trim() || !activeThreadMessage) return;
-
-    soundManager.playTone(780, 0.06);
-
-    const newReply: ChatReply = {
-      id: `r_${Date.now()}`,
-      author: patronName,
-      role: 'PATRON MEMBER',
-      avatarBg: 'from-cyan-400 to-indigo-600',
-      timestamp: 'Just now',
-      content: threadReplyText.trim(),
-    };
-
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.id === activeThreadMessage.id) {
-          return {
-            ...msg,
-            replies: [...(msg.replies || []), newReply],
-          };
-        }
-        return msg;
-      })
-    );
-
-    setActiveThreadMessage((prev) =>
-      prev ? { ...prev, replies: [...(prev.replies || []), newReply] } : null
-    );
-    setThreadReplyText('');
-  };
-
-  // Submit Vault Comment
-  const handleSendVaultComment = (vaultId: string) => {
-    if (!vaultCommentText.trim()) return;
+  // Add Comment to Workflow
+  const handleAddWorkflowComment = (workflowId: string) => {
+    const text = workflowCommentInputs[workflowId]?.trim();
+    if (!text) return;
 
     soundManager.playTone(740, 0.06);
+    const newComment: WorkflowComment = {
+      id: `wfc-${Date.now()}`,
+      author: patronName,
+      role: 'PATRON MEMBER',
+      timestamp: 'Just now',
+      text,
+    };
 
-    const newReply: ChatReply = {
-      id: `vc_${Date.now()}`,
+    setWorkflows((prev) =>
+      prev.map((wf) => {
+        if (wf.id === workflowId) {
+          return { ...wf, comments: [...wf.comments, newComment] };
+        }
+        return wf;
+      })
+    );
+
+    setWorkflowCommentInputs((prev) => ({ ...prev, [workflowId]: '' }));
+  };
+
+  // Handle Discussion Post Submit
+  const handleCreateDiscussionPost = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!discussionInput.trim() && !discussionImage) return;
+
+    soundManager.playTone(820, 0.06);
+    const newPost: DiscussionPost = {
+      id: `dp-${Date.now()}`,
       author: patronName,
       role: 'PATRON MEMBER',
       avatarBg: 'from-cyan-400 to-indigo-600',
       timestamp: 'Just now',
-      content: vaultCommentText.trim(),
+      content: discussionInput.trim(),
+      imageUrl: discussionImage || undefined,
+      likes: 0,
+      hasLiked: false,
+      replies: [],
     };
 
-    setVaultComments((prev) => ({
-      ...prev,
-      [vaultId]: [...(prev[vaultId] || []), newReply],
-    }));
-
-    setVaultCommentText('');
+    setDiscussionPosts((prev) => [newPost, ...prev]);
+    setDiscussionInput('');
+    setDiscussionImage(null);
   };
 
-  // Handle Vote on Poll
-  const handleCastVote = (pollId: string, optionId: string) => {
-    soundManager.playUnlockChime();
-    setPolls((prev) =>
-      prev.map((poll) => {
-        if (poll.id === pollId) {
-          const prevVoted = poll.userVotedId;
-          const updatedOptions = poll.options.map((opt) => {
-            if (opt.id === optionId) {
-              return { ...opt, votes: opt.votes + 1 };
-            }
-            if (prevVoted && opt.id === prevVoted) {
-              return { ...opt, votes: Math.max(0, opt.votes - 1) };
-            }
-            return opt;
-          });
-
+  // Toggle Discussion Like
+  const handleToggleDiscussionLike = (postId: string) => {
+    soundManager.playTone(840, 0.08);
+    setDiscussionPosts((prev) =>
+      prev.map((p) => {
+        if (p.id === postId) {
+          const hasLiked = !p.hasLiked;
           return {
-            ...poll,
-            options: updatedOptions,
-            userVotedId: optionId,
-            totalVotes: prevVoted ? poll.totalVotes : poll.totalVotes + 1,
+            ...p,
+            hasLiked,
+            likes: hasLiked ? p.likes + 1 : Math.max(0, p.likes - 1),
           };
         }
-        return poll;
+        return p;
+      })
+    );
+  };
+
+  // Add Reply to Discussion
+  const handleSendReply = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!replyInputText.trim() || !activeReplyPost) return;
+
+    soundManager.playTone(780, 0.06);
+    const newReply: DiscussionReply = {
+      id: `dpr-${Date.now()}`,
+      author: patronName,
+      role: 'PATRON MEMBER',
+      avatarBg: 'from-cyan-400 to-indigo-600',
+      timestamp: 'Just now',
+      content: replyInputText.trim(),
+    };
+
+    setDiscussionPosts((prev) =>
+      prev.map((p) => {
+        if (p.id === activeReplyPost.id) {
+          return { ...p, replies: [...p.replies, newReply] };
+        }
+        return p;
+      })
+    );
+
+    setActiveReplyPost((prev) => (prev ? { ...prev, replies: [...prev.replies, newReply] } : null));
+    setReplyInputText('');
+  };
+
+  // Vote on Ballot
+  const handleVoteBallot = (ballotId: string, optionId: string) => {
+    soundManager.playUnlockChime();
+    setGovernanceBallots((prev) =>
+      prev.map((b) => {
+        if (b.id === ballotId) {
+          const prevVoted = b.userVoteId;
+          const updatedOptions = b.options.map((opt) => {
+            if (opt.id === optionId) return { ...opt, votes: opt.votes + 1 };
+            if (prevVoted && opt.id === prevVoted) return { ...opt, votes: Math.max(0, opt.votes - 1) };
+            return opt;
+          });
+          return {
+            ...b,
+            options: updatedOptions,
+            userVoteId: optionId,
+            totalVotes: prevVoted ? b.totalVotes : b.totalVotes + 1,
+          };
+        }
+        return b;
       })
     );
   };
 
   return (
     <div className="relative min-h-[100dvh] w-full bg-[#04070d] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Top Universal Community Header */}
-      <header className="relative z-30 w-full border-b border-white/10 bg-[#060a12]/90 backdrop-blur-md px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shrink-0">
+      {/* Top Universal Header Bar */}
+      <header className="relative z-30 w-full border-b border-white/10 bg-[#060a14]/90 backdrop-blur-xl px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -459,17 +611,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="text-xs sm:text-sm font-display font-bold tracking-wider text-white uppercase">
-              SILLOW MILL · COMMUNITY HUB
-            </span>
-            <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-[10px] font-mono text-cyan-300">
-              <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
-              VAULT LEVEL 01
+            <span className="text-xs sm:text-sm font-display font-bold tracking-wider text-white uppercase truncate">
+              CREATIVE VAULT &amp; PRODUCT HUB
             </span>
           </div>
         </div>
 
-        {/* Top Right Actions */}
+        {/* Right Status Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
           {isSimulatedPatron ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-[10.5px] font-mono text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
@@ -479,892 +627,818 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           ) : patronToken ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-400/40 text-[10.5px] font-mono text-emerald-300">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>ACTIVE PATRON</span>
+              <span>{patronName}</span>
             </div>
           ) : (
             <button
               type="button"
               onClick={handleActivateTestAccess}
-              className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-black text-[11px] font-mono font-bold transition-all shadow-[0_0_12px_rgba(245,158,11,0.3)] cursor-pointer flex items-center gap-1"
+              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black text-xs font-mono font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.35)] cursor-pointer flex items-center gap-1.5"
             >
-              <span>🧪 1-CLICK DEMO ACCESS</span>
+              <span>🧪 PREVIEW CREATIVE VAULT</span>
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={() => setMembersDrawerOpen(!membersDrawerOpen)}
-            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
-            title="Toggle Members List"
-          >
-            <Users className="w-4 h-4" />
-          </button>
+          {patronToken && (
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Reset Test Session"
+              className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 hover:text-rose-400 transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Main Discord-Style Frame */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Discord Left Channel Sidebar */}
-        <aside
-          className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#05080f] border-r border-white/10 flex flex-col transition-transform duration-300 md:static md:translate-x-0 ${
-            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          {/* Server Identity Header */}
-          <div className="p-3.5 border-b border-white/10 flex items-center justify-between">
-            <div className="min-w-0">
-              <h2 className="text-xs font-display font-bold text-white tracking-wider uppercase truncate">
-                ÄKINOYA PORTAL
-              </h2>
-              <div className="text-[10px] font-mono text-cyan-400/80 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>38 Patrons Online</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(false)}
-              className="md:hidden p-1 text-white/50 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+      {/* Futuristic Multi-Hub Navigation Sub-Bar */}
+      <nav className="relative z-20 w-full bg-[#050912]/95 border-b border-white/10 px-3 sm:px-6 py-2 overflow-x-auto no-scrollbar shrink-0 shadow-lg">
+        <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-3 min-w-max">
+          {[
+            { id: 'downloads', label: 'Asset & Download Vault', icon: FolderDown, count: '4' },
+            { id: 'workflows', label: 'Workflows & Creative Lab', icon: Sliders, count: '3' },
+            { id: 'visualizer', label: 'Early Access Visualizer Hub', icon: Film, count: '3' },
+            { id: 'discussion', label: 'Creator Discussion Board', icon: MessageSquare, count: discussionPosts.length.toString() },
+            { id: 'governance', label: 'Lore & Governance Portal', icon: Vote, count: '2' },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeSection === tab.id;
 
-          {/* Channel Navigation List */}
-          <div className="flex-1 overflow-y-auto p-2.5 space-y-4">
-            {/* Category: Official Transmissions */}
-            <div>
-              <div className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase px-2 mb-1">
-                TRANSMISSIONS
-              </div>
+            return (
               <button
+                key={tab.id}
                 type="button"
                 onClick={() => {
-                  setActiveChannel('announcements');
-                  setMobileMenuOpen(false);
+                  setActiveSection(tab.id as CreativeHubSection);
+                  soundManager.playTone(580, 0.05);
                 }}
-                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
-                  activeChannel === 'announcements'
-                    ? 'bg-cyan-950/70 text-cyan-300 border border-cyan-500/40 font-bold shadow-[0_0_12px_rgba(56,189,248,0.15)]'
-                    : 'text-white/70 hover:bg-white/5 hover:text-white'
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                  isActive
+                    ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(56,189,248,0.35)] font-bold scale-[1.02]'
+                    : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/5'
                 }`}
               >
-                <div className="flex items-center gap-2 truncate">
-                  <span className="text-amber-400 text-sm">📣</span>
-                  <span className="truncate">announcements</span>
-                </div>
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
-              </button>
-            </div>
-
-            {/* Category: Community Discussion */}
-            <div>
-              <div className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase px-2 mb-1">
-                COMMUNITY CHANNELS
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveChannel('general');
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
-                  activeChannel === 'general'
-                    ? 'bg-cyan-950/70 text-cyan-300 border border-cyan-500/40 font-bold shadow-[0_0_12px_rgba(56,189,248,0.15)]'
-                    : 'text-white/70 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <span className="text-cyan-400 text-sm">💬</span>
-                  <span className="truncate">general-chat</span>
-                </div>
-                <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-950/80 px-1.5 py-0.5 rounded-full border border-cyan-500/30">
-                  {messages.length}
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-black' : 'text-cyan-400'}`} />
+                <span>{tab.label}</span>
+                <span
+                  className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-bold ${
+                    isActive ? 'bg-black/20 text-black' : 'bg-white/10 text-white/60'
+                  }`}
+                >
+                  {tab.count}
                 </span>
               </button>
-            </div>
+            );
+          })}
+        </div>
+      </nav>
 
-            {/* Category: Exclusive Vaults */}
-            <div>
-              <div className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase px-2 mb-1">
-                PATRON VAULTS
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveChannel('vault');
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
-                  activeChannel === 'vault'
-                    ? 'bg-cyan-950/70 text-cyan-300 border border-cyan-500/40 font-bold shadow-[0_0_12px_rgba(56,189,248,0.15)]'
-                    : 'text-white/70 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <span className="text-purple-400 text-sm">🎬</span>
-                  <span className="truncate">early-access-vault</span>
+      {/* Main Content Viewport */}
+      <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+        {/* SECTION 1: ASSET & DOWNLOAD VAULT */}
+        {activeSection === 'downloads' && (
+          <motion.div
+            key="section-downloads"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="space-y-6"
+          >
+            {/* Header intro banner */}
+            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-black/50 to-black/80 border border-cyan-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(56,189,248,0.1)]">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold tracking-wider">
+                    MODULE 01
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">
+                    UNRESTRICTED HIGH-RES ACCESS
+                  </span>
                 </div>
-                <span className="text-[9px] font-mono text-purple-300 bg-purple-950/80 px-1.5 py-0.5 rounded-full border border-purple-500/30">
-                  HQ
+                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
+                  📦 Asset &amp; Download Vault
+                </h1>
+                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
+                  Download production-ready print master PDFs, uncompressed 24-bit audio stems, raw 4K visualizer wallpapers, and storyboards directly to your machine.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="px-3 py-1.5 rounded-xl bg-cyan-950/80 border border-cyan-500/30 text-xs font-mono text-cyan-300 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                  <span>VIP CRYPTO VERIFIED</span>
                 </span>
-              </button>
-            </div>
-
-            {/* Category: Governance & Voting */}
-            <div>
-              <div className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase px-2 mb-1">
-                GOVERNANCE
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveChannel('governance');
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-mono transition-all cursor-pointer ${
-                  activeChannel === 'governance'
-                    ? 'bg-cyan-950/70 text-cyan-300 border border-cyan-500/40 font-bold shadow-[0_0_12px_rgba(56,189,248,0.15)]'
-                    : 'text-white/70 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <span className="text-emerald-400 text-sm">🗳️</span>
-                  <span className="truncate">lore-governance</span>
-                </div>
-                <span className="text-[9px] font-mono text-emerald-300 bg-emerald-950/80 px-1.5 py-0.5 rounded-full border border-emerald-500/30">
-                  VOTE
-                </span>
-              </button>
-            </div>
-          </div>
-
-          {/* Discord Bottom User Panel */}
-          <div className="p-3 bg-[#03050a] border-t border-white/10 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 to-indigo-600 flex items-center justify-center font-bold text-xs text-black shrink-0 relative">
-                PM
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-black absolute -bottom-0.5 -right-0.5" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-white truncate flex items-center gap-1">
-                  <span>{patronName}</span>
-                </div>
-                <div className="text-[9.5px] font-mono text-cyan-300 truncate">
-                  {patronToken ? 'PATRON MEMBER' : 'GUEST VISITOR'}
-                </div>
               </div>
             </div>
 
-            {patronToken && (
-              <button
-                type="button"
-                onClick={handleLogout}
-                title="Sign out or reset test pass"
-                className="p-1.5 rounded-lg text-white/40 hover:text-rose-400 hover:bg-white/5 transition-colors cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-        </aside>
-
-        {/* Central Chat / Channel Feed Container */}
-        <main className="flex-1 flex flex-col bg-[#070b14] overflow-hidden min-w-0">
-          {/* Channel Header Bar */}
-          <div className="px-4 py-3 border-b border-white/10 bg-[#070c16]/80 backdrop-blur-md flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2 min-w-0">
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(true)}
-                className="md:hidden p-1.5 rounded-lg bg-white/5 text-white/70 hover:text-white"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-
-              <span className="text-sm">
-                {activeChannel === 'announcements' && '📣'}
-                {activeChannel === 'general' && '💬'}
-                {activeChannel === 'vault' && '🎬'}
-                {activeChannel === 'governance' && '🗳️'}
-              </span>
-              <h1 className="text-sm sm:text-base font-display font-bold text-white uppercase tracking-wide truncate">
-                {activeChannel === 'announcements' && 'announcements'}
-                {activeChannel === 'general' && 'general-chat'}
-                {activeChannel === 'vault' && 'early-access-vault'}
-                {activeChannel === 'governance' && 'lore-governance'}
-              </h1>
-              <div className="hidden sm:inline-block h-3.5 w-px bg-white/20 mx-1" />
-              <p className="hidden sm:inline-block text-xs font-mono text-white/50 truncate">
-                {activeChannel === 'announcements' && 'Creator updates, official releases & lore reveals'}
-                {activeChannel === 'general' && 'Patron discussion, feedback & live comments'}
-                {activeChannel === 'vault' && 'Unreleased animation clips, 4K renders & audio masters'}
-                {activeChannel === 'governance' && 'Interactive council ballots for future story trajectories'}
-              </p>
-            </div>
-
-            {/* Channel-specific quick actions */}
-            <div className="flex items-center gap-2 shrink-0">
-              {activeChannel === 'vault' && (
-                <span className="px-2 py-0.5 rounded-full bg-purple-950/60 border border-purple-500/30 text-[10px] font-mono text-purple-300">
-                  4K / FLAC AUDIO
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Channel Content Body */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-6 space-y-4">
-            {/* 1. ANNOUNCEMENTS CHANNEL */}
-            {activeChannel === 'announcements' && (
-              <div className="max-w-4xl mx-auto space-y-6">
-                {announcements.map((item) => (
-                  <motion.article
-                    key={item.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-amber-500/30 shadow-[0_0_25px_rgba(245,158,11,0.08)] relative overflow-hidden"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs font-mono font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-400/30">
-                        OFFICIAL TRANSMISSION
+            {/* Asset Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {assetVaultItems.map((asset) => (
+                <div
+                  key={asset.id}
+                  className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 hover:border-cyan-500/40 transition-all flex flex-col justify-between shadow-[0_4px_25px_rgba(0,0,0,0.5)] group relative overflow-hidden"
+                >
+                  <div>
+                    {/* Top Tag & Format Header */}
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-[10px] font-mono font-bold text-cyan-400 bg-cyan-950/80 px-2.5 py-0.5 rounded-md border border-cyan-500/30 uppercase">
+                        {asset.category}
                       </span>
-                      <span className="text-[10px] font-mono text-white/40">{item.timestamp}</span>
+                      <span className="text-[10.5px] font-mono text-white/50">{asset.fileSize}</span>
                     </div>
 
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center text-black font-bold text-xs shrink-0">
-                        OD
+                    <h2 className="text-base sm:text-lg font-display font-bold text-white group-hover:text-cyan-200 transition-colors leading-snug mb-2">
+                      {asset.title}
+                    </h2>
+
+                    <p className="text-xs text-white/65 leading-relaxed font-sans mb-4">
+                      {asset.description}
+                    </p>
+
+                    {/* Preview Thumbnail / Audio Bar */}
+                    <div className="mb-4 rounded-xl overflow-hidden bg-black/80 border border-white/10 p-2.5 flex items-center gap-3">
+                      <img
+                        src={asset.thumbnailUrl}
+                        alt={asset.title}
+                        className="w-16 h-16 object-cover rounded-lg border border-white/10 shrink-0"
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-mono font-semibold text-white truncate">
+                          {asset.fileName}
+                        </div>
+                        <div className="text-[10px] font-mono text-cyan-300/80 mt-0.5">
+                          {asset.fileFormat}
+                        </div>
+
+                        {asset.isAudio && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleAudio(asset.id)}
+                              className="px-2 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500 text-cyan-300 hover:text-black text-[10px] font-mono font-bold transition-colors cursor-pointer flex items-center gap-1"
+                            >
+                              {playingAudioId === asset.id ? (
+                                <>
+                                  <Pause className="w-2.5 h-2.5" />
+                                  <span>PAUSE</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="w-2.5 h-2.5 ml-0.5" />
+                                  <span>PREVIEW STEM</span>
+                                </>
+                              )}
+                            </button>
+                            <span className="text-[9.5px] font-mono text-white/40">Studio Master</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Direct Download Action Button */}
+                  <div className="pt-3 border-t border-white/10 mt-auto flex items-center justify-between gap-3">
+                    <span className="text-[10.5px] font-mono text-white/40 flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-emerald-400" />
+                      <span>UNRESTRICTED</span>
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadAsset(asset)}
+                      className="px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] hover:scale-[1.02] cursor-pointer flex items-center gap-2"
+                    >
+                      <Download className="w-3.5 h-3.5 text-black" />
+                      <span>DOWNLOAD ASSET</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* SECTION 2: WORKFLOWS & CREATIVE LAB */}
+        {activeSection === 'workflows' && (
+          <motion.div
+            key="section-workflows"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="space-y-6"
+          >
+            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-black/50 to-black/80 border border-purple-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(168,85,247,0.1)]">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-purple-950/80 border border-purple-400/40 text-purple-300 font-bold tracking-wider">
+                    MODULE 02
+                  </span>
+                  <span className="text-[10px] font-mono text-purple-300 font-semibold">
+                    PRODUCTION TELEMETRY
+                  </span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
+                  🧪 Workflows &amp; Creative Lab
+                </h1>
+                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
+                  In-depth technical breakdowns of 3D shaders, modular synthesis chains, and paneling architecture. Ask questions in the dedicated Q&amp;A drawer under each workflow.
+                </p>
+              </div>
+            </div>
+
+            {/* Workflow Breakdown Cards */}
+            <div className="space-y-6">
+              {workflows.map((wf) => (
+                <div
+                  key={wf.id}
+                  className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-purple-500/30 shadow-[0_4px_30px_rgba(0,0,0,0.5)] space-y-4"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-purple-300 bg-purple-950/80 px-2.5 py-0.5 rounded-md border border-purple-400/40">
+                        {wf.toolstack}
+                      </span>
+                      <span className="text-[10px] font-mono text-emerald-400">● LIVE BREAKDOWN</span>
+                    </div>
+                    <span className="text-[10.5px] font-mono text-white/50">{wf.duration}</span>
+                  </div>
+
+                  <h2 className="text-base sm:text-lg font-display font-bold text-white">
+                    {wf.title}
+                  </h2>
+
+                  <p className="text-xs sm:text-sm text-white/70 font-sans leading-relaxed">
+                    {wf.description}
+                  </p>
+
+                  {/* Video Mockup Player Frame */}
+                  <div className="relative aspect-video rounded-xl overflow-hidden bg-black/90 border border-purple-500/30 flex items-center justify-center group shadow-inner">
+                    <img
+                      src={wf.videoPlaceholderUrl}
+                      alt={wf.title}
+                      className="absolute inset-0 w-full h-full object-cover opacity-60 filter blur-[0.5px]"
+                    />
+
+                    {/* HUD Telemetry Overlay */}
+                    <div className="absolute inset-0 p-3 sm:p-4 flex flex-col justify-between pointer-events-none">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-purple-300">
+                        <span>ENGINE: {wf.metrics.engine}</span>
+                        <span>RES: {wf.metrics.resolution}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300">
+                        <span>FPS: {wf.metrics.fps}</span>
+                        <span>STUDIO LAB ARCHIVE</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => soundManager.playTone(660, 0.08)}
+                      className="relative z-10 w-14 h-14 rounded-full bg-purple-500/80 hover:bg-purple-400 text-black flex items-center justify-center transition-transform hover:scale-110 shadow-[0_0_20px_rgba(168,85,247,0.5)] cursor-pointer"
+                    >
+                      <Play className="w-6 h-6 fill-black ml-0.5" />
+                    </button>
+                  </div>
+
+                  {/* Expandable Q&A Comment Drawer Trigger */}
+                  <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenWorkflowDrawerId(openWorkflowDrawerId === wf.id ? null : wf.id)
+                      }
+                      className="flex items-center gap-2 text-xs font-mono font-semibold text-purple-300 hover:text-white transition-colors cursor-pointer"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>
+                        {wf.comments.length} Technical Q&amp;A Comments &amp; Dialogue
+                      </span>
+                      {openWorkflowDrawerId === wf.id ? (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Comment Drawer Container */}
+                  {openWorkflowDrawerId === wf.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-3 p-4 rounded-xl bg-black/80 border border-purple-500/20 space-y-3"
+                    >
+                      <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                        {wf.comments.length === 0 ? (
+                          <div className="text-xs font-mono text-white/40 italic p-2">
+                            No questions yet. Be the first to ask about this production setup!
+                          </div>
+                        ) : (
+                          wf.comments.map((c) => (
+                            <div key={c.id} className="text-xs p-2.5 rounded-lg bg-white/[0.03] border border-white/5 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-purple-300 text-[11px] flex items-center gap-1.5">
+                                  <span>{c.author}</span>
+                                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300">
+                                    {c.role}
+                                  </span>
+                                </span>
+                                <span className="text-[9px] font-mono text-white/40">{c.timestamp}</span>
+                              </div>
+                              <p className="text-white/80 leading-relaxed font-sans">{c.text}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Comment Input Box */}
+                      <div className="flex gap-2 pt-2 border-t border-white/10">
+                        <input
+                          type="text"
+                          value={workflowCommentInputs[wf.id] || ''}
+                          onChange={(e) =>
+                            setWorkflowCommentInputs({ ...workflowCommentInputs, [wf.id]: e.target.value })
+                          }
+                          placeholder={`Ask director/artist a question about ${wf.title}...`}
+                          className="flex-1 bg-black/60 border border-white/15 focus:border-purple-400 rounded-xl px-3.5 py-2 text-xs text-white outline-none font-sans"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddWorkflowComment(wf.id)}
+                          className="px-4 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-black font-mono font-bold text-xs transition-colors cursor-pointer"
+                        >
+                          Send
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* SECTION 3: EARLY ACCESS VISUALIZER HUB */}
+        {activeSection === 'visualizer' && (
+          <motion.div
+            key="section-visualizer"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="space-y-6"
+          >
+            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-black/50 to-black/80 border border-cyan-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(56,189,248,0.1)]">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold tracking-wider">
+                    MODULE 03
+                  </span>
+                  <span className="text-[10px] font-mono text-cyan-400 font-semibold">
+                    HIGH-RESOLUTION THEATER SPELER
+                  </span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
+                  🎬 Early Access Visualizer Hub
+                </h1>
+                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
+                  Dedicated master theater player previewing unreleased animated sequences, typographic motion tests, and ambient lighting passes in 4K UHD.
+                </p>
+              </div>
+            </div>
+
+            {/* Theater Player Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Cinema Viewport (2 cols) */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/95 border border-cyan-500/40 shadow-[0_0_40px_rgba(56,189,248,0.2)] flex items-center justify-center group">
+                  <img
+                    src={visualizerTracks[activeVisualizerTrack].previewImage}
+                    alt="Theater Visual"
+                    className="absolute inset-0 w-full h-full object-cover opacity-80"
+                  />
+
+                  {/* Sci-Fi HUD Watermark & Telemetry */}
+                  <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-between pointer-events-none">
+                    <div className="flex items-center justify-between text-xs font-mono text-cyan-300">
+                      <span className="bg-black/60 px-2 py-1 rounded border border-cyan-500/30">
+                        {visualizerTracks[activeVisualizerTrack].status}
+                      </span>
+                      <span className="bg-black/60 px-2 py-1 rounded border border-white/20">
+                        {visualizerTracks[activeVisualizerTrack].fps} · {visualizerTracks[activeVisualizerTrack].renderEngine}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs font-mono text-white/80">
+                      <span className="bg-black/60 px-2 py-1 rounded">
+                        01:14 / {visualizerTracks[activeVisualizerTrack].duration}
+                      </span>
+                      <span className="text-[10px] text-cyan-400 font-bold tracking-wider">
+                        SILLOW MILL CINEMATIC SYNDICATE
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Play/Pause Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsTheaterPlaying(!isTheaterPlaying);
+                      soundManager.playTone(620, 0.08);
+                    }}
+                    className="relative z-10 w-16 h-16 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center transition-transform hover:scale-110 shadow-[0_0_25px_rgba(56,189,248,0.6)] cursor-pointer"
+                  >
+                    {isTheaterPlaying ? <Pause className="w-7 h-7 fill-black" /> : <Play className="w-7 h-7 fill-black ml-1" />}
+                  </button>
+                </div>
+
+                {/* Theater Controls Bar */}
+                <div className="p-4 rounded-xl bg-black/60 border border-white/10 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-display font-bold text-white truncate">
+                      {visualizerTracks[activeVisualizerTrack].title}
+                    </h3>
+                    <p className="text-[11px] text-white/60 font-sans mt-0.5 truncate">
+                      {visualizerTracks[activeVisualizerTrack].synopsis}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsTheaterMuted(!isTheaterMuted)}
+                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white cursor-pointer"
+                    >
+                      {isTheaterMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sequence Playlist Selector (1 col) */}
+              <div className="space-y-3">
+                <div className="text-xs font-mono font-bold text-white/50 uppercase tracking-wider px-1">
+                  AVAILABLE SEQUENCES (3)
+                </div>
+
+                {visualizerTracks.map((trk, idx) => (
+                  <button
+                    key={trk.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveVisualizerTrack(idx);
+                      soundManager.playTone(560, 0.06);
+                    }}
+                    className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
+                      activeVisualizerTrack === idx
+                        ? 'bg-cyan-950/70 border-cyan-400 text-white shadow-[0_0_15px_rgba(56,189,248,0.2)]'
+                        : 'bg-black/50 border-white/10 hover:border-white/20 text-white/70'
+                    }`}
+                  >
+                    <img
+                      src={trk.previewImage}
+                      alt={trk.title}
+                      className="w-14 h-12 object-cover rounded-lg border border-white/10 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300">
+                        <span>TRACK #{trk.trackNumber}</span>
+                        <span>{trk.duration}</span>
+                      </div>
+                      <h4 className="text-xs font-display font-bold text-white truncate mt-0.5">
+                        {trk.title}
+                      </h4>
+                      <span className="text-[9.5px] font-mono text-white/40">{trk.status}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SECTION 4: CREATOR DISCUSSION BOARD */}
+        {activeSection === 'discussion' && (
+          <motion.div
+            key="section-discussion"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="space-y-6"
+          >
+            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-black/50 to-black/80 border border-cyan-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(56,189,248,0.1)]">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold tracking-wider">
+                    MODULE 04
+                  </span>
+                  <span className="text-[10px] font-mono text-cyan-400 font-semibold">
+                    PATRON &amp; CREATOR TRANSMISSIONS
+                  </span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
+                  💬 Creator Discussion Board
+                </h1>
+                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
+                  Official production logs, world lore commentary, and community feed. Post updates, attach artwork, like posts, and engage in threaded discussions.
+                </p>
+              </div>
+            </div>
+
+            {/* Create Post Box */}
+            <form
+              onSubmit={handleCreateDiscussionPost}
+              className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 focus-within:border-cyan-400/50 space-y-3 transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 to-indigo-600 flex items-center justify-center font-bold text-xs text-black shrink-0">
+                  PM
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">{patronName}</div>
+                  <div className="text-[9.5px] font-mono text-cyan-300">PATRON MEMBER</div>
+                </div>
+              </div>
+
+              <textarea
+                value={discussionInput}
+                onChange={(e) => setDiscussionInput(e.target.value)}
+                placeholder="Share production feedback, ask about lore, or discuss upcoming drops..."
+                rows={3}
+                className="w-full bg-transparent text-sm text-white placeholder-white/30 outline-none resize-none font-sans"
+              />
+
+              {discussionImage && (
+                <div className="flex items-center gap-2 bg-white/5 p-2 rounded-xl w-fit border border-cyan-500/30">
+                  <img src={discussionImage} alt="Upload" className="w-12 h-12 object-cover rounded-lg" />
+                  <button
+                    type="button"
+                    onClick={() => setDiscussionImage(null)}
+                    className="p-1 text-white/50 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                <input
+                  type="file"
+                  ref={discussionFileInputRef}
+                  accept="image/*"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      const r = new FileReader();
+                      r.onload = () => typeof r.result === 'string' && setDiscussionImage(r.result);
+                      r.readAsDataURL(f);
+                    }
+                  }}
+                  className="hidden"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => discussionFileInputRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
+                >
+                  <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Attach Image</span>
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={!discussionInput.trim() && !discussionImage}
+                  className="px-5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-30 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>POST TRANSMISSION</span>
+                </button>
+              </div>
+            </form>
+
+            {/* Posts Feed */}
+            <div className="space-y-4">
+              {discussionPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-9 h-9 rounded-full bg-gradient-to-tr ${post.avatarBg} flex items-center justify-center font-bold text-xs text-black shrink-0`}
+                      >
+                        {post.author.slice(0, 2).toUpperCase()}
                       </div>
                       <div>
                         <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <span>{item.author}</span>
-                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40">
-                            CREATOR
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <h2 className="text-base sm:text-lg font-display font-bold text-white mb-2 leading-snug">
-                      {item.title}
-                    </h2>
-
-                    <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-sans mb-4">
-                      {item.content}
-                    </p>
-
-                    {item.imageUrl && (
-                      <div className="rounded-xl overflow-hidden border border-white/10 mb-4 max-h-80 bg-black/80 flex items-center justify-center">
-                        <img
-                          src={item.imageUrl}
-                          alt="Announcement Visual"
-                          className="max-h-80 w-full object-cover"
-                        />
-                      </div>
-                    )}
-
-                    {/* Reactions Bar */}
-                    <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-white/10">
-                      <button
-                        type="button"
-                        onClick={() => soundManager.playTone(880, 0.05)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-white/80 transition-colors cursor-pointer"
-                      >
-                        <Flame className="w-3.5 h-3.5 text-amber-400" />
-                        <span>{item.reactions.flame}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => soundManager.playTone(880, 0.05)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-white/80 transition-colors cursor-pointer"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>{item.reactions.lightning}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => soundManager.playTone(880, 0.05)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-white/80 transition-colors cursor-pointer"
-                      >
-                        <span>💎</span>
-                        <span>{item.reactions.gem}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => soundManager.playTone(880, 0.05)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-white/80 transition-colors cursor-pointer"
-                      >
-                        <span>🌌</span>
-                        <span>{item.reactions.cosmos}</span>
-                      </button>
-                    </div>
-                  </motion.article>
-                ))}
-              </div>
-            )}
-
-            {/* 2. GENERAL CHAT CHANNEL */}
-            {activeChannel === 'general' && (
-              <div className="max-w-4xl mx-auto space-y-4">
-                {/* Channel Welcome Banner */}
-                <div className="p-4 rounded-xl bg-gradient-to-r from-cyan-950/40 via-black/40 to-black/60 border border-cyan-500/20 mb-6 flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
-                    <MessageSquare className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-display font-bold text-white">
-                      Welcome to #💬-general-chat
-                    </h3>
-                    <p className="text-xs text-white/60 font-sans mt-0.5">
-                      This is the start of the general community feed. Discuss lore theories, review the comic, share feedback on soundscapes, and connect with other patrons.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Messages Feed */}
-                <div className="space-y-4">
-                  {messages.map((msg) => (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="group p-3.5 sm:p-4 rounded-xl bg-black/40 hover:bg-black/60 border border-white/5 hover:border-cyan-500/20 transition-all flex items-start gap-3 relative"
-                    >
-                      {/* Avatar */}
-                      <div
-                        className={`w-9 h-9 rounded-full bg-gradient-to-tr ${msg.avatarBg} flex items-center justify-center text-xs font-bold text-black shrink-0 shadow-md`}
-                      >
-                        {msg.author.slice(0, 2).toUpperCase()}
-                      </div>
-
-                      {/* Content Column */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <span className="text-xs font-bold text-white">{msg.author}</span>
+                          <span>{post.author}</span>
                           <span
-                            className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded font-semibold uppercase ${
-                              msg.role === 'CREATOR'
+                            className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-semibold ${
+                              post.role === 'CREATOR'
                                 ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
-                                : msg.role === 'FOUNDING VIP'
+                                : post.role === 'FOUNDING VIP'
                                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40'
                                 : 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
                             }`}
                           >
-                            {msg.role}
+                            {post.role}
                           </span>
-                          <span className="text-[10px] font-mono text-white/40">{msg.timestamp}</span>
                         </div>
-
-                        <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-sans whitespace-pre-line">
-                          {msg.content}
-                        </p>
-
-                        {/* Attached Image if any */}
-                        {msg.imageUrl && (
-                          <div className="mt-2.5 rounded-lg overflow-hidden border border-white/10 max-w-sm">
-                            <img
-                              src={msg.imageUrl}
-                              alt="User uploaded attachment"
-                              className="max-h-60 w-auto object-cover rounded-lg"
-                            />
-                          </div>
-                        )}
-
-                        {/* Interactive Message Actions Bar */}
-                        <div className="mt-2 flex items-center gap-2.5">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleLike(msg.id)}
-                            className={`flex items-center gap-1.5 px-2 py-0.8 rounded text-[11px] font-mono transition-colors cursor-pointer ${
-                              msg.hasLiked
-                                ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold'
-                                : 'text-white/50 hover:text-white hover:bg-white/5'
-                            }`}
-                          >
-                            <ThumbsUp className={`w-3 h-3 ${msg.hasLiked ? 'text-cyan-400' : ''}`} />
-                            <span>{msg.likes > 0 ? msg.likes : 'Like'}</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setActiveThreadMessage(msg)}
-                            className="flex items-center gap-1.5 px-2 py-0.8 rounded text-[11px] font-mono text-white/50 hover:text-cyan-300 hover:bg-white/5 transition-colors cursor-pointer"
-                          >
-                            <MessageCircle className="w-3 h-3" />
-                            <span>
-                              {msg.replies && msg.replies.length > 0
-                                ? `${msg.replies.length} replies`
-                                : 'Reply'}
-                            </span>
-                          </button>
-                        </div>
-
-                        {/* Inline replies preview */}
-                        {msg.replies && msg.replies.length > 0 && (
-                          <div className="mt-2.5 pt-2 border-t border-white/5 space-y-1.5">
-                            {msg.replies.map((r) => (
-                              <div
-                                key={r.id}
-                                className="flex items-start gap-2 bg-white/[0.02] p-2 rounded-lg text-xs"
-                              >
-                                <span className="font-bold text-cyan-300 text-[11px]">{r.author}:</span>
-                                <span className="text-white/70 text-[11px]">{r.content}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        <div className="text-[10px] font-mono text-white/40">{post.timestamp}</div>
                       </div>
-                    </motion.div>
-                  ))}
-                  <div ref={chatBottomRef} />
-                </div>
-              </div>
-            )}
-
-            {/* 3. EARLY ACCESS VAULT CHANNEL */}
-            {activeChannel === 'vault' && (
-              <div className="max-w-4xl mx-auto space-y-6">
-                {/* Vault Item 1: Animated Sequence Reel */}
-                <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.1)] space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-bold text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded border border-purple-400/40">
-                        VAULT ASSET 01 · 4K ANIMATION
-                      </span>
-                      <span className="text-[10px] font-mono text-emerald-400">● ENCRYPTED FEED</span>
                     </div>
-                    <span className="text-[10px] font-mono text-white/50">SEQUENCE 02 · RENDER PASS 4</span>
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-display font-bold text-white">
-                    Bingäa: Behind-the-Scenes Volumetric Sequence (4K UHD)
-                  </h3>
-
-                  <p className="text-xs sm:text-sm text-white/70 font-sans">
-                    Preliminary lighting pass demonstrating the twilight atmospheric ionization over Sector 02. Sound design stems integrated directly into audio timeline.
+                  <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-sans whitespace-pre-line">
+                    {post.content}
                   </p>
 
-                  {/* Video Mockup Frame with Playback Controls */}
-                  <div className="relative aspect-video rounded-xl overflow-hidden bg-black/90 border border-purple-500/30 flex items-center justify-center group shadow-inner">
-                    <img
-                      src={akinoyaVistaImg}
-                      alt="Animation preview"
-                      className="absolute inset-0 w-full h-full object-cover opacity-60 filter blur-[0.5px]"
-                    />
-
-                    {/* Sci-fi Telemetry HUD Overlay */}
-                    <div className="absolute inset-0 p-3 sm:p-4 flex flex-col justify-between pointer-events-none">
-                      <div className="flex items-center justify-between text-[10px] font-mono text-purple-300">
-                        <span>FPS: 60.00 · PRORES 4444</span>
-                        <span>WATERMARK: PATRON #{patronName}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300">
-                        <span>00:18 / 02:45</span>
-                        <span>SILLOW MILL ANIMATION STUDIO</span>
-                      </div>
-                    </div>
-
-                    {/* Play/Pause Trigger Button */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsVideoPlaying(!isVideoPlaying);
-                        soundManager.playTone(560, 0.08);
-                      }}
-                      className="relative z-10 w-14 h-14 rounded-full bg-purple-500/80 hover:bg-purple-400 text-black flex items-center justify-center transition-transform hover:scale-110 shadow-[0_0_20px_rgba(168,85,247,0.5)] cursor-pointer"
-                    >
-                      {isVideoPlaying ? <Pause className="w-6 h-6 fill-black" /> : <Play className="w-6 h-6 fill-black ml-0.5" />}
-                    </button>
-                  </div>
-
-                  {/* Vault Item Comment Drawer Trigger */}
-                  <div className="pt-2 border-t border-white/10 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setOpenVaultCommentId(openVaultCommentId === 'vault-video' ? null : 'vault-video')
-                      }
-                      className="flex items-center gap-2 text-xs font-mono text-purple-300 hover:text-white transition-colors cursor-pointer"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      <span>
-                        {vaultComments['vault-video']?.length || 0} Comments &amp; Feedback
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* Collapsible Comment Drawer for Video */}
-                  {openVaultCommentId === 'vault-video' && (
-                    <div className="mt-3 p-3.5 rounded-xl bg-black/80 border border-purple-500/20 space-y-3">
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {vaultComments['vault-video']?.map((c) => (
-                          <div key={c.id} className="text-xs p-2 rounded bg-white/[0.03] border border-white/5">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-bold text-purple-300 text-[11px]">{c.author}</span>
-                              <span className="text-[9px] font-mono text-white/40">{c.timestamp}</span>
-                            </div>
-                            <p className="text-white/80">{c.content}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={vaultCommentText}
-                          onChange={(e) => setVaultCommentText(e.target.value)}
-                          placeholder="Leave feedback on this sequence..."
-                          className="flex-1 bg-black/60 border border-white/15 focus:border-purple-400 rounded-lg px-3 py-1.5 text-xs text-white outline-none font-mono"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleSendVaultComment('vault-video')}
-                          className="px-3 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-400 text-black font-mono font-bold text-xs transition-colors cursor-pointer"
-                        >
-                          Send
-                        </button>
-                      </div>
+                  {post.imageUrl && (
+                    <div className="rounded-xl overflow-hidden border border-white/10 max-h-72 bg-black/80 flex items-center justify-center max-w-md">
+                      <img src={post.imageUrl} alt="Attached" className="max-h-72 w-full object-cover" />
                     </div>
                   )}
-                </div>
 
-                {/* Vault Item 2: Unreleased Studio Master Track */}
-                <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-cyan-500/30 shadow-[0_0_30px_rgba(56,189,248,0.1)] space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-bold text-cyan-300 bg-cyan-500/20 px-2 py-0.5 rounded border border-cyan-400/40">
-                        VAULT ASSET 02 · UNRELEASED AUDIO
-                      </span>
-                      <span className="text-[10px] font-mono text-cyan-400">96kHz / 24-BIT FLAC</span>
-                    </div>
-                    <span className="text-[10px] font-mono text-white/50">TRACK 12 · UNTITLED DRIFT</span>
+                  {/* Like & Reply Bar */}
+                  <div className="pt-2 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleDiscussionLike(post.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
+                        post.hasLiked
+                          ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold'
+                          : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
+                      }`}
+                    >
+                      <ThumbsUp className={`w-3.5 h-3.5 ${post.hasLiked ? 'text-cyan-400' : ''}`} />
+                      <span>{post.likes}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveReplyPost(post)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>{post.replies.length} Replies</span>
+                    </button>
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-display font-bold text-white">
-                    Sub-Orbital Drift — Unreleased VIP Studio Master
-                  </h3>
-
-                  <p className="text-xs sm:text-sm text-white/70 font-sans">
-                    Unreleased ambient electronic piece designed for the high-altitude entry sequence of Äkinoya. Exclusively available to Patrons prior to official DSP streaming release.
-                  </p>
-
-                  {/* Audio Player Container */}
-                  <div className="p-4 rounded-xl bg-[#080d17] border border-cyan-500/30 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsPlayingAudio(!isPlayingAudio);
-                          soundManager.playTone(600, 0.08);
-                        }}
-                        className="w-11 h-11 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center transition-all cursor-pointer shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
-                      >
-                        {isPlayingAudio ? <Pause className="w-5 h-5 fill-black" /> : <Play className="w-5 h-5 fill-black ml-0.5" />}
-                      </button>
-                      <div>
-                        <div className="text-xs sm:text-sm font-bold text-white">Sub-Orbital Drift</div>
-                        <div className="text-[10px] font-mono text-cyan-300">03:42 · Studio Master Mix</div>
-                      </div>
-                    </div>
-
-                    {/* Animated Pulsing Waveform Bars */}
-                    <div className="flex items-center gap-1 h-8">
-                      {[30, 60, 90, 45, 80, 100, 75, 40, 65, 85, 55, 95, 70, 50].map((h, i) => (
-                        <div
-                          key={i}
-                          className="w-1 rounded-full bg-cyan-400 transition-all duration-200"
-                          style={{
-                            height: isPlayingAudio ? `${h}%` : '20%',
-                          }}
-                        />
+                  {/* Inline replies preview */}
+                  {post.replies.length > 0 && (
+                    <div className="pt-2 border-t border-white/5 space-y-2">
+                      {post.replies.map((rep) => (
+                        <div key={rep.id} className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5 text-xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-cyan-300 text-[11px]">{rep.author}</span>
+                            <span className="text-[9px] font-mono text-white/40">{rep.timestamp}</span>
+                          </div>
+                          <p className="text-white/80 font-sans">{rep.content}</p>
+                        </div>
                       ))}
                     </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* SECTION 5: LORE & GOVERNANCE PORTAL */}
+        {activeSection === 'governance' && (
+          <motion.div
+            key="section-governance"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="space-y-6"
+          >
+            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-black/50 to-black/80 border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-bold tracking-wider">
+                    MODULE 05
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">
+                    PATRON CONSENSUS PROTOCOL
+                  </span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
+                  🗳️ Lore &amp; Governance Portal
+                </h1>
+                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
+                  Cast binding votes on storyline territory branches, pilot armor variants, and batch merchandise priorities. Votes are cryptographically recorded to your pass identity.
+                </p>
+              </div>
+            </div>
+
+            {/* Polls Container */}
+            <div className="space-y-6">
+              {governanceBallots.map((ballot) => (
+                <div
+                  key={ballot.id}
+                  className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-emerald-500/30 shadow-[0_4px_25px_rgba(0,0,0,0.5)] space-y-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-950/80 px-2.5 py-0.5 rounded-md border border-emerald-400/40">
+                      {ballot.category}
+                    </span>
+                    <span className="text-xs font-mono text-white/50">{ballot.totalVotes} Total Ballots</span>
                   </div>
 
-                  {/* Vault Audio Comment Drawer Trigger */}
-                  <div className="pt-2 border-t border-white/10 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setOpenVaultCommentId(openVaultCommentId === 'vault-audio' ? null : 'vault-audio')
-                      }
-                      className="flex items-center gap-2 text-xs font-mono text-cyan-300 hover:text-white transition-colors cursor-pointer"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      <span>
-                        {vaultComments['vault-audio']?.length || 0} Soundboard Discussion Comments
-                      </span>
-                    </button>
-                  </div>
+                  <h2 className="text-base sm:text-lg font-display font-bold text-white">
+                    {ballot.title}
+                  </h2>
 
-                  {/* Collapsible Comment Drawer for Audio */}
-                  {openVaultCommentId === 'vault-audio' && (
-                    <div className="mt-3 p-3.5 rounded-xl bg-black/80 border border-cyan-500/20 space-y-3">
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {vaultComments['vault-audio']?.map((c) => (
-                          <div key={c.id} className="text-xs p-2 rounded bg-white/[0.03] border border-white/5">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-bold text-cyan-300 text-[11px]">{c.author}</span>
-                              <span className="text-[9px] font-mono text-white/40">{c.timestamp}</span>
-                            </div>
-                            <p className="text-white/80">{c.content}</p>
-                          </div>
-                        ))}
-                      </div>
+                  <p className="text-xs sm:text-sm text-white/70 font-sans">
+                    {ballot.description}
+                  </p>
 
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={vaultCommentText}
-                          onChange={(e) => setVaultCommentText(e.target.value)}
-                          placeholder="Share feedback on this mix..."
-                          className="flex-1 bg-black/60 border border-white/15 focus:border-cyan-400 rounded-lg px-3 py-1.5 text-xs text-white outline-none font-mono"
-                        />
+                  {/* Options with percentage fills */}
+                  <div className="space-y-3 pt-2">
+                    {ballot.options.map((opt) => {
+                      const pct = ballot.totalVotes > 0 ? Math.round((opt.votes / ballot.totalVotes) * 100) : 0;
+                      const isVoted = ballot.userVoteId === opt.id;
+
+                      return (
                         <button
+                          key={opt.id}
                           type="button"
-                          onClick={() => handleSendVaultComment('vault-audio')}
-                          className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-mono font-bold text-xs transition-colors cursor-pointer"
+                          onClick={() => handleVoteBallot(ballot.id, opt.id)}
+                          className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${
+                            isVoted
+                              ? 'bg-emerald-950/60 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.25)]'
+                              : 'bg-black/50 border-white/10 hover:border-emerald-500/40 text-white/80'
+                          }`}
                         >
-                          Send
+                          <div
+                            className="absolute inset-y-0 left-0 bg-emerald-500/15 pointer-events-none transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+
+                          <div className="relative z-10 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div
+                                className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                  isVoted
+                                    ? 'border-emerald-400 bg-emerald-400'
+                                    : 'border-white/30 group-hover:border-emerald-400'
+                                }`}
+                              >
+                                {isVoted && <CheckCircle2 className="w-3 h-3 text-black" />}
+                              </div>
+                              <span className="text-xs sm:text-sm font-semibold truncate">
+                                {opt.label}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0 font-mono text-xs">
+                              <span className="text-emerald-400 font-bold">{pct}%</span>
+                              <span className="text-white/40 text-[11px]">({opt.votes})</span>
+                            </div>
+                          </div>
                         </button>
-                      </div>
+                      );
+                    })}
+                  </div>
+
+                  {ballot.userVoteId && (
+                    <div className="pt-2 flex items-center gap-1.5 text-[11px] font-mono text-emerald-300">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Consensus recorded: Ballot verified against {patronName}.</span>
                     </div>
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* 4. LORE GOVERNANCE CHANNEL */}
-            {activeChannel === 'governance' && (
-              <div className="max-w-4xl mx-auto space-y-6">
-                <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
-                    <Vote className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-display font-bold text-white">
-                      Patron Lore Governance Node
-                    </h3>
-                    <p className="text-xs text-white/70 font-sans mt-0.5">
-                      As a verified Patron or Founding Pass holder, you hold binding voting rights on character development, narrative branches, and production priorities.
-                    </p>
-                  </div>
-                </div>
-
-                {polls.map((poll) => (
-                  <motion.div
-                    key={poll.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.1)] space-y-4"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-400/40">
-                        {poll.badge}
-                      </span>
-                      <span className="text-xs font-mono text-white/50">{poll.totalVotes} Total Votes</span>
-                    </div>
-
-                    <h2 className="text-base sm:text-lg font-display font-bold text-white leading-snug">
-                      {poll.title}
-                    </h2>
-
-                    <p className="text-xs sm:text-sm text-white/70 font-sans">
-                      {poll.description}
-                    </p>
-
-                    {/* Voting Options */}
-                    <div className="space-y-3 pt-2">
-                      {poll.options.map((option) => {
-                        const pct = poll.totalVotes > 0 ? Math.round((option.votes / poll.totalVotes) * 100) : 0;
-                        const isUserChoice = poll.userVotedId === option.id;
-
-                        return (
-                          <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => handleCastVote(poll.id, option.id)}
-                            className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${
-                              isUserChoice
-                                ? 'bg-emerald-950/60 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.25)]'
-                                : 'bg-black/50 border-white/10 hover:border-emerald-500/40 text-white/80'
-                            }`}
-                          >
-                            {/* Animated Percentage Fill Bar */}
-                            <div
-                              className="absolute inset-y-0 left-0 bg-emerald-500/15 pointer-events-none transition-all duration-500"
-                              style={{ width: `${pct}%` }}
-                            />
-
-                            <div className="relative z-10 flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div
-                                  className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                                    isUserChoice
-                                      ? 'border-emerald-400 bg-emerald-400'
-                                      : 'border-white/30 group-hover:border-emerald-400'
-                                  }`}
-                                >
-                                  {isUserChoice && <CheckCircle2 className="w-3 h-3 text-black" />}
-                                </div>
-                                <span className="text-xs sm:text-sm font-semibold truncate">
-                                  {option.text}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-2 shrink-0 font-mono text-xs">
-                                <span className="text-emerald-400 font-bold">{pct}%</span>
-                                <span className="text-white/40 text-[11px]">({option.votes})</span>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {poll.userVotedId && (
-                      <div className="pt-2 flex items-center gap-1.5 text-[11px] font-mono text-emerald-300">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Your ballot has been cast and cryptographically tallied.</span>
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Bottom Chat Message Creation Box (Available on #general-chat) */}
-          {activeChannel === 'general' && (
-            <div className="p-3 sm:p-4 bg-[#050810] border-t border-white/10 shrink-0">
-              <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto space-y-2">
-                {/* Image upload preview chip */}
-                {selectedImage && (
-                  <div className="flex items-center gap-2 bg-black/60 p-2 rounded-lg border border-cyan-500/30 w-fit">
-                    <img
-                      src={selectedImage}
-                      alt="Selected upload"
-                      className="w-12 h-12 object-cover rounded"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setSelectedImage(null)}
-                      className="p-1 text-white/50 hover:text-white"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2 bg-black/80 border border-white/15 focus-within:border-cyan-400 rounded-xl px-3 py-2 transition-all">
-                  {/* File Upload Trigger */}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    onChange={handleImageFileChange}
-                    className="hidden"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Upload image / artwork"
-                    className="p-1.5 text-white/40 hover:text-cyan-300 transition-colors cursor-pointer"
-                  >
-                    <ImageIcon className="w-4 h-4" />
-                  </button>
-
-                  <input
-                    type="text"
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    placeholder={`Message #💬-general-chat as ${patronName}...`}
-                    className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none font-sans"
-                  />
-
-                  <button
-                    type="submit"
-                    disabled={!messageText.trim() && !selectedImage}
-                    className="p-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-30 disabled:hover:bg-cyan-500 text-black transition-all cursor-pointer shrink-0"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] font-mono text-white/35 px-1">
-                  <span>Press [Enter] to send · Markdown &amp; images supported</span>
-                  <span className="text-cyan-400">PATRON STATUS VERIFIED</span>
-                </div>
-              </form>
+              ))}
             </div>
-          )}
-        </main>
-
-        {/* Discord Right Members Sidebar (Desktop Collapsible) */}
-        {membersDrawerOpen && (
-          <aside className="w-60 bg-[#05080f] border-l border-white/10 hidden lg:flex flex-col p-3.5 space-y-4 shrink-0 overflow-y-auto">
-            <div>
-              <div className="text-[10px] font-mono font-bold tracking-wider text-amber-400 uppercase px-2 mb-2">
-                CREATORS — 1
-              </div>
-              <div className="flex items-center gap-2.5 p-2 rounded-lg bg-white/[0.02]">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center font-bold text-[10px] text-black">
-                  OD
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-white truncate flex items-center gap-1">
-                    <span>Odi</span>
-                    <Crown className="w-3 h-3 text-amber-400" />
-                  </div>
-                  <div className="text-[9px] font-mono text-white/40">Director &amp; Creator</div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div className="text-[10px] font-mono font-bold tracking-wider text-cyan-400 uppercase px-2 mb-2">
-                PATRON MEMBERS — 4
-              </div>
-              <div className="space-y-1.5">
-                {[
-                  { name: 'Elena Vance', role: 'PATRON', color: 'from-cyan-400 to-blue-600' },
-                  { name: 'Kaelen Thorne', role: 'PATRON', color: 'from-emerald-400 to-teal-600' },
-                  { name: 'Cygnus-9', role: 'VIP #01', color: 'from-purple-400 to-indigo-600' },
-                  { name: patronName, role: 'YOU', color: 'from-cyan-400 to-indigo-600' },
-                ].map((m, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/[0.04] transition-colors"
-                  >
-                    <div
-                      className={`w-7 h-7 rounded-full bg-gradient-to-tr ${m.color} flex items-center justify-center font-bold text-[10px] text-black shrink-0`}
-                    >
-                      {m.name.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-xs font-semibold text-white truncate">{m.name}</div>
-                      <div className="text-[9px] font-mono text-cyan-300/80">{m.role}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-white/5 text-[10px] font-mono text-white/30 text-center">
-              38 Active in Voice / Canvas
-            </div>
-          </aside>
+          </motion.div>
         )}
-      </div>
+      </main>
+
+      {/* Download Alert Toast */}
+      <AnimatePresence>
+        {downloadToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 30 }}
+            className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-cyan-950/95 border border-cyan-400 text-white font-mono text-xs shadow-2xl flex items-center gap-3 backdrop-blur-md"
+          >
+            <Download className="w-5 h-5 text-cyan-400 animate-bounce" />
+            <div>
+              <div className="font-bold text-cyan-300">Vault Download Active</div>
+              <div className="text-[11px] text-white/80">{downloadToast}</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Thread Reply Drawer Modal */}
       <AnimatePresence>
-        {activeThreadMessage && (
+        {activeReplyPost && (
           <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/70 backdrop-blur-sm p-3">
             <motion.div
               initial={{ x: '100%', opacity: 0 }}
@@ -1383,39 +1457,36 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setActiveThreadMessage(null)}
+                    onClick={() => setActiveReplyPost(null)}
                     className="p-1 rounded text-white/50 hover:text-white"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                {/* Original Parent Message */}
                 <div className="p-3 my-3 rounded-xl bg-white/5 border border-white/5 text-xs">
-                  <div className="font-bold text-cyan-300 mb-1">{activeThreadMessage.author}</div>
-                  <p className="text-white/80">{activeThreadMessage.content}</p>
+                  <div className="font-bold text-cyan-300 mb-1">{activeReplyPost.author}</div>
+                  <p className="text-white/80 font-sans">{activeReplyPost.content}</p>
                 </div>
 
-                {/* Replies Feed */}
                 <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {activeThreadMessage.replies?.map((r) => (
+                  {activeReplyPost.replies.map((r) => (
                     <div key={r.id} className="p-2.5 rounded-lg bg-black/60 border border-white/5 text-xs">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-bold text-white">{r.author}</span>
                         <span className="text-[9px] font-mono text-white/40">{r.timestamp}</span>
                       </div>
-                      <p className="text-white/80">{r.content}</p>
+                      <p className="text-white/80 font-sans">{r.content}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Reply Input Box */}
-              <form onSubmit={handleSendThreadReply} className="pt-3 border-t border-white/10 flex gap-2">
+              <form onSubmit={handleSendReply} className="pt-3 border-t border-white/10 flex gap-2">
                 <input
                   type="text"
-                  value={threadReplyText}
-                  onChange={(e) => setThreadReplyText(e.target.value)}
+                  value={replyInputText}
+                  onChange={(e) => setReplyInputText(e.target.value)}
                   placeholder="Reply to thread..."
                   className="flex-1 bg-black/60 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white outline-none font-mono"
                 />
