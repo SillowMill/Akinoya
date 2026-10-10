@@ -24,9 +24,14 @@ export default async function handler(req, res) {
     body = {};
   }
 
+  const isSendPin = body.action === 'send-pin' || (req.url && req.url.includes('send-pin'));
+
   // Bingäa Certificate of Authenticity actions (Card PIN + optional email OTP)
-  if (body.action === 'send-pin' || body.action === 'send-otp' || body.action === 'certify') {
-    const result = await handleCertificateAction(body);
+  if (isSendPin || body.action === 'send-otp' || body.action === 'certify') {
+    const result = await handleCertificateAction({
+      ...body,
+      action: isSendPin ? 'send-pin' : body.action,
+    });
     res.statusCode = result.status;
     return res.end(JSON.stringify(result.body));
   }

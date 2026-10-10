@@ -4,6 +4,10 @@
   "installCommand": "npm install --legacy-peer-deps",
   "rewrites": [
     {
+      "source": "/api/nfc/send-pin",
+      "destination": "/api/nfc/register"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },

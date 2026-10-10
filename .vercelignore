@@ -1,0 +1,13 @@
+node_modules
+dist
+build
+.git
+.github
+.vscode
+.idea
+.vite
+/Bing*.pdf
+/BWS.wav
+*.log
+.DS_Store
+Thumbs.db

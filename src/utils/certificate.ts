@@ -233,7 +233,7 @@ export const requestCardPin = async (
     const res = await fetch('/api/nfc/send-pin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ passId, email, holderName }),
+      body: JSON.stringify({ action: 'send-pin', passId, email, holderName }),
     });
     const data = await res.json().catch(() => ({}));
     return {
