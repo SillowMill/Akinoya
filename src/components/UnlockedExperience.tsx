@@ -555,38 +555,41 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/70 backdrop-blur-md border border-cyan-400/30 rounded-full text-[10px] font-mono text-cyan-300">
-            <Sparkles className="w-3 h-3 text-cyan-400" />
-            <span>{isVipMode ? `• FOUNDING MEMBER #${editionDisplay} OF 100` : 'GUEST ACCESS'}</span>
-          </div>
+          {/* Top badges: In VIP mode show Member # and Access Granted. In Guest mode show ONLY ONE clean badge at top-right to prevent any mobile collision */}
           {isVipMode ? (
-            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-emerald-500/50 rounded-full text-[10px] font-mono font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.9)]" />
-              <span>• ACCESS GRANTED</span>
-            </div>
+            <>
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/70 backdrop-blur-md border border-cyan-400/30 rounded-full text-[10px] font-mono text-cyan-300 max-w-[55%]">
+                <Sparkles className="w-3 h-3 text-cyan-400 shrink-0" />
+                <span className="truncate">• FOUNDING MEMBER #{editionDisplay} OF 100</span>
+              </div>
+              <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-emerald-500/50 rounded-full text-[10px] font-mono font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)] shrink-0 whitespace-nowrap">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.9)]" />
+                <span>• ACCESS GRANTED</span>
+              </div>
+            </>
           ) : (
-            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[9.5px] xs:text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)] shrink-0 whitespace-nowrap">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
-              <span>• VIP ACCESS 100 / 100 CLAIMED</span>
+              <span>• 100 / 100 CLAIMED</span>
             </div>
           )}
         </div>
 
         {/* Card Details Bar */}
         <div className="p-4 sm:p-5 bg-gradient-to-b from-[#060c14] to-[#03060a] border-t border-cyan-500/20">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <span className="text-[11px] sm:text-xs font-mono text-white/50 tracking-wider">
+          <div className="flex items-center justify-between mb-2 sm:mb-3 gap-2">
+            <span className="text-[11px] sm:text-xs font-mono text-white/50 tracking-wider truncate">
               {isVipMode ? 'ÄKINOYA VIP PASS' : 'GUEST ÄKINOYA PASS'}
             </span>
             {isVipMode ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-[10px] font-mono font-semibold text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.25)]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-[10px] font-mono font-semibold text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.25)] shrink-0 whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                 <span>• ACCESS GRANTED</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-[9.5px] xs:text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)] shrink-0 whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                <span>VIP ACCESS 100 / 100 CLAIMED</span>
+                <span>100 / 100 CLAIMED</span>
               </span>
             )}
           </div>
@@ -844,38 +847,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               <span>OPEN VISUALIZER HUB →</span>
                             </button>
                           ) : (
-                            <>
-                              <button
-                                onClick={handleDirectGuestUnlockHub}
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
-                              >
-                                <Unlock className="w-4 h-4 text-black shrink-0" />
-                                <span>UNLOCK VISUALIZER HUB</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handlePastePassId('hub')}
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 transition-all cursor-pointer min-h-[44px]"
-                                title="Paste Pass ID from clipboard"
-                              >
-                                <ClipboardPaste className="w-4 h-4 text-cyan-400 shrink-0" />
-                                <span>PASTE PASS ID</span>
-                              </button>
-                            </>
+                            <button
+                              onClick={handleDirectGuestUnlockHub}
+                              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
+                            >
+                              <Unlock className="w-4 h-4 text-black shrink-0" />
+                              <span>UNLOCK VISUALIZER HUB</span>
+                            </button>
                           )}
                         </div>
-
-                        {pasteFeedback && (
-                          <div className={`flex items-center gap-2 text-xs font-mono rounded-xl px-3.5 py-2 transition-all ${
-                            pasteFeedback.type === 'success'
-                              ? 'text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 shadow-[0_0_12px_rgba(56,189,248,0.15)]'
-                              : 'text-amber-300 bg-amber-950/40 border border-amber-500/30'
-                          }`}>
-                            <Check className="w-4 h-4 text-cyan-400 shrink-0" />
-                            <span>{pasteFeedback.message}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -1058,7 +1038,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     {/* 11 Track Visualizer Widgets Grid (Clean 3-column layout on wide screens) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                       {VISUALIZER_TRACKS.map((track, index) => {
-                        const isUnlocked = Boolean(isVipMode || unlockedTracks[track.id] || track.defaultUnlocked);
+                        const isTrack01 = track.id === '01';
+                        const isTrack02 = track.id === '02';
+                        const isProducedTrack = isTrack01 || isTrack02;
 
                         return (
                           <motion.div
@@ -1069,9 +1051,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             whileHover={{ scale: 1.02 }}
                             onClick={() => handleTrackCardClick(track)}
                             className={`p-4 lg:p-4.5 rounded-xl border transition-all cursor-pointer relative group flex flex-col justify-between ${
-                              isUnlocked
+                              isProducedTrack
                                 ? 'bg-gradient-to-br from-emerald-950/30 via-black/50 to-black/70 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:border-emerald-400'
-                                : 'bg-black/40 border-white/10 hover:border-cyan-500/40 hover:bg-black/60 shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
+                                : 'bg-black/40 border-white/10 hover:border-amber-500/30 hover:bg-black/60 shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
                             }`}
                           >
                             <div className="flex items-start justify-between gap-2 mb-3">
@@ -1079,12 +1061,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 {/* Video Indicator Icon */}
                                 <div
                                   className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                                    isUnlocked
+                                    isProducedTrack
                                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
-                                      : 'bg-white/5 text-white/40 border border-white/10 group-hover:text-cyan-300 group-hover:border-cyan-500/30'
+                                      : 'bg-white/5 text-white/40 border border-white/10 group-hover:text-amber-300 group-hover:border-amber-500/30'
                                   }`}
                                 >
-                                  {isUnlocked ? (
+                                  {isProducedTrack ? (
                                     <Play className="w-4 h-4 fill-emerald-400 text-emerald-400 ml-0.5" />
                                   ) : (
                                     <AudioWaveform className="w-4 h-4" />
@@ -1101,10 +1083,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 </div>
                               </div>
 
-                              {isUnlocked ? (
+                              {isProducedTrack ? (
                                 <Unlock className="w-4 h-4 text-emerald-400 shrink-0" />
                               ) : (
-                                <Key className="w-4 h-4 text-white/40 group-hover:text-cyan-400 shrink-0 transition-colors" />
+                                <Lock className="w-4 h-4 text-amber-400/70 shrink-0" />
                               )}
                             </div>
 
@@ -1125,20 +1107,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             )}
 
                             <div className="flex items-center justify-between pt-2.5 border-t border-white/5 mt-auto">
-                              {isUnlocked ? (
+                              {isTrack01 ? (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                                  <span>{track.id === '02' ? 'EARLY ACCESS AVAILABLE' : 'UNLOCKED & READY'}</span>
-                                  <Unlock className="w-3 h-3 text-emerald-400 shrink-0" />
+                                  <span>FULL VISUALIZER UNLOCKED 🔓</span>
+                                </span>
+                              ) : isTrack02 ? (
+                                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                                  <span>EARLY ACCESS PREVIEW 🔓</span>
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/50 group-hover:border-cyan-500/30 group-hover:text-cyan-300 flex items-center gap-1.5 transition-colors">
-                                  <span>COMING SOON</span>
-                                  <Key className="w-3 h-3 text-cyan-400/70 shrink-0" />
+                                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-400/30 text-amber-300/90 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(245,158,11,0.15)]">
+                                  <span>RELEASE SCHEDULED · JAN 9, 2027 🔒</span>
                                 </span>
                               )}
 
                               <span className="text-[10px] font-mono text-cyan-400/80 group-hover:text-cyan-300 flex items-center gap-1">
-                                {isUnlocked ? 'Watch Stream ▶' : 'Unlock Code 🔑'}
+                                {isProducedTrack ? 'Watch Stream ▶' : 'In Production ⏳'}
                               </span>
                             </div>
                           </motion.div>
