@@ -84,7 +84,7 @@ function createDefaultPassRecord(tokenId) {
     normalizedId: normalized,
     edition,
     editionNumber,
-    sector: 'Sector 04 (Leuven Origin)',
+    origin: 'Genesis Archive (Leuven Origin)',
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
     status: 'VERIFIED ORIGINAL / FOUNDING HOLDER',

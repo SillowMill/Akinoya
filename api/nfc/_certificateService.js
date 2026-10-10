@@ -183,7 +183,7 @@ export async function sendEmailCardPin(passId, email, holderName = 'Founding Hol
           </p>
         </div>
         <div style="padding: 20px 32px; background-color: rgba(0, 0, 0, 0.4); border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: center; font-size: 11px; color: rgba(255, 255, 255, 0.4); font-family: monospace;">
-          Sector 04 · Äkinoya Genesis Whitelist · <a href="mailto:Odi@sillowmill.com" style="color: #67e8f9; text-decoration: none;">Odi@sillowmill.com</a>
+          Äkinoya Genesis Whitelist · <a href="mailto:Odi@sillowmill.com" style="color: #67e8f9; text-decoration: none;">Odi@sillowmill.com</a>
         </div>
       </div>
     </div>`;

@@ -84,7 +84,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     tokenId: string;
     edition: string;
     editionNumber: number;
-    sector: string;
+    origin: string;
     issueDate: string;
     coordinates: string;
     ownerName: string;
@@ -94,7 +94,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     tokenId: `#${activeToken}`,
     edition: '1 of 100',
     editionNumber: 1,
-    sector: 'Sector 04 (Leuven Origin)',
+    origin: 'Genesis Archive (Leuven Origin)',
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
     ownerName: 'Founding Holder',
@@ -454,10 +454,10 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               <span className="text-white/80">{passData.issueDate}</span>
             </div>
 
-            {/* Section / Sector */}
+            {/* Origin */}
             <div className="py-2.5 flex items-center justify-between gap-3">
-              <span className="text-white/45">SECTION</span>
-              <span className="text-white/80">{passData.sector}</span>
+              <span className="text-white/45">ORIGIN</span>
+              <span className="text-white/80">{passData.origin}</span>
             </div>
 
             {/* Coordinates */}

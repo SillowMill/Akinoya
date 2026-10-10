@@ -18,7 +18,7 @@ interface PassRecord {
   normalizedId: string;
   edition: string;
   editionNumber: number;
-  sector: string;
+  origin: string;
   issueDate: string;
   coordinates: string;
   status: string;
@@ -111,7 +111,7 @@ function createDefaultPassRecord(tokenId: string): PassRecord {
     normalizedId: normalized,
     edition,
     editionNumber,
-    sector: 'Sector 04 (Leuven Origin)',
+    origin: 'Genesis Archive (Leuven Origin)',
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
     status: 'VERIFIED ORIGINAL / FOUNDING HOLDER',

@@ -222,7 +222,7 @@ export default function App() {
                     transition={{ delay: 0.25, duration: 0.6 }}
                     className="mt-4 sm:mt-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 text-[10px] sm:text-[11px] font-mono text-white/50 tracking-wider text-center px-4"
                   >
-                    <span>ÄKINOYA SECTOR 04</span>
+                    <span>ÄKINOYA PROTOCOL</span>
                     <span className="text-white/20">·</span>
                     <span>RA 04h 35m / +16° 30'</span>
                     <span className="text-white/20">·</span>

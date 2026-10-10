@@ -114,7 +114,7 @@ const PERK_MODULES: PerkModule[] = [
     description: 'Direct access to unreleased tracks, soundscapes, and singles prior to official streaming release.',
     icon: Radio,
     defaultCode: 'VAULT-2027',
-    deploymentTime: 'SECTOR 04 DEPLOYMENT',
+    deploymentTime: 'GENESIS DEPLOYMENT',
     statusText: 'Audio master archives authenticated. Transmission scheduled for upcoming wave.',
   },
   {
@@ -570,7 +570,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           ) : (
             <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)] shrink-0 whitespace-nowrap">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
-              <span>• 100 / 100 CLAIMED</span>
+              <span>• VIP ACCESS 100 / 100 CLAIMED</span>
             </div>
           )}
         </div>
@@ -589,7 +589,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             ) : (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)] shrink-0 whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                <span>100 / 100 CLAIMED</span>
+                <span>VIP ACCESS 100 / 100 CLAIMED</span>
               </span>
             )}
           </div>
@@ -600,7 +600,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </div>
             <div className="text-[11px] sm:text-xs font-mono text-cyan-400/80 flex items-center justify-between">
               <span>{isVipMode ? `ID: #${activePassId}` : 'ACCESS: PUBLIC GUEST'}</span>
-              <span>SECTOR 04</span>
+              <span>{isVipMode ? 'FOUNDING BATCH' : 'PUBLIC ACCESS'}</span>
             </div>
           </div>
 
@@ -832,7 +832,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             Äkinoya Visualizer Archive
                           </h3>
                           <p className="text-xs sm:text-sm font-sans text-white/70 leading-relaxed mt-1.5">
-                            Experience 4K reactive telemetry visualizers and acoustic logs for all 11 sector tracks—including the featured "Don't Need" and "Bingäa" animations.
+                            Experience 4K reactive telemetry visualizers and acoustic logs for all 11 project tracks—including the featured "Don't Need" and "Bingäa" animations.
                           </p>
                         </div>
 
@@ -1109,20 +1109,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             <div className="flex items-center justify-between pt-2.5 border-t border-white/5 mt-auto">
                               {isTrack01 ? (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                                  <span>FULL VISUALIZER UNLOCKED 🔓</span>
+                                  <span>ARTWORK & COVER VISIBLE 🔓</span>
                                 </span>
                               ) : isTrack02 ? (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                                  <span>EARLY ACCESS PREVIEW 🔓</span>
+                                  <span>AUDIO PREVIEW AVAILABLE 🔓</span>
                                 </span>
                               ) : (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-400/30 text-amber-300/90 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(245,158,11,0.15)]">
-                                  <span>RELEASE SCHEDULED · JAN 9, 2027 🔒</span>
+                                  <span>NOT RELEASED YET · JAN 9, 2027 🔒</span>
                                 </span>
                               )}
 
                               <span className="text-[10px] font-mono text-cyan-400/80 group-hover:text-cyan-300 flex items-center gap-1">
-                                {isProducedTrack ? 'Watch Stream ▶' : 'In Production ⏳'}
+                                {isProducedTrack ? 'Watch Stream ▶' : 'Transmission Pending'}
                               </span>
                             </div>
                           </motion.div>
@@ -1278,26 +1278,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             </span>
                           </div>
                           <p className="text-[11px] sm:text-xs font-mono text-white/60 mt-1">
-                            Your physical hardcover copy is included with your Äkinoya Founding Pass. Read the full high-res digital release now or claim your certificate &amp; physical shipment.
+                            Your physical hardcover copy is included with your Äkinoya Founding Pass. Read the full high-res digital release now.
                           </p>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-2.5">
+                        <div>
                           <button
                             type="button"
                             onClick={() => setShowComicReader(true)}
-                            className="flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                            className="w-full py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
                           >
                             <BookOpen className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
                             <span>READ YOUR DIGITAL COMIC</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setShowCertificateClaim(true)}
-                            className="py-3.5 px-5 rounded-xl text-xs sm:text-sm font-mono font-bold text-amber-300 hover:text-white bg-amber-950/70 hover:bg-amber-900 border border-amber-500/50 hover:border-amber-400 transition-all cursor-pointer min-h-[46px] flex items-center justify-center gap-2 group shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-[1.01]"
-                          >
-                            <ShieldCheck className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-                            <span>CLAIM INCLUDED PHYSICAL COPY</span>
                           </button>
                         </div>
                       </div>
@@ -1788,7 +1780,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       AUDIO TRANSMISSION · TRACK #{activePlayingTrack.id}
                     </div>
                     <h3 className="text-xs sm:text-base font-display font-bold text-white truncate max-w-[200px] xs:max-w-[260px] sm:max-w-none">
-                      {activePlayingTrack.title} — Sector 04 Audio Feed
+                      {activePlayingTrack.title} — Official Audio Feed
                     </h3>
                   </div>
                 </div>
@@ -1832,7 +1824,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       {activePlayingTrack.title}
                     </h2>
                     <p className="text-[10px] xs:text-xs font-mono text-cyan-300/80 mt-1 max-w-xs sm:max-w-none mx-auto leading-tight sm:leading-normal">
-                      AUDIO MATRIX FREQUENCY · SECTOR 04 TRANSMISSION
+                      AUDIO MATRIX FREQUENCY · TRANSMISSION STREAM
                     </p>
                   </div>
 
@@ -1885,7 +1877,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <span className="truncate">
                       {activePlayingTrack.id === '02'
                         ? 'Master Planetary Soundtrack (BWS)'
-                        : 'Sector Audio Synthesizer Matrix'}
+                        : 'Audio Synthesizer Matrix'}
                     </span>
                   </div>
                 </div>
