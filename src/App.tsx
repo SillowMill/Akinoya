@@ -15,6 +15,7 @@ import { KycVerification } from './components/KycVerification';
 import { CheckoutSuccess } from './components/CheckoutSuccess';
 import { NfcHudToast } from './components/NfcHudToast';
 import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerification';
+import { CommunityHub } from './components/CommunityHub';
 
 export default function App() {
   // Public Site Unlock (strictly isolated from VIP status; only unlocked via entering passcode 'SillowMill2027' in ComingSoonGate)
@@ -31,10 +32,11 @@ export default function App() {
   // VIP Sub-view inside /verify route: 'passport' (HUD Certificate) | 'portal' (Personalized VIP Unlocked Portal)
   const [vipSubView, setVipSubView] = useState<'passport' | 'portal'>('passport');
 
-  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify'>(() => {
+  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community'>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
       const search = window.location.search.toLowerCase();
+      if (path === '/community' || path.startsWith('/community/')) return 'community';
       if (path === '/privacy' || path.startsWith('/privacy/')) return 'privacy';
       if (path === '/kyc' || path.startsWith('/kyc/')) return 'kyc';
       if (path === '/success' || path.startsWith('/success/')) return 'success';
@@ -65,6 +67,11 @@ export default function App() {
       searchParams.get('pass');
     if (token) {
       const cleanToken = token.trim().toUpperCase().replace(/^#/, '');
+      if (cleanToken === 'PATRON-TEST-ACCESS' || cleanToken === 'PATRON') {
+        window.history.replaceState({}, '', '/community');
+        setRoute('community');
+        return;
+      }
       window.history.replaceState({}, '', `/verify/${cleanToken}`);
       setRoute('verify');
     }
@@ -75,7 +82,9 @@ export default function App() {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
       const search = window.location.search.toLowerCase();
-      if (path === '/privacy' || path.startsWith('/privacy/')) {
+      if (path === '/community' || path.startsWith('/community/')) {
+        setRoute('community');
+      } else if (path === '/privacy' || path.startsWith('/privacy/')) {
         setRoute('privacy');
       } else if (path === '/kyc' || path.startsWith('/kyc/')) {
         setRoute('kyc');
@@ -101,7 +110,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigateTo = (newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify', path: string) => {
+  const navigateTo = (newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community', path: string) => {
     try {
       window.history.pushState({}, '', path);
     } catch {
@@ -142,7 +151,7 @@ export default function App() {
       <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isCanvasUnlocked} />
 
       {/* Top Bar Navigation (Zone 1, 2, 3) */}
-      {!backdropOnly && (
+      {!backdropOnly && route !== 'community' && (
         <TopBar
           isUnlocked={isVipRoute ? true : publicUnlocked}
           isVip={isVipRoute}
@@ -151,7 +160,11 @@ export default function App() {
       )}
 
       {/* Route-Based Dynamic Content */}
-      {route === 'privacy' ? (
+      {route === 'community' ? (
+        <div className="relative z-20 flex-1 w-full flex flex-col">
+          <CommunityHub onBackToHome={() => navigateTo('home', '/')} />
+        </div>
+      ) : route === 'privacy' ? (
         <div className="relative z-20 flex-1 w-full">
           <PrivacyPolicy onBackToHome={() => navigateTo('home', '/')} />
         </div>
@@ -252,7 +265,7 @@ export default function App() {
       )}
 
       {/* Luxury Minimalist Footer */}
-      {!backdropOnly && (
+      {!backdropOnly && route !== 'community' && (
         <footer className="relative z-10 w-full border-t border-white/5 bg-black/60 backdrop-blur-md py-4 px-4 sm:px-6 text-center space-y-2.5">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-white/40">
             <div>
@@ -299,7 +312,7 @@ export default function App() {
       )}
 
       {/* Floating Audio Stop/Play Control (Always accessible while scrolling) */}
-      {!backdropOnly && <FloatingAudioControl />}
+      {!backdropOnly && route !== 'community' && <FloatingAudioControl />}
     </main>
   );
 }

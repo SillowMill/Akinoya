@@ -937,11 +937,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                       {/* Access / Pricing Bar inside widget top */}
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                        <a
+                          href="/community"
+                          className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:scale-[1.01]"
+                        >
+                          <Sparkles className="w-4 h-4 text-black shrink-0" />
+                          <span>COMMUNITY HUB →</span>
+                        </a>
+
                         <button
                           type="button"
                           disabled={isSubscribing}
                           onClick={handlePerksStripeCheckout}
-                          className="inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
+                          className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
                         >
                           <CreditCard className="w-4 h-4 text-black shrink-0" />
                           <span>{isSubscribing ? 'INITIALIZING STRIPE...' : 'ACCESS NOW — €5/MONTH'}</span>
@@ -961,25 +969,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
                       {PERK_MODULES.map((perk) => {
                         const Icon = perk.icon;
-                        const isSubmitted = Boolean(isVipMode || perkSubmitted[perk.id]);
 
                         return (
                           <motion.div
                             key={perk.id}
                             whileHover={{ scale: 1.015 }}
-                            className={`p-4 sm:p-5 lg:p-6 rounded-2xl border transition-all flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.4)] relative overflow-hidden group ${
-                              isSubmitted
-                                ? 'bg-gradient-to-br from-cyan-950/30 via-black/50 to-black/70 border-cyan-400/40 shadow-[0_0_20px_rgba(56,189,248,0.12)]'
-                                : 'bg-black/40 border-white/10 hover:border-cyan-500/30'
-                            }`}
+                            className="p-4 sm:p-5 lg:p-6 rounded-2xl border transition-all flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.4)] relative overflow-hidden group bg-black/50 border-white/10 hover:border-cyan-500/30"
                           >
                             <div>
-                              {/* Single Header Row: Video Icon + Number + Title (Left) | COMING SOON Pill Badge (Right) */}
+                              {/* Header Row: Icon + Number + Title (Left) | Category Badge (Right) */}
                               <div className="flex items-center justify-between gap-2.5 mb-2.5">
-                                {/* Left Side: Video Icon, Section Number, Title */}
                                 <div className="flex items-center gap-2 min-w-0">
                                   <div className="w-7 h-7 rounded-lg bg-cyan-950/50 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 shadow-[0_0_8px_rgba(56,189,248,0.15)] group-hover:border-cyan-400/50 transition-colors">
-                                    <AudioWaveform className="w-3.5 h-3.5 text-cyan-400" />
+                                    <Icon className="w-3.5 h-3.5 text-cyan-400" />
                                   </div>
                                   <span className="text-[11px] font-mono text-cyan-400 font-semibold shrink-0">
                                     {perk.number}.
@@ -989,15 +991,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                   </h4>
                                 </div>
 
-                                {/* Right Side: Refined Dark-Glass COMING SOON Pill Badge (No brackets) */}
                                 <div className="shrink-0">
-                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-950/20 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono tracking-wider font-semibold shadow-[0_0_10px_rgba(56,189,248,0.12)] whitespace-nowrap">
-                                    <span>COMING SOON</span>
-                                    {isSubmitted ? (
-                                      <Lock className="w-3 h-3 text-cyan-400 shrink-0" />
-                                    ) : (
-                                      <Key className="w-3 h-3 text-cyan-400/70 shrink-0" />
-                                    )}
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono tracking-wider font-semibold whitespace-nowrap">
+                                    {perk.category}
                                   </span>
                                 </div>
                               </div>
@@ -1008,65 +1004,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               </p>
                             </div>
 
-                            {/* Interactive Code Input Bar / Gated Coming Soon State */}
-                            <div className="pt-3 border-t border-white/5 mt-auto">
-                              <AnimatePresence mode="wait">
-                                {isSubmitted ? (
-                                  <motion.div
-                                    key="coming-soon-state"
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -8 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 space-y-1.5 shadow-[inset_0_0_15px_rgba(56,189,248,0.08)]"
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-[10px] font-mono text-cyan-300 flex items-center gap-1.5 font-semibold">
-                                        <Lock className="w-3 h-3 text-cyan-400" />
-                                        <span>DEPLOYMENT IMMINENT · COMING SOON</span>
-                                      </span>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleResetPerk(perk.id)}
-                                        className="text-[9px] font-mono text-white/40 hover:text-white/80 underline cursor-pointer"
-                                      >
-                                        Re-enter
-                                      </button>
-                                    </div>
-                                    <p className="text-[10px] sm:text-[11px] text-white/70 font-mono leading-relaxed">
-                                      {perk.statusText}
-                                    </p>
-                                  </motion.div>
-                                ) : (
-                                  <motion.form
-                                    key="code-input-form"
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -8 }}
-                                    transition={{ duration: 0.3 }}
-                                    onSubmit={(e) => handlePerkCodeSubmit(e, perk.id)}
-                                    className="flex gap-1.5"
-                                  >
-                                    <div className="relative flex-1">
-                                      <Key className="w-3.5 h-3.5 text-white/30 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                      <input
-                                        type="text"
-                                        value={perkInputs[perk.id] || ''}
-                                        onChange={(e) => handlePerkInputChange(perk.id, e.target.value)}
-                                        placeholder={`Enter code (e.g. ${perk.defaultCode} or Pass ID)`}
-                                        className="w-full bg-black/60 border border-white/10 focus:border-cyan-400/60 rounded-lg pl-8 pr-2.5 py-1.5 text-base sm:text-[11px] text-white placeholder-white/30 outline-none font-mono tracking-wide transition-colors"
-                                      />
-                                    </div>
-                                    <button
-                                      type="submit"
-                                      className="px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-mono font-semibold bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 hover:text-white transition-colors cursor-pointer whitespace-nowrap min-h-[34px] flex items-center gap-1 shadow-[0_0_8px_rgba(56,189,248,0.15)]"
-                                    >
-                                      <Lock className="w-3 h-3" />
-                                      <span>VERIFY</span>
-                                    </button>
-                                  </motion.form>
-                                )}
-                              </AnimatePresence>
+                            {/* Clean Descriptive Status Line */}
+                            <div className="pt-3 border-t border-white/5 mt-auto flex items-center justify-between text-[10.5px] font-mono text-cyan-400/80">
+                              <span className="flex items-center gap-1.5">
+                                <Sparkles className="w-3 h-3 text-cyan-400" />
+                                <span>PATRON BENEFIT</span>
+                              </span>
+                              <span className="text-white/40">{perk.deploymentTime}</span>
                             </div>
                           </motion.div>
                         );

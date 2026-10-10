@@ -1,5 +1,4 @@
-import React from 'react';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Sparkles } from 'lucide-react';
 import { SoundtrackButton } from './SoundtrackButton';
 
 interface TopBarProps {
@@ -24,6 +23,10 @@ export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, isVip = false, onNav
         <nav className="hidden md:flex items-center gap-6 text-xs font-mono text-white/60">
           <a href="#archives" className="hover:text-white transition-colors">
             Archive
+          </a>
+          <a href="/community" className="hover:text-cyan-300 transition-colors flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Community Hub</span>
           </a>
           {isVip && onNavigateToVerify && (
             <button

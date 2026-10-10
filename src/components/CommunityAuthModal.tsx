@@ -36,7 +36,14 @@ export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = ({
       return;
     }
 
+    const isPatronTest =
+      clean === 'PATRON-TEST-ACCESS' ||
+      clean === 'PATRONTESTACCESS' ||
+      clean === 'PATRON' ||
+      clean === 'TEST-ACCESS';
+
     if (
+      isPatronTest ||
       clean === FOUNDING_PASS_ID ||
       clean === 'SILLOWMILL2027' ||
       clean === 'AKN-2027' ||
@@ -44,13 +51,25 @@ export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = ({
       isValidPassId(clean)
     ) {
       soundManager.playUnlockChime();
+      if (isPatronTest) {
+        setSuccessMsg('🧪 Test Passkey Accepted! Simulated Patron Account unlocked.');
+        sessionStorage.setItem('akinoya_patron_token', 'PATRON-TEST-ACCESS');
+        sessionStorage.setItem('akinoya_patron_name', 'Patron Member #042');
+        sessionStorage.setItem('akinoya_patron_role', 'PATRON MEMBER');
+        setTimeout(() => {
+          window.location.href = '/community';
+          onClose();
+        }, 500);
+        return;
+      }
+
       setSuccessMsg('Access Key verified! VIP permissions granted.');
       setTimeout(() => {
         onSuccess(clean === 'SILLOWMILL2027' ? FOUNDING_PASS_ID : clean);
         onClose();
       }, 700);
     } else {
-      setError('Unrecognized Access Key. Hint: enter your Pass ID or SILLOWMILL2027.');
+      setError('Unrecognized Access Key. Hint: Use PATRON-TEST-ACCESS or your Pass ID.');
       soundManager.playError();
     }
   };
@@ -157,8 +176,34 @@ export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = ({
               Authenticate via your VIP Pass Key, Google OAuth, or receive an instant Email Magic Link.
             </p>
 
+            {/* Prominent Demo / Test Passkey Quick Bypass Trigger */}
+            <div className="mt-3.5 p-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-cyan-500/10 to-black/60 border border-amber-400/40 flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-2.5 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+              <div className="min-w-0">
+                <div className="text-[11px] font-mono font-bold text-amber-300 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>TEST PASSKEY READY</span>
+                </div>
+                <div className="text-[10px] font-mono text-white/70 mt-0.5">
+                  Instant preview: <span className="text-cyan-300 font-semibold">PATRON-TEST-ACCESS</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  soundManager.playUnlockChime();
+                  sessionStorage.setItem('akinoya_patron_token', 'PATRON-TEST-ACCESS');
+                  sessionStorage.setItem('akinoya_patron_name', 'Patron Member #042');
+                  sessionStorage.setItem('akinoya_patron_role', 'PATRON MEMBER');
+                  window.location.href = '/community';
+                }}
+                className="py-1.5 px-3 rounded-lg text-[11px] font-mono font-bold text-black bg-amber-400 hover:bg-amber-300 transition-all cursor-pointer whitespace-nowrap shadow-[0_0_12px_rgba(245,158,11,0.3)] hover:scale-[1.02] flex items-center justify-center gap-1 shrink-0"
+              >
+                <span>🧪 DEMO / TEST ACCESS</span>
+              </button>
+            </div>
+
             {/* Tabs */}
-            <div className="grid grid-cols-3 gap-1 bg-black/60 p-1 rounded-xl border border-white/10 mt-4">
+            <div className="grid grid-cols-3 gap-1 bg-black/60 p-1 rounded-xl border border-white/10 mt-3.5">
               <button
                 type="button"
                 onClick={() => {
@@ -242,12 +287,12 @@ export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = ({
                         setAccessKey(e.target.value);
                         if (error) setError(null);
                       }}
-                      placeholder={`e.g. ${FOUNDING_PASS_ID} or SILLOWMILL2027`}
+                      placeholder={`e.g. PATRON-TEST-ACCESS or ${FOUNDING_PASS_ID}`}
                       className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-9 pr-3.5 py-2.5 text-sm font-mono text-white placeholder-white/30 outline-none"
                     />
                   </div>
                   <span className="text-[10px] font-mono text-white/40 mt-1 block">
-                    Founding members: enter pass ID from card or master cipher.
+                    Enter <span className="text-amber-400 font-semibold">PATRON-TEST-ACCESS</span> for instant preview or enter your Pass ID.
                   </span>
                 </div>
 
