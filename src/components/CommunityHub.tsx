@@ -673,7 +673,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
           <button
             type="button"
             onClick={onBackToHome}
-            className="flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer min-h-[40px] sm:min-h-[36px] shrink-0"
+            className="flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer min-h-[44px] shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span className="hidden xs:inline">Planet Äkinoya</span>
@@ -693,14 +693,14 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {isPatron ? (
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded-lg bg-emerald-950/80 border border-emerald-400/40 text-[10.5px] font-mono text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)] whitespace-nowrap min-h-[40px] sm:min-h-[36px]">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded-lg bg-emerald-950/80 border border-emerald-400/40 text-[10.5px] font-mono text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)] whitespace-nowrap min-h-[44px]">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="font-bold">PATRON ACTIVE</span>
               </div>
               <button
                 type="button"
                 onClick={handleToggleGuestMode}
-                className="hidden md:inline-flex px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-mono text-white/50 hover:text-white transition-colors cursor-pointer min-h-[36px] items-center"
+                className="hidden md:inline-flex px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-mono text-white/50 hover:text-white transition-colors cursor-pointer min-h-[44px] items-center"
                 title="Simulate Free Guest View"
               >
                 Test Free User View
@@ -711,7 +711,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
               <button
                 type="button"
                 onClick={handleActivateTestAccess}
-                className="px-2.5 py-1.5 sm:py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-black text-[10.5px] sm:text-[11px] font-mono font-bold transition-all shadow-[0_0_12px_rgba(245,158,11,0.3)] cursor-pointer flex items-center gap-1 whitespace-nowrap min-h-[40px] sm:min-h-[36px]"
+                className="px-2.5 py-1.5 sm:py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-black text-[10.5px] sm:text-[11px] font-mono font-bold transition-all shadow-[0_0_12px_rgba(245,158,11,0.3)] cursor-pointer flex items-center gap-1 whitespace-nowrap min-h-[44px]"
                 title="Activate test passkey PATRON-TEST-ACCESS"
               >
                 <span>🧪 <span className="hidden xs:inline">TEST </span>PASSKEY</span>
@@ -723,7 +723,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   setUpgradeModalReason('Unlock 1-click downloads for all 4K wallpapers, DAW templates & stems.');
                   setIsUpgradeModalOpen(true);
                 }}
-                className="px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black text-[10.5px] sm:text-[11px] font-mono font-bold transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] cursor-pointer flex items-center gap-1 whitespace-nowrap min-h-[40px] sm:min-h-[36px]"
+                className="px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black text-[10.5px] sm:text-[11px] font-mono font-bold transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] cursor-pointer flex items-center gap-1 whitespace-nowrap min-h-[44px]"
               >
                 <Sparkles className="w-3 h-3 text-black shrink-0" />
                 <span>UPGRADE €5<span className="hidden xs:inline">/MO</span></span>
@@ -908,7 +908,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                                 setUpgradeModalReason(`Unlock direct download for ${asset.title}.`);
                                 setIsUpgradeModalOpen(true);
                               }}
-                              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.35)] cursor-pointer"
+                              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.35)] cursor-pointer flex items-center justify-center"
                             >
                               [ 🔒 UNLOCK FULL VAULT — €5/MONTH ]
                             </button>
@@ -1067,7 +1067,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                               setUpgradeModalReason(`Unlock full workflow breakdown for ${wf.title}.`);
                               setIsUpgradeModalOpen(true);
                             }}
-                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.35)] cursor-pointer"
+                            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.35)] cursor-pointer flex items-center justify-center"
                           >
                             [ 🔒 UNLOCK FULL VAULT — €5/MONTH ]
                           </button>
@@ -1193,7 +1193,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold tracking-wider">
-                    MODULE 03 · THEATER SPELER
+                    MODULE 03 · THEATER PLAYER
                   </span>
                   <span className="text-[10px] font-mono text-cyan-400 font-semibold">
                     CINEMATIC 4K UHD PREVIEWS
@@ -1258,7 +1258,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           setUpgradeModalReason('Unlock 4K theater player and full early-access animation sequences.');
                           setIsUpgradeModalOpen(true);
                         }}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-black font-mono font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.3)] cursor-pointer"
+                        className="min-h-[44px] px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-black font-mono font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.3)] cursor-pointer flex items-center justify-center"
                       >
                         [ UNLOCK THEATER — €5/MO ]
                       </button>
@@ -1292,7 +1292,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     <button
                       type="button"
                       onClick={() => setIsTheaterMuted(!isTheaterMuted)}
-                      className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
+                      className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
                     >
                       {isTheaterMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
                     </button>
@@ -1317,7 +1317,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         setActiveVisualizerTrack(idx);
                         soundManager.playTone(560, 0.06);
                       }}
-                      className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
+                      className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-center gap-3 min-h-[44px] ${
                         activeVisualizerTrack === idx
                           ? 'bg-cyan-950/70 border-cyan-400 text-white shadow-[0_0_15px_rgba(56,189,248,0.2)]'
                           : 'bg-black/50 border-white/10 hover:border-white/20 text-white/70'
@@ -1624,7 +1624,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                             setUpgradeModalReason('Unlock Council Ballot voting rights & physical merch whitelist.');
                             setIsUpgradeModalOpen(true);
                           }}
-                          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-black font-mono font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.3)] cursor-pointer"
+                          className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-black font-mono font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.3)] cursor-pointer flex items-center justify-center"
                         >
                           [ 🔒 UNLOCK FULL VAULT — €5/MONTH ]
                         </button>
@@ -1640,7 +1640,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                               key={opt.id}
                               type="button"
                               onClick={() => handleVoteBallot(ballot.id, opt.id, isFirstBallot)}
-                              className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${
+                              className={`w-full min-h-[44px] text-left p-3.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${
                                 isVoted
                                   ? 'bg-emerald-950/60 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.25)]'
                                   : 'bg-black/50 border-white/10 hover:border-emerald-500/40 text-white/80'
@@ -1852,11 +1852,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   value={replyInputText}
                   onChange={(e) => setReplyInputText(e.target.value)}
                   placeholder="Reply to thread..."
-                  className="flex-1 bg-black/60 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white outline-none font-mono"
+                  className="flex-1 min-h-[44px] bg-black/60 border border-white/20 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs text-white outline-none font-mono"
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-mono font-bold text-xs transition-colors cursor-pointer"
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-mono font-bold text-xs transition-colors cursor-pointer flex items-center justify-center"
                 >
                   Reply
                 </button>

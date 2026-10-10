@@ -196,7 +196,7 @@ export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = ({
                   sessionStorage.setItem('akinoya_patron_role', 'PATRON MEMBER');
                   window.location.href = '/community';
                 }}
-                className="py-1.5 px-3.5 rounded-lg text-[11px] font-mono font-bold text-black bg-amber-400 hover:bg-amber-300 transition-all cursor-pointer whitespace-nowrap shadow-[0_0_12px_rgba(245,158,11,0.3)] hover:scale-[1.02] flex items-center justify-center gap-1 shrink-0"
+                className="min-h-[44px] py-1.5 px-3.5 rounded-lg text-[11px] font-mono font-bold text-black bg-amber-400 hover:bg-amber-300 transition-all cursor-pointer whitespace-nowrap shadow-[0_0_12px_rgba(245,158,11,0.3)] hover:scale-[1.02] flex items-center justify-center gap-1 shrink-0"
               >
                 <span>🧪 PREVIEW CREATIVE VAULT</span>
               </button>
@@ -211,7 +211,7 @@ export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = ({
                   setError(null);
                   setSuccessMsg(null);
                 }}
-                className={`py-1.5 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`min-h-[44px] py-1.5 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   activeTab === 'key'
                     ? 'bg-cyan-500 text-black shadow-[0_0_10px_rgba(56,189,248,0.3)]'
                     : 'text-white/60 hover:text-white'
@@ -228,7 +228,7 @@ export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = ({
                   setError(null);
                   setSuccessMsg(null);
                 }}
-                className={`py-1.5 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`min-h-[44px] py-1.5 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   activeTab === 'magic'
                     ? 'bg-cyan-500 text-black shadow-[0_0_10px_rgba(56,189,248,0.3)]'
                     : 'text-white/60 hover:text-white'
@@ -245,7 +245,7 @@ export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = ({
                   setError(null);
                   setSuccessMsg(null);
                 }}
-                className={`py-1.5 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`min-h-[44px] py-1.5 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   activeTab === 'google'
                     ? 'bg-cyan-500 text-black shadow-[0_0_10px_rgba(56,189,248,0.3)]'
                     : 'text-white/60 hover:text-white'

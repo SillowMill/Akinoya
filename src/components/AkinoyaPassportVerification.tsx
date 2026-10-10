@@ -307,7 +307,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               onNavigateHome();
             }
           }}
-          className="inline-flex items-center gap-2 text-xs font-mono text-white/60 hover:text-white transition-colors cursor-pointer"
+          className="inline-flex items-center gap-2 text-xs font-mono text-white/60 hover:text-white transition-colors cursor-pointer min-h-[44px] px-2 py-1"
         >
           <ArrowLeft className="w-3.5 h-3.5 text-white/50" />
           <span>Back to Portal</span>
@@ -504,7 +504,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               <button
                 type="submit"
                 disabled={isRegistering}
-                className="w-full py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold cursor-pointer disabled:opacity-50"
+                className="w-full py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold cursor-pointer disabled:opacity-50 min-h-[44px] flex items-center justify-center"
               >
                 {isRegistering ? 'Saving...' : 'Save Holder Name'}
               </button>
@@ -520,7 +520,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               <button
                 type="submit"
                 disabled={!claimNameValid || isClaiming || isValidating || Boolean(dnaError)}
-                className="w-full py-3 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.35)] disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.35)] disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none disabled:cursor-not-allowed min-h-[44px]"
               >
                 {claimNameValid ? (
                   <ShieldCheck className="w-4 h-4" />
@@ -550,7 +550,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                 onNavigateHome();
               }
             }}
-            className="w-full py-3 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.35)]"
+            className="w-full py-3 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.35)] min-h-[44px]"
           >
             <AudioWaveform className="w-4 h-4 text-black" />
             <span>Open Visualizer Hub</span>

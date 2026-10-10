@@ -608,24 +608,26 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-          {/* Top badges: In VIP mode show Member # and Access Granted. In Guest mode show ONLY ONE clean badge at top-right to prevent any mobile collision */}
-          {isVipMode ? (
-            <>
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/70 backdrop-blur-md border border-cyan-400/30 rounded-full text-[10px] font-mono text-cyan-300 max-w-[55%]">
-                <Sparkles className="w-3 h-3 text-cyan-400 shrink-0" />
-                <span className="truncate">• FOUNDING MEMBER #{editionDisplay} OF 100</span>
+          {/* Top badges: In VIP mode show Member # and Access Granted in a safe responsive flex header. In Guest mode show ONLY ONE clean badge at top-right to prevent any mobile collision */}
+          <div className="absolute top-3 inset-x-3 flex items-center justify-between gap-2 pointer-events-none z-10">
+            {isVipMode ? (
+              <>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/75 backdrop-blur-md border border-cyan-400/30 rounded-full text-[9.5px] xs:text-[10px] font-mono text-cyan-300 max-w-[58%] truncate">
+                  <Sparkles className="w-3 h-3 text-cyan-400 shrink-0" />
+                  <span className="truncate">• FOUNDING MEMBER #{editionDisplay} OF 100</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-emerald-500/50 rounded-full text-[9.5px] xs:text-[10px] font-mono font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)] shrink-0 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.9)]" />
+                  <span>• ACCESS GRANTED</span>
+                </div>
+              </>
+            ) : (
+              <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)] shrink-0 whitespace-nowrap">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
+                <span>• VIP ACCESS 100 / 100 CLAIMED</span>
               </div>
-              <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-emerald-500/50 rounded-full text-[10px] font-mono font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)] shrink-0 whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.9)]" />
-                <span>• ACCESS GRANTED</span>
-              </div>
-            </>
-          ) : (
-            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)] shrink-0 whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
-              <span>• VIP ACCESS 100 / 100 CLAIMED</span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Card Details Bar */}
@@ -746,7 +748,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => onToggleViewMode(currentViewMode === 'orbit' ? 'surface' : 'orbit')}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/60 border border-cyan-800/40 rounded-xl transition-all cursor-pointer min-h-[40px]"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2 text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/60 border border-cyan-800/40 rounded-xl transition-all cursor-pointer min-h-[44px]"
           >
             {currentViewMode === 'orbit' ? (
               <>
@@ -764,7 +766,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           <button
             onClick={onLockPortal}
             title="Lock the portal and return to the access gate"
-            className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 text-xs font-mono text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all cursor-pointer min-h-[40px]"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2 text-xs font-mono text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all cursor-pointer min-h-[44px]"
           >
             <Lock className="w-3.5 h-3.5 text-white/60" />
             <span>Lock</span>
@@ -779,7 +781,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         <div className={`grid ${isVipMode ? 'grid-cols-3' : 'grid-cols-2'} gap-1 xs:gap-1.5 p-1 xs:p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
             <button
               onClick={() => setActiveTab('pass')}
-              className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[38px] sm:min-h-[40px] ${
+              className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[44px] ${
                 activeTab === 'pass'
                   ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                   : 'text-white/60 hover:text-white'
@@ -790,7 +792,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('edition')}
-              className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[38px] sm:min-h-[40px] ${
+              className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[44px] ${
                 activeTab === 'edition'
                   ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                   : 'text-white/60 hover:text-white'
@@ -802,7 +804,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             {isVipMode && (
               <button
                 onClick={() => setActiveTab('assets')}
-                className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[38px] sm:min-h-[40px] ${
+                className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[44px] ${
                   activeTab === 'assets'
                     ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                     : 'text-white/60 hover:text-white'
@@ -1524,7 +1526,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   <button
                     type="button"
                     onClick={() => (onNavigateToPassport ? onNavigateToPassport() : onNavigateToVerify?.(activePassId))}
-                    className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-semibold text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/30 hover:border-cyan-400 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px]"
+                    className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-semibold text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/30 hover:border-cyan-400 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
                   >
                     <User className="w-3.5 h-3.5" />
                     <span>View Digital Passport</span>
@@ -1566,7 +1568,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowCoverPreview(true)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 transition-all cursor-pointer min-h-[40px]"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 transition-all cursor-pointer min-h-[44px]"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>View Cover</span>
@@ -1575,7 +1577,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowComicReader(true)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-400 bg-emerald-950/40 transition-all cursor-pointer min-h-[40px]"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-400 bg-emerald-950/40 transition-all cursor-pointer min-h-[44px]"
                       >
                         <BookOpen className="w-3.5 h-3.5" />
                         <span>Read Comic</span>
@@ -1584,7 +1586,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <a
                         href={BINGAA_COVER_URL}
                         download={BINGAA_COVER_FILENAME}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-white/80 hover:text-white border border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all min-h-[40px]"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-white/80 hover:text-white border border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all min-h-[44px]"
                       >
                         <Download className="w-3.5 h-3.5 text-cyan-400" />
                         <span>Download Cover</span>
@@ -1593,7 +1595,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <a
                         href={BINGAA_PDF_URL}
                         download={BINGAA_PDF_FILENAME}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 hover:bg-cyan-900/60 transition-all min-h-[40px]"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 hover:bg-cyan-900/60 transition-all min-h-[44px]"
                       >
                         <Download className="w-3.5 h-3.5 text-cyan-400" />
                         <span>Download Comic PDF</span>
@@ -1605,11 +1607,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
               {/* Asset 3: Bingäa Issue #1 Certificate of Authenticity (COA) */}
               <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
-                <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                   <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Certificate of Authenticity</span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-emerald-300 whitespace-nowrap shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    OFFICIALLY VERIFIED · HUMAN CERTIFICATION PROTOCOL ACTIVE
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10px] font-mono font-semibold tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)] max-w-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span className="truncate sm:whitespace-normal">OFFICIALLY VERIFIED · HUMAN CERTIFICATION PROTOCOL ACTIVE</span>
                   </span>
                 </div>
 
@@ -1855,7 +1857,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         soundManager.playTone(520, 0.1);
                       }
                     }}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-mono font-semibold transition-all cursor-pointer shadow-[0_0_12px_rgba(56,189,248,0.3)] min-h-[42px] sm:min-h-[40px]"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-mono font-semibold transition-all cursor-pointer shadow-[0_0_12px_rgba(56,189,248,0.3)] min-h-[44px]"
                   >
                     {isPlayingAudio ? (
                       <>

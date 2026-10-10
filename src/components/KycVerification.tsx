@@ -34,7 +34,7 @@ export const KycVerification: React.FC<KycVerificationProps> = ({ onBackToHome }
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <button
             onClick={handleBack}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-cyan-950 text-white/80 hover:text-cyan-300 border border-white/10 hover:border-cyan-400/40 text-xs font-mono transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-cyan-950 text-white/80 hover:text-cyan-300 border border-white/10 hover:border-cyan-400/40 text-xs font-mono transition-all cursor-pointer min-h-[44px]"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Äkinoya Portal</span>

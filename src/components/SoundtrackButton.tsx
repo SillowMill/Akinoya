@@ -22,7 +22,7 @@ export const SoundtrackButton: React.FC = () => {
       type="button"
       aria-label={isPlaying ? 'Pause Sillow Mill - Bingäa' : 'Play Sillow Mill - Bingäa'}
       title={isPlaying ? 'Pause Soundtrack: Sillow Mill - Bingäa' : 'Play Soundtrack: Sillow Mill - Bingäa'}
-      className={`group relative flex items-center gap-1 sm:gap-2 px-1.5 xs:px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border text-[10.5px] xs:text-[11px] sm:text-xs font-mono transition-all duration-300 cursor-pointer select-none max-w-[130px] sm:max-w-none overflow-hidden shrink-0 ${
+      className={`group relative flex items-center gap-1 sm:gap-2 px-1.5 xs:px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border text-[10.5px] xs:text-[11px] sm:text-xs font-mono transition-all duration-300 cursor-pointer select-none max-w-[130px] sm:max-w-none overflow-hidden shrink-0 min-h-[38px] sm:min-h-[44px] ${
         isPlaying
           ? 'bg-cyan-950/80 border-cyan-400/60 text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.35)]'
           : 'bg-black/50 hover:bg-black/80 border-white/20 hover:border-cyan-400/50 text-white/80 hover:text-cyan-200 shadow-md hover:shadow-[0_0_12px_rgba(103,232,249,0.2)]'
