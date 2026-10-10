@@ -57,7 +57,25 @@ export default async function handler(req, res) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
+    const isMembership = session.mode === 'subscription' || session.metadata?.product === 'community_membership';
+    const customerEmail = session.customer_details?.email || session.customer_email || session.metadata?.customer_email || '';
+    const customerName = session.customer_details?.name || session.metadata?.customer_name || 'Patron Member';
     const passId = `PASS-BINGAA-${session.id.slice(-8).toUpperCase()}`;
+
+    if (isMembership) {
+      console.log(`[Webhook] Active subscription verified: email=${customerEmail}, is_patron=true`);
+      res.statusCode = 200;
+      res.end(
+        JSON.stringify({
+          received: true,
+          membership: true,
+          email: customerEmail,
+          name: customerName,
+          is_patron: true,
+        })
+      );
+      return;
+    }
 
     res.statusCode = 200;
     res.end(

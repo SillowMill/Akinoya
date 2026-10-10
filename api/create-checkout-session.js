@@ -110,9 +110,12 @@ export default async function handler(req, res) {
         metadata: {
           product: 'community_membership',
           plan: 'monthly_5eur',
+          customer_email: sanitizedEmail || '',
+          customer_name: sanitizedName || '',
+          is_patron: 'true',
         },
-        success_url: `${baseUrl}/?membership_unlocked=true&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/?canceled=true`,
+        success_url: `${baseUrl}/community?membership_unlocked=true&session_id={CHECKOUT_SESSION_ID}&email=${encodeURIComponent(sanitizedEmail || '')}`,
+        cancel_url: `${baseUrl}/community?canceled=true`,
       });
 
       res.statusCode = 200;

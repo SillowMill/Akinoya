@@ -88,57 +88,58 @@ export interface PerkModule {
   number: string;
   category: string;
   title: string;
-  description: string;
+  bullets: string[];
   icon: React.ElementType;
-  defaultCode: string;
-  deploymentTime: string;
-  statusText: string;
 }
 
 const PERK_MODULES: PerkModule[] = [
   {
     id: 'animation',
     number: '01',
-    category: 'EARLY ACCESS',
-    title: 'Animation Early Access',
-    description: 'Exclusive early access to animations and visual stories before public release.',
+    category: '4K & ANIMATION',
+    title: '4K Wallpapers & Animation Vault',
+    bullets: [
+      '4K uncompressed wallpapers & concept world renders',
+      'Early-access animation sequences and volumetric test reels',
+      'Full 32-page high-resolution graphic novel master print downloads',
+    ],
     icon: Film,
-    defaultCode: 'ANIM-2027',
-    deploymentTime: 'PHASE 02 LAUNCH',
-    statusText: 'Animation pipeline verified & encrypted. Prepared for upcoming broadcast release.',
   },
   {
     id: 'vault',
     number: '02',
-    category: 'UNRELEASED AUDIO',
-    title: 'Unreleased Music Vault',
-    description: 'Direct access to unreleased tracks, soundscapes, and singles prior to official streaming release.',
+    category: 'MUSIC & STEMS',
+    title: 'Unreleased Music & DAW Templates',
+    bullets: [
+      '24-Bit / 96kHz unreleased studio masters prior to DSP release',
+      'Full Ableton Live & modular synthesizer DAW project templates',
+      '16-Track isolated audio stem archives (.WAV) for study & remixes',
+    ],
     icon: Radio,
-    defaultCode: 'VAULT-2027',
-    deploymentTime: 'GENESIS DEPLOYMENT',
-    statusText: 'Audio master archives authenticated. Transmission scheduled for upcoming wave.',
   },
   {
     id: 'governance',
     number: '03',
-    category: 'COMMUNITY GOVERNANCE',
-    title: 'Voting Rights & Lore Input',
-    description: 'Cast your vote on future releases, character decisions, and directions within the Sillow Mill universe.',
+    category: 'CREATIVE LAB',
+    title: 'Workflows & Prompt Structures',
+    bullets: [
+      'Midjourney & 3D cinematic prompt matrices & node trees',
+      'Blender & Octane volumetric shader production breakdowns',
+      'Direct creator Q&A and technical comment drawer access',
+    ],
     icon: Vote,
-    defaultCode: 'LORE-2027',
-    deploymentTime: 'COUNCIL CONVENE',
-    statusText: 'Ballot governance node locked. Consensus protocol activates on full planetary mint.',
   },
   {
     id: 'drops',
     number: '04',
-    category: 'DROPS & MERCH',
-    title: 'Exclusive Merch Drops',
-    description: 'Priority access and drops for limited, exclusive, and free physical merchandise.',
+    category: 'GOVERNANCE & DROPS',
+    title: 'Lore Input & Merch Priority',
+    bullets: [
+      'Binding patron votes on story territory & character designs',
+      'Priority whitelist allocation for Wave 2 physical merch drops',
+      'Unrestricted creator discussion board participation',
+    ],
     icon: Package,
-    defaultCode: 'MERCH-2027',
-    deploymentTime: 'WAVE 2 DISPATCH',
-    statusText: 'Physical archive whitelist verified. Wave 2 logistics preparing for dispatch.',
   },
 ];
 
@@ -998,19 +999,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 </div>
                               </div>
 
-                              {/* Description */}
-                              <p className="text-[11px] sm:text-xs text-white/60 leading-relaxed mb-4">
-                                {perk.description}
-                              </p>
+                              {/* Bulleted Value Triggers */}
+                              <ul className="space-y-1.5 mb-4 text-[11px] sm:text-xs text-white/75 font-sans">
+                                {perk.bullets.map((b, idx) => (
+                                  <li key={idx} className="flex items-start gap-1.5">
+                                    <span className="text-cyan-400 font-bold shrink-0 mt-0.5">✓</span>
+                                    <span>{b}</span>
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
 
-                            {/* Clean Descriptive Status Line */}
+                            {/* Clean Status Line highlighting €5/month */}
                             <div className="pt-3 border-t border-white/5 mt-auto flex items-center justify-between text-[10.5px] font-mono text-cyan-400/80">
                               <span className="flex items-center gap-1.5">
                                 <Sparkles className="w-3 h-3 text-cyan-400" />
-                                <span>PATRON BENEFIT</span>
+                                <span>INCLUDED WITH €5/MO PASS</span>
                               </span>
-                              <span className="text-white/40">{perk.deploymentTime}</span>
+                              <span className="text-amber-400 font-bold font-mono">NO-BRAINER VALUE</span>
                             </div>
                           </motion.div>
                         );
