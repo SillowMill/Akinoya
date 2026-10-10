@@ -40,7 +40,6 @@ import {
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
-import { PassTransferModal } from './PassTransferModal';
 import { useHolderName, isValidPassId, TOTAL_EDITION_LIMIT } from '../utils/holder';
 import { useVipAccess } from '../context/VipAccessContext';
 import {
@@ -162,7 +161,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const holderName = useHolderName();
   const isVipMode = Boolean(isVip);
   const [passSubView, setPassSubView] = useState<'overview' | 'hub'>('overview');
-  const [showTransferModal, setShowTransferModal] = useState(false);
 
   // Verified holder assets: active pass is the NFC-bound token for this device session
   const { nfcToken } = useVipAccess();
@@ -510,6 +508,119 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     setCheckoutAptBus("");
   };
 
+  const renderPassCardWidget = () => (
+    <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center">
+      <div
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+        style={isTouchDevice
+          ? { touchAction: 'pan-y' }
+          : {
+              transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+              transition: 'transform 0.15s ease-out',
+              touchAction: 'none',
+            }
+        }
+        className="relative w-full max-w-sm sm:max-w-[360px] rounded-2xl overflow-hidden bg-black/70 border border-cyan-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_40px_rgba(56,189,248,0.25)] group cursor-pointer"
+      >
+        {/* Holographic dynamic gradient sheen */}
+        <div
+          style={{
+            background: `radial-gradient(circle at ${50 + rotateY * 3}% ${
+              50 - rotateX * 3
+            }%, rgba(103, 232, 249, 0.35), transparent 60%)`,
+          }}
+          className="absolute inset-0 pointer-events-none mix-blend-color-dodge z-20 transition-opacity"
+        />
+
+        {/* Pass Visual */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-950">
+          <img
+            src={passCardImg}
+            alt="VIP Äkinoya Pass Card"
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/70 backdrop-blur-md border border-cyan-400/30 rounded-full text-[10px] font-mono text-cyan-300">
+            <Sparkles className="w-3 h-3 text-cyan-400" />
+            FOUNDING HOLDER
+          </div>
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/80 backdrop-blur-md border border-amber-500/40 rounded-full text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.25)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
+            <span>SOLD OUT — 100/100</span>
+          </div>
+        </div>
+
+        {/* Card Details Bar */}
+        <div className="p-4 sm:p-5 bg-gradient-to-b from-[#060c14] to-[#03060a] border-t border-cyan-500/20">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <span className="text-[11px] sm:text-xs font-mono text-white/50 tracking-wider">ÄKINOYA VIP PASS</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-[10px] font-mono font-medium text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.2)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+              <span>100/100 CLAIMED</span>
+            </span>
+          </div>
+
+          <div className="space-y-1 mb-4">
+            <div className="text-xs sm:text-sm font-display font-bold text-white tracking-wider">
+              SILLOW MILL ARCHIVE HOLDER
+            </div>
+            <div className="text-[11px] sm:text-xs font-mono text-cyan-400/80 flex items-center justify-between">
+              <span>ID: #{isVipMode ? activePassId : FOUNDING_PASS_ID}</span>
+              <span>SECTOR 04</span>
+            </div>
+          </div>
+
+          {/* Quick action buttons */}
+          <div className="pt-3 border-t border-white/10 space-y-2">
+            <div className={`grid ${isVipMode ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+              <button
+                onClick={handleCopyPassId}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 text-xs font-mono text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.15)] group"
+              >
+                {isCopied ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span className="text-emerald-300 font-semibold tracking-wider text-[11px] truncate">COPIED</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
+                    <span className="tracking-wider text-[11px] truncate">COPY PASS ID</span>
+                  </>
+                )}
+              </button>
+
+              {isVipMode && (
+                <button
+                  onClick={() => {
+                    if (onNavigateToPassport) {
+                      onNavigateToPassport();
+                    } else if (onNavigateToVerify) {
+                      onNavigateToVerify(activePassId);
+                    } else if (typeof window !== 'undefined') {
+                      window.location.href = `/verify/${activePassId}`;
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.1)] min-h-[44px]"
+                  title="View Digital Passport HUD & Verification"
+                >
+                  <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <span className="tracking-wider text-[11px] truncate">DIGITAL PASSPORT</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p className="text-[11px] font-mono text-white/40 mt-2.5 text-center">
+        ✦ Hover or touch the card for a holographic reflection
+      </p>
+    </div>
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}
@@ -568,128 +679,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         </div>
       </div>
 
-      {/* Main Grid: 3D Holographic Pass + Exclusive Perks */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-start">
-        {/* Left Column: 3D Holographic VIP Pass Card */}
-        <div className="lg:col-span-5 xl:col-span-4 flex flex-col items-center lg:sticky lg:top-24">
-          <div
-            onPointerMove={handlePointerMove}
-            onPointerLeave={handlePointerLeave}
-            style={isTouchDevice
-              ? { touchAction: 'pan-y' }
-              : {
-                  transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
-                  transition: 'transform 0.15s ease-out',
-                  touchAction: 'none',
-                }
-            }
-            className="relative w-full max-w-sm lg:max-w-[340px] xl:max-w-[360px] rounded-2xl overflow-hidden bg-black/70 border border-cyan-400/30 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_40px_rgba(56,189,248,0.25)] group cursor-pointer"
-          >
-            {/* Holographic dynamic gradient sheen */}
-            <div
-              style={{
-                background: `radial-gradient(circle at ${50 + rotateY * 3}% ${
-                  50 - rotateX * 3
-                }%, rgba(103, 232, 249, 0.35), transparent 60%)`,
-              }}
-              className="absolute inset-0 pointer-events-none mix-blend-color-dodge z-20 transition-opacity"
-            />
-
-            {/* Pass Visual */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-950">
-              <img
-                src={passCardImg}
-                alt="VIP Äkinoya Pass Card"
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/70 backdrop-blur-md border border-cyan-400/30 rounded-full text-[10px] font-mono text-cyan-300">
-                <Sparkles className="w-3 h-3 text-cyan-400" />
-                FOUNDING HOLDER
-              </div>
-            </div>
-
-            {/* Card Details Bar */}
-            <div className="p-4 sm:p-5 bg-gradient-to-b from-[#060c14] to-[#03060a] border-t border-cyan-500/20">
-              <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <span className="text-[11px] sm:text-xs font-mono text-white/50 tracking-wider">ÄKINOYA VIP PASS</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 border border-cyan-400/30 text-cyan-300">
-                  TIER I VERIFIED
-                </span>
-              </div>
-
-              <div className="space-y-1 mb-4">
-                <div className="text-xs sm:text-sm font-display font-bold text-white tracking-wider">
-                  SILLOW MILL ARCHIVE HOLDER
-                </div>
-                <div className="text-[11px] sm:text-xs font-mono text-cyan-400/80 flex items-center justify-between">
-                  <span>ID: #{FOUNDING_PASS_ID}</span>
-                  <span>SECTOR 04</span>
-                </div>
-              </div>
-
-              {/* Quick action button (Download button completely removed) */}
-              <div className="pt-3 border-t border-white/10 space-y-2">
-                <button
-                  onClick={handleCopyPassId}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 text-xs font-mono text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.15)] group"
-                >
-                  {isCopied ? (
-                    <>
-                      <Check className="w-4 h-4 text-emerald-400" />
-                      <span className="text-emerald-300 font-semibold tracking-wider">COPIED PASS ID</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-                      <span className="tracking-wider">COPY PASS ID</span>
-                    </>
-                  )}
-                </button>
-
-                {isVipMode && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => {
-                        if (onNavigateToPassport) {
-                          onNavigateToPassport();
-                        } else if (onNavigateToVerify) {
-                          onNavigateToVerify(FOUNDING_PASS_ID);
-                        } else if (typeof window !== 'undefined') {
-                          window.location.href = `/verify/${FOUNDING_PASS_ID}`;
-                        }
-                      }}
-                      className="flex items-center justify-center gap-1.5 py-2 px-2 text-[10.5px] font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.1)]"
-                      title="View Digital Passport HUD & Verification"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                      <span className="truncate">Digital Passport</span>
-                    </button>
-
-                    <button
-                      onClick={() => setShowTransferModal(true)}
-                      className="flex items-center justify-center gap-1.5 py-2 px-2 text-[10.5px] font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.1)]"
-                      title="Transfer Pass Ownership to a new collector"
-                    >
-                      <Key className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                      <span className="truncate">Transfer Pass</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <p className="text-[11px] font-mono text-white/40 mt-2.5 text-center">
-            ✦ Hover or touch the card for a holographic reflection
-          </p>
+      {/* Conditional Layout: In VIP mode, VIP Pass Card Widget is prominently AT THE TOP */}
+      {isVipMode && (
+        <div className="flex flex-col items-center mb-6 lg:mb-8">
+          {renderPassCardWidget()}
         </div>
+      )}
 
-        {/* Right Column: Perks and Physical Drop */}
-        <div className="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-6">
-          {/* Navigation Tabs (Mobile optimized scrollable / grid) */}
-          <div className={`grid ${isVipMode ? 'grid-cols-3' : 'grid-cols-2'} gap-1 xs:gap-1.5 p-1 xs:p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
+      {/* Main Tabs and Content Area */}
+      <div className="space-y-4 sm:space-y-6 w-full">
+        {/* Navigation Tabs (Mobile optimized scrollable / grid) */}
+        <div className={`grid ${isVipMode ? 'grid-cols-3' : 'grid-cols-2'} gap-1 xs:gap-1.5 p-1 xs:p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
             <button
               onClick={() => setActiveTab('pass')}
               className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[38px] sm:min-h-[40px] ${
@@ -1120,18 +1120,31 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </span>
                     </div>
 
-                    {/* Central Cover Art: Clean, Uninterrupted Illustration (Text overlays removed from image surface) */}
-                    <div className="relative group w-full aspect-[3/4] rounded-2xl overflow-hidden border-2 border-cyan-500/40 shadow-[0_0_35px_rgba(56,189,248,0.25)] bg-[#050505] transition-transform duration-500 hover:scale-[1.02]">
+                    {/* Central Cover Art: Clean, Uninterrupted Illustration with interactive reader trigger */}
+                    <button
+                      type="button"
+                      onClick={() => setShowComicReader(true)}
+                      className="relative group w-full aspect-[3/4] rounded-2xl overflow-hidden border-2 border-cyan-500/40 shadow-[0_0_35px_rgba(56,189,248,0.25)] bg-[#050505] transition-transform duration-500 hover:scale-[1.02] cursor-pointer text-left block"
+                      aria-label="Open Bingäa comic reader"
+                    >
                       <img
                         src={BINGAA_COVER_URL}
                         alt="Sillow Mill — Bingäa (Collector's Graphic Novel) Cover"
-                        className="w-full h-full object-cover object-center"
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                       />
 
                       {/* Subtle bioluminescent glossy sheen overlay (clean ambient lighting only) */}
                       <div className="absolute inset-0 bg-gradient-to-tr from-cyan-950/20 via-transparent to-white/10 pointer-events-none" />
                       <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
-                    </div>
+
+                      {/* Hover action prompt overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3 px-2">
+                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/90 border border-cyan-400/50 text-[11px] font-mono font-semibold text-cyan-200 shadow-[0_0_12px_rgba(56,189,248,0.3)]">
+                          <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>{isVipMode && bingaaCertificate ? 'Read Full Comic' : 'Read 2-Page Preview'}</span>
+                        </span>
+                      </div>
+                    </button>
 
                     {/* Bottom Information Widget (Below Artwork) */}
                     <div className="w-full bg-[#050505]/90 backdrop-blur-md border border-cyan-500/30 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-[10px] sm:text-[11px] font-mono shadow-[0_0_15px_rgba(56,189,248,0.12)]">
@@ -1160,25 +1173,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           2027 LIMITED COMIC DROP
                         </span>
                       </div>
-                      <span
-                        className={`text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-semibold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm transition-all ${
-                          waveInventory.available > 0
-                            ? 'text-emerald-300 bg-emerald-950/70 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                            : 'text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            waveInventory.available > 0
-                              ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]'
-                              : 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]'
-                          } animate-pulse shrink-0`}
-                        />
-                        <span>
-                          {waveInventory.available > 0
-                            ? `AVAILABLE - ${waveInventory.available} / ${waveInventory.total} COPIES AVAILABLE`
-                            : `SOLD OUT - 0 / ${waveInventory.total} COPIES CLAIMED`}
-                        </span>
+                      <span className="text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-semibold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)] animate-pulse shrink-0" />
+                        <span>• 100/100 FOUNDING EDITIONS CLAIMED (SOLD OUT)</span>
                       </span>
                     </div>
 
@@ -1240,22 +1237,32 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => {
-                          setIsCheckoutOpen(true);
-                          soundManager.playTone(660, 0.08);
-                        }}
-                        className="w-full py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
-                      >
-                        <ShoppingBag className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
-                        <span>Order Now — €14,99</span>
-                      </button>
+                      <div className="flex flex-col sm:flex-row gap-2.5">
+                        <button
+                          onClick={() => {
+                            setIsCheckoutOpen(true);
+                            soundManager.playTone(660, 0.08);
+                          }}
+                          className="flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                        >
+                          <ShoppingBag className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
+                          <span>Order Now — €14,99</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowComicReader(true)}
+                          className="py-3.5 px-5 rounded-xl text-xs sm:text-sm font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/40 hover:border-cyan-400 transition-all cursor-pointer min-h-[44px] flex items-center justify-center gap-2 group shadow-[0_0_15px_rgba(56,189,248,0.12)]"
+                        >
+                          <BookOpen className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                          <span>{isVipMode && bingaaCertificate ? 'Read Comic' : 'Preview Comic (Pgs 1–2)'}</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Wave 1 / Wave 2 Metrics Grid */}
                     <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 lg:p-5 rounded-xl bg-cyan-950/30 border border-cyan-500/20 text-center sm:text-left">
                       <div>
-                        <div className="text-[10px] font-mono text-white/50">WAVE 1</div>
+                        <div className="text-[10px] font-mono text-white/50">FOUNDING RUN</div>
                         <div className="text-xs sm:text-sm font-semibold text-amber-400">Sold Out (100/100)</div>
                       </div>
                       <div>
@@ -1380,7 +1387,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-1 xs:grid-cols-2 gap-2">
+                <div className="mt-3">
                   <button
                     type="button"
                     onClick={() => (onNavigateToPassport ? onNavigateToPassport() : onNavigateToVerify?.(activePassId))}
@@ -1388,14 +1395,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   >
                     <User className="w-3.5 h-3.5" />
                     <span>View Digital Passport</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowTransferModal(true)}
-                    className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-semibold text-white/80 hover:text-white bg-transparent hover:bg-white/5 border border-white/15 hover:border-white/30 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px]"
-                  >
-                    <Key className="w-3.5 h-3.5 text-white/60" />
-                    <span>Transfer Ownership</span>
                   </button>
                 </div>
               </div>
@@ -1568,7 +1567,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </motion.div>
           )}
         </div>
-      </div>
+
+        {/* Conditional Layout: In Non-VIP / Public mode, VIP Pass Card Widget is positioned BELOW tabs */}
+        {!isVipMode && (
+          <div className="flex flex-col items-center pt-8 border-t border-white/10 mt-8">
+            <div className="text-center mb-4 space-y-1">
+              <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-amber-300 font-semibold">
+                ARCHIVE COLLECTOR ARTIFACT · LIMITED EDITION
+              </span>
+              <h3 className="text-base sm:text-lg font-display font-bold text-white">
+                Äkinoya Physical Founding Pass Card
+              </h3>
+              <p className="text-xs font-mono text-white/50 max-w-md mx-auto">
+                Sold-out holographic NFC membership card. Verified holders access via their dedicated NFC link.
+              </p>
+            </div>
+            {renderPassCardWidget()}
+          </div>
+        )}
 
       {/* Modal 1: Track-Specific Code Unlock Modal */}
       <AnimatePresence>
@@ -2005,63 +2021,59 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Ownership Transfer Protocol Modal */}
-      <PassTransferModal
-        isOpen={showTransferModal}
-        onClose={() => setShowTransferModal(false)}
-        tokenId={isVipMode ? activePassId : FOUNDING_PASS_ID}
-      />
-
       {/* Verified-holder modals (strictly VIP route only) */}
       {isVipMode && (
-        <>
-          <BingaaCertificateClaimModal
-            isOpen={showCertificateClaim}
-            onClose={() => setShowCertificateClaim(false)}
-            passId={activePassId}
-            defaultName={holderName}
-          />
-
-          {showComicReader && (
-            <Suspense
-              fallback={
-                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95">
-                  <div className="w-7 h-7 border-2 border-cyan-300 border-t-transparent rounded-full animate-spin" />
-                </div>
-              }
-            >
-              <BingaaComicReader onClose={() => setShowComicReader(false)} />
-            </Suspense>
-          )}
-
-          <AnimatePresence>
-            {showCoverPreview && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
-                onClick={() => setShowCoverPreview(false)}
-              >
-                <button
-                  type="button"
-                  onClick={() => setShowCoverPreview(false)}
-                  className="absolute top-4 right-4 p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 cursor-pointer"
-                  aria-label="Close preview"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                <img
-                  src={BINGAA_COVER_URL}
-                  alt="Bingäa official cover artwork"
-                  className="max-w-full max-h-[88dvh] rounded-xl border border-white/15 shadow-2xl object-contain"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </>
+        <BingaaCertificateClaimModal
+          isOpen={showCertificateClaim}
+          onClose={() => setShowCertificateClaim(false)}
+          passId={activePassId}
+          defaultName={holderName}
+        />
       )}
+
+      {/* Comic Reader modal (accessible to all visitors; verified holders get 32 pages, public visitors get 2-page preview + whitelist lock) */}
+      {showComicReader && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95">
+              <div className="w-7 h-7 border-2 border-cyan-300 border-t-transparent rounded-full animate-spin" />
+            </div>
+          }
+        >
+          <BingaaComicReader
+            onClose={() => setShowComicReader(false)}
+            isVerified={Boolean(isVipMode && bingaaCertificate)}
+          />
+        </Suspense>
+      )}
+
+      {/* Cover artwork high-res preview modal */}
+      <AnimatePresence>
+        {showCoverPreview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+            onClick={() => setShowCoverPreview(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setShowCoverPreview(false)}
+              className="absolute top-4 right-4 p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 cursor-pointer"
+              aria-label="Close preview"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={BINGAA_COVER_URL}
+              alt="Bingäa official cover artwork"
+              className="max-w-full max-h-[88dvh] rounded-xl border border-white/15 shadow-2xl object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

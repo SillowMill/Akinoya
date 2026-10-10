@@ -11,8 +11,6 @@ import {
   verifyDnaCipher,
   generateAuthenticDnaCipher,
   registerPassHolder,
-  generateTransferKey,
-  claimTransferKey,
   isValidPassId,
 } from './nfcDnaService';
 import { handleCertificateAction } from '../../api/nfc/_certificateService.js';
@@ -282,44 +280,22 @@ apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<voi
   res.status(200).json(result);
 });
 
-// ─── 7. Ownership Transfer Protocol ───────────────────────────────────────────
-apiRouter.post('/nfc/transfer', (req: Request, res: Response): void => {
-  const token = (req.body?.token || req.body?.id) as string;
-  const deviceId = req.body?.deviceId as string | undefined;
+// ─── 7. Whitelist Subscription ────────────────────────────────────────────────
+apiRouter.post('/whitelist/subscribe', (req: Request, res: Response): void => {
+  const rawEmail = ((req.body?.email as string) || '').trim().toLowerCase();
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(rawEmail);
 
-  if (!token) {
-    res.status(400).json({ success: false, error: 'MISSING_TOKEN', message: 'Token is required' });
+  if (!rawEmail || !isValidEmail) {
+    res.status(400).json({ success: false, error: 'INVALID_EMAIL', message: 'Please provide a valid email address.' });
     return;
   }
 
-  const result = generateTransferKey(token, deviceId);
-  res.status(200).json(result);
-});
-
-// ─── 8. Claim Transferred Pass ────────────────────────────────────────────────
-apiRouter.post('/nfc/claim-transfer', (req: Request, res: Response): void => {
-  const transferKey = (req.body?.transferKey || req.body?.key) as string;
-  const newOwnerName = (req.body?.newOwnerName || req.body?.ownerName || req.body?.name) as string;
-  const newOwnerEmail = (req.body?.newOwnerEmail || req.body?.email) as string | undefined;
-  const deviceId = req.body?.deviceId as string | undefined;
-
-  if (!transferKey || !transferKey.trim()) {
-    res.status(400).json({ success: false, error: 'MISSING_TRANSFER_KEY', message: 'Transfer key is required' });
-    return;
-  }
-
-  if (!newOwnerName || !newOwnerName.trim()) {
-    res.status(400).json({ success: false, error: 'MISSING_NAME', message: 'New owner display name is required' });
-    return;
-  }
-
-  const result = claimTransferKey(transferKey, newOwnerName, newOwnerEmail, deviceId);
-  if (!result.success) {
-    res.status(400).json(result);
-    return;
-  }
-
-  res.status(200).json(result);
+  console.log(`[WHITELIST] Subscribed: ${rawEmail}`);
+  res.status(200).json({
+    success: true,
+    email: rawEmail,
+    message: "You've been added to the Äkinoya Whitelist! You will receive priority notification for the next drop.",
+  });
 });
 
 // ─── 9. Generate Test Dynamic Cipher ──────────────────────────────────────────

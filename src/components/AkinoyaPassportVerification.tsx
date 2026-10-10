@@ -6,14 +6,12 @@ import {
   Check,
   ArrowLeft,
   AudioWaveform,
-  Key,
   AlertCircle,
   ShieldCheck,
   Lock,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { useVipAccess, setDeviceSession } from '../context/VipAccessContext';
-import { PassTransferModal } from './PassTransferModal';
 import {
   useHolderName,
   getHolderName,
@@ -106,10 +104,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
   // UI helpers
   const [copiedToken, setCopiedToken] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(Boolean(queryParams.claim));
-  const [transferModalMode, setTransferModalMode] = useState<'transfer' | 'claim'>(
-    queryParams.claim ? 'claim' : 'transfer'
-  );
 
   // Registration Form state (inline)
   const [isRegistering, setIsRegistering] = useState(false);
@@ -331,13 +325,19 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         className="rounded-2xl bg-[#0a0d14] border border-white/10 p-4 sm:p-7 space-y-4 sm:space-y-5 shadow-2xl"
       >
         {/* Clean Main Title */}
-        <div className="border-b border-white/10 pb-3 sm:pb-4">
-          <h1 className="text-lg sm:text-2xl font-display font-bold text-white tracking-wide">
-            Official Digital Passport
-          </h1>
-          <p className="text-[11px] sm:text-xs font-mono text-white/50 mt-1">
-            Founding Holder Verification Certificate
-          </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3 sm:pb-4">
+          <div>
+            <h1 className="text-lg sm:text-2xl font-display font-bold text-white tracking-wide">
+              Official Digital Passport
+            </h1>
+            <p className="text-[11px] sm:text-xs font-mono text-white/50 mt-1">
+              Founding Holder Verification Certificate
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
+            <span>SOLD OUT — 100/100</span>
+          </span>
         </div>
 
         {/* Security Warning if Cloned/Invalid */}
@@ -555,39 +555,10 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             <AudioWaveform className="w-4 h-4 text-black" />
             <span>Open Visualizer Hub</span>
           </button>
-
-          {/* 2. Secondary (Outline): Transfer Pass Ownership */}
-          <button
-            onClick={() => {
-              setTransferModalMode('transfer');
-              setShowTransferModal(true);
-            }}
-            className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-semibold text-white/80 hover:text-white bg-transparent hover:bg-white/5 border border-white/15 hover:border-white/30 flex items-center justify-center gap-2 transition-all cursor-pointer"
-          >
-            <Key className="w-3.5 h-3.5 text-white/60" />
-            <span>Transfer Pass Ownership</span>
-          </button>
             </>
           )}
         </div>
       </motion.div>
-
-      {/* Transfer Ownership / Claim Modal */}
-      <PassTransferModal
-        isOpen={showTransferModal}
-        onClose={() => setShowTransferModal(false)}
-        tokenId={activeToken}
-        initialMode={transferModalMode}
-        onTransferClaimed={(newToken, newOwner) => {
-          if (newOwner) saveHolderName(newOwner);
-          setPassData((prev) => ({
-            ...prev,
-            tokenId: `#${newToken}`,
-            ownerName: newOwner,
-          }));
-          executeVerification(newToken, null, null);
-        }}
-      />
     </div>
   );
 };
