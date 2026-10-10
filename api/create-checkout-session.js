@@ -85,6 +85,44 @@ export default async function handler(req, res) {
     const { city: parsedCity, postalCode: parsedPostal } = parseCityPostal(rawCityPostal);
 
     const truncate = (s, max = 480) => (s || '').slice(0, max);
+    const isMembership = body.plan === 'membership' || body.product === 'community_membership';
+
+    if (isMembership) {
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        line_items: [
+          {
+            price_data: {
+              currency: 'eur',
+              product_data: {
+                name: 'Sillow Mill — Community Perks & Hub',
+                description: 'Monthly recurring pass to unreleased music vaults, animation early access, voting rights & lore governance.',
+              },
+              unit_amount: 500, // €5.00 / month
+              recurring: {
+                interval: 'month',
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        customer_email: sanitizedEmail,
+        metadata: {
+          product: 'community_membership',
+          plan: 'monthly_5eur',
+        },
+        success_url: `${baseUrl}/?membership_unlocked=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/?canceled=true`,
+      });
+
+      res.statusCode = 200;
+      return res.end(
+        JSON.stringify({
+          url: session.url,
+          sessionId: session.id,
+        })
+      );
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',

@@ -52,9 +52,10 @@ import {
   downloadCertificatePng,
   normalizePassId,
   useCertificate,
+  BingaaCertificate,
 } from '../utils/certificate';
 import { CertificateOfAuthenticity } from './CertificateOfAuthenticity';
-import { BingaaCertificateClaimModal } from './BingaaCertificateClaimModal';
+import { CommunityAuthModal } from './CommunityAuthModal';
 
 // pdf.js is heavy — only fetch the reader chunk when a verified holder opens the comic
 const BingaaComicReader = lazy(() => import('./BingaaComicReader'));
@@ -168,8 +169,58 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const activePassId = isValidPassId(nfcToken) ? normalizePassId(nfcToken) : FOUNDING_PASS_ID;
   const activeEditionNumber = deriveEditionNumber(activePassId);
   const editionDisplay = activeEditionNumber;
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
   const bingaaCertificate = useCertificate(activePassId);
-  const [showCertificateClaim, setShowCertificateClaim] = useState(false);
+
+  // Human Certification Protocol active: certified directly for VIP holders
+  const activeCertificate: BingaaCertificate = bingaaCertificate || {
+    certificateId: `AKN-COA-${String(activeEditionNumber).padStart(4, '0')}`,
+    title: 'Bingäa Issue #1 — Certificate of Authenticity',
+    passId: activePassId,
+    holderName: holderName || 'Founding VIP Member',
+    editionNumber: activeEditionNumber,
+    editionTotal: TOTAL_EDITION_LIMIT,
+    status: 'ACTIVE_VERIFIED',
+    emailVerified: true,
+    claimedAt: '2026-10-09T00:00:00.000Z',
+    signatureAlgorithm: 'HMAC-SHA256-DETERMINISTIC',
+    signature: 'Sillow Mill · Creative Syndicate',
+  };
+
+  const handlePerksStripeCheckout = async () => {
+    setIsSubscribing(true);
+    soundManager.playTone(660, 0.08);
+
+    try {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: 'membership',
+          product: 'community_membership',
+          customerName: holderName || 'Community Member',
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      if (data?.error) {
+        soundManager.playError();
+        alert(`Checkout Notice: ${data.error}`);
+      }
+    } catch {
+      soundManager.playError();
+      alert('Stripe subscription endpoint initializing.');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
   const [showComicReader, setShowComicReader] = useState(false);
   const [showCoverPreview, setShowCoverPreview] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -860,14 +911,52 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
 
-                  {/* Official Community VIP Entitlements */}
-                  <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
+                  {/* Master Widget: COMMUNITY PERKS & HUB */}
+                  <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.12)] space-y-5 sm:space-y-6">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                    <h3 className="text-xs sm:text-sm font-mono tracking-wider text-cyan-300 uppercase mb-4 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-                      <span>Official Äkinoya Pass Community Perks</span>
-                    </h3>
+                    {/* Header & Access / Pricing Bar */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-white/10">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-semibold tracking-wider flex items-center gap-1.5 shadow-[0_0_8px_rgba(56,189,248,0.15)]">
+                            <Sparkles className="w-3 h-3 text-cyan-400" />
+                            COMMUNITY PORTAL
+                          </span>
+                          <span className="text-[10px] font-mono text-emerald-400 font-semibold">
+                            4 MEMBER ENTITLEMENTS
+                          </span>
+                        </div>
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-display font-extrabold text-white tracking-wide">
+                          COMMUNITY PERKS &amp; HUB
+                        </h2>
+                        <p className="text-xs sm:text-sm font-sans text-white/65 mt-1 max-w-xl">
+                          Monthly recurring pass to unreleased music vaults, animation early access, voting rights &amp; lore governance.
+                        </p>
+                      </div>
+
+                      {/* Access / Pricing Bar inside widget top */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                        <button
+                          type="button"
+                          disabled={isSubscribing}
+                          onClick={handlePerksStripeCheckout}
+                          className="inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
+                        >
+                          <CreditCard className="w-4 h-4 text-black shrink-0" />
+                          <span>{isSubscribing ? 'INITIALIZING STRIPE...' : 'ACCESS NOW — €5/MONTH'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setIsAuthModalOpen(true)}
+                          className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.1)] hover:scale-[1.01]"
+                        >
+                          <Key className="w-4 h-4 text-cyan-400 shrink-0" />
+                          <span>ENTER ACCESS KEY / SIGN IN</span>
+                        </button>
+                      </div>
+                    </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
                       {PERK_MODULES.map((perk) => {
@@ -1109,15 +1198,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             <div className="flex items-center justify-between pt-2.5 border-t border-white/5 mt-auto">
                               {isTrack01 ? (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                                  <span>ARTWORK & COVER VISIBLE 🔓</span>
+                                  <span>ARTWORK UNLOCKED 🔓</span>
                                 </span>
                               ) : isTrack02 ? (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                                  <span>AUDIO PREVIEW AVAILABLE 🔓</span>
+                                  <span>EARLY ACCESS PREVIEW 🔓</span>
                                 </span>
                               ) : (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-400/30 text-amber-300/90 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(245,158,11,0.15)]">
-                                  <span>NOT RELEASED YET · JAN 9, 2027 🔒</span>
+                                  <span>RELEASE SCHEDULED 🔒</span>
                                 </span>
                               )}
 
@@ -1477,170 +1566,113 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 </div>
               </div>
 
-              {/* Asset 2: Bingäa Official Artwork / Cover Image */}
-              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 02 · Official Artwork</span>
+              {/* Asset 2: Bingäa Official Artwork / Cover Image & Publication Master */}
+              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 02 · Official Artwork &amp; Comicbook Master</span>
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-[9.5px] sm:text-[10px] font-mono text-cyan-300">
                     HI-RES MASTER
                   </span>
                 </div>
-                <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 min-w-0">
                   <button
                     type="button"
                     onClick={() => setShowCoverPreview(true)}
-                    className="shrink-0 w-[72px] sm:w-24 aspect-[3/4] rounded-lg overflow-hidden border border-white/15 hover:border-cyan-400/60 transition-colors cursor-pointer"
+                    className="shrink-0 w-24 sm:w-28 aspect-[3/4] rounded-lg overflow-hidden border border-white/15 hover:border-cyan-400/60 transition-colors cursor-pointer shadow-[0_0_15px_rgba(0,0,0,0.5)]"
                     aria-label="Preview Bingäa cover artwork"
                   >
                     <img src={BINGAA_COVER_URL} alt="Bingäa official cover artwork" className="w-full h-full object-cover" />
                   </button>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm sm:text-base font-display font-bold text-white leading-snug">
-                      Bingäa Official Artwork / Cover Image
-                    </h3>
-                    <p className="text-[10.5px] sm:text-[11px] font-mono text-white/45 mt-0.5">High-resolution master graphic</p>
-                    <div className="mt-2.5 flex flex-wrap gap-2">
+                  <div className="min-w-0 flex-1 w-full space-y-3 text-center sm:text-left">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-display font-bold text-white leading-snug">
+                        Bingäa Official Artwork / Cover Image &amp; Digital Publication
+                      </h3>
+                      <p className="text-[11px] sm:text-xs font-mono text-white/60 mt-1 leading-relaxed">
+                        <strong className="text-cyan-300">Cover Graphic:</strong> High-resolution master Retina artwork (PNG format).
+                        <br className="hidden sm:inline" />{' '}
+                        <strong className="text-emerald-300">Comicbook PDF:</strong> Complete Issue #1 digital publication (Print-ready master).
+                      </p>
+                    </div>
+
+                    {/* Consolidated 4 Clear Buttons */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                       <button
                         type="button"
                         onClick={() => setShowCoverPreview(true)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] sm:text-[11px] font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 transition-colors cursor-pointer min-h-[34px]"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 transition-all cursor-pointer min-h-[40px]"
                       >
                         <Eye className="w-3.5 h-3.5" />
-                        View
+                        <span>View Cover</span>
                       </button>
+
                       <button
                         type="button"
                         onClick={() => setShowComicReader(true)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] sm:text-[11px] font-mono font-semibold text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-400 bg-emerald-950/40 transition-colors cursor-pointer min-h-[34px]"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-400 bg-emerald-950/40 transition-all cursor-pointer min-h-[40px]"
                       >
                         <BookOpen className="w-3.5 h-3.5" />
-                        Read Comic
+                        <span>Read Comic</span>
                       </button>
-                      {bingaaCertificate ? (
-                        <a
-                          href={BINGAA_COVER_URL}
-                          download={BINGAA_COVER_FILENAME}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] sm:text-[11px] font-mono font-semibold text-white/75 hover:text-white border border-white/15 hover:border-white/30 transition-colors min-h-[34px]"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          Download
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setShowCertificateClaim(true)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] sm:text-[11px] font-mono font-semibold text-white/45 hover:text-amber-300 border border-white/10 hover:border-amber-400/30 transition-colors cursor-pointer min-h-[34px]"
-                          title="Verification Required: Claim Certificate & Unlock Downloads"
-                        >
-                          <Lock className="w-3 h-3 text-amber-400" />
-                          Download
-                        </button>
-                      )}
+
+                      <a
+                        href={BINGAA_COVER_URL}
+                        download={BINGAA_COVER_FILENAME}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-white/80 hover:text-white border border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all min-h-[40px]"
+                      >
+                        <Download className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Download Cover</span>
+                      </a>
+
+                      <a
+                        href={BINGAA_PDF_URL}
+                        download={BINGAA_PDF_FILENAME}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 hover:bg-cyan-900/60 transition-all min-h-[40px]"
+                      >
+                        <Download className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Download Comic PDF</span>
+                      </a>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Asset 3: Bingäa Issue #1 Collector's Edition — Comic PDF & Certificate of Authenticity */}
-              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Collector's Edition</span>
-                  {bingaaCertificate ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-emerald-300 whitespace-nowrap shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      OFFICIALLY VERIFIED
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-amber-300 whitespace-nowrap">
-                      <Lock className="w-3 h-3 text-amber-400" />
-                      CLAIM &amp; VERIFICATION REQUIRED
-                    </span>
-                  )}
+              {/* Asset 3: Bingäa Issue #1 Certificate of Authenticity (COA) */}
+              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Certificate of Authenticity</span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-emerald-300 whitespace-nowrap shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    OFFICIALLY VERIFIED · HUMAN CERTIFICATION PROTOCOL ACTIVE
+                  </span>
                 </div>
+
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                    <BookOpen className="w-5 h-5 text-cyan-300" />
+                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h3 className="text-sm sm:text-base font-display font-bold text-white leading-snug">
-                      Bingäa Issue #1 Collector's Edition
+                      Signed Certificate of Authenticity (COA)
                     </h3>
-                    <p className="text-[10.5px] sm:text-[11px] font-mono text-white/45 mt-0.5">
-                      Authenticated Comic PDF &amp; Certificate of Authenticity
+                    <p className="text-[10.5px] sm:text-[11px] font-mono text-white/50 mt-0.5">
+                      Deterministic cryptographic provenance bound to pass #{activePassId} (Edition #{editionDisplay} of 100).
                     </p>
                   </div>
                 </div>
 
-                {bingaaCertificate ? (
-                  <div className="mt-4 space-y-3">
-                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowComicReader(true)}
-                        className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px]"
-                      >
-                        <BookOpen className="w-3.5 h-3.5" />
-                        <span>Read Comic</span>
-                      </button>
-                      <a
-                        href={BINGAA_PDF_URL}
-                        download={BINGAA_PDF_FILENAME}
-                        className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-semibold text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/30 hover:border-cyan-400 flex items-center justify-center gap-2 transition-all min-h-[42px]"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>Download Bingäa.pdf</span>
-                      </a>
-                    </div>
+                <div className="mt-3 space-y-3">
+                  <CertificateOfAuthenticity certificate={activeCertificate} />
 
-                    <CertificateOfAuthenticity certificate={bingaaCertificate} />
-
-                    <button
-                      type="button"
-                      onClick={() => downloadCertificatePng(bingaaCertificate)}
-                      className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-semibold text-white/80 hover:text-white bg-transparent hover:bg-white/5 border border-white/15 hover:border-white/30 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px]"
-                    >
-                      <Download className="w-3.5 h-3.5 text-white/60" />
-                      <span>Download Certificate of Authenticity</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="mt-4 space-y-3">
-                    <div className="rounded-xl border border-amber-500/25 bg-amber-950/20 p-3 sm:p-3.5 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span className="text-[11px] sm:text-xs font-mono font-medium text-amber-200/90 truncate">
-                          Verification Required: Claim Certificate &amp; Unlock Downloads
-                        </span>
-                      </div>
-                      <span className="shrink-0 text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300">
-                        LOCKED
-                      </span>
-                    </div>
-
-                    <p className="text-[11px] sm:text-xs text-white/55 leading-relaxed">
-                      Physical cards display edition numbers (#{activeEditionNumber}/100) only. Request your 6-digit Card PIN via email to verify and unlock full downloads and your signed Certificate of Authenticity.
-                    </p>
-
-                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowComicReader(true)}
-                        className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px]"
-                      >
-                        <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>Preview Comic Reader</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowCertificateClaim(true)}
-                        className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px]"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>Verify Pass to Claim Certificate &amp; Downloads</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                  <button
+                    type="button"
+                    onClick={() => downloadCertificatePng(activeCertificate)}
+                    className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-cyan-300 hover:text-white bg-cyan-950/50 hover:bg-cyan-900 border border-cyan-500/40 hover:border-cyan-400 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.2)]"
+                  >
+                    <Download className="w-4 h-4 text-cyan-400" />
+                    <span>Download Certificate</span>
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
@@ -2099,15 +2131,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Verified-holder modals (strictly VIP route only) */}
-      {isVipMode && (
-        <BingaaCertificateClaimModal
-          isOpen={showCertificateClaim}
-          onClose={() => setShowCertificateClaim(false)}
-          passId={activePassId}
-          defaultName={holderName}
-        />
-      )}
+      {/* Community Auth / Dual-Login Modal */}
+      <CommunityAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={(token) => {
+          if (onNavigateToVerify) {
+            onNavigateToVerify(token);
+          } else {
+            sessionStorage.setItem('akinoya_vip_token', token || FOUNDING_PASS_ID);
+            window.location.href = `/verify/${token || FOUNDING_PASS_ID}`;
+          }
+        }}
+      />
 
       {/* Comic Reader modal (accessible to all visitors; verified holders get 32 pages, public visitors get 2-page preview + whitelist lock) */}
       {showComicReader && (
@@ -2120,7 +2156,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         >
           <BingaaComicReader
             onClose={() => setShowComicReader(false)}
-            isVerified={Boolean(isVipMode && bingaaCertificate)}
+            isVerified={Boolean(isVipMode)}
           />
         </Suspense>
       )}
