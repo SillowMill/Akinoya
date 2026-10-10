@@ -15,6 +15,7 @@ import {
   claimTransferKey,
   isValidPassId,
 } from './nfcDnaService';
+import { handleCertificateAction } from '../../api/nfc/_certificateService.js';
 
 export const apiApp = express();
 export const apiRouter = express.Router();
@@ -243,7 +244,14 @@ apiRouter.all('/nfc/verify-dna', (req: Request, res: Response): void => {
 });
 
 // ─── 6. Holder Pass Registration ──────────────────────────────────────────────
-apiRouter.post('/nfc/register', (req: Request, res: Response): void => {
+apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<void> => {
+  // Bingäa Certificate of Authenticity actions (Card PIN + optional email OTP)
+  if (req.body?.action === 'send-otp' || req.body?.action === 'certify') {
+    const result = await handleCertificateAction(req.body);
+    res.status(result.status).json(result.body);
+    return;
+  }
+
   const token = (req.body?.token || req.body?.id) as string;
   const ownerName = (req.body?.ownerName || req.body?.displayName) as string;
   const ownerEmail = (req.body?.ownerEmail || req.body?.email) as string | undefined;

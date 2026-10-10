@@ -56,7 +56,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       return { token: 'AKN-VIP-2027-X0914', enc: null, cmac: null, claim: null };
     }
     const params = new URLSearchParams(window.location.search);
-    const pathToken = window.location.pathname.replace(/^\/verify\/?/, '').trim();
+    const pathToken = window.location.pathname.replace(/^\/verify\/?/, '').replace(/\/+$/, '').trim();
     const token =
       tokenIdFromRoute ||
       pathToken ||

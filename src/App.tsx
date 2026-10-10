@@ -174,6 +174,11 @@ export default function App() {
         <div className="relative z-20 flex-1 w-full">
           {vipSubView === 'passport' ? (
             <AkinoyaPassportVerification
+              tokenIdFromRoute={
+                typeof window !== 'undefined'
+                  ? window.location.pathname.replace(/^\/verify\/?/, '').replace(/\/+$/, '').trim() || undefined
+                  : undefined
+              }
               onNavigateHome={() => navigateTo('home', '/')}
               onOpenVisualizerHub={() => setVipSubView('portal')}
             />

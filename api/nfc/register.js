@@ -1,4 +1,5 @@
 import { registerPassHolder } from './_nfcDnaService.js';
+import { handleCertificateAction } from './_certificateService.js';
 
 export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
@@ -21,6 +22,13 @@ export default async function handler(req, res) {
     body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
   } catch {
     body = {};
+  }
+
+  // Bingäa Certificate of Authenticity actions (Card PIN + optional email OTP)
+  if (body.action === 'send-otp' || body.action === 'certify') {
+    const result = await handleCertificateAction(body);
+    res.statusCode = result.status;
+    return res.end(JSON.stringify(result.body));
   }
 
   const token = body.token || body.id;

@@ -31,5 +31,6 @@ npm-debug.log*
 
 # Temporary root raw assets
 /BWS.wav
+/Bing*.pdf
 
 

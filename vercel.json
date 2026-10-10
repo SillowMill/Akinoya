@@ -8,6 +8,10 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/assets/Bing:rest(.*)\\.pdf",
+      "destination": "/assets/Bingaa.pdf"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
