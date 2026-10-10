@@ -77,18 +77,27 @@ export function isValidPassId(raw?: string | null): boolean {
 }
 
 function deriveEdition(tokenId: string): { edition: string; editionNumber: number } {
-  if (tokenId.includes('X0914') || tokenId === 'AKN-VIP-2027-X0914') {
+  const clean = normalizeTokenId(tokenId);
+  if (
+    clean.includes('X0914') ||
+    clean.includes('0914') ||
+    clean === 'AKN-VIP-2027-X0914' ||
+    clean === 'AKN-2027' ||
+    clean === 'AKN-VIP-2027'
+  ) {
     return { edition: '1 of 100', editionNumber: 1 };
   }
   // Check if matches numbers
-  const match = tokenId.match(/(\d+)/g);
+  const match = clean.match(/(\d+)/g);
   if (match && match.length > 0) {
     const lastNum = parseInt(match[match.length - 1], 10);
-    const editionNum = (lastNum % 100) || 1;
-    return {
-      edition: `${editionNum} of 100`,
-      editionNumber: editionNum,
-    };
+    if (!isNaN(lastNum)) {
+      const editionNum = Math.min(Math.max((lastNum % 100) || 100, 1), 100);
+      return {
+        edition: `${editionNum} of 100`,
+        editionNumber: editionNum,
+      };
+    }
   }
   return { edition: '1 of 100', editionNumber: 1 };
 }

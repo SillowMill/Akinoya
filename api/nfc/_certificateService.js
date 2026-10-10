@@ -32,10 +32,21 @@ export function isValidPassId(raw) {
 
 export function deriveEditionNumber(passId) {
   const clean = normalizePassId(passId);
-  if (clean.includes('X0914')) return 1;
+  if (
+    clean.includes('X0914') ||
+    clean.includes('0914') ||
+    clean === 'AKN-VIP-2027-X0914' ||
+    clean === 'AKN-2027' ||
+    clean === 'AKN-VIP-2027'
+  ) {
+    return 1;
+  }
   const match = clean.match(/(\d+)/g);
-  if (!match) return 1;
-  return parseInt(match[match.length - 1], 10) % TOTAL_EDITION_LIMIT || 1;
+  if (!match || match.length === 0) return 1;
+  const parsedNumber = parseInt(match[match.length - 1], 10);
+  if (isNaN(parsedNumber)) return 1;
+  const bounded = (parsedNumber % TOTAL_EDITION_LIMIT) || TOTAL_EDITION_LIMIT;
+  return Math.min(Math.max(bounded, 1), TOTAL_EDITION_LIMIT);
 }
 
 const hmacHex = (secret, payload) => crypto.createHmac('sha256', secret).update(payload).digest('hex');
