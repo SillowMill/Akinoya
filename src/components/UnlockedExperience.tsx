@@ -555,12 +555,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
           <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/70 backdrop-blur-md border border-cyan-400/30 rounded-full text-[10px] font-mono text-cyan-300">
             <Sparkles className="w-3 h-3 text-cyan-400" />
-            {isVipMode ? 'FOUNDING HOLDER' : 'GUEST ACCESS'}
+            <span>{isVipMode ? `• FOUNDING MEMBER #${activeEditionNumber} OF 100` : 'GUEST ACCESS'}</span>
           </div>
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
-            <span>• 100 / 100 CLAIMED</span>
-          </div>
+          {isVipMode ? (
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-emerald-500/50 rounded-full text-[10px] font-mono font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.9)]" />
+              <span>• ACCESS GRANTED</span>
+            </div>
+          ) : (
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
+              <span>• 100 / 100 CLAIMED</span>
+            </div>
+          )}
         </div>
 
         {/* Card Details Bar */}
@@ -569,10 +576,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <span className="text-[11px] sm:text-xs font-mono text-white/50 tracking-wider">
               {isVipMode ? 'ÄKINOYA VIP PASS' : 'GUEST ÄKINOYA PASS'}
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-              <span>100 / 100 CLAIMED</span>
-            </span>
+            {isVipMode ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-[10px] font-mono font-semibold text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.25)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                <span>• ACCESS GRANTED</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <span>100 / 100 CLAIMED</span>
+              </span>
+            )}
           </div>
 
           <div className="space-y-1 mb-4">
@@ -700,12 +714,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         </div>
       </div>
 
-      {/* Conditional Layout: In VIP mode, VIP Pass Card Widget is prominently AT THE TOP */}
-      {isVipMode && (
-        <div className="flex flex-col items-center mb-6 lg:mb-8">
-          {renderPassCardWidget()}
-        </div>
-      )}
 
       {/* Main Tabs and Content Area */}
       <div className="space-y-4 sm:space-y-6 w-full">
@@ -1589,23 +1597,23 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           )}
         </div>
 
-        {/* Conditional Layout: In Non-VIP / Public mode, VIP Pass Card Widget is positioned BELOW tabs */}
-        {!isVipMode && (
-          <div className="flex flex-col items-center pt-8 border-t border-white/10 mt-8">
-            <div className="text-center mb-4 space-y-1">
-              <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-amber-300 font-semibold">
-                ARCHIVE COLLECTOR ARTIFACT · LIMITED EDITION
-              </span>
-              <h3 className="text-base sm:text-lg font-display font-bold text-white">
-                Guest Äkinoya Pass
-              </h3>
-              <p className="text-xs font-mono text-white/50 max-w-md mx-auto">
-                Founding edition fully claimed (100 / 100). Use your guest pass below for instant 1-click access to the Visualizer Hub.
-              </p>
-            </div>
-            {renderPassCardWidget()}
+        {/* Pass Card Widget Section (Positioned at the bottom of the page for both VIP & Guest views) */}
+        <div className="flex flex-col items-center pt-8 border-t border-white/10 mt-8">
+          <div className="text-center mb-4 space-y-1">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-amber-300 font-semibold">
+              ARCHIVE COLLECTOR ARTIFACT · LIMITED EDITION
+            </span>
+            <h3 className="text-base sm:text-lg font-display font-bold text-white">
+              {isVipMode ? 'Äkinoya VIP Pass Card' : 'Guest Äkinoya Pass'}
+            </h3>
+            <p className="text-xs font-mono text-white/50 max-w-md mx-auto">
+              {isVipMode
+                ? `Physical limited edition holographic NFC card (#${activeEditionNumber} of 100). Verified and authenticated on this device.`
+                : 'Founding edition fully claimed (100 / 100). Use your guest pass below for instant 1-click access to the Visualizer Hub.'}
+            </p>
           </div>
-        )}
+          {renderPassCardWidget()}
+        </div>
 
       {/* Modal 1: Track-Specific Code Unlock Modal */}
       <AnimatePresence>

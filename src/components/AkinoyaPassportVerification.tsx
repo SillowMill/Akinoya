@@ -334,9 +334,9 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               Founding Holder Verification Certificate
             </p>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
-            <span>• 100 / 100 CLAIMED</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.9)]" />
+            <span>• ACCESS GRANTED</span>
           </span>
         </div>
 
