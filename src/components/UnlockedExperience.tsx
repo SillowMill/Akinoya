@@ -352,6 +352,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     setPassIdError('');
   };
 
+  const handleDirectGuestUnlockHub = () => {
+    sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+    setIsVisualizerUnlocked(true);
+    setActiveTab('pass');
+    setPassSubView('hub');
+    soundManager.playUnlockChime();
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const handleTrackCardClick = (track: VisualizerTrack) => {
     const isUnlocked = isVipMode || unlockedTracks[track.id] || track.defaultUnlocked;
     if (isUnlocked) {
@@ -544,55 +555,57 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
           <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/70 backdrop-blur-md border border-cyan-400/30 rounded-full text-[10px] font-mono text-cyan-300">
             <Sparkles className="w-3 h-3 text-cyan-400" />
-            FOUNDING HOLDER
+            {isVipMode ? 'FOUNDING HOLDER' : 'GUEST ACCESS'}
           </div>
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/80 backdrop-blur-md border border-amber-500/40 rounded-full text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.25)]">
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
-            <span>SOLD OUT — 100/100</span>
+            <span>• 100 / 100 CLAIMED</span>
           </div>
         </div>
 
         {/* Card Details Bar */}
         <div className="p-4 sm:p-5 bg-gradient-to-b from-[#060c14] to-[#03060a] border-t border-cyan-500/20">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <span className="text-[11px] sm:text-xs font-mono text-white/50 tracking-wider">ÄKINOYA VIP PASS</span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-[10px] font-mono font-medium text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.2)]">
+            <span className="text-[11px] sm:text-xs font-mono text-white/50 tracking-wider">
+              {isVipMode ? 'ÄKINOYA VIP PASS' : 'GUEST ÄKINOYA PASS'}
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)]">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-              <span>100/100 CLAIMED</span>
+              <span>100 / 100 CLAIMED</span>
             </span>
           </div>
 
           <div className="space-y-1 mb-4">
             <div className="text-xs sm:text-sm font-display font-bold text-white tracking-wider">
-              SILLOW MILL ARCHIVE HOLDER
+              {isVipMode ? 'SILLOW MILL ARCHIVE HOLDER' : 'SILLOW MILL GUEST HOLDER'}
             </div>
             <div className="text-[11px] sm:text-xs font-mono text-cyan-400/80 flex items-center justify-between">
-              <span>ID: #{isVipMode ? activePassId : FOUNDING_PASS_ID}</span>
+              <span>{isVipMode ? `ID: #${activePassId}` : 'ACCESS: PUBLIC GUEST'}</span>
               <span>SECTOR 04</span>
             </div>
           </div>
 
-          {/* Quick action buttons */}
+          {/* Action buttons */}
           <div className="pt-3 border-t border-white/10 space-y-2">
-            <div className={`grid ${isVipMode ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
-              <button
-                onClick={handleCopyPassId}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 text-xs font-mono text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.15)] group"
-              >
-                {isCopied ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-400" />
-                    <span className="text-emerald-300 font-semibold tracking-wider text-[11px] truncate">COPIED</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="tracking-wider text-[11px] truncate">COPY PASS ID</span>
-                  </>
-                )}
-              </button>
+            {isVipMode ? (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleCopyPassId}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 text-xs font-mono text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.15)] group"
+                >
+                  {isCopied ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-400" />
+                      <span className="text-emerald-300 font-semibold tracking-wider text-[11px] truncate">COPIED</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
+                      <span className="tracking-wider text-[11px] truncate">COPY PASS ID</span>
+                    </>
+                  )}
+                </button>
 
-              {isVipMode && (
                 <button
                   onClick={() => {
                     if (onNavigateToPassport) {
@@ -609,8 +622,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
                   <span className="tracking-wider text-[11px] truncate">DIGITAL PASSPORT</span>
                 </button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleDirectGuestUnlockHub}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 text-xs font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 rounded-xl transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
+              >
+                <Unlock className="w-4 h-4 text-black shrink-0" />
+                <span className="tracking-wider">UNLOCK VISUALIZER HUB</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1175,7 +1196,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
                       <span className="text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-semibold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)] animate-pulse shrink-0" />
-                        <span>• 100/100 FOUNDING EDITIONS CLAIMED (SOLD OUT)</span>
+                        <span>• 100 / 100 CLAIMED</span>
                       </span>
                     </div>
 
@@ -1223,7 +1244,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="p-4 sm:p-5 lg:p-6 rounded-xl bg-gradient-to-br from-cyan-950/50 via-black/70 to-black/90 border border-cyan-500/30 flex flex-col gap-4 shadow-[0_0_20px_rgba(56,189,248,0.12)]">
                       <div>
                         <div className="text-[10px] font-mono text-cyan-400/90 uppercase tracking-wider font-semibold flex items-center gap-1.5">
-                          <span>Wave 2 — Order Now</span>
+                          <span>Wave 2 — Pre-Order Now</span>
                           <span className="text-white/30">·</span>
                           <span className="text-emerald-400 font-bold">{waveInventory.available} Available</span>
                         </div>
@@ -1246,7 +1267,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           className="flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
                         >
                           <ShoppingBag className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
-                          <span>Order Now — €14,99</span>
+                          <span>PRE-ORDER NOW — €14,99</span>
                         </button>
                         <button
                           type="button"
@@ -1263,7 +1284,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 lg:p-5 rounded-xl bg-cyan-950/30 border border-cyan-500/20 text-center sm:text-left">
                       <div>
                         <div className="text-[10px] font-mono text-white/50">FOUNDING RUN</div>
-                        <div className="text-xs sm:text-sm font-semibold text-amber-400">Sold Out (100/100)</div>
+                        <div className="text-xs sm:text-sm font-semibold text-amber-400">100 / 100 Claimed</div>
                       </div>
                       <div>
                         <div className="text-[10px] font-mono text-white/50">NEXT WAVE</div>
@@ -1576,10 +1597,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 ARCHIVE COLLECTOR ARTIFACT · LIMITED EDITION
               </span>
               <h3 className="text-base sm:text-lg font-display font-bold text-white">
-                Äkinoya Physical Founding Pass Card
+                Guest Äkinoya Pass
               </h3>
               <p className="text-xs font-mono text-white/50 max-w-md mx-auto">
-                Sold-out holographic NFC membership card. Verified holders access via their dedicated NFC link.
+                Founding edition fully claimed (100 / 100). Use your guest pass below for instant 1-click access to the Visualizer Hub.
               </p>
             </div>
             {renderPassCardWidget()}

@@ -197,10 +197,10 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
             SILLOW MILL
           </h1>
 
-          {/* Sold Out Status Badge */}
+          {/* Claimed Status Badge */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/60 backdrop-blur-md border border-amber-500/40 shadow-[0_0_14px_rgba(245,158,11,0.2)] text-[10.5px] sm:text-xs font-mono text-amber-300 font-semibold mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.9)] shrink-0" />
-            <span>• 100/100 FOUNDING EDITIONS CLAIMED (SOLD OUT)</span>
+            <span>• 100 / 100 CLAIMED</span>
           </div>
 
           {/* Mobile Release Date Badge (Centered underneath title) */}

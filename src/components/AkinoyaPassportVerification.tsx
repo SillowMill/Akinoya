@@ -336,7 +336,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           </div>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
-            <span>SOLD OUT — 100/100</span>
+            <span>• 100 / 100 CLAIMED</span>
           </span>
         </div>
 
