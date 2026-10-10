@@ -4,6 +4,7 @@ import passCardImg from '../assets/images/akinoya_pass_card_1790852652003.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
+import moodboardImg from '../assets/images/Mood.png';
 import {
   Lock,
   Unlock,
@@ -99,8 +100,8 @@ const PERK_MODULES: PerkModule[] = [
     category: 'ANIMATION & 4K',
     title: 'Animation & Visual Workflows',
     bullets: [
-      '3D & animation pipeline breakdowns',
-      'Exact AI/animation prompt structures',
+      'Step-by-step 3D & animation pipeline breakdowns',
+      'Exact AI/animation prompt frameworks',
       'Raw storyboards & 4K cinematic exports',
     ],
     icon: Film,
@@ -111,9 +112,9 @@ const PERK_MODULES: PerkModule[] = [
     category: 'MUSIC & DAW',
     title: 'Unreleased Music Vault & DAW Templates',
     bullets: [
-      'Unreleased tracks & VIP masters',
+      'Unreleased tracks & VIP audio masters',
       'Downloadable DAW project templates',
-      'WAV STEM packs & mix breakdowns',
+      'WAV STEM packs & sound design breakdowns',
     ],
     icon: Radio,
   },
@@ -125,7 +126,7 @@ const PERK_MODULES: PerkModule[] = [
     bullets: [
       'Character lore PDFs & moodboards',
       'Sci-fi branding & creative growth strategies',
-      'Direct governance voting',
+      'Direct governance voting on lore decisions',
     ],
     icon: Vote,
   },
@@ -135,7 +136,7 @@ const PERK_MODULES: PerkModule[] = [
     category: '4K ASSETS & DROPS',
     title: 'Exclusive 4K Assets & Merch Drops',
     bullets: [
-      'High-res 4K wallpapers',
+      'High-res 4K wallpapers for desktop & mobile',
       'Downloadable project blueprints & digital asset bundles',
       'Merch whitelist priority & discounts',
     ],
@@ -1016,7 +1017,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 <Sparkles className="w-3 h-3 text-cyan-400" />
                                 <span>INCLUDED WITH €5/MO PASS</span>
                               </span>
-                              <span className="text-amber-400 font-bold font-mono">NO-BRAINER VALUE</span>
                             </div>
                           </motion.div>
                         );
@@ -1134,6 +1134,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 <img
                                   src={visualizerThumbnailImg}
                                   alt="Don't Need Visualizer Preview"
+                                  className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                                  <div className="w-10 h-10 rounded-full bg-cyan-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.4)]">
+                                    <Play className="w-4 h-4 ml-0.5 fill-current" />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {track.id === '02' && (
+                              <div className="w-full aspect-video rounded-lg overflow-hidden my-2.5 relative group/thumb border border-cyan-500/30">
+                                <img
+                                  src={moodboardImg}
+                                  alt="Bingäa Visualizer Preview"
                                   className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />

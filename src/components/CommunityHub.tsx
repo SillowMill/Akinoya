@@ -39,6 +39,7 @@ import { soundManager } from '../utils/audio';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
 import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
+import moodboardImg from '../assets/images/Mood.png';
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME, BINGAA_COVER_URL, BINGAA_COVER_FILENAME } from '../utils/certificate';
 
 export type CreativeHubSection = 'downloads' | 'workflows' | 'visualizer' | 'discussion' | 'governance';
@@ -151,6 +152,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
 
   const [patronName, setPatronName] = useState<string>(() => {
     if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailParam = urlParams.get('email');
+      if (emailParam) {
+        const derived = emailParam.split('@')[0];
+        sessionStorage.setItem('akinoya_patron_name', derived);
+        return derived;
+      }
       return sessionStorage.getItem('akinoya_patron_name') || 'Patron Member #042';
     }
     return 'Patron Member #042';
@@ -191,14 +199,14 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     {
       id: 'asset-pdf',
       title: 'Bingäa Issue #01 — Complete 32-Page Master Print Edition',
-      category: 'GRAPHIC NOVEL MASTER',
+      category: 'MOODBOARD MASTER',
       fileFormat: 'PDF ARCHIVE',
       fileSize: '114.8 MB · 300 DPI CMYK',
       description:
         'Uncompressed production print file including full 32-page narrative sequence, wraparound cover art, author lore glossary, and high-resolution typography vectors.',
       downloadUrl: BINGAA_PDF_URL,
       fileName: BINGAA_PDF_FILENAME,
-      heroBannerUrl: bingaaComicCover,
+      heroBannerUrl: moodboardImg,
     },
     {
       id: 'asset-stems',
@@ -323,7 +331,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
       renderEngine: 'BLENDER OCTANE · VOLUMETRICS',
       synopsis:
         'Full atmospheric entry sequence showing the pilot vessel gliding across the ionizing cloud ceiling into Sector 02.',
-      previewImage: akinoyaVistaImg,
+      previewImage: moodboardImg,
     },
     {
       id: 'vt-3',
@@ -732,7 +740,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
             { id: 'downloads', label: 'Asset & Download Vault', icon: FolderDown, count: '4' },
             { id: 'workflows', label: 'Workflows & Creative Lab', icon: Sliders, count: '3' },
             { id: 'visualizer', label: 'Early Access Visualizer Hub', icon: Film, count: '3' },
-            { id: 'discussion', label: 'Creator Discussion Board (Free Chat)', icon: MessageSquare, count: discussionPosts.length.toString() },
+            { id: 'discussion', label: '# 💬-general-chat (Free Chat)', icon: MessageSquare, count: discussionPosts.length.toString() },
             { id: 'governance', label: 'Lore & Governance Portal', icon: Vote, count: '2' },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -957,7 +965,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           <span>
                             {isPatron
                               ? 'DOWNLOAD ASSET'
-                              : 'ACTIVATE TO DOWNLOAD (€5/MO)'}
+                              : 'ACTIVATE MEMBERSHIP FOR €5/MONTH TO DOWNLOAD'}
                           </span>
                         </button>
                       )}
@@ -1368,7 +1376,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
-                  💬 Creator Discussion Board
+                  💬 # general-chat · Creator Discussion Board
                 </h1>
                 <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
                   Community feed open to everyone. Read creator updates, share production feedback, attach artwork images, and discuss upcoming lore drops.
