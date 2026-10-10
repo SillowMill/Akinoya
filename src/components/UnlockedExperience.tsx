@@ -1453,7 +1453,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           type="button"
                           onClick={() => setShowCertificateClaim(true)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] sm:text-[11px] font-mono font-semibold text-white/45 hover:text-amber-300 border border-white/10 hover:border-amber-400/30 transition-colors cursor-pointer min-h-[34px]"
-                          title="Verification Required to Unlock Downloads"
+                          title="Verification Required: Claim Certificate & Unlock Downloads"
                         >
                           <Lock className="w-3 h-3 text-amber-400" />
                           Download
@@ -1476,7 +1476,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   ) : (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-amber-300 whitespace-nowrap">
                       <Lock className="w-3 h-3 text-amber-400" />
-                      VERIFICATION REQUIRED
+                      CLAIM &amp; VERIFICATION REQUIRED
                     </span>
                   )}
                 </div>
@@ -1532,7 +1532,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <div className="flex items-center gap-2 min-w-0">
                         <Lock className="w-4 h-4 text-amber-400 shrink-0" />
                         <span className="text-[11px] sm:text-xs font-mono font-medium text-amber-200/90 truncate">
-                          Verification Required to Unlock Downloads
+                          Verification Required: Claim Certificate &amp; Unlock Downloads
                         </span>
                       </div>
                       <span className="shrink-0 text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300">
@@ -1559,7 +1559,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px]"
                       >
                         <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>Verify via Email PIN</span>
+                        <span>Verify Pass to Claim Certificate &amp; Downloads</span>
                       </button>
                     </div>
                   </div>

@@ -164,12 +164,12 @@ export const BingaaCertificateClaimModal: React.FC<BingaaCertificateClaimModalPr
             </div>
 
             <h3 className="mt-1 text-lg sm:text-xl font-display font-bold text-white pr-6 leading-snug">
-              {step === 1 ? 'Verify Your Founding Pass' : 'Enter Card Security PIN'}
+              {step === 1 ? 'Claim Official Certificate & Unlock Downloads' : 'Enter Card Security PIN'}
             </h3>
 
             <p className="mt-1.5 text-xs text-white/60 leading-relaxed">
               {step === 1
-                ? 'Physical cards display edition numbers (#1/100) only. Request your 6-digit Card PIN via email to verify and unlock authenticated downloads.'
+                ? 'Enter your name and email address to receive your 6-digit Card PIN. Verifying will issue your signed Certificate of Authenticity (#1 of 100) and unlock PDF downloads.'
                 : `A 6-digit Card Security PIN was dispatched to ${cleanEmail}. Enter it below to authenticate pass #${passId}.`}
             </p>
 

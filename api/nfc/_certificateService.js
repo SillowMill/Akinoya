@@ -147,7 +147,7 @@ export async function sendEmailCardPin(passId, email, holderName = 'Founding Hol
     };
   }
 
-  const from = process.env.RESEND_FROM_EMAIL || 'Äkinoya VIP Protocol <onboarding@resend.dev>';
+  const from = process.env.RESEND_FROM_EMAIL || 'Sillow Mill <onboarding@resend.dev>';
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #05070c; color: #ffffff; padding: 40px 20px; line-height: 1.6;">
       <div style="max-width: 540px; margin: 0 auto; background-color: #0a0d14; border: 1px solid rgba(34, 211, 238, 0.25); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
