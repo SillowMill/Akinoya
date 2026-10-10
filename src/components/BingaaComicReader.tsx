@@ -267,7 +267,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/70 border border-amber-400/40 text-[10px] font-mono font-semibold tracking-wider text-amber-300 mb-3 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span>• 100 / 100 CLAIMED</span>
+              <span>• COMICBOOKS 100 / 100 CLAIMED</span>
             </div>
 
             <h3 className="text-base sm:text-lg font-display font-bold text-white tracking-wide uppercase leading-snug mb-2">

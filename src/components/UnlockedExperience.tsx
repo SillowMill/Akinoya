@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import passCardImg from '../assets/images/akinoya_pass_card_1790852652003.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
+import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import {
   Lock,
   Unlock,
@@ -166,6 +167,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const { nfcToken } = useVipAccess();
   const activePassId = isValidPassId(nfcToken) ? normalizePassId(nfcToken) : FOUNDING_PASS_ID;
   const activeEditionNumber = deriveEditionNumber(activePassId);
+  const editionDisplay = activePassId.includes('0914') ? '0914' : activeEditionNumber;
   const bingaaCertificate = useCertificate(activePassId);
   const [showCertificateClaim, setShowCertificateClaim] = useState(false);
   const [showComicReader, setShowComicReader] = useState(false);
@@ -555,7 +557,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
           <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/70 backdrop-blur-md border border-cyan-400/30 rounded-full text-[10px] font-mono text-cyan-300">
             <Sparkles className="w-3 h-3 text-cyan-400" />
-            <span>{isVipMode ? `• FOUNDING MEMBER #${activeEditionNumber} OF 100` : 'GUEST ACCESS'}</span>
+            <span>{isVipMode ? `• FOUNDING MEMBER #${editionDisplay} OF 100` : 'GUEST ACCESS'}</span>
           </div>
           {isVipMode ? (
             <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-emerald-500/50 rounded-full text-[10px] font-mono font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
@@ -563,9 +565,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <span>• ACCESS GRANTED</span>
             </div>
           ) : (
-            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[9.5px] xs:text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
-              <span>• 100 / 100 CLAIMED</span>
+              <span>• VIP ACCESS 100 / 100 CLAIMED</span>
             </div>
           )}
         </div>
@@ -582,9 +584,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 <span>• ACCESS GRANTED</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-[9.5px] xs:text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)]">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                <span>100 / 100 CLAIMED</span>
+                <span>VIP ACCESS 100 / 100 CLAIMED</span>
               </span>
             )}
           </div>
@@ -768,90 +770,101 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   transition={{ duration: 0.4 }}
                   className="space-y-4 lg:space-y-6"
                 >
-                  {/* If already unlocked, provide a prominent shortcut banner to jump right into the Hub */}
-                  {(isVipMode || isVisualizerUnlocked) ? (
-                    <div className="bg-gradient-to-r from-emerald-950/40 via-cyan-950/40 to-black/60 backdrop-blur-xl border border-emerald-500/40 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(16,185,129,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-400/40 text-emerald-300 font-semibold tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                            <Unlock className="w-3 h-3 text-emerald-400" />
-                            {isVipMode ? 'VIP ACCESS ACTIVE' : 'ARCHIVE ACCESS ACTIVE'}
-                          </span>
-                          <span className="text-[10px] font-mono text-cyan-400/80">11 TRACKS DECRYPTED</span>
-                        </div>
-                        <h3 className="text-base sm:text-lg lg:text-xl font-display font-bold text-white">
-                          Äkinoya Visualizer Archive is Unlocked
-                        </h3>
-                        <p className="text-[11px] sm:text-xs text-white/60 mt-0.5">
-                          Stream all 11 exclusive track visualizers and acoustic sector logs.
-                        </p>
-                      </div>
+                  {/* Visualizer Hub Showcase Widget with 16:9 Cinematic Thumbnail */}
+                  <div className="bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)]">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                      <button
-                        onClick={() => setPassSubView('hub')}
-                        className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer whitespace-nowrap min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
+                    <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
+                      {/* 16:9 Cinematic Thumbnail Container */}
+                      <div
+                        onClick={() => {
+                          if (isVipMode || isVisualizerUnlocked) {
+                            setPassSubView('hub');
+                          } else {
+                            handleDirectGuestUnlockHub();
+                          }
+                        }}
+                        className="w-full md:w-[360px] lg:w-[420px] aspect-video shrink-0 rounded-xl overflow-hidden relative group border border-cyan-500/40 shadow-[0_0_25px_rgba(56,189,248,0.2)] bg-black/80 cursor-pointer"
                       >
-                        <AudioWaveform className="w-4 h-4 text-black" />
-                        <span>OPEN VISUALIZER HUB →</span>
-                      </button>
-                    </div>
-                  ) : (
-                    /* Pass ID Portal Widget */
-                    <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_25px_rgba(56,189,248,0.12)]">
-                      <div className="absolute top-0 right-0 w-36 h-36 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
+                        <img
+                          src={visualizerThumbnailImg}
+                          alt="Don't Need — Official Visualizer Preview"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
-                      <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
-                        <Key className="w-4 h-4 text-cyan-400" />
-                        <span className="text-[11px] sm:text-xs font-mono text-cyan-300 uppercase tracking-wider font-semibold">
-                          VIP VISUALIZER ARCHIVE GATEWAY
-                        </span>
-                      </div>
-
-                      <h3 className="text-base sm:text-lg font-display font-bold text-white mb-1.5 text-center sm:text-left">
-                        Visualizer Hub Access
-                      </h3>
-                      <p className="text-[11px] sm:text-xs text-white/60 leading-relaxed mb-4 text-center sm:text-left">
-                        Enter your exact Pass ID (copied from your Founding Holder card above) to unlock all 11 visualizers, video telemetry, and early releases.
-                      </p>
-
-                      <form onSubmit={handleUnlockVisualizers} className="space-y-3 sm:space-y-3.5">
-                        {/* Desktop: Input + Paste Button side-by-side | Mobile: Stacked full width */}
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 sm:gap-3">
-                          <div className="sm:col-span-8 relative">
-                            <Key className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            <input
-                              type="text"
-                              value={passIdInput}
-                              onChange={(e) => {
-                                setPassIdInput(e.target.value);
-                                if (passIdError) setPassIdError('');
-                              }}
-                              placeholder={`Enter Pass ID (e.g. ${FOUNDING_PASS_ID})`}
-                              className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-3 text-base sm:text-sm text-white placeholder-white/40 outline-none font-mono tracking-wide transition-colors min-h-[46px]"
-                            />
-                          </div>
-
-                          <div className="sm:col-span-4">
-                            <button
-                              type="button"
-                              onClick={() => handlePastePassId('hub')}
-                              className="w-full h-full min-h-[46px] px-4 py-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 hover:text-white text-xs sm:text-sm font-mono font-semibold tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(56,189,248,0.15)] active:scale-[0.98]"
-                              title="Paste Pass ID from clipboard"
-                            >
-                              <ClipboardPaste className="w-4 h-4 text-cyan-400 shrink-0" />
-                              <span>PASTE PASS ID</span>
-                            </button>
+                        {/* Play button overlay with hover glow */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-cyan-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-300 shadow-[0_0_20px_rgba(56,189,248,0.4)] group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-black transition-all">
+                            <Play className="w-5 h-5 sm:w-6 sm:h-6 ml-0.5 fill-current" />
                           </div>
                         </div>
 
-                        {/* Unlock Visualizers Primary Action Button */}
-                        <button
-                          type="submit"
-                          className="w-full py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer whitespace-nowrap min-h-[48px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 active:scale-[0.99] tracking-wider"
-                        >
-                          <Lock className="w-4 h-4 text-black" />
-                          <span>UNLOCK VISUALIZERS</span>
-                        </button>
+                        {/* Top Left Badge on Thumbnail */}
+                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md border border-cyan-400/40 text-[10px] font-mono text-cyan-300">
+                          <Sparkles className="w-3 h-3 text-cyan-400" />
+                          <span>TRACK 01 · DON'T NEED</span>
+                        </div>
+
+                        {/* Bottom Right Duration / 4K Pill */}
+                        <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-black/80 backdrop-blur-md border border-white/20 text-[9px] font-mono text-white/80">
+                          4K CINEMATIC
+                        </div>
+                      </div>
+
+                      {/* Track Metadata & Action Controls */}
+                      <div className="flex-1 flex flex-col justify-between w-full space-y-3 sm:space-y-4">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/40 text-cyan-300 font-semibold tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(56,189,248,0.2)]">
+                              <AudioWaveform className="w-3 h-3 text-cyan-400" />
+                              {(isVipMode || isVisualizerUnlocked) ? 'ARCHIVE ACCESS ACTIVE' : 'VISUALIZER HUB GATEWAY'}
+                            </span>
+                            <span className="text-[10px] font-mono text-emerald-400 font-semibold">
+                              11 TRACKS DECRYPTED
+                            </span>
+                          </div>
+
+                          <h3 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white tracking-wide leading-tight">
+                            Äkinoya Visualizer Archive
+                          </h3>
+                          <p className="text-xs sm:text-sm font-sans text-white/70 leading-relaxed mt-1.5">
+                            Experience 4K reactive telemetry visualizers and acoustic logs for all 11 sector tracks—including the featured "Don't Need" and "Bingäa" animations.
+                          </p>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                          {(isVipMode || isVisualizerUnlocked) ? (
+                            <button
+                              onClick={() => setPassSubView('hub')}
+                              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(56,189,248,0.35)] hover:scale-[1.01]"
+                            >
+                              <AudioWaveform className="w-4 h-4 text-black" />
+                              <span>OPEN VISUALIZER HUB →</span>
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={handleDirectGuestUnlockHub}
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
+                              >
+                                <Unlock className="w-4 h-4 text-black shrink-0" />
+                                <span>UNLOCK VISUALIZER HUB</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handlePastePassId('hub')}
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 transition-all cursor-pointer min-h-[44px]"
+                                title="Paste Pass ID from clipboard"
+                              >
+                                <ClipboardPaste className="w-4 h-4 text-cyan-400 shrink-0" />
+                                <span>PASTE PASS ID</span>
+                              </button>
+                            </>
+                          )}
+                        </div>
 
                         {pasteFeedback && (
                           <div className={`flex items-center gap-2 text-xs font-mono rounded-xl px-3.5 py-2 transition-all ${
@@ -863,16 +876,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             <span>{pasteFeedback.message}</span>
                           </div>
                         )}
-
-                        {passIdError && (
-                          <div className="flex items-center gap-1.5 text-xs font-mono text-rose-400 bg-rose-950/40 border border-rose-500/30 rounded-lg px-3 py-2">
-                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                            <span>{passIdError}</span>
-                          </div>
-                        )}
-                      </form>
+                      </div>
                     </div>
-                  )}
+                  </div>
 
                   {/* Official Community VIP Entitlements */}
                   <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden">
@@ -1102,6 +1108,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               )}
                             </div>
 
+                            {track.id === '01' && (
+                              <div className="w-full aspect-video rounded-lg overflow-hidden my-2.5 relative group/thumb border border-cyan-500/30">
+                                <img
+                                  src={visualizerThumbnailImg}
+                                  alt="Don't Need Visualizer Preview"
+                                  className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                                  <div className="w-10 h-10 rounded-full bg-cyan-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.4)]">
+                                    <Play className="w-4 h-4 ml-0.5 fill-current" />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
                             <div className="flex items-center justify-between pt-2.5 border-t border-white/5 mt-auto">
                               {isUnlocked ? (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
@@ -1202,10 +1224,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           2027 LIMITED COMIC DROP
                         </span>
                       </div>
-                      <span className="text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-semibold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)] animate-pulse shrink-0" />
-                        <span>• 100 / 100 CLAIMED</span>
-                      </span>
+                      {isVipMode ? (
+                        <span className="text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-bold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-amber-300 bg-amber-950/80 border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)] animate-pulse shrink-0" />
+                          <span className="truncate">• YOU OWN EDITION #{editionDisplay} OF 100</span>
+                        </span>
+                      ) : (
+                        <span className="text-[9.5px] xs:text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-semibold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)] shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)] animate-pulse shrink-0" />
+                          <span className="truncate">• COMICBOOKS 100 / 100 CLAIMED</span>
+                        </span>
+                      )}
                     </div>
 
                     <div>
@@ -1248,51 +1277,95 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
                     </div>
 
-                    {/* Prominent Price & Order Action Bar */}
-                    <div className="p-4 sm:p-5 lg:p-6 rounded-xl bg-gradient-to-br from-cyan-950/50 via-black/70 to-black/90 border border-cyan-500/30 flex flex-col gap-4 shadow-[0_0_20px_rgba(56,189,248,0.12)]">
-                      <div>
-                        <div className="text-[10px] font-mono text-cyan-400/90 uppercase tracking-wider font-semibold flex items-center gap-1.5">
-                          <span>Wave 2 — Pre-Order Now</span>
-                          <span className="text-white/30">·</span>
-                          <span className="text-emerald-400 font-bold">{waveInventory.available} Available</span>
+                    {/* Dynamic VIP Ownership or Public Pre-Order Bar */}
+                    {isVipMode ? (
+                      <div className="p-4 sm:p-5 lg:p-6 rounded-xl bg-gradient-to-br from-amber-950/30 via-black/70 to-black/90 border border-amber-500/40 flex flex-col gap-4 shadow-[0_0_25px_rgba(245,158,11,0.15)]">
+                        <div>
+                          <div className="text-[10px] font-mono text-amber-300 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                            <span>FOUNDING MEMBER ASSET · INCLUDED WITH PASS</span>
+                          </div>
+                          <div className="flex flex-wrap items-baseline gap-2 mt-1">
+                            <span className="text-lg sm:text-xl font-display font-extrabold text-white tracking-tight">
+                              Edition #{editionDisplay} of 100 Owned
+                            </span>
+                            <span className="text-[11px] font-mono text-emerald-400 font-semibold bg-emerald-950/70 border border-emerald-500/30 px-2 py-0.5 rounded">
+                              ● ACCESS UNLOCKED
+                            </span>
+                          </div>
+                          <p className="text-[11px] sm:text-xs font-mono text-white/60 mt-1">
+                            Your physical hardcover copy is included with your Äkinoya Founding Pass. Read the full high-res digital release now or claim your certificate &amp; physical shipment.
+                          </p>
                         </div>
-                        <div className="flex flex-wrap items-baseline gap-2 mt-1">
-                          <span className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight">
-                            €14,99
-                          </span>
-                          <span className="text-[11px] font-mono text-white/50">
-                            incl. VAT · Free Global Shipping
-                          </span>
-                        </div>
-                      </div>
 
-                      <div className="flex flex-col sm:flex-row gap-2.5">
-                        <button
-                          onClick={() => {
-                            setIsCheckoutOpen(true);
-                            soundManager.playTone(660, 0.08);
-                          }}
-                          className="flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
-                        >
-                          <ShoppingBag className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
-                          <span>PRE-ORDER NOW — €14,99</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowComicReader(true)}
-                          className="py-3.5 px-5 rounded-xl text-xs sm:text-sm font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/40 hover:border-cyan-400 transition-all cursor-pointer min-h-[44px] flex items-center justify-center gap-2 group shadow-[0_0_15px_rgba(56,189,248,0.12)]"
-                        >
-                          <BookOpen className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-                          <span>{isVipMode && bingaaCertificate ? 'Read Comic' : 'Preview Comic (Pgs 1–2)'}</span>
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-2.5">
+                          <button
+                            type="button"
+                            onClick={() => setShowComicReader(true)}
+                            className="flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                          >
+                            <BookOpen className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
+                            <span>READ YOUR DIGITAL COMIC</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowCertificateClaim(true)}
+                            className="py-3.5 px-5 rounded-xl text-xs sm:text-sm font-mono font-bold text-amber-300 hover:text-white bg-amber-950/70 hover:bg-amber-900 border border-amber-500/50 hover:border-amber-400 transition-all cursor-pointer min-h-[46px] flex items-center justify-center gap-2 group shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-[1.01]"
+                          >
+                            <ShieldCheck className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                            <span>CLAIM INCLUDED PHYSICAL COPY</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* Public Guest: Price & Order Action Bar */
+                      <div className="p-4 sm:p-5 lg:p-6 rounded-xl bg-gradient-to-br from-cyan-950/50 via-black/70 to-black/90 border border-cyan-500/30 flex flex-col gap-4 shadow-[0_0_20px_rgba(56,189,248,0.12)]">
+                        <div>
+                          <div className="text-[10px] font-mono text-cyan-400/90 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                            <span>Wave 2 — Pre-Order Now</span>
+                            <span className="text-white/30">·</span>
+                            <span className="text-emerald-400 font-bold">{waveInventory.available} Available</span>
+                          </div>
+                          <div className="flex flex-wrap items-baseline gap-2 mt-1">
+                            <span className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight">
+                              €14.99
+                            </span>
+                            <span className="text-[11px] font-mono text-white/50">
+                              incl. VAT · Free Global Shipping
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-2.5">
+                          <button
+                            onClick={() => {
+                              setIsCheckoutOpen(true);
+                              soundManager.playTone(660, 0.08);
+                            }}
+                            className="flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                          >
+                            <ShoppingBag className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
+                            <span>PRE-ORDER NOW — €14.99</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowComicReader(true)}
+                            className="py-3.5 px-5 rounded-xl text-xs sm:text-sm font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/40 hover:border-cyan-400 transition-all cursor-pointer min-h-[44px] flex items-center justify-center gap-2 group shadow-[0_0_15px_rgba(56,189,248,0.12)]"
+                          >
+                            <BookOpen className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                            <span>Preview Comic (Pgs 1–2)</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Wave 1 / Wave 2 Metrics Grid */}
                     <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 lg:p-5 rounded-xl bg-cyan-950/30 border border-cyan-500/20 text-center sm:text-left">
                       <div>
                         <div className="text-[10px] font-mono text-white/50">FOUNDING RUN</div>
-                        <div className="text-xs sm:text-sm font-semibold text-amber-400">100 / 100 Claimed</div>
+                        <div className="text-xs sm:text-sm font-semibold text-amber-400">
+                          {isVipMode ? `Edition #${editionDisplay} (Owned)` : '100 / 100 Claimed'}
+                        </div>
                       </div>
                       <div>
                         <div className="text-[10px] font-mono text-white/50">NEXT WAVE</div>
@@ -1601,14 +1674,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         <div className="flex flex-col items-center pt-8 border-t border-white/10 mt-8">
           <div className="text-center mb-4 space-y-1">
             <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-amber-300 font-semibold">
-              ARCHIVE COLLECTOR ARTIFACT · LIMITED EDITION
+              {isVipMode ? 'ARCHIVE COLLECTOR ARTIFACT · LIMITED EDITION' : '• VIP ACCESS 100 / 100 CLAIMED'}
             </span>
             <h3 className="text-base sm:text-lg font-display font-bold text-white">
               {isVipMode ? 'Äkinoya VIP Pass Card' : 'Guest Äkinoya Pass'}
             </h3>
             <p className="text-xs font-mono text-white/50 max-w-md mx-auto">
               {isVipMode
-                ? `Physical limited edition holographic NFC card (#${activeEditionNumber} of 100). Verified and authenticated on this device.`
+                ? `Physical limited edition holographic NFC card (#${editionDisplay} of 100). Verified and authenticated on this device.`
                 : 'Founding edition fully claimed (100 / 100). Use your guest pass below for instant 1-click access to the Visualizer Hub.'}
             </p>
           </div>
