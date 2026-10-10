@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   }
 
   // Bingäa Certificate of Authenticity actions (Card PIN + optional email OTP)
-  if (body.action === 'send-otp' || body.action === 'certify') {
+  if (body.action === 'send-pin' || body.action === 'send-otp' || body.action === 'certify') {
     const result = await handleCertificateAction(body);
     res.statusCode = result.status;
     return res.end(JSON.stringify(result.body));

@@ -12,6 +12,10 @@
       "destination": "/assets/Bingaa.pdf"
     },
     {
+      "source": "/assets/Bing:rest(.*)Cover(.*)",
+      "destination": "/assets/BingaaCover.png"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

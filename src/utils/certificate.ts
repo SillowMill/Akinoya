@@ -9,6 +9,8 @@ import { TOTAL_EDITION_LIMIT } from './holder';
 
 export const BINGAA_PDF_FILENAME = 'Bingäa.pdf';
 export const BINGAA_PDF_URL = '/assets/Bingaa.pdf';
+export const BINGAA_COVER_FILENAME = 'BingäaCover.png';
+export const BINGAA_COVER_URL = '/assets/BingaaCover.png';
 
 const CERT_STORAGE_KEY = 'akinoya_bingaa_certificates';
 const CERT_EVENT = 'akinoya-certificate-updated';
@@ -203,3 +205,79 @@ export const downloadCertificatePng = async (cert: BingaaCertificate): Promise<v
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 };
+
+export interface PinRequestResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  devMode?: boolean;
+  pin?: string;
+  status?: number;
+}
+
+export interface CertifyResult {
+  success: boolean;
+  certificate?: BingaaCertificate;
+  message?: string;
+  error?: string;
+  status?: string;
+}
+
+/** Requests deterministic 6-digit Card PIN delivery to email via Resend. */
+export const requestCardPin = async (
+  passId: string,
+  email: string,
+  holderName?: string
+): Promise<PinRequestResult> => {
+  try {
+    const res = await fetch('/api/nfc/send-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passId, email, holderName }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return {
+      success: Boolean(res.ok && data?.success),
+      message: data?.message,
+      error: data?.error,
+      devMode: data?.devMode,
+      pin: data?.pin,
+      status: res.status,
+    };
+  } catch (err: any) {
+    return { success: false, error: 'NETWORK_ERROR', message: err?.message || 'Network connection error.' };
+  }
+};
+
+/** Authenticates the 6-digit Card PIN and issues the signed Certificate of Authenticity. */
+export const verifyAndCertify = async (
+  passId: string,
+  pin: string,
+  holderName: string,
+  email?: string
+): Promise<CertifyResult> => {
+  try {
+    const res = await fetch('/api/nfc/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'certify',
+        token: passId,
+        pin,
+        ownerName: holderName,
+        email,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return {
+      success: Boolean(res.ok && data?.success && data?.certificate),
+      certificate: data?.certificate,
+      message: data?.message,
+      error: data?.error,
+      status: data?.status,
+    };
+  } catch (err: any) {
+    return { success: false, error: 'NETWORK_ERROR', message: err?.message || 'Network connection error.' };
+  }
+};
+

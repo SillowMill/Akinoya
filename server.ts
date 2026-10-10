@@ -23,6 +23,13 @@ app.get('/assets/Bing*.pdf', (_req, res) => {
   res.sendFile(fs.existsSync(distFile) ? distFile : pubFile);
 });
 
+// Serve Bingaa Cover asset
+app.get('/assets/Bing*Cover*', (_req, res) => {
+  const distFile = path.resolve(distPath, 'assets/BingaaCover.png');
+  const pubFile = path.resolve(process.cwd(), 'public/assets/BingaaCover.png');
+  res.sendFile(fs.existsSync(distFile) ? distFile : pubFile);
+});
+
 // Fallback to index.html for SPA routing
 app.get('*', (_req, res) => {
   res.sendFile(path.resolve(distPath, 'index.html'));

@@ -243,10 +243,21 @@ apiRouter.all('/nfc/verify-dna', (req: Request, res: Response): void => {
   });
 });
 
+// ─── 5.5. Send Card PIN via Resend ─────────────────────────────────────────
+apiRouter.post('/nfc/send-pin', async (req: Request, res: Response): Promise<void> => {
+  const result = await handleCertificateAction({
+    action: 'send-pin',
+    token: req.body?.token || req.body?.passId || req.body?.id,
+    email: req.body?.email,
+    ownerName: req.body?.ownerName || req.body?.holderName || req.body?.name,
+  });
+  res.status(result.status).json(result.body);
+});
+
 // ─── 6. Holder Pass Registration ──────────────────────────────────────────────
 apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<void> => {
   // Bingäa Certificate of Authenticity actions (Card PIN + optional email OTP)
-  if (req.body?.action === 'send-otp' || req.body?.action === 'certify') {
+  if (req.body?.action === 'send-pin' || req.body?.action === 'send-otp' || req.body?.action === 'certify') {
     const result = await handleCertificateAction(req.body);
     res.status(result.status).json(result.body);
     return;

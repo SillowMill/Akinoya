@@ -121,11 +121,104 @@ export async function sendEmailOtp(passId, email) {
   }
 }
 
+export async function sendEmailCardPin(passId, email, holderName = 'Founding Holder') {
+  const normalizedId = normalizePassId(passId);
+  if (!isValidPassId(normalizedId)) {
+    return { success: false, status: 400, error: 'INVALID_PASS', message: 'This Pass ID is not recognized.' };
+  }
+  if (!isValidEmail(email)) {
+    return { success: false, status: 400, error: 'INVALID_EMAIL', message: 'Please enter a valid email address.' };
+  }
+
+  const pin = generateCardPin(normalizedId);
+  const editionNumber = deriveEditionNumber(normalizedId);
+  const cleanName = sanitizeHolderName(holderName) || 'Founding Holder';
+  const cleanEmail = normalizeEmail(email);
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (!resendApiKey) {
+    console.warn(`[COA DEV] RESEND_API_KEY is not set. Generated Card PIN for #${normalizedId} is: ${pin}`);
+    return {
+      success: true,
+      status: 200,
+      devMode: true,
+      pin,
+      message: `Card PIN generated for ${cleanEmail}. (Development notice: PIN is ${pin})`,
+    };
+  }
+
+  const from = process.env.RESEND_FROM_EMAIL || 'Äkinoya VIP Protocol <onboarding@resend.dev>';
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #05070c; color: #ffffff; padding: 40px 20px; line-height: 1.6;">
+      <div style="max-width: 540px; margin: 0 auto; background-color: #0a0d14; border: 1px solid rgba(34, 211, 238, 0.25); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+        <div style="padding: 32px 32px 24px 32px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); text-align: center;">
+          <p style="letter-spacing: 3px; font-size: 11px; font-weight: 700; color: #67e8f9; margin: 0 0 8px 0; text-transform: uppercase;">SILLOW MILL · ÄKINOYA PROTOCOL</p>
+          <h1 style="font-size: 22px; font-weight: 800; color: #ffffff; margin: 0; letter-spacing: 0.5px;">Your Card Security PIN</h1>
+          <p style="font-size: 12px; color: rgba(255, 255, 255, 0.5); margin: 6px 0 0 0; font-family: monospace;">Founding Pass #${normalizedId} · Edition #${editionNumber} of 100</p>
+        </div>
+        <div style="padding: 32px;">
+          <p style="font-size: 14px; color: rgba(255, 255, 255, 0.85); margin: 0 0 16px 0;">
+            Greetings, <strong>${cleanName}</strong>.
+          </p>
+          <p style="font-size: 13px; color: rgba(255, 255, 255, 0.7); margin: 0 0 24px 0;">
+            Use the 6-digit Card Security PIN below to authenticate your Founding Member status, unlock your official Bingäa Issue #1 Certificate of Authenticity, and gain access to all exclusive downloads.
+          </p>
+          <div style="background-color: #000000; border: 1px solid rgba(34, 211, 238, 0.4); border-radius: 12px; padding: 24px; text-align: center; margin: 0 0 24px 0;">
+            <div style="font-size: 11px; font-family: monospace; color: #67e8f9; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;">SECURITY PIN</div>
+            <div style="font-size: 38px; font-family: monospace; font-weight: 800; color: #ffffff; letter-spacing: 12px; margin-left: 12px;">${pin}</div>
+          </div>
+          <p style="font-size: 12px; color: rgba(255, 255, 255, 0.5); margin: 0; line-height: 1.5;">
+            Physical cards display edition numbers (#${editionNumber}/100) and do not have printed PINs. This PIN is deterministically bound to pass #${normalizedId} and secures your single-device session.
+          </p>
+        </div>
+        <div style="padding: 20px 32px; background-color: rgba(0, 0, 0, 0.4); border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: center; font-size: 11px; color: rgba(255, 255, 255, 0.4); font-family: monospace;">
+          Sector 04 · Äkinoya Genesis Whitelist · <a href="mailto:Odi@sillowmill.com" style="color: #67e8f9; text-decoration: none;">Odi@sillowmill.com</a>
+        </div>
+      </div>
+    </div>`;
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to: [cleanEmail],
+        subject: `Your Äkinoya Card Security PIN — Pass #${normalizedId}`,
+        html,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error('[COA] Resend delivery error:', res.status, errText);
+      let errMsg = 'Failed to deliver PIN via Resend.';
+      try {
+        const parsed = JSON.parse(errText);
+        if (parsed.message) errMsg = parsed.message;
+      } catch {}
+      return { success: false, status: 502, error: 'RESEND_ERROR', message: errMsg };
+    }
+
+    return {
+      success: true,
+      status: 200,
+      message: `Card Security PIN dispatched to ${cleanEmail}. Check your inbox.`,
+    };
+  } catch (err) {
+    console.error('[COA] Resend request exception:', err);
+    return { success: false, status: 502, error: 'RESEND_ERROR', message: 'Could not connect to email delivery service.' };
+  }
+}
+
 export function sanitizeHolderName(name) {
   return String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40);
 }
 
-export function issueCertificate(passId, holderName, emailVerified) {
+export function issueCertificate(passId, holderName, emailVerified = true) {
   const normalizedId = normalizePassId(passId);
   const editionNumber = deriveEditionNumber(normalizedId);
   const claimedAt = new Date().toISOString();
@@ -139,7 +232,7 @@ export function issueCertificate(passId, holderName, emailVerified) {
     holderName,
     editionNumber,
     editionTotal: TOTAL_EDITION_LIMIT,
-    status: 'PERMANENTLY AUTHENTICATED & CLAIMED',
+    status: 'OFFICIALLY VERIFIED',
     emailVerified: Boolean(emailVerified),
     claimedAt,
     signatureAlgorithm: 'HMAC-SHA256',
@@ -153,20 +246,20 @@ export function issueCertificate(passId, holderName, emailVerified) {
  */
 export async function handleCertificateAction(body = {}) {
   const action = body.action;
-  const passId = normalizePassId(body.token || body.passId);
-  const pin = body.pin;
+  const passId = normalizePassId(body.token || body.passId || body.id);
   const email = normalizeEmail(body.email);
 
   if (!isValidPassId(passId)) {
     return { status: 400, body: { success: false, error: 'INVALID_PASS', message: 'This Pass ID is not recognized.' } };
   }
-  if (!verifyCardPin(passId, pin)) {
-    return {
-      status: 401,
-      body: { success: false, error: 'INVALID_PIN', message: 'The Card Security PIN does not match this pass.' },
-    };
+
+  // Action: Send Card PIN to Email via Resend
+  if (action === 'send-pin') {
+    const result = await sendEmailCardPin(passId, email, body.ownerName || body.holderName || body.name);
+    return { status: result.status, body: result };
   }
 
+  // Action: Optional email OTP (legacy)
   if (action === 'send-otp') {
     if (!isValidEmail(email)) {
       return { status: 400, body: { success: false, error: 'INVALID_EMAIL', message: 'Please enter a valid email address.' } };
@@ -175,23 +268,32 @@ export async function handleCertificateAction(body = {}) {
     return { status: result.status, body: result };
   }
 
+  // Action: Authenticate Card PIN & generate Certificate of Authenticity
   if (action === 'certify') {
-    const holderName = sanitizeHolderName(body.ownerName || body.holderName);
+    const pin = body.pin;
+    if (!verifyCardPin(passId, pin)) {
+      return {
+        status: 401,
+        body: { success: false, error: 'INVALID_PIN', message: 'The 6-digit Card Security PIN does not match this pass.' },
+      };
+    }
+
+    const holderName = sanitizeHolderName(body.ownerName || body.holderName || body.name);
     if (!holderName) {
       return { status: 400, body: { success: false, error: 'MISSING_NAME', message: 'A holder name is required.' } };
     }
-    let emailVerified = false;
-    if (email) {
-      if (!verifyEmailOtp(passId, email, body.otp)) {
-        return {
-          status: 401,
-          body: { success: false, error: 'INVALID_OTP', message: 'The email verification code is invalid or expired.' },
-        };
-      }
-      emailVerified = true;
-    }
-    return { status: 200, body: { success: true, certificate: issueCertificate(passId, holderName, emailVerified) } };
+
+    const cert = issueCertificate(passId, holderName, Boolean(email));
+    return {
+      status: 200,
+      body: {
+        success: true,
+        status: 'OFFICIALLY VERIFIED',
+        certificate: cert,
+      },
+    };
   }
 
   return { status: 400, body: { success: false, error: 'UNKNOWN_ACTION', message: 'Unsupported certificate action.' } };
 }
+

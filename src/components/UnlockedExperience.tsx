@@ -46,6 +46,8 @@ import { useVipAccess } from '../context/VipAccessContext';
 import {
   BINGAA_PDF_URL,
   BINGAA_PDF_FILENAME,
+  BINGAA_COVER_URL,
+  BINGAA_COVER_FILENAME,
   deriveEditionNumber,
   downloadCertificatePng,
   normalizePassId,
@@ -1121,7 +1123,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     {/* Central Cover Art: Clean, Uninterrupted Illustration (Text overlays removed from image surface) */}
                     <div className="relative group w-full aspect-[3/4] rounded-2xl overflow-hidden border-2 border-cyan-500/40 shadow-[0_0_35px_rgba(56,189,248,0.25)] bg-[#050505] transition-transform duration-500 hover:scale-[1.02]">
                       <img
-                        src={bingaaComicCover}
+                        src={BINGAA_COVER_URL}
                         alt="Sillow Mill — Bingäa (Collector's Graphic Novel) Cover"
                         className="w-full h-full object-cover object-center"
                       />
@@ -1400,8 +1402,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
               {/* Asset 2: Bingäa Official Artwork / Cover Image */}
               <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6">
-                <div className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase mb-3">
-                  Asset 02 · Official Artwork
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 02 · Official Artwork</span>
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-[9.5px] sm:text-[10px] font-mono text-cyan-300">
+                    HI-RES MASTER
+                  </span>
                 </div>
                 <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
                   <button
@@ -1410,13 +1415,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     className="shrink-0 w-[72px] sm:w-24 aspect-[3/4] rounded-lg overflow-hidden border border-white/15 hover:border-cyan-400/60 transition-colors cursor-pointer"
                     aria-label="Preview Bingäa cover artwork"
                   >
-                    <img src={bingaaComicCover} alt="Bingäa official cover artwork" className="w-full h-full object-cover" />
+                    <img src={BINGAA_COVER_URL} alt="Bingäa official cover artwork" className="w-full h-full object-cover" />
                   </button>
                   <div className="min-w-0 flex-1">
                     <h3 className="text-sm sm:text-base font-display font-bold text-white leading-snug">
                       Bingäa Official Artwork / Cover Image
                     </h3>
-                    <p className="text-[10.5px] sm:text-[11px] font-mono text-white/45 mt-0.5">High-resolution preview graphic</p>
+                    <p className="text-[10.5px] sm:text-[11px] font-mono text-white/45 mt-0.5">High-resolution master graphic</p>
                     <div className="mt-2.5 flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -1426,14 +1431,34 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         <Eye className="w-3.5 h-3.5" />
                         View
                       </button>
-                      <a
-                        href={bingaaComicCover}
-                        download="Bingaa-Official-Cover.jpg"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] sm:text-[11px] font-mono font-semibold text-white/75 hover:text-white border border-white/15 hover:border-white/30 transition-colors min-h-[34px]"
+                      <button
+                        type="button"
+                        onClick={() => setShowComicReader(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] sm:text-[11px] font-mono font-semibold text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-400 bg-emerald-950/40 transition-colors cursor-pointer min-h-[34px]"
                       >
-                        <Download className="w-3.5 h-3.5" />
-                        Download
-                      </a>
+                        <BookOpen className="w-3.5 h-3.5" />
+                        Read Comic
+                      </button>
+                      {bingaaCertificate ? (
+                        <a
+                          href={BINGAA_COVER_URL}
+                          download={BINGAA_COVER_FILENAME}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] sm:text-[11px] font-mono font-semibold text-white/75 hover:text-white border border-white/15 hover:border-white/30 transition-colors min-h-[34px]"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Download
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setShowCertificateClaim(true)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] sm:text-[11px] font-mono font-semibold text-white/45 hover:text-amber-300 border border-white/10 hover:border-amber-400/30 transition-colors cursor-pointer min-h-[34px]"
+                          title="Verification Required to Unlock Downloads"
+                        >
+                          <Lock className="w-3 h-3 text-amber-400" />
+                          Download
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1444,13 +1469,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Collector's Edition</span>
                   {bingaaCertificate ? (
-                    <span className="inline-flex items-center gap-1 text-[9.5px] sm:text-[10.5px] font-mono font-semibold text-emerald-300 whitespace-nowrap">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      AUTHENTICATED
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-emerald-300 whitespace-nowrap shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      OFFICIALLY VERIFIED
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-[9.5px] sm:text-[10.5px] font-mono font-semibold text-amber-300/90 whitespace-nowrap">
-                      <Lock className="w-3 h-3" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-amber-300 whitespace-nowrap">
+                      <Lock className="w-3 h-3 text-amber-400" />
                       VERIFICATION REQUIRED
                     </span>
                   )}
@@ -1502,19 +1527,41 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </button>
                   </div>
                 ) : (
-                  <div className="mt-4 space-y-2.5">
+                  <div className="mt-4 space-y-3">
+                    <div className="rounded-xl border border-amber-500/25 bg-amber-950/20 p-3 sm:p-3.5 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                        <span className="text-[11px] sm:text-xs font-mono font-medium text-amber-200/90 truncate">
+                          Verification Required to Unlock Downloads
+                        </span>
+                      </div>
+                      <span className="shrink-0 text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300">
+                        LOCKED
+                      </span>
+                    </div>
+
                     <p className="text-[11px] sm:text-xs text-white/55 leading-relaxed">
-                      Verify with your name and the Security PIN printed on your physical pass to permanently unlock the
-                      comic PDF and your signed Certificate of Authenticity.
+                      Physical cards display edition numbers (#{activeEditionNumber}/100) only. Request your 6-digit Card PIN via email to verify and unlock full downloads and your signed Certificate of Authenticity.
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => setShowCertificateClaim(true)}
-                      className="w-full py-3 px-4 rounded-xl font-mono text-[11px] sm:text-xs font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
-                    >
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>Verify &amp; Claim Certificate</span>
-                    </button>
+
+                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowComicReader(true)}
+                        className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px]"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Preview Comic Reader</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowCertificateClaim(true)}
+                        className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px]"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Verify via Email PIN</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1975,7 +2022,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             defaultName={holderName}
           />
 
-          {showComicReader && bingaaCertificate && (
+          {showComicReader && (
             <Suspense
               fallback={
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95">
@@ -2005,7 +2052,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   <X className="w-5 h-5" />
                 </button>
                 <img
-                  src={bingaaComicCover}
+                  src={BINGAA_COVER_URL}
                   alt="Bingäa official cover artwork"
                   className="max-w-full max-h-[88dvh] rounded-xl border border-white/15 shadow-2xl object-contain"
                   onClick={(e) => e.stopPropagation()}
