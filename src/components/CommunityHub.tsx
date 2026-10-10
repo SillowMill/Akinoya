@@ -658,23 +658,23 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
   };
 
   return (
-    <div className="relative min-h-[100dvh] w-full bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="relative min-h-[100dvh] w-full bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
       {/* Top Universal Header Bar */}
-      <header className="relative z-30 w-full border-b border-white/10 bg-[#050811]/90 backdrop-blur-xl px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="relative z-30 w-full border-b border-white/10 bg-[#050811]/90 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"
             onClick={onBackToHome}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer min-h-[40px] sm:min-h-[36px] shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span className="hidden xs:inline">Planet Äkinoya</span>
           </button>
 
-          <div className="h-4 w-px bg-white/15" />
+          <div className="h-4 w-px bg-white/15 shrink-0" />
 
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
             <span className="text-xs sm:text-sm font-display font-bold tracking-wider text-white uppercase truncate">
               CREATIVE VAULT &amp; PRODUCT HUB
             </span>
@@ -682,31 +682,31 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
         </div>
 
         {/* Right Status Actions & Freemium Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {isPatron ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-400/40 text-[10.5px] font-mono text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded-lg bg-emerald-950/80 border border-emerald-400/40 text-[10.5px] font-mono text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)] whitespace-nowrap min-h-[40px] sm:min-h-[36px]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="font-bold">PATRON ACTIVE</span>
               </div>
               <button
                 type="button"
                 onClick={handleToggleGuestMode}
-                className="hidden sm:inline-flex px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-mono text-white/50 hover:text-white transition-colors cursor-pointer"
+                className="hidden md:inline-flex px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-mono text-white/50 hover:text-white transition-colors cursor-pointer min-h-[36px] items-center"
                 title="Simulate Free Guest View"
               >
                 Test Free User View
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={handleActivateTestAccess}
-                className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-black text-[11px] font-mono font-bold transition-all shadow-[0_0_12px_rgba(245,158,11,0.3)] cursor-pointer flex items-center gap-1"
+                className="px-2.5 py-1.5 sm:py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-black text-[10.5px] sm:text-[11px] font-mono font-bold transition-all shadow-[0_0_12px_rgba(245,158,11,0.3)] cursor-pointer flex items-center gap-1 whitespace-nowrap min-h-[40px] sm:min-h-[36px]"
                 title="Activate test passkey PATRON-TEST-ACCESS"
               >
-                <span>🧪 TEST PASSKEY</span>
+                <span>🧪 <span className="hidden xs:inline">TEST </span>PASSKEY</span>
               </button>
 
               <button
@@ -715,10 +715,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   setUpgradeModalReason('Unlock 1-click downloads for all 4K wallpapers, DAW templates & stems.');
                   setIsUpgradeModalOpen(true);
                 }}
-                className="px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black text-[11px] font-mono font-bold transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] cursor-pointer flex items-center gap-1"
+                className="px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black text-[10.5px] sm:text-[11px] font-mono font-bold transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] cursor-pointer flex items-center gap-1 whitespace-nowrap min-h-[40px] sm:min-h-[36px]"
               >
-                <Sparkles className="w-3 h-3 text-black" />
-                <span>UPGRADE €5/MO</span>
+                <Sparkles className="w-3 h-3 text-black shrink-0" />
+                <span>UPGRADE €5<span className="hidden xs:inline">/MO</span></span>
               </button>
             </div>
           )}
@@ -726,7 +726,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
       </header>
 
       {/* Futuristic Multi-Hub Navigation Sub-Bar */}
-      <nav className="relative z-20 w-full bg-[#04070e]/95 border-b border-white/10 px-3 sm:px-6 py-2 overflow-x-auto no-scrollbar shrink-0 shadow-lg">
+      <nav className="relative z-20 w-full bg-[#04070e]/95 border-b border-white/10 px-3 sm:px-6 py-2 overflow-x-auto no-scrollbar scroll-smooth shrink-0 shadow-lg" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-3 min-w-max">
           {[
             { id: 'downloads', label: 'Asset & Download Vault', icon: FolderDown, count: '4' },
@@ -746,7 +746,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   setActiveSection(tab.id as CreativeHubSection);
                   soundManager.playTone(580, 0.05);
                 }}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap min-h-[44px] ${
                   isActive
                     ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(56,189,248,0.35)] font-bold scale-[1.02]'
                     : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/5'
@@ -930,8 +930,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     </div>
 
                     {/* Bottom Action Footer */}
-                    <div className="p-5 sm:p-6 pt-0 mt-auto flex items-center justify-between gap-3 border-t border-white/5">
-                      <span className="text-[10.5px] font-mono text-white/40 truncate">
+                    <div className="p-4 sm:p-6 pt-0 mt-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-white/5">
+                      <span className="text-[10.5px] font-mono text-white/40 truncate text-center sm:text-left">
                         {asset.fileName}
                       </span>
 
@@ -942,7 +942,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                             setUpgradeModalReason(`Unlock direct download for ${asset.title}.`);
                             setIsUpgradeModalOpen(true);
                           }}
-                          className="px-4 py-2.5 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 hover:text-white hover:bg-cyan-900 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                          className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 hover:text-white hover:bg-cyan-900 text-xs font-mono font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                         >
                           <Lock className="w-3.5 h-3.5 text-cyan-400" />
                           <span>UNLOCK (€5/MO)</span>
@@ -951,7 +951,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         <button
                           type="button"
                           onClick={() => handleDownloadAsset(asset, index)}
-                          className="px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] hover:scale-[1.02] cursor-pointer flex items-center gap-2"
+                          className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-2"
                         >
                           <Download className="w-3.5 h-3.5 text-black" />
                           <span>
@@ -1021,8 +1021,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                       />
 
                       {/* Sci-Fi HUD Overlay */}
-                      <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-between pointer-events-none">
-                        <div className="flex items-center justify-between text-xs font-mono text-purple-300">
+                      <div className="absolute inset-0 p-3 sm:p-6 flex flex-col justify-between pointer-events-none">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-xs font-mono text-purple-300">
                           <span className="bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-purple-500/30">
                             {wf.toolstack}
                           </span>
@@ -1031,11 +1031,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between text-xs font-mono text-cyan-300">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-xs font-mono text-cyan-300">
                           <span className="bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg">
                             ENGINE: {wf.metrics.engine} · RES: {wf.metrics.resolution}
                           </span>
-                          <span className="text-[10px] font-bold tracking-wider text-purple-400">
+                          <span className="text-[9.5px] sm:text-[10px] font-bold tracking-wider text-purple-400 hidden xs:inline">
                             SILLOW MILL CREATIVE LAB
                           </span>
                         </div>
@@ -1142,7 +1142,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           </div>
 
                           {/* Comment Input Box (Free for everyone to ask!) */}
-                          <div className="flex gap-2 pt-2 border-t border-white/10">
+                          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/10">
                             <input
                               type="text"
                               value={workflowCommentInputs[wf.id] || ''}
@@ -1150,12 +1150,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                                 setWorkflowCommentInputs({ ...workflowCommentInputs, [wf.id]: e.target.value })
                               }
                               placeholder={`Ask director/artist a question about ${wf.title}...`}
-                              className="flex-1 bg-black/60 border border-white/15 focus:border-purple-400 rounded-xl px-3.5 py-2 text-xs text-white outline-none font-sans"
+                              className="flex-1 min-h-[44px] bg-black/60 border border-white/15 focus:border-purple-400 rounded-xl px-3.5 py-2 text-xs text-white outline-none font-sans"
                             />
                             <button
                               type="button"
                               onClick={() => handleAddWorkflowComment(wf.id)}
-                              className="px-4 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-black font-mono font-bold text-xs transition-colors cursor-pointer"
+                              className="w-full sm:w-auto min-h-[44px] px-5 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-black font-mono font-bold text-xs transition-colors cursor-pointer flex items-center justify-center"
                             >
                               Send
                             </button>
@@ -1270,8 +1270,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 </div>
 
                 {/* Theater Controls Bar */}
-                <div className="p-4 rounded-xl bg-black/60 border border-white/10 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
+                <div className="p-4 rounded-xl bg-black/60 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="min-w-0 w-full sm:w-auto">
                     <h3 className="text-sm font-display font-bold text-white truncate">
                       {visualizerTracks[activeVisualizerTrack].title}
                     </h3>
@@ -1280,11 +1280,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                     <button
                       type="button"
                       onClick={() => setIsTheaterMuted(!isTheaterMuted)}
-                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white cursor-pointer"
+                      className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
                     >
                       {isTheaterMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
                     </button>
@@ -1418,7 +1418,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-2 border-t border-white/10">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10">
                 <input
                   type="file"
                   ref={discussionFileInputRef}
@@ -1437,16 +1437,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 <button
                   type="button"
                   onClick={() => discussionFileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
+                  className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
                 >
-                  <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+                  <ImageIcon className="w-4 h-4 text-cyan-400" />
                   <span>Attach Image</span>
                 </button>
 
                 <button
                   type="submit"
                   disabled={!discussionInput.trim() && !discussionImage}
-                  className="px-5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-30 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5"
+                  className="min-h-[44px] px-5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-30 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>POST TRANSMISSION</span>
@@ -1500,11 +1500,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   )}
 
                   {/* Like & Reply Bar */}
-                  <div className="pt-2 flex items-center gap-3">
+                  <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
                     <button
                       type="button"
                       onClick={() => handleToggleDiscussionLike(post.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
+                      className={`min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
                         post.hasLiked
                           ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold'
                           : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
@@ -1517,7 +1517,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     <button
                       type="button"
                       onClick={() => setActiveReplyPost(post)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
+                      className="min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
                       <span>{post.replies.length} Replies</span>
@@ -1689,12 +1689,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
       {/* ======================================================== */}
       <AnimatePresence>
         {isUpgradeModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto">
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              className="relative w-full max-w-lg bg-[#060a12] border border-cyan-500/40 rounded-2xl p-6 sm:p-8 shadow-[0_0_60px_rgba(56,189,248,0.25)] space-y-5 overflow-hidden"
+              className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[#060a12] border border-cyan-500/40 rounded-2xl p-5 sm:p-8 shadow-[0_0_60px_rgba(56,189,248,0.25)] space-y-5 my-auto"
             >
               <div className="absolute top-0 right-0 w-44 h-44 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -1753,7 +1753,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   type="button"
                   disabled={isSubscribing}
                   onClick={handleStripeUpgrade}
-                  className="w-full py-3.5 px-4 rounded-xl font-mono text-sm font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full min-h-[48px] py-3.5 px-4 rounded-xl font-mono text-sm font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   <CreditCard className="w-4 h-4 text-black" />
                   <span>{isSubscribing ? 'INITIALIZING STRIPE...' : 'ACTIVATE MEMBERSHIP FOR €5/MONTH'}</span>
