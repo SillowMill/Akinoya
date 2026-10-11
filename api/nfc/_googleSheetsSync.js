@@ -120,8 +120,12 @@ export async function syncPassClaimToGoogleSheets(passId, holderName, holderEmai
       valueInputOption: 'USER_ENTERED',
       data: [
         {
-          range: `Blad1!C${targetRow}:D${targetRow}`,
-          values: [[cleanName, cleanEmail]],
+          range: `Blad1!C${targetRow}`,
+          values: [[cleanName]],
+        },
+        {
+          range: `Blad1!D${targetRow}`,
+          values: [[cleanEmail || '']],
         },
         {
           range: `Blad1!F${targetRow}`,
