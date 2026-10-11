@@ -77,12 +77,14 @@ async function getAccessToken() {
 }
 
 /**
- * Updates Column C (Holder Name) and Column E (Status = "Claimed") for a claimed pass in Google Sheets.
+ * Updates Column C (Holder Name), Column D (Holder Email), and Column F (Status = "Claimed") for a claimed pass in Google Sheets.
+ * Leaves Column E (NFC Target URL) and Column G (Notes) intact.
  */
-export async function syncPassClaimToGoogleSheets(passId, holderName) {
+export async function syncPassClaimToGoogleSheets(passId, holderName, holderEmail = '') {
   try {
     const cleanId = String(passId || '').trim().toUpperCase().replace(/^#/, '');
     const cleanName = String(holderName || '').trim();
+    const cleanEmail = String(holderEmail || '').trim();
 
     if (!cleanId || !cleanName) return { success: false, reason: 'MISSING_DATA' };
 
@@ -111,17 +113,19 @@ export async function syncPassClaimToGoogleSheets(passId, holderName) {
       return { success: false, reason: 'NO_TOKEN' };
     }
 
+    const statusVal = targetRow === 2 ? 'Active / Primary Key' : 'Claimed';
+
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`;
     const payload = {
       valueInputOption: 'USER_ENTERED',
       data: [
         {
-          range: `Blad1!C${targetRow}`,
-          values: [[cleanName]],
+          range: `Blad1!C${targetRow}:D${targetRow}`,
+          values: [[cleanName, cleanEmail]],
         },
         {
-          range: `Blad1!E${targetRow}`,
-          values: [['Claimed']],
+          range: `Blad1!F${targetRow}`,
+          values: [[statusVal]],
         },
       ],
     };

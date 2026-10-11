@@ -99,7 +99,7 @@ function createDefaultPassRecord(tokenId) {
     coordinates: "RA 04h 35m / +16° 30'",
     status: isMaster ? 'MASTER FOUNDER ORIGINAL' : 'UNASSIGNED / READY TO CLAIM',
     ownerName: isMaster ? 'Odi Selis' : '',
-    ownerEmail: isMaster ? 'odi.selis3@gmail.com' : null,
+    ownerEmail: isMaster ? 'Odi@sillowmill.com' : null,
     isClaimed: isMaster,
     registeredAt: isMaster ? '2026-10-09T00:00:00.000Z' : null,
     certificate: isMaster
@@ -190,6 +190,7 @@ export function getPassRecord(tokenId) {
   const pass = _store.passes[normalized];
   if (normalized === 'AKN-VIP-2027-X0914') {
     pass.ownerName = 'Odi Selis';
+    pass.ownerEmail = 'Odi@sillowmill.com';
     pass.isClaimed = true;
     pass.status = 'MASTER FOUNDER ORIGINAL';
     if (!pass.certificate) {
@@ -358,10 +359,10 @@ export async function registerPassHolder(tokenId, ownerName, ownerEmail, deviceI
 
   saveStore();
 
-  // Dynamically sync to Google Sheets (Column C = Holder Name, Column E = "Claimed")
+  // Dynamically sync to Google Sheets (Column C = Holder Name, Column D = Holder Email, Column F = "Claimed")
   try {
     const { syncPassClaimToGoogleSheets } = await import('./_googleSheetsSync.js');
-    await syncPassClaimToGoogleSheets(pass.normalizedId, cleanName);
+    await syncPassClaimToGoogleSheets(pass.normalizedId, cleanName, cleanEmail || '');
   } catch (err) {
     console.warn('[Register] Google Sheets auto-sync notice:', err);
   }
