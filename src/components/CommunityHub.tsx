@@ -42,6 +42,9 @@ import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import moodboardImg from '../assets/images/Mood.png';
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME, BINGAA_COVER_URL, BINGAA_COVER_FILENAME } from '../utils/certificate';
 
+export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
+export const isMembershipLaunchLocked = new Date() < MEMBERSHIP_LAUNCH_DATE;
+
 export type CreativeHubSection = 'downloads' | 'workflows' | 'visualizer' | 'discussion' | 'governance';
 
 interface AssetVaultItem {
@@ -443,6 +446,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
 
   // Stripe Checkout Handler for €5/Month
   const handleStripeUpgrade = async () => {
+    if (isMembershipLaunchLocked) {
+      soundManager.playTone(330, 0.08);
+      alert('Community membership pass public checkout launches on 09/01/2027. Use test passkey PATRON-TEST-ACCESS for instant full preview.');
+      return;
+    }
     setIsSubscribing(true);
     soundManager.playTone(660, 0.08);
 
@@ -1759,12 +1767,26 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
               <div className="space-y-3 pt-2">
                 <button
                   type="button"
-                  disabled={isSubscribing}
+                  disabled={isMembershipLaunchLocked || isSubscribing}
                   onClick={handleStripeUpgrade}
-                  className="w-full min-h-[48px] py-3.5 px-4 rounded-xl font-mono text-sm font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                  className={
+                    isMembershipLaunchLocked
+                      ? "w-full min-h-[48px] py-3.5 px-4 rounded-xl font-mono text-sm font-semibold text-amber-300/80 bg-amber-950/40 border border-amber-500/30 cursor-not-allowed flex items-center justify-center gap-2 select-none opacity-85"
+                      : "w-full min-h-[48px] py-3.5 px-4 rounded-xl font-mono text-sm font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                  }
                 >
-                  <CreditCard className="w-4 h-4 text-black" />
-                  <span>{isSubscribing ? 'INITIALIZING STRIPE...' : 'ACTIVATE MEMBERSHIP FOR €5/MONTH'}</span>
+                  {isMembershipLaunchLocked ? (
+                    <Lock className="w-4 h-4 text-amber-400/80" />
+                  ) : (
+                    <CreditCard className="w-4 h-4 text-black" />
+                  )}
+                  <span>
+                    {isMembershipLaunchLocked
+                      ? '🔒 LAUNCHES 09/01/2027 — €5/MONTH'
+                      : isSubscribing
+                      ? 'INITIALIZING STRIPE...'
+                      : 'ACTIVATE MEMBERSHIP FOR €5/MONTH'}
+                  </span>
                 </button>
 
                 <div className="text-center">

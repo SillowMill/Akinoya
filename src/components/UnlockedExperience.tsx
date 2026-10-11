@@ -63,6 +63,8 @@ import { CommunityAuthModal } from './CommunityAuthModal';
 const BingaaComicReader = lazy(() => import('./BingaaComicReader'));
 
 export const FOUNDING_PASS_ID = 'AKN-VIP-2027-X0914';
+export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
+export const isMembershipLaunchLocked = new Date() < MEMBERSHIP_LAUNCH_DATE;
 
 export interface VisualizerTrack {
   id: string;
@@ -199,6 +201,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         });
 
   const handlePerksStripeCheckout = async () => {
+    if (isMembershipLaunchLocked) {
+      soundManager.playTone(330, 0.08);
+      return;
+    }
     setIsSubscribing(true);
     soundManager.playTone(660, 0.08);
 
@@ -960,12 +966,27 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                         <button
                           type="button"
-                          disabled={isSubscribing}
+                          disabled={isMembershipLaunchLocked || isSubscribing}
                           onClick={handlePerksStripeCheckout}
-                          className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
+                          title={isMembershipLaunchLocked ? 'Membership pass opens January 9, 2027' : undefined}
+                          className={
+                            isMembershipLaunchLocked
+                              ? 'inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-semibold text-amber-300/80 bg-amber-950/30 border border-amber-500/30 cursor-not-allowed min-h-[44px] shadow-[0_0_12px_rgba(245,158,11,0.08)] select-none opacity-85'
+                              : 'inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]'
+                          }
                         >
-                          <CreditCard className="w-4 h-4 text-black shrink-0" />
-                          <span>{isSubscribing ? 'INITIALIZING STRIPE...' : 'ACCESS NOW — €5/MONTH'}</span>
+                          {isMembershipLaunchLocked ? (
+                            <Lock className="w-4 h-4 text-amber-400/80 shrink-0" />
+                          ) : (
+                            <CreditCard className="w-4 h-4 text-black shrink-0" />
+                          )}
+                          <span>
+                            {isMembershipLaunchLocked
+                              ? '🔒 LAUNCHES 09/01/2027 — €5/MONTH'
+                              : isSubscribing
+                              ? 'INITIALIZING STRIPE...'
+                              : 'ACCESS NOW — €5/MONTH'}
+                          </span>
                         </button>
 
                         <button
