@@ -24,6 +24,8 @@ interface PassRecord {
   status: string;
   ownerName: string;
   ownerEmail: string | null;
+  isClaimed?: boolean;
+  certificate?: any;
   registeredAt: string | null;
   boundDeviceId: string | null;
   lastCounter: number;
@@ -114,6 +116,7 @@ function deriveEdition(tokenId: string): { edition: string; editionNumber: numbe
 function createDefaultPassRecord(tokenId: string): PassRecord {
   const normalized = normalizeTokenId(tokenId);
   const { edition, editionNumber } = deriveEdition(normalized);
+  const isMaster = normalized === 'AKN-VIP-2027-X0914';
 
   return {
     tokenId: `#${normalized}`,
@@ -123,10 +126,26 @@ function createDefaultPassRecord(tokenId: string): PassRecord {
     origin: 'Genesis Archive (Leuven Origin)',
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
-    status: 'VERIFIED ORIGINAL / FOUNDING HOLDER',
-    ownerName: 'Founding Holder',
-    ownerEmail: null,
-    registeredAt: null,
+    status: isMaster ? 'MASTER FOUNDER ORIGINAL' : 'UNASSIGNED / READY TO CLAIM',
+    ownerName: isMaster ? 'Odi Selis' : '',
+    ownerEmail: isMaster ? 'odi.selis3@gmail.com' : null,
+    isClaimed: isMaster,
+    registeredAt: isMaster ? '2026-10-09T00:00:00.000Z' : null,
+    certificate: isMaster
+      ? {
+          certificateId: 'COA-BNG1-001-FOUNDER',
+          title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
+          passId: 'AKN-VIP-2027-X0914',
+          holderName: 'Odi Selis',
+          editionNumber: 1,
+          editionTotal: 100,
+          status: 'MASTER FOUNDER ORIGINAL',
+          emailVerified: true,
+          claimedAt: '2026-10-09T00:00:00.000Z',
+          signatureAlgorithm: 'HMAC-SHA256',
+          signature: 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637',
+        }
+      : null,
     boundDeviceId: null,
     lastCounter: 0,
     usedEncSignatures: [],
@@ -202,7 +221,34 @@ export function getPassRecord(tokenId: string): PassRecord {
     _store.passes[normalized] = createDefaultPassRecord(normalized);
     saveStore();
   }
-  return _store.passes[normalized];
+  const pass = _store.passes[normalized];
+  if (normalized === 'AKN-VIP-2027-X0914') {
+    pass.ownerName = 'Odi Selis';
+    pass.isClaimed = true;
+    pass.status = 'MASTER FOUNDER ORIGINAL';
+    if (!pass.certificate) {
+      pass.certificate = {
+        certificateId: 'COA-BNG1-001-FOUNDER',
+        title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
+        passId: 'AKN-VIP-2027-X0914',
+        holderName: 'Odi Selis',
+        editionNumber: 1,
+        editionTotal: 100,
+        status: 'MASTER FOUNDER ORIGINAL',
+        emailVerified: true,
+        claimedAt: '2026-10-09T00:00:00.000Z',
+        signatureAlgorithm: 'HMAC-SHA256',
+        signature: 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637',
+      };
+    }
+  } else if (pass.ownerName === 'Founding Holder' || (!pass.isClaimed && !pass.registeredAt)) {
+    pass.ownerName = pass.isClaimed ? pass.ownerName : '';
+    pass.isClaimed = Boolean(pass.isClaimed && pass.ownerName);
+    if (!pass.isClaimed) {
+      pass.status = 'UNASSIGNED / READY TO CLAIM';
+    }
+  }
+  return pass;
 }
 
 // ─── NXP NTAG 424 DNA Dynamic URL Encryption & Validation ───────────────────
@@ -224,7 +270,7 @@ export function verifyDnaCipher(
   if (!enc || !enc.trim()) {
     return {
       valid: true,
-      status: 'VERIFIED ORIGINAL / FOUNDING HOLDER',
+      status: pass.status,
       message: 'Founding Pass record verified in Äkinoya Genesis whitelist.',
       counter: pass.lastCounter,
     };
@@ -349,27 +395,46 @@ export function generateAuthenticDnaCipher(
 }
 
 // ─── Holder Registration Protocol ───────────────────────────────────────────
-export function registerPassHolder(
+export async function registerPassHolder(
   tokenId: string,
   ownerName: string,
   ownerEmail?: string,
   deviceId?: string
-): { success: boolean; pass: PassRecord; message: string } {
+): Promise<{ success: boolean; pass: PassRecord; certificate?: any; message: string }> {
   loadStore();
   const pass = getPassRecord(tokenId);
+  const cleanName = ownerName ? ownerName.trim() : '';
+  const cleanEmail = ownerEmail ? ownerEmail.trim().toLowerCase() : null;
 
-  pass.ownerName = ownerName.trim() || 'Founding Holder';
-  pass.ownerEmail = ownerEmail ? ownerEmail.trim().toLowerCase() : null;
+  pass.ownerName = cleanName;
+  pass.ownerEmail = cleanEmail;
+  pass.isClaimed = true;
+  pass.status = 'CLAIMED / OFFICIALLY VERIFIED';
   pass.registeredAt = new Date().toISOString();
   if (deviceId) {
     pass.boundDeviceId = deviceId;
   }
 
+  try {
+    const { issueCertificate } = await import('../../api/nfc/_certificateService.js');
+    pass.certificate = issueCertificate(pass.normalizedId, cleanName, Boolean(cleanEmail));
+  } catch (err) {
+    console.warn('[Register] Error issuing certificate:', err);
+  }
+
   saveStore();
+
+  try {
+    const { syncPassClaimToGoogleSheets } = await import('../../api/nfc/_googleSheetsSync.js');
+    await syncPassClaimToGoogleSheets(pass.normalizedId, cleanName);
+  } catch (err) {
+    console.warn('[Register] Google Sheets auto-sync notice:', err);
+  }
 
   return {
     success: true,
     pass,
+    certificate: pass.certificate,
     message: `Pass #${pass.normalizedId} registered to ${pass.ownerName}.`,
   };
 }

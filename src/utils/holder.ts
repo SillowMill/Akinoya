@@ -46,19 +46,33 @@ export const setExplicitVipRouteActive = (active: boolean): void => {
 export const sanitizeHolderName = (name: string): string =>
   name.replace(/\s+/g, ' ').trim().slice(0, HOLDER_NAME_MAX_LENGTH);
 
-export const getHolderName = (): string => {
+export const getHolderName = (passId?: string): string => {
   if (typeof window === 'undefined') return '';
+  const cleanId = (passId || '').trim().toUpperCase().replace(/^#/, '');
+  if (cleanId === 'AKN-VIP-2027-X0914') {
+    return 'Odi Selis';
+  }
   try {
+    if (cleanId) {
+      const perPass = localStorage.getItem(`akinoya_holder_name_${cleanId}`);
+      if (perPass) return sanitizeHolderName(perPass);
+      return '';
+    }
     return sanitizeHolderName(localStorage.getItem(HOLDER_NAME_KEY) || '');
   } catch {
     return '';
   }
 };
 
-export const saveHolderName = (name: string): string => {
+export const saveHolderName = (name: string, passId?: string): string => {
   const clean = sanitizeHolderName(name);
   if (typeof window === 'undefined' || !clean) return clean;
+  const cleanId = (passId || '').trim().toUpperCase().replace(/^#/, '');
   try {
+    if (cleanId) {
+      localStorage.setItem(`akinoya_holder_name_${cleanId}`, clean);
+      sessionStorage.setItem(`akinoya_holder_name_${cleanId}`, clean);
+    }
     localStorage.setItem(HOLDER_NAME_KEY, clean);
     sessionStorage.setItem(HOLDER_NAME_KEY, clean);
   } catch {
@@ -69,18 +83,19 @@ export const saveHolderName = (name: string): string => {
 };
 
 /** Reactive hook: re-renders when the holder name changes (same tab or other tabs). */
-export const useHolderName = (): string => {
-  const [name, setName] = useState<string>(() => getHolderName());
+export const useHolderName = (passId?: string): string => {
+  const [name, setName] = useState<string>(() => getHolderName(passId));
 
   useEffect(() => {
-    const sync = () => setName(getHolderName());
+    const sync = () => setName(getHolderName(passId));
+    sync();
     window.addEventListener(HOLDER_EVENT, sync);
     window.addEventListener('storage', sync);
     return () => {
       window.removeEventListener(HOLDER_EVENT, sync);
       window.removeEventListener('storage', sync);
     };
-  }, []);
+  }, [passId]);
 
   return name;
 };

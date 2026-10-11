@@ -276,7 +276,7 @@ apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<voi
     return;
   }
 
-  const result = registerPassHolder(token, ownerName, ownerEmail, deviceId);
+  const result = await registerPassHolder(token, ownerName, ownerEmail, deviceId);
   res.status(200).json(result);
 });
 

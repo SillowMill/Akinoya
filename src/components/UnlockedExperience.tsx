@@ -53,6 +53,7 @@ import {
   downloadCertificatePng,
   normalizePassId,
   useCertificate,
+  getMasterCertificate,
   BingaaCertificate,
 } from '../utils/certificate';
 import { CertificateOfAuthenticity } from './CertificateOfAuthenticity';
@@ -163,13 +164,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   onNavigateToPassport,
 }) => {
   const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'assets'>('pass');
-  const holderName = useHolderName();
   const isVipMode = Boolean(isVip);
   const [passSubView, setPassSubView] = useState<'overview' | 'hub'>('overview');
 
   // Verified holder assets: active pass is the NFC-bound token for this device session
   const { nfcToken } = useVipAccess();
   const activePassId = isValidPassId(nfcToken) ? normalizePassId(nfcToken) : FOUNDING_PASS_ID;
+  const holderName = useHolderName(activePassId);
+  const isMaster = activePassId === 'AKN-VIP-2027-X0914';
   const activeEditionNumber = deriveEditionNumber(activePassId);
   const editionDisplay = activeEditionNumber;
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -178,19 +180,23 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const bingaaCertificate = useCertificate(activePassId);
 
   // Human Certification Protocol active: certified directly for VIP holders
-  const activeCertificate: BingaaCertificate = bingaaCertificate || {
-    certificateId: `AKN-COA-${String(activeEditionNumber).padStart(4, '0')}`,
-    title: 'Bingäa Issue #1 — Certificate of Authenticity',
-    passId: activePassId,
-    holderName: holderName || 'Founding VIP Member',
-    editionNumber: activeEditionNumber,
-    editionTotal: TOTAL_EDITION_LIMIT,
-    status: 'ACTIVE_VERIFIED',
-    emailVerified: true,
-    claimedAt: '2026-10-09T00:00:00.000Z',
-    signatureAlgorithm: 'HMAC-SHA256-DETERMINISTIC',
-    signature: 'Sillow Mill · Creative Syndicate',
-  };
+  const activeCertificate: BingaaCertificate =
+    bingaaCertificate ||
+    (isMaster
+      ? getMasterCertificate()
+      : {
+          certificateId: `COA-BNG1-${String(activeEditionNumber).padStart(3, '0')}-VERIFIED`,
+          title: 'Bingäa Issue #1 — Certificate of Authenticity',
+          passId: activePassId,
+          holderName: holderName || 'Founding VIP Member',
+          editionNumber: activeEditionNumber,
+          editionTotal: TOTAL_EDITION_LIMIT,
+          status: 'ACTIVE_VERIFIED',
+          emailVerified: true,
+          claimedAt: '2026-10-09T00:00:00.000Z',
+          signatureAlgorithm: 'HMAC-SHA256-DETERMINISTIC',
+          signature: 'Sillow Mill · Creative Syndicate',
+        });
 
   const handlePerksStripeCheckout = async () => {
     setIsSubscribing(true);

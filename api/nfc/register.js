@@ -105,7 +105,7 @@ export default async function handler(req, res) {
     );
   }
 
-  const result = registerPassHolder(token, ownerName, ownerEmail, deviceId);
+  const result = await registerPassHolder(token, ownerName, ownerEmail, deviceId);
   res.statusCode = 200;
   return res.end(JSON.stringify(result));
 }
