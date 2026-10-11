@@ -12,17 +12,10 @@ interface CommunityAuthModalProps {
   onSuccess: (token?: string) => void;
 }
 
-export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = ({
-  isOpen,
-  onClose,
-  onSuccess,
-}) => {
-  const [activeTab, setActiveTab] = useState<'key' | 'magic' | 'google'>('key');
-  const [accessKey, setAccessKey] = useState('');
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+export const CommunityAuthModal: React.FC<CommunityAuthModalProps> = () => {
+  // Disabled until launch on 09/01/2027 (Strict Preview-Only Mode)
+  return null;
+};
 
   // 1. Access Key Authentication
   const handleKeySubmit = (e: React.FormEvent) => {

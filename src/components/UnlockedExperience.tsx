@@ -57,7 +57,6 @@ import {
   BingaaCertificate,
 } from '../utils/certificate';
 import { CertificateOfAuthenticity } from './CertificateOfAuthenticity';
-import { CommunityAuthModal } from './CommunityAuthModal';
 
 // pdf.js is heavy — only fetch the reader chunk when a verified holder opens the comic
 const BingaaComicReader = lazy(() => import('./BingaaComicReader'));
@@ -987,15 +986,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               ? 'INITIALIZING STRIPE...'
                               : 'ACCESS NOW — €5/MONTH'}
                           </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setIsAuthModalOpen(true)}
-                          className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.1)] hover:scale-[1.01]"
-                        >
-                          <Key className="w-4 h-4 text-cyan-400 shrink-0" />
-                          <span>ENTER ACCESS KEY / SIGN IN</span>
                         </button>
                       </div>
                     </div>
@@ -2139,19 +2129,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Community Auth / Dual-Login Modal */}
-      <CommunityAuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={(token) => {
-          if (onNavigateToVerify) {
-            onNavigateToVerify(token);
-          } else {
-            sessionStorage.setItem('akinoya_vip_token', token || FOUNDING_PASS_ID);
-            window.location.href = `/verify/${token || FOUNDING_PASS_ID}`;
-          }
-        }}
-      />
+
 
       {/* Comic Reader modal (accessible to all visitors; verified holders get 32 pages, public visitors get 2-page preview + whitelist lock) */}
       {showComicReader && (

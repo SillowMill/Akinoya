@@ -129,29 +129,8 @@ interface CommunityHubProps {
 }
 
 export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpenAuthModal }) => {
-  // Authentication & Patron State
-  const [isPatron, setIsPatron] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const isParamPatron =
-        urlParams.get('membership_unlocked') === 'true' ||
-        urlParams.get('pass')?.toUpperCase().includes('PATRON') ||
-        urlParams.get('token')?.toUpperCase().includes('PATRON');
-
-      if (isParamPatron) {
-        sessionStorage.setItem('akinoya_is_patron', 'true');
-        sessionStorage.setItem('akinoya_patron_token', 'PATRON-TEST-ACCESS');
-        return true;
-      }
-
-      return (
-        sessionStorage.getItem('akinoya_is_patron') === 'true' ||
-        sessionStorage.getItem('akinoya_patron_token') === 'PATRON-TEST-ACCESS' ||
-        Boolean(sessionStorage.getItem('akinoya_vip_token'))
-      );
-    }
-    return false;
-  });
+  // Authentication & Patron State (Strict Preview-Only Mode until 09/01/2027)
+  const [isPatron, setIsPatron] = useState<boolean>(false);
 
   const [patronName, setPatronName] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -420,35 +399,20 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     },
   ]);
 
-  // Test Access Activator
+  // Test Access Activator (Disabled in preview-only mode)
   const handleActivateTestAccess = () => {
-    soundManager.playUnlockChime();
-    sessionStorage.setItem('akinoya_is_patron', 'true');
-    sessionStorage.setItem('akinoya_patron_token', 'PATRON-TEST-ACCESS');
-    sessionStorage.setItem('akinoya_patron_name', 'Patron Member #042');
-    sessionStorage.setItem('akinoya_patron_role', 'PATRON MEMBER');
-    setIsPatron(true);
-    setPatronName('Patron Member #042');
-    setIsUpgradeModalOpen(false);
+    soundManager.playTone(330, 0.08);
   };
 
   const handleToggleGuestMode = () => {
-    soundManager.playTone(450, 0.08);
-    if (isPatron) {
-      sessionStorage.removeItem('akinoya_is_patron');
-      sessionStorage.removeItem('akinoya_patron_token');
-      setIsPatron(false);
-      setPatronName('Guest Member');
-    } else {
-      handleActivateTestAccess();
-    }
+    soundManager.playTone(330, 0.08);
   };
 
   // Stripe Checkout Handler for €5/Month
   const handleStripeUpgrade = async () => {
     if (isMembershipLaunchLocked) {
       soundManager.playTone(330, 0.08);
-      alert('Community membership pass public checkout launches on 09/01/2027. Use test passkey PATRON-TEST-ACCESS for instant full preview.');
+      alert('Community membership pass public checkout launches on 09/01/2027.');
       return;
     }
     setIsSubscribing(true);
@@ -483,56 +447,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     }
   };
 
-  // Trigger Asset Download or Open Freemium Paywall
-  const handleDownloadAsset = (asset: AssetVaultItem, index: number) => {
-    if (!isPatron) {
-      // Freemium Paywall: Free sample preview permits viewing, but downloading requires €5/month pass
-      soundManager.playTone(480, 0.08);
-      setUpgradeModalReason(
-        `Activate the Sillow Mill Creative Vault membership for €5/month to download ${asset.title}.`
-      );
-      setIsUpgradeModalOpen(true);
-      return;
-    }
-
-    // Paid Patron 1-click download
-    soundManager.playUnlockChime();
-    setDownloadToast(`Downloading: ${asset.fileName}`);
-
-    if (asset.downloadUrl.startsWith('/assets/') || asset.downloadUrl.includes('jpg') || asset.downloadUrl.includes('png')) {
-      const link = document.createElement('a');
-      link.href = asset.downloadUrl;
-      link.download = asset.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      const blob = new Blob(
-        [
-          `SILLOW MILL CREATIVE VAULT · ASSET DOWNLOAD MANIFEST\n\n` +
-            `Asset Title: ${asset.title}\n` +
-            `Format: ${asset.fileFormat}\n` +
-            `Size: ${asset.fileSize}\n` +
-            `Patron Token: PATRON-AUTHENTICATED\n` +
-            `Timestamp: ${new Date().toISOString()}\n` +
-            `Verification: SHA256-DETERMINISTIC\n\n` +
-            `Your high-res audio stem, DAW template, and production archive is authenticated.`,
-        ],
-        { type: 'text/plain' }
-      );
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = asset.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
-
-    setTimeout(() => {
-      setDownloadToast(null);
-    }, 4500);
+  // Trigger Asset Download (Disabled in preview-only mode until 09/01/2027)
+  const handleDownloadAsset = (asset: AssetVaultItem, _index: number) => {
+    soundManager.playTone(330, 0.08);
+    setUpgradeModalReason(
+      `Downloads are disabled in preview-only mode. Public membership and full asset downloads unlock on 09/01/2027.`
+    );
+    setIsUpgradeModalOpen(true);
   };
 
   // Toggle Audio Play in Vault
@@ -697,47 +618,17 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
           </div>
         </div>
 
-        {/* Right Status Actions & Freemium Controls */}
+        {/* Right Status Actions: Locked Membership Badge until launch 09/01/2027 */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {isPatron ? (
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 sm:py-1 rounded-lg bg-emerald-950/80 border border-emerald-400/40 text-[10.5px] font-mono text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)] whitespace-nowrap min-h-[44px]">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="font-bold">PATRON ACTIVE</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleToggleGuestMode}
-                className="hidden md:inline-flex px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-mono text-white/50 hover:text-white transition-colors cursor-pointer min-h-[44px] items-center"
-                title="Simulate Free Guest View"
-              >
-                Test Free User View
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <button
-                type="button"
-                onClick={handleActivateTestAccess}
-                className="px-2.5 py-1.5 sm:py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-black text-[10.5px] sm:text-[11px] font-mono font-bold transition-all shadow-[0_0_12px_rgba(245,158,11,0.3)] cursor-pointer flex items-center gap-1 whitespace-nowrap min-h-[44px]"
-                title="Activate test passkey PATRON-TEST-ACCESS"
-              >
-                <span>🧪 <span className="hidden xs:inline">TEST </span>PASSKEY</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setUpgradeModalReason('Unlock 1-click downloads for all 4K wallpapers, DAW templates & stems.');
-                  setIsUpgradeModalOpen(true);
-                }}
-                className="px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-black text-[10.5px] sm:text-[11px] font-mono font-bold transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] cursor-pointer flex items-center gap-1 whitespace-nowrap min-h-[44px]"
-              >
-                <Sparkles className="w-3 h-3 text-black shrink-0" />
-                <span>UPGRADE €5<span className="hidden xs:inline">/MO</span></span>
-              </button>
-            </div>
-          )}
+          <button
+            type="button"
+            disabled={true}
+            className="px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300/80 text-[10.5px] sm:text-[11px] font-mono font-semibold cursor-not-allowed flex items-center gap-1.5 whitespace-nowrap min-h-[44px] select-none opacity-85"
+            title="Public membership launches on 09/01/2027"
+          >
+            <Lock className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
+            <span>🔒 LAUNCHES 09/01/2027 — €5/MONTH</span>
+          </button>
         </div>
       </header>
 
@@ -815,19 +706,15 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 </p>
               </div>
 
-              {!isPatron && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUpgradeModalReason('Unlock 1-click downloads across the entire Asset Vault.');
-                    setIsUpgradeModalOpen(true);
-                  }}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-black text-xs font-mono font-bold shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-all cursor-pointer whitespace-nowrap flex items-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4 text-black" />
-                  <span>UNLOCK FULL VAULT — €5/MO</span>
-                </button>
-              )}
+              <button
+                type="button"
+                disabled={true}
+                className="px-4 py-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 text-xs font-mono font-semibold cursor-not-allowed whitespace-nowrap flex items-center gap-2 select-none opacity-85"
+                title="Full vault downloads launch on 09/01/2027"
+              >
+                <Lock className="w-4 h-4 text-amber-400/80" />
+                <span>🔒 LAUNCHES 09/01/2027 — €5/MONTH</span>
+              </button>
             </div>
 
             {/* Asset Grid: Large 16:9 Visual Preview Cards */}
@@ -847,9 +734,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         <img
                           src={asset.heroBannerUrl}
                           alt={asset.title}
-                          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-                            isLockedForUser ? 'blur-sm scale-105 opacity-60' : 'opacity-90'
-                          }`}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
                         />
 
                         {/* Top Badges Overlay */}
@@ -897,41 +782,15 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                             </div>
                           </div>
                         )}
-
-                        {/* Paywall Overlay for Locked Assets (Index > 0 for Free Users) */}
-                        {isLockedForUser && (
-                          <div className="absolute inset-0 z-20 backdrop-blur-md bg-black/60 flex flex-col items-center justify-center p-6 text-center">
-                            <div className="w-12 h-12 rounded-2xl bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(56,189,248,0.3)]">
-                              <Lock className="w-6 h-6 text-cyan-400" />
-                            </div>
-                            <span className="text-xs font-mono font-bold tracking-wider text-cyan-300 uppercase mb-1">
-                              PATRON EXCLUSIVE ASSET
-                            </span>
-                            <p className="text-xs text-white/70 max-w-xs mb-4 font-sans">
-                              Unlock 1-click downloads for full 96kHz stem archives, DAW templates, and 4K wallpapers.
-                            </p>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setUpgradeModalReason(`Unlock direct download for ${asset.title}.`);
-                                setIsUpgradeModalOpen(true);
-                              }}
-                              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.35)] cursor-pointer flex items-center justify-center"
-                            >
-                              [ 🔒 UNLOCK FULL VAULT — €5/MONTH ]
-                            </button>
-                          </div>
-                        )}
                       </div>
 
                       {/* Content Section below large preview */}
                       <div className="p-5 sm:p-6 space-y-2">
                         <div className="flex items-center gap-2">
-                          {isFreeSample && !isPatron && (
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold">
-                              FREE SAMPLE PREVIEW
-                            </span>
-                          )}
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-400/40 font-semibold tracking-wider flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
+                            READ-ONLY PREVIEW
+                          </span>
                           <span className="text-[11px] font-mono text-cyan-400 font-semibold">{asset.fileFormat}</span>
                         </div>
 
@@ -945,38 +804,21 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                       </div>
                     </div>
 
-                    {/* Bottom Action Footer */}
+                    {/* Bottom Action Footer: Disabled in Preview-Only Mode */}
                     <div className="p-4 sm:p-6 pt-0 mt-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-white/5">
                       <span className="text-[10.5px] font-mono text-white/40 truncate text-center sm:text-left">
                         {asset.fileName}
                       </span>
 
-                      {isLockedForUser ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUpgradeModalReason(`Unlock direct download for ${asset.title}.`);
-                            setIsUpgradeModalOpen(true);
-                          }}
-                          className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 hover:text-white hover:bg-cyan-900 text-xs font-mono font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <Lock className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>UNLOCK (€5/MO)</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadAsset(asset, index)}
-                          className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-2"
-                        >
-                          <Download className="w-3.5 h-3.5 text-black" />
-                          <span>
-                            {isPatron
-                              ? 'DOWNLOAD ASSET'
-                              : 'ACTIVATE MEMBERSHIP FOR €5/MONTH TO DOWNLOAD'}
-                          </span>
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        disabled={true}
+                        className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white/50 text-xs font-mono font-semibold cursor-not-allowed flex items-center justify-center gap-2 select-none"
+                        title="Downloads unlock on launch date: 09/01/2027"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
+                        <span>🔒 DOWNLOADS UNLOCK 09/01/2027</span>
+                      </button>
                     </div>
                   </div>
                 );
@@ -1057,50 +899,25 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         </div>
                       </div>
 
-                      {/* Paywall Overlay on subsequent workflows */}
-                      {isLockedForUser ? (
-                        <div className="absolute inset-0 z-20 backdrop-blur-md bg-black/65 flex flex-col items-center justify-center p-6 text-center">
-                          <div className="w-14 h-14 rounded-2xl bg-purple-950/80 border border-purple-400/40 flex items-center justify-center mb-3 shadow-[0_0_25px_rgba(168,85,247,0.3)]">
-                            <Lock className="w-7 h-7 text-purple-400" />
-                          </div>
-                          <span className="text-xs font-mono font-bold tracking-wider text-purple-300 uppercase mb-1">
-                            PATRON EXCLUSIVE WORKFLOW BREAKDOWN
-                          </span>
-                          <p className="text-xs text-white/70 max-w-sm mb-4 font-sans">
-                            Gain full access to the complete DAW project deconstructions and 3D node trees.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setUpgradeModalReason(`Unlock full workflow breakdown for ${wf.title}.`);
-                              setIsUpgradeModalOpen(true);
-                            }}
-                            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.35)] cursor-pointer flex items-center justify-center"
-                          >
-                            [ 🔒 UNLOCK FULL VAULT — €5/MONTH ]
-                          </button>
-                        </div>
-                      ) : (
                         <button
                           type="button"
                           onClick={() => soundManager.playTone(660, 0.08)}
                           className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-purple-500/80 hover:bg-purple-400 text-black flex items-center justify-center transition-transform hover:scale-110 shadow-[0_0_25px_rgba(168,85,247,0.5)] cursor-pointer z-10"
+                          title="Preview workflow breakdown"
                         >
                           <Play className="w-7 h-7 fill-black ml-1" />
                         </button>
-                      )}
-                    </div>
-
-                    {/* Content Section */}
-                    <div className="p-5 sm:p-6 space-y-3">
-                      <div className="flex items-center gap-2">
-                        {isFreeSample && !isPatron && (
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold">
-                            FREE SAMPLE BREAKDOWN
-                          </span>
-                        )}
-                        <span className="text-xs font-mono text-purple-300">{wf.toolstack}</span>
                       </div>
+
+                      {/* Content Section */}
+                      <div className="p-5 sm:p-6 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-400/40 font-semibold tracking-wider flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5 text-purple-400" />
+                            READ-ONLY WORKFLOW
+                          </span>
+                          <span className="text-xs font-mono text-purple-300">{wf.toolstack}</span>
+                        </div>
 
                       <h2 className="text-base sm:text-xl font-display font-bold text-white">
                         {wf.title}
@@ -1262,13 +1079,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                       </p>
                       <button
                         type="button"
-                        onClick={() => {
-                          setUpgradeModalReason('Unlock 4K theater player and full early-access animation sequences.');
-                          setIsUpgradeModalOpen(true);
-                        }}
-                        className="min-h-[44px] px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-black font-mono font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.3)] cursor-pointer flex items-center justify-center"
+                        disabled={true}
+                        className="min-h-[44px] px-4 py-2 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 font-mono font-semibold text-xs cursor-not-allowed flex items-center justify-center gap-1.5 opacity-85 select-none"
+                        title="Theater unlocks on 09/01/2027"
                       >
-                        [ UNLOCK THEATER — €5/MO ]
+                        <Lock className="w-3.5 h-3.5 text-amber-400/80" />
+                        <span>🔒 LAUNCHES 09/01/2027 — €5/MONTH</span>
                       </button>
                     </div>
                   ) : (
@@ -1628,13 +1444,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         </p>
                         <button
                           type="button"
-                          onClick={() => {
-                            setUpgradeModalReason('Unlock Council Ballot voting rights & physical merch whitelist.');
-                            setIsUpgradeModalOpen(true);
-                          }}
-                          className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-black font-mono font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.3)] cursor-pointer flex items-center justify-center"
+                          disabled={true}
+                          className="min-h-[44px] px-5 py-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 font-mono font-semibold text-xs cursor-not-allowed flex items-center justify-center gap-1.5 opacity-85 select-none"
+                          title="Voting unlocks on 09/01/2027"
                         >
-                          [ 🔒 UNLOCK FULL VAULT — €5/MONTH ]
+                          <Lock className="w-3.5 h-3.5 text-amber-400/80" />
+                          <span>🔒 LAUNCHES 09/01/2027 — €5/MONTH</span>
                         </button>
                       </div>
                     ) : (
@@ -1789,14 +1604,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   </span>
                 </button>
 
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={handleActivateTestAccess}
-                    className="text-xs font-mono text-amber-300 hover:text-white underline cursor-pointer"
-                  >
-                    🧪 Or preview full vault instantly with PATRON-TEST-ACCESS
-                  </button>
+                <div className="text-center text-[11px] font-mono text-white/50">
+                  🔒 The portal is currently in preview-only mode until launch on 09/01/2027.
                 </div>
               </div>
             </motion.div>
