@@ -68,11 +68,12 @@ export interface VisualizerTrack {
   title: string;
   code: string;
   defaultUnlocked?: boolean;
+  artworkUrl?: string;
 }
 
 const VISUALIZER_TRACKS: VisualizerTrack[] = [
-  { id: '01', title: "Don't Need", code: 'DONTNEED' },
-  { id: '02', title: "Bingäa", code: 'BINGAA', defaultUnlocked: true },
+  { id: '01', title: "Don't Need", code: 'DONTNEED', artworkUrl: visualizerThumbnailImg },
+  { id: '02', title: "Bingäa", code: 'BINGAA', defaultUnlocked: true, artworkUrl: moodboardImg },
   { id: '03', title: "Memories", code: 'MEMORIES' },
   { id: '04', title: "Hurry", code: 'HURRY' },
   { id: '05', title: "Know Me", code: 'KNOWME' },
@@ -1076,9 +1077,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </button>
                     </div>
 
-                    {/* 11 Track Visualizer Widgets Grid (Clean 3-column layout on wide screens) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-                      {VISUALIZER_TRACKS.map((track, index) => {
+                    {/* Visualizer Track Cards: 16:9 Artwork Previews (Tracks 01 & 02) followed by Compact Scheduled Tracks */}
+                    {(() => {
+                      const tracksWithArtwork = VISUALIZER_TRACKS.filter((t) => Boolean(t.artworkUrl));
+                      const scheduledTracks = VISUALIZER_TRACKS.filter((t) => !t.artworkUrl);
+
+                      const renderTrackCard = (track: VisualizerTrack, index: number, hasArtwork: boolean) => {
                         const isTrack01 = track.id === '01';
                         const isTrack02 = track.id === '02';
                         const isProducedTrack = isTrack01 || isTrack02;
@@ -1131,27 +1135,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               )}
                             </div>
 
-                            {track.id === '01' && (
+                            {/* Active 16:9 Artwork Preview Container (Only rendered when artwork is attached) */}
+                            {hasArtwork && track.artworkUrl && (
                               <div className="w-full aspect-video rounded-lg overflow-hidden my-2.5 relative group/thumb border border-cyan-500/30">
                                 <img
-                                  src={visualizerThumbnailImg}
-                                  alt="Don't Need Visualizer Preview"
-                                  className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
-                                  <div className="w-10 h-10 rounded-full bg-cyan-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.4)]">
-                                    <Play className="w-4 h-4 ml-0.5 fill-current" />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {track.id === '02' && (
-                              <div className="w-full aspect-video rounded-lg overflow-hidden my-2.5 relative group/thumb border border-cyan-500/30">
-                                <img
-                                  src={moodboardImg}
-                                  alt="Bingäa Visualizer Preview"
+                                  src={track.artworkUrl}
+                                  alt={`${track.title} Visualizer Preview`}
                                   className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -1184,8 +1173,30 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             </div>
                           </motion.div>
                         );
-                      })}
-                    </div>
+                      };
+
+                      return (
+                        <div className="space-y-3 sm:space-y-4">
+                          {/* Active Artwork Previews (16:9 Widescreen Pair) */}
+                          {tracksWithArtwork.length > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                              {tracksWithArtwork.map((track, index) =>
+                                renderTrackCard(track, index, true)
+                              )}
+                            </div>
+                          )}
+
+                          {/* Compact Scheduled Tracks (Collapsed clean proportions for Memories, Hurry, Know Me, Bignäa II, etc.) */}
+                          {scheduledTracks.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                              {scheduledTracks.map((track, index) =>
+                                renderTrackCard(track, index + tracksWithArtwork.length, false)
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </motion.div>
               )}
