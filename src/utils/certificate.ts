@@ -44,6 +44,12 @@ export const deriveEditionNumber = (passId: string): number => {
   ) {
     return 1;
   }
+  const xMatch = clean.match(/X(\d{3,4})$/);
+  if (xMatch) {
+    const num = parseInt(xMatch[1], 10);
+    if (num === 914) return 1;
+    return Math.min(Math.max(num, 1), TOTAL_EDITION_LIMIT);
+  }
   const match = clean.match(/(\d+)/g);
   if (!match || match.length === 0) return 1;
   const parsedNumber = parseInt(match[match.length - 1], 10);

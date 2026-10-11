@@ -11,7 +11,7 @@ const HOLDER_EVENT = 'akinoya-holder-updated';
 export const HOLDER_NAME_MAX_LENGTH = 40;
 export const TOTAL_EDITION_LIMIT = 100;
 const PASS_ID_PATTERNS = [
-  /^AKN-VIP-\d{4}-[A-Z]\d{4}$/, // AKN-VIP-2027-X0914
+  /^AKN-VIP-\d{4}-[A-Z]\d{3,4}$/, // AKN-VIP-2027-X0914, AKN-VIP-2027-X001..X100
   /^AKN-\d{4}$/, // AKN-9941
   /^SM\d{3}-[A-Z0-9]{4}$/, // SM001-A9B2
 ];

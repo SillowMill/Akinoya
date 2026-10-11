@@ -18,7 +18,7 @@ const PIN_SECRET = process.env.PASS_PIN_SECRET || 'akinoya-founding-pass-pin-v1'
 const CERT_SECRET = process.env.CERT_SIGNING_SECRET || 'akinoya-bingaa-coa-signing-v1';
 const OTP_SECRET = process.env.OTP_SECRET || `${PIN_SECRET}:otp`;
 
-const PASS_ID_PATTERNS = [/^AKN-VIP-\d{4}-[A-Z]\d{4}$/, /^AKN-\d{4}$/, /^SM\d{3}-[A-Z0-9]{4}$/];
+const PASS_ID_PATTERNS = [/^AKN-VIP-\d{4}-[A-Z]\d{3,4}$/, /^AKN-\d{4}$/, /^SM\d{3}-[A-Z0-9]{4}$/];
 
 export function normalizePassId(raw) {
   if (!raw || typeof raw !== 'string') return '';
@@ -40,6 +40,12 @@ export function deriveEditionNumber(passId) {
     clean === 'AKN-VIP-2027'
   ) {
     return 1;
+  }
+  const xMatch = clean.match(/X(\d{3,4})$/);
+  if (xMatch) {
+    const num = parseInt(xMatch[1], 10);
+    if (num === 914) return 1;
+    return Math.min(Math.max(num, 1), TOTAL_EDITION_LIMIT);
   }
   const match = clean.match(/(\d+)/g);
   if (!match || match.length === 0) return 1;

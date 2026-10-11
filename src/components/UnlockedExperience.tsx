@@ -387,7 +387,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     if (
       clean === FOUNDING_PASS_ID ||
       clean === 'AKN-2027-X0914' ||
-      clean === 'SILLOWMILL2027'
+      clean === 'SILLOWMILL2027' ||
+      isValidPassId(clean)
     ) {
       sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
       setIsVisualizerUnlocked(true);
@@ -395,7 +396,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       setPassIdError('');
       soundManager.playUnlockChime();
     } else {
-      setPassIdError(`Invalid Pass ID. Please enter #${FOUNDING_PASS_ID} as displayed on your card.`);
+      setPassIdError(`Invalid Pass ID. Please enter an authentic Äkinoya Pass ID (e.g. #${FOUNDING_PASS_ID}).`);
       soundManager.playError();
     }
   };
@@ -440,7 +441,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     if (
       clean === selectedTrackForUnlock.code ||
       clean === 'SILLOWMILL2027' ||
-      clean === FOUNDING_PASS_ID
+      clean === FOUNDING_PASS_ID ||
+      isValidPassId(clean)
     ) {
       const updated = { ...unlockedTracks, [selectedTrackForUnlock.id]: true };
       setUnlockedTracks(updated);
@@ -458,7 +460,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   };
 
   const handleCopyPassId = () => {
-    navigator.clipboard?.writeText?.(FOUNDING_PASS_ID);
+    navigator.clipboard?.writeText?.(activePassId || FOUNDING_PASS_ID);
     setIsCopied(true);
     soundManager.playTone(880, 0.08);
     setTimeout(() => setIsCopied(false), 2000);

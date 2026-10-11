@@ -57,7 +57,7 @@ function normalizeTokenId(raw: string): string {
 }
 
 const PASS_ID_PATTERNS = [
-  /^AKN-VIP-\d{4}-[A-Z]\d{4}$/, // AKN-VIP-2027-X0914
+  /^AKN-VIP-\d{4}-[A-Z]\d{3,4}$/, // AKN-VIP-2027-X0914 or AKN-VIP-2027-X001..X100
   /^AKN-\d{4}$/, // AKN-9941
   /^SM\d{3}-[A-Z0-9]{4}$/, // SM001-A9B2
 ];
@@ -86,6 +86,15 @@ function deriveEdition(tokenId: string): { edition: string; editionNumber: numbe
     clean === 'AKN-VIP-2027'
   ) {
     return { edition: '1 of 100', editionNumber: 1 };
+  }
+  const xMatch = clean.match(/X(\d{3,4})$/);
+  if (xMatch) {
+    const num = parseInt(xMatch[1], 10);
+    const editionNum = num === 914 ? 1 : Math.min(Math.max(num, 1), 100);
+    return {
+      edition: `${editionNum} of 100`,
+      editionNumber: editionNum,
+    };
   }
   // Check if matches numbers
   const match = clean.match(/(\d+)/g);
