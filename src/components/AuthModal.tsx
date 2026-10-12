@@ -435,8 +435,9 @@ export const AuthModal: React.FC = () => {
           )}
 
           {/* GDPR / Privacy Compliance Footer */}
-          <div className="mt-5 pt-3 border-t border-white/5 text-center text-[10px] font-mono text-white/40">
-            🔒 100% GDPR / AVG Compliant · Salted Auth &amp; Encrypted Sync
+          <div className="mt-5 pt-3 border-t border-white/5 text-center text-[10px] font-mono text-white/40 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span>100% GDPR / AVG Compliant · Salted Auth &amp; Encrypted Sync</span>
           </div>
         </motion.div>
       </div>

@@ -735,10 +735,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-2.5 xs:px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-8 lg:py-10"
+      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 py-6 sm:py-8 lg:py-10"
     >
       {/* Top Status & Lock Control (Mobile friendly wrapping) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-3 xs:p-4 sm:px-6 lg:px-8 lg:py-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:px-6 lg:px-8 lg:py-5">
         <div className="flex items-center gap-3 min-w-0 max-w-full">
           <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
             <ShieldCheck className="w-5 h-5 text-cyan-400" />
@@ -974,13 +974,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           }
                         >
                           {isMembershipLaunchLocked ? (
-                            <Lock className="w-4 h-4 text-amber-400/80 shrink-0" />
+                            <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
                           ) : (
                             <CreditCard className="w-4 h-4 text-black shrink-0" />
                           )}
-                          <span>
+                          <span className="whitespace-normal break-words text-center leading-tight">
                             {isMembershipLaunchLocked
-                              ? '🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)'
+                              ? 'LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)'
                               : isSubscribing
                               ? 'INITIALIZING STRIPE...'
                               : 'ACCESS NOW — €60/YEAR (~€5/MONTH)'}
@@ -1149,7 +1149,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               {isProducedTrack ? (
                                 <Unlock className="w-4 h-4 text-emerald-400 shrink-0" />
                               ) : (
-                                <Lock className="w-4 h-4 text-amber-400/70 shrink-0" />
+                                <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
                               )}
                             </div>
 
@@ -1173,15 +1173,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             <div className="flex items-center justify-between pt-2.5 border-t border-white/5 mt-auto">
                               {isTrack01 ? (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                                  <span>ARTWORK UNLOCKED 🔓</span>
+                                  <Unlock className="w-3 h-3 text-emerald-400 shrink-0" />
+                                  <span>ARTWORK UNLOCKED</span>
                                 </span>
                               ) : isTrack02 ? (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                                  <span>EARLY ACCESS PREVIEW 🔓</span>
+                                  <Unlock className="w-3 h-3 text-emerald-400 shrink-0" />
+                                  <span>EARLY ACCESS PREVIEW</span>
                                 </span>
                               ) : (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-400/30 text-amber-300/90 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(245,158,11,0.15)]">
-                                  <span>RELEASE SCHEDULED 🔒</span>
+                                  <Lock className="w-3 h-3 text-yellow-400 shrink-0" />
+                                  <span>RELEASE SCHEDULED</span>
                                 </span>
                               )}
 
@@ -1979,7 +1982,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         <CreditCard className="w-3.5 h-3.5 text-cyan-400" />
                         <span>POWERED BY STRIPE CHECKOUT</span>
                       </div>
-                      <span className="text-[9px] text-white/50 font-mono">🔒 256-Bit TLS</span>
+                      <span className="text-[9px] text-white/50 font-mono flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3 text-cyan-400" />
+                        <span>256-Bit TLS</span>
+                      </span>
                     </div>
 
                     <p className="text-xs text-white/70 font-mono leading-relaxed">

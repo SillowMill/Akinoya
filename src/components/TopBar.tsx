@@ -10,7 +10,7 @@ interface TopBarProps {
 
 export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, isVip = false, onNavigateToVerify }) => {
   return (
-    <header className="relative z-30 w-full border-b border-white/10 bg-black/50 backdrop-blur-md px-2.5 xs:px-4 sm:px-6 py-2 sm:py-3.5 overflow-x-clip">
+    <header className="relative z-30 w-full border-b border-white/10 bg-black/50 backdrop-blur-md px-2.5 xs:px-4 sm:px-6 py-2 sm:py-3.5 overflow-x-hidden">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 xs:gap-3 sm:gap-4">
         {/* Zone 1: Clean wordmark */}
         <a
@@ -48,14 +48,21 @@ export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, isVip = false, onNav
 
           {isUnlocked ? (
             isVip ? (
-              <div className="flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] xs:text-[10.5px] sm:text-[11px] font-mono text-emerald-300 bg-emerald-950/60 border border-emerald-400/30 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+              <div
+                title="VIP Verified"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] xs:text-[10.5px] sm:text-[11px] font-mono text-emerald-300 bg-emerald-950/60 border border-emerald-400/30 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+              >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="tracking-wide">VIP VERIFIED</span>
+                <span className="hidden sm:inline tracking-wide">VIP VERIFIED</span>
+                <span className="sm:hidden text-[9px] font-bold tracking-wider">VIP</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] xs:text-[10.5px] sm:text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-400/30 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0">
+              <div
+                title="Access Granted"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] xs:text-[10.5px] sm:text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-400/30 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0"
+              >
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                <span className="tracking-wide">ACCESS GRANTED</span>
+                <span className="hidden sm:inline tracking-wide">ACCESS GRANTED</span>
               </div>
             )
           ) : (

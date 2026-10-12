@@ -693,7 +693,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     if (!isAnnualOrCreator) {
       soundManager.playTone(330, 0.08);
       setUpgradeModalReason(
-        '🔒 Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)'
+        'Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)'
       );
       setIsUpgradeModalOpen(true);
       return;
@@ -766,7 +766,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     if (currentChannel?.isAnnualPass && !isVipOrAbove) {
       soundManager.playTone(330, 0.08);
       alert(
-        '🔒 Creator Lab channels require Äkinoya VIP Guest Pass or Annual Pass. Please sign in or redeem your VIP Pass Code.'
+        'Creator Lab channels require Äkinoya VIP Guest Pass or Annual Pass. Please sign in or redeem your VIP Pass Code.'
       );
       openAuthModal(isAuthenticated ? 'vip' : 'signin');
       return;
@@ -941,8 +941,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
             className="hidden sm:flex px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300/80 text-[10.5px] sm:text-[11px] font-mono font-semibold cursor-not-allowed items-center gap-1.5 whitespace-nowrap min-h-[48px] sm:min-h-[44px] select-none opacity-85"
             title="Public membership launches on 09/01/2027"
           >
-            <Lock className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
-            <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
+            <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+            <span>LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
           </button>
         </div>
       </header>
@@ -990,7 +990,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
       </nav>
 
       {/* Main Content Viewport */}
-      <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
         {/* ======================================================== */}
         {/* SECTION 1: ASSET & DOWNLOAD VAULT (LARGE MEDIA BANNERS)  */}
         {/* ======================================================== */}
@@ -1024,11 +1024,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
               <button
                 type="button"
                 disabled={true}
-                className="px-4 py-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 text-xs font-mono font-semibold cursor-not-allowed whitespace-nowrap flex items-center gap-2 select-none opacity-85"
+                className="px-4 py-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 text-xs font-mono font-semibold cursor-not-allowed flex items-center justify-center gap-2 select-none opacity-85 text-center whitespace-normal break-words leading-tight"
                 title="Full vault downloads launch on 09/01/2027"
               >
-                <Lock className="w-4 h-4 text-amber-400/80" />
-                <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
+                <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
+                <span>LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
               </button>
             </div>
 
@@ -1136,7 +1136,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         title={
                           isAnnualOrCreator
                             ? `Download ${asset.fileName}`
-                            : '🔒 Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)'
+                            : 'Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)'
                         }
                       >
                         {isAnnualOrCreator ? (
@@ -1146,8 +1146,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           </>
                         ) : (
                           <>
-                            <Lock className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
-                            <span>🔒 Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)</span>
+                            <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                            <span className="whitespace-normal break-words text-center leading-snug">
+                              Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)
+                            </span>
                           </>
                         )}
                       </button>
@@ -1224,7 +1226,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         </div>
                       </div>
 
-                      {/* Full-Width 16:9 Cinematic Video Player Banner */}
+                      {/* Full-Width 16:9 Cinematic Video Player Banner (Clean, Uncluttered) */}
                       <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/95 border-y border-purple-500/20 group/media">
                         <img
                           src={wf.heroBannerUrl}
@@ -1234,35 +1236,34 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           }`}
                         />
 
-                        {/* Sci-Fi HUD Overlay */}
-                        <div className="absolute inset-0 p-3 sm:p-6 flex flex-col justify-between pointer-events-none">
-                          <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-xs font-mono text-purple-300">
-                            <span className="bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-purple-500/30">
-                              {wf.toolstack}
-                            </span>
-                            <span className="bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20">
-                              {wf.metrics.fps}
-                            </span>
-                          </div>
-
-                          <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-xs font-mono text-cyan-300">
-                            <span className="bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-cyan-500/30">
-                              ENGINE: {wf.metrics.engine} · RES: {wf.metrics.resolution}
-                            </span>
-                            <span className="text-[9.5px] sm:text-[10px] font-bold tracking-wider text-purple-400 hidden xs:inline">
-                              SILLOW MILL CREATIVE LAB
-                            </span>
-                          </div>
-                        </div>
-
                         <button
                           type="button"
                           onClick={() => soundManager.playTone(660, 0.08)}
-                          className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-purple-500/80 hover:bg-purple-400 text-black flex items-center justify-center transition-transform hover:scale-110 shadow-[0_0_25px_rgba(168,85,247,0.5)] cursor-pointer z-10"
+                          className="absolute inset-0 m-auto w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-purple-500/85 hover:bg-purple-400 text-black flex items-center justify-center transition-transform hover:scale-110 shadow-[0_0_25px_rgba(168,85,247,0.5)] cursor-pointer z-10"
                           title="Preview workflow breakdown"
                         >
-                          <Play className="w-7 h-7 fill-black ml-1" />
+                          <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-black ml-0.5" />
                         </button>
+                      </div>
+
+                      {/* Clean Dedicated Workflow Specs Bar (Positioned Below Media Container) */}
+                      <div className="px-4 py-3 sm:px-6 bg-black/60 border-b border-purple-500/20 flex flex-wrap items-center justify-between gap-2.5 text-[10.5px] sm:text-xs font-mono">
+                        <div className="flex flex-wrap items-center gap-2 text-purple-300">
+                          <span className="bg-purple-950/70 px-2.5 py-1 rounded-lg border border-purple-500/30 font-semibold">
+                            {wf.toolstack}
+                          </span>
+                          <span className="bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 text-white/70">
+                            {wf.metrics.fps}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-cyan-300">
+                          <span className="bg-cyan-950/60 px-2.5 py-1 rounded-lg border border-cyan-500/30">
+                            ENGINE: {wf.metrics.engine} · RES: {wf.metrics.resolution}
+                          </span>
+                          <span className="text-[10px] font-bold tracking-wider text-purple-400 hidden sm:inline">
+                            SILLOW MILL CREATIVE LAB
+                          </span>
+                        </div>
                       </div>
 
                       {/* Content Section */}
@@ -1427,7 +1428,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   {/* Paywall overlay on tracks 2 & 3 for free users */}
                   {!isPatron && activeVisualizerTrack > 0 ? (
                     <div className="relative z-20 backdrop-blur-md bg-black/60 p-6 rounded-2xl border border-cyan-400/30 flex flex-col items-center justify-center text-center max-w-sm">
-                      <Lock className="w-8 h-8 text-cyan-400 mb-2" />
+                      <Lock className="w-8 h-8 text-yellow-400 mb-2" />
                       <div className="text-sm font-display font-bold text-white mb-1">
                         PATRON 4K THEATER PREVIEW
                       </div>
@@ -1437,11 +1438,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                       <button
                         type="button"
                         disabled={true}
-                        className="min-h-[44px] px-4 py-2 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 font-mono font-semibold text-xs cursor-not-allowed flex items-center justify-center gap-1.5 opacity-85 select-none"
+                        className="min-h-[44px] px-4 py-2 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 font-mono font-semibold text-xs cursor-not-allowed flex items-center justify-center gap-1.5 opacity-85 select-none text-center whitespace-normal break-words leading-tight"
                         title="Theater unlocks on 09/01/2027"
                       >
-                        <Lock className="w-3.5 h-3.5 text-amber-400/80" />
-                        <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
+                        <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                        <span>LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
                       </button>
                     </div>
                   ) : (
@@ -1512,7 +1513,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         />
                         {isLocked && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                            <Lock className="w-3.5 h-3.5 text-cyan-400" />
+                            <Lock className="w-3.5 h-3.5 text-yellow-400" />
                           </div>
                         )}
                       </div>
@@ -1737,7 +1738,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                               </div>
                             </div>
                           </div>
-                          <Lock className="w-3.5 h-3.5 text-amber-400/70 shrink-0 ml-1" />
+                          <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0 ml-1" />
                         </button>
                       );
                     })}
@@ -1928,8 +1929,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     {activeChannel.isAnnualPass && !isVipOrAbove && (
                       <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2 text-xs font-mono text-amber-300">
-                          <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                          <span>🔒 Creator Lab transmission requires VIP Guest Pass or Annual Pass</span>
+                          <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
+                          <span className="whitespace-normal break-words leading-tight">Creator Lab transmission requires VIP Guest Pass or Annual Pass</span>
                         </div>
                         <button
                           type="button"
@@ -2075,7 +2076,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     {/* Paywall Overlay on Ballot #02 */}
                     {isLocked ? (
                       <div className="p-6 rounded-xl backdrop-blur-md bg-black/70 border border-emerald-500/30 text-center flex flex-col items-center justify-center">
-                        <Lock className="w-8 h-8 text-emerald-400 mb-2" />
+                        <Lock className="w-8 h-8 text-yellow-400 mb-2" />
                         <div className="text-sm font-display font-bold text-white mb-1">
                           COUNCIL BALLOT #02 RESERVED FOR PATRONS
                         </div>
@@ -2085,11 +2086,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         <button
                           type="button"
                           disabled={true}
-                          className="min-h-[44px] px-5 py-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 font-mono font-semibold text-xs cursor-not-allowed flex items-center justify-center gap-1.5 opacity-85 select-none"
+                          className="min-h-[44px] px-5 py-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 font-mono font-semibold text-xs cursor-not-allowed flex items-center justify-center gap-1.5 opacity-85 select-none text-center whitespace-normal break-words leading-tight"
                           title="Voting unlocks on 09/01/2027"
                         >
-                          <Lock className="w-3.5 h-3.5 text-amber-400/80" />
-                          <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
+                          <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                          <span>LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
                         </button>
                       </div>
                     ) : (
@@ -2231,21 +2232,22 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   }
                 >
                   {isMembershipLaunchLocked ? (
-                    <Lock className="w-4 h-4 text-amber-400/80" />
+                    <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
                   ) : (
                     <CreditCard className="w-4 h-4 text-black" />
                   )}
-                  <span>
+                  <span className="whitespace-normal break-words text-center leading-snug">
                     {isMembershipLaunchLocked
-                      ? '🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)'
+                      ? 'LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)'
                       : isSubscribing
                       ? 'INITIALIZING STRIPE...'
                       : 'ACTIVATE ANNUAL MEMBERSHIP — €60/YEAR (~€5/MONTH)'}
                   </span>
                 </button>
 
-                <div className="text-center text-[11px] font-mono text-white/50">
-                  🔒 The portal is currently in preview-only mode until launch on 09/01/2027.
+                <div className="text-center text-[11px] font-mono text-white/50 flex items-center justify-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                  <span>The portal is currently in preview-only mode until launch on 09/01/2027.</span>
                 </div>
               </div>
             </motion.div>
@@ -2432,7 +2434,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
                         </div>
                       </div>
-                      <Lock className="w-4 h-4 text-amber-400/80 shrink-0" />
+                      <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
                     </button>
                   );
                 })}

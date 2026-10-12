@@ -196,7 +196,7 @@ export default function App() {
               onOpenVisualizerHub={() => setVipSubView('portal')}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-2 sm:px-4 md:px-6 lg:px-8 max-w-7xl w-full mx-auto">
+            <div className="flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
               <UnlockedExperience
                 isVip={true}
                 onLockPortal={() => setVipSubView('passport')}
@@ -210,7 +210,7 @@ export default function App() {
         </div>
       ) : (
         /* Public Root Domain (100% Locked Site) */
-        <div className="relative z-20 flex-1 flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-2 sm:px-4 md:px-6 lg:px-8 max-w-7xl w-full mx-auto">
+        <div className="relative z-20 flex-1 flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
           <AnimatePresence mode="wait">
             {!publicUnlocked ? (
               <motion.div

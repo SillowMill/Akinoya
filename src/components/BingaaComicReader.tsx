@@ -261,8 +261,8 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
             {/* Ambient background glow */}
             <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="w-12 h-12 rounded-2xl bg-amber-950/70 border border-amber-500/40 text-amber-400 mx-auto flex items-center justify-center mb-3.5 shadow-[0_0_20px_rgba(245,158,11,0.25)]">
-              <Lock className="w-6 h-6 text-amber-400" />
+            <div className="w-12 h-12 rounded-2xl bg-amber-950/70 border border-amber-500/40 text-yellow-400 mx-auto flex items-center justify-center mb-3.5 shadow-[0_0_20px_rgba(245,158,11,0.25)]">
+              <Lock className="w-6 h-6 text-yellow-400" />
             </div>
 
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/70 border border-amber-400/40 text-[10px] font-mono font-semibold tracking-wider text-amber-300 mb-3 shadow-[0_0_12px_rgba(245,158,11,0.2)]">

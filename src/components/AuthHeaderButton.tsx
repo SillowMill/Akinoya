@@ -63,10 +63,10 @@ export const AuthHeaderButton: React.FC = () => {
       <button
         type="button"
         onClick={() => openAuthModal('signin')}
-        className="min-h-[48px] px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:scale-[1.02] active:scale-[0.98] shrink-0"
+        className="min-h-[48px] px-2.5 xs:px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:scale-[1.02] active:scale-[0.98] shrink-0"
       >
-        <User className="w-3.5 h-3.5 fill-black" />
-        <span>SIGN IN / REGISTER</span>
+        <User className="w-3.5 h-3.5 fill-black shrink-0" />
+        <span>SIGN IN<span className="hidden sm:inline"> / REGISTER</span></span>
       </button>
     );
   }
@@ -86,8 +86,8 @@ export const AuthHeaderButton: React.FC = () => {
           {displayName.charAt(0).toUpperCase()}
         </div>
 
-        {/* Greeting + Role Badge */}
-        <div className="hidden xs:flex flex-col text-left">
+        {/* Greeting + Role Badge (Hidden on mobile <640px) */}
+        <div className="hidden sm:flex flex-col text-left">
           <div className="text-[11px] font-sans font-semibold text-white group-hover:text-cyan-200 transition-colors leading-tight">
             Welcome, {displayName}
           </div>
