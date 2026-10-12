@@ -69,7 +69,7 @@ export const AuthHeaderButton: React.FC = () => {
   const roleBadge = getRoleBadge();
   const displayName = profile?.first_name || user?.email?.split('@')[0] || 'Pilot';
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return (
       <button
         type="button"
@@ -77,7 +77,7 @@ export const AuthHeaderButton: React.FC = () => {
         className="min-h-[48px] px-2.5 xs:px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:scale-[1.02] active:scale-[0.98] shrink-0"
       >
         <User className="w-3.5 h-3.5 fill-black shrink-0" />
-        <span>SIGN IN<span className="hidden sm:inline"> / REGISTER</span></span>
+        <span>SIGN IN<span className="hidden sm:inline"> / JOIN</span></span>
       </button>
     );
   }
@@ -188,9 +188,9 @@ export const AuthHeaderButton: React.FC = () => {
             {/* Sign Out */}
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 setIsDropdownOpen(false);
-                signOut();
+                await signOut();
               }}
               className="w-full p-2.5 rounded-xl hover:bg-red-950/30 text-red-300 font-mono text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-2 min-h-[48px]"
             >

@@ -16,23 +16,25 @@ export const TopBar: React.FC<TopBarProps> = ({
   onNavigateHome,
   onNavigateToVerify,
 }) => {
-  const { isVip: authIsVip, profile, role } = useAuth();
+  const { user, isVip: authIsVip, profile, role } = useAuth();
   const effectiveIsVip = Boolean(
-    isVip ||
-    authIsVip ||
-    profile?.has_vip_pass === true ||
-    profile?.is_vip === true ||
-    role === 'VIP_GUEST' ||
-    role === 'CREATOR' ||
-    Boolean(profile?.vip_code_redeemed) ||
-    (typeof window !== 'undefined' &&
-      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
-       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
-       Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
-       Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
-       Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
-       localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
-       localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
+    Boolean(user || profile) && (
+      isVip ||
+      authIsVip ||
+      profile?.has_vip_pass === true ||
+      profile?.is_vip === true ||
+      role === 'VIP_GUEST' ||
+      role === 'CREATOR' ||
+      Boolean(profile?.vip_code_redeemed) ||
+      (typeof window !== 'undefined' &&
+        (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+         Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+         Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+         Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+         Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+         localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+         localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
+    )
   );
 
   return (

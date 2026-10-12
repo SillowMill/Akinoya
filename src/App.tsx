@@ -18,25 +18,28 @@ import { NfcHudToast } from './components/NfcHudToast';
 import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerification';
 import { CommunityHub } from './components/CommunityHub';
 import { useAuth } from './context/AuthContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
-  const { user, profile, role, isAuthenticated, isVip, hasPendingVipInvitation, openAuthModal } = useAuth();
+  const { user, profile, role, isAuthenticated, isVip, hasPendingVipInvitation, openAuthModal, isLoading } = useAuth();
 
   const isUserVip = Boolean(
-    isVip ||
-    profile?.has_vip_pass === true ||
-    profile?.is_vip === true ||
-    role === 'VIP_GUEST' ||
-    role === 'CREATOR' ||
-    Boolean(profile?.vip_code_redeemed) ||
-    (typeof window !== 'undefined' &&
-      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
-       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
-       Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
-       Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
-       Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
-       localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
-       localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
+    Boolean(user || profile) && (
+      isVip ||
+      profile?.has_vip_pass === true ||
+      profile?.is_vip === true ||
+      role === 'VIP_GUEST' ||
+      role === 'CREATOR' ||
+      Boolean(profile?.vip_code_redeemed) ||
+      (typeof window !== 'undefined' &&
+        (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+         Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+         Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+         Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+         Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+         localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+         localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
+    )
   );
 
   // Persistent Public & Account Unlock:
@@ -45,25 +48,42 @@ export default function App() {
     if (typeof window !== 'undefined') {
       return (
         localStorage.getItem('akinoya_public_unlocked') === 'true' ||
-        sessionStorage.getItem('akinoya_public_unlocked') === 'true' ||
-        Boolean(localStorage.getItem('akinoya_auth_profile')) ||
-        Boolean(localStorage.getItem('akinoya_session_user'))
+        sessionStorage.getItem('akinoya_public_unlocked') === 'true'
       );
     }
     return false;
   });
 
-  const isSiteUnlocked =
-    isAuthenticated ||
-    Boolean(user || profile) ||
-    role !== 'FREE' ||
+  // Listen to global logout event & reset state to public landing view
+  useEffect(() => {
+    const handleLogoutSync = () => {
+      setPublicUnlocked(false);
+      setViewMode('orbit');
+      setRoute('home');
+      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+        window.history.replaceState({}, '', '/');
+      }
+    };
+
+    window.addEventListener('akinoya-auth-logout', handleLogoutSync);
+    return () => window.removeEventListener('akinoya-auth-logout', handleLogoutSync);
+  }, []);
+
+  // Safe fallback if user state transitions to unauthenticated
+  useEffect(() => {
+    if (!isAuthenticated && !user && publicUnlocked) {
+      if (typeof window !== 'undefined' && !localStorage.getItem('akinoya_public_unlocked')) {
+        setPublicUnlocked(false);
+      }
+    }
+  }, [isAuthenticated, user, publicUnlocked]);
+
+  const isSiteUnlocked = Boolean(
+    (isAuthenticated && Boolean(user || profile)) ||
+    (role && role !== 'FREE') ||
     isUserVip ||
-    publicUnlocked ||
-    (typeof window !== 'undefined' &&
-      (localStorage.getItem('akinoya_public_unlocked') === 'true' ||
-       sessionStorage.getItem('akinoya_public_unlocked') === 'true' ||
-       Boolean(localStorage.getItem('akinoya_auth_profile')) ||
-       Boolean(localStorage.getItem('akinoya_session_user'))));
+    (publicUnlocked && typeof window !== 'undefined' && localStorage.getItem('akinoya_public_unlocked') === 'true')
+  );
 
   const [viewMode, setViewMode] = useState<'orbit' | 'surface'>('orbit');
   const [backdropOnly, setBackdropOnly] = useState<boolean>(false);
@@ -248,111 +268,113 @@ export default function App() {
       )}
 
       {/* Route-Based Dynamic Content */}
-      {route === 'community' ? (
-        <div className="relative z-20 flex-1 w-full flex flex-col">
-          <CommunityHub onBackToHome={() => navigateTo('home', '/')} />
-        </div>
-      ) : route === 'privacy' ? (
-        <div className="relative z-20 flex-1 w-full">
-          <PrivacyPolicy onBackToHome={() => navigateTo('home', '/')} />
-        </div>
-      ) : route === 'kyc' ? (
-        <div className="relative z-20 flex-1 w-full">
-          <KycVerification onBackToHome={() => navigateTo('home', '/')} />
-        </div>
-      ) : route === 'success' ? (
-        <div className="relative z-20 flex-1 w-full">
-          <CheckoutSuccess
-            onEnterPortal={() => {
-              handlePublicUnlockSuccess();
-              navigateTo('home', '/');
-            }}
-            onBackToComic={() => navigateTo('home', '/')}
-          />
-        </div>
-      ) : route === 'verify' ? (
-        /* Exclusive VIP Verification & Personal Portal Route (/verify/[id]) */
-        <div className="relative z-20 flex-1 w-full">
-          {vipSubView === 'passport' ? (
-            <AkinoyaPassportVerification
-              tokenIdFromRoute={
-                typeof window !== 'undefined'
-                  ? window.location.pathname.replace(/^\/verify\/?/, '').replace(/\/+$/, '').trim() || undefined
-                  : undefined
-              }
-              onNavigateHome={() => navigateTo('home', '/')}
-              onOpenVisualizerHub={() => setVipSubView('portal')}
+      <ErrorBoundary>
+        {route === 'community' ? (
+          <div className="relative z-20 flex-1 w-full flex flex-col">
+            <CommunityHub onBackToHome={() => navigateTo('home', '/')} />
+          </div>
+        ) : route === 'privacy' ? (
+          <div className="relative z-20 flex-1 w-full">
+            <PrivacyPolicy onBackToHome={() => navigateTo('home', '/')} />
+          </div>
+        ) : route === 'kyc' ? (
+          <div className="relative z-20 flex-1 w-full">
+            <KycVerification onBackToHome={() => navigateTo('home', '/')} />
+          </div>
+        ) : route === 'success' ? (
+          <div className="relative z-20 flex-1 w-full">
+            <CheckoutSuccess
+              onEnterPortal={() => {
+                handlePublicUnlockSuccess();
+                navigateTo('home', '/');
+              }}
+              onBackToComic={() => navigateTo('home', '/')}
             />
-          ) : (
-            <div className="flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
-              <UnlockedExperience
-                isVip={true}
-                onLockPortal={() => setVipSubView('passport')}
-                onNavigateToPassport={() => setVipSubView('passport')}
-                onToggleViewMode={setViewMode}
-                currentViewMode={viewMode}
-                onNavigateToVerify={() => setVipSubView('passport')}
+          </div>
+        ) : route === 'verify' ? (
+          /* Exclusive VIP Verification & Personal Portal Route (/verify/[id]) */
+          <div className="relative z-20 flex-1 w-full">
+            {vipSubView === 'passport' ? (
+              <AkinoyaPassportVerification
+                tokenIdFromRoute={
+                  typeof window !== 'undefined'
+                    ? window.location.pathname.replace(/^\/verify\/?/, '').replace(/\/+$/, '').trim() || undefined
+                    : undefined
+                }
+                onNavigateHome={() => navigateTo('home', '/')}
+                onOpenVisualizerHub={() => setVipSubView('portal')}
               />
-            </div>
-          )}
-        </div>
-      ) : (
-        /* Public Root Domain (100% Locked Site) */
-        <div className="relative z-20 flex-1 flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
-          <AnimatePresence mode="wait">
-            {!isSiteUnlocked ? (
-              <motion.div
-                key="gate-view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.5 }}
-                className="w-full flex flex-col items-center"
-              >
-                <ComingSoonGate
-                  onUnlockSuccess={handlePublicUnlockSuccess}
-                  onToggleBackdropMode={() => setBackdropOnly(!backdropOnly)}
-                  backdropOnly={backdropOnly}
-                />
-
-                {/* Minimal atmospheric footer metadata beneath gate */}
-                {!backdropOnly && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25, duration: 0.6 }}
-                    className="mt-4 sm:mt-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 text-[10px] sm:text-[11px] font-mono text-white/50 tracking-wider text-center px-4"
-                  >
-                    <span>ÄKINOYA PROTOCOL</span>
-                    <span className="text-white/20">·</span>
-                    <span>RA 04h 35m / +16° 30'</span>
-                    <span className="text-white/20">·</span>
-                    <span className="text-cyan-400">RELEASE 2027</span>
-                  </motion.div>
-                )}
-              </motion.div>
             ) : (
-              <motion.div
-                key="unlocked-view"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full flex items-center justify-center"
-              >
+              <div className="flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
                 <UnlockedExperience
-                  isVip={isUserVip}
-                  onLockPortal={handlePublicLock}
+                  isVip={true}
+                  onLockPortal={() => setVipSubView('passport')}
+                  onNavigateToPassport={() => setVipSubView('passport')}
                   onToggleViewMode={setViewMode}
                   currentViewMode={viewMode}
-                  onNavigateToPassport={() => navigateTo('verify', '/verify')}
-                  onNavigateToVerify={() => navigateTo('verify', '/verify')}
+                  onNavigateToVerify={() => setVipSubView('passport')}
                 />
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
-        </div>
-      )}
+          </div>
+        ) : (
+          /* Public Root Domain (100% Locked Site) */
+          <div className="relative z-20 flex-1 flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
+            <AnimatePresence mode="wait">
+              {!isSiteUnlocked ? (
+                <motion.div
+                  key="gate-view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full flex flex-col items-center"
+                >
+                  <ComingSoonGate
+                    onUnlockSuccess={handlePublicUnlockSuccess}
+                    onToggleBackdropMode={() => setBackdropOnly(!backdropOnly)}
+                    backdropOnly={backdropOnly}
+                  />
+
+                  {/* Minimal atmospheric footer metadata beneath gate */}
+                  {!backdropOnly && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25, duration: 0.6 }}
+                      className="mt-4 sm:mt-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 text-[10px] sm:text-[11px] font-mono text-white/50 tracking-wider text-center px-4"
+                    >
+                      <span>ÄKINOYA PROTOCOL</span>
+                      <span className="text-white/20">·</span>
+                      <span>RA 04h 35m / +16° 30'</span>
+                      <span className="text-white/20">·</span>
+                      <span className="text-cyan-400">RELEASE 2027</span>
+                    </motion.div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="unlocked-view"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  className="w-full flex items-center justify-center"
+                >
+                  <UnlockedExperience
+                    isVip={isUserVip}
+                    onLockPortal={handlePublicLock}
+                    onToggleViewMode={setViewMode}
+                    currentViewMode={viewMode}
+                    onNavigateToPassport={() => navigateTo('verify', '/verify')}
+                    onNavigateToVerify={() => navigateTo('verify', '/verify')}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </ErrorBoundary>
 
       {/* Luxury Minimalist Footer */}
       {!backdropOnly && route !== 'community' && (

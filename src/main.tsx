@@ -3,13 +3,16 @@ import App from './App.tsx';
 import { VipAccessProvider } from './context/VipAccessContext';
 import { AuthProvider } from './context/AuthContext';
 import { AuthModal } from './components/AuthModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
-  <VipAccessProvider>
-    <AuthProvider>
-      <App />
-      <AuthModal />
-    </AuthProvider>
-  </VipAccessProvider>
+  <ErrorBoundary>
+    <VipAccessProvider>
+      <AuthProvider>
+        <App />
+        <AuthModal />
+      </AuthProvider>
+    </VipAccessProvider>
+  </ErrorBoundary>
 );

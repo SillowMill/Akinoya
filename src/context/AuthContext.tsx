@@ -263,6 +263,42 @@ const getCachedRole = (): UserRole => {
   return 'FREE';
 };
 
+const clearAllAuthSessionStorage = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(LOCAL_PROFILE_KEY);
+    localStorage.removeItem(LOCAL_SESSION_USER_KEY);
+    localStorage.removeItem(PATRON_TOKEN_KEY);
+    localStorage.removeItem(PATRON_ROLE_KEY);
+    localStorage.removeItem(PENDING_ROLE_KEY);
+    localStorage.removeItem(PENDING_VIP_PASS_KEY);
+    localStorage.removeItem('akinoya_public_unlocked');
+    localStorage.removeItem('sillow_vip_device_access');
+    localStorage.removeItem('sillow_vip_bound_token');
+    localStorage.removeItem('akinoya_vip_unlocked');
+
+    sessionStorage.removeItem(PATRON_TOKEN_KEY);
+    sessionStorage.removeItem(PATRON_ROLE_KEY);
+    sessionStorage.removeItem(PENDING_ROLE_KEY);
+    sessionStorage.removeItem('pending_vip_code');
+    sessionStorage.removeItem('akinoya_public_unlocked');
+    sessionStorage.removeItem('akinoya_vip_unlocked');
+    sessionStorage.removeItem('akinoya_visualizers_unlocked');
+    sessionStorage.removeItem('akinoya_unlocked_tracks');
+    sessionStorage.removeItem('akinoya_perk_states');
+    sessionStorage.removeItem('akinoya_patron_name');
+    sessionStorage.removeItem('akinoya_vip_route_active');
+
+    // Safe redirect / reset to public root URL (/)
+    if (window.location.pathname !== '/' || window.location.search) {
+      window.history.replaceState({}, '', '/');
+    }
+    window.dispatchEvent(new CustomEvent('akinoya-auth-logout'));
+  } catch (e) {
+    console.warn('[AuthContext] Storage reset warning:', e);
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any | null>(getCachedUser);
   const [profile, setProfile] = useState<Profile | null>(getCachedProfile);
@@ -662,12 +698,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null);
           setProfile(null);
           setRole('FREE');
-          localStorage.removeItem(LOCAL_PROFILE_KEY);
-          localStorage.removeItem(LOCAL_SESSION_USER_KEY);
-          localStorage.removeItem(PATRON_TOKEN_KEY);
-          localStorage.removeItem(PATRON_ROLE_KEY);
-          sessionStorage.removeItem(PATRON_TOKEN_KEY);
-          sessionStorage.removeItem(PATRON_ROLE_KEY);
+          clearAllAuthSessionStorage();
         }
       });
 
@@ -1023,12 +1054,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setProfile(null);
     setRole('FREE');
-    localStorage.removeItem(LOCAL_PROFILE_KEY);
-    localStorage.removeItem(LOCAL_SESSION_USER_KEY);
-    localStorage.removeItem(PATRON_TOKEN_KEY);
-    localStorage.removeItem(PATRON_ROLE_KEY);
-    sessionStorage.removeItem(PATRON_TOKEN_KEY);
-    sessionStorage.removeItem(PATRON_ROLE_KEY);
+    clearAllAuthSessionStorage();
   };
 
   const claimVipInvitation = async (): Promise<{ success: boolean; message: string }> => {
