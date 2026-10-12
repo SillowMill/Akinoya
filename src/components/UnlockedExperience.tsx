@@ -195,8 +195,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const activePassId = isValidPassId(rawCandidatePassId) ? normalizePassId(rawCandidatePassId) : FOUNDING_PASS_ID;
   const authHolderName = profile?.first_name ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}` : profile?.full_name;
   const holderName = authHolderName || useHolderName(activePassId);
-  const isMaster = activePassId === 'AKN-VIP-2027-X0914';
+  const isMaster = activePassId === 'AKN-VIP-2027-X0914' || activePassId === FOUNDING_PASS_ID;
   const activeEditionNumber = deriveEditionNumber(activePassId);
+  const isFoundersPass = isMaster || activePassId === 'AKN-VIP-2027-X0914' || activePassId === FOUNDING_PASS_ID || activeEditionNumber === 1 || activeEditionNumber === 0;
+  const foundersEditionLabel = 'Founders Pass (#0)';
   const editionDisplay = activeEditionNumber;
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
@@ -651,7 +653,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <>
                 <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/75 backdrop-blur-md border border-cyan-400/30 rounded-full text-[9.5px] xs:text-[10px] font-mono text-cyan-300 max-w-[58%] truncate">
                   <Sparkles className="w-3 h-3 text-cyan-400 shrink-0" />
-                  <span className="truncate">• FOUNDING MEMBER #{editionDisplay} OF 100</span>
+                  <span className="truncate">{isFoundersPass ? '• FOUNDERS PASS (#0)' : `• FOUNDING MEMBER #${editionDisplay} OF 100`}</span>
                 </div>
                 <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-emerald-500/50 rounded-full text-[9.5px] xs:text-[10px] font-mono font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)] shrink-0 whitespace-nowrap">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.9)]" />
@@ -798,15 +800,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 <span className="truncate">Orbital View</span>
               </>
             )}
-          </button>
-
-          <button
-            onClick={onLockPortal}
-            title="Lock the portal and return to the access gate"
-            className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2 text-xs font-mono text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all cursor-pointer min-h-[44px]"
-          >
-            <Lock className="w-3.5 h-3.5 text-white/60" />
-            <span>Lock</span>
           </button>
         </div>
       </div>
@@ -1324,7 +1317,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       {isVipMode ? (
                         <span className="text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-bold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-amber-300 bg-amber-950/80 border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)] animate-pulse shrink-0" />
-                          <span className="truncate">• YOU OWN EDITION #{editionDisplay} OF 100</span>
+                          <span className="truncate">{isFoundersPass ? '• YOU OWN FOUNDERS PASS (#0)' : `• YOU OWN EDITION #${editionDisplay} OF 100`}</span>
                         </span>
                       ) : (
                         <span className="text-[9.5px] xs:text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-semibold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)] shrink-0">
@@ -1384,7 +1377,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           </div>
                           <div className="flex flex-wrap items-baseline gap-2 mt-1">
                             <span className="text-lg sm:text-xl font-display font-extrabold text-white tracking-tight">
-                              Edition #{editionDisplay} of 100 Owned
+                              {isFoundersPass ? 'Founders Pass (#0) Owned' : `Edition #${editionDisplay} of 100 Owned`}
                             </span>
                             <span className="text-[11px] font-mono text-emerald-400 font-semibold bg-emerald-950/70 border border-emerald-500/30 px-2 py-0.5 rounded">
                               ● ACCESS UNLOCKED
@@ -1453,7 +1446,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <div>
                         <div className="text-[10px] font-mono text-white/50">FOUNDING RUN</div>
                         <div className="text-xs sm:text-sm font-semibold text-amber-400">
-                          {isVipMode ? `Edition #${editionDisplay} (Owned)` : '100 / 100 Claimed'}
+                          {isVipMode ? (isFoundersPass ? 'Founders Pass (#0) (Owned)' : `Edition #${editionDisplay} (Owned)`) : '100 / 100 Claimed'}
                         </div>
                       </div>
                       <div>
@@ -1548,7 +1541,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       Äkinoya Founding Pass — Physical Limited Edition
                     </h3>
                     <p className="text-[11px] sm:text-xs font-mono text-cyan-300/80">
-                      #{activeEditionNumber} of {TOTAL_EDITION_LIMIT}
+                      {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
                     </p>
                   </div>
                 </div>
@@ -1574,7 +1567,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                   <div className="py-2.5 flex items-center justify-between gap-3">
                     <span className="text-white/45 shrink-0">EDITION</span>
-                    <span className="text-white/80">#{activeEditionNumber} of {TOTAL_EDITION_LIMIT}</span>
+                    <span className="text-white/80">
+                      {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
+                    </span>
                   </div>
                 </div>
 
@@ -1680,7 +1675,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       Signed Certificate of Authenticity (COA)
                     </h3>
                     <p className="text-[10.5px] sm:text-[11px] font-mono text-white/50 mt-0.5">
-                      Deterministic cryptographic provenance bound to pass #{activePassId} (Edition #{editionDisplay} of 100).
+                      Deterministic cryptographic provenance bound to pass #{activePassId} ({isFoundersPass ? 'Founders Pass #0' : `Edition #${editionDisplay} of 100`}).
                     </p>
                   </div>
                 </div>
@@ -1713,7 +1708,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </h3>
             <p className="text-xs font-mono text-white/50 max-w-md mx-auto">
               {isVipMode
-                ? `Physical limited edition holographic NFC card (#${editionDisplay} of 100). Verified and authenticated on this device.`
+                ? (isFoundersPass
+                    ? 'Physical limited edition holographic NFC card (Founders Pass #0). Verified and authenticated on this device.'
+                    : `Physical limited edition holographic NFC card (#${editionDisplay} of 100). Verified and authenticated on this device.`)
                 : 'Founding edition fully claimed (100 / 100). Use your guest pass below for instant 1-click access to the Visualizer Hub.'}
             </p>
           </div>

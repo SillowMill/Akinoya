@@ -178,7 +178,7 @@ export const downloadCertificatePng = async (cert: BingaaCertificate): Promise<v
 
   const rows: [string, string][] = [
     ['REGISTERED HOLDER', cert.holderName.toUpperCase()],
-    ['EDITION', `FOUNDING MEMBER COPY #${cert.editionNumber} OF ${cert.editionTotal}`],
+    ['EDITION', cert.passId === 'AKN-VIP-2027-X0914' || cert.editionNumber === 0 ? 'FOUNDERS PASS (#0)' : `FOUNDING MEMBER COPY #${cert.editionNumber} OF ${cert.editionTotal}`],
     ['STATUS', cert.status],
     ['PASS ID', `#${cert.passId}`],
     ['CERTIFICATE ID', cert.certificateId],
@@ -227,7 +227,7 @@ export const downloadCertificatePng = async (cert: BingaaCertificate): Promise<v
   ctx.font = '800 44px ui-monospace, Menlo, monospace';
   ctx.fillText('AUTHENTIC', 0, 14);
   ctx.font = '600 24px ui-monospace, Menlo, monospace';
-  ctx.fillText(`SILLOW MILL · ${cert.editionNumber}/${cert.editionTotal}`, 0, 58);
+  ctx.fillText(`SILLOW MILL · ${cert.passId === 'AKN-VIP-2027-X0914' || cert.editionNumber === 0 ? 'FOUNDERS #0' : `${cert.editionNumber}/${cert.editionTotal}`}`, 0, 58);
   ctx.restore();
 
   const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));

@@ -115,7 +115,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     certificate?: BingaaCertificate | null;
   }>({
     tokenId: `#${activeToken}`,
-    edition: isMaster ? 'Master / Founders Pass (#0)' : `${derivedEdition} of 100`,
+    edition: isMaster ? 'Founders Pass (#0)' : `${derivedEdition} of 100`,
     editionNumber: derivedEdition,
     origin: 'Genesis Archive (Leuven Origin)',
     issueDate: '09.01.2027',
@@ -399,7 +399,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               Claim Your Äkinoya Founding Pass
             </h1>
             <p className="text-xs font-mono text-white/60 leading-relaxed">
-              Founding Physical Edition #{passData.editionNumber} of {TOTAL_EDITION_LIMIT}. This card has not yet been registered. Enter your name and email to permanently bind ownership and issue your official VIP Certificate of Authenticity.
+              {isMaster ? 'Founders Pass (#0)' : `Founding Physical Edition #${passData.editionNumber} of ${TOTAL_EDITION_LIMIT}`}. This card has not yet been registered. Enter your name and email to permanently bind ownership and issue your official VIP Certificate of Authenticity.
             </p>
           </div>
 
@@ -492,7 +492,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             </div>
             <div className="py-2.5 flex items-center justify-between gap-3">
               <span className="text-white/40">EDITION</span>
-              <span className="text-white font-medium">#{passData.editionNumber} of {TOTAL_EDITION_LIMIT}</span>
+              <span className="text-white font-medium">{isMaster ? 'Founders Pass (#0)' : `#${passData.editionNumber} of ${TOTAL_EDITION_LIMIT}`}</span>
             </div>
             <div className="py-2.5 flex items-center justify-between gap-3">
               <span className="text-white/40">ORIGIN</span>
