@@ -1119,16 +1119,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                       </div>
                     </div>
 
-                    {/* Bottom Action Footer: Disabled in Preview-Only Mode */}
-                    <div className="p-4 sm:p-6 pt-0 mt-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-white/5">
-                      <span className="text-[10.5px] font-mono text-white/40 truncate text-center sm:text-left">
-                        {asset.fileName}
-                      </span>
-
+                    {/* Bottom Action Footer: Seamless transition from description to CTA */}
+                    <div className="p-5 sm:p-6 pt-0 mt-auto">
                       <button
                         type="button"
                         onClick={() => handleDownloadAsset(asset, index)}
-                        className={`w-full sm:w-auto min-h-[48px] px-4 py-2.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        className={`w-full min-h-[48px] px-4 py-2.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                           isAnnualOrCreator
                             ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_15px_rgba(56,189,248,0.35)]'
                             : 'bg-white/[0.04] hover:bg-white/10 border border-white/10 text-white/70 hover:text-white'
