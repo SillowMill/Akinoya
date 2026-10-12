@@ -764,8 +764,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!cleanEmail || !cleanEmail.includes('@')) {
       return { success: false, error: 'Please enter a valid email address.' };
     }
-    if (!password || password.length < 6) {
-      return { success: false, error: 'Password must be at least 6 characters.' };
+    if (!password || password.length < 8) {
+      return { success: false, error: 'Password must be at least 8 characters.' };
+    }
+    const hasSpecial =
+      /[!@#$%^&*()_+\-=[\]{}|;:,.<>?~`'"/\\]/.test(password) || /[^A-Za-z0-9\s]/.test(password);
+    if (!hasSpecial) {
+      return { success: false, error: 'Password must contain at least 1 special character.' };
     }
     if (!cleanFirst) {
       return { success: false, error: 'First name is required.' };

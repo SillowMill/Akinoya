@@ -32,11 +32,19 @@ export const AuthModal: React.FC = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Real-time password validation criteria
+  const hasMinLength = password.length >= 8;
+  const hasSpecialChar =
+    /[!@#$%^&*()_+\-=[\]{}|;:,.<>?~`'"/\\]/.test(password) || /[^A-Za-z0-9\s]/.test(password);
+  const passwordsMatch = Boolean(password && confirmPassword && password === confirmPassword);
 
   // Sync mode with context
   React.useEffect(() => {
@@ -44,6 +52,8 @@ export const AuthModal: React.FC = () => {
       setMode(authModalMode);
       setError(null);
       setSuccess(null);
+      setConfirmPassword('');
+      setShowConfirmPassword(false);
     }
   }, [authModalMode, isAuthModalOpen]);
 
@@ -69,6 +79,25 @@ export const AuthModal: React.FC = () => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+
+    if (mode === 'signup') {
+      if (!hasMinLength) {
+        setError('Password must contain at least 8 characters.');
+        soundManager.playError();
+        return;
+      }
+      if (!hasSpecialChar) {
+        setError('Password must contain at least 1 special character (e.g. !@#$%^&*).');
+        soundManager.playError();
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match. Please ensure both passwords match exactly.');
+        soundManager.playError();
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -163,6 +192,8 @@ export const AuthModal: React.FC = () => {
                 setMode('signin');
                 setError(null);
                 setSuccess(null);
+                setConfirmPassword('');
+                setShowConfirmPassword(false);
                 soundManager.playTone(560, 0.04);
               }}
               className={`min-h-[48px] py-2 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
@@ -180,6 +211,8 @@ export const AuthModal: React.FC = () => {
                 setMode('signup');
                 setError(null);
                 setSuccess(null);
+                setConfirmPassword('');
+                setShowConfirmPassword(false);
                 soundManager.playTone(560, 0.04);
               }}
               className={`min-h-[48px] py-2 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
@@ -299,9 +332,12 @@ export const AuthModal: React.FC = () => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    minLength={6}
+                    minLength={mode === 'signup' ? 8 : 6}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (error) setError(null);
+                    }}
                     placeholder="••••••••"
                     className="w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
                   />
@@ -315,6 +351,99 @@ export const AuthModal: React.FC = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Confirm Password Input & Real-Time UX Feedback (Register mode only) */}
+              {mode === 'signup' && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-mono text-white/70 block">
+                    Confirm Password <span className="text-cyan-400">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Lock className="absolute left-3.5 w-4 h-4 text-white/40 pointer-events-none" />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (error) setError(null);
+                      }}
+                      placeholder="••••••••"
+                      className={`w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-black/60 border ${
+                        confirmPassword.length > 0 && !passwordsMatch
+                          ? 'border-rose-500/60 focus:border-rose-400'
+                          : passwordsMatch
+                          ? 'border-emerald-500/60 focus:border-emerald-400'
+                          : 'border-white/15 focus:border-cyan-400'
+                      } text-white text-xs sm:text-sm font-sans outline-none transition-colors`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3.5 text-white/40 hover:text-white p-1 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                      aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+
+                  {/* Real-time UX Password Validation Checklist */}
+                  <div className="pt-1.5 pb-0.5 px-0.5 space-y-1.5 text-[11px] font-mono">
+                    <div
+                      className={`flex items-center gap-2 transition-colors ${
+                        hasMinLength
+                          ? 'text-emerald-400 font-medium'
+                          : password.length > 0
+                          ? 'text-white/60'
+                          : 'text-white/40'
+                      }`}
+                    >
+                      {hasMinLength ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
+                      )}
+                      <span>• At least 8 characters</span>
+                    </div>
+
+                    <div
+                      className={`flex items-center gap-2 transition-colors ${
+                        hasSpecialChar
+                          ? 'text-emerald-400 font-medium'
+                          : password.length > 0
+                          ? 'text-white/60'
+                          : 'text-white/40'
+                      }`}
+                    >
+                      {hasSpecialChar ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
+                      )}
+                      <span>• At least 1 special character</span>
+                    </div>
+
+                    <div
+                      className={`flex items-center gap-2 transition-colors ${
+                        passwordsMatch
+                          ? 'text-emerald-400 font-medium'
+                          : confirmPassword.length > 0
+                          ? 'text-rose-400 font-medium'
+                          : 'text-white/40'
+                      }`}
+                    >
+                      {passwordsMatch ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      ) : confirmPassword.length > 0 ? (
+                        <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
+                      )}
+                      <span>• Passwords match</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Error Banner */}
               {error && (
