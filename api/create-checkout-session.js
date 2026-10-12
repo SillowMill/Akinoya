@@ -106,7 +106,7 @@ export default async function handler(req, res) {
               currency: 'eur',
               product_data: {
                 name: 'Sillow Mill — Community Perks & Hub (Annual Pass)',
-                description: 'Annual recurring pass to unreleased music vaults, animation early access, voting rights & lore governance (€60/year, ~€5/mo).',
+                description: 'Exclusive Annual Membership Pass (€60/year, equivalent to just €5/month). Unlocks full 3D visualizer breakdowns, unreleased audio masters, lore governance & 4K assets on January 9, 2027.',
               },
               unit_amount: 6000, // €60.00 / year
               recurring: {

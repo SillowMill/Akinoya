@@ -34,6 +34,8 @@ import {
   Eye,
   Check,
   Zap,
+  Hash,
+  Users,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
@@ -62,7 +64,10 @@ interface AssetVaultItem {
 
 interface WorkflowItem {
   id: string;
+  stepNumber: string;
+  tag: string;
   title: string;
+  subtitle: string;
   toolstack: string;
   duration: string;
   description: string;
@@ -74,7 +79,7 @@ interface WorkflowItem {
 interface WorkflowComment {
   id: string;
   author: string;
-  role: 'CREATOR' | 'PATRON MEMBER' | 'COMMUNITY MEMBER';
+  role: 'CREATOR' | 'ANNUAL PASS MEMBER' | 'PATRON' | 'COMMUNITY MEMBER';
   timestamp: string;
   text: string;
 }
@@ -91,10 +96,19 @@ interface VisualizerTrackItem {
   previewImage: string;
 }
 
+export interface ChatChannel {
+  id: string;
+  name: string;
+  category: 'PUBLIC HUB' | 'CREATOR LAB (ANNUAL PASS)';
+  description: string;
+  isAnnualPass?: boolean;
+}
+
 interface DiscussionPost {
   id: string;
+  channelId: string;
   author: string;
-  role: 'CREATOR' | 'PATRON MEMBER' | 'COMMUNITY MEMBER';
+  role: 'CREATOR' | 'ANNUAL PASS MEMBER' | 'PATRON' | 'COMMUNITY MEMBER';
   avatarBg: string;
   timestamp: string;
   content: string;
@@ -107,7 +121,7 @@ interface DiscussionPost {
 interface DiscussionReply {
   id: string;
   author: string;
-  role: 'CREATOR' | 'PATRON MEMBER' | 'COMMUNITY MEMBER';
+  role: 'CREATOR' | 'ANNUAL PASS MEMBER' | 'PATRON' | 'COMMUNITY MEMBER';
   avatarBg: string;
   timestamp: string;
   content: string;
@@ -151,7 +165,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
 
   // Paywall Upgrade Modal state
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-  const [upgradeModalReason, setUpgradeModalReason] = useState<string>('Unlock full access to downloads, DAW templates, and 4K vaults.');
+  const [upgradeModalReason, setUpgradeModalReason] = useState<string>(
+    'Exclusive Annual Membership Pass (€60/year, equivalent to just €5/month). Unlocks full 3D visualizer breakdowns, unreleased audio masters, lore governance & 4K assets on January 9, 2027.'
+  );
   const [isSubscribing, setIsSubscribing] = useState(false);
 
   // Download Toast
@@ -169,7 +185,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
   const [openWorkflowDrawerId, setOpenWorkflowDrawerId] = useState<string | null>(null);
   const [workflowCommentInputs, setWorkflowCommentInputs] = useState<Record<string, string>>({});
 
-  // Discussion state (100% Free & Open)
+  // Multi-Channel Discord Comm-Net State
+  const [activeChannelId, setActiveChannelId] = useState<string>('general-chat');
   const [discussionInput, setDiscussionInput] = useState('');
   const [discussionImage, setDiscussionImage] = useState<string | null>(null);
   const discussionFileInputRef = useRef<HTMLInputElement>(null);
@@ -185,7 +202,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
       fileFormat: 'PDF LORE PREVIEW',
       fileSize: '114.8 MB · 300 DPI CMYK',
       description:
-        'Read-only digital lore preview and narrative teaser sequence. Note: The full official print edition of "Bingäa" is sold separately as a physical collector\'s item and is not included as a free digital download.',
+        'Read-only digital lore preview and narrative teaser sequence. Note: The full official 32-page print edition of "Bingäa" is sold separately as a physical collector\'s item (€14,99) and is not included as a free digital download.',
       downloadUrl: BINGAA_PDF_URL,
       fileName: BINGAA_PDF_FILENAME,
       heroBannerUrl: moodboardImg,
@@ -229,63 +246,116 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     },
   ];
 
-  // 2. WORKFLOWS & CREATIVE LAB DATA
+  // 2. WORKFLOWS & CREATIVE LAB DATA (4-STEP PRODUCTION ROADMAP)
   const [workflows, setWorkflows] = useState<WorkflowItem[]>([
     {
-      id: 'wf-volumetric',
-      title: 'Atmospheric Ionization & Twilight Horizon Simulation',
-      toolstack: 'Blender 4.2 · Octane Render · DaVinci Resolve',
-      duration: '14:28 Breakdown',
+      id: 'wf-step-01',
+      stepNumber: '01',
+      tag: 'LORE & SCRIPT',
+      title: 'Concept & Storyboarding',
+      subtitle: 'Scene narrative, 2D drafts & shot lists',
+      toolstack: 'Clip Studio Paint EX · Storyboard Pro · Adobe Photoshop',
+      duration: '12:40 Breakdown',
       description:
-        'Behind-the-scenes breakdown of how we achieved the signature twilight purple-cyan color transitions using volumetric scatter nodes, velocity particle emitters, and spectral grading curves.',
-      heroBannerUrl: akinoyaVistaImg,
-      metrics: { fps: '60.00', engine: 'OCTANE SPECTRAL', resolution: '4K DCI' },
+        'Deconstructing the cinematic narrative arc from initial lore worldbuilding scripts to rough 2D thumbnail passes. We establish dynamic camera framing, pilot perspective geometry, and panel pacing that translate directly from the Bingäa graphic novel into animated shot sequences.',
+      heroBannerUrl: moodboardImg,
+      metrics: { fps: '24 FPS ANIMATIC', engine: 'STORYBOARD PRO', resolution: 'B4 MANUSCRIPT' },
       comments: [
         {
           id: 'wfc-1',
           author: 'Elena Vance',
-          role: 'PATRON MEMBER',
+          role: 'ANNUAL PASS MEMBER',
           timestamp: '2h ago',
-          text: 'The density multiplier you used for the high-altitude cloud rim creates incredible cinematic depth.',
+          text: 'The panel pacing transitions between upper orbit and atmospheric entry build immense tension.',
         },
         {
           id: 'wfc-2',
           author: 'Odi',
           role: 'CREATOR',
           timestamp: '1h ago',
-          text: 'Thanks Elena! We layered two separate absorption shaders with subtle chromatic aberration at the horizon edge.',
+          text: 'Thanks Elena! We timed the cut duration to match the heartbeat frequency of the pilot before the ionization shockwave hits.',
         },
       ],
     },
     {
-      id: 'wf-audio-synthesis',
-      title: 'Sound Design: Modular Analog Synthesis & DAW Project Walkthrough',
-      toolstack: 'Ableton Live 12 · Eurorack Modular · Moog Sub 37',
-      duration: '18:40 Breakdown',
+      id: 'wf-step-02',
+      stepNumber: '02',
+      tag: 'BLENDER / OCTANE',
+      title: '3D Scene Architecture & Shaders',
+      subtitle: 'Environment, lighting rigs & node setup',
+      toolstack: 'Blender 4.2 · Octane Render Spectral · Quixel Megascans',
+      duration: '18:15 Breakdown',
       description:
-        'Deep dive into the harmonic FM synthesis techniques and Ableton rack macros used to construct the extraterrestrial radio telemetry audio loops that play across the Äkinoya surface.',
-      heroBannerUrl: visualizerThumbnailImg,
-      metrics: { fps: 'N/A', engine: 'BINAURAL 3D STEREO', resolution: '96kHz/24bit' },
+        'Building the procedural terrain and obsidian spires of Upper Äkinoya. In-depth walkthrough of volumetric absorption shaders, atmospheric fog density nodes, custom spectral emission curves, and 3-point cinematic lighting rigs optimized for 4K rendering.',
+      heroBannerUrl: akinoyaVistaImg,
+      metrics: { fps: '60.00 FPS', engine: 'OCTANE SPECTRAL', resolution: '4K DCI (3840x2160)' },
       comments: [
         {
           id: 'wfc-3',
-          author: 'Kaelen Thorne',
+          author: 'Cygnus-9',
           role: 'PATRON MEMBER',
           timestamp: '3h ago',
-          text: 'Can you share the filter envelope settings for the low-frequency drone in the opening sequence?',
+          text: 'The dual-absorption shader approach for the horizon rim solves the black edge artifacting so cleanly!',
+        },
+        {
+          id: 'wfc-4',
+          author: 'Odi',
+          role: 'CREATOR',
+          timestamp: '2h ago',
+          text: 'Exactly—it separates the purple stratosphere from the deep space blackbody curve without harsh clipping.',
         },
       ],
     },
     {
-      id: 'wf-storyboard',
-      title: 'Graphic Novel Composition: Visual Pacing from Thumbnails to Inks',
-      toolstack: 'Clip Studio Paint EX · Adobe Photoshop',
-      duration: '11:15 Breakdown',
+      id: 'wf-step-03',
+      stepNumber: '03',
+      tag: 'AI PIPELINE',
+      title: 'AI Visual Enhancements & Prompting',
+      subtitle: 'Style consistency, prompt frameworks & frame passes',
+      toolstack: 'ComfyUI · Stable Diffusion XL · Custom Sci-Fi LoRA',
+      duration: '15:50 Breakdown',
       description:
-        'Deconstruction of page 12 to 16 in Bingäa Issue #01. Examining panel flow, negative space, mechanical line weights, and traditional screentone application.',
+        'Advanced AI animation augmentation pipeline: utilizing ControlNet depth maps, custom LoRA prompt matrices, and multi-pass frame upscaling to maintain precise character styling, metallic surface textures, and neon lighting consistency without temporal flickering.',
+      heroBannerUrl: visualizerThumbnailImg,
+      metrics: { fps: 'MULTI-PASS LORA', engine: 'COMFYUI PIPELINE', resolution: '4K UHD MASTER' },
+      comments: [
+        {
+          id: 'wfc-5',
+          author: 'Kaelen Thorne',
+          role: 'ANNUAL PASS MEMBER',
+          timestamp: '4h ago',
+          text: 'Could you share the ControlNet depth weight curve used across the high-speed camera tracking shots?',
+        },
+        {
+          id: 'wfc-6',
+          author: 'Odi',
+          role: 'CREATOR',
+          timestamp: '1h ago',
+          text: 'We keep depth weight at 0.85 for the first 35% of denoising steps, then taper to 0.4 to let the LoRA style textures take over.',
+        },
+      ],
+    },
+    {
+      id: 'wf-step-04',
+      stepNumber: '04',
+      tag: 'AUDIO & EDITING',
+      title: 'Music Sync & DaVinci Post-Processing',
+      subtitle: 'Audio-reactive animation sync & 4K master export',
+      toolstack: 'DaVinci Resolve Studio · Ableton Live 12 · ACEScc',
+      duration: '20:05 Breakdown',
+      description:
+        'Aligning visual cuts to analog synthesizer transients, sub-bass 808 drops, and atmospheric risers. Final ACEScc color science grading, anamorphic halation, organic 35mm film grain overlays, and master delivery in uncompressed 4K 60FPS ProRes 4444 XQ with 24-bit 96kHz LPCM audio.',
       heroBannerUrl: bingaaComicCover,
-      metrics: { fps: 'N/A', engine: 'RASTER 600DPI', resolution: 'B4 MANUSCRIPT' },
-      comments: [],
+      metrics: { fps: '60 FPS', engine: 'ACEScc COLOR SCIENCE', resolution: '4K PRORES 4444 XQ' },
+      comments: [
+        {
+          id: 'wfc-7',
+          author: 'Elena Vance',
+          role: 'ANNUAL PASS MEMBER',
+          timestamp: '5h ago',
+          text: 'The bass transient alignment with the camera shake at 03:14 hits so hard on monitors.',
+        },
+      ],
     },
   ]);
 
@@ -329,39 +399,200 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     },
   ];
 
-  // 4. CREATOR DISCUSSION BOARD DATA (100% Free & Open)
+  // 4. DISCORD-STYLE MULTI-CHANNEL COMM-NET CHANNELS
+  const CHAT_CHANNELS: ChatChannel[] = [
+    {
+      id: 'general-chat',
+      name: 'general-chat',
+      category: 'PUBLIC HUB',
+      description: 'Free Public Discussion, Introductions & Community Central',
+    },
+    {
+      id: 'lore-theory-crafting',
+      name: 'lore-theory-crafting',
+      category: 'PUBLIC HUB',
+      description: 'Äkinoya Worldbuilding, Canon Lore, Timeline & Theorycrafting',
+    },
+    {
+      id: 'visualizers-3d',
+      name: 'visualizers-3d',
+      category: 'CREATOR LAB (ANNUAL PASS)',
+      description: 'Blender & Octane 3D Scene Architecture, Volumetric Shaders & Lighting',
+      isAnnualPass: true,
+    },
+    {
+      id: 'music-daw-lounge',
+      name: 'music-daw-lounge',
+      category: 'CREATOR LAB (ANNUAL PASS)',
+      description: 'DAW Session Templates, Analog Synthesizers & VIP Audio Master Feedback',
+      isAnnualPass: true,
+    },
+    {
+      id: 'asset-showcase',
+      name: 'asset-showcase',
+      category: 'CREATOR LAB (ANNUAL PASS)',
+      description: 'Community Artwork, 4K Wallpapers & Work-In-Progress Production Renders',
+      isAnnualPass: true,
+    },
+  ];
+
+  // 4b. MULTI-CHANNEL DISCUSSION POSTS FEED
   const [discussionPosts, setDiscussionPosts] = useState<DiscussionPost[]>([
+    // # general-chat
     {
       id: 'dp-1',
+      channelId: 'general-chat',
       author: 'Odi',
       role: 'CREATOR',
       avatarBg: 'from-amber-400 to-amber-600',
       timestamp: 'Today at 14:15',
       content:
-        'Welcome to the official Sillow Mill Creative Vault & Product Hub! This environment consolidates all production downloads, workflow breakdowns, visualizer test reels, and community governance into one command center.\n\nFree community members get a full preview of the first asset in each category and unrestricted access to this discussion board!',
+        'Welcome to the official Sillow Mill Comm-Net & Creator Hub! This Discord-style environment consolidates all production downloads, workflow roadmaps, visualizer test reels, and community channels into one command center.\n\nFree community members have open access to our public channels and full read-only previews of all production vaults!',
       imageUrl: bingaaComicCover,
-      likes: 31,
+      likes: 38,
       hasLiked: false,
       replies: [
         {
           id: 'dpr-1',
           author: 'Elena Vance',
-          role: 'PATRON MEMBER',
+          role: 'ANNUAL PASS MEMBER',
           avatarBg: 'from-cyan-400 to-blue-600',
           timestamp: 'Today at 14:32',
-          content: 'The download vault layout is clean and fast. Studio masters sound immaculate in the DAW!',
+          content: 'The new step-by-step 3D timeline looks incredible. Excited for the January 9, 2027 full launch!',
         },
       ],
     },
     {
       id: 'dp-2',
+      channelId: 'general-chat',
       author: 'Cygnus-9',
-      role: 'PATRON MEMBER',
+      role: 'PATRON',
       avatarBg: 'from-purple-400 to-indigo-600',
       timestamp: 'Today at 15:04',
       content:
-        'Just reviewed the volumetric cloud breakdown in the Creative Lab. The lighting workflow at 08:30 is super insightful. Looking forward to casting my ballot for Chapter 2!',
-      likes: 19,
+        'Just reviewed the volumetric cloud breakdown in the Creative Lab. The dual-absorption shader approach at Step 02 is super insightful. Looking forward to casting my ballot for Chapter 2!',
+      likes: 21,
+      hasLiked: false,
+      replies: [],
+    },
+    // # lore-theory-crafting
+    {
+      id: 'dp-3',
+      channelId: 'lore-theory-crafting',
+      author: 'Odi',
+      role: 'CREATOR',
+      avatarBg: 'from-amber-400 to-amber-600',
+      timestamp: 'Yesterday at 18:20',
+      content:
+        'Lore Dispatch #01: Planet Äkinoya orbits a binary white dwarf star system. The intense ionization in the upper mesosphere creates the signature twilight purple-cyan sky gradient observed from Sector 02.',
+      imageUrl: akinoyaVistaImg,
+      likes: 45,
+      hasLiked: false,
+      replies: [
+        {
+          id: 'dpr-2',
+          author: 'Vesper-01',
+          role: 'COMMUNITY MEMBER',
+          avatarBg: 'from-slate-400 to-slate-600',
+          timestamp: 'Yesterday at 19:05',
+          content: 'Does this ionization also explain why the obsidian spires resonate at 432Hz?',
+        },
+        {
+          id: 'dpr-3',
+          author: 'Odi',
+          role: 'CREATOR',
+          avatarBg: 'from-amber-400 to-amber-600',
+          timestamp: 'Yesterday at 19:30',
+          content: 'Yes! The resonance acts as a harmonic stabilizer for the pilot guidance relays.',
+        },
+      ],
+    },
+    {
+      id: 'dp-4',
+      channelId: 'lore-theory-crafting',
+      author: 'Kaelen Thorne',
+      role: 'ANNUAL PASS MEMBER',
+      avatarBg: 'from-cyan-400 to-blue-600',
+      timestamp: 'Today at 11:42',
+      content:
+        'Notice how page 14 of the Bingäa comic preview references the "Obsidian Resonance Core". Looking at the Council Ballot, Sector 04 might reveal the origins of the first pilot expedition.',
+      likes: 16,
+      hasLiked: false,
+      replies: [],
+    },
+    // # visualizers-3d
+    {
+      id: 'dp-5',
+      channelId: 'visualizers-3d',
+      author: 'Odi',
+      role: 'CREATOR',
+      avatarBg: 'from-amber-400 to-amber-600',
+      timestamp: '2 days ago',
+      content:
+        'Blender 4.2 & Octane Spectral setup tip: We clamped volumetric scatter density at 0.04 and dialed anisotropic phase to 0.72. This keeps the starry backdrop visible behind the heavy cloud rim without introducing firefly noise.',
+      imageUrl: visualizerThumbnailImg,
+      likes: 54,
+      hasLiked: false,
+      replies: [
+        {
+          id: 'dpr-4',
+          author: 'Elena Vance',
+          role: 'ANNUAL PASS MEMBER',
+          avatarBg: 'from-cyan-400 to-blue-600',
+          timestamp: '2 days ago',
+          content: 'Tested this in my local scene—dramatically reduces noise without blowing out render times.',
+        },
+      ],
+    },
+    // # music-daw-lounge
+    {
+      id: 'dp-6',
+      channelId: 'music-daw-lounge',
+      author: 'Odi',
+      role: 'CREATOR',
+      avatarBg: 'from-amber-400 to-amber-600',
+      timestamp: '3 days ago',
+      content:
+        'DAW Template walkthrough: In "Sub-Orbital Drift", the modular lead uses dual-sine frequency modulation with a gentle tape saturation curve. Transient punch is preserved by sidechaining the sub-bass 808 transient bed directly.',
+      likes: 33,
+      hasLiked: false,
+      replies: [
+        {
+          id: 'dpr-5',
+          author: 'BeatArchitect',
+          role: 'ANNUAL PASS MEMBER',
+          avatarBg: 'from-cyan-400 to-blue-600',
+          timestamp: '3 days ago',
+          content: 'The uncompressed 24-bit / 96kHz audio masters sound huge on studio monitors. Zero phase cancellation.',
+        },
+      ],
+    },
+    // # asset-showcase
+    {
+      id: 'dp-7',
+      channelId: 'asset-showcase',
+      author: 'Odi',
+      role: 'CREATOR',
+      avatarBg: 'from-amber-400 to-amber-600',
+      timestamp: '4 days ago',
+      content:
+        'Dropping the raw 4K wallpaper render of the Ionized Stratosphere. Optimized for ultra-wide monitors and OLED displays with zero compression.',
+      imageUrl: akinoyaVistaImg,
+      likes: 62,
+      hasLiked: false,
+      replies: [],
+    },
+    {
+      id: 'dp-8',
+      channelId: 'asset-showcase',
+      author: 'NeoArtist',
+      role: 'ANNUAL PASS MEMBER',
+      avatarBg: 'from-cyan-400 to-blue-600',
+      timestamp: '3 days ago',
+      content:
+        'Sharing my WIP 3D study of the pilot flight helmet visor reflections modeled in Blender and textured in Substance Painter!',
+      imageUrl: moodboardImg,
+      likes: 29,
       hasLiked: false,
       replies: [],
     },
@@ -501,8 +732,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     soundManager.playTone(820, 0.06);
     const newPost: DiscussionPost = {
       id: `dp-${Date.now()}`,
+      channelId: activeChannelId,
       author: patronName,
-      role: isPatron ? 'PATRON MEMBER' : 'COMMUNITY MEMBER',
+      role: isPatron ? 'ANNUAL PASS MEMBER' : 'COMMUNITY MEMBER',
       avatarBg: isPatron ? 'from-cyan-400 to-indigo-600' : 'from-slate-400 to-slate-600',
       timestamp: 'Just now',
       content: discussionInput.trim(),
@@ -544,7 +776,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     const newReply: DiscussionReply = {
       id: `dpr-${Date.now()}`,
       author: patronName,
-      role: isPatron ? 'PATRON MEMBER' : 'COMMUNITY MEMBER',
+      role: isPatron ? 'ANNUAL PASS MEMBER' : 'COMMUNITY MEMBER',
       avatarBg: isPatron ? 'from-cyan-400 to-indigo-600' : 'from-slate-400 to-slate-600',
       timestamp: 'Just now',
       content: replyInputText.trim(),
@@ -567,7 +799,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
   const handleVoteBallot = (ballotId: string, optionId: string, isFirstBallot: boolean) => {
     if (!isPatron && !isFirstBallot) {
       soundManager.playTone(480, 0.08);
-      setUpgradeModalReason('Council Ballot #02 is reserved for verified Patrons. Annual membership (€60/year) launches on 09/01/2027.');
+      setUpgradeModalReason('Council Ballot #02 is reserved for verified Patrons. Annual membership (€60/year, ~€5/month) launches on 09/01/2027.');
       setIsUpgradeModalOpen(true);
       return;
     }
@@ -627,7 +859,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
             title="Public membership launches on 09/01/2027"
           >
             <Lock className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
-            <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR</span>
+            <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
           </button>
         </div>
       </header>
@@ -637,9 +869,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
         <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-3 min-w-max">
           {[
             { id: 'downloads', label: 'Asset & Download Vault', icon: FolderDown, count: '4' },
-            { id: 'workflows', label: 'Workflows & Creative Lab', icon: Sliders, count: '3' },
+            { id: 'workflows', label: 'Workflows & Creative Lab', icon: Sliders, count: '4 Steps' },
             { id: 'visualizer', label: 'Early Access Visualizer Hub', icon: Film, count: '3' },
-            { id: 'discussion', label: '# 💬-general-chat (Free Chat)', icon: MessageSquare, count: discussionPosts.length.toString() },
+            { id: 'discussion', label: 'Comm-Net Chat (5 Channels)', icon: MessageSquare, count: '5 Channels' },
             { id: 'governance', label: 'Lore & Governance Portal', icon: Vote, count: '2' },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -695,7 +927,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     MODULE 01 · ASSETS &amp; DOWNLOADS
                   </span>
                   <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                    1 FREE SAMPLE UNLOCKED · €60/YR ANNUAL PASS
+                    1 FREE SAMPLE UNLOCKED · €60/YR (~€5/MO)
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
@@ -713,7 +945,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 title="Full vault downloads launch on 09/01/2027"
               >
                 <Lock className="w-4 h-4 text-amber-400/80" />
-                <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR</span>
+                <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
               </button>
             </div>
 
@@ -845,59 +1077,83 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     MODULE 02 · PRODUCTION WORKFLOWS
                   </span>
                   <span className="text-[10px] font-mono text-purple-300 font-semibold">
-                    1 FREE BREAKDOWN SAMPLE UNLOCKED
+                    4 PRODUCTION ROADMAP STEPS · €60/YR (~€5/MO)
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
                   🧪 Workflows &amp; Creative Lab
                 </h1>
                 <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  In-depth technical breakdowns of 3D shaders, modular synthesis chains, and paneling architecture. Ask questions in the dedicated Q&amp;A drawer under each workflow.
+                  Vertical step-by-step production roadmap deconstructing 3D shaders, modular synthesis chains, and paneling architecture. Ask questions in the dedicated technical Q&amp;A drawer under each step.
                 </p>
               </div>
             </div>
 
-            {/* Workflow Breakdown Cards */}
-            <div className="space-y-8">
+            {/* Vertical Timeline Production Step Roadmap */}
+            <div className="relative pl-0 md:pl-10 space-y-8 sm:space-y-12 before:hidden md:before:block before:absolute before:left-4 before:top-4 before:bottom-8 before:w-0.5 before:bg-gradient-to-b before:from-purple-500 before:via-cyan-400 before:to-purple-500/30">
               {workflows.map((wf, index) => {
                 const isFreeSample = index === 0;
                 const isLockedForUser = !isPatron && !isFreeSample;
 
                 return (
-                  <div
-                    key={wf.id}
-                    className="rounded-2xl bg-black/60 border border-purple-500/30 shadow-[0_4px_35px_rgba(0,0,0,0.6)] overflow-hidden space-y-4"
-                  >
-                    {/* Full-Width 16:9 Cinematic Video Player Banner */}
-                    <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/95 border-b border-purple-500/20 group">
-                      <img
-                        src={wf.heroBannerUrl}
-                        alt={wf.title}
-                        className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-                          isLockedForUser ? 'blur-sm opacity-50 scale-105' : 'opacity-70'
-                        }`}
-                      />
+                  <div key={wf.id} className="relative group">
+                    {/* Glowing Timeline Node Indicator (Desktop) */}
+                    <div className="hidden md:flex absolute -left-10 top-6 -translate-x-1/2 w-9 h-9 rounded-full bg-[#080d1a] border-2 border-purple-400 items-center justify-center font-mono font-black text-xs text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.5)] z-10">
+                      {wf.stepNumber}
+                    </div>
 
-                      {/* Sci-Fi HUD Overlay */}
-                      <div className="absolute inset-0 p-3 sm:p-6 flex flex-col justify-between pointer-events-none">
-                        <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-xs font-mono text-purple-300">
-                          <span className="bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-purple-500/30">
-                            {wf.toolstack}
+                    <div className="rounded-2xl bg-black/70 border border-purple-500/30 hover:border-purple-400/60 transition-all shadow-[0_4px_35px_rgba(0,0,0,0.7)] overflow-hidden space-y-4">
+                      {/* Step Header with Step Badge, Tag, Subtitle & Duration */}
+                      <div className="p-4 sm:p-5 border-b border-purple-500/20 bg-gradient-to-r from-purple-950/30 via-black/40 to-transparent flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <span className="px-2.5 py-1 rounded-lg bg-purple-500 text-black font-mono font-extrabold text-xs tracking-wider shadow-[0_0_12px_rgba(168,85,247,0.4)]">
+                            STEP {wf.stepNumber}
                           </span>
-                          <span className="bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20">
+                          <span className="px-2.5 py-1 rounded-lg bg-purple-950/80 border border-purple-400/40 text-purple-300 font-mono font-bold text-[10.5px] tracking-wider uppercase">
+                            TAG: {wf.tag}
+                          </span>
+                          <span className="text-xs sm:text-sm text-white/80 font-sans font-medium">
+                            {wf.subtitle}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-mono text-purple-300/80 bg-white/5 px-2.5 py-1 rounded-md border border-white/10">
                             {wf.duration}
                           </span>
                         </div>
-
-                        <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-xs font-mono text-cyan-300">
-                          <span className="bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg">
-                            ENGINE: {wf.metrics.engine} · RES: {wf.metrics.resolution}
-                          </span>
-                          <span className="text-[9.5px] sm:text-[10px] font-bold tracking-wider text-purple-400 hidden xs:inline">
-                            SILLOW MILL CREATIVE LAB
-                          </span>
-                        </div>
                       </div>
+
+                      {/* Full-Width 16:9 Cinematic Video Player Banner */}
+                      <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/95 border-y border-purple-500/20 group/media">
+                        <img
+                          src={wf.heroBannerUrl}
+                          alt={wf.title}
+                          className={`w-full h-full object-cover transition-transform duration-500 group-hover/media:scale-105 ${
+                            isLockedForUser ? 'blur-sm opacity-50 scale-105' : 'opacity-75'
+                          }`}
+                        />
+
+                        {/* Sci-Fi HUD Overlay */}
+                        <div className="absolute inset-0 p-3 sm:p-6 flex flex-col justify-between pointer-events-none">
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-xs font-mono text-purple-300">
+                            <span className="bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-purple-500/30">
+                              {wf.toolstack}
+                            </span>
+                            <span className="bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20">
+                              {wf.metrics.fps}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] sm:text-xs font-mono text-cyan-300">
+                            <span className="bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-cyan-500/30">
+                              ENGINE: {wf.metrics.engine} · RES: {wf.metrics.resolution}
+                            </span>
+                            <span className="text-[9.5px] sm:text-[10px] font-bold tracking-wider text-purple-400 hidden xs:inline">
+                              SILLOW MILL CREATIVE LAB
+                            </span>
+                          </div>
+                        </div>
 
                         <button
                           type="button"
@@ -914,87 +1170,88 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-400/40 font-semibold tracking-wider flex items-center gap-1">
                             <Sparkles className="w-2.5 h-2.5 text-purple-400" />
-                            READ-ONLY WORKFLOW
+                            READ-ONLY TIMELINE STEP
                           </span>
                           <span className="text-xs font-mono text-purple-300">{wf.toolstack}</span>
                         </div>
 
-                      <h2 className="text-base sm:text-xl font-display font-bold text-white">
-                        {wf.title}
-                      </h2>
+                        <h2 className="text-base sm:text-xl font-display font-bold text-white">
+                          {wf.title}
+                        </h2>
 
-                      <p className="text-xs sm:text-sm text-white/70 font-sans leading-relaxed">
-                        {wf.description}
-                      </p>
+                        <p className="text-xs sm:text-sm text-white/70 font-sans leading-relaxed">
+                          {wf.description}
+                        </p>
 
-                      {/* Expandable Q&A Drawer Trigger */}
-                      <div className="pt-3 border-t border-white/10 flex items-center justify-between">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenWorkflowDrawerId(openWorkflowDrawerId === wf.id ? null : wf.id)
-                          }
-                          className="flex items-center gap-2 text-xs font-mono font-semibold text-purple-300 hover:text-white transition-colors cursor-pointer"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          <span>
-                            {wf.comments.length} Technical Q&amp;A Comments &amp; Dialogue
-                          </span>
-                          {openWorkflowDrawerId === wf.id ? (
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          ) : (
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Drawer Container */}
-                      {openWorkflowDrawerId === wf.id && (
-                        <div className="mt-3 p-4 rounded-xl bg-black/80 border border-purple-500/20 space-y-3">
-                          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                            {wf.comments.length === 0 ? (
-                              <div className="text-xs font-mono text-white/40 italic p-2">
-                                No questions yet. Be the first to ask about this production setup!
-                              </div>
+                        {/* Expandable Q&A Drawer Trigger */}
+                        <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenWorkflowDrawerId(openWorkflowDrawerId === wf.id ? null : wf.id)
+                            }
+                            className="flex items-center gap-2 text-xs font-mono font-semibold text-purple-300 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>
+                              {wf.comments.length} Technical Q&amp;A Comments &amp; Dialogue
+                            </span>
+                            {openWorkflowDrawerId === wf.id ? (
+                              <ChevronDown className="w-3.5 h-3.5" />
                             ) : (
-                              wf.comments.map((c) => (
-                                <div key={c.id} className="text-xs p-2.5 rounded-lg bg-white/[0.03] border border-white/5 space-y-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-bold text-purple-300 text-[11px] flex items-center gap-1.5">
-                                      <span>{c.author}</span>
-                                      <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300">
-                                        {c.role}
-                                      </span>
-                                    </span>
-                                    <span className="text-[9px] font-mono text-white/40">{c.timestamp}</span>
-                                  </div>
-                                  <p className="text-white/80 leading-relaxed font-sans">{c.text}</p>
-                                </div>
-                              ))
+                              <ChevronRight className="w-3.5 h-3.5" />
                             )}
-                          </div>
-
-                          {/* Comment Input Box (Free for everyone to ask!) */}
-                          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/10">
-                            <input
-                              type="text"
-                              value={workflowCommentInputs[wf.id] || ''}
-                              onChange={(e) =>
-                                setWorkflowCommentInputs({ ...workflowCommentInputs, [wf.id]: e.target.value })
-                              }
-                              placeholder={`Ask director/artist a question about ${wf.title}...`}
-                              className="flex-1 min-h-[44px] bg-black/60 border border-white/15 focus:border-purple-400 rounded-xl px-3.5 py-2 text-xs text-white outline-none font-sans"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleAddWorkflowComment(wf.id)}
-                              className="w-full sm:w-auto min-h-[44px] px-5 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-black font-mono font-bold text-xs transition-colors cursor-pointer flex items-center justify-center"
-                            >
-                              Send
-                            </button>
-                          </div>
+                          </button>
                         </div>
-                      )}
+
+                        {/* Drawer Container */}
+                        {openWorkflowDrawerId === wf.id && (
+                          <div className="mt-3 p-4 rounded-xl bg-black/80 border border-purple-500/20 space-y-3">
+                            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                              {wf.comments.length === 0 ? (
+                                <div className="text-xs font-mono text-white/40 italic p-2">
+                                  No questions yet. Be the first to ask about this production setup!
+                                </div>
+                              ) : (
+                                wf.comments.map((c) => (
+                                  <div key={c.id} className="text-xs p-2.5 rounded-lg bg-white/[0.03] border border-white/5 space-y-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-bold text-purple-300 text-[11px] flex items-center gap-1.5">
+                                        <span>{c.author}</span>
+                                        <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300">
+                                          {c.role}
+                                        </span>
+                                      </span>
+                                      <span className="text-[9px] font-mono text-white/40">{c.timestamp}</span>
+                                    </div>
+                                    <p className="text-white/80 leading-relaxed font-sans">{c.text}</p>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+
+                            {/* Comment Input Box (Free for everyone to ask!) */}
+                            <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/10">
+                              <input
+                                type="text"
+                                value={workflowCommentInputs[wf.id] || ''}
+                                onChange={(e) =>
+                                  setWorkflowCommentInputs({ ...workflowCommentInputs, [wf.id]: e.target.value })
+                                }
+                                placeholder={`Ask director/artist a question about ${wf.title}...`}
+                                className="flex-1 min-h-[44px] bg-black/60 border border-white/15 focus:border-purple-400 rounded-xl px-3.5 py-2 text-xs text-white outline-none font-sans"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleAddWorkflowComment(wf.id)}
+                                className="w-full sm:w-auto min-h-[44px] px-5 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-black font-mono font-bold text-xs transition-colors cursor-pointer flex items-center justify-center"
+                              >
+                                Send
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -1084,7 +1341,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         title="Theater unlocks on 09/01/2027"
                       >
                         <Lock className="w-3.5 h-3.5 text-amber-400/80" />
-                        <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR</span>
+                        <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
                       </button>
                     </div>
                   ) : (
@@ -1179,202 +1436,403 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
         )}
 
         {/* ======================================================== */}
-        {/* SECTION 4: CREATOR DISCUSSION BOARD (100% OPEN & FREE)  */}
+        {/* SECTION 4: CREATOR DISCUSSION BOARD (DISCORD MULTI-HUB)  */}
         {/* ======================================================== */}
-        {activeSection === 'discussion' && (
-          <motion.div
-            key="section-discussion"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            className="space-y-6"
-          >
-            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-black/50 to-black/80 border border-cyan-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(56,189,248,0.1)]">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold tracking-wider">
-                    MODULE 04 · COMMUNITY CHAT
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                    100% OPEN &amp; FREE FOR ALL VISITORS
-                  </span>
-                </div>
-                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
-                  💬 # general-chat · Creator Discussion Board
-                </h1>
-                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  Community feed open to everyone. Read creator updates, share production feedback, attach artwork images, and discuss upcoming lore drops.
-                </p>
-              </div>
-            </div>
+        {activeSection === 'discussion' && (() => {
+          const activeChannel = CHAT_CHANNELS.find((c) => c.id === activeChannelId) || CHAT_CHANNELS[0];
+          const channelPosts = discussionPosts.filter((p) => p.channelId === activeChannelId);
+          const publicChannels = CHAT_CHANNELS.filter((c) => c.category === 'PUBLIC HUB');
+          const creatorLabChannels = CHAT_CHANNELS.filter((c) => c.category === 'CREATOR LAB (ANNUAL PASS)');
 
-            {/* Create Post Box */}
-            <form
-              onSubmit={handleCreateDiscussionPost}
-              className="p-5 rounded-2xl bg-black/60 border border-white/10 focus-within:border-cyan-400/50 space-y-3 transition-colors shadow-[0_4px_25px_rgba(0,0,0,0.5)]"
+          return (
+            <motion.div
+              key="section-discussion"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              className="space-y-6"
             >
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={`w-8 h-8 rounded-full bg-gradient-to-tr ${
-                    isPatron ? 'from-cyan-400 to-indigo-600' : 'from-slate-400 to-slate-600'
-                  } flex items-center justify-center font-bold text-xs text-black shrink-0`}
-                >
-                  PM
-                </div>
+              {/* Header intro banner */}
+              <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-black/50 to-black/80 border border-cyan-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(56,189,248,0.1)]">
                 <div>
-                  <div className="text-xs font-bold text-white">{patronName}</div>
-                  <div className="text-[9.5px] font-mono text-cyan-300">
-                    {isPatron ? 'PATRON MEMBER' : 'COMMUNITY MEMBER (FREE)'}
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold tracking-wider">
+                      MODULE 04 · DISCORD-STYLE COMM-NET CHAT
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400 font-semibold">
+                      5 CHANNELS · 100% OPEN COMMUNITY FEED
+                    </span>
                   </div>
+                  <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
+                    💬 Comm-Net · Discord Multi-Channel Hub
+                  </h1>
+                  <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
+                    Multi-channel Discord-style community hub. Explore public discussions, 3D visualizer pipelines, DAW synthesis lounges, and showcase your productions.
+                  </p>
                 </div>
               </div>
 
-              <textarea
-                value={discussionInput}
-                onChange={(e) => setDiscussionInput(e.target.value)}
-                placeholder="Share your thoughts, ask about production techniques, or post artwork..."
-                rows={3}
-                className="w-full bg-transparent text-sm text-white placeholder-white/30 outline-none resize-none font-sans"
-              />
+              {/* Mobile Channel Navigation Pills (Visible below lg) */}
+              <div className="lg:hidden flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                {CHAT_CHANNELS.map((ch) => {
+                  const isChActive = activeChannelId === ch.id;
+                  return (
+                    <button
+                      key={ch.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveChannelId(ch.id);
+                        soundManager.playTone(600, 0.05);
+                      }}
+                      className={`px-3 py-2 rounded-xl text-xs font-mono font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer min-h-[44px] ${
+                        isChActive
+                          ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(56,189,248,0.35)] font-bold'
+                          : 'bg-black/60 border border-white/10 text-white/70 hover:text-white'
+                      }`}
+                    >
+                      <Hash className={`w-3.5 h-3.5 ${isChActive ? 'text-black' : 'text-cyan-400'}`} />
+                      <span>{ch.name}</span>
+                      {ch.isAnnualPass && (
+                        <span className={`text-[9px] px-1 py-0.2 rounded font-bold ${isChActive ? 'bg-black/20 text-black' : 'bg-amber-500/20 text-amber-300'}`}>
+                          VIP
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
 
-              {discussionImage && (
-                <div className="flex items-center gap-2 bg-white/5 p-2 rounded-xl w-fit border border-cyan-500/30">
-                  <img src={discussionImage} alt="Upload" className="w-16 h-16 object-cover rounded-lg" />
-                  <button
-                    type="button"
-                    onClick={() => setDiscussionImage(null)}
-                    className="p-1 text-white/50 hover:text-white"
+              {/* Discord-Style Multi-Channel Grid: Left Channels Sidebar + Right Chat Feed */}
+              <div className="flex flex-col lg:flex-row gap-6 items-start">
+                {/* LEFT SIDEBAR: Discord Server & Channels */}
+                <aside className="hidden lg:flex w-72 shrink-0 flex-col gap-4 rounded-2xl bg-[#060913]/90 border border-white/10 p-4 shadow-xl sticky top-24 self-start">
+                  {/* Guild Header */}
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-cyan-400 text-black flex items-center justify-center font-black text-xs font-mono shadow-[0_0_10px_rgba(56,189,248,0.4)]">
+                        #
+                      </div>
+                      <div>
+                        <div className="text-xs font-display font-extrabold text-white tracking-wider uppercase">
+                          COMM-NET SERVER
+                        </div>
+                        <div className="text-[9.5px] font-mono text-white/40">SILLOW MILL HQ</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400 font-semibold bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>128 Online</span>
+                    </div>
+                  </div>
+
+                  {/* CATEGORY 1: 📁 PUBLIC HUB */}
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] font-mono font-bold text-white/50 tracking-wider flex items-center justify-between uppercase px-1 pb-1">
+                      <span className="flex items-center gap-1.5">
+                        📁 PUBLIC HUB
+                      </span>
+                      <span className="text-[9px] text-emerald-400 font-normal">OPEN</span>
+                    </div>
+                    {publicChannels.map((ch) => {
+                      const isChActive = activeChannelId === ch.id;
+                      return (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveChannelId(ch.id);
+                            soundManager.playTone(600, 0.05);
+                          }}
+                          className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
+                            isChActive
+                              ? 'bg-cyan-950/70 border-cyan-400/60 text-white shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                              : 'bg-black/40 border-white/5 hover:border-white/15 text-white/70 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-cyan-400' : 'text-white/40 group-hover:text-cyan-400'}`} />
+                            <div className="min-w-0">
+                              <div className="text-xs font-mono font-semibold truncate leading-tight">
+                                {ch.name}
+                              </div>
+                              <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
+                                {ch.id === 'general-chat' ? 'Free community discussion' : 'Storyline & Äkinoya lore'}
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* CATEGORY 2: 📁 CREATOR LAB (ANNUAL PASS) */}
+                  <div className="space-y-1.5 pt-2 border-t border-white/5">
+                    <div className="text-[10px] font-mono font-bold text-amber-300/80 tracking-wider flex items-center justify-between uppercase px-1 pb-1">
+                      <span className="flex items-center gap-1.5">
+                        📁 CREATOR LAB
+                      </span>
+                      <span className="text-[9px] text-amber-400 font-bold bg-amber-950/80 px-1.5 py-0.2 rounded border border-amber-500/30">
+                        ANNUAL PASS
+                      </span>
+                    </div>
+                    {creatorLabChannels.map((ch) => {
+                      const isChActive = activeChannelId === ch.id;
+                      return (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveChannelId(ch.id);
+                            soundManager.playTone(600, 0.05);
+                          }}
+                          className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
+                            isChActive
+                              ? 'bg-amber-950/50 border-amber-400/60 text-white shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                              : 'bg-black/40 border-white/5 hover:border-white/15 text-white/70 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-amber-400' : 'text-white/40 group-hover:text-amber-400'}`} />
+                            <div className="min-w-0">
+                              <div className="text-xs font-mono font-semibold truncate leading-tight">
+                                {ch.name}
+                              </div>
+                              <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
+                                {ch.id === 'visualizers-3d'
+                                  ? 'Blender & Octane render discussion'
+                                  : ch.id === 'music-daw-lounge'
+                                  ? 'Synthesizer patches & Ableton files'
+                                  : 'Member renders, fan art & remix stems'}
+                              </div>
+                            </div>
+                          </div>
+                          <Lock className="w-3.5 h-3.5 text-amber-400/70 shrink-0 ml-1" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </aside>
+
+                {/* RIGHT CHAT AREA */}
+                <div className="flex-1 min-w-0 space-y-4 w-full">
+                  {/* Active Channel Header */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Hash className="w-5 h-5 text-cyan-400 shrink-0" />
+                        <h2 className="text-base sm:text-lg font-display font-bold text-white tracking-wide truncate">
+                          {activeChannel.name}
+                        </h2>
+                        <span className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                          activeChannel.isAnnualPass
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
+                            : 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                        }`}>
+                          {activeChannel.category}
+                        </span>
+                      </div>
+                      <p className="text-xs text-white/65 font-sans truncate">
+                        {activeChannel.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 shrink-0 text-xs font-mono text-white/50">
+                      <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-500/30">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[10.5px]">42 Online</span>
+                      </div>
+                      <span className="text-[10.5px] bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
+                        {channelPosts.length} Transmissions
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Channel Filtered Message Feed */}
+                  <div className="space-y-4">
+                    {channelPosts.length === 0 ? (
+                      <div className="p-8 rounded-2xl bg-black/40 border border-white/10 text-center space-y-2">
+                        <MessageSquare className="w-8 h-8 text-white/30 mx-auto" />
+                        <div className="text-sm font-display font-bold text-white">
+                          No transmissions in #{activeChannel.name} yet
+                        </div>
+                        <p className="text-xs text-white/50 font-sans max-w-sm mx-auto">
+                          Be the first to transmit a message or drop project feedback in this channel!
+                        </p>
+                      </div>
+                    ) : (
+                      channelPosts.map((post) => (
+                        <div
+                          key={post.id}
+                          className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 hover:border-white/20 transition-all space-y-3 shadow-[0_4px_25px_rgba(0,0,0,0.5)]"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={`w-9 h-9 rounded-full bg-gradient-to-tr ${post.avatarBg} flex items-center justify-center font-bold text-xs text-black shrink-0`}
+                              >
+                                {post.author.slice(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                                  <span>{post.author}</span>
+                                  <span
+                                    className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-semibold ${
+                                      post.role === 'CREATOR'
+                                        ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
+                                        : post.role === 'ANNUAL PASS MEMBER'
+                                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                                        : post.role === 'PATRON' || post.role === 'PATRON MEMBER'
+                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
+                                        : 'bg-slate-500/20 text-slate-300 border border-slate-400/40'
+                                    }`}
+                                  >
+                                    {post.role}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] font-mono text-white/40">{post.timestamp}</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-sans whitespace-pre-line">
+                            {post.content}
+                          </p>
+
+                          {/* Large High-Res Image Post Attachment */}
+                          {post.imageUrl && (
+                            <div className="rounded-xl overflow-hidden border border-white/10 max-h-96 bg-black/80 flex items-center justify-center">
+                              <img src={post.imageUrl} alt="Attached" className="max-h-96 w-full object-cover" />
+                            </div>
+                          )}
+
+                          {/* Like & Reply Bar */}
+                          <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleDiscussionLike(post.id)}
+                              className={`min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
+                                post.hasLiked
+                                  ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold'
+                                  : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
+                              }`}
+                            >
+                              <ThumbsUp className={`w-3.5 h-3.5 ${post.hasLiked ? 'text-cyan-400' : ''}`} />
+                              <span>{post.likes}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setActiveReplyPost(post)}
+                              className="min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>{post.replies.length} Replies</span>
+                            </button>
+                          </div>
+
+                          {/* Inline replies */}
+                          {post.replies.length > 0 && (
+                            <div className="pt-2 border-t border-white/5 space-y-2">
+                              {post.replies.map((rep) => (
+                                <div key={rep.id} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 text-xs">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-bold text-cyan-300 text-[11px]">{rep.author}</span>
+                                    <span className="text-[9px] font-mono text-white/40">{rep.timestamp}</span>
+                                  </div>
+                                  <p className="text-white/80 font-sans">{rep.content}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Bottom Discord-Style Message Input Box */}
+                  <form
+                    onSubmit={handleCreateDiscussionPost}
+                    className="p-4 sm:p-5 rounded-2xl bg-black/75 border border-white/10 focus-within:border-cyan-400/50 space-y-3 transition-colors shadow-2xl"
                   >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10">
-                <input
-                  type="file"
-                  ref={discussionFileInputRef}
-                  accept="image/*"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) {
-                      const r = new FileReader();
-                      r.onload = () => typeof r.result === 'string' && setDiscussionImage(r.result);
-                      r.readAsDataURL(f);
-                    }
-                  }}
-                  className="hidden"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => discussionFileInputRef.current?.click()}
-                  className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
-                >
-                  <ImageIcon className="w-4 h-4 text-cyan-400" />
-                  <span>Attach Image</span>
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={!discussionInput.trim() && !discussionImage}
-                  className="min-h-[44px] px-5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-30 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>POST TRANSMISSION</span>
-                </button>
-              </div>
-            </form>
-
-            {/* Posts Feed */}
-            <div className="space-y-6">
-              {discussionPosts.map((post) => (
-                <div
-                  key={post.id}
-                  className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-4 shadow-[0_4px_25px_rgba(0,0,0,0.5)]"
-                >
-                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-9 h-9 rounded-full bg-gradient-to-tr ${post.avatarBg} flex items-center justify-center font-bold text-xs text-black shrink-0`}
+                        className={`w-7 h-7 rounded-full bg-gradient-to-tr ${
+                          isPatron ? 'from-cyan-400 to-indigo-600' : 'from-slate-400 to-slate-600'
+                        } flex items-center justify-center font-bold text-[10px] text-black shrink-0`}
                       >
-                        {post.author.slice(0, 2).toUpperCase()}
+                        PM
                       </div>
                       <div>
                         <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <span>{post.author}</span>
-                          <span
-                            className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-semibold ${
-                              post.role === 'CREATOR'
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
-                                : post.role === 'PATRON MEMBER'
-                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
-                                : 'bg-slate-500/20 text-slate-300 border border-slate-400/40'
-                            }`}
-                          >
-                            {post.role}
+                          <span>{patronName}</span>
+                          <span className="text-[9px] font-mono text-cyan-300">
+                            {isPatron ? 'ANNUAL PASS MEMBER' : 'COMMUNITY MEMBER (FREE)'}
                           </span>
                         </div>
-                        <div className="text-[10px] font-mono text-white/40">{post.timestamp}</div>
                       </div>
                     </div>
-                  </div>
 
-                  <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-sans whitespace-pre-line">
-                    {post.content}
-                  </p>
+                    <textarea
+                      value={discussionInput}
+                      onChange={(e) => setDiscussionInput(e.target.value)}
+                      placeholder={`Message #${activeChannel.name}...`}
+                      rows={3}
+                      className="w-full bg-transparent text-xs sm:text-sm text-white placeholder-white/30 outline-none resize-none font-sans"
+                    />
 
-                  {/* Large High-Res Image Post Attachment */}
-                  {post.imageUrl && (
-                    <div className="rounded-xl overflow-hidden border border-white/10 max-h-96 bg-black/80 flex items-center justify-center">
-                      <img src={post.imageUrl} alt="Attached" className="max-h-96 w-full object-cover" />
+                    {discussionImage && (
+                      <div className="flex items-center gap-2 bg-white/5 p-2 rounded-xl w-fit border border-cyan-500/30">
+                        <img src={discussionImage} alt="Upload" className="w-16 h-16 object-cover rounded-lg" />
+                        <button
+                          type="button"
+                          onClick={() => setDiscussionImage(null)}
+                          className="p-1 text-white/50 hover:text-white"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10">
+                      <input
+                        type="file"
+                        ref={discussionFileInputRef}
+                        accept="image/*"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) {
+                            const r = new FileReader();
+                            r.onload = () => typeof r.result === 'string' && setDiscussionImage(r.result);
+                            r.readAsDataURL(f);
+                          }
+                        }}
+                        className="hidden"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => discussionFileInputRef.current?.click()}
+                        className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
+                      >
+                        <ImageIcon className="w-4 h-4 text-cyan-400" />
+                        <span>Attach Image</span>
+                      </button>
+
+                      <button
+                        type="submit"
+                        disabled={!discussionInput.trim() && !discussionImage}
+                        className="min-h-[44px] px-5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-30 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>TRANSMIT MESSAGE</span>
+                      </button>
                     </div>
-                  )}
-
-                  {/* Like & Reply Bar */}
-                  <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleDiscussionLike(post.id)}
-                      className={`min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
-                        post.hasLiked
-                          ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold'
-                          : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
-                      }`}
-                    >
-                      <ThumbsUp className={`w-3.5 h-3.5 ${post.hasLiked ? 'text-cyan-400' : ''}`} />
-                      <span>{post.likes}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setActiveReplyPost(post)}
-                      className="min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>{post.replies.length} Replies</span>
-                    </button>
-                  </div>
-
-                  {/* Inline replies */}
-                  {post.replies.length > 0 && (
-                    <div className="pt-2 border-t border-white/5 space-y-2">
-                      {post.replies.map((rep) => (
-                        <div key={rep.id} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 text-xs">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-cyan-300 text-[11px]">{rep.author}</span>
-                            <span className="text-[9px] font-mono text-white/40">{rep.timestamp}</span>
-                          </div>
-                          <p className="text-white/80 font-sans">{rep.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  </form>
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* ======================================================== */}
         {/* SECTION 5: LORE & GOVERNANCE PORTAL                      */}
@@ -1449,7 +1907,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           title="Voting unlocks on 09/01/2027"
                         >
                           <Lock className="w-3.5 h-3.5 text-amber-400/80" />
-                          <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR</span>
+                          <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
                         </button>
                       </div>
                     ) : (
@@ -1543,7 +2001,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     CREATIVE VAULT PASS
                   </span>
                   <span className="text-[10px] font-mono text-amber-400 font-bold">
-                    €60 / YEAR (~€5/MO)
+                    €60/YEAR (~€5/MONTH)
                   </span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-display font-extrabold text-white">
@@ -1597,10 +2055,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   )}
                   <span>
                     {isMembershipLaunchLocked
-                      ? '🔒 LAUNCHES 09/01/2027 — €60/YEAR'
+                      ? '🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)'
                       : isSubscribing
                       ? 'INITIALIZING STRIPE...'
-                      : 'ACTIVATE ANNUAL MEMBERSHIP — €60/YEAR'}
+                      : 'ACTIVATE ANNUAL MEMBERSHIP — €60/YEAR (~€5/MONTH)'}
                   </span>
                 </button>
 

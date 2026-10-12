@@ -948,7 +948,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           COMMUNITY PERKS &amp; HUB
                         </h2>
                         <p className="text-xs sm:text-sm font-sans text-white/65 mt-1 max-w-xl">
-                          Annual membership pass (€60/year, ~€5/mo) to unreleased music vaults, animation early access, voting rights &amp; lore governance.
+                          Exclusive Annual Membership Pass (€60/year, equivalent to just €5/month). Unlocks full 3D visualizer breakdowns, unreleased audio masters, lore governance &amp; 4K assets on January 9, 2027.
                         </p>
                       </div>
 
@@ -980,10 +980,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           )}
                           <span>
                             {isMembershipLaunchLocked
-                              ? '🔒 LAUNCHES 09/01/2027 — €60/YEAR'
+                              ? '🔒 LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)'
                               : isSubscribing
                               ? 'INITIALIZING STRIPE...'
-                              : 'ACCESS NOW — €60/YEAR'}
+                              : 'ACCESS NOW — €60/YEAR (~€5/MONTH)'}
                           </span>
                         </button>
                       </div>
@@ -1036,7 +1036,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             <div className="pt-3 border-t border-white/5 mt-auto flex items-center justify-between text-[10.5px] font-mono text-cyan-400/80">
                               <span className="flex items-center gap-1.5">
                                 <Sparkles className="w-3 h-3 text-cyan-400" />
-                                <span>INCLUDED WITH ANNUAL PASS (€60/YR)</span>
+                                <span>INCLUDED WITH ANNUAL PASS (€60/YR · ~€5/MO)</span>
                               </span>
                             </div>
                           </motion.div>
