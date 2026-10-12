@@ -16,15 +16,35 @@ import { CheckoutSuccess } from './components/CheckoutSuccess';
 import { NfcHudToast } from './components/NfcHudToast';
 import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerification';
 import { CommunityHub } from './components/CommunityHub';
+import { useAuth } from './context/AuthContext';
 
 export default function App() {
-  // Public Site Unlock (strictly isolated from VIP status; only unlocked via entering passcode 'SillowMill2027' in ComingSoonGate)
+  const { user, profile, role, isAuthenticated } = useAuth();
+
+  // Persistent Public & Account Unlock:
+  // Automatically bypass all lock gating if authenticated or local storage has an active session/unlock
   const [publicUnlocked, setPublicUnlocked] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('akinoya_public_unlocked') === 'true';
+      return (
+        localStorage.getItem('akinoya_public_unlocked') === 'true' ||
+        sessionStorage.getItem('akinoya_public_unlocked') === 'true' ||
+        Boolean(localStorage.getItem('akinoya_auth_profile')) ||
+        Boolean(localStorage.getItem('akinoya_session_user'))
+      );
     }
     return false;
   });
+
+  const isSiteUnlocked =
+    isAuthenticated ||
+    Boolean(user || profile) ||
+    role !== 'FREE' ||
+    publicUnlocked ||
+    (typeof window !== 'undefined' &&
+      (localStorage.getItem('akinoya_public_unlocked') === 'true' ||
+       sessionStorage.getItem('akinoya_public_unlocked') === 'true' ||
+       Boolean(localStorage.getItem('akinoya_auth_profile')) ||
+       Boolean(localStorage.getItem('akinoya_session_user'))));
 
   const [viewMode, setViewMode] = useState<'orbit' | 'surface'>('orbit');
   const [backdropOnly, setBackdropOnly] = useState<boolean>(false);
@@ -135,6 +155,7 @@ export default function App() {
 
   const handlePublicUnlockSuccess = () => {
     try {
+      localStorage.setItem('akinoya_public_unlocked', 'true');
       sessionStorage.setItem('akinoya_public_unlocked', 'true');
     } catch {
       // Fallback
@@ -143,7 +164,12 @@ export default function App() {
   };
 
   const handlePublicLock = () => {
+    // If user is authenticated, NEVER force them into a locked state!
+    if (isAuthenticated || Boolean(user || profile) || role !== 'FREE') {
+      return;
+    }
     try {
+      localStorage.removeItem('akinoya_public_unlocked');
       sessionStorage.removeItem('akinoya_public_unlocked');
     } catch {
       // Fallback
@@ -152,7 +178,7 @@ export default function App() {
     setViewMode('orbit');
   };
 
-  const isCanvasUnlocked = route === 'verify' ? true : publicUnlocked;
+  const isCanvasUnlocked = route === 'verify' ? true : isSiteUnlocked;
   const isVipRoute = route === 'verify';
 
   return (
@@ -166,7 +192,7 @@ export default function App() {
       {/* Top Bar Navigation (Zone 1, 2, 3) */}
       {!backdropOnly && route !== 'community' && (
         <TopBar
-          isUnlocked={isVipRoute ? true : publicUnlocked}
+          isUnlocked={isVipRoute ? true : isSiteUnlocked}
           isVip={isVipRoute}
           onNavigateToVerify={isVipRoute ? () => setVipSubView('passport') : undefined}
         />
@@ -225,7 +251,7 @@ export default function App() {
         /* Public Root Domain (100% Locked Site) */
         <div className="relative z-20 flex-1 flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
           <AnimatePresence mode="wait">
-            {!publicUnlocked ? (
+            {!isSiteUnlocked ? (
               <motion.div
                 key="gate-view"
                 initial={{ opacity: 0 }}

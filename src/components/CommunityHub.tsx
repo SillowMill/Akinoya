@@ -166,8 +166,19 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}`
     : profile?.full_name || (user?.email ? user.email.split('@')[0] : patronName);
 
-  const isVipOrAbove = role === 'VIP_GUEST' || role === 'ANNUAL_PASS' || role === 'CREATOR';
-  const isAnnualOrCreator = role === 'ANNUAL_PASS' || role === 'CREATOR';
+  const isVipOrAbove =
+    role === 'VIP_GUEST' ||
+    role === 'ANNUAL_PASS' ||
+    role === 'CREATOR' ||
+    Boolean(profile?.vip_code_redeemed) ||
+    Boolean(profile?.is_vip) ||
+    (typeof window !== 'undefined' &&
+      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+       localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+       localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST' ||
+       localStorage.getItem('akinoya_patron_role') === 'ANNUAL_PASS'));
+  const isAnnualOrCreator = role === 'ANNUAL_PASS' || role === 'CREATOR' || Boolean(profile?.is_annual_member);
   const isPatron = isVipOrAbove;
 
   // Active Hub Section

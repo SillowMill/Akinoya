@@ -53,23 +53,28 @@ export function getOrCreateDeviceId(): string {
 export function hasActiveDeviceSession(): boolean {
   if (typeof window === 'undefined') return false;
   try {
-    const isExplicitRoute =
-      window.location.pathname.startsWith('/verify') ||
-      Boolean(new URLSearchParams(window.location.search).get('token')) ||
-      Boolean(new URLSearchParams(window.location.search).get('nfc_token')) ||
-      Boolean(new URLSearchParams(window.location.search).get('nfc')) ||
-      Boolean(new URLSearchParams(window.location.search).get('pass')) ||
-      sessionStorage.getItem('akinoya_vip_route_active') === 'true';
-
-    // Strict security rule: direct visits never inherit VIP status automatically
-    if (!isExplicitRoute) return false;
-
     const hasLocal = localStorage.getItem(STORAGE_KEY_ACCESS) === 'true';
     const hasCookie = document.cookie
       .split(';')
       .some((c) => c.trim().startsWith(`${COOKIE_NAME}=true`));
     const hasSession = sessionStorage.getItem('akinoya_vip_unlocked') === 'true';
-    return hasLocal || hasCookie || hasSession;
+    const hasToken = Boolean(localStorage.getItem(STORAGE_KEY_TOKEN));
+    const hasPatron = Boolean(
+      localStorage.getItem('akinoya_patron_token') ||
+      sessionStorage.getItem('akinoya_patron_token')
+    );
+    const hasVipProfile = (() => {
+      try {
+        const profStr = localStorage.getItem('akinoya_auth_profile');
+        if (profStr) {
+          const prof = JSON.parse(profStr);
+          return prof.role === 'VIP_GUEST' || prof.role === 'ANNUAL_PASS' || prof.role === 'CREATOR';
+        }
+      } catch {}
+      return false;
+    })();
+
+    return hasLocal || hasCookie || hasSession || hasToken || hasPatron || hasVipProfile;
   } catch {
     return false;
   }
@@ -156,8 +161,6 @@ export const VipAccessProvider: React.FC<{ children: ReactNode }> = ({ children 
       // Direct visits or non-token page loads
       if (hadExistingAccess) {
         setIsVipUnlocked(true);
-      } else {
-        setIsVipUnlocked(false);
       }
     }
   }, [triggerToast]);

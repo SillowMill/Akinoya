@@ -138,29 +138,56 @@ const persistProfileToSupabase = async (prof: Profile) => {
   }
 };
 
+// Immediate Synchronous Local Fallbacks
+const getCachedProfile = (): Profile | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const saved = localStorage.getItem(LOCAL_PROFILE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed?.id) return enrichProfile(parsed);
+    }
+  } catch {}
+  return null;
+};
+
+const getCachedUser = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const savedUser = localStorage.getItem(LOCAL_SESSION_USER_KEY);
+    if (savedUser) return JSON.parse(savedUser);
+    const savedProf = localStorage.getItem(LOCAL_PROFILE_KEY);
+    if (savedProf) {
+      const p = JSON.parse(savedProf);
+      return { id: p.id, email: p.email, user_metadata: p };
+    }
+  } catch {}
+  return null;
+};
+
+const getCachedRole = (): UserRole => {
+  if (typeof window === 'undefined') return 'FREE';
+  try {
+    const savedProf = localStorage.getItem(LOCAL_PROFILE_KEY);
+    if (savedProf) {
+      const p = JSON.parse(savedProf);
+      if (p?.role) return p.role;
+    }
+    const savedRole = localStorage.getItem(PATRON_ROLE_KEY) || sessionStorage.getItem(PATRON_ROLE_KEY);
+    if (savedRole && (savedRole === 'CREATOR' || savedRole === 'ANNUAL_PASS' || savedRole === 'VIP_GUEST')) {
+      return savedRole as UserRole;
+    }
+    const pending = getStoredVipPass();
+    if (pending) return resolveRoleForCode(pending);
+  } catch {}
+  return 'FREE';
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<any | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(LOCAL_PROFILE_KEY);
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return null;
-  });
-  const [role, setRole] = useState<UserRole>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(LOCAL_PROFILE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed?.role) return parsed.role;
-        }
-      } catch {}
-    }
-    return 'FREE';
-  });
+  // Synchronous initialization prevents any flashing of "FREE" or "Logged Out" state on page refresh
+  const [user, setUser] = useState<any | null>(getCachedUser);
+  const [profile, setProfile] = useState<Profile | null>(getCachedProfile);
+  const [role, setRole] = useState<UserRole>(getCachedRole);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
@@ -185,19 +212,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Hydrate user session on mount
+  // Hydrate user session on mount immediately and unblocked
   useEffect(() => {
     let mounted = true;
 
     async function initAuth() {
       try {
-        if (isSupabaseConfigured) {
-          const { data, error } = await supabase.auth.getSession();
-          if (!error && data?.session?.user) {
-            const authUser = data.session.user;
-            if (mounted) setUser(authUser);
+        // Step 1: Guarantee immediate persistent fallback recovery
+        const cachedUser = getCachedUser();
+        const cachedProf = getCachedProfile();
+        const cachedRole = getCachedRole();
+        if (cachedProf && mounted) {
+          setProfile(cachedProf);
+          setRole(cachedRole);
+          if (cachedUser) setUser(cachedUser);
+        }
 
-            // Fetch live profile from Supabase profiles table
+        // Step 2: Immediate unblocked Supabase session retrieval
+        if (isSupabaseConfigured) {
+          const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+          if (!sessionErr && sessionData?.session?.user) {
+            const authUser = sessionData.session.user;
+            if (mounted) setUser(authUser);
+            localStorage.setItem(
+              LOCAL_SESSION_USER_KEY,
+              JSON.stringify({
+                id: authUser.id,
+                email: authUser.email,
+                user_metadata: authUser.user_metadata,
+              })
+            );
+
+            // Fetch live profile from public.profiles table
             const { data: profData } = await supabase
               .from('profiles')
               .select('*')
@@ -208,7 +254,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (profData) {
               let targetRole = profData.role || 'FREE';
-              let targetPassCode = profData.vip_code_redeemed || null;
+              if (cachedProf?.role) {
+                targetRole = pickHigherRole(targetRole, cachedProf.role);
+              }
+              let targetPassCode = profData.vip_code_redeemed || cachedProf?.vip_code_redeemed || null;
 
               // Upgrade if user holds a valid VIP pass and was not yet upgraded
               if (pendingPass && (targetRole === 'FREE' || !targetPassCode)) {
@@ -223,7 +272,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 vip_code_redeemed: targetPassCode,
               });
 
-              // Persist upgrades back to DB
+              // Persist upgrades back to Supabase
               if (targetRole !== profData.role || targetPassCode !== profData.vip_code_redeemed) {
                 await persistProfileToSupabase(enriched);
                 syncToGoogleSheets(enriched, targetPassCode || undefined);
@@ -233,17 +282,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setProfile(enriched);
                 setRole(enriched.role);
                 localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(enriched));
-                localStorage.setItem(
-                  LOCAL_SESSION_USER_KEY,
-                  JSON.stringify({ id: authUser.id, email: authUser.email })
-                );
                 if (enriched.vip_code_redeemed) {
+                  localStorage.setItem(PATRON_TOKEN_KEY, enriched.vip_code_redeemed);
                   sessionStorage.setItem(PATRON_TOKEN_KEY, enriched.vip_code_redeemed);
+                  localStorage.setItem(PATRON_ROLE_KEY, enriched.role);
                   sessionStorage.setItem(PATRON_ROLE_KEY, enriched.role);
                 }
               }
             } else {
-              // Extract from Supabase user_metadata if profiles record not yet created
+              // Profiles record not yet created: create and upsert it
               const meta = authUser.user_metadata || {};
               const first =
                 meta.first_name ||
@@ -258,7 +305,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 meta.full_name?.split(' ').slice(1).join(' ') ||
                 meta.name?.split(' ').slice(1).join(' ') ||
                 '';
-              const initialRole = pendingPass ? resolveRoleForCode(pendingPass) : 'FREE';
+              const initialRole = pendingPass
+                ? resolveRoleForCode(pendingPass)
+                : cachedRole !== 'FREE'
+                ? cachedRole
+                : 'FREE';
 
               const newProf = enrichProfile({
                 id: authUser.id,
@@ -268,7 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 full_name: (meta.full_name || meta.name || `${first} ${last}`).trim(),
                 avatar_url: meta.avatar_url || meta.picture || null,
                 role: initialRole,
-                vip_code_redeemed: pendingPass || null,
+                vip_code_redeemed: pendingPass || cachedProf?.vip_code_redeemed || null,
               });
 
               await persistProfileToSupabase(newProf);
@@ -278,32 +329,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setProfile(newProf);
                 setRole(newProf.role);
                 localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(newProf));
-                localStorage.setItem(
-                  LOCAL_SESSION_USER_KEY,
-                  JSON.stringify({ id: authUser.id, email: authUser.email })
-                );
                 if (newProf.vip_code_redeemed) {
+                  localStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
                   sessionStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
+                  localStorage.setItem(PATRON_ROLE_KEY, newProf.role);
                   sessionStorage.setItem(PATRON_ROLE_KEY, newProf.role);
                 }
               }
             }
-          }
-        } else {
-          // Local storage session fallback
-          const savedProfStr = localStorage.getItem(LOCAL_PROFILE_KEY);
-          const savedUserStr = localStorage.getItem(LOCAL_SESSION_USER_KEY);
-          if (savedProfStr && mounted) {
-            try {
-              const parsed = JSON.parse(savedProfStr);
-              setProfile(parsed);
-              setRole(parsed.role || 'FREE');
-              if (savedUserStr) {
-                setUser(JSON.parse(savedUserStr));
-              } else {
-                setUser({ id: parsed.id, email: parsed.email });
-              }
-            } catch {}
           }
         }
 
@@ -326,6 +359,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           const authUser = session.user;
           setUser(authUser);
+          localStorage.setItem(
+            LOCAL_SESSION_USER_KEY,
+            JSON.stringify({
+              id: authUser.id,
+              email: authUser.email,
+              user_metadata: authUser.user_metadata,
+            })
+          );
 
           const { data: profData } = await supabase
             .from('profiles')
@@ -334,10 +375,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .maybeSingle();
 
           const pendingPass = getStoredVipPass();
+          const currentCached = getCachedProfile();
 
           if (profData) {
             let targetRole = profData.role || 'FREE';
-            let targetPassCode = profData.vip_code_redeemed || null;
+            if (currentCached?.role) {
+              targetRole = pickHigherRole(targetRole, currentCached.role);
+            }
+            let targetPassCode = profData.vip_code_redeemed || currentCached?.vip_code_redeemed || null;
 
             if (pendingPass && (targetRole === 'FREE' || !targetPassCode)) {
               const vipRole = resolveRoleForCode(pendingPass);
@@ -359,12 +404,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setProfile(enriched);
             setRole(enriched.role);
             localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(enriched));
-            localStorage.setItem(
-              LOCAL_SESSION_USER_KEY,
-              JSON.stringify({ id: authUser.id, email: authUser.email })
-            );
             if (enriched.vip_code_redeemed) {
+              localStorage.setItem(PATRON_TOKEN_KEY, enriched.vip_code_redeemed);
               sessionStorage.setItem(PATRON_TOKEN_KEY, enriched.vip_code_redeemed);
+              localStorage.setItem(PATRON_ROLE_KEY, enriched.role);
               sessionStorage.setItem(PATRON_ROLE_KEY, enriched.role);
             }
           } else {
@@ -382,7 +425,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               meta.full_name?.split(' ').slice(1).join(' ') ||
               meta.name?.split(' ').slice(1).join(' ') ||
               '';
-            const initialRole = pendingPass ? resolveRoleForCode(pendingPass) : 'FREE';
+            const initialRole = pendingPass
+              ? resolveRoleForCode(pendingPass)
+              : currentCached?.role || 'FREE';
 
             const newProf = enrichProfile({
               id: authUser.id,
@@ -392,7 +437,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               full_name: (meta.full_name || meta.name || `${first} ${last}`).trim(),
               avatar_url: meta.avatar_url || meta.picture || null,
               role: initialRole,
-              vip_code_redeemed: pendingPass || null,
+              vip_code_redeemed: pendingPass || currentCached?.vip_code_redeemed || null,
             });
 
             await persistProfileToSupabase(newProf);
@@ -401,12 +446,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setProfile(newProf);
             setRole(newProf.role);
             localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(newProf));
-            localStorage.setItem(
-              LOCAL_SESSION_USER_KEY,
-              JSON.stringify({ id: authUser.id, email: authUser.email })
-            );
             if (newProf.vip_code_redeemed) {
+              localStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
               sessionStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
+              localStorage.setItem(PATRON_ROLE_KEY, newProf.role);
               sessionStorage.setItem(PATRON_ROLE_KEY, newProf.role);
             }
           }
@@ -415,11 +458,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             window.history.replaceState({}, '', '/community');
           }
         } else if (event === 'SIGNED_OUT') {
+          // Explicit sign out only
           setUser(null);
           setProfile(null);
           setRole('FREE');
           localStorage.removeItem(LOCAL_PROFILE_KEY);
           localStorage.removeItem(LOCAL_SESSION_USER_KEY);
+          localStorage.removeItem(PATRON_TOKEN_KEY);
+          localStorage.removeItem(PATRON_ROLE_KEY);
           sessionStorage.removeItem(PATRON_TOKEN_KEY);
           sessionStorage.removeItem(PATRON_ROLE_KEY);
         }
@@ -537,7 +583,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             JSON.stringify({ id: authUser.id, email: authUser.email })
           );
           if (newProf.vip_code_redeemed) {
+            localStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
             sessionStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
+            localStorage.setItem(PATRON_ROLE_KEY, newProf.role);
             sessionStorage.setItem(PATRON_ROLE_KEY, newProf.role);
           }
 
@@ -562,7 +610,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(simUser));
         localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(newProf));
         if (newProf.vip_code_redeemed) {
+          localStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
           sessionStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
+          localStorage.setItem(PATRON_ROLE_KEY, newProf.role);
           sessionStorage.setItem(PATRON_ROLE_KEY, newProf.role);
         }
 
@@ -643,7 +693,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             JSON.stringify({ id: authUser.id, email: authUser.email })
           );
           if (resolvedProf.vip_code_redeemed) {
+            localStorage.setItem(PATRON_TOKEN_KEY, resolvedProf.vip_code_redeemed);
             sessionStorage.setItem(PATRON_TOKEN_KEY, resolvedProf.vip_code_redeemed);
+            localStorage.setItem(PATRON_ROLE_KEY, resolvedProf.role);
             sessionStorage.setItem(PATRON_ROLE_KEY, resolvedProf.role);
           }
         }
@@ -676,7 +728,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(simUser));
         localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(enriched));
         if (enriched.vip_code_redeemed) {
+          localStorage.setItem(PATRON_TOKEN_KEY, enriched.vip_code_redeemed);
           sessionStorage.setItem(PATRON_TOKEN_KEY, enriched.vip_code_redeemed);
+          localStorage.setItem(PATRON_ROLE_KEY, enriched.role);
           sessionStorage.setItem(PATRON_ROLE_KEY, enriched.role);
         }
       }
@@ -691,14 +745,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     soundManager.playTone(440, 0.08);
-    if (isSupabaseConfigured) {
-      await supabase.auth.signOut();
+    try {
+      if (isSupabaseConfigured) {
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.warn('[AuthContext] Sign out warning:', err);
     }
     setUser(null);
     setProfile(null);
     setRole('FREE');
     localStorage.removeItem(LOCAL_PROFILE_KEY);
     localStorage.removeItem(LOCAL_SESSION_USER_KEY);
+    localStorage.removeItem(PATRON_TOKEN_KEY);
+    localStorage.removeItem(PATRON_ROLE_KEY);
     sessionStorage.removeItem(PATRON_TOKEN_KEY);
     sessionStorage.removeItem(PATRON_ROLE_KEY);
   };
@@ -727,7 +787,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       soundManager.playUnlockChime();
       const targetRole: UserRole = isMasterFounder ? 'CREATOR' : 'VIP_GUEST';
 
+      localStorage.setItem(PATRON_TOKEN_KEY, clean);
       sessionStorage.setItem(PATRON_TOKEN_KEY, clean);
+      localStorage.setItem(PATRON_ROLE_KEY, targetRole === 'CREATOR' ? 'CREATOR' : 'VIP GUEST');
       sessionStorage.setItem(PATRON_ROLE_KEY, targetRole === 'CREATOR' ? 'CREATOR' : 'VIP GUEST');
       localStorage.setItem(PENDING_VIP_PASS_KEY, clean);
 
