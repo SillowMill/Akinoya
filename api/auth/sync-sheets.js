@@ -250,89 +250,104 @@ export default async function handler(req, res) {
       ];
     }
 
-    let existingRowIndex = -1;
+    // Map existing rows by normalized email address to consolidate any duplicates
+    const subscriberMap = new Map();
+
     for (let i = 1; i < rows.length; i++) {
-      const rowEmail = String(rows[i]?.[2] || '').trim().toLowerCase();
-      if (rowEmail === email) {
-        existingRowIndex = i + 1; // 1-indexed row number
-        break;
+      const row = rows[i];
+      if (!row || row.length === 0) continue;
+      const rEmail = String(row[2] || '').trim().toLowerCase();
+      if (!rEmail || !rEmail.includes('@')) continue;
+
+      if (!subscriberMap.has(rEmail)) {
+        subscriberMap.set(rEmail, {
+          firstName: String(row[0] || '').trim(),
+          lastName: String(row[1] || '').trim(),
+          email: rEmail,
+          role: String(row[3] || 'FREE').trim().toUpperCase(),
+          vipCode: String(row[4] || 'N/A').trim(),
+          registrationDate: row[5] || new Date().toISOString(),
+        });
+      } else {
+        // Consolidate duplicate into primary unique record
+        const existing = subscriberMap.get(rEmail);
+        if (row[0] && !existing.firstName) existing.firstName = String(row[0]).trim();
+        if (row[1] && !existing.lastName) existing.lastName = String(row[1]).trim();
+        if (row[3] && row[3] !== 'FREE') existing.role = String(row[3]).trim().toUpperCase();
+        if (row[4] && row[4] !== 'N/A') existing.vipCode = String(row[4]).trim();
+        if (row[5]) existing.registrationDate = row[5];
       }
     }
 
-    if (existingRowIndex > 0) {
-      // Update existing row
-      const updateRange = `${tabName}!A${existingRowIndex}:F${existingRowIndex}`;
-      const currentRow = rows[existingRowIndex - 1] || [];
-      const updatedRow = [
-        firstName || currentRow[0] || '',
-        lastName || currentRow[1] || '',
+    // Process the incoming subscriber record
+    let action = 'appended';
+    if (subscriberMap.has(email)) {
+      action = 'updated';
+      const existing = subscriberMap.get(email);
+      if (firstName) existing.firstName = firstName;
+      if (lastName) existing.lastName = lastName;
+      if (role) existing.role = role;
+      if (vipCode && vipCode !== 'N/A') existing.vipCode = vipCode;
+      existing.registrationDate = registrationDate || new Date().toISOString();
+    } else {
+      subscriberMap.set(email, {
+        firstName: firstName || 'Subscriber',
+        lastName: lastName || '',
         email,
-        role || currentRow[3] || 'FREE',
-        vipCode || currentRow[4] || 'N/A',
-        currentRow[5] || registrationDate,
-      ];
-
-      const putRes = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
-          updateRange
-        )}?valueInputOption=USER_ENTERED`,
-        {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ values: [updatedRow] }),
-        }
-      );
-
-      if (!putRes.ok) {
-        const errText = await putRes.text();
-        console.warn('[Google Sheets Sync] Update failed:', putRes.status, errText);
-      }
-
-      return res.status(200).json({
-        success: true,
-        action: 'updated',
-        row: existingRowIndex,
-        email,
-        role,
+        role: role || 'FREE',
+        vipCode: vipCode || 'N/A',
+        registrationDate: registrationDate || new Date().toISOString(),
       });
     }
 
-    // Append new row
-    const appendRange = `${tabName}!A:F`;
-    const newRow = [
-      firstName || 'Subscriber',
-      lastName || '',
-      email,
-      role || 'FREE',
-      vipCode || 'N/A',
-      registrationDate,
-    ];
+    // Build consolidated unique records
+    const consolidatedRows = Array.from(subscriberMap.values()).map((s) => [
+      s.firstName,
+      s.lastName,
+      s.email,
+      s.role,
+      s.vipCode,
+      s.registrationDate,
+    ]);
 
-    const appendRes = await fetch(
+    // Clear existing data rows starting from row 2 to ensure no duplicate rows linger
+    await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
-        appendRange
-      )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+        `${tabName}!A2:F`
+      )}:clear`,
       {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ values: [newRow] }),
       }
     );
 
-    if (!appendRes.ok) {
-      const errText = await appendRes.text();
-      console.warn('[Google Sheets Sync] Append failed:', appendRes.status, errText);
+    // Write all unique rows cleanly
+    const putRes = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
+        `${tabName}!A2:F${consolidatedRows.length + 1}`
+      )}?valueInputOption=USER_ENTERED`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ values: consolidatedRows }),
+      }
+    );
+
+    if (!putRes.ok) {
+      const errText = await putRes.text();
+      console.warn('[Google Sheets Sync] Sync write failed:', putRes.status, errText);
     }
 
     return res.status(200).json({
       success: true,
-      action: 'appended',
+      action,
+      totalSubscribers: consolidatedRows.length,
       email,
       role,
     });

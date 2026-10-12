@@ -16,8 +16,8 @@ interface AuthContextType {
   subscriptionStatus: string;
   hasPendingVipInvitation: boolean;
   isAuthModalOpen: boolean;
-  authModalMode: 'signin' | 'signup';
-  openAuthModal: (mode?: 'signin' | 'signup' | string) => void;
+  authModalMode: 'signin' | 'signup' | 'reset' | 'update_password';
+  openAuthModal: (mode?: 'signin' | 'signup' | 'reset' | 'update_password' | string) => void;
   closeAuthModal: () => void;
   signInWithGoogle: () => Promise<{ data?: any; error?: any }>;
   signUpWithEmail: (
@@ -27,6 +27,8 @@ interface AuthContextType {
     lastName: string
   ) => Promise<{ success: boolean; error?: string }>;
   signInWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  resetPasswordForEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   redeemVipCode: (code: string) => Promise<{ success: boolean; message: string }>;
   claimVipInvitation: () => Promise<{ success: boolean; message: string }>;
@@ -305,7 +307,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [role, setRole] = useState<UserRole>(getCachedRole);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
-  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
+  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup' | 'reset' | 'update_password'>('signin');
   const [hasPendingVipInvitation, setHasPendingVipInvitation] = useState<boolean>(() => checkAndCaptureReferral());
 
   // Derived Dynamic Entitlements
@@ -556,6 +558,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             window.history.replaceState({}, '', '/community');
           }
         }
+
+        // Detect incoming password recovery link
+        if (
+          typeof window !== 'undefined' &&
+          (window.location.hash.includes('type=recovery') ||
+           window.location.search.includes('type=recovery'))
+        ) {
+          openAuthModal('update_password');
+        }
       } catch (err) {
         console.warn('[AuthContext] Auth initialization warning:', err);
       } finally {
@@ -743,6 +754,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               window.history.replaceState({}, '', '/community');
             }
           }
+        } else if (event === 'PASSWORD_RECOVERY') {
+          openAuthModal('update_password');
         } else if (event === 'SIGNED_OUT') {
           // Explicit sign out only
           setUser(null);
@@ -763,9 +776,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const openAuthModal = (mode: 'signin' | 'signup' | string = 'signin') => {
-    const safeMode = mode === 'signup' ? 'signup' : 'signin';
-    setAuthModalMode(safeMode);
+  const openAuthModal = (mode: 'signin' | 'signup' | 'reset' | 'update_password' | string = 'signin') => {
+    const safeMode =
+      mode === 'signup'
+        ? 'signup'
+        : mode === 'reset'
+        ? 'reset'
+        : mode === 'update_password'
+        ? 'update_password'
+        : 'signin';
+    setAuthModalMode(safeMode as any);
     setIsAuthModalOpen(true);
     soundManager.playTone(580, 0.05);
   };
@@ -1133,6 +1153,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPasswordForEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return { success: false, error: 'Please enter a valid email address.' };
+    }
+    if (isSupabaseConfigured) {
+      try {
+        const redirectTo =
+          typeof window !== 'undefined' && window.location.origin
+            ? `${window.location.origin}`
+            : 'https://www.sillowmill.com';
+        const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo,
+        });
+        if (error) {
+          return { success: false, error: error.message };
+        }
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'Password reset request failed.' };
+      }
+    }
+    return { success: false, error: 'Authentication service not configured.' };
+  };
+
+  const updatePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    if (!newPassword || newPassword.length < 8) {
+      return { success: false, error: 'Password must be at least 8 characters.' };
+    }
+    const hasSpecial =
+      /[!@#$%^&*()_+\-=[\]{}|;:,.<>?~`'"/\\]/.test(newPassword) || /[^A-Za-z0-9\s]/.test(newPassword);
+    if (!hasSpecial) {
+      return { success: false, error: 'Password must contain at least 1 special character.' };
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) {
+          return { success: false, error: error.message };
+        }
+        soundManager.playUnlockChime();
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'Password update failed.' };
+      }
+    }
+    return { success: false, error: 'Authentication service not configured.' };
+  };
+
   const signOut = async () => {
     soundManager.playTone(440, 0.08);
     try {
@@ -1312,6 +1382,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithGoogle,
         signUpWithEmail,
         signInWithEmail,
+        resetPasswordForEmail,
+        updatePassword,
         signOut,
         redeemVipCode,
         claimVipInvitation,
