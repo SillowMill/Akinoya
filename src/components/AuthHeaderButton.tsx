@@ -143,19 +143,16 @@ export const AuthHeaderButton: React.FC = () => {
               {role === 'CREATOR' && '👑 Syndicate Founder Privileges'}
             </div>
 
-            {/* Redeem Code action if user is FREE */}
+            {/* Verify & Redeem VIP Pass Portal action if user is FREE */}
             {role === 'FREE' && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  openAuthModal('redeem');
-                }}
+              <a
+                href="/verify"
+                onClick={() => setIsDropdownOpen(false)}
                 className="w-full p-2.5 rounded-xl bg-amber-950/40 hover:bg-amber-950/60 border border-amber-500/30 text-amber-300 font-mono text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-2 text-left min-h-[48px]"
               >
                 <KeyRound className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>Redeem VIP Pass Code</span>
-              </button>
+                <span>Verify &amp; Redeem VIP Pass</span>
+              </a>
             )}
 
             {/* Quick Link to Community Hub */}

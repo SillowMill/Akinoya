@@ -11,6 +11,9 @@ export interface Profile {
   avatar_url?: string | null;
   role: UserRole;
   vip_code_redeemed?: string | null;
+  is_vip?: boolean;
+  is_annual_member?: boolean;
+  unlocked_assets?: string[];
   created_at?: string;
   updated_at?: string;
 }

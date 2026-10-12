@@ -37,6 +37,7 @@ export default function App() {
       const path = window.location.pathname.toLowerCase();
       const search = window.location.search.toLowerCase();
       if (path === '/community' || path.startsWith('/community/')) return 'community';
+      if (path === '/auth/callback' || path.startsWith('/auth/callback')) return 'community';
       if (path === '/privacy' || path.startsWith('/privacy/')) return 'privacy';
       if (path === '/kyc' || path.startsWith('/kyc/')) return 'kyc';
       if (path === '/success' || path.startsWith('/success/')) return 'success';
@@ -59,6 +60,13 @@ export default function App() {
   // Redirect incoming token parameters from root domain directly to /verify/[id]
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const path = window.location.pathname.toLowerCase();
+    if (path === '/auth/callback' || path.startsWith('/auth/callback')) {
+      window.history.replaceState({}, '', '/community');
+      setRoute('community');
+      return;
+    }
+
     const searchParams = new URLSearchParams(window.location.search);
     const token =
       searchParams.get('token') ||
@@ -82,7 +90,12 @@ export default function App() {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
       const search = window.location.search.toLowerCase();
-      if (path === '/community' || path.startsWith('/community/')) {
+      if (
+        path === '/community' ||
+        path.startsWith('/community/') ||
+        path === '/auth/callback' ||
+        path.startsWith('/auth/callback')
+      ) {
         setRoute('community');
       } else if (path === '/privacy' || path.startsWith('/privacy/')) {
         setRoute('privacy');

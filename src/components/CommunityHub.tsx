@@ -768,7 +768,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
       alert(
         'Creator Lab channels require Äkinoya VIP Guest Pass or Annual Pass. Please sign in or redeem your VIP Pass Code.'
       );
-      openAuthModal(isAuthenticated ? 'vip' : 'signin');
+      if (isAuthenticated) {
+        window.location.href = '/verify';
+      } else {
+        openAuthModal('signin');
+      }
       return;
     }
 
@@ -1913,10 +1917,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         </div>
                         <button
                           type="button"
-                          onClick={() => openAuthModal(isAuthenticated ? 'vip' : 'signin')}
+                          onClick={() => {
+                            if (isAuthenticated) {
+                              window.location.href = '/verify';
+                            } else {
+                              openAuthModal('signin');
+                            }
+                          }}
                           className="min-h-[48px] px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all shrink-0 cursor-pointer"
                         >
-                          {isAuthenticated ? 'REDEEM VIP PASS CODE' : 'SIGN IN / REGISTER'}
+                          {isAuthenticated ? 'VERIFY / CLAIM VIP PASS' : 'SIGN IN / REGISTER'}
                         </button>
                       </div>
                     )}
