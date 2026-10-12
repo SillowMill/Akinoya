@@ -426,7 +426,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
               let targetPassCode = profData.vip_code_redeemed || (hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : null) || cachedProf?.vip_code_redeemed || null;
 
-              if (pendingPass && (targetRole === 'FREE' || !targetPassCode)) {
+              if (pendingPass) {
                 const vipRole = resolveRoleForCode(pendingPass);
                 targetRole = pickHigherRole(targetRole, vipRole);
                 targetPassCode = pendingPass;
@@ -448,6 +448,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // Update in Supabase
               await persistProfileToSupabase(enriched);
               syncToGoogleSheets(enriched, targetPassCode || undefined);
+
+              if (pendingPass && isValidPassId(pendingPass)) {
+                fetch('/api/nfc/register', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    token: pendingPass,
+                    ownerName: enriched.full_name || `${enriched.first_name || ''} ${enriched.last_name || ''}`.trim() || enriched.email?.split('@')[0],
+                    ownerEmail: enriched.email,
+                  }),
+                }).catch(() => {});
+              }
 
               // Clear referral claim after successful DB update
               if (hasReferralClaim) {
@@ -535,7 +547,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Clean redirect if landing on /auth/callback
         if (typeof window !== 'undefined' && window.location.pathname.startsWith('/auth/callback')) {
-          window.history.replaceState({}, '', '/community');
+          const pending =
+            localStorage.getItem(PENDING_VIP_PASS_KEY) ||
+            sessionStorage.getItem('pending_vip_code');
+          if (pending) {
+            window.history.replaceState({}, '', `/verify/${pending}`);
+          } else {
+            window.history.replaceState({}, '', '/community');
+          }
         }
       } catch (err) {
         console.warn('[AuthContext] Auth initialization warning:', err);
@@ -594,7 +613,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               currentCached?.vip_code_redeemed ||
               null;
 
-            if (pendingPass && (targetRole === 'FREE' || !targetPassCode)) {
+            if (pendingPass) {
               const vipRole = resolveRoleForCode(pendingPass);
               targetRole = pickHigherRole(targetRole, vipRole);
               targetPassCode = pendingPass;
@@ -615,6 +634,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             await persistProfileToSupabase(enriched);
             syncToGoogleSheets(enriched, targetPassCode || undefined);
+
+            if (pendingPass && isValidPassId(pendingPass)) {
+              fetch('/api/nfc/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  token: pendingPass,
+                  ownerName: enriched.full_name || `${enriched.first_name || ''} ${enriched.last_name || ''}`.trim() || enriched.email?.split('@')[0],
+                  ownerEmail: enriched.email,
+                }),
+              }).catch(() => {});
+            }
 
             if (hasReferralClaim) {
               localStorage.removeItem(PENDING_ROLE_KEY);
@@ -673,6 +704,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await persistProfileToSupabase(newProf);
             syncToGoogleSheets(newProf, hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || undefined);
 
+            if (pendingPass && isValidPassId(pendingPass)) {
+              fetch('/api/nfc/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  token: pendingPass,
+                  ownerName: newProf.full_name || `${newProf.first_name || ''} ${newProf.last_name || ''}`.trim() || newProf.email?.split('@')[0],
+                  ownerEmail: newProf.email,
+                }),
+              }).catch(() => {});
+            }
+
             if (hasReferralClaim) {
               localStorage.removeItem(PENDING_ROLE_KEY);
               sessionStorage.removeItem(PENDING_ROLE_KEY);
@@ -691,7 +734,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           if (typeof window !== 'undefined' && window.location.pathname.startsWith('/auth/callback')) {
-            window.history.replaceState({}, '', '/community');
+            const pending =
+              localStorage.getItem(PENDING_VIP_PASS_KEY) ||
+              sessionStorage.getItem('pending_vip_code');
+            if (pending) {
+              window.history.replaceState({}, '', `/verify/${pending}`);
+            } else {
+              window.history.replaceState({}, '', '/community');
+            }
           }
         } else if (event === 'SIGNED_OUT') {
           // Explicit sign out only
@@ -845,6 +895,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           syncToGoogleSheets(newProf, hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || undefined);
+
+          if (pendingPass && isValidPassId(pendingPass)) {
+            fetch('/api/nfc/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                token: pendingPass,
+                ownerName: newProf.full_name || `${newProf.first_name || ''} ${newProf.last_name || ''}`.trim() || newProf.email?.split('@')[0],
+                ownerEmail: newProf.email,
+              }),
+            }).catch(() => {});
+          }
         }
       } else {
         const simId = `usr-${Date.now()}`;
@@ -885,6 +947,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         syncToGoogleSheets(newProf, hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || undefined);
+
+        if (pendingPass && isValidPassId(pendingPass)) {
+          fetch('/api/nfc/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: pendingPass,
+              ownerName: newProf.full_name || `${newProf.first_name || ''} ${newProf.last_name || ''}`.trim() || newProf.email?.split('@')[0],
+              ownerEmail: newProf.email,
+            }),
+          }).catch(() => {});
+        }
       }
 
       soundManager.playUnlockChime();
@@ -945,7 +1019,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             (hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : null) ||
             null;
 
-          if (pendingPass && (targetRole === 'FREE' || !targetPassCode)) {
+          if (pendingPass) {
             const vipRole = resolveRoleForCode(pendingPass);
             targetRole = pickHigherRole(targetRole, vipRole);
             targetPassCode = pendingPass;
@@ -969,6 +1043,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           await persistProfileToSupabase(resolvedProf);
           syncToGoogleSheets(resolvedProf, targetPassCode || undefined);
+
+          if (pendingPass && isValidPassId(pendingPass)) {
+            fetch('/api/nfc/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                token: pendingPass,
+                ownerName: resolvedProf.full_name || `${resolvedProf.first_name || ''} ${resolvedProf.last_name || ''}`.trim() || resolvedProf.email?.split('@')[0],
+                ownerEmail: resolvedProf.email,
+              }),
+            }).catch(() => {});
+          }
 
           if (hasReferralClaim) {
             localStorage.removeItem(PENDING_ROLE_KEY);

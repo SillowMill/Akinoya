@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import {
@@ -10,12 +10,11 @@ import {
   ShieldCheck,
   Lock,
   Download,
-  Mail,
-  User,
   Sparkles,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { useVipAccess, setDeviceSession, getOrCreateDeviceId } from '../context/VipAccessContext';
+import { useAuth } from '../context/AuthContext';
 import {
   useHolderName,
   getHolderName,
@@ -48,6 +47,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   onOpenVisualizerHub,
 }) => {
   const { unlockVip } = useVipAccess();
+  const { user, profile, openAuthModal, redeemVipCode } = useAuth();
+  const autoClaimAttemptedRef = useRef(false);
 
   // Extract query params: token / id, enc (NTAG 424 DNA dynamic cipher), claim (transfer key)
   const [queryParams] = useState<{
@@ -81,13 +82,21 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const isMaster = activeToken === 'AKN-VIP-2027-X0914';
   const derivedEdition = deriveEditionNumber(activeToken);
 
+  // Auto-record pending VIP pass token in storage for seamless auth claim binding
+  useEffect(() => {
+    if (typeof window !== 'undefined' && activeToken && !isMaster && isValidPassId(activeToken)) {
+      localStorage.setItem('akinoya_pending_vip_pass', activeToken);
+      sessionStorage.setItem('pending_vip_code', activeToken);
+      localStorage.setItem('pending_role', 'VIP_GUEST');
+      sessionStorage.setItem('pending_role', 'VIP_GUEST');
+    }
+  }, [activeToken, isMaster]);
+
   // Per-pass stored holder name and certificate (isolated per Pass ID)
   const localStoredName = useHolderName(activeToken);
   const localStoredCert = useCertificate(activeToken);
 
-  // Claim Form inputs (for unassigned passes)
-  const [claimName, setClaimName] = useState('');
-  const [claimEmail, setClaimEmail] = useState('');
+  // Claim state (for unassigned passes)
   const [claimError, setClaimError] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
 
@@ -131,16 +140,31 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   // UI helpers
   const [copiedToken, setCopiedToken] = useState(false);
 
-  // Determine if this pass is officially claimed
+  // Determine if this pass is officially claimed by the active account or previously
+  const isClaimedByUser = Boolean(
+    profile?.has_vip_pass &&
+    (profile?.vip_code_redeemed === activeToken || profile?.role === 'CREATOR' || isMaster)
+  );
+
   const isClaimed =
     isMaster ||
+    isClaimedByUser ||
     Boolean(passData.isClaimed && passData.ownerName && passData.ownerName.trim().length > 0) ||
     Boolean(localStoredCert && localStoredCert.holderName && localStoredCert.holderName.trim().length > 0) ||
     Boolean(localStoredName && localStoredName.trim().length > 0);
 
   const activeHolderName = isMaster
     ? 'Odi Selis'
-    : (passData.ownerName || localStoredCert?.holderName || localStoredName || '');
+    : (
+        passData.ownerName ||
+        profile?.full_name ||
+        (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : null) ||
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        localStoredCert?.holderName ||
+        localStoredName ||
+        ''
+      );
 
   const activeCertificate: BingaaCertificate =
     localStoredCert ||
@@ -246,27 +270,19 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     setTimeout(() => setCopiedToken(false), 2000);
   };
 
-  // Submit Holder Claim Form (for unassigned passes)
-  const handleClaimPass = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanName = sanitizeHolderName(claimName);
-    const cleanEmail = claimEmail.trim().toLowerCase();
+  // Execute Claim for Authenticated User (binds Pass ID to user account)
+  const executeClaimForUser = async (targetUser?: any, targetProfile?: any) => {
+    if (isClaiming || isMaster || dnaError) return;
+    const currentUser = targetUser || user;
+    const currentProfile = targetProfile || profile;
 
-    if (!cleanName) {
-      setClaimError('Please enter your full name or handle to claim this pass.');
-      soundManager.playError();
-      return;
-    }
-
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      setClaimError('Please provide a valid email address for certificate provenance.');
-      soundManager.playError();
-      return;
-    }
-
-    if (dnaError) {
-      setClaimError('This pass could not be cryptographically verified.');
-      soundManager.playError();
+    if (!currentUser && !currentProfile) {
+      // Record pending pass intent and open Auth Gateway modal
+      localStorage.setItem('akinoya_pending_vip_pass', activeToken);
+      sessionStorage.setItem('pending_vip_code', activeToken);
+      localStorage.setItem('pending_role', 'VIP_GUEST');
+      sessionStorage.setItem('pending_role', 'VIP_GUEST');
+      openAuthModal('signup');
       return;
     }
 
@@ -274,7 +290,20 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     setClaimError(null);
     soundManager.playTone(660, 0.08);
 
+    const rawName =
+      currentProfile?.full_name ||
+      (currentProfile?.first_name ? `${currentProfile.first_name} ${currentProfile.last_name || ''}`.trim() : null) ||
+      currentUser?.user_metadata?.full_name ||
+      currentUser?.user_metadata?.name ||
+      (currentUser?.user_metadata?.first_name ? `${currentUser.user_metadata.first_name} ${currentUser.user_metadata.last_name || ''}`.trim() : null) ||
+      currentUser?.email?.split('@')[0] ||
+      'Founding VIP Member';
+
+    const cleanName = sanitizeHolderName(rawName) || 'Founding VIP Member';
+    const cleanEmail = (currentUser?.email || currentProfile?.email || '').trim().toLowerCase();
+
     try {
+      // 1. Call server-side NFC register endpoint (records pass in backend & syncs Blad1 row in Google Sheets)
       const res = await fetch('/api/nfc/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -292,6 +321,10 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         throw new Error((data && data.message) || 'Claim registration failed. Please try again.');
       }
 
+      // 2. Permanently link VIP status to Supabase public.profiles & sync to Google Sheets Subscribers tab
+      await redeemVipCode(activeToken);
+
+      // 3. Issue and persist unique Certificate of Authenticity
       const cert: BingaaCertificate = (data && data.certificate) || {
         certificateId: `COA-BNG1-${String(passData.editionNumber).padStart(3, '0')}-VERIFIED`,
         title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
@@ -300,18 +333,21 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         editionNumber: passData.editionNumber,
         editionTotal: TOTAL_EDITION_LIMIT,
         status: 'OFFICIALLY VERIFIED',
-        emailVerified: true,
+        emailVerified: Boolean(cleanEmail),
         claimedAt: new Date().toISOString(),
         signatureAlgorithm: 'HMAC-SHA256',
         signature: 'Sillow Mill · Creative Syndicate',
       };
 
-      // Permanently store details for this specific pass
       saveCertificate(cert);
       saveHolderName(cleanName, activeToken);
       setExplicitVipRouteActive(true);
       setDeviceSession(activeToken);
       unlockVip(activeToken);
+
+      // Clean up pending tokens
+      localStorage.removeItem('akinoya_pending_vip_pass');
+      sessionStorage.removeItem('pending_vip_code');
 
       setPassData((prev) => ({
         ...prev,
@@ -338,6 +374,23 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       setIsClaiming(false);
     }
   };
+
+  // Auto-execute claim as soon as an unassigned pass is authenticated via login or registration
+  useEffect(() => {
+    if (
+      !isValidating &&
+      !isMaster &&
+      !isClaimed &&
+      !isClaimedByUser &&
+      (user || profile) &&
+      !autoClaimAttemptedRef.current &&
+      !isClaiming &&
+      !dnaError
+    ) {
+      autoClaimAttemptedRef.current = true;
+      executeClaimForUser(user, profile);
+    }
+  }, [user, profile, isClaimed, isClaimedByUser, isValidating, isMaster, dnaError, isClaiming]);
 
   return (
     <div className="relative z-20 w-full max-w-2xl mx-auto px-3 sm:px-6 py-6 sm:py-12 text-white font-sans">
@@ -399,81 +452,107 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               Claim Your Äkinoya Founding Pass
             </h1>
             <p className="text-xs font-mono text-white/60 leading-relaxed">
-              {isMaster ? 'Founders Pass (#0)' : `Founding Physical Edition #${passData.editionNumber} of ${TOTAL_EDITION_LIMIT}`}. This card has not yet been registered. Enter your name and email to permanently bind ownership and issue your official VIP Certificate of Authenticity.
+              {isMaster ? 'Founders Pass (#0)' : `Founding Physical Edition #${passData.editionNumber} of ${TOTAL_EDITION_LIMIT}`}. This card is unassigned. Create an account or sign in to permanently claim VIP status, unlock the full portal, and issue your official Certificate of Authenticity.
             </p>
           </div>
 
-          {/* Claim Form */}
-          <form onSubmit={handleClaimPass} noValidate className="space-y-4">
-            <div className="space-y-1.5 font-mono">
-              <label htmlFor="claim-name" className="text-[11px] text-white/70 font-semibold tracking-wider uppercase flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Holder Name (Printed on Certificate)</span>
-              </label>
-              <input
-                id="claim-name"
-                type="text"
-                required
-                maxLength={HOLDER_NAME_MAX_LENGTH}
-                value={claimName}
-                disabled={isClaiming || isValidating}
-                onChange={(e) => {
-                  setClaimName(e.target.value);
-                  if (claimError) setClaimError(null);
-                }}
-                placeholder="e.g. Elena Rostova"
-                className="w-full bg-black/70 border border-white/20 focus:border-cyan-400 rounded-xl px-3.5 py-3 text-sm text-white placeholder:text-white/30 outline-none transition-all disabled:opacity-40"
-              />
-            </div>
-
-            <div className="space-y-1.5 font-mono">
-              <label htmlFor="claim-email" className="text-[11px] text-white/70 font-semibold tracking-wider uppercase flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Email Address (For Ownership Provenance)</span>
-              </label>
-              <input
-                id="claim-email"
-                type="email"
-                required
-                value={claimEmail}
-                disabled={isClaiming || isValidating}
-                onChange={(e) => {
-                  setClaimEmail(e.target.value);
-                  if (claimError) setClaimError(null);
-                }}
-                placeholder="e.g. elena@example.com"
-                className="w-full bg-black/70 border border-white/20 focus:border-cyan-400 rounded-xl px-3.5 py-3 text-sm text-white placeholder:text-white/30 outline-none transition-all disabled:opacity-40"
-              />
-            </div>
-
+          {/* Direct Claim Action Section (No loose name/email inputs) */}
+          <div className="space-y-4">
             {claimError && (
-              <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-500/40 text-[11px] font-mono text-rose-300">
-                {claimError}
+              <div className="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/40 text-[11px] font-mono text-rose-300 flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-rose-300">Claim Error</div>
+                  <div className="text-rose-200/80 mt-0.5">{claimError}</div>
+                </div>
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={!claimName.trim() || !claimEmail.trim() || isClaiming || isValidating}
-              className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(34,211,238,0.35)] disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none disabled:cursor-not-allowed min-h-[46px]"
-            >
-              {isClaiming ? (
-                <>
-                  <Sparkles className="w-4 h-4 animate-spin text-black" />
-                  <span>CLAIMING &amp; ISSUING CERTIFICATE...</span>
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="w-4 h-4 text-black" />
-                  <span>CLAIM &amp; ACTIVATE VIP PASS</span>
-                </>
-              )}
-            </button>
+            {user || profile ? (
+              /* User is authenticated: 1-click claim to account */
+              <div className="space-y-3">
+                <div className="p-3.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs font-mono flex items-center justify-between gap-3">
+                  <div className="space-y-0.5 min-w-0">
+                    <span className="text-[10px] uppercase tracking-wider text-cyan-400/80 block">Logged in as</span>
+                    <span className="text-white font-medium truncate block">{profile?.email || user?.email}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem('akinoya_pending_vip_pass', activeToken);
+                      sessionStorage.setItem('pending_vip_code', activeToken);
+                      openAuthModal('signin');
+                    }}
+                    className="text-[11px] text-cyan-400 hover:text-cyan-300 underline cursor-pointer shrink-0"
+                  >
+                    Switch Account
+                  </button>
+                </div>
 
-            <p className="text-[10px] font-mono text-white/40 text-center leading-relaxed">
-              Upon submission, your details are cryptographically signed, bound to Pass #{activeToken}, and synced to Sillow Mill Genesis Registry.
-            </p>
-          </form>
+                <button
+                  type="button"
+                  disabled={isClaiming || isValidating}
+                  onClick={() => executeClaimForUser(user, profile)}
+                  className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(34,211,238,0.35)] disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
+                >
+                  {isClaiming ? (
+                    <>
+                      <Sparkles className="w-4 h-4 animate-spin text-black" />
+                      <span>CLAIMING &amp; ISSUING CERTIFICATE...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4 text-black" />
+                      <span>CLAIM VIP PASS TO MY ACCOUNT</span>
+                    </>
+                  )}
+                </button>
+
+                <p className="text-[10px] font-mono text-white/40 text-center leading-relaxed">
+                  Your account will permanently gain VIP Guest status across all private channels and syndicate releases.
+                </p>
+              </div>
+            ) : (
+              /* User is unauthenticated: Direct CTAs to Register or Sign In */
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  disabled={isValidating}
+                  onClick={() => {
+                    localStorage.setItem('akinoya_pending_vip_pass', activeToken);
+                    sessionStorage.setItem('pending_vip_code', activeToken);
+                    localStorage.setItem('pending_role', 'VIP_GUEST');
+                    sessionStorage.setItem('pending_role', 'VIP_GUEST');
+                    openAuthModal('signup');
+                  }}
+                  className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(34,211,238,0.35)] min-h-[48px]"
+                >
+                  <Sparkles className="w-4 h-4 text-black" />
+                  <span>CLAIM VIP PASS &amp; CREATE ACCOUNT</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isValidating}
+                  onClick={() => {
+                    localStorage.setItem('akinoya_pending_vip_pass', activeToken);
+                    sessionStorage.setItem('pending_vip_code', activeToken);
+                    localStorage.setItem('pending_role', 'VIP_GUEST');
+                    sessionStorage.setItem('pending_role', 'VIP_GUEST');
+                    openAuthModal('signin');
+                  }}
+                  className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 hover:border-cyan-400/40 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
+                >
+                  <Lock className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>SIGN IN TO CLAIM</span>
+                </button>
+
+                <p className="text-[10px] font-mono text-white/40 text-center leading-relaxed pt-1">
+                  Supports Google 1-Click Login and Email Registration. VIP status and Certificate of Authenticity are automatically bound to your account in one step.
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* Hardware Metadata summary */}
           <div className="divide-y divide-white/5 rounded-xl bg-black/40 border border-white/5 px-3.5 sm:px-4 font-mono text-xs">

@@ -96,7 +96,12 @@ export default function App() {
       const path = window.location.pathname.toLowerCase();
       const search = window.location.search.toLowerCase();
       if (path === '/community' || path.startsWith('/community/')) return 'community';
-      if (path === '/auth/callback' || path.startsWith('/auth/callback')) return 'community';
+      if (path === '/auth/callback' || path.startsWith('/auth/callback')) {
+        const pendingPass =
+          localStorage.getItem('akinoya_pending_vip_pass') ||
+          sessionStorage.getItem('pending_vip_code');
+        return pendingPass ? 'verify' : 'community';
+      }
       if (path === '/privacy' || path.startsWith('/privacy/')) return 'privacy';
       if (path === '/kyc' || path.startsWith('/kyc/')) return 'kyc';
       if (path === '/success' || path.startsWith('/success/')) return 'success';
@@ -121,6 +126,14 @@ export default function App() {
     if (typeof window === 'undefined') return;
     const path = window.location.pathname.toLowerCase();
     if (path === '/auth/callback' || path.startsWith('/auth/callback')) {
+      const pendingPass =
+        localStorage.getItem('akinoya_pending_vip_pass') ||
+        sessionStorage.getItem('pending_vip_code');
+      if (pendingPass) {
+        window.history.replaceState({}, '', `/verify/${pendingPass}`);
+        setRoute('verify');
+        return;
+      }
       window.history.replaceState({}, '', '/community');
       setRoute('community');
       return;

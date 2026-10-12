@@ -162,23 +162,25 @@ export const AuthModal: React.FC = () => {
             </button>
           </div>
 
-          {/* Active VIP Referral Invitation Banner */}
-          {hasPendingVipInvitation && (
-            <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-amber-950/60 via-yellow-950/50 to-amber-950/60 border border-yellow-500/40 text-yellow-300 shadow-[0_0_20px_rgba(234,179,8,0.15)] flex items-start gap-3">
-              <div className="p-1.5 rounded-lg bg-yellow-400/20 text-yellow-400 shrink-0 mt-0.5">
+          {/* Active VIP Referral / Pass Invitation Banner */}
+          {(hasPendingVipInvitation || (typeof window !== 'undefined' && Boolean(localStorage.getItem('akinoya_pending_vip_pass')))) && (
+            <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/60 via-emerald-950/50 to-cyan-950/60 border border-cyan-500/40 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.15)] flex items-start gap-3">
+              <div className="p-1.5 rounded-lg bg-cyan-400/20 text-cyan-400 shrink-0 mt-0.5">
                 <Sparkles className="w-4 h-4 animate-pulse" />
               </div>
               <div className="text-left flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-yellow-400">
+                  <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-cyan-300">
                     VIP Invitation Active
                   </span>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-extrabold bg-yellow-400 text-black">
-                    VIP_GUEST
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-extrabold bg-cyan-400 text-black">
+                    {(typeof window !== 'undefined' && localStorage.getItem('akinoya_pending_vip_pass')) || 'VIP_GUEST'}
                   </span>
                 </div>
-                <p className="text-xs text-yellow-100/90 font-sans mt-1 leading-relaxed">
-                  You were invited as a VIP Guest. Continue with Google or register to claim instant access to Creator Lab channels, exclusive audio masters &amp; visualizers.
+                <p className="text-xs text-cyan-100/90 font-sans mt-1 leading-relaxed">
+                  {(typeof window !== 'undefined' && localStorage.getItem('akinoya_pending_vip_pass'))
+                    ? `Founding Pass #${localStorage.getItem('akinoya_pending_vip_pass')} detected. Sign in or create an account to permanently claim VIP ownership and generate your Certificate of Authenticity.`
+                    : 'You were invited as a VIP Guest. Continue with Google or register to claim instant access to Creator Lab channels, exclusive audio masters & visualizers.'}
                 </p>
               </div>
             </div>
