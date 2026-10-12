@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
 
 export const AuthHeaderButton: React.FC = () => {
-  const { user, profile, role, isAuthenticated, openAuthModal, signOut } = useAuth();
+  const { user, profile, role, isAuthenticated, isVip, isSubscriber, openAuthModal, signOut } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -30,29 +30,40 @@ export const AuthHeaderButton: React.FC = () => {
   }, []);
 
   const getRoleBadge = () => {
-    switch (role) {
-      case 'CREATOR':
-        return {
-          label: 'CREATOR',
-          className: 'bg-amber-500 text-black font-black border border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.4)]',
-        };
-      case 'ANNUAL_PASS':
-        return {
-          label: 'ANNUAL PASS',
-          className: 'bg-amber-500/25 text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
-        };
-      case 'VIP_GUEST':
-        return {
-          label: 'VIP GUEST',
-          className: 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 shadow-[0_0_10px_rgba(16,185,129,0.25)]',
-        };
-      case 'FREE':
-      default:
-        return {
-          label: 'FREE',
-          className: 'bg-cyan-950/80 text-cyan-300 border border-cyan-400/30',
-        };
+    if (role === 'CREATOR') {
+      return {
+        label: 'CREATOR',
+        className: 'bg-amber-500 text-black font-black border border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.4)]',
+      };
     }
+    if ((isVip || role === 'VIP_GUEST') && (isSubscriber || role === 'ANNUAL_PASS' || role === 'SUBSCRIBER')) {
+      return {
+        label: 'VIP + SUBSCRIBER',
+        className: 'bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 text-black font-black border border-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.35)]',
+      };
+    }
+    if (role === 'ANNUAL_PASS' || role === 'SUBSCRIBER' || isSubscriber) {
+      return {
+        label: 'ANNUAL PASS',
+        className: 'bg-amber-500/25 text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
+      };
+    }
+    if (role === 'VIP_GUEST' || isVip) {
+      return {
+        label: 'VIP GUEST',
+        className: 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 shadow-[0_0_10px_rgba(16,185,129,0.25)]',
+      };
+    }
+    if (role === 'GUEST') {
+      return {
+        label: 'GUEST',
+        className: 'bg-cyan-900/60 text-cyan-200 border border-cyan-400/30',
+      };
+    }
+    return {
+      label: 'FREE',
+      className: 'bg-cyan-950/80 text-cyan-300 border border-cyan-400/30',
+    };
   };
 
   const roleBadge = getRoleBadge();
@@ -136,15 +147,22 @@ export const AuthHeaderButton: React.FC = () => {
             </div>
 
             {/* Role Entitlement Info */}
-            <div className="px-2 py-1 text-[10px] font-mono text-white/60">
-              {role === 'FREE' && '🔓 Public Chat Access (Free)'}
-              {role === 'VIP_GUEST' && '✨ 1-of-100 Guest: All Chat Channels Unlocked'}
-              {role === 'ANNUAL_PASS' && '👑 Full Access + Asset Downloads Unlocked'}
-              {role === 'CREATOR' && '👑 Syndicate Founder Privileges'}
+            <div className="px-2 py-1 text-[10px] font-mono text-white/60 space-y-1">
+              {(isVip || role === 'VIP_GUEST') && (isSubscriber || role === 'ANNUAL_PASS' || role === 'SUBSCRIBER') ? (
+                <div className="text-amber-300 font-semibold">✨👑 Dual-Tier: All VIP Channels + Full Asset Vault Unlocked</div>
+              ) : (
+                <>
+                  {role === 'FREE' && <div>🔓 Public Chat Access (Free)</div>}
+                  {role === 'GUEST' && <div>🔓 Guest Explorer</div>}
+                  {(role === 'VIP_GUEST' || isVip) && <div>✨ 1-of-100 Guest: All Chat Channels Unlocked</div>}
+                  {(role === 'ANNUAL_PASS' || role === 'SUBSCRIBER' || isSubscriber) && <div>👑 Full Access + Asset Downloads Unlocked</div>}
+                  {role === 'CREATOR' && <div>👑 Syndicate Founder Privileges</div>}
+                </>
+              )}
             </div>
 
-            {/* Verify & Redeem VIP Pass Portal action if user is FREE */}
-            {role === 'FREE' && (
+            {/* Verify & Redeem VIP Pass Portal action if user does not have a VIP pass */}
+            {!isVip && role !== 'VIP_GUEST' && role !== 'CREATOR' && (
               <a
                 href="/verify"
                 onClick={() => setIsDropdownOpen(false)}

@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
 import { KeyRound, Sparkles, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface ComingSoonGateProps {
   onUnlockSuccess: () => void;
@@ -54,6 +55,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
   onToggleBackdropMode,
   backdropOnly = false,
 }) => {
+  const { isAuthenticated, hasPendingVipInvitation, openAuthModal } = useAuth();
   const [accessCode, setAccessCode] = useState('');
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -197,11 +199,22 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
             SILLOW MILL
           </h1>
 
-          {/* Claimed Status Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/60 backdrop-blur-md border border-amber-500/40 shadow-[0_0_14px_rgba(245,158,11,0.2)] text-[10px] sm:text-xs font-mono text-amber-300 font-semibold mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.9)] shrink-0" />
-            <span>• VIP ACCESS 100 / 100 CLAIMED</span>
-          </div>
+          {/* Claimed Status Badge / VIP Invitation Active Badge */}
+          {hasPendingVipInvitation && !isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => openAuthModal('signin')}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-yellow-500/20 via-amber-500/25 to-yellow-500/20 backdrop-blur-md border border-yellow-400/60 shadow-[0_0_16px_rgba(245,158,11,0.35)] text-[11px] sm:text-xs font-mono text-yellow-300 font-bold mb-3 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-yellow-400 animate-pulse shrink-0" />
+              <span>✨ VIP INVITATION ACTIVE · CLICK TO CLAIM</span>
+            </button>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/60 backdrop-blur-md border border-amber-500/40 shadow-[0_0_14px_rgba(245,158,11,0.2)] text-[10px] sm:text-xs font-mono text-amber-300 font-semibold mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.9)] shrink-0" />
+              <span>• VIP ACCESS 100 / 100 CLAIMED</span>
+            </div>
+          )}
 
           {/* Mobile Release Date Badge (Centered underneath title) */}
           <div className="sm:hidden flex justify-center w-full my-3">

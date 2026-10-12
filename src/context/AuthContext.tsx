@@ -10,6 +10,11 @@ interface AuthContextType {
   role: UserRole;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isVip: boolean;
+  isSubscriber: boolean;
+  hasVipPass: boolean;
+  subscriptionStatus: string;
+  hasPendingVipInvitation: boolean;
   isAuthModalOpen: boolean;
   authModalMode: 'signin' | 'signup';
   openAuthModal: (mode?: 'signin' | 'signup' | string) => void;
@@ -24,6 +29,7 @@ interface AuthContextType {
   signInWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   redeemVipCode: (code: string) => Promise<{ success: boolean; message: string }>;
+  claimVipInvitation: () => Promise<{ success: boolean; message: string }>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -32,14 +38,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const LOCAL_PROFILE_KEY = 'akinoya_auth_profile';
 const LOCAL_SESSION_USER_KEY = 'akinoya_session_user';
 const PENDING_VIP_PASS_KEY = 'akinoya_pending_vip_pass';
+const PENDING_ROLE_KEY = 'pending_role';
 const PATRON_TOKEN_KEY = 'akinoya_patron_token';
 const PATRON_ROLE_KEY = 'akinoya_patron_role';
 
 const ROLE_PRIORITY: Record<UserRole, number> = {
   FREE: 0,
+  GUEST: 0,
   VIP_GUEST: 1,
+  SUBSCRIBER: 2,
   ANNUAL_PASS: 2,
   CREATOR: 3,
+};
+
+// Detect ?ref=VIP_GUEST or ?claim=vip parameters on page load and persist
+const checkAndCaptureReferral = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const searchParams = new URLSearchParams(window.location.search);
+    const ref = (searchParams.get('ref') || searchParams.get('referral') || '').trim();
+    const claim = (searchParams.get('claim') || searchParams.get('tier') || '').trim();
+
+    const isVipRef =
+      ref.toUpperCase() === 'VIP_GUEST' ||
+      ref.toLowerCase() === 'vip' ||
+      claim.toLowerCase() === 'vip' ||
+      claim.toUpperCase() === 'VIP_GUEST';
+
+    if (isVipRef) {
+      localStorage.setItem(PENDING_ROLE_KEY, 'VIP_GUEST');
+      sessionStorage.setItem(PENDING_ROLE_KEY, 'VIP_GUEST');
+      return true;
+    }
+
+    const pending = localStorage.getItem(PENDING_ROLE_KEY) || sessionStorage.getItem(PENDING_ROLE_KEY);
+    return pending === 'VIP_GUEST';
+  } catch {}
+  return false;
 };
 
 const getStoredVipPass = (): string | null => {
@@ -81,19 +116,59 @@ const pickHigherRole = (roleA: UserRole, roleB: UserRole): UserRole => {
 
 const enrichProfile = (
   raw: Partial<Profile> & { id: string; email: string },
-  passCode?: string | null
+  passCode?: string | null,
+  grantVipOverride?: boolean
 ): Profile => {
   const code = passCode || raw.vip_code_redeemed || getStoredVipPass();
+  const rawSubStatus =
+    raw.subscription_status ||
+    (raw.role === 'ANNUAL_PASS' || raw.role === 'SUBSCRIBER' ? 'active' : 'inactive');
+
+  let hasVip = Boolean(
+    grantVipOverride ||
+    raw.has_vip_pass ||
+    raw.is_vip ||
+    raw.role === 'VIP_GUEST' ||
+    raw.role === 'CREATOR' ||
+    Boolean(code)
+  );
+
   let effectiveRole: UserRole = raw.role || 'FREE';
+  if (grantVipOverride || hasVip) {
+    if (effectiveRole === 'FREE' || effectiveRole === 'GUEST') {
+      effectiveRole = 'VIP_GUEST';
+    }
+  }
+
   if (code) {
     const codeRole = resolveRoleForCode(code);
     effectiveRole = pickHigherRole(effectiveRole, codeRole);
+    hasVip = true;
   }
 
-  const isVip = effectiveRole === 'VIP_GUEST' || effectiveRole === 'CREATOR' || Boolean(code);
-  const isAnnual = effectiveRole === 'ANNUAL_PASS' || effectiveRole === 'CREATOR';
-  const first = raw.first_name || raw.full_name?.split(' ')[0] || raw.email?.split('@')[0] || 'Member';
-  const last = raw.last_name || raw.full_name?.split(' ').slice(1).join(' ') || '';
+  const isVip = Boolean(
+    hasVip ||
+    effectiveRole === 'VIP_GUEST' ||
+    effectiveRole === 'CREATOR' ||
+    code
+  );
+
+  const isSubscriber = Boolean(
+    rawSubStatus === 'active' ||
+    effectiveRole === 'ANNUAL_PASS' ||
+    effectiveRole === 'SUBSCRIBER' ||
+    effectiveRole === 'CREATOR'
+  );
+
+  const first =
+    raw.first_name ||
+    raw.full_name?.split(' ')[0] ||
+    raw.email?.split('@')[0] ||
+    'Member';
+  const last =
+    raw.last_name ||
+    raw.full_name?.split(' ').slice(1).join(' ') ||
+    '';
   const full = (raw.full_name || `${first} ${last}`).trim() || raw.email;
 
   return {
@@ -104,10 +179,13 @@ const enrichProfile = (
     email: raw.email,
     avatar_url: raw.avatar_url || null,
     role: effectiveRole,
-    vip_code_redeemed: code || null,
+    has_vip_pass: hasVip,
+    subscription_status: rawSubStatus,
+    vip_code_redeemed: code || (hasVip ? 'VIP-REFERRAL-CLAIM' : null),
     is_vip: isVip,
-    is_annual_member: isAnnual,
-    unlocked_assets: isVip || isAnnual ? ['master_audio', 'visualizer_3d', 'lore_doc'] : [],
+    is_subscriber: isSubscriber,
+    is_annual_member: isSubscriber,
+    unlocked_assets: isVip || isSubscriber ? ['master_audio', 'visualizer_3d', 'lore_doc'] : [],
     created_at: raw.created_at || new Date().toISOString(),
     updated_at: raw.updated_at || new Date().toISOString(),
   };
@@ -125,6 +203,8 @@ const persistProfileToSupabase = async (prof: Profile) => {
         email: prof.email,
         avatar_url: prof.avatar_url || null,
         role: prof.role,
+        has_vip_pass: Boolean(prof.has_vip_pass),
+        subscription_status: prof.subscription_status || 'inactive',
         vip_code_redeemed: prof.vip_code_redeemed || null,
         updated_at: new Date().toISOString(),
       },
@@ -184,13 +264,33 @@ const getCachedRole = (): UserRole => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Synchronous initialization prevents any flashing of "FREE" or "Logged Out" state on page refresh
   const [user, setUser] = useState<any | null>(getCachedUser);
   const [profile, setProfile] = useState<Profile | null>(getCachedProfile);
   const [role, setRole] = useState<UserRole>(getCachedRole);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
+  const [hasPendingVipInvitation, setHasPendingVipInvitation] = useState<boolean>(() => checkAndCaptureReferral());
+
+  // Derived Dynamic Entitlements
+  const isVip = Boolean(
+    profile?.has_vip_pass === true ||
+    profile?.is_vip === true ||
+    role === 'VIP_GUEST' ||
+    role === 'CREATOR' ||
+    profile?.vip_code_redeemed
+  );
+
+  const isSubscriber = Boolean(
+    profile?.subscription_status === 'active' ||
+    profile?.is_subscriber === true ||
+    role === 'ANNUAL_PASS' ||
+    role === 'SUBSCRIBER' ||
+    role === 'CREATOR'
+  );
+
+  const hasVipPass = Boolean(profile?.has_vip_pass ?? isVip);
+  const subscriptionStatus = profile?.subscription_status || (isSubscriber ? 'active' : 'inactive');
 
   // Sync profile data to Google Sheets via backend endpoint
   const syncToGoogleSheets = async (prof: Partial<Profile>, codeUsed?: string) => {
@@ -203,6 +303,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           last_name: prof.last_name,
           email: prof.email,
           role: prof.role || 'FREE',
+          has_vip_pass: prof.has_vip_pass ?? false,
+          subscription_status: prof.subscription_status || 'inactive',
           vip_code_redeemed: codeUsed || prof.vip_code_redeemed || 'N/A',
           created_at: prof.created_at || new Date().toISOString(),
         }),
@@ -212,9 +314,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Hydrate user session on mount immediately and unblocked
+  // Hydrate user session on mount immediately and handle VIP invitation auto-assignment
   useEffect(() => {
     let mounted = true;
+
+    // Detect referral intent on every mount
+    const isInvitePending = checkAndCaptureReferral();
+    if (isInvitePending && mounted) {
+      setHasPendingVipInvitation(true);
+    }
 
     async function initAuth() {
       try {
@@ -228,7 +336,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (cachedUser) setUser(cachedUser);
         }
 
-        // Step 2: Immediate unblocked Supabase session retrieval
+        // Step 2: Unblocked Supabase session retrieval
         if (isSupabaseConfigured) {
           const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
           if (!sessionErr && sessionData?.session?.user) {
@@ -250,32 +358,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .eq('id', authUser.id)
               .maybeSingle();
 
+            const pendingRole = typeof window !== 'undefined' ? localStorage.getItem(PENDING_ROLE_KEY) : null;
+            const hasReferralClaim = pendingRole === 'VIP_GUEST';
             const pendingPass = getStoredVipPass();
 
             if (profData) {
+              // Preserve existing subscription status while upgrading VIP
+              const currentSubStatus = profData.subscription_status || 'inactive';
               let targetRole = profData.role || 'FREE';
+              let targetHasVip = Boolean(profData.has_vip_pass || hasReferralClaim);
+
               if (cachedProf?.role) {
                 targetRole = pickHigherRole(targetRole, cachedProf.role);
               }
-              let targetPassCode = profData.vip_code_redeemed || cachedProf?.vip_code_redeemed || null;
 
-              // Upgrade if user holds a valid VIP pass and was not yet upgraded
+              // Auto-assign VIP Guest from referral link without overwriting existing subscription tier
+              if (hasReferralClaim) {
+                targetHasVip = true;
+                if (targetRole === 'FREE' || targetRole === 'GUEST') {
+                  targetRole = 'VIP_GUEST';
+                }
+              }
+
+              let targetPassCode = profData.vip_code_redeemed || (hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : null) || cachedProf?.vip_code_redeemed || null;
+
               if (pendingPass && (targetRole === 'FREE' || !targetPassCode)) {
                 const vipRole = resolveRoleForCode(pendingPass);
                 targetRole = pickHigherRole(targetRole, vipRole);
                 targetPassCode = pendingPass;
+                targetHasVip = true;
               }
 
-              const enriched = enrichProfile({
-                ...profData,
-                role: targetRole,
-                vip_code_redeemed: targetPassCode,
-              });
+              const enriched = enrichProfile(
+                {
+                  ...profData,
+                  role: targetRole,
+                  has_vip_pass: targetHasVip,
+                  subscription_status: currentSubStatus,
+                  vip_code_redeemed: targetPassCode,
+                },
+                targetPassCode,
+                targetHasVip
+              );
 
-              // Persist upgrades back to Supabase
-              if (targetRole !== profData.role || targetPassCode !== profData.vip_code_redeemed) {
-                await persistProfileToSupabase(enriched);
-                syncToGoogleSheets(enriched, targetPassCode || undefined);
+              // Update in Supabase
+              await persistProfileToSupabase(enriched);
+              syncToGoogleSheets(enriched, targetPassCode || undefined);
+
+              // Clear referral claim after successful DB update
+              if (hasReferralClaim) {
+                localStorage.removeItem(PENDING_ROLE_KEY);
+                sessionStorage.removeItem(PENDING_ROLE_KEY);
+                if (mounted) setHasPendingVipInvitation(false);
               }
 
               if (mounted) {
@@ -290,7 +424,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
               }
             } else {
-              // Profiles record not yet created: create and upsert it
+              // Profiles record not yet created: create and upsert it with referral VIP if present
               const meta = authUser.user_metadata || {};
               const first =
                 meta.first_name ||
@@ -305,25 +439,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 meta.full_name?.split(' ').slice(1).join(' ') ||
                 meta.name?.split(' ').slice(1).join(' ') ||
                 '';
-              const initialRole = pendingPass
+
+              const initialRole: UserRole = hasReferralClaim
+                ? 'VIP_GUEST'
+                : pendingPass
                 ? resolveRoleForCode(pendingPass)
                 : cachedRole !== 'FREE'
                 ? cachedRole
                 : 'FREE';
 
-              const newProf = enrichProfile({
-                id: authUser.id,
-                first_name: first,
-                last_name: last,
-                email: authUser.email || '',
-                full_name: (meta.full_name || meta.name || `${first} ${last}`).trim(),
-                avatar_url: meta.avatar_url || meta.picture || null,
-                role: initialRole,
-                vip_code_redeemed: pendingPass || cachedProf?.vip_code_redeemed || null,
-              });
+              const newProf = enrichProfile(
+                {
+                  id: authUser.id,
+                  first_name: first,
+                  last_name: last,
+                  email: authUser.email || '',
+                  full_name: (meta.full_name || meta.name || `${first} ${last}`).trim(),
+                  avatar_url: meta.avatar_url || meta.picture || null,
+                  role: initialRole,
+                  has_vip_pass: hasReferralClaim || Boolean(pendingPass),
+                  subscription_status: 'inactive',
+                  vip_code_redeemed: hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || cachedProf?.vip_code_redeemed || null,
+                },
+                hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass,
+                hasReferralClaim
+              );
 
               await persistProfileToSupabase(newProf);
-              syncToGoogleSheets(newProf, pendingPass || undefined);
+              syncToGoogleSheets(newProf, hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || undefined);
+
+              if (hasReferralClaim) {
+                localStorage.removeItem(PENDING_ROLE_KEY);
+                sessionStorage.removeItem(PENDING_ROLE_KEY);
+                if (mounted) setHasPendingVipInvitation(false);
+              }
 
               if (mounted) {
                 setProfile(newProf);
@@ -353,7 +502,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth();
 
-    // Listen to Supabase Auth state changes
+    // Listen to Supabase Auth state changes & handle OAuth completion
     if (isSupabaseConfigured) {
       const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (session?.user) {
@@ -374,31 +523,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('id', authUser.id)
             .maybeSingle();
 
+          const pendingRole = typeof window !== 'undefined' ? localStorage.getItem(PENDING_ROLE_KEY) : null;
+          const hasReferralClaim = pendingRole === 'VIP_GUEST';
           const pendingPass = getStoredVipPass();
           const currentCached = getCachedProfile();
 
           if (profData) {
+            const currentSubStatus = profData.subscription_status || 'inactive';
             let targetRole = profData.role || 'FREE';
+            let targetHasVip = Boolean(profData.has_vip_pass || hasReferralClaim);
+
             if (currentCached?.role) {
               targetRole = pickHigherRole(targetRole, currentCached.role);
             }
-            let targetPassCode = profData.vip_code_redeemed || currentCached?.vip_code_redeemed || null;
+
+            if (hasReferralClaim) {
+              targetHasVip = true;
+              if (targetRole === 'FREE' || targetRole === 'GUEST') {
+                targetRole = 'VIP_GUEST';
+              }
+            }
+
+            let targetPassCode =
+              profData.vip_code_redeemed ||
+              (hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : null) ||
+              currentCached?.vip_code_redeemed ||
+              null;
 
             if (pendingPass && (targetRole === 'FREE' || !targetPassCode)) {
               const vipRole = resolveRoleForCode(pendingPass);
               targetRole = pickHigherRole(targetRole, vipRole);
               targetPassCode = pendingPass;
+              targetHasVip = true;
             }
 
-            const enriched = enrichProfile({
-              ...profData,
-              role: targetRole,
-              vip_code_redeemed: targetPassCode,
-            });
+            const enriched = enrichProfile(
+              {
+                ...profData,
+                role: targetRole,
+                has_vip_pass: targetHasVip,
+                subscription_status: currentSubStatus,
+                vip_code_redeemed: targetPassCode,
+              },
+              targetPassCode,
+              targetHasVip
+            );
 
-            if (targetRole !== profData.role || targetPassCode !== profData.vip_code_redeemed) {
-              await persistProfileToSupabase(enriched);
-              syncToGoogleSheets(enriched, targetPassCode || undefined);
+            await persistProfileToSupabase(enriched);
+            syncToGoogleSheets(enriched, targetPassCode || undefined);
+
+            if (hasReferralClaim) {
+              localStorage.removeItem(PENDING_ROLE_KEY);
+              sessionStorage.removeItem(PENDING_ROLE_KEY);
+              setHasPendingVipInvitation(false);
             }
 
             setProfile(enriched);
@@ -425,23 +602,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               meta.full_name?.split(' ').slice(1).join(' ') ||
               meta.name?.split(' ').slice(1).join(' ') ||
               '';
-            const initialRole = pendingPass
+
+            const initialRole: UserRole = hasReferralClaim
+              ? 'VIP_GUEST'
+              : pendingPass
               ? resolveRoleForCode(pendingPass)
               : currentCached?.role || 'FREE';
 
-            const newProf = enrichProfile({
-              id: authUser.id,
-              first_name: first,
-              last_name: last,
-              email: authUser.email || '',
-              full_name: (meta.full_name || meta.name || `${first} ${last}`).trim(),
-              avatar_url: meta.avatar_url || meta.picture || null,
-              role: initialRole,
-              vip_code_redeemed: pendingPass || currentCached?.vip_code_redeemed || null,
-            });
+            const newProf = enrichProfile(
+              {
+                id: authUser.id,
+                first_name: first,
+                last_name: last,
+                email: authUser.email || '',
+                full_name: (meta.full_name || meta.name || `${first} ${last}`).trim(),
+                avatar_url: meta.avatar_url || meta.picture || null,
+                role: initialRole,
+                has_vip_pass: hasReferralClaim || Boolean(pendingPass),
+                subscription_status: 'inactive',
+                vip_code_redeemed: hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || currentCached?.vip_code_redeemed || null,
+              },
+              hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass,
+              hasReferralClaim
+            );
 
             await persistProfileToSupabase(newProf);
-            syncToGoogleSheets(newProf, pendingPass || undefined);
+            syncToGoogleSheets(newProf, hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || undefined);
+
+            if (hasReferralClaim) {
+              localStorage.removeItem(PENDING_ROLE_KEY);
+              sessionStorage.removeItem(PENDING_ROLE_KEY);
+              setHasPendingVipInvitation(false);
+            }
 
             setProfile(newProf);
             setRole(newProf.role);
@@ -541,8 +733,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      const pendingRole = typeof window !== 'undefined' ? localStorage.getItem(PENDING_ROLE_KEY) : null;
+      const hasReferralClaim = pendingRole === 'VIP_GUEST';
       const pendingPass = getStoredVipPass();
-      const initialRole = pendingPass ? resolveRoleForCode(pendingPass) : 'FREE';
+      const initialRole: UserRole = hasReferralClaim
+        ? 'VIP_GUEST'
+        : pendingPass
+        ? resolveRoleForCode(pendingPass)
+        : 'FREE';
 
       if (isSupabaseConfigured) {
         const { data, error } = await supabase.auth.signUp({
@@ -564,15 +762,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data?.user) {
           const authUser = data.user;
           setUser(authUser);
-          const newProf = enrichProfile({
-            id: authUser.id,
-            first_name: cleanFirst,
-            last_name: cleanLast,
-            email: cleanEmail,
-            full_name: `${cleanFirst} ${cleanLast}`.trim(),
-            role: initialRole,
-            vip_code_redeemed: pendingPass || null,
-          });
+          const newProf = enrichProfile(
+            {
+              id: authUser.id,
+              first_name: cleanFirst,
+              last_name: cleanLast,
+              email: cleanEmail,
+              full_name: `${cleanFirst} ${cleanLast}`.trim(),
+              role: initialRole,
+              has_vip_pass: hasReferralClaim || Boolean(pendingPass),
+              subscription_status: 'inactive',
+              vip_code_redeemed: hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || null,
+            },
+            hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass,
+            hasReferralClaim
+          );
 
           await persistProfileToSupabase(newProf);
           setProfile(newProf);
@@ -582,6 +786,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             LOCAL_SESSION_USER_KEY,
             JSON.stringify({ id: authUser.id, email: authUser.email })
           );
+
+          if (hasReferralClaim) {
+            localStorage.removeItem(PENDING_ROLE_KEY);
+            sessionStorage.removeItem(PENDING_ROLE_KEY);
+            setHasPendingVipInvitation(false);
+          }
+
           if (newProf.vip_code_redeemed) {
             localStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
             sessionStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
@@ -589,26 +800,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             sessionStorage.setItem(PATRON_ROLE_KEY, newProf.role);
           }
 
-          syncToGoogleSheets(newProf, pendingPass || undefined);
+          syncToGoogleSheets(newProf, hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || undefined);
         }
       } else {
         const simId = `usr-${Date.now()}`;
         const simUser = { id: simId, email: cleanEmail };
-        const newProf = enrichProfile({
-          id: simId,
-          first_name: cleanFirst,
-          last_name: cleanLast,
-          email: cleanEmail,
-          full_name: `${cleanFirst} ${cleanLast}`.trim(),
-          role: initialRole,
-          vip_code_redeemed: pendingPass || null,
-        });
+        const newProf = enrichProfile(
+          {
+            id: simId,
+            first_name: cleanFirst,
+            last_name: cleanLast,
+            email: cleanEmail,
+            full_name: `${cleanFirst} ${cleanLast}`.trim(),
+            role: initialRole,
+            has_vip_pass: hasReferralClaim || Boolean(pendingPass),
+            subscription_status: 'inactive',
+            vip_code_redeemed: hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || null,
+          },
+          hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass,
+          hasReferralClaim
+        );
 
         setUser(simUser);
         setProfile(newProf);
         setRole(newProf.role);
         localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(simUser));
         localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(newProf));
+
+        if (hasReferralClaim) {
+          localStorage.removeItem(PENDING_ROLE_KEY);
+          sessionStorage.removeItem(PENDING_ROLE_KEY);
+          setHasPendingVipInvitation(false);
+        }
+
         if (newProf.vip_code_redeemed) {
           localStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
           sessionStorage.setItem(PATRON_TOKEN_KEY, newProf.vip_code_redeemed);
@@ -616,7 +840,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sessionStorage.setItem(PATRON_ROLE_KEY, newProf.role);
         }
 
-        syncToGoogleSheets(newProf, pendingPass || undefined);
+        syncToGoogleSheets(newProf, hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || undefined);
       }
 
       soundManager.playUnlockChime();
@@ -637,6 +861,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      const pendingRole = typeof window !== 'undefined' ? localStorage.getItem(PENDING_ROLE_KEY) : null;
+      const hasReferralClaim = pendingRole === 'VIP_GUEST';
       const pendingPass = getStoredVipPass();
 
       if (isSupabaseConfigured) {
@@ -659,13 +885,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('id', authUser.id)
             .maybeSingle();
 
+          const currentSubStatus = profData?.subscription_status || 'inactive';
           let targetRole = profData?.role || 'FREE';
-          let targetPassCode = profData?.vip_code_redeemed || null;
+          let targetHasVip = Boolean(profData?.has_vip_pass || hasReferralClaim);
+
+          if (hasReferralClaim) {
+            targetHasVip = true;
+            if (targetRole === 'FREE' || targetRole === 'GUEST') {
+              targetRole = 'VIP_GUEST';
+            }
+          }
+
+          let targetPassCode =
+            profData?.vip_code_redeemed ||
+            (hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : null) ||
+            null;
 
           if (pendingPass && (targetRole === 'FREE' || !targetPassCode)) {
             const vipRole = resolveRoleForCode(pendingPass);
             targetRole = pickHigherRole(targetRole, vipRole);
             targetPassCode = pendingPass;
+            targetHasVip = true;
           }
 
           const resolvedProf = enrichProfile(
@@ -676,13 +916,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               last_name: '',
               full_name: cleanEmail.split('@')[0],
               role: targetRole,
+              has_vip_pass: targetHasVip,
+              subscription_status: currentSubStatus,
             },
-            targetPassCode
+            targetPassCode,
+            targetHasVip
           );
 
-          if (!profData || targetRole !== profData.role || targetPassCode !== profData.vip_code_redeemed) {
-            await persistProfileToSupabase(resolvedProf);
-            syncToGoogleSheets(resolvedProf, targetPassCode || undefined);
+          await persistProfileToSupabase(resolvedProf);
+          syncToGoogleSheets(resolvedProf, targetPassCode || undefined);
+
+          if (hasReferralClaim) {
+            localStorage.removeItem(PENDING_ROLE_KEY);
+            sessionStorage.removeItem(PENDING_ROLE_KEY);
+            setHasPendingVipInvitation(false);
           }
 
           setProfile(resolvedProf);
@@ -714,19 +961,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             last_name: '',
             email: cleanEmail,
             full_name: derivedName,
-            role: pendingPass ? resolveRoleForCode(pendingPass) : 'FREE',
-            vip_code_redeemed: pendingPass || null,
+            role: hasReferralClaim
+              ? 'VIP_GUEST'
+              : pendingPass
+              ? resolveRoleForCode(pendingPass)
+              : 'FREE',
+            has_vip_pass: hasReferralClaim || Boolean(pendingPass),
+            subscription_status: 'inactive',
+            vip_code_redeemed: hasReferralClaim ? 'VIP-REFERRAL-CLAIM' : pendingPass || null,
             created_at: new Date().toISOString(),
           };
         }
 
-        const enriched = enrichProfile(currentProf, pendingPass);
+        const enriched = enrichProfile(currentProf, pendingPass, hasReferralClaim);
         const simUser = { id: enriched.id, email: cleanEmail };
         setUser(simUser);
         setProfile(enriched);
         setRole(enriched.role);
         localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(simUser));
         localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(enriched));
+
+        if (hasReferralClaim) {
+          localStorage.removeItem(PENDING_ROLE_KEY);
+          sessionStorage.removeItem(PENDING_ROLE_KEY);
+          setHasPendingVipInvitation(false);
+        }
+
         if (enriched.vip_code_redeemed) {
           localStorage.setItem(PATRON_TOKEN_KEY, enriched.vip_code_redeemed);
           sessionStorage.setItem(PATRON_TOKEN_KEY, enriched.vip_code_redeemed);
@@ -761,6 +1021,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem(PATRON_ROLE_KEY);
     sessionStorage.removeItem(PATRON_TOKEN_KEY);
     sessionStorage.removeItem(PATRON_ROLE_KEY);
+  };
+
+  const claimVipInvitation = async (): Promise<{ success: boolean; message: string }> => {
+    if (!user) {
+      openAuthModal('signin');
+      return { success: false, message: 'Please sign in or create an account to claim your VIP invitation.' };
+    }
+
+    soundManager.playUnlockChime();
+    const updatedProfile: Profile = enrichProfile(
+      profile
+        ? {
+            ...profile,
+            role: profile.role === 'FREE' || profile.role === 'GUEST' ? 'VIP_GUEST' : profile.role,
+            has_vip_pass: true,
+            vip_code_redeemed: profile.vip_code_redeemed || 'VIP-REFERRAL-CLAIM',
+          }
+        : {
+            id: user.id,
+            first_name: 'VIP',
+            last_name: 'Guest',
+            full_name: 'VIP Guest',
+            email: user.email || 'guest@sillowmill.com',
+            role: 'VIP_GUEST',
+            has_vip_pass: true,
+            subscription_status: 'inactive',
+            vip_code_redeemed: 'VIP-REFERRAL-CLAIM',
+            created_at: new Date().toISOString(),
+          },
+      'VIP-REFERRAL-CLAIM',
+      true
+    );
+
+    setProfile(updatedProfile);
+    setRole(updatedProfile.role);
+    localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(updatedProfile));
+    localStorage.removeItem(PENDING_ROLE_KEY);
+    sessionStorage.removeItem(PENDING_ROLE_KEY);
+    setHasPendingVipInvitation(false);
+
+    if (isSupabaseConfigured && user.id) {
+      await persistProfileToSupabase(updatedProfile);
+    }
+
+    syncToGoogleSheets(updatedProfile, 'VIP-REFERRAL-CLAIM');
+    return { success: true, message: '✨ VIP Guest status officially activated on your account!' };
   };
 
   const redeemVipCode = async (
@@ -798,6 +1104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? {
               ...profile,
               role: pickHigherRole(profile.role, targetRole),
+              has_vip_pass: true,
               vip_code_redeemed: clean,
             }
           : {
@@ -807,10 +1114,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               full_name: 'VIP Guest',
               email: user?.email || 'guest@sillowmill.com',
               role: targetRole,
+              has_vip_pass: true,
+              subscription_status: 'inactive',
               vip_code_redeemed: clean,
               created_at: new Date().toISOString(),
             },
-        clean
+        clean,
+        true
       );
 
       setProfile(updatedProfile);
@@ -865,6 +1175,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role,
         isAuthenticated: Boolean(user || profile),
         isLoading,
+        isVip,
+        isSubscriber,
+        hasVipPass,
+        subscriptionStatus,
+        hasPendingVipInvitation,
         isAuthModalOpen,
         authModalMode,
         openAuthModal,
@@ -874,6 +1189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithEmail,
         signOut,
         redeemVipCode,
+        claimVipInvitation,
         refreshProfile,
       }}
     >

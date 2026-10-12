@@ -11,6 +11,7 @@ import {
   Loader2,
   ArrowRight,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
@@ -19,6 +20,7 @@ export const AuthModal: React.FC = () => {
   const {
     isAuthModalOpen,
     authModalMode,
+    hasPendingVipInvitation,
     closeAuthModal,
     signInWithGoogle,
     signUpWithEmail,
@@ -130,6 +132,28 @@ export const AuthModal: React.FC = () => {
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Active VIP Referral Invitation Banner */}
+          {hasPendingVipInvitation && (
+            <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-amber-950/60 via-yellow-950/50 to-amber-950/60 border border-yellow-500/40 text-yellow-300 shadow-[0_0_20px_rgba(234,179,8,0.15)] flex items-start gap-3">
+              <div className="p-1.5 rounded-lg bg-yellow-400/20 text-yellow-400 shrink-0 mt-0.5">
+                <Sparkles className="w-4 h-4 animate-pulse" />
+              </div>
+              <div className="text-left flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-yellow-400">
+                    VIP Invitation Active
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-extrabold bg-yellow-400 text-black">
+                    VIP_GUEST
+                  </span>
+                </div>
+                <p className="text-xs text-yellow-100/90 font-sans mt-1 leading-relaxed">
+                  You were invited as a VIP Guest. Continue with Google or register to claim instant access to Creator Lab channels, exclusive audio masters &amp; visualizers.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Mode Switcher Tabs: Strictly 2 Clean Tabs (grid-cols-2) */}
           <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/60 rounded-xl border border-white/10 mt-4">

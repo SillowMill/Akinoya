@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import { AkinoyaPlanetCanvas } from './components/AkinoyaPlanetCanvas';
 import { ComingSoonGate } from './components/ComingSoonGate';
 import { UnlockedExperience } from './components/UnlockedExperience';
@@ -19,7 +20,7 @@ import { CommunityHub } from './components/CommunityHub';
 import { useAuth } from './context/AuthContext';
 
 export default function App() {
-  const { user, profile, role, isAuthenticated } = useAuth();
+  const { user, profile, role, isAuthenticated, hasPendingVipInvitation, openAuthModal } = useAuth();
 
   // Persistent Public & Account Unlock:
   // Automatically bypass all lock gating if authenticated or local storage has an active session/unlock
@@ -183,6 +184,31 @@ export default function App() {
 
   return (
     <main className="relative min-h-[100dvh] w-full bg-[#050505] text-white flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Global VIP Referral Invitation Top Banner */}
+      {hasPendingVipInvitation && !isAuthenticated && (
+        <div className="relative z-[60] w-full bg-gradient-to-r from-amber-950/95 via-yellow-950/90 to-amber-950/95 border-b border-amber-500/40 px-3 sm:px-6 py-2 sm:py-2.5 backdrop-blur-xl flex flex-wrap items-center justify-between gap-2 shadow-[0_4px_25px_rgba(245,158,11,0.25)] shrink-0">
+          <div className="flex items-center gap-2.5 text-xs text-amber-200 font-sans min-w-0">
+            <span className="p-1 rounded-md bg-yellow-400/20 text-yellow-400 shrink-0">
+              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+            </span>
+            <span className="font-mono font-bold text-yellow-400 uppercase tracking-wider text-[11px] shrink-0">
+              VIP Guest Pass Invited:
+            </span>
+            <span className="truncate text-white/90">
+              Sign in to claim instant access to Creator Lab channels, exclusive audio masters &amp; visualizers.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => openAuthModal('signin')}
+            className="px-3 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-black font-mono font-bold text-[11px] tracking-wider transition-all cursor-pointer shadow-md shrink-0 flex items-center gap-1.5"
+          >
+            <span>Claim VIP Invitation</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
       {/* Global NFC Magic Link Verification HUD Toast (Strictly restricted to explicit VIP access route) */}
       {isVipRoute && <NfcHudToast />}
 

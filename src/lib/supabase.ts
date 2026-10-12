@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-export type UserRole = 'FREE' | 'VIP_GUEST' | 'ANNUAL_PASS' | 'CREATOR';
+export type UserRole = 'FREE' | 'GUEST' | 'VIP_GUEST' | 'SUBSCRIBER' | 'ANNUAL_PASS' | 'CREATOR';
 
 export interface Profile {
   id: string;
@@ -10,8 +10,11 @@ export interface Profile {
   full_name: string;
   avatar_url?: string | null;
   role: UserRole;
+  has_vip_pass?: boolean;
+  subscription_status?: string; // 'active' | 'inactive' | 'trialing' | 'canceled'
   vip_code_redeemed?: string | null;
   is_vip?: boolean;
+  is_subscriber?: boolean;
   is_annual_member?: boolean;
   unlocked_assets?: string[];
   created_at?: string;

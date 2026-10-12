@@ -21,6 +21,7 @@ import {
   Vote,
   X,
   ArrowLeft,
+  ArrowRight,
   Maximize2,
   ChevronRight,
   ChevronDown,
@@ -146,7 +147,16 @@ interface CommunityHubProps {
 
 export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpenAuthModal }) => {
   // Authentication & RBAC User State
-  const { user, profile, role, isAuthenticated, openAuthModal } = useAuth();
+  const {
+    user,
+    profile,
+    role,
+    isAuthenticated,
+    isVip,
+    isSubscriber,
+    hasPendingVipInvitation,
+    openAuthModal,
+  } = useAuth();
 
   const [patronName, setPatronName] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -167,6 +177,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     : profile?.full_name || (user?.email ? user.email.split('@')[0] : patronName);
 
   const isVipOrAbove =
+    isVip ||
+    Boolean(profile?.has_vip_pass) ||
     role === 'VIP_GUEST' ||
     role === 'ANNUAL_PASS' ||
     role === 'CREATOR' ||
@@ -178,7 +190,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
        localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
        localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST' ||
        localStorage.getItem('akinoya_patron_role') === 'ANNUAL_PASS'));
-  const isAnnualOrCreator = role === 'ANNUAL_PASS' || role === 'CREATOR' || Boolean(profile?.is_annual_member);
+
+  const isAnnualOrCreator =
+    isSubscriber ||
+    role === 'ANNUAL_PASS' ||
+    role === 'SUBSCRIBER' ||
+    role === 'CREATOR' ||
+    Boolean(profile?.is_annual_member) ||
+    Boolean(profile?.is_subscriber) ||
+    profile?.subscription_status === 'active';
+
   const isPatron = isVipOrAbove;
 
   // Active Hub Section
@@ -961,6 +982,31 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
           </button>
         </div>
       </header>
+
+      {/* Active VIP Referral Invitation Banner */}
+      {hasPendingVipInvitation && !isAuthenticated && (
+        <div className="relative z-40 w-full bg-gradient-to-r from-amber-950/95 via-yellow-950/90 to-amber-950/95 border-b border-amber-500/40 px-3 sm:px-6 py-2 sm:py-2.5 backdrop-blur-xl flex flex-wrap items-center justify-between gap-2 shadow-[0_4px_25px_rgba(245,158,11,0.25)] shrink-0">
+          <div className="flex items-center gap-2.5 text-xs text-amber-200 font-sans min-w-0">
+            <span className="p-1 rounded-md bg-yellow-400/20 text-yellow-400 shrink-0">
+              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+            </span>
+            <span className="font-mono font-bold text-yellow-400 uppercase tracking-wider text-[11px] shrink-0">
+              VIP Referral Detected:
+            </span>
+            <span className="truncate text-white/90">
+              Sign in to activate your VIP Guest Pass and unlock Creator Lab chat &amp; visualizer channels.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => openAuthModal('signin')}
+            className="px-3 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-black font-mono font-bold text-[11px] tracking-wider transition-all cursor-pointer shadow-md shrink-0 flex items-center gap-1.5"
+          >
+            <span>Claim VIP Invitation</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+      )}
 
       {/* Futuristic Multi-Hub Navigation Sub-Bar */}
       <nav className="relative z-20 w-full bg-[#04070e]/95 border-b border-white/10 px-3 sm:px-6 py-2 overflow-x-auto no-scrollbar scroll-smooth shrink-0 shadow-lg" style={{ WebkitOverflowScrolling: 'touch' }}>
