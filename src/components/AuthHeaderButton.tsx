@@ -72,7 +72,7 @@ export const AuthHeaderButton: React.FC = () => {
   }
 
   return (
-    <div className="relative shrink-0" ref={dropdownRef}>
+    <div className={`relative shrink-0 ${isDropdownOpen ? 'z-[100]' : 'z-20'}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => {
@@ -113,7 +113,7 @@ export const AuthHeaderButton: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.18 }}
-            className="absolute right-0 mt-2 w-64 rounded-2xl bg-[#060a14] border border-cyan-500/30 p-3 shadow-2xl z-50 space-y-2 text-xs font-sans"
+            className="absolute right-0 top-full mt-2 w-64 sm:w-72 rounded-2xl bg-[#0b0f17] border border-white/10 p-3 shadow-2xl z-[100] space-y-2 text-xs font-sans backdrop-blur-xl ring-1 ring-white/5"
           >
             {/* Header info */}
             <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 space-y-1">

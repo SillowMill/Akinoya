@@ -911,7 +911,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
   return (
     <div className="relative min-h-[100dvh] w-full bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
       {/* Top Universal Header Bar */}
-      <header className="relative z-30 w-full border-b border-white/10 bg-[#050811]/90 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+      <header className="relative z-50 w-full border-b border-white/10 bg-[#050811]/90 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"

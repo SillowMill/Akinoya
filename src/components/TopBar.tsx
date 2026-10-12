@@ -10,7 +10,7 @@ interface TopBarProps {
 
 export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, isVip = false, onNavigateToVerify }) => {
   return (
-    <header className="relative z-30 w-full border-b border-white/10 bg-black/50 backdrop-blur-md px-2.5 xs:px-4 sm:px-6 py-2 sm:py-3.5 overflow-x-hidden">
+    <header className="relative z-50 w-full border-b border-white/10 bg-black/50 backdrop-blur-md px-2.5 xs:px-4 sm:px-6 py-2 sm:py-3.5">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 xs:gap-3 sm:gap-4">
         {/* Zone 1: Clean wordmark */}
         <a
