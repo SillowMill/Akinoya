@@ -1044,27 +1044,44 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     className="rounded-2xl bg-black/60 border border-white/10 hover:border-cyan-500/40 transition-all flex flex-col justify-between shadow-[0_4px_30px_rgba(0,0,0,0.6)] group relative overflow-hidden"
                   >
                     <div>
-                      {/* Large Hero Media Container (16:9 Cinematic Preview) */}
+                      {/* Large Hero Media Container (16:9 Cinematic Preview - 100% Clean) */}
                       <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/90 border-b border-white/10">
                         <img
                           src={asset.heroBannerUrl}
                           alt={asset.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
                         />
+                      </div>
 
-                        {/* Top Badges Overlay */}
-                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
-                          <span className="text-[10px] font-mono font-bold text-cyan-300 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-cyan-500/30 uppercase">
-                            {asset.category}
-                          </span>
-                          <span className="text-[10px] font-mono font-semibold text-white/90 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20">
+                      {/* Content Section below large preview */}
+                      <div className="p-5 sm:p-6 space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-400/40 font-semibold tracking-wider flex items-center gap-1">
+                              <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
+                              READ-ONLY PREVIEW
+                            </span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-cyan-300 border border-white/10 uppercase font-semibold">
+                              {asset.category}
+                            </span>
+                            <span className="text-[11px] font-mono text-cyan-400 font-semibold">{asset.fileFormat}</span>
+                          </div>
+                          <span className="text-[10px] font-mono text-white/50">
                             {asset.fileSize}
                           </span>
                         </div>
 
-                        {/* Audio Waveform preview bar over banner if audio asset */}
+                        <h2 className="text-base sm:text-lg font-display font-bold text-white group-hover:text-cyan-200 transition-colors leading-snug">
+                          {asset.title}
+                        </h2>
+
+                        <p className="text-xs text-white/65 leading-relaxed font-sans">
+                          {asset.description}
+                        </p>
+
+                        {/* Audio Waveform preview bar positioned cleanly in content area if audio asset */}
                         {asset.isAudio && (
-                          <div className="absolute bottom-3 left-3 right-3 z-10 bg-black/80 backdrop-blur-md border border-cyan-500/30 p-2.5 rounded-xl flex items-center justify-between gap-3">
+                          <div className="bg-black/60 border border-cyan-500/30 p-2.5 rounded-xl flex items-center justify-between gap-3 mt-3">
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
@@ -1097,25 +1114,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                             </div>
                           </div>
                         )}
-                      </div>
-
-                      {/* Content Section below large preview */}
-                      <div className="p-5 sm:p-6 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-400/40 font-semibold tracking-wider flex items-center gap-1">
-                            <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
-                            READ-ONLY PREVIEW
-                          </span>
-                          <span className="text-[11px] font-mono text-cyan-400 font-semibold">{asset.fileFormat}</span>
-                        </div>
-
-                        <h2 className="text-base sm:text-lg font-display font-bold text-white group-hover:text-cyan-200 transition-colors leading-snug">
-                          {asset.title}
-                        </h2>
-
-                        <p className="text-xs text-white/65 leading-relaxed font-sans">
-                          {asset.description}
-                        </p>
                       </div>
                     </div>
 
@@ -1400,27 +1398,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     }`}
                   />
 
-                  {/* Sci-Fi HUD Watermark & Telemetry */}
-                  <div className="absolute inset-0 p-4 sm:p-6 flex flex-col justify-between pointer-events-none">
-                    <div className="flex items-center justify-between text-xs font-mono text-cyan-300">
-                      <span className="bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-cyan-500/30">
-                        {visualizerTracks[activeVisualizerTrack].status}
-                      </span>
-                      <span className="bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/20">
-                        {visualizerTracks[activeVisualizerTrack].fps} · {visualizerTracks[activeVisualizerTrack].renderEngine}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs font-mono text-white/80">
-                      <span className="bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg">
-                        01:14 / {visualizerTracks[activeVisualizerTrack].duration}
-                      </span>
-                      <span className="text-[10px] text-cyan-400 font-bold tracking-wider">
-                        SILLOW MILL CINEMATIC SYNDICATE
-                      </span>
-                    </div>
-                  </div>
-
                   {/* Paywall overlay on tracks 2 & 3 for free users */}
                   {!isPatron && activeVisualizerTrack > 0 ? (
                     <div className="relative z-20 backdrop-blur-md bg-black/60 p-6 rounded-2xl border border-cyan-400/30 flex flex-col items-center justify-center text-center max-w-sm">
@@ -1455,9 +1432,17 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   )}
                 </div>
 
-                {/* Theater Controls Bar */}
+                {/* Theater Controls Bar (With clean specs strip) */}
                 <div className="p-4 rounded-xl bg-black/60 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div className="min-w-0 w-full sm:w-auto">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 font-semibold">
+                        {visualizerTracks[activeVisualizerTrack].status}
+                      </span>
+                      <span className="text-[10px] font-mono text-white/50">
+                        {visualizerTracks[activeVisualizerTrack].fps} · {visualizerTracks[activeVisualizerTrack].renderEngine} · {visualizerTracks[activeVisualizerTrack].duration}
+                      </span>
+                    </div>
                     <h3 className="text-sm font-display font-bold text-white truncate">
                       {visualizerTracks[activeVisualizerTrack].title}
                     </h3>
@@ -1505,13 +1490,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         <img
                           src={trk.previewImage}
                           alt={trk.title}
-                          className={`w-full h-full object-cover ${isLocked ? 'blur-[1px] opacity-60' : ''}`}
+                          className="w-full h-full object-cover"
                         />
-                        {isLocked && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                            <Lock className="w-3.5 h-3.5 text-yellow-400" />
-                          </div>
-                        )}
                       </div>
 
                       <div className="min-w-0 flex-1">
@@ -1519,9 +1499,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           <span>TRACK #{trk.trackNumber}</span>
                           <span>{trk.duration}</span>
                         </div>
-                        <h4 className="text-xs font-display font-bold text-white truncate mt-0.5">
-                          {trk.title}
-                        </h4>
+                        <div className="flex items-center justify-between gap-1.5 mt-0.5">
+                          <h4 className="text-xs font-display font-bold text-white truncate">
+                            {trk.title}
+                          </h4>
+                          {isLocked && <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />}
+                        </div>
                         <span className="text-[9.5px] font-mono text-white/40">{trk.status}</span>
                       </div>
                     </button>
