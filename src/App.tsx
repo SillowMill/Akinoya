@@ -20,7 +20,24 @@ import { CommunityHub } from './components/CommunityHub';
 import { useAuth } from './context/AuthContext';
 
 export default function App() {
-  const { user, profile, role, isAuthenticated, hasPendingVipInvitation, openAuthModal } = useAuth();
+  const { user, profile, role, isAuthenticated, isVip, hasPendingVipInvitation, openAuthModal } = useAuth();
+
+  const isUserVip = Boolean(
+    isVip ||
+    profile?.has_vip_pass === true ||
+    profile?.is_vip === true ||
+    role === 'VIP_GUEST' ||
+    role === 'CREATOR' ||
+    Boolean(profile?.vip_code_redeemed) ||
+    (typeof window !== 'undefined' &&
+      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+       Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+       Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+       Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+       localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+       localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
+  );
 
   // Persistent Public & Account Unlock:
   // Automatically bypass all lock gating if authenticated or local storage has an active session/unlock
@@ -40,6 +57,7 @@ export default function App() {
     isAuthenticated ||
     Boolean(user || profile) ||
     role !== 'FREE' ||
+    isUserVip ||
     publicUnlocked ||
     (typeof window !== 'undefined' &&
       (localStorage.getItem('akinoya_public_unlocked') === 'true' ||
@@ -218,9 +236,14 @@ export default function App() {
       {/* Top Bar Navigation (Zone 1, 2, 3) */}
       {!backdropOnly && route !== 'community' && (
         <TopBar
-          isUnlocked={isVipRoute ? true : isSiteUnlocked}
-          isVip={isVipRoute}
-          onNavigateToVerify={isVipRoute ? () => setVipSubView('passport') : undefined}
+          isUnlocked={isVipRoute || isUserVip ? true : isSiteUnlocked}
+          isVip={isVipRoute || isUserVip}
+          onNavigateHome={() => navigateTo('home', '/')}
+          onNavigateToVerify={
+            isVipRoute
+              ? () => setVipSubView('passport')
+              : () => navigateTo('verify', '/verify')
+          }
         />
       )}
 
@@ -318,10 +341,12 @@ export default function App() {
                 className="w-full flex items-center justify-center"
               >
                 <UnlockedExperience
-                  isVip={false}
+                  isVip={isUserVip}
                   onLockPortal={handlePublicLock}
                   onToggleViewMode={setViewMode}
                   currentViewMode={viewMode}
+                  onNavigateToPassport={() => navigateTo('verify', '/verify')}
+                  onNavigateToVerify={() => navigateTo('verify', '/verify')}
                 />
               </motion.div>
             )}

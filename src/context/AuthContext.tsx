@@ -278,7 +278,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile?.is_vip === true ||
     role === 'VIP_GUEST' ||
     role === 'CREATOR' ||
-    profile?.vip_code_redeemed
+    Boolean(profile?.vip_code_redeemed) ||
+    (typeof window !== 'undefined' &&
+      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+       Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+       Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+       Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+       localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+       localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
   );
 
   const isSubscriber = Boolean(

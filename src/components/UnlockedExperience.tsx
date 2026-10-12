@@ -44,6 +44,7 @@ import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
 import { useHolderName, isValidPassId, TOTAL_EDITION_LIMIT } from '../utils/holder';
 import { useVipAccess } from '../context/VipAccessContext';
+import { useAuth } from '../context/AuthContext';
 import {
   BINGAA_PDF_URL,
   BINGAA_PDF_FILENAME,
@@ -164,13 +165,36 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   onNavigateToPassport,
 }) => {
   const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'assets'>('pass');
-  const isVipMode = Boolean(isVip);
+  const { isVip: authIsVip, profile, role } = useAuth();
+  const isVipMode = Boolean(
+    isVip ||
+    authIsVip ||
+    profile?.has_vip_pass === true ||
+    profile?.is_vip === true ||
+    role === 'VIP_GUEST' ||
+    role === 'CREATOR' ||
+    Boolean(profile?.vip_code_redeemed) ||
+    (typeof window !== 'undefined' &&
+      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+       Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+       Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+       Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+       localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+       localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
+  );
   const [passSubView, setPassSubView] = useState<'overview' | 'hub'>('overview');
 
   // Verified holder assets: active pass is the NFC-bound token for this device session
   const { nfcToken } = useVipAccess();
-  const activePassId = isValidPassId(nfcToken) ? normalizePassId(nfcToken) : FOUNDING_PASS_ID;
-  const holderName = useHolderName(activePassId);
+  const rawCandidatePassId =
+    (isValidPassId(nfcToken) ? nfcToken : null) ||
+    profile?.vip_code_redeemed ||
+    (typeof window !== 'undefined' ? (localStorage.getItem('akinoya_patron_token') || sessionStorage.getItem('akinoya_patron_token')) : null) ||
+    FOUNDING_PASS_ID;
+  const activePassId = isValidPassId(rawCandidatePassId) ? normalizePassId(rawCandidatePassId) : FOUNDING_PASS_ID;
+  const authHolderName = profile?.first_name ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}` : profile?.full_name;
+  const holderName = authHolderName || useHolderName(activePassId);
   const isMaster = activePassId === 'AKN-VIP-2027-X0914';
   const activeEditionNumber = deriveEditionNumber(activePassId);
   const editionDisplay = activeEditionNumber;

@@ -1,21 +1,53 @@
 import { ShieldCheck, Sparkles } from 'lucide-react';
 import { SoundtrackButton } from './SoundtrackButton';
 import { AuthHeaderButton } from './AuthHeaderButton';
+import { useAuth } from '../context/AuthContext';
 
 interface TopBarProps {
   isUnlocked: boolean;
   isVip?: boolean;
+  onNavigateHome?: () => void;
   onNavigateToVerify?: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, isVip = false, onNavigateToVerify }) => {
+export const TopBar: React.FC<TopBarProps> = ({
+  isUnlocked,
+  isVip = false,
+  onNavigateHome,
+  onNavigateToVerify,
+}) => {
+  const { isVip: authIsVip, profile, role } = useAuth();
+  const effectiveIsVip = Boolean(
+    isVip ||
+    authIsVip ||
+    profile?.has_vip_pass === true ||
+    profile?.is_vip === true ||
+    role === 'VIP_GUEST' ||
+    role === 'CREATOR' ||
+    Boolean(profile?.vip_code_redeemed) ||
+    (typeof window !== 'undefined' &&
+      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+       Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+       Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+       Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+       localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+       localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
+  );
+
   return (
     <header className="relative z-50 w-full border-b border-white/10 bg-black/50 backdrop-blur-md px-2.5 xs:px-4 sm:px-6 py-2 sm:py-3.5">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 xs:gap-3 sm:gap-4">
         {/* Zone 1: Clean wordmark */}
         <a
           href="/"
-          className="text-xs xs:text-sm sm:text-lg font-display font-bold tracking-[0.14em] sm:tracking-[0.2em] text-white hover:text-cyan-300 transition-colors uppercase whitespace-nowrap shrink-0"
+          onClick={(e) => {
+            if (onNavigateHome) {
+              e.preventDefault();
+              onNavigateHome();
+            }
+          }}
+          className="text-xs xs:text-sm sm:text-lg font-display font-bold tracking-[0.14em] sm:tracking-[0.2em] text-white hover:text-cyan-300 transition-colors uppercase whitespace-nowrap shrink-0 cursor-pointer"
         >
           SILLOW MILL
         </a>
@@ -29,15 +61,25 @@ export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, isVip = false, onNav
             <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
             <span>Community Hub</span>
           </a>
-          {isVip && onNavigateToVerify && (
-            <button
-              type="button"
-              onClick={onNavigateToVerify}
-              className="hover:text-cyan-300 transition-colors cursor-pointer flex items-center gap-1.5"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Digital Passport</span>
-            </button>
+          {effectiveIsVip && (
+            onNavigateToVerify ? (
+              <button
+                type="button"
+                onClick={onNavigateToVerify}
+                className="hover:text-cyan-300 transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Digital Passport</span>
+              </button>
+            ) : (
+              <a
+                href="/verify"
+                className="hover:text-cyan-300 transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Digital Passport</span>
+              </a>
+            )
           )}
         </nav>
 
@@ -47,7 +89,7 @@ export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, isVip = false, onNav
           <AuthHeaderButton />
 
           {isUnlocked ? (
-            isVip ? (
+            effectiveIsVip ? (
               <div
                 title="VIP Verified"
                 className="flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] xs:text-[10.5px] sm:text-[11px] font-mono text-emerald-300 bg-emerald-950/60 border border-emerald-400/30 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
@@ -66,15 +108,25 @@ export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, isVip = false, onNav
               </div>
             )
           ) : (
-            isVip && onNavigateToVerify && (
-              <button
-                type="button"
-                onClick={onNavigateToVerify}
-                className="md:hidden flex items-center gap-1 px-2 py-1 text-[10px] xs:text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg sm:rounded-xl cursor-pointer whitespace-nowrap shrink-0"
-              >
-                <ShieldCheck className="w-3 h-3 text-cyan-400" />
-                <span>Passport</span>
-              </button>
+            effectiveIsVip && (
+              onNavigateToVerify ? (
+                <button
+                  type="button"
+                  onClick={onNavigateToVerify}
+                  className="md:hidden flex items-center gap-1 px-2 py-1 text-[10px] xs:text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg sm:rounded-xl cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  <ShieldCheck className="w-3 h-3 text-cyan-400" />
+                  <span>Passport</span>
+                </button>
+              ) : (
+                <a
+                  href="/verify"
+                  className="md:hidden flex items-center gap-1 px-2 py-1 text-[10px] xs:text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg sm:rounded-xl cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  <ShieldCheck className="w-3 h-3 text-cyan-400" />
+                  <span>Passport</span>
+                </a>
+              )
             )
           )}
         </div>
