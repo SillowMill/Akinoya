@@ -956,7 +956,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
                         <a
                           href="/community"
-                          className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:scale-[1.01]"
+                          className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all cursor-pointer min-h-[48px] shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:scale-[1.01]"
                         >
                           <Sparkles className="w-4 h-4 text-black shrink-0" />
                           <span>COMMUNITY HUB →</span>
@@ -969,8 +969,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           title={isMembershipLaunchLocked ? 'Membership pass opens January 9, 2027' : undefined}
                           className={
                             isMembershipLaunchLocked
-                              ? 'inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-semibold text-amber-300/80 bg-amber-950/30 border border-amber-500/30 cursor-not-allowed min-h-[44px] shadow-[0_0_12px_rgba(245,158,11,0.08)] select-none opacity-85'
-                              : 'inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]'
+                              ? 'inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-semibold text-amber-300/80 bg-amber-950/30 border border-amber-500/30 cursor-not-allowed min-h-[48px] shadow-[0_0_12px_rgba(245,158,11,0.08)] select-none opacity-85'
+                              : 'inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[48px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]'
                           }
                         >
                           {isMembershipLaunchLocked ? (

@@ -1,0 +1,445 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  X,
+  Mail,
+  Lock,
+  User,
+  Sparkles,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  KeyRound,
+  ArrowRight,
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { soundManager } from '../utils/audio';
+
+export const AuthModal: React.FC = () => {
+  const {
+    isAuthModalOpen,
+    authModalMode,
+    closeAuthModal,
+    openAuthModal,
+    signInWithGoogle,
+    signUpWithEmail,
+    signInWithEmail,
+    redeemVipCode,
+  } = useAuth();
+
+  const [mode, setMode] = useState<'signin' | 'signup' | 'redeem'>(authModalMode || 'signin');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [vipCode, setVipCode] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Sync mode with context
+  React.useEffect(() => {
+    if (authModalMode) {
+      setMode(authModalMode);
+      setError(null);
+      setSuccess(null);
+    }
+  }, [authModalMode, isAuthModalOpen]);
+
+  if (!isAuthModalOpen) return null;
+
+  const handleGoogleAuth = async () => {
+    setError(null);
+    setSuccess(null);
+    setIsSubmitting(true);
+    try {
+      const res = await signInWithGoogle();
+      if (res?.error) {
+        setError(res.error.message || 'Google authentication failed.');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Google authentication failed.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setIsSubmitting(true);
+
+    try {
+      if (mode === 'signup') {
+        const res = await signUpWithEmail(email, password, firstName, lastName);
+        if (!res.success) {
+          setError(res.error || 'Registration failed.');
+          soundManager.playError();
+        } else {
+          setSuccess('Account created successfully! Welcome to Sillow Mill.');
+        }
+      } else if (mode === 'signin') {
+        const res = await signInWithEmail(email, password);
+        if (!res.success) {
+          setError(res.error || 'Invalid email or password.');
+          soundManager.playError();
+        } else {
+          setSuccess('Signed in successfully! Loading your session...');
+        }
+      } else if (mode === 'redeem') {
+        const res = await redeemVipCode(vipCode);
+        if (!res.success) {
+          setError(res.message);
+        } else {
+          setSuccess(res.message);
+          setTimeout(() => {
+            closeAuthModal();
+          }, 1200);
+        }
+      }
+    } catch (err: any) {
+      setError(err?.message || 'An unexpected error occurred.');
+      soundManager.playError();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+        {/* Backdrop click */}
+        <div className="fixed inset-0" onClick={closeAuthModal} />
+
+        <motion.div
+          initial={{ opacity: 0, y: 30, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 30, scale: 0.96 }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-10 w-full sm:max-w-md bg-[#050811] border-t sm:border border-cyan-500/30 rounded-t-3xl sm:rounded-2xl p-5 sm:p-7 shadow-[0_0_50px_rgba(56,189,248,0.2)] overflow-hidden my-0 sm:my-auto"
+        >
+          {/* Ambient Glow */}
+          <div className="absolute top-0 right-0 w-44 h-44 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-44 h-44 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Top Bar / Close Button */}
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-xs font-display font-extrabold tracking-wider text-white uppercase">
+                SILLOW MILL · AUTH GATEWAY
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={closeAuthModal}
+              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Mode Switcher Tabs */}
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-black/60 rounded-xl border border-white/10 mt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('signin');
+                setError(null);
+                setSuccess(null);
+                soundManager.playTone(560, 0.04);
+              }}
+              className={`min-h-[48px] py-2 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                mode === 'signin'
+                  ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(56,189,248,0.35)] font-bold'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              Sign In
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMode('signup');
+                setError(null);
+                setSuccess(null);
+                soundManager.playTone(560, 0.04);
+              }}
+              className={`min-h-[48px] py-2 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                mode === 'signup'
+                  ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(56,189,248,0.35)] font-bold'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              Register
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMode('redeem');
+                setError(null);
+                setSuccess(null);
+                soundManager.playTone(600, 0.04);
+              }}
+              className={`min-h-[48px] py-2 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                mode === 'redeem'
+                  ? 'bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.35)] font-bold'
+                  : 'text-amber-300/80 hover:text-amber-200'
+              }`}
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>VIP Pass</span>
+            </button>
+          </div>
+
+          {/* Mode 1 & 2: Sign In / Register Form */}
+          {mode !== 'redeem' ? (
+            <div className="space-y-4 mt-5">
+              {/* Top Action: Official Continue with Google Button */}
+              <button
+                type="button"
+                onClick={handleGoogleAuth}
+                disabled={isSubmitting}
+                className="w-full min-h-[48px] px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-black font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-3 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:scale-[1.01] active:scale-[0.99] border border-white/20"
+              >
+                {/* Official Google G Logo SVG */}
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span>Continue with Google</span>
+              </button>
+
+              {/* Minimalist Divider */}
+              <div className="relative flex items-center justify-center my-3">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10" />
+                </div>
+                <span className="relative px-3 bg-[#050811] text-[10px] font-mono tracking-wider text-white/40 uppercase">
+                  OR SIGN {mode === 'signup' ? 'UP' : 'IN'} WITH EMAIL
+                </span>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-3">
+                {/* First Name & Last Name (Side-by-side on desktop ≥640px, stacked on mobile <640px) */}
+                {mode === 'signup' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-mono text-white/70 block">
+                        First Name <span className="text-cyan-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          placeholder="Voornaam"
+                          className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-mono text-white/70 block">
+                        Last Name <span className="text-white/40">(Optional)</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          placeholder="Achternaam"
+                          className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Email Address */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-mono text-white/70 block">
+                    Email Address <span className="text-cyan-400">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Mail className="absolute left-3.5 w-4 h-4 text-white/40 pointer-events-none" />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="pilot@sillowmill.com"
+                      className="w-full min-h-[48px] pl-10 pr-3.5 py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Password Input */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-mono text-white/70 block">
+                    Password <span className="text-cyan-400">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Lock className="absolute left-3.5 w-4 h-4 text-white/40 pointer-events-none" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 text-white/40 hover:text-white p-1"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Error Banner */}
+                {error && (
+                  <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs font-sans flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Success Banner */}
+                {success && (
+                  <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs font-sans flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{success}</span>
+                  </div>
+                )}
+
+                {/* Submit CTA */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full min-h-[48px] mt-2 px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs sm:text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <span>{mode === 'signup' ? 'CREATE FREE ACCOUNT' : 'SIGN IN TO PORTAL'}</span>
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          ) : (
+            /* Mode 3: Redeem VIP Guest Pass Code */
+            <div className="space-y-4 mt-5">
+              <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 space-y-1.5">
+                <div className="text-xs font-mono font-bold text-amber-300 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-amber-400" />
+                  <span>1-OF-100 VIP GUEST PASS REDEMPTION</span>
+                </div>
+                <p className="text-[11.5px] font-sans text-white/70 leading-relaxed">
+                  Enter your physical pass ID (e.g. <span className="text-amber-300 font-mono">AKN-VIP-2027-X001</span> to <span className="text-amber-300 font-mono">X100</span>) or founding passkey to instantly activate <span className="text-emerald-400 font-bold">VIP GUEST</span> status and unlock all creator chat channels.
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-mono text-white/70 block">
+                    Pass ID / Test Access Key
+                  </label>
+                  <div className="relative flex items-center">
+                    <KeyRound className="absolute left-3.5 w-4 h-4 text-amber-400/80 pointer-events-none" />
+                    <input
+                      type="text"
+                      required
+                      value={vipCode}
+                      onChange={(e) => setVipCode(e.target.value)}
+                      placeholder="AKN-VIP-2027-X042"
+                      className="w-full min-h-[48px] pl-10 pr-3.5 py-2.5 rounded-xl bg-black/60 border border-amber-500/30 focus:border-amber-400 text-white font-mono text-xs sm:text-sm uppercase outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Test Key Fill */}
+                <div className="flex items-center justify-between text-[11px] font-mono text-white/50 pt-1">
+                  <span>Developer / Test key:</span>
+                  <button
+                    type="button"
+                    onClick={() => setVipCode('PATRON-TEST-ACCESS')}
+                    className="text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                  >
+                    PATRON-TEST-ACCESS
+                  </button>
+                </div>
+
+                {error && (
+                  <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs font-sans flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {success && (
+                  <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs font-sans flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{success}</span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !vipCode.trim()}
+                  className="w-full min-h-[48px] mt-2 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs sm:text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <span>REDEEM &amp; UPGRADE TO VIP GUEST</span>
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* GDPR / Privacy Compliance Footer */}
+          <div className="mt-5 pt-3 border-t border-white/5 text-center text-[10px] font-mono text-white/40">
+            🔒 100% GDPR / AVG Compliant · Salted Auth &amp; Encrypted Sync
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};

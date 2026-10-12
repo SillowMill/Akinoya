@@ -1,5 +1,6 @@
 import { ShieldCheck, Sparkles } from 'lucide-react';
 import { SoundtrackButton } from './SoundtrackButton';
+import { AuthHeaderButton } from './AuthHeaderButton';
 
 interface TopBarProps {
   isUnlocked: boolean;
@@ -43,6 +44,7 @@ export const TopBar: React.FC<TopBarProps> = ({ isUnlocked, isVip = false, onNav
         {/* Zone 3: Actions (Mobile optimized to prevent clipping) */}
         <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 shrink-0">
           <SoundtrackButton />
+          <AuthHeaderButton />
 
           {isUnlocked ? (
             isVip ? (

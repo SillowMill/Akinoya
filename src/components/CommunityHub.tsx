@@ -43,6 +43,8 @@ import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_17908526409
 import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import moodboardImg from '../assets/images/Mood.png';
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME, BINGAA_COVER_URL, BINGAA_COVER_FILENAME } from '../utils/certificate';
+import { useAuth } from '../context/AuthContext';
+import { AuthHeaderButton } from './AuthHeaderButton';
 
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
 export const isMembershipLaunchLocked = new Date() < MEMBERSHIP_LAUNCH_DATE;
@@ -79,7 +81,7 @@ interface WorkflowItem {
 interface WorkflowComment {
   id: string;
   author: string;
-  role: 'CREATOR' | 'ANNUAL PASS MEMBER' | 'PATRON' | 'COMMUNITY MEMBER';
+  role: 'CREATOR' | 'ANNUAL PASS MEMBER' | 'ANNUAL PASS' | 'PATRON' | 'PATRON MEMBER' | 'VIP GUEST' | 'COMMUNITY MEMBER' | 'FREE';
   timestamp: string;
   text: string;
 }
@@ -108,7 +110,7 @@ interface DiscussionPost {
   id: string;
   channelId: string;
   author: string;
-  role: 'CREATOR' | 'ANNUAL PASS MEMBER' | 'PATRON' | 'COMMUNITY MEMBER';
+  role: 'CREATOR' | 'ANNUAL PASS MEMBER' | 'ANNUAL PASS' | 'PATRON' | 'PATRON MEMBER' | 'VIP GUEST' | 'COMMUNITY MEMBER' | 'FREE';
   avatarBg: string;
   timestamp: string;
   content: string;
@@ -121,7 +123,7 @@ interface DiscussionPost {
 interface DiscussionReply {
   id: string;
   author: string;
-  role: 'CREATOR' | 'ANNUAL PASS MEMBER' | 'PATRON' | 'COMMUNITY MEMBER';
+  role: 'CREATOR' | 'ANNUAL PASS MEMBER' | 'ANNUAL PASS' | 'PATRON' | 'PATRON MEMBER' | 'VIP GUEST' | 'COMMUNITY MEMBER' | 'FREE';
   avatarBg: string;
   timestamp: string;
   content: string;
@@ -143,8 +145,8 @@ interface CommunityHubProps {
 }
 
 export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpenAuthModal }) => {
-  // Authentication & Patron State (Strict Preview-Only Mode until 09/01/2027)
-  const [isPatron, setIsPatron] = useState<boolean>(false);
+  // Authentication & RBAC User State
+  const { user, profile, role, isAuthenticated, openAuthModal } = useAuth();
 
   const [patronName, setPatronName] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -159,6 +161,14 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     }
     return 'Patron Member #042';
   });
+
+  const userDisplayName = profile?.first_name
+    ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}`
+    : profile?.full_name || (user?.email ? user.email.split('@')[0] : patronName);
+
+  const isVipOrAbove = role === 'VIP_GUEST' || role === 'ANNUAL_PASS' || role === 'CREATOR';
+  const isAnnualOrCreator = role === 'ANNUAL_PASS' || role === 'CREATOR';
+  const isPatron = isVipOrAbove;
 
   // Active Hub Section
   const [activeSection, setActiveSection] = useState<CreativeHubSection>('downloads');
@@ -187,6 +197,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
 
   // Multi-Channel Discord Comm-Net State
   const [activeChannelId, setActiveChannelId] = useState<string>('general-chat');
+  const [isMobileChannelsOpen, setIsMobileChannelsOpen] = useState<boolean>(false);
   const [discussionInput, setDiscussionInput] = useState('');
   const [discussionImage, setDiscussionImage] = useState<string | null>(null);
   const discussionFileInputRef = useRef<HTMLInputElement>(null);
@@ -448,7 +459,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
       timestamp: 'Today at 14:15',
       content:
         'Welcome to the official Sillow Mill Comm-Net & Creator Hub! This Discord-style environment consolidates all production downloads, workflow roadmaps, visualizer test reels, and community channels into one command center.\n\nFree community members have open access to our public channels and full read-only previews of all production vaults!',
-      imageUrl: bingaaComicCover,
       likes: 38,
       hasLiked: false,
       replies: [
@@ -678,13 +688,26 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     }
   };
 
-  // Trigger Asset Download (Disabled in preview-only mode until 09/01/2027)
+  // Trigger Asset Download (Gated by Annual Pass / Creator status)
   const handleDownloadAsset = (asset: AssetVaultItem, _index: number) => {
-    soundManager.playTone(330, 0.08);
-    setUpgradeModalReason(
-      `Downloads are disabled in preview-only mode. Public membership and full asset downloads unlock on 09/01/2027.`
-    );
-    setIsUpgradeModalOpen(true);
+    if (!isAnnualOrCreator) {
+      soundManager.playTone(330, 0.08);
+      setUpgradeModalReason(
+        '🔒 Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)'
+      );
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+
+    soundManager.playUnlockChime();
+    setDownloadToast(`Preparing download: ${asset.fileName}`);
+    setTimeout(() => setDownloadToast(null), 4000);
+    const a = document.createElement('a');
+    a.href = asset.downloadUrl;
+    a.download = asset.fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   // Toggle Audio Play in Vault
@@ -704,10 +727,19 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     if (!text) return;
 
     soundManager.playTone(740, 0.06);
+    const commentRole: WorkflowComment['role'] =
+      role === 'CREATOR'
+        ? 'CREATOR'
+        : role === 'ANNUAL_PASS'
+        ? 'ANNUAL PASS MEMBER'
+        : role === 'VIP_GUEST'
+        ? 'VIP GUEST'
+        : 'COMMUNITY MEMBER';
+
     const newComment: WorkflowComment = {
       id: `wfc-${Date.now()}`,
-      author: patronName,
-      role: isPatron ? 'PATRON MEMBER' : 'COMMUNITY MEMBER',
+      author: userDisplayName,
+      role: commentRole,
       timestamp: 'Just now',
       text,
     };
@@ -724,21 +756,53 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     setWorkflowCommentInputs((prev) => ({ ...prev, [workflowId]: '' }));
   };
 
-  // Handle Discussion Post Submit (Free & Open for everyone)
+  // Handle Discussion Post Submit (RBAC-enforced)
   const handleCreateDiscussionPost = (e: React.FormEvent) => {
     e.preventDefault();
     if (!discussionInput.trim() && !discussionImage) return;
 
+    // RBAC: Check if channel requires VIP/Annual Pass
+    const currentChannel = CHAT_CHANNELS.find((c) => c.id === activeChannelId);
+    if (currentChannel?.isAnnualPass && !isVipOrAbove) {
+      soundManager.playTone(330, 0.08);
+      alert(
+        '🔒 Creator Lab channels require Äkinoya VIP Guest Pass or Annual Pass. Please sign in or redeem your VIP Pass Code.'
+      );
+      openAuthModal(isAuthenticated ? 'vip' : 'signin');
+      return;
+    }
+
     soundManager.playTone(820, 0.06);
+    const postRole: DiscussionPost['role'] =
+      role === 'CREATOR'
+        ? 'CREATOR'
+        : role === 'ANNUAL_PASS'
+        ? 'ANNUAL PASS MEMBER'
+        : role === 'VIP_GUEST'
+        ? 'VIP GUEST'
+        : 'COMMUNITY MEMBER';
+
+    const avatarGradient =
+      role === 'CREATOR'
+        ? 'from-amber-400 to-amber-600'
+        : role === 'ANNUAL_PASS'
+        ? 'from-cyan-400 to-indigo-600'
+        : role === 'VIP_GUEST'
+        ? 'from-purple-400 to-purple-600'
+        : 'from-slate-400 to-slate-600';
+
+    // Strictly text-only in #general-chat
+    const finalImage = activeChannelId === 'general-chat' ? undefined : (discussionImage || undefined);
+
     const newPost: DiscussionPost = {
       id: `dp-${Date.now()}`,
       channelId: activeChannelId,
-      author: patronName,
-      role: isPatron ? 'ANNUAL PASS MEMBER' : 'COMMUNITY MEMBER',
-      avatarBg: isPatron ? 'from-cyan-400 to-indigo-600' : 'from-slate-400 to-slate-600',
+      author: userDisplayName,
+      role: postRole,
+      avatarBg: avatarGradient,
       timestamp: 'Just now',
       content: discussionInput.trim(),
-      imageUrl: discussionImage || undefined,
+      imageUrl: finalImage,
       likes: 0,
       hasLiked: false,
       replies: [],
@@ -773,11 +837,29 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     if (!replyInputText.trim() || !activeReplyPost) return;
 
     soundManager.playTone(780, 0.06);
+    const replyRole: DiscussionReply['role'] =
+      role === 'CREATOR'
+        ? 'CREATOR'
+        : role === 'ANNUAL_PASS'
+        ? 'ANNUAL PASS MEMBER'
+        : role === 'VIP_GUEST'
+        ? 'VIP GUEST'
+        : 'COMMUNITY MEMBER';
+
+    const avatarGradient =
+      role === 'CREATOR'
+        ? 'from-amber-400 to-amber-600'
+        : role === 'ANNUAL_PASS'
+        ? 'from-cyan-400 to-indigo-600'
+        : role === 'VIP_GUEST'
+        ? 'from-purple-400 to-purple-600'
+        : 'from-slate-400 to-slate-600';
+
     const newReply: DiscussionReply = {
       id: `dpr-${Date.now()}`,
-      author: patronName,
-      role: isPatron ? 'ANNUAL PASS MEMBER' : 'COMMUNITY MEMBER',
-      avatarBg: isPatron ? 'from-cyan-400 to-indigo-600' : 'from-slate-400 to-slate-600',
+      author: userDisplayName,
+      role: replyRole,
+      avatarBg: avatarGradient,
       timestamp: 'Just now',
       content: replyInputText.trim(),
     };
@@ -797,9 +879,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
 
   // Vote on Ballot
   const handleVoteBallot = (ballotId: string, optionId: string, isFirstBallot: boolean) => {
-    if (!isPatron && !isFirstBallot) {
+    if (!isVipOrAbove && !isFirstBallot) {
       soundManager.playTone(480, 0.08);
-      setUpgradeModalReason('Council Ballot #02 is reserved for verified Patrons. Annual membership (€60/year, ~€5/month) launches on 09/01/2027.');
+      setUpgradeModalReason('Council Ballot #02 is reserved for verified VIP and Patron members. Annual membership (€60/year, ~€5/month) launches on 09/01/2027.');
       setIsUpgradeModalOpen(true);
       return;
     }
@@ -850,12 +932,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
           </div>
         </div>
 
-        {/* Right Status Actions: Locked Membership Badge until launch 09/01/2027 */}
+        {/* Right Status Actions: Auth Status Profile Button + Locked Membership Badge */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <AuthHeaderButton />
           <button
             type="button"
             disabled={true}
-            className="px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300/80 text-[10.5px] sm:text-[11px] font-mono font-semibold cursor-not-allowed flex items-center gap-1.5 whitespace-nowrap min-h-[44px] select-none opacity-85"
+            className="hidden sm:flex px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300/80 text-[10.5px] sm:text-[11px] font-mono font-semibold cursor-not-allowed items-center gap-1.5 whitespace-nowrap min-h-[48px] sm:min-h-[44px] select-none opacity-85"
             title="Public membership launches on 09/01/2027"
           >
             <Lock className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
@@ -1044,12 +1127,29 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
 
                       <button
                         type="button"
-                        disabled={true}
-                        className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white/50 text-xs font-mono font-semibold cursor-not-allowed flex items-center justify-center gap-2 select-none"
-                        title="Downloads unlock on launch date: 09/01/2027"
+                        onClick={() => handleDownloadAsset(asset, index)}
+                        className={`w-full sm:w-auto min-h-[48px] px-4 py-2.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                          isAnnualOrCreator
+                            ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_15px_rgba(56,189,248,0.35)]'
+                            : 'bg-white/[0.04] hover:bg-white/10 border border-white/10 text-white/70 hover:text-white'
+                        }`}
+                        title={
+                          isAnnualOrCreator
+                            ? `Download ${asset.fileName}`
+                            : '🔒 Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)'
+                        }
                       >
-                        <Lock className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
-                        <span>🔒 DOWNLOADS UNLOCK 09/01/2027</span>
+                        {isAnnualOrCreator ? (
+                          <>
+                            <Download className="w-3.5 h-3.5" />
+                            <span>DOWNLOAD ASSET ({asset.fileSize.split('·')[0].trim()})</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
+                            <span>🔒 Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1472,34 +1572,64 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 </div>
               </div>
 
-              {/* Mobile Channel Navigation Pills (Visible below lg) */}
-              <div className="lg:hidden flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                {CHAT_CHANNELS.map((ch) => {
-                  const isChActive = activeChannelId === ch.id;
-                  return (
-                    <button
-                      key={ch.id}
-                      type="button"
-                      onClick={() => {
-                        setActiveChannelId(ch.id);
-                        soundManager.playTone(600, 0.05);
-                      }}
-                      className={`px-3 py-2 rounded-xl text-xs font-mono font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer min-h-[44px] ${
-                        isChActive
-                          ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(56,189,248,0.35)] font-bold'
-                          : 'bg-black/60 border border-white/10 text-white/70 hover:text-white'
+              {/* Mobile Channel Selector & Touch Drawer Trigger */}
+              <div className="lg:hidden w-full flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileChannelsOpen(true)}
+                  className="w-full min-h-[48px] px-4 py-3 rounded-xl bg-[#060913] border border-cyan-500/40 text-white flex items-center justify-between shadow-lg cursor-pointer transition-all hover:border-cyan-400"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Hash className="w-4 h-4 text-cyan-400 shrink-0" />
+                    <span className="text-xs font-mono font-bold truncate">#{activeChannel.name}</span>
+                    <span
+                      className={`text-[9.5px] px-2 py-0.5 rounded font-mono font-semibold ${
+                        activeChannel.isAnnualPass ? 'bg-amber-500/20 text-amber-300' : 'bg-cyan-500/20 text-cyan-300'
                       }`}
                     >
-                      <Hash className={`w-3.5 h-3.5 ${isChActive ? 'text-black' : 'text-cyan-400'}`} />
-                      <span>{ch.name}</span>
-                      {ch.isAnnualPass && (
-                        <span className={`text-[9px] px-1 py-0.2 rounded font-bold ${isChActive ? 'bg-black/20 text-black' : 'bg-amber-500/20 text-amber-300'}`}>
-                          VIP
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+                      {activeChannel.category}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-cyan-400 text-xs font-mono">
+                    <span>Channels</span>
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </button>
+
+                {/* Quick Horizontal Channel Pills (≥48px touch targets) */}
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                  {CHAT_CHANNELS.map((ch) => {
+                    const isChActive = activeChannelId === ch.id;
+                    return (
+                      <button
+                        key={ch.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveChannelId(ch.id);
+                          if (ch.id === 'general-chat') setDiscussionImage(null);
+                          soundManager.playTone(600, 0.05);
+                        }}
+                        className={`px-3 py-2 rounded-xl text-xs font-mono font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer min-h-[48px] ${
+                          isChActive
+                            ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(56,189,248,0.35)] font-bold'
+                            : 'bg-black/60 border border-white/10 text-white/70 hover:text-white'
+                        }`}
+                      >
+                        <Hash className={`w-3.5 h-3.5 ${isChActive ? 'text-black' : 'text-cyan-400'}`} />
+                        <span>{ch.name}</span>
+                        {ch.isAnnualPass && (
+                          <span
+                            className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                              isChActive ? 'bg-black/20 text-black' : 'bg-amber-500/20 text-amber-300'
+                            }`}
+                          >
+                            VIP
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Discord-Style Multi-Channel Grid: Left Channels Sidebar + Right Chat Feed */}
@@ -1541,6 +1671,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           type="button"
                           onClick={() => {
                             setActiveChannelId(ch.id);
+                            if (ch.id === 'general-chat') setDiscussionImage(null);
                             soundManager.playTone(600, 0.05);
                           }}
                           className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
@@ -1676,17 +1807,17 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                                 <div className="text-xs font-bold text-white flex items-center gap-1.5">
                                   <span>{post.author}</span>
                                   <span
-                                    className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-semibold ${
+                                    className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
                                       post.role === 'CREATOR'
                                         ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
-                                        : post.role === 'ANNUAL PASS MEMBER'
+                                        : post.role === 'ANNUAL PASS' || post.role === 'ANNUAL PASS MEMBER'
                                         ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
-                                        : post.role === 'PATRON' || post.role === 'PATRON MEMBER'
+                                        : post.role === 'VIP GUEST' || post.role === 'PATRON' || post.role === 'PATRON MEMBER'
                                         ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
                                         : 'bg-slate-500/20 text-slate-300 border border-slate-400/40'
                                     }`}
                                   >
-                                    {post.role}
+                                    {post.role === 'PATRON' || post.role === 'PATRON MEMBER' ? 'VIP GUEST' : post.role}
                                   </span>
                                 </div>
                                 <div className="text-[10px] font-mono text-white/40">{post.timestamp}</div>
@@ -1698,8 +1829,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                             {post.content}
                           </p>
 
-                          {/* Large High-Res Image Post Attachment */}
-                          {post.imageUrl && (
+                          {/* Large High-Res Image Post Attachment (Strictly disabled in #general-chat) */}
+                          {post.imageUrl && post.channelId !== 'general-chat' && (
                             <div className="rounded-xl overflow-hidden border border-white/10 max-h-96 bg-black/80 flex items-center justify-center">
                               <img src={post.imageUrl} alt="Attached" className="max-h-96 w-full object-cover" />
                             </div>
@@ -1710,7 +1841,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                             <button
                               type="button"
                               onClick={() => handleToggleDiscussionLike(post.id)}
-                              className={`min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
+                              className={`min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
                                 post.hasLiked
                                   ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold'
                                   : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
@@ -1723,7 +1854,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                             <button
                               type="button"
                               onClick={() => setActiveReplyPost(post)}
-                              className="min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
+                              className="min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
                             >
                               <MessageCircle className="w-3.5 h-3.5" />
                               <span>{post.replies.length} Replies</span>
@@ -1757,30 +1888,72 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     <div className="flex items-center gap-2.5">
                       <div
                         className={`w-7 h-7 rounded-full bg-gradient-to-tr ${
-                          isPatron ? 'from-cyan-400 to-indigo-600' : 'from-slate-400 to-slate-600'
+                          role === 'CREATOR'
+                            ? 'from-amber-400 to-amber-600'
+                            : role === 'ANNUAL_PASS'
+                            ? 'from-cyan-400 to-indigo-600'
+                            : role === 'VIP_GUEST'
+                            ? 'from-purple-400 to-purple-600'
+                            : 'from-slate-400 to-slate-600'
                         } flex items-center justify-center font-bold text-[10px] text-black shrink-0`}
                       >
-                        PM
+                        {(userDisplayName || 'US').slice(0, 2).toUpperCase()}
                       </div>
                       <div>
                         <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <span>{patronName}</span>
-                          <span className="text-[9px] font-mono text-cyan-300">
-                            {isPatron ? 'ANNUAL PASS MEMBER' : 'COMMUNITY MEMBER (FREE)'}
+                          <span>{userDisplayName}</span>
+                          <span
+                            className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                              role === 'CREATOR'
+                                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
+                                : role === 'ANNUAL_PASS'
+                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                                : role === 'VIP_GUEST'
+                                ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
+                                : 'bg-slate-500/20 text-slate-300 border border-slate-400/40'
+                            }`}
+                          >
+                            {role === 'CREATOR'
+                              ? 'CREATOR'
+                              : role === 'ANNUAL_PASS'
+                              ? 'ANNUAL PASS'
+                              : role === 'VIP_GUEST'
+                              ? 'VIP GUEST'
+                              : 'FREE MEMBER'}
                           </span>
                         </div>
                       </div>
                     </div>
 
+                    {activeChannel.isAnnualPass && !isVipOrAbove && (
+                      <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-xs font-mono text-amber-300">
+                          <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                          <span>🔒 Creator Lab transmission requires VIP Guest Pass or Annual Pass</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openAuthModal(isAuthenticated ? 'vip' : 'signin')}
+                          className="min-h-[48px] px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all shrink-0 cursor-pointer"
+                        >
+                          {isAuthenticated ? 'REDEEM VIP PASS CODE' : 'SIGN IN / REGISTER'}
+                        </button>
+                      </div>
+                    )}
+
                     <textarea
                       value={discussionInput}
                       onChange={(e) => setDiscussionInput(e.target.value)}
-                      placeholder={`Message #${activeChannel.name}...`}
+                      placeholder={
+                        activeChannel.isAnnualPass && !isVipOrAbove
+                          ? `Redeem VIP Pass to message #${activeChannel.name}...`
+                          : `Message #${activeChannel.name}...`
+                      }
                       rows={3}
                       className="w-full bg-transparent text-xs sm:text-sm text-white placeholder-white/30 outline-none resize-none font-sans"
                     />
 
-                    {discussionImage && (
+                    {discussionImage && activeChannelId !== 'general-chat' && (
                       <div className="flex items-center gap-2 bg-white/5 p-2 rounded-xl w-fit border border-cyan-500/30">
                         <img src={discussionImage} alt="Upload" className="w-16 h-16 object-cover rounded-lg" />
                         <button
@@ -1794,34 +1967,43 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     )}
 
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10">
-                      <input
-                        type="file"
-                        ref={discussionFileInputRef}
-                        accept="image/*"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) {
-                            const r = new FileReader();
-                            r.onload = () => typeof r.result === 'string' && setDiscussionImage(r.result);
-                            r.readAsDataURL(f);
-                          }
-                        }}
-                        className="hidden"
-                      />
+                      {activeChannelId === 'general-chat' ? (
+                        <div className="flex items-center gap-1.5 text-[11px] font-mono text-white/40">
+                          <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>#general-chat is strictly text-only</span>
+                        </div>
+                      ) : (
+                        <>
+                          <input
+                            type="file"
+                            ref={discussionFileInputRef}
+                            accept="image/*"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) {
+                                const r = new FileReader();
+                                r.onload = () => typeof r.result === 'string' && setDiscussionImage(r.result);
+                                r.readAsDataURL(f);
+                              }
+                            }}
+                            className="hidden"
+                          />
 
-                      <button
-                        type="button"
-                        onClick={() => discussionFileInputRef.current?.click()}
-                        className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
-                      >
-                        <ImageIcon className="w-4 h-4 text-cyan-400" />
-                        <span>Attach Image</span>
-                      </button>
+                          <button
+                            type="button"
+                            onClick={() => discussionFileInputRef.current?.click()}
+                            className="min-h-[48px] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
+                          >
+                            <ImageIcon className="w-4 h-4 text-cyan-400" />
+                            <span>Attach Image</span>
+                          </button>
+                        </>
+                      )}
 
                       <button
                         type="submit"
                         disabled={!discussionInput.trim() && !discussionImage}
-                        className="min-h-[44px] px-5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-30 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        className="min-h-[48px] px-5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-30 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ml-auto"
                       >
                         <Send className="w-3.5 h-3.5" />
                         <span>TRANSMIT MESSAGE</span>
@@ -2150,6 +2332,111 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   Reply
                 </button>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Channels Touch Drawer (Bottom-Sheet) */}
+      <AnimatePresence>
+        {isMobileChannelsOpen && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4">
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full max-w-lg bg-[#070b14] border-t sm:border border-cyan-500/30 rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <Hash className="w-5 h-5 text-cyan-400" />
+                  <span className="text-sm font-display font-bold text-white tracking-wider">
+                    SELECT COMM-NET CHANNEL
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileChannelsOpen(false)}
+                  className="p-2 rounded-lg text-white/50 hover:text-white min-h-[48px] min-w-[48px] flex items-center justify-center cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Public Channels */}
+              <div className="space-y-2">
+                <div className="text-[11px] font-mono font-bold text-white/50 uppercase tracking-wider px-1">
+                  📁 PUBLIC HUB (FREE &amp; OPEN)
+                </div>
+                {CHAT_CHANNELS.filter((c) => c.category === 'PUBLIC HUB').map((ch) => {
+                  const isChActive = activeChannelId === ch.id;
+                  return (
+                    <button
+                      key={ch.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveChannelId(ch.id);
+                        if (ch.id === 'general-chat') setDiscussionImage(null);
+                        setIsMobileChannelsOpen(false);
+                        soundManager.playTone(600, 0.05);
+                      }}
+                      className={`w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                        isChActive
+                          ? 'bg-cyan-950/70 border-cyan-400 text-white shadow-[0_0_15px_rgba(56,189,248,0.25)]'
+                          : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-cyan-400' : 'text-white/40'}`} />
+                        <div className="min-w-0">
+                          <div className="text-xs font-mono font-bold truncate">#{ch.name}</div>
+                          <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
+                        </div>
+                      </div>
+                      {isChActive && <Check className="w-4 h-4 text-cyan-400 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Creator Lab Channels */}
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <div className="text-[11px] font-mono font-bold text-amber-300/80 uppercase tracking-wider px-1 flex items-center justify-between">
+                  <span>📁 CREATOR LAB (VIP / ANNUAL PASS)</span>
+                  <span className="text-[9.5px] bg-amber-950/80 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">
+                    VIP PASS REQUIRED
+                  </span>
+                </div>
+                {CHAT_CHANNELS.filter((c) => c.category === 'CREATOR LAB (ANNUAL PASS)').map((ch) => {
+                  const isChActive = activeChannelId === ch.id;
+                  return (
+                    <button
+                      key={ch.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveChannelId(ch.id);
+                        setIsMobileChannelsOpen(false);
+                        soundManager.playTone(600, 0.05);
+                      }}
+                      className={`w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                        isChActive
+                          ? 'bg-amber-950/50 border-amber-400 text-white shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+                          : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-amber-400' : 'text-white/40'}`} />
+                        <div className="min-w-0">
+                          <div className="text-xs font-mono font-bold truncate">#{ch.name}</div>
+                          <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
+                        </div>
+                      </div>
+                      <Lock className="w-4 h-4 text-amber-400/80 shrink-0" />
+                    </button>
+                  );
+                })}
+              </div>
             </motion.div>
           </div>
         )}
