@@ -101,42 +101,41 @@ const PERK_MODULES: PerkModule[] = [
     id: 'animation',
     number: '01',
     category: 'ANIMATION & 4K',
-    title: 'Animation & Visual Workflows',
+    title: 'Animation & 3D Cinematic Early Access',
     bullets: [
-      'Step-by-step 3D & animation pipeline breakdowns',
-      'Exact AI/animation prompt frameworks',
-      'Raw storyboards & 4K cinematic exports',
+      '48-Hour Early Access to new episodes & visualizers',
+      'Raw storyboards & 3D pipeline breakdowns',
+      'AI & Animation prompt frameworks',
     ],
     icon: Film,
   },
   {
     id: 'vault',
     number: '02',
-    category: 'MUSIC & DAW',
+    category: 'MUSIC & SOUND',
     title: 'Unreleased Music Vault & DAW Templates',
     bullets: [
       'Unreleased tracks & VIP audio masters',
       'Downloadable DAW project templates',
-      'WAV STEM packs & sound design breakdowns',
     ],
     icon: Radio,
   },
   {
     id: 'governance',
     number: '03',
-    category: 'WORLDBUILDING & LORE',
-    title: 'Worldbuilding, Branding & Character Lore',
+    category: 'LORE & COMMUNITY',
+    title: 'Äkinoya Worldbuilding, Lore & Governance',
     bullets: [
-      'Character lore PDFs & moodboards',
-      'Sci-fi branding & creative growth strategies',
+      'Deep lore articles & concept art expansions',
       'Direct governance voting on lore decisions',
+      'Exclusive behind-the-scenes production logs',
     ],
     icon: Vote,
   },
   {
     id: 'drops',
     number: '04',
-    category: '4K ASSETS & DROPS',
+    category: 'ASSETS & DROPS',
     title: 'Exclusive 4K Assets & Merch Drops',
     bullets: [
       'High-res 4K wallpapers for desktop & mobile',
@@ -949,7 +948,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           COMMUNITY PERKS &amp; HUB
                         </h2>
                         <p className="text-xs sm:text-sm font-sans text-white/65 mt-1 max-w-xl">
-                          Monthly recurring pass to unreleased music vaults, animation early access, voting rights &amp; lore governance.
+                          Annual membership pass (€60/year, ~€5/mo) to unreleased music vaults, animation early access, voting rights &amp; lore governance.
                         </p>
                       </div>
 
@@ -981,10 +980,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           )}
                           <span>
                             {isMembershipLaunchLocked
-                              ? '🔒 LAUNCHES 09/01/2027 — €5/MONTH'
+                              ? '🔒 LAUNCHES 09/01/2027 — €60/YEAR'
                               : isSubscribing
                               ? 'INITIALIZING STRIPE...'
-                              : 'ACCESS NOW — €5/MONTH'}
+                              : 'ACCESS NOW — €60/YEAR'}
                           </span>
                         </button>
                       </div>
@@ -1033,11 +1032,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               </ul>
                             </div>
 
-                            {/* Clean Status Line highlighting €5/month */}
+                            {/* Clean Status Line highlighting €60/year annual pass */}
                             <div className="pt-3 border-t border-white/5 mt-auto flex items-center justify-between text-[10.5px] font-mono text-cyan-400/80">
                               <span className="flex items-center gap-1.5">
                                 <Sparkles className="w-3 h-3 text-cyan-400" />
-                                <span>INCLUDED WITH €5/MO PASS</span>
+                                <span>INCLUDED WITH ANNUAL PASS (€60/YR)</span>
                               </span>
                             </div>
                           </motion.div>

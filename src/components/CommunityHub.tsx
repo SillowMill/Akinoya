@@ -180,26 +180,26 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
   const assetVaultItems: AssetVaultItem[] = [
     {
       id: 'asset-pdf',
-      title: 'Bingäa Issue #01 — Complete 32-Page Master Print Edition',
-      category: 'MOODBOARD MASTER',
-      fileFormat: 'PDF ARCHIVE',
+      title: 'Bingäa Issue #01 — Read-Only Lore Preview & Teaser',
+      category: 'LORE PREVIEW / TEASER',
+      fileFormat: 'PDF LORE PREVIEW',
       fileSize: '114.8 MB · 300 DPI CMYK',
       description:
-        'Uncompressed production print file including full 32-page narrative sequence, wraparound cover art, author lore glossary, and high-resolution typography vectors.',
+        'Read-only digital lore preview and narrative teaser sequence. Note: The full official print edition of "Bingäa" is sold separately as a physical collector\'s item and is not included as a free digital download.',
       downloadUrl: BINGAA_PDF_URL,
       fileName: BINGAA_PDF_FILENAME,
       heroBannerUrl: moodboardImg,
     },
     {
-      id: 'asset-stems',
-      title: 'Sub-Orbital Drift — 16-Track Studio Audio Stem Archive & DAW Template',
+      id: 'asset-audio-master',
+      title: 'Sub-Orbital Drift — Studio Audio Master & DAW Template',
       category: 'UNRELEASED MUSIC & DAW TEMPLATE',
-      fileFormat: 'ZIP STEMS + ABLETON .ALS',
+      fileFormat: 'AUDIO MASTER + ABLETON .ALS',
       fileSize: '348.2 MB · 24-BIT / 96kHz WAV',
       description:
-        'Full DAW session template with 16 isolated tracks: analog modular synth arpeggios, sub-bass 808 transient beds, spatial reverb tails, and binaural atmosphere channels for remixing and production study.',
-      downloadUrl: '/assets/SubOrbitalDrift_Stems.zip',
-      fileName: 'SubOrbitalDrift_Stems_96kHz.zip',
+        'Full DAW session template with unreleased studio audio masters and project files for production study.',
+      downloadUrl: '/assets/SubOrbitalDrift_AudioMaster.zip',
+      fileName: 'SubOrbitalDrift_AudioMaster_96kHz.zip',
       heroBannerUrl: visualizerThumbnailImg,
       isAudio: true,
     },
@@ -349,7 +349,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
           role: 'PATRON MEMBER',
           avatarBg: 'from-cyan-400 to-blue-600',
           timestamp: 'Today at 14:32',
-          content: 'The download vault layout is clean and fast. Stems sound immaculate in the DAW!',
+          content: 'The download vault layout is clean and fast. Studio masters sound immaculate in the DAW!',
         },
       ],
     },
@@ -408,7 +408,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     soundManager.playTone(330, 0.08);
   };
 
-  // Stripe Checkout Handler for €5/Month
+  // Stripe Checkout Handler for Annual Pass (€60/Year)
   const handleStripeUpgrade = async () => {
     if (isMembershipLaunchLocked) {
       soundManager.playTone(330, 0.08);
@@ -567,7 +567,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
   const handleVoteBallot = (ballotId: string, optionId: string, isFirstBallot: boolean) => {
     if (!isPatron && !isFirstBallot) {
       soundManager.playTone(480, 0.08);
-      setUpgradeModalReason('Council Ballot #02 is reserved for verified Patrons. Activate for €5/month to vote.');
+      setUpgradeModalReason('Council Ballot #02 is reserved for verified Patrons. Annual membership (€60/year) launches on 09/01/2027.');
       setIsUpgradeModalOpen(true);
       return;
     }
@@ -627,7 +627,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
             title="Public membership launches on 09/01/2027"
           >
             <Lock className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
-            <span>🔒 LAUNCHES 09/01/2027 — €5/MONTH</span>
+            <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR</span>
           </button>
         </div>
       </header>
@@ -695,14 +695,14 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     MODULE 01 · ASSETS &amp; DOWNLOADS
                   </span>
                   <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                    1 FREE SAMPLE UNLOCKED · €5/MO FOR ALL
+                    1 FREE SAMPLE UNLOCKED · €60/YR ANNUAL PASS
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
                   📦 Asset &amp; Download Vault
                 </h1>
                 <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  Download production-ready print master PDFs, uncompressed 24-bit audio stems, raw 4K visualizer wallpapers, and storyboards directly to your machine.
+                  Download production-ready project templates, uncompressed 24-bit VIP audio masters, raw 4K visualizer wallpapers, and storyboards directly to your machine.
                 </p>
               </div>
 
@@ -713,7 +713,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 title="Full vault downloads launch on 09/01/2027"
               >
                 <Lock className="w-4 h-4 text-amber-400/80" />
-                <span>🔒 LAUNCHES 09/01/2027 — €5/MONTH</span>
+                <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR</span>
               </button>
             </div>
 
@@ -763,7 +763,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                                 )}
                               </button>
                               <div className="min-w-0">
-                                <div className="text-[11px] font-bold text-white truncate">Studio Master Stems</div>
+                                <div className="text-[11px] font-bold text-white truncate">Studio Audio Master</div>
                                 <div className="text-[9.5px] font-mono text-cyan-300">96kHz / 24-BIT WAV</div>
                               </div>
                             </div>
@@ -1084,7 +1084,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                         title="Theater unlocks on 09/01/2027"
                       >
                         <Lock className="w-3.5 h-3.5 text-amber-400/80" />
-                        <span>🔒 LAUNCHES 09/01/2027 — €5/MONTH</span>
+                        <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR</span>
                       </button>
                     </div>
                   ) : (
@@ -1440,7 +1440,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           COUNCIL BALLOT #02 RESERVED FOR PATRONS
                         </div>
                         <p className="text-xs text-white/70 mb-4 max-w-sm">
-                          Activate membership for €5/month to cast your binding vote on physical merchandise drops and lore directives.
+                          Activate membership for €60/year (~€5/mo) to cast your binding vote on physical merchandise drops and lore directives.
                         </p>
                         <button
                           type="button"
@@ -1449,7 +1449,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           title="Voting unlocks on 09/01/2027"
                         >
                           <Lock className="w-3.5 h-3.5 text-amber-400/80" />
-                          <span>🔒 LAUNCHES 09/01/2027 — €5/MONTH</span>
+                          <span>🔒 LAUNCHES 09/01/2027 — €60/YEAR</span>
                         </button>
                       </div>
                     ) : (
@@ -1516,7 +1516,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
       </main>
 
       {/* ======================================================== */}
-      {/* FREEMIUM PAYWALL UPGRADE MODAL (€5/MONTH & TEST PASSKEY) */}
+      {/* FREEMIUM PAYWALL UPGRADE MODAL (€60/YEAR ANNUAL PASS)    */}
       {/* ======================================================== */}
       <AnimatePresence>
         {isUpgradeModalOpen && (
@@ -1543,7 +1543,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     CREATIVE VAULT PASS
                   </span>
                   <span className="text-[10px] font-mono text-amber-400 font-bold">
-                    €5 / MONTH
+                    €60 / YEAR (~€5/MO)
                   </span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-display font-extrabold text-white">
@@ -1566,7 +1566,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span>16-Track 24-Bit / 96kHz Audio Stem Archives (.ZIP) for Remixes</span>
+                  <span>Uncompressed 24-Bit / 96kHz VIP Audio Masters &amp; Project Files</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -1597,10 +1597,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                   )}
                   <span>
                     {isMembershipLaunchLocked
-                      ? '🔒 LAUNCHES 09/01/2027 — €5/MONTH'
+                      ? '🔒 LAUNCHES 09/01/2027 — €60/YEAR'
                       : isSubscribing
                       ? 'INITIALIZING STRIPE...'
-                      : 'ACTIVATE MEMBERSHIP FOR €5/MONTH'}
+                      : 'ACTIVATE ANNUAL MEMBERSHIP — €60/YEAR'}
                   </span>
                 </button>
 

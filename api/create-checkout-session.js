@@ -88,6 +88,16 @@ export default async function handler(req, res) {
     const isMembership = body.plan === 'membership' || body.product === 'community_membership';
 
     if (isMembership) {
+      const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
+      if (new Date() < MEMBERSHIP_LAUNCH_DATE) {
+        res.statusCode = 403;
+        return res.end(
+          JSON.stringify({
+            error: 'Community membership pass public checkout is locked until launch on 09/01/2027.',
+          })
+        );
+      }
+
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         line_items: [
@@ -95,12 +105,12 @@ export default async function handler(req, res) {
             price_data: {
               currency: 'eur',
               product_data: {
-                name: 'Sillow Mill — Community Perks & Hub',
-                description: 'Monthly recurring pass to unreleased music vaults, animation early access, voting rights & lore governance.',
+                name: 'Sillow Mill — Community Perks & Hub (Annual Pass)',
+                description: 'Annual recurring pass to unreleased music vaults, animation early access, voting rights & lore governance (€60/year, ~€5/mo).',
               },
-              unit_amount: 500, // €5.00 / month
+              unit_amount: 6000, // €60.00 / year
               recurring: {
-                interval: 'month',
+                interval: 'year',
               },
             },
             quantity: 1,
@@ -109,7 +119,7 @@ export default async function handler(req, res) {
         customer_email: sanitizedEmail,
         metadata: {
           product: 'community_membership',
-          plan: 'monthly_5eur',
+          plan: 'annual_60eur',
           customer_email: sanitizedEmail || '',
           customer_name: sanitizedName || '',
           is_patron: 'true',
