@@ -398,16 +398,12 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <button
           onClick={() => {
-            if (isClaimed && onOpenVisualizerHub) {
-              onOpenVisualizerHub();
-            } else {
-              onNavigateHome();
-            }
+            onNavigateHome();
           }}
           className="inline-flex items-center gap-2 text-xs font-mono text-white/60 hover:text-white transition-colors cursor-pointer min-h-[44px] px-2 py-1"
         >
           <ArrowLeft className="w-3.5 h-3.5 text-white/50" />
-          <span>{isClaimed ? 'Back to Portal' : 'Back to Home'}</span>
+          <span>Back to Home</span>
         </button>
         <span className="text-[10px] sm:text-[11px] font-mono text-cyan-400 uppercase tracking-widest">
           ÄKINOYA PROTOCOL · 2027

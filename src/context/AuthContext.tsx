@@ -547,16 +547,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        // Clean redirect if landing on /auth/callback
+        // Clean redirect if landing on /auth/callback - always redirect to Welcome Page ('/')
         if (typeof window !== 'undefined' && window.location.pathname.startsWith('/auth/callback')) {
-          const pending =
-            localStorage.getItem(PENDING_VIP_PASS_KEY) ||
-            sessionStorage.getItem('pending_vip_code');
-          if (pending) {
-            window.history.replaceState({}, '', `/verify/${pending}`);
-          } else {
-            window.history.replaceState({}, '', '/community');
-          }
+          window.history.replaceState({}, '', '/');
+          window.dispatchEvent(new CustomEvent('akinoya-navigate-home'));
+          window.dispatchEvent(new PopStateEvent('popstate'));
         }
 
         // Detect incoming password recovery link
@@ -744,15 +739,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
 
+          // Clean redirect if landing on /auth/callback - always redirect to Welcome Page ('/')
           if (typeof window !== 'undefined' && window.location.pathname.startsWith('/auth/callback')) {
-            const pending =
-              localStorage.getItem(PENDING_VIP_PASS_KEY) ||
-              sessionStorage.getItem('pending_vip_code');
-            if (pending) {
-              window.history.replaceState({}, '', `/verify/${pending}`);
-            } else {
-              window.history.replaceState({}, '', '/community');
-            }
+            window.history.replaceState({}, '', '/');
+            window.dispatchEvent(new CustomEvent('akinoya-navigate-home'));
+            window.dispatchEvent(new PopStateEvent('popstate'));
           }
         } else if (event === 'PASSWORD_RECOVERY') {
           openAuthModal('update_password');
@@ -798,7 +789,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     soundManager.playTone(660, 0.08);
 
     const redirectTo =
-      typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined;
+      typeof window !== 'undefined' && window.location.origin
+        ? `${window.location.origin}/`
+        : 'https://www.sillowmill.com/';
 
     if (isSupabaseConfigured) {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -861,6 +854,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: cleanEmail,
           password,
           options: {
+            emailRedirectTo:
+              typeof window !== 'undefined' && window.location.origin
+                ? `${window.location.origin}/`
+                : 'https://www.sillowmill.com/',
             data: {
               first_name: cleanFirst,
               last_name: cleanLast,
@@ -1162,8 +1159,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const redirectTo =
           typeof window !== 'undefined' && window.location.origin
-            ? `${window.location.origin}`
-            : 'https://www.sillowmill.com';
+            ? `${window.location.origin}/`
+            : 'https://www.sillowmill.com/';
         const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
           redirectTo,
         });

@@ -112,6 +112,12 @@ export const AuthModal: React.FC = () => {
           soundManager.playError();
         } else {
           setSuccess('Account created successfully! Welcome to Sillow Mill.');
+          if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+            window.history.pushState({}, '', '/');
+            window.dispatchEvent(new CustomEvent('akinoya-navigate-home'));
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }
+          closeAuthModal();
         }
       } else if (mode === 'reset') {
         const res = await resetPasswordForEmail(email);
@@ -131,6 +137,11 @@ export const AuthModal: React.FC = () => {
           soundManager.playUnlockChime();
           setSuccess('Password updated successfully! Redirecting...');
           setTimeout(() => {
+            if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+              window.history.pushState({}, '', '/');
+              window.dispatchEvent(new CustomEvent('akinoya-navigate-home'));
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }
             closeAuthModal();
             setMode('signin');
           }, 1500);
@@ -142,6 +153,12 @@ export const AuthModal: React.FC = () => {
           soundManager.playError();
         } else {
           setSuccess('Signed in successfully! Loading your session...');
+          if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+            window.history.pushState({}, '', '/');
+            window.dispatchEvent(new CustomEvent('akinoya-navigate-home'));
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }
+          closeAuthModal();
         }
       }
     } catch (err: any) {

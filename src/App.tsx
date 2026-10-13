@@ -69,6 +69,20 @@ export default function App() {
     return () => window.removeEventListener('akinoya-auth-logout', handleLogoutSync);
   }, []);
 
+  // Listen to post-auth navigation event to route directly to home ('/')
+  useEffect(() => {
+    const handleNavigateHome = () => {
+      setRoute('home');
+      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+        window.history.replaceState({}, '', '/');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.addEventListener('akinoya-navigate-home', handleNavigateHome);
+    return () => window.removeEventListener('akinoya-navigate-home', handleNavigateHome);
+  }, []);
+
   // Safe fallback if user state transitions to unauthenticated
   useEffect(() => {
     if (!isAuthenticated && !user && publicUnlocked) {
@@ -97,10 +111,7 @@ export default function App() {
       const search = window.location.search.toLowerCase();
       if (path === '/community' || path.startsWith('/community/')) return 'community';
       if (path === '/auth/callback' || path.startsWith('/auth/callback')) {
-        const pendingPass =
-          localStorage.getItem('akinoya_pending_vip_pass') ||
-          sessionStorage.getItem('pending_vip_code');
-        return pendingPass ? 'verify' : 'community';
+        return 'home';
       }
       if (path === '/privacy' || path.startsWith('/privacy/')) return 'privacy';
       if (path === '/kyc' || path.startsWith('/kyc/')) return 'kyc';
@@ -126,16 +137,8 @@ export default function App() {
     if (typeof window === 'undefined') return;
     const path = window.location.pathname.toLowerCase();
     if (path === '/auth/callback' || path.startsWith('/auth/callback')) {
-      const pendingPass =
-        localStorage.getItem('akinoya_pending_vip_pass') ||
-        sessionStorage.getItem('pending_vip_code');
-      if (pendingPass) {
-        window.history.replaceState({}, '', `/verify/${pendingPass}`);
-        setRoute('verify');
-        return;
-      }
-      window.history.replaceState({}, '', '/community');
-      setRoute('community');
+      window.history.replaceState({}, '', '/');
+      setRoute('home');
       return;
     }
 
@@ -148,8 +151,8 @@ export default function App() {
     if (token) {
       const cleanToken = token.trim().toUpperCase().replace(/^#/, '');
       if (cleanToken === 'PATRON-TEST-ACCESS' || cleanToken === 'PATRON') {
-        window.history.replaceState({}, '', '/community');
-        setRoute('community');
+        window.history.replaceState({}, '', '/');
+        setRoute('home');
         return;
       }
       window.history.replaceState({}, '', `/verify/${cleanToken}`);
@@ -164,9 +167,7 @@ export default function App() {
       const search = window.location.search.toLowerCase();
       if (
         path === '/community' ||
-        path.startsWith('/community/') ||
-        path === '/auth/callback' ||
-        path.startsWith('/auth/callback')
+        path.startsWith('/community/')
       ) {
         setRoute('community');
       } else if (path === '/privacy' || path.startsWith('/privacy/')) {
@@ -315,7 +316,7 @@ export default function App() {
                     : undefined
                 }
                 onNavigateHome={() => navigateTo('home', '/')}
-                onOpenVisualizerHub={() => setVipSubView('portal')}
+                onOpenVisualizerHub={() => navigateTo('home', '/')}
               />
             ) : (
               <div className="flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
