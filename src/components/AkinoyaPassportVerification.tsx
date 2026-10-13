@@ -34,6 +34,7 @@ import {
   deriveEditionNumber,
   TOTAL_EDITION_LIMIT,
 } from '../utils/certificate';
+import { checkVipTokenStatus } from '../lib/vipTokens';
 
 interface AkinoyaPassportVerificationProps {
   tokenIdFromRoute?: string;
@@ -200,6 +201,19 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       return;
     }
 
+    // Strict single-claim check in Supabase
+    if (!isMaster) {
+      const tokenStatus = await checkVipTokenStatus(token, user?.id);
+      if (tokenStatus.isAlreadyClaimed) {
+        setIsDnaAuthentic(false);
+        setStatusText('ALREADY CLAIMED');
+        setDnaError('THIS VIP LINK HAS ALREADY BEEN CLAIMED. This VIP pass has already been permanently bound to another account.');
+        soundManager.playError();
+        setIsValidating(false);
+        return;
+      }
+    }
+
     try {
       const res = await fetch('/api/nfc/verify-dna', {
         method: 'POST',
@@ -303,6 +317,16 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     const cleanEmail = (currentUser?.email || currentProfile?.email || '').trim().toLowerCase();
 
     try {
+      if (!isMaster) {
+        const tokenStatus = await checkVipTokenStatus(activeToken, currentUser?.id);
+        if (tokenStatus.isAlreadyClaimed) {
+          setClaimError('THIS VIP LINK HAS ALREADY BEEN CLAIMED. This pass has already been bound.');
+          soundManager.playError();
+          setIsClaiming(false);
+          return;
+        }
+      }
+
       // 1. Call server-side NFC register endpoint (records pass in backend & syncs Blad1 row in Google Sheets)
       const res = await fetch('/api/nfc/register', {
         method: 'POST',

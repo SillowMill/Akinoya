@@ -21,6 +21,7 @@ export const AuthModal: React.FC = () => {
     isAuthModalOpen,
     authModalMode,
     hasPendingVipInvitation,
+    vipLinkError,
     closeAuthModal,
     signInWithGoogle,
     signUpWithEmail,
@@ -205,8 +206,25 @@ export const AuthModal: React.FC = () => {
             </button>
           </div>
 
+          {/* Already Claimed VIP Link Error Banner */}
+          {vipLinkError && (
+            <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-red-950/90 via-rose-950/85 to-red-950/90 border border-red-500/60 text-red-200 shadow-[0_0_25px_rgba(239,68,68,0.3)] flex items-start gap-3 select-none">
+              <div className="p-1.5 rounded-lg bg-red-500/20 text-red-400 shrink-0 mt-0.5">
+                <AlertCircle className="w-5 h-5 text-red-400" />
+              </div>
+              <div className="text-left flex-1 min-w-0">
+                <div className="text-xs font-mono font-bold tracking-wider uppercase text-red-400">
+                  THIS VIP LINK HAS ALREADY BEEN CLAIMED
+                </div>
+                <p className="text-xs text-red-200/90 font-sans mt-1 leading-relaxed">
+                  This VIP invitation link has already been permanently bound to another account. Each VIP invitation can only be redeemed once.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Active VIP Referral / Pass Invitation Banner */}
-          {(hasPendingVipInvitation || (typeof window !== 'undefined' && Boolean(localStorage.getItem('akinoya_pending_vip_pass')))) && (
+          {!vipLinkError && (hasPendingVipInvitation || (typeof window !== 'undefined' && Boolean(localStorage.getItem('akinoya_pending_vip_pass')))) && (
             <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/60 via-emerald-950/50 to-cyan-950/60 border border-cyan-500/40 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.15)] flex items-start gap-3">
               <div className="p-1.5 rounded-lg bg-cyan-400/20 text-cyan-400 shrink-0 mt-0.5">
                 <Sparkles className="w-4 h-4 animate-pulse" />

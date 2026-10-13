@@ -348,6 +348,25 @@ apiRouter.all(['/generate-planet', '/planet/generate'], async (req: Request, res
   }
 });
 
+// ─── 11. VIP Token Verification & Single-Claim ────────────────────────────────
+apiRouter.all(['/vip/verify'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const handler = (await import('../../api/vip/verify.js')).default;
+    await handler(req as any, res as any);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'VIP verify failed' });
+  }
+});
+
+apiRouter.all(['/vip/claim'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const handler = (await import('../../api/vip/claim.js')).default;
+    await handler(req as any, res as any);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'VIP claim failed' });
+  }
+});
+
 // ─── Mount router ─────────────────────────────────────────────────────────────
 apiApp.use('/api', apiRouter);
 

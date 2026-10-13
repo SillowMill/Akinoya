@@ -36,6 +36,16 @@ export interface Profile {
   updated_at?: string;
 }
 
+export interface VipTokenRecord {
+  id: string;
+  token_code: string;
+  is_claimed: boolean;
+  claimed_by_user_id?: string | null;
+  claimed_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 const supabaseUrl =
   (import.meta as any).env?.VITE_SUPABASE_URL ||
   (typeof process !== 'undefined' ? process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL : '') ||

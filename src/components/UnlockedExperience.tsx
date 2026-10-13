@@ -962,7 +962,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
                     {/* Header & Access / Pricing Bar */}
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-white/10">
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-5 border-b border-white/10 w-full max-w-full overflow-visible">
                       <div>
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-semibold tracking-wider flex items-center gap-1.5 shadow-[0_0_8px_rgba(56,189,248,0.15)]">
@@ -982,7 +982,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
 
                       {/* Access / Pricing Bar inside widget top */}
-                      <div className="flex flex-wrap items-center gap-3 shrink-0">
+                      <div className="flex flex-wrap items-center gap-3 w-full max-w-full overflow-visible">
                         <a
                           href="/contest"
                           className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-[1.01]"
@@ -1006,8 +1006,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           title={isMembershipLaunchLocked ? 'Membership pass opens January 9, 2027' : undefined}
                           className={
                             isMembershipLaunchLocked
-                              ? 'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-semibold text-amber-300 bg-amber-950/60 border border-amber-500/40 cursor-not-allowed min-h-[44px] shadow-sm select-none'
-                              : 'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]'
+                              ? 'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-semibold text-amber-300 bg-amber-950/60 border border-amber-500/40 cursor-not-allowed min-h-[44px] shadow-sm select-none max-w-full break-words'
+                              : 'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01] max-w-full break-words'
                           }
                         >
                           {isMembershipLaunchLocked ? (
@@ -1015,7 +1015,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           ) : (
                             <CreditCard className="w-4 h-4 text-black shrink-0" />
                           )}
-                          <span className="whitespace-normal break-words text-center leading-snug">
+                          <span className="max-w-full truncate sm:whitespace-normal break-words text-center leading-snug">
                             {isMembershipLaunchLocked
                               ? 'LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)'
                               : isSubscribing

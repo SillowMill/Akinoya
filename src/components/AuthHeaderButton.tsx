@@ -134,7 +134,7 @@ export const AuthHeaderButton: React.FC = () => {
               <div className="text-[10px] font-mono text-white/50 truncate">
                 {profile?.email || user?.email}
               </div>
-              <div className="pt-1 flex items-center gap-1.5">
+              <div className="pt-1 flex flex-wrap items-center gap-1.5">
                 <span className={`text-[9px] font-mono px-2 py-0.5 rounded font-bold uppercase ${roleBadge.className}`}>
                   ROLE: {roleBadge.label}
                 </span>
@@ -144,6 +144,14 @@ export const AuthHeaderButton: React.FC = () => {
                   </span>
                 )}
               </div>
+
+              {/* Strict Account-Bound VIP Pass Badge */}
+              {(isVip || role === 'VIP_GUEST' || role === 'CREATOR' || Boolean(profile?.has_vip_pass) || Boolean(profile?.is_vip)) && (
+                <div className="mt-2 p-2 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-mono text-[9px] sm:text-[9.5px] font-bold flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.25)] select-none">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="leading-tight">VIP PASS UNLOCKED — STRIKT GEKOPPELD AAN DIT ACCOUNT</span>
+                </div>
+              )}
             </div>
 
             {/* Role Entitlement Info */}

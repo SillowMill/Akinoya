@@ -6,6 +6,7 @@ import {
   Sparkles,
   ShieldCheck,
   CheckCircle2,
+  AlertCircle,
   Play,
   Pause,
   Volume2,
@@ -157,6 +158,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     isArtist,
     hasVipPass,
     hasPendingVipInvitation,
+    vipLinkError,
+    clearVipLinkError,
     openAuthModal,
     updateProfile,
   } = useAuth();
@@ -1052,7 +1055,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   return (
     <div className="relative min-h-[100dvh] w-full bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
       {/* Top Universal Header Bar */}
-      <header className="relative z-50 w-full border-b border-white/10 bg-[#050811]/90 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+      <header className="relative z-50 w-full border-b border-white/10 bg-[#050811]/90 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 w-full max-w-full overflow-visible">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"
@@ -1074,7 +1077,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         </div>
 
         {/* Right Status Actions: Auth Status Profile Button + Locked Membership Badge */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto max-w-full overflow-visible">
           <a
             href="/contest"
             className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold text-black bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition-all min-h-[44px] shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:scale-[1.01]"
@@ -1087,17 +1090,42 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           <button
             type="button"
             disabled={true}
-            className="hidden sm:inline-flex px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold cursor-not-allowed items-center gap-2 whitespace-normal break-words leading-snug min-h-[44px] select-none shadow-sm"
+            className="hidden sm:inline-flex px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold cursor-not-allowed items-center gap-2 max-w-full truncate sm:whitespace-normal break-words leading-snug min-h-[44px] select-none shadow-sm"
             title="Public membership launches on 09/01/2027"
           >
             <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-            <span>LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)</span>
+            <span className="max-w-full truncate sm:whitespace-normal break-words">LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)</span>
           </button>
         </div>
       </header>
 
+      {/* Already Claimed VIP Link Error Banner */}
+      {vipLinkError && (
+        <div className="relative z-40 w-full bg-gradient-to-r from-red-950/95 via-rose-950/90 to-red-950/95 border-b border-red-500/50 px-3 sm:px-6 py-2.5 backdrop-blur-xl flex flex-wrap items-center justify-between gap-2 shadow-[0_4px_25px_rgba(239,68,68,0.3)] shrink-0">
+          <div className="flex items-center gap-2.5 text-xs text-red-200 font-sans min-w-0">
+            <span className="p-1 rounded-md bg-red-500/20 text-red-400 shrink-0">
+              <AlertCircle className="w-4 h-4 text-red-400" />
+            </span>
+            <span className="font-mono font-bold text-red-400 uppercase tracking-wider text-[11px] shrink-0">
+              ALREADY CLAIMED VIP LINK:
+            </span>
+            <span className="truncate text-red-200/90 text-xs">
+              THIS VIP LINK HAS ALREADY BEEN CLAIMED. Single-use invitation enforced.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={clearVipLinkError}
+            className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            aria-label="Dismiss error"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Active VIP Referral Invitation Banner */}
-      {hasPendingVipInvitation && !isAuthenticated && (
+      {!vipLinkError && hasPendingVipInvitation && !isAuthenticated && (
         <div className="relative z-40 w-full bg-gradient-to-r from-amber-950/95 via-yellow-950/90 to-amber-950/95 border-b border-amber-500/40 px-3 sm:px-6 py-2 sm:py-2.5 backdrop-blur-xl flex flex-wrap items-center justify-between gap-2 shadow-[0_4px_25px_rgba(245,158,11,0.25)] shrink-0">
           <div className="flex items-center gap-2.5 text-xs text-amber-200 font-sans min-w-0">
             <span className="p-1 rounded-md bg-yellow-400/20 text-yellow-400 shrink-0">
@@ -1198,11 +1226,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               <button
                 type="button"
                 disabled={true}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold cursor-not-allowed flex items-center justify-center gap-2 select-none text-center whitespace-normal break-words leading-snug shadow-md shrink-0 min-h-[44px]"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold cursor-not-allowed flex items-center justify-center gap-2 select-none text-center max-w-full truncate sm:whitespace-normal break-words leading-snug shadow-md shrink-0 min-h-[44px]"
                 title="Full vault downloads launch on 09/01/2027"
               >
                 <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
-                <span>LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)</span>
+                <span className="max-w-full truncate sm:whitespace-normal break-words">LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)</span>
               </button>
             </div>
 
