@@ -48,8 +48,17 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   onOpenVisualizerHub,
 }) => {
   const { unlockVip } = useVipAccess();
-  const { user, profile, openAuthModal, redeemVipCode } = useAuth();
+  const { user, profile, openAuthModal, redeemVipCode, isVip, hasVipPass, role } = useAuth();
   const autoClaimAttemptedRef = useRef(false);
+
+  const isUserVip = Boolean(
+    isVip ||
+    hasVipPass ||
+    profile?.has_vip_pass ||
+    profile?.is_vip ||
+    role === 'VIP_GUEST' ||
+    role === 'CREATOR'
+  );
 
   // Extract query params: token / id, enc (NTAG 424 DNA dynamic cipher), claim (transfer key)
   const [queryParams] = useState<{
@@ -143,8 +152,9 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
   // Determine if this pass is officially claimed by the active account or previously
   const isClaimedByUser = Boolean(
-    profile?.has_vip_pass &&
-    (profile?.vip_code_redeemed === activeToken || profile?.role === 'CREATOR' || isMaster)
+    isUserVip ||
+    (profile?.has_vip_pass &&
+      (profile?.vip_code_redeemed === activeToken || profile?.role === 'CREATOR' || isMaster))
   );
 
   const isClaimed =
@@ -207,7 +217,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       if (tokenStatus.isAlreadyClaimed) {
         setIsDnaAuthentic(false);
         setStatusText('ALREADY CLAIMED');
-        setDnaError('THIS VIP LINK HAS ALREADY BEEN CLAIMED. This VIP pass has already been permanently bound to another account.');
+        setDnaError('ALREADY CLAIMED VIP LINK');
         soundManager.playError();
         setIsValidating(false);
         return;
@@ -320,7 +330,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       if (!isMaster) {
         const tokenStatus = await checkVipTokenStatus(activeToken, currentUser?.id);
         if (tokenStatus.isAlreadyClaimed) {
-          setClaimError('THIS VIP LINK HAS ALREADY BEEN CLAIMED. This pass has already been bound.');
+          setClaimError('ALREADY CLAIMED VIP LINK');
           soundManager.playError();
           setIsClaiming(false);
           return;
@@ -435,7 +445,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       </div>
 
       {/* Security Warning if Cloned/Invalid */}
-      {dnaError && (
+      {dnaError && dnaError !== 'ALREADY CLAIMED VIP LINK' && (
         <div className="mb-5 p-4 rounded-xl bg-rose-950/50 border border-rose-500/40 text-rose-200 text-xs font-mono space-y-1">
           <div className="font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -447,8 +457,84 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         </div>
       )}
 
-      {/* VIEW A: UNCLAIMED ONBOARDING & CLAIM SCREEN */}
-      {!isClaimed ? (
+      {/* VIEW: ALREADY CLAIMED VIP LINK SCREEN */}
+      {dnaError === 'ALREADY CLAIMED VIP LINK' ? (
+        <motion.div
+          key="already-claimed-card"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="rounded-2xl bg-[#090d16] border border-red-500/40 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(239,68,68,0.15)]"
+        >
+          {/* Header */}
+          <div className="border-b border-white/10 pb-4 sm:pb-5 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold text-rose-300 bg-rose-950/70 border border-rose-500/40 shadow-[0_0_12px_rgba(239,68,68,0.2)]">
+                <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                <span>ALREADY CLAIMED VIP LINK</span>
+              </span>
+              <span className="text-[10px] font-mono text-rose-400/90 font-bold tracking-wider">
+                LOCKED
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
+              This VIP Link Has Already Been Claimed
+            </h1>
+            <p className="text-xs font-mono text-white/60 leading-relaxed">
+              This VIP pass ({passData.tokenId}) has already been redeemed and permanently bound to an account. To eliminate link misuse and token duplication, each Äkinoya VIP pass link can only be claimed once.
+            </p>
+          </div>
+
+          {/* If the active user is already VIP */}
+          {isUserVip ? (
+            <div className="space-y-4">
+              <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/80 to-teal-950/70 border border-emerald-500/50 text-emerald-300 font-mono text-xs flex items-center gap-3 shadow-[0_0_16px_rgba(16,185,129,0.2)]">
+                <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+                <div>
+                  <div className="font-bold text-emerald-200">VIP PASS ACTIVE — LINKED TO ACCOUNT</div>
+                  <div className="text-[10px] text-emerald-300/80 mt-0.5">
+                    Your account already has full VIP access unlocked. You do not need to re-claim any invitation links.
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onNavigateHome}
+                className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[48px]"
+              >
+                <span>RETURN TO COMMUNITY HUB</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-xs font-mono text-rose-200/80 bg-rose-950/40 border border-rose-500/30 p-3.5 rounded-xl leading-relaxed">
+                If this is your pass, please sign in with the original account you used to claim it. Your VIP entitlements are permanently tied to your profile.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => openAuthModal('signin')}
+                  className="w-full py-3 px-4 rounded-xl font-mono text-xs font-bold bg-white/10 hover:bg-white/15 border border-white/20 text-white flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
+                >
+                  <Lock className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>SIGN IN TO MY ACCOUNT</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onNavigateHome}
+                  className="w-full py-3 px-4 rounded-xl font-mono text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
+                >
+                  <span>RETURN TO HOME</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      ) : !isClaimed ? (
         <motion.div
           key="unclaimed-card"
           initial={{ opacity: 0, y: 12 }}
@@ -615,10 +701,17 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           {/* Header Card */}
           <div className="rounded-2xl bg-[#090d16] border border-emerald-500/30 p-4 sm:p-6 shadow-[0_0_35px_rgba(16,185,129,0.12)] flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1.5">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                  <span>• OFFICIALLY VERIFIED &amp; ACTIVE</span>
+                  <span>OFFICIALLY VERIFIED &amp; ACTIVE</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <span>VIP PASS ACTIVE — LINKED TO ACCOUNT</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase bg-gradient-to-r from-amber-400 to-amber-200 text-black">
+                  ROLE: VIP
                 </span>
               </div>
               <h1 className="text-lg sm:text-2xl font-display font-bold text-white tracking-wide">

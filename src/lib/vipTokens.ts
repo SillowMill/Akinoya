@@ -1,7 +1,7 @@
 import { supabase, isSupabaseConfigured, VipTokenRecord } from './supabase';
 import { isValidPassId } from '../utils/holder';
 
-export const ALREADY_CLAIMED_VIP_ERROR = 'THIS VIP LINK HAS ALREADY BEEN CLAIMED';
+export const ALREADY_CLAIMED_VIP_ERROR = 'ALREADY CLAIMED VIP LINK';
 
 export interface VipTokenCheckResult {
   valid: boolean;
@@ -77,7 +77,48 @@ export const isRecognizedVipTokenPattern = (token: string): boolean => {
 };
 
 /**
- * Checks token claim status in Supabase before granting elevation
+ * Fetches any valid VIP token permanently bound to a given user ID in Supabase or local store
+ */
+export const getUserBoundVipToken = async (userId: string): Promise<VipTokenRecord | null> => {
+  if (!userId) return null;
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('vip_tokens')
+        .select('*')
+        .eq('claimed_by_user_id', userId)
+        .eq('is_claimed', true)
+        .maybeSingle();
+
+      if (!error && data) {
+        return data as VipTokenRecord;
+      }
+    } catch (err) {
+      console.warn('[VipTokens] getUserBoundVipToken exception:', err);
+    }
+  }
+
+  // Local fallback check
+  const localMap = getLocalClaimedMap();
+  for (const [code, record] of Object.entries(localMap)) {
+    if (record.is_claimed && record.claimed_by_user_id === userId) {
+      return {
+        id: 'local-' + code,
+        token_code: code,
+        is_claimed: true,
+        claimed_by_user_id: userId,
+        claimed_at: record.claimed_at,
+      };
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Checks token claim status in Supabase before granting elevation.
+ * Enforces single-claim: If an already-claimed link/token is accessed again by ANY user
+ * (even the original owner), prevents re-redemption and returns ALREADY CLAIMED VIP LINK.
  */
 export const checkVipTokenStatus = async (
   rawToken: string,
@@ -108,21 +149,11 @@ export const checkVipTokenStatus = async (
       if (!error && data) {
         const tokenRecord = data as VipTokenRecord;
         if (tokenRecord.is_claimed) {
-          if (currentUserId && tokenRecord.claimed_by_user_id === currentUserId) {
-            return {
-              valid: true,
-              allowed: true,
-              isAlreadyClaimed: false,
-              isClaimedByMe: true,
-              tokenCode: clean,
-              record: tokenRecord,
-            };
-          }
           return {
             valid: true,
             allowed: false,
             isAlreadyClaimed: true,
-            isClaimedByMe: false,
+            isClaimedByMe: Boolean(currentUserId && tokenRecord.claimed_by_user_id === currentUserId),
             tokenCode: clean,
             error: ALREADY_CLAIMED_VIP_ERROR,
             record: tokenRecord,
@@ -149,20 +180,11 @@ export const checkVipTokenStatus = async (
   const localRecord = localMap[clean];
 
   if (localRecord && localRecord.is_claimed) {
-    if (currentUserId && localRecord.claimed_by_user_id === currentUserId) {
-      return {
-        valid: true,
-        allowed: true,
-        isAlreadyClaimed: false,
-        isClaimedByMe: true,
-        tokenCode: clean,
-      };
-    }
     return {
       valid: true,
       allowed: false,
       isAlreadyClaimed: true,
-      isClaimedByMe: false,
+      isClaimedByMe: Boolean(currentUserId && localRecord.claimed_by_user_id === currentUserId),
       tokenCode: clean,
       error: ALREADY_CLAIMED_VIP_ERROR,
     };
@@ -220,8 +242,8 @@ export const claimVipTokenForUser = async (
         .maybeSingle();
 
       if (existing) {
-        if (existing.is_claimed && existing.claimed_by_user_id !== userId) {
-          return { success: false, error: ALREADY_CLAIMED_VIP_ERROR };
+        if (existing.is_claimed) {
+          return { success: false, error: ALREADY_CLAIMED_VIP_ERROR, message: 'This VIP link has already been claimed.' };
         }
 
         const { data: updated, error: updateErr } = await supabase

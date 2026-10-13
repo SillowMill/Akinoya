@@ -214,7 +214,7 @@ export const AuthModal: React.FC = () => {
               </div>
               <div className="text-left flex-1 min-w-0">
                 <div className="text-xs font-mono font-bold tracking-wider uppercase text-red-400">
-                  THIS VIP LINK HAS ALREADY BEEN CLAIMED
+                  ALREADY CLAIMED VIP LINK
                 </div>
                 <p className="text-xs text-red-200/90 font-sans mt-1 leading-relaxed">
                   This VIP invitation link has already been permanently bound to another account. Each VIP invitation can only be redeemed once.

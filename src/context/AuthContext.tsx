@@ -6,6 +6,7 @@ import { FOUNDING_PASS_ID } from '../components/UnlockedExperience';
 import {
   checkVipTokenStatus,
   claimVipTokenForUser,
+  getUserBoundVipToken,
   normalizeVipToken,
   ALREADY_CLAIMED_VIP_ERROR,
 } from '../lib/vipTokens';
@@ -349,8 +350,12 @@ const resolveAndLinkVipProfile = async (
   );
   const metaPass = authUser.user_metadata?.vip_pass_id || authUser.user_metadata?.vip_code || null;
 
+  // 1. Check if an active VIP token entry in vip_tokens is already bound to this user ID
+  const boundVipToken = authUser?.id ? await getUserBoundVipToken(authUser.id) : null;
+
   // Determine if user or session is tied to VIP in any form
   const isTiedToVip = Boolean(
+    boundVipToken ||
     rawProfData?.has_vip_pass ||
     rawProfData?.is_vip ||
     rawProfData?.role === 'VIP_GUEST' ||
@@ -373,11 +378,21 @@ const resolveAndLinkVipProfile = async (
   }
 
   let targetHasVip = isTiedToVip;
-  if (targetHasVip && (targetRole === 'FREE' || targetRole === 'GUEST')) {
+  if (boundVipToken) {
+    targetHasVip = true;
+    const boundRole: UserRole = boundVipToken.token_code === 'AKN-VIP-2027-X0914' ? 'CREATOR' : 'VIP_GUEST';
+    targetRole = pickHigherRole(targetRole, boundRole);
+  } else if (rawProfData?.is_vip || rawProfData?.has_vip_pass) {
+    targetHasVip = true;
+    if (targetRole === 'FREE' || targetRole === 'GUEST') {
+      targetRole = rawProfData?.role === 'CREATOR' ? 'CREATOR' : 'VIP_GUEST';
+    }
+  } else if (targetHasVip && (targetRole === 'FREE' || targetRole === 'GUEST')) {
     targetRole = 'VIP_GUEST';
   }
 
   let targetPassCode =
+    boundVipToken?.token_code ||
     pendingPass ||
     rawProfData?.vip_code_redeemed ||
     metaPass ||
@@ -390,8 +405,8 @@ const resolveAndLinkVipProfile = async (
     const tokenCheck = await checkVipTokenStatus(pendingPass, authUser.id);
     if (tokenCheck.isAlreadyClaimed) {
       clearPendingVipStorage();
-      targetHasVip = Boolean(rawProfData?.has_vip_pass || rawProfData?.is_vip);
-      targetPassCode = rawProfData?.vip_code_redeemed || null;
+      targetHasVip = Boolean(boundVipToken || rawProfData?.has_vip_pass || rawProfData?.is_vip || cachedProf?.has_vip_pass || cachedProf?.is_vip);
+      targetPassCode = boundVipToken?.token_code || rawProfData?.vip_code_redeemed || cachedProf?.vip_code_redeemed || null;
       if (!targetHasVip && targetRole === 'VIP_GUEST') {
         targetRole = rawProfData?.role && rawProfData.role !== 'VIP_GUEST' ? rawProfData.role : 'FREE';
       }
@@ -404,16 +419,16 @@ const resolveAndLinkVipProfile = async (
         await claimVipTokenForUser(pendingPass, authUser.id);
       }
     }
-  } else if (targetPassCode && targetPassCode !== 'VIP-REFERRAL-CLAIM') {
+  } else if (targetPassCode && targetPassCode !== 'VIP-REFERRAL-CLAIM' && (!boundVipToken || boundVipToken.token_code !== targetPassCode)) {
     const tokenCheck = await checkVipTokenStatus(targetPassCode, authUser.id);
     if (tokenCheck.isAlreadyClaimed) {
       clearPendingVipStorage();
-      targetHasVip = Boolean(rawProfData?.has_vip_pass || rawProfData?.is_vip);
-      targetPassCode = rawProfData?.vip_code_redeemed || null;
+      targetHasVip = Boolean(boundVipToken || rawProfData?.has_vip_pass || rawProfData?.is_vip);
+      targetPassCode = boundVipToken?.token_code || rawProfData?.vip_code_redeemed || null;
       if (!targetHasVip && targetRole === 'VIP_GUEST') {
         targetRole = rawProfData?.role && rawProfData.role !== 'VIP_GUEST' ? rawProfData.role : 'FREE';
       }
-    } else if (tokenCheck.allowed && !tokenCheck.isClaimedByMe && authUser?.id) {
+    } else if (tokenCheck.allowed && authUser?.id) {
       await claimVipTokenForUser(targetPassCode, authUser.id);
     }
   }
