@@ -2,19 +2,22 @@
  * Planetary 5-Photo Image Generation API Endpoint
  *
  * Strict Sillow Mill 2D Sci-Fi Anime Aesthetic:
- * - Storyboard & Composition Anchor: Mood.png (anime panels, cockpit/wide camera angles, film grain)
- * - Visual & Energy Anchor: akinoya_hero_bg.jpg (cosmic planet, icy sphere texture, neon turquoise/purple palette)
+ * - Photo 1 (Hero Planet): akinoya_hero_bg.jpg (structural 2D composition reference, custom user color palette)
+ * - Photos 2, 3, 4 (Interior / Flora / Fauna / Details): Mood.png (stylistic & atmospheric reference, anime panels)
+ * - Photo 5 (Lore Dossier Cover): Archival cover combining monument lore and the user's future promise/message
  *
- * Token Protection:
- * - Hard single-execution gate per user account to prevent API token waste.
+ * Strict One-Shot Token Protection:
+ * - Single-execution gate per user account enforced via Supabase user_dossiers check & memory guard.
  *
  * Live Generation:
- * - Powered by Google Gemini / Imagen 3 via process.env.GEMINI_API_KEY.
- * - Zero static stock fallbacks: strictly generates real-time visuals.
+ * - Powered by Google Gemini Imagen 3 via process.env.GEMINI_API_KEY.
+ * - Procedural 2D anime SVG synthesis with user-specific color palettes and inscriptions when key is offline.
  */
 
+import { createClient } from '@supabase/supabase-js';
+
 export const SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR =
-  '2D high-end anime sci-fi concept art, Sillow Mill aesthetic, storyboard & composition strictly anchored by Mood.png (cel-shaded anime panels, cinematic cockpit & wide planetary camera angles, subtle film grain) and visual aesthetic strictly anchored by akinoya_hero_bg.jpg (cosmic sci-fi planet, icy energy sphere texture, neon turquoise & deep cosmic purple palette, glowing energy silhouettes, cel-shaded linework, zero photorealistic noise).';
+  '2D high-end anime sci-fi concept art, Sillow Mill aesthetic, storyboard & composition strictly anchored by Mood.png (cel-shaded anime panels, cinematic cockpit & wide planetary camera angles, subtle film grain) and visual aesthetic strictly anchored by akinoya_hero_bg.jpg (cosmic sci-fi planet, icy energy sphere texture, custom palette, glowing energy silhouettes, cel-shaded linework, zero photorealistic noise).';
 
 export const formatAkinoyaPlanetName = (rawName?: string): string => {
   if (!rawName || !rawName.trim()) return 'Äkinoya Prime';
@@ -37,6 +40,17 @@ export const formatAkinoyaPlanetName = (rawName?: string): string => {
 export interface GeneratePlanetRequest {
   userId?: string;
   email?: string;
+  // 8 Human-Centric Questions
+  relaxation?: string;
+  creativeExpression?: string;
+  naturalEnvironment?: string;
+  lifePhilosophy?: string;
+  admiredCreature?: string;
+  colorPalette?: string;
+  resilienceStory?: string;
+  futurePromise?: string;
+
+  // Planetary attributes
   planetName?: string;
   atmosphere?: string;
   flora?: string;
@@ -50,131 +64,196 @@ export interface GeneratePlanetRequest {
 // In-memory set of user IDs that have used their single Golden Ticket token synthesis
 const _userGenerations = new Set<string>();
 
-export function checkAndLockUserGeneration(userId?: string): { allowed: boolean; reason?: string } {
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qcfpnoerksbgunekoame.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_uQ928ayPw4vS7msW2_oZSQ_vTi22idX';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export async function checkAndLockUserGeneration(userId?: string): Promise<{ allowed: boolean; reason?: string }> {
   if (!userId) return { allowed: true };
+
+  // 1. Check in-memory fast guard
   if (_userGenerations.has(userId)) {
     return {
       allowed: false,
       reason: 'SUBMISSION_LOCKED: Account has already utilized its single Golden Ticket planet synthesis. Hard lock enforced to preserve token budget.',
     };
   }
+
+  // 2. Check Supabase user_dossiers database table
+  try {
+    const { data, error } = await supabase
+      .from('user_dossiers')
+      .select('id, planet_name')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (data && data.id) {
+      _userGenerations.add(userId);
+      return {
+        allowed: false,
+        reason: `SUBMISSION_LOCKED: Account already has registered planet "${data.planet_name}". Exactly one world generation permitted per account.`,
+      };
+    }
+  } catch (dbErr) {
+    console.warn('[GeneratePlanet] Supabase user_dossiers check notice:', dbErr);
+  }
+
   _userGenerations.add(userId);
   return { allowed: true };
+}
+
+/**
+ * Parses user color palette keywords into SVG HSL hues
+ */
+function parsePaletteHues(colorText?: string): { hue1: number; hue2: number; isDark: boolean } {
+  const text = (colorText || '').toLowerCase();
+  let hue1 = 195; // Default neon turquoise
+  let hue2 = 280; // Default deep purple
+  let isDark = text.includes('black') || text.includes('obsidian') || text.includes('dark');
+
+  if (text.includes('orange') || text.includes('copper') || text.includes('amber')) {
+    hue1 = 28;
+    hue2 = 18;
+  } else if (text.includes('green') || text.includes('emerald') || text.includes('forest')) {
+    hue1 = 150;
+    hue2 = 175;
+  } else if (text.includes('pink') || text.includes('rose') || text.includes('magenta')) {
+    hue1 = 325;
+    hue2 = 280;
+  } else if (text.includes('gold') || text.includes('yellow')) {
+    hue1 = 45;
+    hue2 = 35;
+  } else if (text.includes('indigo') || text.includes('blue')) {
+    hue1 = 225;
+    hue2 = 265;
+  }
+
+  return { hue1, hue2, isDark };
 }
 
 /**
  * Procedural 2D Anime SVG Generator
  * Used when Gemini API key is offline or in local test mode.
  * Strictly eliminates static stock images by dynamically rendering custom celestial anime vectors
- * specifically tailored to the planet's name, atmosphere, flora, fauna, and monument.
+ * anchored to akinoya_hero_bg.jpg (Photo 1) and Mood.png (Photos 2-4) and Archival Cover (Photo 5).
  */
-function createProcedural2DAnimeSvg(type: 'hero' | 'flora' | 'fauna' | 'atmosphere' | 'landmark', data: {
-  planetName: string;
-  atmosphere: string;
-  flora: string;
-  fauna: string;
-  landmark: string;
-}): string {
+function createProcedural2DAnimeSvg(
+  type: 'hero' | 'flora' | 'fauna' | 'atmosphere' | 'landmark',
+  data: {
+    planetName: string;
+    atmosphere: string;
+    flora: string;
+    fauna: string;
+    landmark: string;
+    colorPalette?: string;
+    futurePromise?: string;
+  }
+): string {
   const name = data.planetName;
-  const hash = Math.abs(name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0));
-  const hue1 = (hash * 37) % 60 + 175; // 175-235 (Cyan to Violet)
-  const hue2 = (hue1 + 70) % 360; // Complementary deep violet / magenta
+  const { hue1, hue2, isDark } = parsePaletteHues(data.colorPalette);
+  const promise = data.futurePromise || 'Never forget that true beauty lies in curiosity and persistence.';
 
   let svgContent = '';
 
   if (type === 'hero') {
-    // 01 · Main Orbital Planet Render (akinoya_hero_bg.jpg style)
+    // 01 · Main Orbital Planet Render (akinoya_hero_bg.jpg structural reference, custom palette)
     svgContent = `
       <defs>
-        <radialGradient id="planetGlow" cx="50%" cy="50%" r="50%">
+        <radialGradient id="planetGlow" cx="45%" cy="45%" r="55%">
           <stop offset="0%" stop-color="hsl(${hue1}, 100%, 75%)" />
-          <stop offset="60%" stop-color="hsl(${hue1}, 95%, 45%)" />
-          <stop offset="90%" stop-color="hsl(${hue2}, 90%, 25%)" />
-          <stop offset="100%" stop-color="#020308" />
+          <stop offset="50%" stop-color="hsl(${hue1}, 95%, 45%)" />
+          <stop offset="85%" stop-color="hsl(${hue2}, 90%, 25%)" />
+          <stop offset="100%" stop-color="${isDark ? '#010204' : '#03050d'}" />
         </radialGradient>
         <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="rgba(34,211,238,0.8)" />
-          <stop offset="50%" stop-color="rgba(168,85,247,0.4)" />
-          <stop offset="100%" stop-color="rgba(6,182,212,0)" />
+          <stop offset="0%" stop-color="hsla(${hue1}, 100%, 70%, 0.9)" />
+          <stop offset="50%" stop-color="hsla(${hue2}, 90%, 60%, 0.45)" />
+          <stop offset="100%" stop-color="hsla(${hue1}, 100%, 50%, 0.1)" />
         </linearGradient>
       </defs>
-      <rect width="1280" height="720" fill="#03050d" />
-      <circle cx="640" cy="360" r="230" fill="url(#planetGlow)" />
-      <!-- Cel-shaded anime ring -->
-      <ellipse cx="640" cy="360" rx="380" ry="85" fill="none" stroke="url(#ringGrad)" stroke-width="26" transform="rotate(-18 640 360)" />
-      <!-- Starfields & anime film grain aura -->
-      <circle cx="200" cy="180" r="2.5" fill="#22d3ee" />
-      <circle cx="980" cy="140" r="3" fill="#a855f7" />
-      <circle cx="1100" cy="540" r="2" fill="#38bdf8" />
-      <text x="60" y="660" font-family="monospace" font-size="28" font-weight="bold" fill="#38bdf8" letter-spacing="4">01 · ORBITAL HERO RENDER</text>
-      <text x="60" y="695" font-family="sans-serif" font-size="18" fill="#e0f2fe">${name} · ${data.atmosphere.slice(0, 50)}</text>
+      <rect width="1280" height="720" fill="#020409" />
+      <!-- Starfields & cosmic nebula -->
+      <circle cx="180" cy="140" r="2.5" fill="hsl(${hue1}, 100%, 75%)" />
+      <circle cx="340" cy="80" r="1.5" fill="#ffffff" />
+      <circle cx="980" cy="120" r="3" fill="hsl(${hue2}, 100%, 80%)" />
+      <circle cx="1120" cy="520" r="2" fill="hsl(${hue1}, 100%, 70%)" />
+      <!-- 2D Celestial Sphere (akinoya_hero_bg.jpg structure) -->
+      <circle cx="640" cy="360" r="235" fill="url(#planetGlow)" />
+      <!-- Cel-shaded anime ring structure -->
+      <ellipse cx="640" cy="360" rx="390" ry="88" fill="none" stroke="url(#ringGrad)" stroke-width="28" transform="rotate(-18 640 360)" />
+      <ellipse cx="640" cy="360" rx="420" ry="94" fill="none" stroke="hsl(${hue1}, 100%, 75%)" stroke-width="2" opacity="0.6" transform="rotate(-18 640 360)" />
+      <!-- Telemetry overlay -->
+      <text x="60" y="650" font-family="monospace" font-size="26" font-weight="bold" fill="hsl(${hue1}, 100%, 75%)" letter-spacing="4">01 · MAIN ORBITAL PLANET RENDER</text>
+      <text x="60" y="685" font-family="sans-serif" font-size="16" fill="#e0f2fe">${name} · Reference: akinoya_hero_bg.jpg</text>
     `;
   } else if (type === 'flora') {
     // 02 · Botanical Flora System (Mood.png panel style)
     svgContent = `
       <defs>
         <linearGradient id="floraBg" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#070d1e" />
-          <stop offset="100%" stop-color="#020409" />
+          <stop offset="0%" stop-color="#080e21" />
+          <stop offset="100%" stop-color="#02040a" />
         </linearGradient>
       </defs>
       <rect width="1280" height="720" fill="url(#floraBg)" />
-      <!-- Bioluminescent Spore Towers & Canopy -->
-      <path d="M 300 720 Q 320 400 420 320 Q 520 400 540 720 Z" fill="#0d1b33" stroke="#22d3ee" stroke-width="2" />
-      <circle cx="420" cy="310" r="65" fill="#38bdf8" opacity="0.85" filter="drop-shadow(0 0 25px #06b6d4)" />
-      <path d="M 720 720 Q 750 360 880 260 Q 980 360 1020 720 Z" fill="#111c38" stroke="#a855f7" stroke-width="2" />
-      <circle cx="880" cy="250" r="85" fill="#c084fc" opacity="0.85" filter="drop-shadow(0 0 35px #a855f7)" />
-      <!-- Glowing Spores -->
-      <circle cx="480" cy="240" r="8" fill="#67e8f9" />
-      <circle cx="620" cy="180" r="6" fill="#f472b6" />
-      <circle cx="810" cy="140" r="10" fill="#a855f7" />
-      <text x="60" y="660" font-family="monospace" font-size="28" font-weight="bold" fill="#2dd4bf" letter-spacing="4">02 · BOTANICAL FLORA SYSTEM</text>
-      <text x="60" y="695" font-family="sans-serif" font-size="18" fill="#ccfbf1">${name} · ${data.flora.slice(0, 50)}</text>
+      <!-- Bioluminescent Spore Towers & Alien Canopy -->
+      <path d="M 280 720 Q 310 380 420 300 Q 530 380 560 720 Z" fill="#0b1730" stroke="hsl(${hue1}, 100%, 65%)" stroke-width="2" />
+      <circle cx="420" cy="290" r="75" fill="hsl(${hue1}, 95%, 55%)" opacity="0.85" />
+      <path d="M 720 720 Q 760 340 890 240 Q 1000 340 1040 720 Z" fill="#101938" stroke="hsl(${hue2}, 100%, 70%)" stroke-width="2" />
+      <circle cx="890" cy="230" r="95" fill="hsl(${hue2}, 90%, 60%)" opacity="0.85" />
+      <!-- Glowing Spore Particles -->
+      <circle cx="480" cy="220" r="8" fill="hsl(${hue1}, 100%, 75%)" />
+      <circle cx="630" cy="160" r="7" fill="hsl(${hue2}, 100%, 80%)" />
+      <circle cx="820" cy="120" r="10" fill="hsl(${hue1}, 100%, 85%)" />
+      <text x="60" y="650" font-family="monospace" font-size="26" font-weight="bold" fill="hsl(${hue1}, 100%, 70%)" letter-spacing="4">02 · BOTANICAL FLORA SYSTEM</text>
+      <text x="60" y="685" font-family="sans-serif" font-size="16" fill="#ccfbf1">${name} · Reference: Mood.png (Storyboards)</text>
     `;
   } else if (type === 'fauna') {
-    // 03 · Exotic Fauna System
+    // 03 · Exotic Fauna & Wildlife System (Mood.png creature design)
     svgContent = `
-      <rect width="1280" height="720" fill="#050814" />
-      <!-- Atmospheric thermal bands -->
-      <path d="M 0 300 Q 350 240 700 320 T 1280 280 L 1280 720 L 0 720 Z" fill="#0a1226" />
-      <!-- Plasma-Wing Leviathan Silhouette -->
-      <path d="M 640 280 Q 540 180 380 220 Q 510 290 640 310 Q 770 290 900 220 Q 740 180 640 280 Z" fill="#38bdf8" opacity="0.9" filter="drop-shadow(0 0 30px #22d3ee)" />
-      <path d="M 640 310 Q 610 390 640 450 Q 670 390 640 310 Z" fill="#818cf8" />
-      <text x="60" y="660" font-family="monospace" font-size="28" font-weight="bold" fill="#c084fc" letter-spacing="4">03 · EXOTIC FAUNA &amp; WILDLIFE</text>
-      <text x="60" y="695" font-family="sans-serif" font-size="18" fill="#f3e8ff">${name} · ${data.fauna.slice(0, 50)}</text>
+      <rect width="1280" height="720" fill="#040716" />
+      <!-- Atmospheric thermal wave -->
+      <path d="M 0 320 Q 320 220 640 310 T 1280 260 L 1280 720 L 0 720 Z" fill="#09132e" />
+      <!-- Plasma-Wing Celestial Apex Creature -->
+      <path d="M 640 270 Q 520 160 360 210 Q 500 280 640 300 Q 780 280 920 210 Q 760 160 640 270 Z" fill="hsl(${hue1}, 100%, 65%)" opacity="0.9" />
+      <path d="M 640 300 Q 605 380 640 440 Q 675 380 640 300 Z" fill="hsl(${hue2}, 90%, 65%)" />
+      <text x="60" y="650" font-family="monospace" font-size="26" font-weight="bold" fill="hsl(${hue2}, 100%, 75%)" letter-spacing="4">03 · EXOTIC FAUNA &amp; WILDLIFE</text>
+      <text x="60" y="685" font-family="sans-serif" font-size="16" fill="#f3e8ff">${name} · Reference: Mood.png (Creature Design)</text>
     `;
   } else if (type === 'atmosphere') {
-    // 04 · Cockpit / Ship Landing Atmosphere (Mood.png camera angle)
+    // 04 · Cockpit / Ship Landing Atmosphere Detail (Mood.png camera angle)
     svgContent = `
-      <rect width="1280" height="720" fill="#04060f" />
-      <!-- Distant planetary landscape through cockpit canopy -->
-      <polygon points="0,520 400,380 800,480 1280,360 1280,720 0,720" fill="#09142b" stroke="#06b6d4" stroke-width="1.5" />
+      <rect width="1280" height="720" fill="#030511" />
+      <!-- Planetary horizon terrain -->
+      <polygon points="0,520 380,390 780,470 1280,370 1280,720 0,720" fill="#08142f" stroke="hsl(${hue1}, 100%, 60%)" stroke-width="2" />
       <!-- Cockpit Frame Overlay & HUD -->
-      <path d="M 0 0 L 260 0 L 360 720 L 0 720 Z" fill="#020308" />
-      <path d="M 1280 0 L 1020 0 L 920 720 L 1280 720 Z" fill="#020308" />
-      <line x1="260" y1="0" x2="360" y2="720" stroke="#22d3ee" stroke-width="3" opacity="0.7" />
-      <line x1="1020" y1="0" x2="920" y2="720" stroke="#22d3ee" stroke-width="3" opacity="0.7" />
-      <!-- Pilot HUD Reticle -->
-      <circle cx="640" cy="340" r="70" fill="none" stroke="#22d3ee" stroke-dasharray="6,4" stroke-width="2" />
-      <line x1="530" y1="340" x2="750" y2="340" stroke="#22d3ee" stroke-width="1.5" />
-      <line x1="640" y1="230" x2="640" y2="450" stroke="#22d3ee" stroke-width="1.5" />
-      <text x="560" y="440" font-family="monospace" font-size="14" fill="#67e8f9">ATMOSPHERE: LOCKED</text>
-      <text x="60" y="660" font-family="monospace" font-size="28" font-weight="bold" fill="#38bdf8" letter-spacing="4">04 · COCKPIT ATMOSPHERE</text>
-      <text x="60" y="695" font-family="sans-serif" font-size="18" fill="#e0f2fe">${name} · ${data.atmosphere.slice(0, 50)}</text>
+      <path d="M 0 0 L 260 0 L 360 720 L 0 720 Z" fill="#010207" />
+      <path d="M 1280 0 L 1020 0 L 920 720 L 1280 720 Z" fill="#010207" />
+      <line x1="260" y1="0" x2="360" y2="720" stroke="hsl(${hue1}, 100%, 70%)" stroke-width="3" opacity="0.75" />
+      <line x1="1020" y1="0" x2="920" y2="720" stroke="hsl(${hue1}, 100%, 70%)" stroke-width="3" opacity="0.75" />
+      <!-- Pilot HUD reticle -->
+      <circle cx="640" cy="340" r="70" fill="none" stroke="hsl(${hue1}, 100%, 75%)" stroke-dasharray="6,4" stroke-width="2" />
+      <text x="560" y="440" font-family="monospace" font-size="14" fill="hsl(${hue1}, 100%, 80%)">COCKPIT DESCENT: LOCKED</text>
+      <text x="60" y="650" font-family="monospace" font-size="26" font-weight="bold" fill="hsl(${hue1}, 100%, 75%)" letter-spacing="4">04 · COCKPIT ATMOSPHERE</text>
+      <text x="60" y="685" font-family="sans-serif" font-size="16" fill="#e0f2fe">${name} · Reference: Mood.png (Cockpit Angle)</text>
     `;
   } else {
-    // 05 · Iconic Landmark & Megastructure
+    // 05 · Lore Dossier Cover & Monument (Combines landmark and user's future promise)
     svgContent = `
-      <rect width="1280" height="720" fill="#04060e" />
-      <!-- Ancient Monolith / Obsidian Spire -->
-      <polygon points="640,80 570,720 710,720" fill="#080e1c" stroke="#38bdf8" stroke-width="3" />
-      <!-- Core Energy Conduit Ray -->
-      <line x1="640" y1="80" x2="640" y2="720" stroke="#22d3ee" stroke-width="6" filter="drop-shadow(0 0 20px #06b6d4)" />
-      <circle cx="640" cy="80" r="28" fill="#a855f7" filter="drop-shadow(0 0 35px #c084fc)" />
-      <!-- Horizon terrain -->
-      <polygon points="0,580 500,520 640,540 850,510 1280,590 1280,720 0,720" fill="#060b17" />
-      <text x="60" y="660" font-family="monospace" font-size="28" font-weight="bold" fill="#fbbf24" letter-spacing="4">05 · ICONIC LANDMARK</text>
-      <text x="60" y="695" font-family="sans-serif" font-size="18" fill="#fef3c7">${name} · ${data.landmark.slice(0, 50)}</text>
+      <rect width="1280" height="720" fill="#02040c" />
+      <!-- Archival Border Frame -->
+      <rect x="40" y="40" width="1200" height="640" fill="none" stroke="hsl(${hue1}, 100%, 50%)" stroke-width="2" opacity="0.4" />
+      <!-- Obsidian Monument Spire -->
+      <polygon points="640,110 580,680 700,680" fill="#060d1f" stroke="hsl(${hue1}, 100%, 70%)" stroke-width="3" />
+      <line x1="640" y1="110" x2="640" y2="680" stroke="hsl(${hue2}, 100%, 75%)" stroke-width="6" />
+      <!-- Archival Inscription Header -->
+      <text x="100" y="110" font-family="monospace" font-size="28" font-weight="bold" fill="hsl(${hue1}, 100%, 75%)" letter-spacing="6">OFFICIAL ÄKINOYA LORE DOSSIER COVER</text>
+      <text x="100" y="150" font-family="sans-serif" font-size="34" font-weight="900" fill="#ffffff" letter-spacing="2">${name.toUpperCase()}</text>
+      <!-- User's Future Promise Inscription -->
+      <rect x="100" y="520" width="1080" height="90" rx="12" fill="rgba(6,182,212,0.12)" stroke="hsl(${hue1}, 100%, 65%)" stroke-width="1.5" />
+      <text x="130" y="555" font-family="monospace" font-size="13" font-weight="bold" fill="hsl(${hue1}, 100%, 75%)" letter-spacing="2">FOUNDING MESSAGE &amp; FUTURE PROMISE:</text>
+      <text x="130" y="585" font-family="sans-serif" font-size="16" font-style="italic" fill="#ffffff">"${promise.slice(0, 95)}..."</text>
+      <text x="100" y="650" font-family="monospace" font-size="14" fill="#94a3b8">2027 ÄKINOYA LORE GOVERNANCE ARCHIVE · ONE-SHOT GOLDEN TICKET #1</text>
     `;
   }
 
@@ -239,21 +318,22 @@ async function generateGeminiImage(prompt: string, apiKey: string): Promise<stri
 
 export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const planetName = formatAkinoyaPlanetName(data.planetName);
-  const atmosphere = data.atmosphere || 'Atmosphere of ionized violet twilight and auroras';
-  const flora = data.flora || 'Giant resonance spore mushrooms with bioluminescent neon violet glow';
-  const fauna = data.fauna || 'Leviathan plasma-wings drifting in upper troposphere';
-  const landmark = data.landmark || 'The Obsidian Spire (Infinite Energy Conduit)';
-  const aesthetic = data.visualAesthetic || '2D high-end anime concept art, cel-shaded';
+  const colorPalette = data.colorPalette || 'deep indigo blue, neon purple, and warm copper';
+  const environment = data.naturalEnvironment || 'misty mountain ridge and bioluminescent rainforest';
+  const flora = data.flora || 'resonant spore canopies and glowing moss';
+  const creature = data.admiredCreature || data.fauna || 'soaring pack wolf and plasma-wing leviathan';
+  const landmark = data.landmark || data.resilienceStory || 'The Obsidian Spire infinite energy conduit';
+  const promise = data.futurePromise || 'Never forget that true beauty lies in curiosity and persistence.';
+  const atmosphere = data.atmosphere || `celestial atmosphere of ${colorPalette}`;
 
   return {
     planetName,
-    promptAnchor: SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR,
     prompts: {
-      hero: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [01/05 Main Orbital Render]: Celestial disc and orbital curvature of ${planetName}. ${atmosphere}. Ringed horizon, cel-shaded cosmic anime panorama, styled after akinoya_hero_bg.jpg.`,
-      flora: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [02/05 Botanical Flora System]: Surface plant organisms on ${planetName}. Flora: ${flora}. Bioluminescent spore towers, glowing turquoise moss, styled like a cinematic panel from Mood.png.`,
-      fauna: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [03/05 Exotic Fauna System]: Wildlife ecology of ${planetName}. Fauna: ${fauna}. Plasma wings drifting in upper troposphere, intricate cel-shaded 2D anime linework.`,
-      atmosphere: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [04/05 Cockpit & Landing Atmosphere]: Cockpit canopy view descending toward ${planetName}. ${atmosphere}. Volumetric neon turquoise shafts, deep cosmic purple gradients, pilot HUD reflections styled after Mood.png.`,
-      landmark: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [05/05 Iconic Landmark]: Monumental wonder: ${landmark} on ${planetName}. Ancient monolith structure channeling turquoise energy, majestic anime background art.`,
+      hero: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 1 - Main Orbital Hero]: Celestial disc and orbital curvature of ${planetName}. Composition strictly anchored to akinoya_hero_bg.jpg (exact 2D planetary sphere and ring geometry). Custom color palette: ${colorPalette}. Glowing celestial corona, cel-shaded anime linework, dark cosmic starfields, zero photorealistic noise.`,
+      flora: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 2 - Botanical Flora System]: Planetary interior botanical organisms on ${planetName}. Stylistic and atmospheric reference strictly anchored to Mood.png (cinematic anime storyboard panel). Flora: ${flora}, glowing spore towers, alien canopies inspired by ${environment}, cel-shaded linework, film grain.`,
+      fauna: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 3 - Exotic Fauna & Wildlife]: Wildlife ecology and apex creatures on ${planetName}. Stylistic reference strictly anchored to Mood.png. Celestial creature design: ${creature}, drifting through atmospheric thermals, cel-shaded 2D anime linework, bioluminescent markings.`,
+      atmosphere: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 4 - Cockpit & Landing Atmosphere]: Cockpit canopy descent into ${planetName}. Camera angle strictly anchored to Mood.png (cockpit perspective). Atmosphere: ${atmosphere}, interior HUD reflections, volumetric light beams, alien mountain horizons, cel-shaded background art.`,
+      landmark: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 5 - Lore Dossier Cover]: Official Lore Dossier Cover for planet ${planetName}. Monument: ${landmark}. Framed as a high-end sci-fi archival document cover inscribed with the founding creed: "${promise}". Ancient energy conduit, grand scale monument, cel-shaded anime linework.`,
     },
   };
 }
@@ -277,12 +357,6 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   meta: Record<string, any>;
 }> {
   const planetName = formatAkinoyaPlanetName(data.planetName);
-  const atmosphere = data.atmosphere || 'Ionized violet twilight and electric auroras';
-  const flora = data.flora || 'Resonant spore canopies emitting neon purple luminescence';
-  const fauna = data.fauna || 'Leviathan plasma-wings soaring in upper troposphere';
-  const landmark = data.landmark || 'The Obsidian Spire (Infinite Energy Conduit)';
-  const aesthetic = data.visualAesthetic || '2D High-End Anime Sci-Fi Cel-Shaded Art';
-
   const { prompts } = buildPlanetPrompts(data);
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
@@ -292,7 +366,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   let atmosphereUrl: string | null = null;
   let landmarkUrl: string | null = null;
 
-  if (apiKey) {
+  if (apiKey && apiKey !== 'MY_GEMINI_API_KEY') {
     // Generate all 5 images via live Google Gemini Imagen API
     const [h, fl, fa, at, lm] = await Promise.all([
       generateGeminiImage(prompts.hero, apiKey),
@@ -310,43 +384,103 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
 
   // Zero static stock fallbacks: If no API key or network error, synthesize customized procedural 2D anime vectors
   const finalRenders = {
-    hero: heroUrl || createProcedural2DAnimeSvg('hero', { planetName, atmosphere, flora, fauna, landmark }),
-    flora: floraUrl || createProcedural2DAnimeSvg('flora', { planetName, atmosphere, flora, fauna, landmark }),
-    fauna: faunaUrl || createProcedural2DAnimeSvg('fauna', { planetName, atmosphere, flora, fauna, landmark }),
-    atmosphere: atmosphereUrl || createProcedural2DAnimeSvg('atmosphere', { planetName, atmosphere, flora, fauna, landmark }),
-    landmark: landmarkUrl || createProcedural2DAnimeSvg('landmark', { planetName, atmosphere, flora, fauna, landmark }),
-    ecosystem: floraUrl || createProcedural2DAnimeSvg('flora', { planetName, atmosphere, flora, fauna, landmark }),
+    hero:
+      heroUrl ||
+      createProcedural2DAnimeSvg('hero', {
+        planetName,
+        atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
+        flora: data.flora || 'Resonant spore mushrooms',
+        fauna: data.fauna || 'Celestial apex predators',
+        landmark: data.landmark || 'The Obsidian Spire',
+        colorPalette: data.colorPalette,
+        futurePromise: data.futurePromise,
+      }),
+    flora:
+      floraUrl ||
+      createProcedural2DAnimeSvg('flora', {
+        planetName,
+        atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
+        flora: data.flora || 'Resonant spore mushrooms',
+        fauna: data.fauna || 'Celestial apex predators',
+        landmark: data.landmark || 'The Obsidian Spire',
+        colorPalette: data.colorPalette,
+        futurePromise: data.futurePromise,
+      }),
+    fauna:
+      faunaUrl ||
+      createProcedural2DAnimeSvg('fauna', {
+        planetName,
+        atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
+        flora: data.flora || 'Resonant spore mushrooms',
+        fauna: data.fauna || 'Celestial apex predators',
+        landmark: data.landmark || 'The Obsidian Spire',
+        colorPalette: data.colorPalette,
+        futurePromise: data.futurePromise,
+      }),
+    atmosphere:
+      atmosphereUrl ||
+      createProcedural2DAnimeSvg('atmosphere', {
+        planetName,
+        atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
+        flora: data.flora || 'Resonant spore mushrooms',
+        fauna: data.fauna || 'Celestial apex predators',
+        landmark: data.landmark || 'The Obsidian Spire',
+        colorPalette: data.colorPalette,
+        futurePromise: data.futurePromise,
+      }),
+    landmark:
+      landmarkUrl ||
+      createProcedural2DAnimeSvg('landmark', {
+        planetName,
+        atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
+        flora: data.flora || 'Resonant spore mushrooms',
+        fauna: data.fauna || 'Celestial apex predators',
+        landmark: data.landmark || 'The Obsidian Spire',
+        colorPalette: data.colorPalette,
+        futurePromise: data.futurePromise,
+      }),
+    ecosystem:
+      floraUrl ||
+      createProcedural2DAnimeSvg('flora', {
+        planetName,
+        atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
+        flora: data.flora || 'Resonant spore mushrooms',
+        fauna: data.fauna || 'Celestial apex predators',
+        landmark: data.landmark || 'The Obsidian Spire',
+        colorPalette: data.colorPalette,
+        futurePromise: data.futurePromise,
+      }),
   };
 
   const galleryList = [
     {
       id: 'hero',
       label: '01 · Main Orbital Planet Render',
-      reference: 'akinoya_hero_bg.jpg (Planet / Energy Style)',
+      reference: 'akinoya_hero_bg.jpg (2D Celestial Sphere Composition Reference)',
       url: finalRenders.hero,
     },
     {
       id: 'flora',
       label: '02 · Botanical Flora System',
-      reference: 'Mood.png (Storyboard / Panel Style)',
+      reference: 'Mood.png (Storyboard Panel Style & Botanical Life)',
       url: finalRenders.flora,
     },
     {
       id: 'fauna',
       label: '03 · Exotic Fauna & Wildlife System',
-      reference: 'Mood.png (Composition & Film Grain)',
+      reference: 'Mood.png (Composition, Creature Linework & Film Grain)',
       url: finalRenders.fauna,
     },
     {
       id: 'atmosphere',
       label: '04 · Cockpit / Ship Landing Atmosphere',
-      reference: 'Mood.png (Cockpit / Camera Angle)',
+      reference: 'Mood.png (Cockpit Canopy Camera Perspective)',
       url: finalRenders.atmosphere,
     },
     {
       id: 'landmark',
-      label: '05 · Iconic Landmark & Megastructure',
-      reference: 'Sillow Mill Anime House Style',
+      label: '05 · Lore Dossier Cover & Monument',
+      reference: 'Archival Cover combining monument & founding future promise',
       url: finalRenders.landmark,
     },
   ];
@@ -356,12 +490,11 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     renders: finalRenders,
     galleryList,
     meta: {
-      engine: apiKey ? 'Google Gemini Imagen 3 (Live)' : 'Procedural 2D Anime Synthesis',
+      engine: apiKey && apiKey !== 'MY_GEMINI_API_KEY' ? 'Google Gemini Imagen 3 (Live)' : 'Procedural 2D Anime Synthesis',
       aestheticGuideline: 'Official Sillow Mill 2D Sci-Fi Anime Standard',
-      storyboardReference: 'Mood.png (Storyboard / Composition / Angles)',
-      visualAestheticReference: 'akinoya_hero_bg.jpg (Planet / Neon Energy / Color Palette)',
+      heroCompositionReference: 'akinoya_hero_bg.jpg (Exact 2D Sphere & Ring Structure)',
+      interiorStylisticReference: 'Mood.png (Storyboards, Angles & Film Grain)',
       namingRule: "Mandatory 'Ä' prefix enforced",
-      visualStyle: aesthetic,
       generatedAt: new Date().toISOString(),
     },
   };
@@ -382,9 +515,9 @@ export default async function handler(req: any, res: any) {
   try {
     const body: GeneratePlanetRequest = req.body || {};
 
-    // 1. Strict Token Protection: Single-Execution Lock per Account
+    // 1. Strict One-Shot Enforcement: Check database and memory lock
     if (body.userId) {
-      const lockCheck = checkAndLockUserGeneration(body.userId);
+      const lockCheck = await checkAndLockUserGeneration(body.userId);
       if (!lockCheck.allowed) {
         res.statusCode = 403;
         res.end(

@@ -20,7 +20,6 @@ import {
   Volume2,
   Calendar,
   Vote,
-  Edit,
   ThumbsUp,
   Camera,
 } from 'lucide-react';
@@ -29,6 +28,7 @@ import { soundManager } from '../utils/audio';
 import millAvatar from '../assets/images/mill_photo.jpg';
 import { PlanetGeneratorChat } from './PlanetGeneratorChat';
 import { PlanetDossierModal } from './PlanetDossierModal';
+import { AkinoyaSciFiLoader } from './AkinoyaSciFiLoader';
 import { WizardAnswers, PlanetSubmission } from '../types/contest';
 import {
   getStoredPlanetSubmissions,
@@ -38,6 +38,7 @@ import {
   resolvePlanetRenders,
   savePlanetSubmission,
   togglePlanetSubmissionVote,
+  subscribeToPlanetSubmissions,
 } from '../data/contest';
 import { attachContestSubmissionToCreator } from '../data/creators';
 
@@ -80,7 +81,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     activeSubmission
   );
 
-  // Load submissions and check user's ticket status
+  // Load submissions, check user's ticket status, and subscribe to realtime updates
   useEffect(() => {
     const list = getStoredPlanetSubmissions();
     setAllSubmissions(list);
@@ -94,6 +95,16 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         if (found) setActiveSubmission(found);
       }
     }
+
+    const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
+      setAllSubmissions(fresh);
+      if (isAuthenticated && (user?.id || profile?.id || user?.email)) {
+        const userSub = getUserContestSubmission(user?.id || profile?.id, user?.email);
+        if (userSub) setActiveSubmission(userSub);
+      }
+    });
+
+    return () => unsubscribe();
   }, [isAuthenticated, user?.id, user?.email, profile?.id, profile?.contest_submission_id]);
 
   // Handle launch button
@@ -124,13 +135,21 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     soundManager.playTone(660, 0.08);
 
     try {
-      // 1. Call live Gemini AI generation endpoint
+      // 1. Call live Gemini AI generation endpoint with the 8 human inputs
       const res = await fetch('/api/generate-planet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id || profile?.id,
           email: user?.email,
+          relaxation: answers.relaxation,
+          creativeExpression: answers.creativeExpression,
+          naturalEnvironment: answers.naturalEnvironment,
+          lifePhilosophy: answers.lifePhilosophy,
+          admiredCreature: answers.admiredCreature,
+          colorPalette: answers.colorPalette,
+          resilienceStory: answers.resilienceStory,
+          futurePromise: answers.futurePromise,
           planetName,
           atmosphere: answers.atmosphere,
           flora: answers.flora,
@@ -142,6 +161,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         }),
       });
 
+      if (res.status === 403) {
+        const json = await res.json();
+        setIsGeneratingRenders(false);
+        soundManager.playError();
+        alert(json.message || 'SUBMISSION_LOCKED: Account has already utilized its single Golden Ticket planet synthesis.');
+        return;
+      }
+
       let finalRenders = resolvePlanetRenders(answersWithFormattedName);
       if (res.ok) {
         const json = await res.json();
@@ -150,7 +177,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         }
       }
 
-      // 2. Synthesize official sector lore
+      // 2. Synthesize official sector lore incorporating founding creed
       const lore = generatePlanetLore(answersWithFormattedName, userDisplayName);
 
       const draft: PlanetSubmission = {
@@ -168,6 +195,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         visualAesthetic: answers.visualAesthetic,
         landmark: answers.landmark,
         additionalNotes: answers.additionalNotes,
+        humanAnswers: answersWithFormattedName,
+        futurePromise: answers.futurePromise,
         generatedLore: lore,
         renders: finalRenders,
         votesCount: 1,
@@ -199,6 +228,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         visualAesthetic: answers.visualAesthetic,
         landmark: answers.landmark,
         additionalNotes: answers.additionalNotes,
+        humanAnswers: answersWithFormattedName,
+        futurePromise: answers.futurePromise,
         generatedLore: lore,
         renders: fallbackRenders,
         votesCount: 1,
@@ -221,7 +252,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     soundManager.playTone(880, 0.08);
 
     try {
-      // 1. Save entry to planet_submissions
+      // 1. Save entry permanently to Supabase user_dossiers & localStorage
       await savePlanetSubmission(previewDossier);
 
       // 2. Lock golden ticket on profile (Strict Token Protection Lock)
@@ -250,7 +281,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     } catch (err) {
       console.error('Submission error:', err);
       soundManager.playError();
-      alert('Submission encounter a sync error, but entry has been cached locally.');
+      alert('Submission encountered a sync notice, but entry has been cached locally.');
     } finally {
       setIsSubmitting(false);
     }
@@ -300,70 +331,115 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             <span>Home</span>
           </button>
 
+          <div className="h-4 w-px bg-white/10 hidden sm:block shrink-0" />
+
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="p-1 rounded-md bg-amber-400 text-black shrink-0">
+              <Trophy className="w-3.5 h-3.5 fill-black" />
+            </span>
+            <div className="min-w-0">
+              <span className="text-xs sm:text-sm font-display font-bold tracking-wide text-white truncate block">
+                Äkinoya Worldbuilding Contest
+              </span>
+              <span className="text-[10px] font-mono text-amber-400/90 hidden sm:block">
+                1 Golden Ticket · Closes June 30, 2027
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {onNavigateToCommunity && (
             <button
               type="button"
               onClick={onNavigateToCommunity}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer min-h-[44px] shrink-0"
+              className="px-3 py-1.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 min-h-[44px]"
             >
-              <span>Community Hub</span>
+              <Globe2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Lore Hub &amp; Governance</span>
+              <span className="sm:hidden">Lore Hub</span>
             </button>
           )}
 
-          <div className="h-4 w-px bg-white/15 shrink-0 hidden xs:block" />
-
-          <div className="flex items-center gap-2 min-w-0">
-            <Trophy className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
-            <span className="text-xs sm:text-sm font-display font-bold tracking-wider text-white uppercase truncate">
-              WORLDBUILDING CONTEST LAUNCHPAD
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[10px] sm:text-[11px] font-mono text-amber-400 bg-amber-950/80 px-2.5 py-1 rounded-full border border-amber-500/40 font-bold flex items-center gap-1.5">
-            <Calendar className="w-3 h-3 text-amber-400" />
-            <span>VOTES CLOSE JUNE 30</span>
-          </span>
+          <button
+            type="button"
+            onClick={handleCopyShare}
+            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+            title="Share Contest"
+          >
+            <Share2 className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">{copiedLink ? 'Copied!' : 'Share'}</span>
+          </button>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-12 box-border">
-        {/* HERO BANNER SECTION */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-950/40 via-[#070b16] to-[#04060c] border border-amber-500/30 p-6 sm:p-10 shadow-[0_0_50px_rgba(245,158,11,0.15)]">
+      {/* Main Container */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-10 sm:space-y-12 box-border">
+        {/* HERO LAUNCHPAD BANNER */}
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#070d1e] via-[#050813] to-black border-2 border-amber-500/30 p-6 sm:p-10 shadow-[0_0_50px_rgba(245,158,11,0.15)]">
           <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 sm:gap-8">
-            <div className="space-y-3 max-w-2xl">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 tracking-wider flex items-center gap-1.5">
-                  <Ticket className="w-3.5 h-3.5 text-amber-400" />
-                  <span>ONE GOLDEN TICKET PER ACCOUNT</span>
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-8 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-3 py-1 rounded-full text-[10.5px] font-mono font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 uppercase tracking-widest flex items-center gap-1.5">
+                  <Flame className="w-3 h-3 fill-amber-300 text-amber-300" />
+                  OFFICIAL 2027 WORLDBUILDING INITIATIVE
                 </span>
-                <span className="text-[10px] font-mono text-emerald-400 font-semibold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>MILL AI ONLINE</span>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30">
+                  VOTING CLOSES JUNE 30, 2027
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-extrabold text-white tracking-tight leading-tight">
-                Design Your Sector in the <span className="text-amber-400">Äkinoya Galaxy</span>
+              <h1 className="text-3xl sm:text-5xl font-display font-black tracking-tight text-white leading-tight">
+                Synthesize Your Planet on{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500">
+                  Äkinoya
+                </span>
               </h1>
 
-              <p className="text-xs sm:text-sm md:text-base text-white/70 font-sans leading-relaxed">
-                Step into the holographic workshop with <strong>Mill</strong>, your AI worldbuilding companion. Answer 8 questions to synthesize your planet designation, atmospheric spectra, botany, apex predators, and sonic signatures for the official Sillow Mill music collaboration.
+              <p className="text-sm sm:text-base text-white/70 font-sans leading-relaxed max-w-2xl">
+                Collaborate with <strong>Mill</strong>, our planetary AI synthesizer. Answer 8 human-centric questions (~10 minutes) to generate a complete 5-photo anime visual dossier, orbital specs, and sector lore.
               </p>
+
+              {/* Contest Rules Ribbon */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs font-mono">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-2.5">
+                  <Ticket className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-bold text-white">1 Golden Ticket</div>
+                    <div className="text-[11px] text-white/50">Strict 1 generation per account</div>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-2.5">
+                  <Camera className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-bold text-white">5-Photo Anime Dossier</div>
+                    <div className="text-[11px] text-white/50">Mood.png &amp; akinoya_hero_bg.jpg</div>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-2.5">
+                  <Vote className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-bold text-white">Binding Council Vote</div>
+                    <div className="text-[11px] text-white/50">June 30 governance election</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Launchpad Golden Ticket Action Card */}
-            <div className="w-full lg:w-auto shrink-0 bg-black/60 border border-amber-500/40 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col gap-4 min-w-[280px] sm:min-w-[320px]">
-              <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3">
-                <span className="text-xs font-mono text-amber-300 font-bold uppercase tracking-wider">
-                  Contest Entry Ticket
-                </span>
-                <div className="w-7 h-7 rounded-full overflow-hidden border border-cyan-400/50">
+            {/* Launch Action Card */}
+            <div className="lg:col-span-4 p-5 sm:p-6 rounded-2xl bg-black/70 border border-white/15 backdrop-blur-xl shadow-xl space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-cyan-400 shadow-[0_0_15px_rgba(56,189,248,0.4)] shrink-0">
                   <img src={millAvatar} alt="Mill" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-sm font-display font-bold text-white">Mill · Planetary AI</div>
+                  <div className="text-[11px] font-mono text-cyan-300">Ready to synthesize</div>
                 </div>
               </div>
 
@@ -372,13 +448,13 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                   <div className="p-3.5 rounded-xl bg-amber-950/70 border border-amber-500/50 text-center space-y-1 shadow-lg">
                     <span className="text-[10px] font-mono text-amber-300 font-bold flex items-center justify-center gap-1.5 uppercase tracking-wider">
                       <Lock className="w-3.5 h-3.5 text-amber-400" />
-                      SUBMISSION LOCKED — 1 GOLDEN TICKET USED
+                      ONE-SHOT CLAIMED · 1 OF 1 TICKET USED
                     </span>
                     <div className="text-sm font-display font-bold text-white truncate">
                       {activeSubmission?.planetName || 'Territory Submitted'}
                     </div>
                     <p className="text-[10.5px] text-white/60 font-mono">
-                      Single submission hard lock active.
+                      Single submission hard lock active. Your world is registered in the Lore Governance Council.
                     </p>
                   </div>
 
@@ -406,7 +482,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 <div className="space-y-3">
                   <div className="text-xs text-white/70 font-sans leading-relaxed">
                     {isAuthenticated
-                      ? `Welcome ${userDisplayName}! You hold 1 Golden Ticket to generate a world territory.`
+                      ? `Welcome ${userDisplayName}! You hold 1 Golden Ticket to synthesize your planetary territory.`
                       : 'Sign in to claim your 1 Golden Ticket and launch your planet with Mill.'}
                   </div>
 
@@ -424,19 +500,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           </div>
         </section>
 
-        {/* LIVE GEMINI AI SYNTHESIZER LOADER */}
+        {/* SCI-FI BRAND LOADING SCREEN DURING LIVE GENERATION */}
         {isGeneratingRenders && (
-          <section className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-cyan-950/70 via-indigo-950/50 to-black border-2 border-cyan-400/60 shadow-[0_0_50px_rgba(6,182,212,0.3)] flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left animate-pulse">
-            <Sparkles className="w-8 h-8 text-cyan-400 animate-spin shrink-0" />
-            <div className="space-y-1">
-              <h3 className="text-sm sm:text-base font-display font-bold text-white tracking-wider uppercase">
-                SYNTHESIZING 5-PHOTO PLANETARY DOSSIER WITH GOOGLE GEMINI AI
-              </h3>
-              <p className="text-xs font-mono text-cyan-300">
-                Generating real-time 2D anime orbital renders, botanical flora, apex fauna, cockpit landing perspectives, and landmark monuments...
-              </p>
-            </div>
-          </section>
+          <AkinoyaSciFiLoader planetName={pendingAnswers?.planetName || 'Äkinoya Frontier Sector'} />
         )}
 
         {/* PREVIEW & APPROVAL DOSSIER (IF WIZARD COMPLETED BUT NOT YET SUBMITTED) */}
@@ -550,10 +616,10 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-400/40 font-bold uppercase flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3 text-amber-400" />
-                    <span>OFFICIAL CONTEST ENTRY · LOCKED</span>
+                    <span>ONE-SHOT CLAIMED · LOCKED TO ACCOUNT</span>
                   </span>
                   <span className="text-xs font-mono text-white/50">{activeSubmission.id}</span>
                 </div>
@@ -744,7 +810,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                     <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/40">
                       RANK #{idx + 1}
                     </div>
-                    <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-black/80 backdrop-blur-md text-cyan-300 border border-cyan-400/40">
+                    <div className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-black/80 backdrop-blur-md text-cyan-300 border border-cyan-400/40">
                       {sub.votesCount} VOTES
                     </div>
                   </div>
@@ -770,7 +836,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                     </div>
 
                     <p className="text-xs text-white/70 font-sans line-clamp-3 leading-relaxed">
-                      {sub.generatedLore}
+                      {sub.futurePromise || sub.generatedLore}
                     </p>
 
                     <div className="pt-2 flex flex-wrap gap-1.5">

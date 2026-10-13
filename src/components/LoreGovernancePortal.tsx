@@ -7,11 +7,16 @@ import {
   ExternalLink,
   Camera,
   Sparkles,
+  Flame,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
 import { PlanetSubmission } from '../types/contest';
-import { getStoredPlanetSubmissions, togglePlanetSubmissionVote } from '../data/contest';
+import {
+  getStoredPlanetSubmissions,
+  togglePlanetSubmissionVote,
+  subscribeToPlanetSubmissions,
+} from '../data/contest';
 import { PlanetDossierModal } from './PlanetDossierModal';
 
 interface LoreGovernancePortalProps {
@@ -31,7 +36,16 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetSubmission | null>(null);
 
   useEffect(() => {
-    setContestSubmissions(getStoredPlanetSubmissions());
+    // Initial load
+    const initial = getStoredPlanetSubmissions();
+    setContestSubmissions([...initial].sort((a, b) => b.votesCount - a.votesCount));
+
+    // Supabase Realtime Subscription
+    const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
+      setContestSubmissions([...fresh].sort((a, b) => b.votesCount - a.votesCount));
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleVoteContest = async (submissionId: string) => {
@@ -43,11 +57,12 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
     soundManager.playTone(740, 0.06);
     const res = await togglePlanetSubmissionVote(submissionId, user?.id);
     if (res.success) {
-      setContestSubmissions((prev) =>
-        prev.map((s) =>
+      setContestSubmissions((prev) => {
+        const updated = prev.map((s) =>
           s.id === submissionId ? { ...s, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : s
-        )
-      );
+        );
+        return [...updated].sort((a, b) => b.votesCount - a.votesCount);
+      });
       if (selectedPlanet && selectedPlanet.id === submissionId) {
         setSelectedPlanet((prev) =>
           prev ? { ...prev, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : null
@@ -66,13 +81,17 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
       {/* Intro Header */}
       <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-black/50 to-black/80 border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-bold tracking-wider">
               MODULE 05 · LORE GOVERNANCE &amp; CONTEST VOTING
             </span>
             <span className="text-[10px] font-mono text-amber-400 font-semibold flex items-center gap-1">
               <Calendar className="w-3 h-3 text-amber-400" />
               <span>VOTING OPEN UNTIL JUNE 30</span>
+            </span>
+            <span className="text-[10px] font-mono text-cyan-300 font-semibold flex items-center gap-1">
+              <Flame className="w-3 h-3 text-cyan-300" />
+              <span>REALTIME SYNC ACTIVE</span>
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
@@ -156,7 +175,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
                   </div>
 
                   <p className="text-xs text-white/70 font-sans line-clamp-2 leading-relaxed">
-                    {sub.generatedLore}
+                    {sub.futurePromise || sub.generatedLore}
                   </p>
                 </div>
               </div>

@@ -44,6 +44,64 @@ export const formatAkinoyaPlanetName = (rawName?: string): string => {
   return 'Ä' + clean;
 };
 
+/**
+ * Derives official Äkinoya planetary attributes from the 8 human-centric answers.
+ */
+export const derivePlanetAttributesFromHumanAnswers = (answers: WizardAnswers): WizardAnswers => {
+  let name = answers.planetName;
+  if (!name || !name.trim()) {
+    const rawTokens = [
+      answers.colorPalette?.split(' ')[0],
+      answers.admiredCreature?.split(' ')[0],
+      answers.naturalEnvironment?.split(' ')[0],
+    ].filter(Boolean);
+    const seed = (rawTokens[0] || 'kinoya').replace(/[^a-zA-Z]/g, '');
+    name = formatAkinoyaPlanetName(seed.length > 2 ? seed : 'Äkinoya Prime');
+  } else {
+    name = formatAkinoyaPlanetName(name);
+  }
+
+  const atmosphere =
+    answers.atmosphere ||
+    `Ionized celestial atmosphere styled with ${answers.colorPalette || 'deep indigo and neon purple'} and serene horizons of ${answers.naturalEnvironment || 'misty mountain ridges'}`;
+
+  const flora =
+    answers.flora ||
+    `Bioluminescent botanical systems inspired by ${answers.naturalEnvironment || 'ancient rainforests'}, creating peaceful biomes echoing ${answers.relaxation || 'deep relaxation'}`;
+
+  const fauna =
+    answers.fauna ||
+    `Celestial apex wildlife inspired by the ${answers.admiredCreature || 'noble pack wolf and soaring plasma glider'}, roaming through high-altitude thermals`;
+
+  const sonicVibe =
+    answers.sonicVibe ||
+    `${answers.creativeExpression || 'Deep analog synthesizers and cinematic ACEScc ambient pads'} vibrating across the planetary crust`;
+
+  const visualAesthetic =
+    answers.visualAesthetic ||
+    `2D High-End Anime Sci-Fi Cel-Shaded Art (Sillow Mill Aesthetic, Mood.png & akinoya_hero_bg.jpg), palette: ${answers.colorPalette || 'deep indigo and neon purple'}`;
+
+  const landmark =
+    answers.landmark ||
+    `The Monument of Resilience: An ancient obsidian megastructure commemorating "${answers.resilienceStory || 'forging a creative vision from scratch'}"`;
+
+  const additionalNotes =
+    answers.additionalNotes ||
+    `Founding Creed & Future Promise: "${answers.futurePromise || 'Never forget that true beauty lies in curiosity and persistence'}". Guided by core philosophy: "${answers.lifePhilosophy || 'Harmony between technology and nature'}".`;
+
+  return {
+    ...answers,
+    planetName: name,
+    atmosphere,
+    flora,
+    fauna,
+    sonicVibe,
+    visualAesthetic,
+    landmark,
+    additionalNotes,
+  };
+};
+
 export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
   {
     id: 'PLN-2027-AKINOYA-PRIME',
@@ -58,6 +116,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     sonicVibe: 'Deep Modular Sub-Bass & Cinematic ACEScc Synthesizers',
     visualAesthetic: '2D High-End Anime Sci-Fi Cel-Shaded Art (Sillow Mill Aesthetic)',
     landmark: 'The Obsidian Spire (Infinite Energy Conduit)',
+    futurePromise: 'Never forget that true beauty lies in curiosity and persistence.',
     additionalNotes: 'Sub-surface tunnels carry liquid neon energy that pulses in time with atmospheric pressure waves.',
     generatedLore:
       'Discovered at the epicenter of the Äkinoya energy sphere, Äkinoya Prime radiates with celestial 2D anime grandeur. Its troposphere is alive with electric blue ionized bioluminescence, where gargantuan spore canopies filter cosmic radiation into pure resonant harmonics. Indigenous pilots utilize the Obsidian Spire to recharge quantum navigation drives before deep-space jumps.',
@@ -66,7 +125,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       flora: mushroomValleyImg, // 2. Flora (Mood.png panel style)
       fauna: twilightWorldImg, // 3. Fauna
       atmosphere: heroBgImg, // 4. Cockpit / Landing Atmosphere
-      landmark: visualizerThumbnailImg, // 5. Landmark
+      landmark: visualizerThumbnailImg, // 5. Landmark / Archival Cover
       ecosystem: mushroomValleyImg,
     },
     votesCount: 88,
@@ -87,15 +146,16 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     sonicVibe: 'Aggressive Neurofunk Drops & Industrial Metallic Transients',
     visualAesthetic: '2D Cel-Shaded Cosmic Anime Concept Art (Sillow Mill House Style)',
     landmark: 'Celestial Dyson Ring Fragment hovering at equator',
+    futurePromise: 'That technology and nature can harmoniously merge.',
     additionalNotes: 'Orbital wreckage from the First Collapse has settled into a permanently glowing cosmic particle ring.',
     generatedLore:
       'Ämlemie is an enigmatic ringed sanctuary framed in the classic 2D anime space vista style of Sillow Mill. Woven with deep cosmic purple hues and bioluminescent neon turquoise, its celestial ring fragment casts permanent twilight across alien valleys where crystalline predators feed on static electrical discharges.',
     renders: {
-      hero: exactPlanetImg, // 1. Main Orbital (High-entropy celestial sphere)
+      hero: exactPlanetImg, // 1. Main Orbital
       flora: twilightWorldImg, // 2. Flora
       fauna: mobileBgImg, // 3. Fauna
-      atmosphere: moodboardImg, // 4. Cockpit / Landing Atmosphere (Mood.png style)
-      landmark: heroBgImg, // 5. Landmark
+      atmosphere: moodboardImg, // 4. Cockpit Atmosphere (Mood.png style)
+      landmark: heroBgImg, // 5. Landmark / Archival Cover
       ecosystem: twilightWorldImg,
     },
     votesCount: 64,
@@ -116,15 +176,16 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     sonicVibe: 'Glitch Ambient Lo-Fi & Ethereal Tape Saturation',
     visualAesthetic: '2D Sillow Mill Cockpit Moodboard Style & Cel-Shaded Neon',
     landmark: 'The Sunken Cobalt Caldera of Upper Äkinoya',
+    futurePromise: 'Curiosity is the compass of the stars.',
     additionalNotes: 'Sub-glacial geothermal vents create enclosed tropical bioluminescent biomes matching the expedition cockpit moodboard.',
     generatedLore:
       'Anchored directly in the visual heritage of the Sillow Mill ship cockpit and landing moodboard, Älkan-IV is a lush bioluminescent frontier world. Glowing turquoise mosses and violet spore canopies illuminate misty alien canopies, echoing with the tape-saturated frequencies of lone interstellar explorers.',
     renders: {
-      hero: visualizerThumbnailImg, // 1. Main Orbital / Storyboard Hero (Mood.png)
+      hero: visualizerThumbnailImg, // 1. Main Orbital / Storyboard Hero
       flora: mushroomValleyImg, // 2. Flora
       fauna: twilightWorldImg, // 3. Fauna
-      atmosphere: heroBgImg, // 4. Cockpit / Landing Atmosphere (akinoya_hero_bg.jpg style)
-      landmark: planetHeroImg, // 5. Landmark
+      atmosphere: heroBgImg, // 4. Cockpit / Landing Atmosphere
+      landmark: planetHeroImg, // 5. Landmark / Archival Cover
       ecosystem: mushroomValleyImg,
     },
     votesCount: 47,
@@ -138,7 +199,6 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
 export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
   const sanitize = (list: PlanetSubmission[]): PlanetSubmission[] =>
     list.map((sub) => {
-      // Migrate legacy default IDs if present
       if (sub.id === 'PLN-2027-ZEPHYR' || sub.id === 'PLN-2027-AKINOYA-PRIME') {
         return INITIAL_SUBMISSIONS[0];
       }
@@ -148,7 +208,6 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
       if (sub.id === 'PLN-2027-CRYO' || sub.id === 'PLN-2027-ALKAN-IV') {
         return INITIAL_SUBMISSIONS[2];
       }
-      // Ensure 5 renders exist
       const renders = {
         hero: sub.renders?.hero || planetHeroImg,
         flora: sub.renders?.flora || sub.renders?.ecosystem || mushroomValleyImg,
@@ -169,7 +228,6 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
     const raw = localStorage.getItem(LOCAL_SUBMISSIONS_KEY);
     if (raw) {
       const parsed: PlanetSubmission[] = JSON.parse(raw);
-      // Merge unique by ID
       const existingIds = new Set(parsed.map((p) => p.id));
       const merged = [...parsed, ...INITIAL_SUBMISSIONS.filter((p) => !existingIds.has(p.id))];
       return sanitize(merged);
@@ -185,7 +243,9 @@ export const getUserContestSubmission = (userId?: string, email?: string): Plane
   if (!userId && !email) return null;
   const submissions = getStoredPlanetSubmissions();
   const match = submissions.find(
-    (s) => (userId && s.userId === userId) || (email && s.authorEmail && s.authorEmail.toLowerCase() === email.toLowerCase())
+    (s) =>
+      (userId && s.userId === userId) ||
+      (email && s.authorEmail && s.authorEmail.toLowerCase() === email.toLowerCase())
   );
   return match || null;
 };
@@ -193,43 +253,49 @@ export const getUserContestSubmission = (userId?: string, email?: string): Plane
 // Generate high-end AI cinematic lore from wizard answers adhering strictly to Sillow Mill aesthetic
 export const generatePlanetLore = (answers: WizardAnswers, authorName: string): string => {
   const planetName = formatAkinoyaPlanetName(answers.planetName);
-  const atmo = answers.atmosphere || 'Atmosphere of ionized violet twilight';
-  const flora = answers.flora || 'Resonant bioluminescent flora';
-  const fauna = answers.fauna || 'Apex plasma fauna roaming high-altitude thermals';
-  const vibe = answers.sonicVibe || 'Cinematic analog modular synthesis';
+  const color = answers.colorPalette || 'deep cosmic violet and neon turquoise';
+  const atmo = answers.atmosphere || 'an atmosphere of ionized violet twilight and electric auroras';
+  const flora = answers.flora || 'resonant bioluminescent flora systems and spore canopies';
+  const fauna = answers.fauna || 'apex plasma fauna roaming high-altitude thermals';
+  const vibe = answers.sonicVibe || 'cinematic analog modular synthesis';
   const visual = answers.visualAesthetic || '2D high-end anime sci-fi concept art (Sillow Mill aesthetic)';
-  const landmark = answers.landmark || 'The Ancient Obsidian Spire';
-  const notes = answers.additionalNotes ? ` World architect notes specify: "${answers.additionalNotes}"` : '';
+  const landmark = answers.landmark || 'The Ancient Obsidian Spire energy conduit';
+  const promise = answers.futurePromise || 'Never forget that true beauty lies in curiosity and persistence.';
+  const philosophy = answers.lifePhilosophy || 'harmony between nature and technology';
+  const relaxation = answers.relaxation || 'peaceful moments of quiet contemplation';
 
-  return `Classified by architect ${authorName}, ${planetName} is a high-entropy frontier world situated in the outer rings of the Äkinoya system. Rendered strictly in the signature Sillow Mill 2D anime aesthetic with bioluminescent neon turquoise and deep cosmic purple hues (anchored by Mood.png and akinoya_hero_bg.jpg), its planetary envelope features ${atmo}, creating an awe-inspiring visual signature rendered with ${visual}.
+  return `Classified by world architect ${authorName}, ${planetName} is an official frontier sector situated within the Äkinoya celestial sphere. Anchored strictly in the signature Sillow Mill 2D anime aesthetic (composition referenced from akinoya_hero_bg.jpg and atmospheric panels from Mood.png), its skies radiate with ${color}, framing ${atmo} rendered in exquisite ${visual}.
 
-The surface ecology is defined by ${flora}, which forms a mutualistic symbiotic network alongside ${fauna}. Dominating the equatorial horizon stands ${landmark}, serving as a harmonic anchor point where the world's sonic signature—characterized by ${vibe}—echoes across mountain ranges and baselines.${notes}
+The planetary ecology thrives through ${flora}, creating sanctuary valleys where explorers recharge their spirits through ${relaxation}. Across the high troposphere roam ${fauna}, while the equatorial meridian is anchored by ${landmark}. Resonating with ${vibe}, the entire sector reflects the architect's core philosophy: "${philosophy}".
 
-This planetary territory is officially registered for the 2027 Äkinoya Lore Governance Council. Community votes cast before June 30 determine whether this sector will be featured in the official Sillow Mill album visualizer and animated storyline.`;
+FOUNDING CREED & FUTURE PROMISE:
+"${promise}"
+
+This planetary territory is officially registered in the 2027 Äkinoya Lore Governance Council. Community votes cast before June 30 determine whether this sector will be featured in the official Sillow Mill animated storyline and soundtrack.`;
 };
 
 // Map wizard inputs to 5 visual render assets anchored in Mood.png & akinoya_hero_bg.jpg
 export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['renders'] => {
-  const text = `${answers.planetName} ${answers.atmosphere} ${answers.visualAesthetic} ${answers.landmark}`.toLowerCase();
+  const text = `${answers.planetName} ${answers.atmosphere} ${answers.visualAesthetic} ${answers.colorPalette}`.toLowerCase();
 
-  if (text.includes('moodboard') || text.includes('cockpit') || text.includes('forest') || text.includes('älkan')) {
+  if (text.includes('moodboard') || text.includes('cockpit') || text.includes('green') || text.includes('älkan')) {
     return {
-      hero: moodboardImg, // 1. Main Orbital / Storyboard Hero (Mood.png)
+      hero: moodboardImg, // 1. Main Orbital (Mood.png)
       flora: mushroomValleyImg, // 2. Flora
       fauna: twilightWorldImg, // 3. Fauna
-      atmosphere: heroBgImg, // 4. Cockpit / Landing Atmosphere (akinoya_hero_bg.jpg)
-      landmark: planetHeroImg, // 5. Landmark
+      atmosphere: heroBgImg, // 4. Cockpit Atmosphere (akinoya_hero_bg.jpg)
+      landmark: planetHeroImg, // 5. Landmark / Archival Cover
       ecosystem: mushroomValleyImg,
     };
   }
 
-  if (text.includes('ring') || text.includes('ämlemie') || text.includes('space') || text.includes('dyson')) {
+  if (text.includes('ring') || text.includes('ämlemie') || text.includes('purple') || text.includes('dyson')) {
     return {
       hero: visualizerThumbnailImg, // 1. Main Orbital
       flora: twilightWorldImg, // 2. Flora
       fauna: heroBgImg, // 3. Fauna
-      atmosphere: moodboardImg, // 4. Cockpit / Landing Atmosphere (Mood.png)
-      landmark: planetHeroImg, // 5. Landmark
+      atmosphere: moodboardImg, // 4. Cockpit Atmosphere (Mood.png)
+      landmark: planetHeroImg, // 5. Landmark / Archival Cover
       ecosystem: twilightWorldImg,
     };
   }
@@ -239,7 +305,7 @@ export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['
     flora: mushroomValleyImg, // 2. Flora (Mood.png)
     fauna: twilightWorldImg, // 3. Fauna
     atmosphere: heroBgImg, // 4. Cockpit Atmosphere
-    landmark: visualizerThumbnailImg, // 5. Landmark
+    landmark: visualizerThumbnailImg, // 5. Landmark / Archival Cover
     ecosystem: mushroomValleyImg,
   };
 };
@@ -260,8 +326,8 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
       title: 'Main Orbital Planet Render',
       category: '01 · ORBITAL HORIZON',
       url: sub.renders.hero,
-      description: `Planetary disc and orbital curvature of ${sub.planetName}. Electric blue resonance, icy bol textures, and deep cosmic violet horizon.`,
-      styleAnchor: 'Aesthetic Reference: akinoya_hero_bg.jpg (Cosmic sci-fi planet, radiant energy sphere, zero photorealistic noise)',
+      description: `Planetary disc and orbital curvature of ${sub.planetName}. Electric resonance and deep cosmic horizon.`,
+      styleAnchor: 'Aesthetic Reference: akinoya_hero_bg.jpg (2D celestial sphere, energy halo, zero photorealistic noise)',
     },
     {
       id: 'photo-flora',
@@ -269,7 +335,7 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
       category: '02 · BOTANICAL BIOME',
       url: sub.renders.flora || sub.renders.ecosystem || sub.renders.atmosphere,
       description: sub.flora,
-      styleAnchor: 'Storyboard Reference: Mood.png (Cinematic anime storyboard panel, bioluminescent flora, atmospheric cel-shading)',
+      styleAnchor: 'Storyboard Reference: Mood.png (Cinematic anime panel, bioluminescent plant life, atmospheric cel-shading)',
     },
     {
       id: 'photo-fauna',
@@ -277,7 +343,7 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
       category: '03 · FAUNA ECOSYSTEM',
       url: sub.renders.fauna || sub.renders.atmosphere,
       description: sub.fauna,
-      styleAnchor: 'Storyboard Reference: Mood.png (Dynamic anime composition, alien apex lifeforms drifting through neon thermals)',
+      styleAnchor: 'Storyboard Reference: Mood.png (Anime creature linework, apex lifeforms drifting through thermals)',
     },
     {
       id: 'photo-atmosphere',
@@ -285,20 +351,20 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
       category: '04 · COCKPIT ATMOSPHERE',
       url: sub.renders.atmosphere,
       description: sub.atmosphere,
-      styleAnchor: 'Aesthetic Reference: akinoya_hero_bg.jpg (Volumetric light shafts, cockpit HUD reflections, neon turquoise/purple haze)',
+      styleAnchor: 'Aesthetic Reference: Mood.png (Cockpit canopy view, pilot HUD reflections, volumetric light shafts)',
     },
     {
       id: 'photo-landmark',
-      title: 'Iconic Landmark & Ancient Wonder',
-      category: '05 · MEGASTRUCTURE',
+      title: 'Lore Dossier Cover & Monument',
+      category: '05 · LORE DOSSIER COVER',
       url: sub.renders.landmark,
       description: sub.landmark,
-      styleAnchor: 'Sillow Mill Anime House Style (Ancient energy conduit, grand scale monument, cel-shaded linework)',
+      styleAnchor: `Archival Document Cover (Ancient monument, founding promise: "${sub.futurePromise || 'Never forget that true beauty lies in curiosity and persistence'}")`,
     },
   ];
 };
 
-// Save a new contest entry
+// Save a new contest entry permanently to Supabase user_dossiers & localStorage
 export const savePlanetSubmission = async (
   submission: PlanetSubmission
 ): Promise<{ success: boolean; submission: PlanetSubmission; error?: string }> => {
@@ -307,15 +373,16 @@ export const savePlanetSubmission = async (
     const updated = [submission, ...existing.filter((s) => s.id !== submission.id)];
     localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(updated));
 
-    // Optional Supabase cloud persistence
+    // Supabase cloud persistence (user_dossiers table)
     if (isSupabaseConfigured) {
       try {
-        await supabase.from('planet_submissions').upsert({
+        await supabase.from('user_dossiers').upsert({
           id: submission.id,
           user_id: submission.userId,
           author_name: submission.authorName,
           author_username: submission.authorUsername,
           author_email: submission.authorEmail,
+          author_avatar_gradient: submission.authorAvatarGradient,
           planet_name: submission.planetName,
           atmosphere: submission.atmosphere,
           flora: submission.flora,
@@ -324,6 +391,7 @@ export const savePlanetSubmission = async (
           visual_aesthetic: submission.visualAesthetic,
           landmark: submission.landmark,
           additional_notes: submission.additionalNotes,
+          human_answers: submission.humanAnswers || {},
           generated_lore: submission.generatedLore,
           renders: submission.renders,
           votes_count: submission.votesCount,
@@ -331,7 +399,7 @@ export const savePlanetSubmission = async (
           created_at: submission.createdAt,
         });
       } catch (cloudErr) {
-        console.warn('[Contest] Cloud sync deferred:', cloudErr);
+        console.warn('[Contest] user_dossiers cloud sync notice:', cloudErr);
       }
     }
 
@@ -391,25 +459,55 @@ export const togglePlanetSubmissionVote = async (
     localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(updatedSubmissions));
   } catch {}
 
-  // Sync with Supabase if online
-  if (isSupabaseConfigured && userId) {
+  // Sync with Supabase Realtime & DB
+  if (isSupabaseConfigured) {
     try {
-      if (nextVoted) {
-        await supabase
-          .from('planet_submission_votes')
-          .insert({ submission_id: submissionId, user_id: userId });
-      } else {
-        await supabase
-          .from('planet_submission_votes')
-          .delete()
-          .match({ submission_id: submissionId, user_id: userId });
+      if (userId) {
+        if (nextVoted) {
+          await supabase.from('dossier_votes').insert({ dossier_id: submissionId, user_id: userId });
+        } else {
+          await supabase.from('dossier_votes').delete().match({ dossier_id: submissionId, user_id: userId });
+        }
       }
-    } catch {}
+      // Update votes_count on user_dossiers
+      await supabase
+        .from('user_dossiers')
+        .update({ votes_count: updatedCount })
+        .eq('id', submissionId);
+    } catch (voteCloudErr) {
+      console.warn('[Contest] Vote sync notice:', voteCloudErr);
+    }
   }
 
   return {
     success: true,
     newVotesCount: updatedCount,
     hasVoted: nextVoted,
+  };
+};
+
+/**
+ * Realtime Subscription for Planet Dossiers & Votes
+ */
+export const subscribeToPlanetSubmissions = (
+  onUpdate: (updatedSubmissions: PlanetSubmission[]) => void
+) => {
+  if (!isSupabaseConfigured) return () => {};
+
+  const channel = supabase
+    .channel('realtime_user_dossiers')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'user_dossiers' },
+      () => {
+        // Refresh stored submissions
+        const fresh = getStoredPlanetSubmissions();
+        onUpdate(fresh);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
   };
 };

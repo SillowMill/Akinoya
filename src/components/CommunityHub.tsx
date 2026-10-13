@@ -1156,7 +1156,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             { id: 'downloads', label: 'Asset & Download Vault', icon: FolderDown, count: '4' },
             { id: 'workflows', label: 'Workflows & Creative Lab', icon: Sliders, count: '4 Steps' },
             { id: 'discussion', label: 'Comm-Net Chat (8 Channels)', icon: MessageSquare, count: '8 Channels' },
-            { id: 'creators', label: 'Creator Portfolios & Leaderboard', icon: Trophy, count: 'Spotlight' },
+            { id: 'creators', label: "Group's Favorite Planets & Leaderboard", icon: Trophy, count: 'Spotlight' },
             { id: 'governance', label: 'Lore & Governance Portal', icon: Vote, count: 'Contest' },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -2450,19 +2450,19 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           >
             <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-amber-950/40 via-black/50 to-black/80 border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(245,158,11,0.1)]">
               <div>
-                <div className="flex items-center gap-2 mb-1.5">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                   <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-400/40 text-amber-300 font-bold tracking-wider">
-                    MODULE 05 · CREATOR NETWORK &amp; PORTFOLIOS
+                    MODULE 05 · COMMUNITY SPOTLIGHT &amp; RANKINGS
                   </span>
                   <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                    LIVE LEADERBOARD · PUBLIC PORTFOLIOS
+                    GROUP'S FAVORITE PLANETS · REALTIME LEADERBOARD
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
-                  🏆 Creator Syndicate &amp; Leaderboards
+                  🏆 Group's Favorite Planets &amp; Creator Showcase
                 </h1>
                 <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  Explore public creator portfolios, celebrate the Portfolio of the Month, leave appreciations, and transmit direct peer-to-peer collaboration proposals.
+                  Explore the community's top-voted planets, inspect complete 5-photo anime dossiers, and celebrate syndicate creator portfolios.
                 </p>
               </div>
             </div>

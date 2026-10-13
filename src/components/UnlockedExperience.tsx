@@ -40,12 +40,16 @@ import {
   User,
   Download,
   Trophy,
+  Camera,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
 import { useHolderName, isValidPassId, TOTAL_EDITION_LIMIT } from '../utils/holder';
 import { useVipAccess } from '../context/VipAccessContext';
 import { useAuth } from '../context/AuthContext';
+import { PlanetSubmission } from '../types/contest';
+import { getUserContestSubmission } from '../data/contest';
+import { PlanetDossierModal } from './PlanetDossierModal';
 import {
   BINGAA_PDF_URL,
   BINGAA_PDF_FILENAME,
@@ -155,6 +159,7 @@ interface UnlockedExperienceProps {
   onNavigateToVerify?: (tokenId?: string) => void;
   isVip?: boolean;
   onNavigateToPassport?: () => void;
+  onNavigateToContest?: () => void;
 }
 
 export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
@@ -164,9 +169,21 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   onNavigateToVerify,
   isVip = false,
   onNavigateToPassport,
+  onNavigateToContest,
 }) => {
   const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'assets'>('pass');
   const { user, isVip: authIsVip, profile, role } = useAuth();
+  const [userDossier, setUserDossier] = useState<PlanetSubmission | null>(null);
+  const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);
+
+  useEffect(() => {
+    if (user?.id || profile?.id || user?.email) {
+      const sub = getUserContestSubmission(user?.id || profile?.id, user?.email);
+      if (sub) {
+        setUserDossier(sub);
+      }
+    }
+  }, [user?.id, profile?.id, user?.email]);
   const isVipMode = Boolean(
     Boolean(user || profile) && (
       isVip ||
@@ -1713,6 +1730,92 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </button>
                 </div>
               </div>
+
+              {/* Asset 4: Synthesized 5-Photo Planetary Sector Dossier */}
+              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">
+                    Asset 04 · Synthesized Planetary Sector Dossier
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-400/40 text-[9.5px] sm:text-[10px] font-mono font-semibold tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)] max-w-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                    <span className="truncate sm:whitespace-normal">
+                      {userDossier ? 'ONE-SHOT CLAIMED · BOUND TO ACCOUNT' : '1 GOLDEN TICKET READY'}
+                    </span>
+                  </span>
+                </div>
+
+                {userDossier ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row items-start gap-4">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-white/15 shrink-0 bg-black">
+                        <img
+                          src={userDossier.renders.hero}
+                          alt={userDossier.planetName}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base sm:text-lg font-display font-extrabold text-white truncate">
+                            {userDossier.planetName}
+                          </h3>
+                          <span className="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-cyan-950 text-cyan-300 border border-cyan-400/30 shrink-0">
+                            5 PHOTOS
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-mono text-white/60">
+                          Registered Sector ID: {userDossier.id} · Votes: {userDossier.votesCount}
+                        </p>
+                        <p className="text-xs text-white/80 font-sans italic line-clamp-2">
+                          "{userDossier.futurePromise || userDossier.generatedLore}"
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundManager.playTone(660, 0.05);
+                          setSelectedDossierModal(userDossier);
+                        }}
+                        className="flex-1 min-h-[44px] px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>Inspect 5-Photo Dossier Modal</span>
+                      </button>
+
+                      {onNavigateToContest && (
+                        <button
+                          type="button"
+                          onClick={onNavigateToContest}
+                          className="px-4 py-2 min-h-[44px] rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Contest Launchpad</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 p-4 rounded-xl bg-white/5 border border-white/5">
+                    <p className="text-xs text-white/70 font-sans leading-relaxed">
+                      Your account holds 1 Golden Ticket. Answer Mill's 8 human-centric questions to synthesize your official 5-photo anime dossier and sector lore.
+                    </p>
+                    {onNavigateToContest && (
+                      <button
+                        type="button"
+                        onClick={onNavigateToContest}
+                        className="w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 fill-black" />
+                        <span>Launch 8-Step Worldbuilding Protocol</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </div>
@@ -2220,6 +2323,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 5-Photo Planet Dossier Modal */}
+      <PlanetDossierModal
+        planet={selectedDossierModal}
+        isOpen={Boolean(selectedDossierModal)}
+        onClose={() => setSelectedDossierModal(null)}
+      />
     </motion.div>
   );
 };

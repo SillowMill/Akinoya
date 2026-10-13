@@ -325,7 +325,7 @@ apiRouter.all(['/generate-planet', '/planet/generate'], async (req: Request, res
   try {
     const body = req.body || {};
     if (body.userId) {
-      const lockCheck = checkAndLockUserGeneration(body.userId);
+      const lockCheck = await checkAndLockUserGeneration(body.userId);
       if (!lockCheck.allowed) {
         res.status(403).json({
           success: false,

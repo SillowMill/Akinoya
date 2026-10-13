@@ -311,7 +311,20 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
               </div>
             </div>
 
-            {/* 4. WORLD ARCHITECT SECRET NOTES (If present) */}
+            {/* 4. FOUNDING CREED & FUTURE PROMISE */}
+            {planet.futurePromise && (
+              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/40 via-yellow-950/30 to-black border border-amber-500/30 space-y-1">
+                <div className="text-[11px] font-mono text-amber-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Founding Creed &amp; Future Promise</span>
+                </div>
+                <p className="text-xs sm:text-sm text-white/90 font-sans italic">
+                  "{planet.futurePromise}"
+                </p>
+              </div>
+            )}
+
+            {/* 5. WORLD ARCHITECT SECRET NOTES (If present) */}
             {planet.additionalNotes && (
               <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/20 space-y-1">
                 <div className="text-[11px] font-mono text-cyan-300 font-bold uppercase tracking-wider">

@@ -377,6 +377,7 @@ export default function App() {
                   onToggleViewMode={setViewMode}
                   currentViewMode={viewMode}
                   onNavigateToVerify={() => setVipSubView('passport')}
+                  onNavigateToContest={() => navigateTo('contest', '/contest')}
                 />
               </div>
             )}
@@ -432,6 +433,7 @@ export default function App() {
                     currentViewMode={viewMode}
                     onNavigateToPassport={() => navigateTo('verify', '/verify')}
                     onNavigateToVerify={() => navigateTo('verify', '/verify')}
+                    onNavigateToContest={() => navigateTo('contest', '/contest')}
                   />
                 </motion.div>
               )}
