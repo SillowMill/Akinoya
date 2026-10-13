@@ -12,6 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   isVip: boolean;
   isSubscriber: boolean;
+  isArtist: boolean;
   hasVipPass: boolean;
   subscriptionStatus: string;
   hasPendingVipInvitation: boolean;
@@ -19,6 +20,7 @@ interface AuthContextType {
   authModalMode: 'signin' | 'signup' | 'reset' | 'update_password';
   openAuthModal: (mode?: 'signin' | 'signup' | 'reset' | 'update_password' | string) => void;
   closeAuthModal: () => void;
+  updateProfile: (updates: Partial<Profile>) => Promise<{ success: boolean; error?: string }>;
   signInWithGoogle: () => Promise<{ data?: any; error?: any }>;
   signUpWithEmail: (
     email: string,
@@ -335,8 +337,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role === 'CREATOR'
   );
 
+  const isArtist = Boolean(
+    profile?.is_artist === true ||
+    role === 'CREATOR' ||
+    (typeof window !== 'undefined' && localStorage.getItem('akinoya_is_artist') === 'true')
+  );
+
   const hasVipPass = Boolean(profile?.has_vip_pass ?? isVip);
   const subscriptionStatus = profile?.subscription_status || (isSubscriber ? 'active' : 'inactive');
+
+  const updateProfile = async (updates: Partial<Profile>): Promise<{ success: boolean; error?: string }> => {
+    try {
+      if (!profile && !user) return { success: false, error: 'Not authenticated' };
+      const merged: Profile = {
+        ...(profile || ({} as Profile)),
+        ...updates,
+      };
+      setProfile(merged);
+      localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(merged));
+      if (updates.is_artist !== undefined) {
+        localStorage.setItem('akinoya_is_artist', String(updates.is_artist));
+      }
+
+      if (isSupabaseConfigured && (profile?.id || user?.id)) {
+        const targetId = profile?.id || user?.id;
+        await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', targetId);
+      }
+      return { success: true };
+    } catch (err: any) {
+      console.warn('[AuthContext] Profile update error:', err);
+      return { success: false, error: err?.message || 'Update failed' };
+    }
+  };
 
   // Sync profile data to Google Sheets via backend endpoint
   const syncToGoogleSheets = async (prof: Partial<Profile>, codeUsed?: string) => {
@@ -1369,6 +1404,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         isVip,
         isSubscriber,
+        isArtist,
         hasVipPass,
         subscriptionStatus,
         hasPendingVipInvitation,
@@ -1376,6 +1412,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authModalMode,
         openAuthModal,
         closeAuthModal,
+        updateProfile,
         signInWithGoogle,
         signUpWithEmail,
         signInWithEmail,

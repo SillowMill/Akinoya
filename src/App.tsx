@@ -17,6 +17,7 @@ import { CheckoutSuccess } from './components/CheckoutSuccess';
 import { NfcHudToast } from './components/NfcHudToast';
 import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerification';
 import { CommunityHub } from './components/CommunityHub';
+import { CreatorPortfolioView } from './components/CreatorPortfolioView';
 import { useAuth } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -105,10 +106,22 @@ export default function App() {
   // VIP Sub-view inside /verify route: 'passport' (HUD Certificate) | 'portal' (Personalized VIP Unlocked Portal)
   const [vipSubView, setVipSubView] = useState<'passport' | 'portal'>('passport');
 
-  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community'>(() => {
+  const [creatorUsername, setCreatorUsername] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/creators/')) {
+        const u = window.location.pathname.replace(/^\/creators\/?/, '').split('/')[0].trim();
+        if (u) return u;
+      }
+    }
+    return 'odi';
+  });
+
+  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators'>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
       const search = window.location.search.toLowerCase();
+      if (path === '/creators' || path.startsWith('/creators/')) return 'creators';
       if (path === '/community' || path.startsWith('/community/')) return 'community';
       if (path === '/auth/callback' || path.startsWith('/auth/callback')) {
         return 'home';
@@ -165,7 +178,11 @@ export default function App() {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
       const search = window.location.search.toLowerCase();
-      if (
+      if (path === '/creators' || path.startsWith('/creators/')) {
+        const u = window.location.pathname.replace(/^\/creators\/?/, '').split('/')[0].trim() || 'odi';
+        setCreatorUsername(u);
+        setRoute('creators');
+      } else if (
         path === '/community' ||
         path.startsWith('/community/')
       ) {
@@ -196,7 +213,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigateTo = (newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community', path: string) => {
+  const navigateTo = (newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators', path: string) => {
     try {
       window.history.pushState({}, '', path);
     } catch {
@@ -268,7 +285,7 @@ export default function App() {
       <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isCanvasUnlocked} />
 
       {/* Top Bar Navigation (Zone 1, 2, 3) */}
-      {!backdropOnly && route !== 'community' && (
+      {!backdropOnly && route !== 'community' && route !== 'creators' && (
         <TopBar
           isUnlocked={isVipRoute || isUserVip ? true : isSiteUnlocked}
           isVip={isVipRoute || isUserVip}
@@ -283,9 +300,27 @@ export default function App() {
 
       {/* Route-Based Dynamic Content */}
       <ErrorBoundary>
-        {route === 'community' ? (
+        {route === 'creators' ? (
           <div className="relative z-20 flex-1 w-full flex flex-col">
-            <CommunityHub onBackToHome={() => navigateTo('home', '/')} />
+            <CreatorPortfolioView
+              username={creatorUsername}
+              onBackToCommunity={() => navigateTo('community', '/community')}
+              onBackToHome={() => navigateTo('home', '/')}
+              onNavigateToCreator={(u) => {
+                setCreatorUsername(u);
+                navigateTo('creators', `/creators/${u}`);
+              }}
+            />
+          </div>
+        ) : route === 'community' ? (
+          <div className="relative z-20 flex-1 w-full flex flex-col">
+            <CommunityHub
+              onBackToHome={() => navigateTo('home', '/')}
+              onOpenCreator={(u) => {
+                setCreatorUsername(u);
+                navigateTo('creators', `/creators/${u}`);
+              }}
+            />
           </div>
         ) : route === 'privacy' ? (
           <div className="relative z-20 flex-1 w-full">
@@ -391,7 +426,7 @@ export default function App() {
       </ErrorBoundary>
 
       {/* Luxury Minimalist Footer */}
-      {!backdropOnly && route !== 'community' && (
+      {!backdropOnly && route !== 'community' && route !== 'creators' && (
         <footer className="relative z-10 w-full border-t border-white/5 bg-black/60 backdrop-blur-md py-4 px-4 sm:px-6 text-center space-y-2.5">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-white/40">
             <div>
@@ -438,7 +473,7 @@ export default function App() {
       )}
 
       {/* Floating Audio Stop/Play Control (Always accessible while scrolling) */}
-      {!backdropOnly && route !== 'community' && <FloatingAudioControl />}
+      {!backdropOnly && route !== 'community' && route !== 'creators' && <FloatingAudioControl />}
     </main>
   );
 }

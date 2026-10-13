@@ -17,6 +17,19 @@ export interface Profile {
   is_subscriber?: boolean;
   is_annual_member?: boolean;
   unlocked_assets?: string[];
+  // Creator Portfolios & Artist Verification
+  username?: string;
+  bio?: string;
+  social_links?: {
+    twitter?: string;
+    instagram?: string;
+    soundcloud?: string;
+    spotify?: string;
+    artstation?: string;
+    website?: string;
+  };
+  is_artist?: boolean;
+  portfolio_likes_count?: number;
   created_at?: string;
   updated_at?: string;
 }

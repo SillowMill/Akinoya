@@ -37,7 +37,10 @@ import {
   Zap,
   Hash,
   Users,
+  Trophy,
+  Heart,
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
@@ -46,11 +49,14 @@ import moodboardImg from '../assets/images/Mood.png';
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME, BINGAA_COVER_URL, BINGAA_COVER_FILENAME } from '../utils/certificate';
 import { useAuth } from '../context/AuthContext';
 import { AuthHeaderButton } from './AuthHeaderButton';
+import { CreatorLeaderboard } from './CreatorLeaderboard';
+import { CreatorPortfolioView } from './CreatorPortfolioView';
+import { getStoredCreators } from '../data/creators';
 
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
 export const isMembershipLaunchLocked = new Date() < MEMBERSHIP_LAUNCH_DATE;
 
-export type CreativeHubSection = 'downloads' | 'workflows' | 'visualizer' | 'discussion' | 'governance';
+export type CreativeHubSection = 'downloads' | 'workflows' | 'visualizer' | 'discussion' | 'creators' | 'governance';
 
 interface AssetVaultItem {
   id: string;
@@ -99,12 +105,22 @@ interface VisualizerTrackItem {
   previewImage: string;
 }
 
+export type ChannelCategory =
+  | 'PUBLIC HUB'
+  | 'CREATOR LAB & SHOWCASE'
+  | 'COLLABORATION BOARD'
+  | 'PRO AUDIO LOUNGE'
+  | 'FOUNDERS & VIP';
+
 export interface ChatChannel {
   id: string;
   name: string;
-  category: 'PUBLIC HUB' | 'CREATOR LAB (ANNUAL PASS)';
+  category: ChannelCategory;
   description: string;
   isAnnualPass?: boolean;
+  requiresArtist?: boolean;
+  requiresVip?: boolean;
+  isOpenCollab?: boolean;
 }
 
 interface DiscussionPost {
@@ -143,9 +159,14 @@ interface GovernanceBallot {
 interface CommunityHubProps {
   onBackToHome: () => void;
   onOpenAuthModal?: () => void;
+  onOpenCreator?: (username: string) => void;
 }
 
-export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpenAuthModal }) => {
+export const CommunityHub: React.FC<CommunityHubProps> = ({
+  onBackToHome,
+  onOpenAuthModal,
+  onOpenCreator,
+}) => {
   // Authentication & RBAC User State
   const {
     user,
@@ -154,8 +175,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     isAuthenticated,
     isVip,
     isSubscriber,
+    isArtist,
+    hasVipPass,
     hasPendingVipInvitation,
     openAuthModal,
+    updateProfile,
   } = useAuth();
 
   const [patronName, setPatronName] = useState<string>(() => {
@@ -235,6 +259,15 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
   const discussionFileInputRef = useRef<HTMLInputElement>(null);
   const [activeReplyPost, setActiveReplyPost] = useState<DiscussionPost | null>(null);
   const [replyInputText, setReplyInputText] = useState('');
+
+  // Creator Portfolios & Artist Verification State
+  const [selectedCreatorUsername, setSelectedCreatorUsername] = useState<string>('odi');
+  const [isArtistModalOpen, setIsArtistModalOpen] = useState<boolean>(false);
+  const [artistAlias, setArtistAlias] = useState<string>('');
+  const [artistGenre, setArtistGenre] = useState<string>('Electronic / Ambient Sound Design');
+  const [artistLink, setArtistLink] = useState<string>('');
+  const [artistSubmitting, setArtistSubmitting] = useState<boolean>(false);
+  const [artistSuccess, setArtistSuccess] = useState<boolean>(false);
 
   // 1. ASSET & DOWNLOAD VAULT DATA
   const assetVaultItems: AssetVaultItem[] = [
@@ -444,6 +477,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
 
   // 4. DISCORD-STYLE MULTI-CHANNEL COMM-NET CHANNELS
   const CHAT_CHANNELS: ChatChannel[] = [
+    // PUBLIC HUB
     {
       id: 'general-chat',
       name: 'general-chat',
@@ -456,26 +490,55 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
       category: 'PUBLIC HUB',
       description: 'Äkinoya Worldbuilding, Canon Lore, Timeline & Theorycrafting',
     },
+
+    // CREATOR LAB & SHOWCASE
     {
       id: 'visualizers-3d',
       name: 'visualizers-3d',
-      category: 'CREATOR LAB (ANNUAL PASS)',
+      category: 'CREATOR LAB & SHOWCASE',
       description: 'Blender & Octane 3D Scene Architecture, Volumetric Shaders & Lighting',
-      isAnnualPass: true,
-    },
-    {
-      id: 'music-daw-lounge',
-      name: 'music-daw-lounge',
-      category: 'CREATOR LAB (ANNUAL PASS)',
-      description: 'DAW Session Templates, Analog Synthesizers & VIP Audio Master Feedback',
       isAnnualPass: true,
     },
     {
       id: 'asset-showcase',
       name: 'asset-showcase',
-      category: 'CREATOR LAB (ANNUAL PASS)',
+      category: 'CREATOR LAB & SHOWCASE',
       description: 'Community Artwork, 4K Wallpapers & Work-In-Progress Production Renders',
       isAnnualPass: true,
+    },
+
+    // COLLABORATION BOARD (Open to all members)
+    {
+      id: 'music-x-visuals',
+      name: 'music-x-visuals',
+      category: 'COLLABORATION BOARD',
+      description: 'Cross-Discipline Matchmaking: Producers seeking 3D Animators & Visualists',
+      isOpenCollab: true,
+    },
+    {
+      id: 'collab-requests',
+      name: 'collab-requests',
+      category: 'COLLABORATION BOARD',
+      description: 'Pitch Co-op Tracks, Remix Stems, 3D Asset Swaps & Syndicate Collabs',
+      isOpenCollab: true,
+    },
+
+    // PRO AUDIO LOUNGE 🔒
+    {
+      id: 'plugins-deals-vault',
+      name: 'plugins-deals-vault',
+      category: 'PRO AUDIO LOUNGE',
+      description: 'Curated VST/AU Plugin Deals, Mixing Chains, Presets & Sample Vaults',
+      requiresArtist: true,
+    },
+
+    // FOUNDERS & VIP 🔒
+    {
+      id: 'founders-vip-lounge',
+      name: 'founders-vip-lounge',
+      category: 'FOUNDERS & VIP',
+      description: 'Founding NFC Pass Holders (#001–#100) Private Syndicate Chamber & Direct Creative Access',
+      requiresVip: true,
     },
   ];
 
@@ -586,29 +649,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
         },
       ],
     },
-    // # music-daw-lounge
-    {
-      id: 'dp-6',
-      channelId: 'music-daw-lounge',
-      author: 'Odi',
-      role: 'CREATOR',
-      avatarBg: 'from-amber-400 to-amber-600',
-      timestamp: '3 days ago',
-      content:
-        'DAW Template walkthrough: In "Sub-Orbital Drift", the modular lead uses dual-sine frequency modulation with a gentle tape saturation curve. Transient punch is preserved by sidechaining the sub-bass 808 transient bed directly.',
-      likes: 33,
-      hasLiked: false,
-      replies: [
-        {
-          id: 'dpr-5',
-          author: 'BeatArchitect',
-          role: 'ANNUAL PASS MEMBER',
-          avatarBg: 'from-cyan-400 to-blue-600',
-          timestamp: '3 days ago',
-          content: 'The uncompressed 24-bit / 96kHz audio masters sound huge on studio monitors. Zero phase cancellation.',
-        },
-      ],
-    },
     // # asset-showcase
     {
       id: 'dp-7',
@@ -637,6 +677,100 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
       likes: 29,
       hasLiked: false,
       replies: [],
+    },
+    // # music-x-visuals (Collaboration Board)
+    {
+      id: 'dp-9',
+      channelId: 'music-x-visuals',
+      author: 'Elena Vance',
+      role: 'ANNUAL PASS MEMBER',
+      avatarBg: 'from-teal-400 to-emerald-600',
+      timestamp: 'Today at 09:15',
+      content:
+        'Seeking an Unreal Engine 5 or Blender 3D artist to co-create an audio-reactive visualizer for my next atmospheric track "Ion Shroud". Master audio is completed at 128 BPM with separate stem groups (Bass, Synths, Foley) ready for dispatch.',
+      likes: 28,
+      hasLiked: false,
+      replies: [
+        {
+          id: 'dpr-6',
+          author: 'Kaelen Voss',
+          role: 'VIP GUEST',
+          avatarBg: 'from-purple-400 to-indigo-600',
+          timestamp: 'Today at 10:04',
+          content: 'Hey Elena! I have an obsidian canyon procedural geometry ready with volumetric fog that would sync great with your sub-bass pulses. Let\'s collaborate!',
+        },
+      ],
+    },
+    // # collab-requests (Collaboration Board)
+    {
+      id: 'dp-10',
+      channelId: 'collab-requests',
+      author: 'Odi',
+      role: 'CREATOR',
+      avatarBg: 'from-amber-400 to-amber-600',
+      timestamp: 'Yesterday at 16:30',
+      content:
+        'Open Syndicate Call: Äkinoya Chapter 1 Community Remix Stems are now available! Producers & sound designers: download the stems in Asset Vault, craft your remix, and submit links here. Top 3 selected remixes will be integrated into the official visualizer stream.',
+      imageUrl: visualizerThumbnailImg,
+      likes: 51,
+      hasLiked: false,
+      replies: [
+        {
+          id: 'dpr-7',
+          author: 'Sora Takahashi',
+          role: 'COMMUNITY MEMBER',
+          avatarBg: 'from-rose-400 to-orange-600',
+          timestamp: 'Yesterday at 17:10',
+          content: 'Stems downloaded! Are 24-bit 48kHz WAV submissions preferred for the final mixdown?',
+        },
+      ],
+    },
+    // # plugins-deals-vault (Pro Audio Lounge)
+    {
+      id: 'dp-11',
+      channelId: 'plugins-deals-vault',
+      author: 'Odi',
+      role: 'CREATOR',
+      avatarBg: 'from-amber-400 to-amber-600',
+      timestamp: 'Today at 08:00',
+      content:
+        '💎 [ARTIST DEAL VAULT] Syndicate Partner VST/AU deal is live! Use code AKN-SYNTH-2027 for 40% off FabFilter bundles & UAD native plugins. Also dropped 5 custom analog saturator racks for Ableton 12 and Bitwig in the sound design drive.',
+      likes: 47,
+      hasLiked: false,
+      replies: [
+        {
+          id: 'dpr-8',
+          author: 'Elena Vance',
+          role: 'ANNUAL PASS MEMBER',
+          avatarBg: 'from-teal-400 to-emerald-600',
+          timestamp: 'Today at 08:45',
+          content: 'The custom saturator rack on the master buss adds incredible analog warmth without muddying the transients. Essential toolkit!',
+        },
+      ],
+    },
+    // # founders-vip-lounge (Founders & VIP)
+    {
+      id: 'dp-12',
+      channelId: 'founders-vip-lounge',
+      author: 'Odi',
+      role: 'CREATOR',
+      avatarBg: 'from-amber-400 to-amber-600',
+      timestamp: 'Yesterday at 12:00',
+      content:
+        '👑 Welcome Founders! As NFC VIP Pass holders, you hold permanent lifetime voting rights and uncompressed master access. Next week we are streaming the private test cut for the Issue #1 animated teaser exclusively in this chamber.',
+      imageUrl: akinoyaVistaImg,
+      likes: 64,
+      hasLiked: false,
+      replies: [
+        {
+          id: 'dpr-9',
+          author: 'Pass Holder #007',
+          role: 'VIP GUEST',
+          avatarBg: 'from-yellow-400 to-amber-600',
+          timestamp: 'Yesterday at 13:20',
+          content: 'The NFC authentication on my physical card was super smooth. Truly honored to hold Pass #007. Looking forward to reviewing the test cut!',
+        },
+      ],
     },
   ]);
 
@@ -788,13 +922,83 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
     setWorkflowCommentInputs((prev) => ({ ...prev, [workflowId]: '' }));
   };
 
+  // Artist Verification Handlers
+  const handleArtistVerificationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setArtistSubmitting(true);
+    try {
+      await updateProfile({
+        is_artist: true,
+        bio: artistGenre ? `${artistGenre} · Verified Syndicate Artist` : undefined,
+      });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('akinoya_is_artist', 'true');
+      }
+      soundManager.playUnlockChime();
+      confetti({
+        particleCount: 60,
+        spread: 60,
+        origin: { y: 0.5 },
+        colors: ['#a855f7', '#6366f1', '#38bdf8', '#fbbf24'],
+      });
+      setArtistSuccess(true);
+      setTimeout(() => {
+        setArtistSuccess(false);
+        setIsArtistModalOpen(false);
+        setActiveChannelId('plugins-deals-vault');
+      }, 1200);
+    } catch (err) {
+      console.error('Artist verification error:', err);
+    } finally {
+      setArtistSubmitting(false);
+    }
+  };
+
+  const handleInstantArtistVerify = async () => {
+    setArtistSubmitting(true);
+    try {
+      await updateProfile({ is_artist: true });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('akinoya_is_artist', 'true');
+      }
+      soundManager.playUnlockChime();
+      confetti({
+        particleCount: 50,
+        spread: 50,
+        origin: { y: 0.5 },
+        colors: ['#a855f7', '#6366f1', '#38bdf8', '#fbbf24'],
+      });
+      setArtistSuccess(true);
+      setTimeout(() => {
+        setArtistSuccess(false);
+        setIsArtistModalOpen(false);
+        setActiveChannelId('plugins-deals-vault');
+      }, 1000);
+    } catch (err) {
+      console.error('Instant verification error:', err);
+    } finally {
+      setArtistSubmitting(false);
+    }
+  };
+
   // Handle Discussion Post Submit (RBAC-enforced)
   const handleCreateDiscussionPost = (e: React.FormEvent) => {
     e.preventDefault();
     if (!discussionInput.trim() && !discussionImage) return;
 
-    // RBAC: Check if channel requires VIP/Annual Pass
+    // RBAC: Check if channel requires VIP/Artist/Annual Pass
     const currentChannel = CHAT_CHANNELS.find((c) => c.id === activeChannelId);
+    if (currentChannel?.requiresArtist && !isArtist) {
+      soundManager.playTone(330, 0.08);
+      alert('Artist verification is required to post in the Pro Audio Lounge.');
+      setIsArtistModalOpen(true);
+      return;
+    }
+    if (currentChannel?.requiresVip && !isVip && !hasVipPass) {
+      soundManager.playTone(330, 0.08);
+      alert('Founders Pass (#001–#100) or VIP status required to post in the Founders VIP Lounge.');
+      return;
+    }
     if (currentChannel?.isAnnualPass && !isVipOrAbove) {
       soundManager.playTone(330, 0.08);
       alert(
@@ -1015,7 +1219,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
             { id: 'downloads', label: 'Asset & Download Vault', icon: FolderDown, count: '4' },
             { id: 'workflows', label: 'Workflows & Creative Lab', icon: Sliders, count: '4 Steps' },
             { id: 'visualizer', label: 'Early Access Visualizer Hub', icon: Film, count: '3' },
-            { id: 'discussion', label: 'Comm-Net Chat (5 Channels)', icon: MessageSquare, count: '5 Channels' },
+            { id: 'discussion', label: 'Comm-Net Chat (8 Channels)', icon: MessageSquare, count: '8 Channels' },
+            { id: 'creators', label: 'Creator Portfolios & Leaderboard', icon: Trophy, count: 'Spotlight' },
             { id: 'governance', label: 'Lore & Governance Portal', icon: Vote, count: '2' },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -1581,9 +1786,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
         {/* ======================================================== */}
         {activeSection === 'discussion' && (() => {
           const activeChannel = CHAT_CHANNELS.find((c) => c.id === activeChannelId) || CHAT_CHANNELS[0];
-          const channelPosts = discussionPosts.filter((p) => p.channelId === activeChannelId);
+          const channelPosts = discussionPosts.filter((p) => p.channelId === activeChannel.id);
           const publicChannels = CHAT_CHANNELS.filter((c) => c.category === 'PUBLIC HUB');
-          const creatorLabChannels = CHAT_CHANNELS.filter((c) => c.category === 'CREATOR LAB (ANNUAL PASS)');
+          const creatorLabChannels = CHAT_CHANNELS.filter((c) => c.category === 'CREATOR LAB & SHOWCASE');
+          const collabChannels = CHAT_CHANNELS.filter((c) => c.category === 'COLLABORATION BOARD');
+          const proAudioChannels = CHAT_CHANNELS.filter((c) => c.category === 'PRO AUDIO LOUNGE');
+          const foundersVipChannels = CHAT_CHANNELS.filter((c) => c.category === 'FOUNDERS & VIP');
+          const topCreator = getStoredCreators().sort((a, b) => b.likesCount - a.likesCount)[0];
 
           return (
             <motion.div
@@ -1601,14 +1810,14 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                       MODULE 04 · DISCORD-STYLE COMM-NET CHAT
                     </span>
                     <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                      5 CHANNELS · 100% OPEN COMMUNITY FEED
+                      8 CHANNELS · RBAC GATED HUBS &amp; SHOWCASES
                     </span>
                   </div>
                   <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
                     💬 Comm-Net · Discord Multi-Channel Hub
                   </h1>
                   <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                    Multi-channel Discord-style community hub. Explore public discussions, 3D visualizer pipelines, DAW synthesis lounges, and showcase your productions.
+                    Multi-channel Discord-style community hub. Explore public discussions, 3D visualizer pipelines, DAW synthesis lounges, open collaboration boards, and exclusive syndicate vaults.
                   </p>
                 </div>
               </div>
@@ -1625,7 +1834,15 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     <span className="text-xs font-mono font-bold truncate">#{activeChannel.name}</span>
                     <span
                       className={`text-[9.5px] px-2 py-0.5 rounded font-mono font-semibold ${
-                        activeChannel.isAnnualPass ? 'bg-amber-500/20 text-amber-300' : 'bg-cyan-500/20 text-cyan-300'
+                        activeChannel.category === 'FOUNDERS & VIP'
+                          ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/40'
+                          : activeChannel.category === 'PRO AUDIO LOUNGE'
+                          ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
+                          : activeChannel.category === 'CREATOR LAB & SHOWCASE'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
+                          : activeChannel.category === 'COLLABORATION BOARD'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40'
+                          : 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
                       }`}
                     >
                       {activeChannel.category}
@@ -1641,6 +1858,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                   {CHAT_CHANNELS.map((ch) => {
                     const isChActive = activeChannelId === ch.id;
+                    const isLocked =
+                      (ch.requiresArtist && !isArtist) ||
+                      (ch.requiresVip && !isVip && !hasVipPass) ||
+                      (ch.isAnnualPass && !isVipOrAbove);
+
                     return (
                       <button
                         key={ch.id}
@@ -1658,13 +1880,23 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                       >
                         <Hash className={`w-3.5 h-3.5 ${isChActive ? 'text-black' : 'text-cyan-400'}`} />
                         <span>{ch.name}</span>
-                        {ch.isAnnualPass && (
+                        {isLocked && <Lock className={`w-3 h-3 ${isChActive ? 'text-black' : 'text-yellow-400'}`} />}
+                        {ch.category === 'FOUNDERS & VIP' && (
                           <span
                             className={`text-[9px] px-1 py-0.2 rounded font-bold ${
-                              isChActive ? 'bg-black/20 text-black' : 'bg-amber-500/20 text-amber-300'
+                              isChActive ? 'bg-black/20 text-black' : 'bg-yellow-500/20 text-yellow-300'
                             }`}
                           >
                             VIP
+                          </span>
+                        )}
+                        {ch.category === 'PRO AUDIO LOUNGE' && (
+                          <span
+                            className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                              isChActive ? 'bg-black/20 text-black' : 'bg-purple-500/20 text-purple-300'
+                            }`}
+                          >
+                            ARTIST
                           </span>
                         )}
                       </button>
@@ -1737,11 +1969,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     })}
                   </div>
 
-                  {/* CATEGORY 2: 📁 CREATOR LAB (ANNUAL PASS) */}
+                  {/* CATEGORY 2: 📁 CREATOR LAB & SHOWCASE */}
                   <div className="space-y-1.5 pt-2 border-t border-white/5">
                     <div className="text-[10px] font-mono font-bold text-amber-300/80 tracking-wider flex items-center justify-between uppercase px-1 pb-1">
                       <span className="flex items-center gap-1.5">
-                        📁 CREATOR LAB
+                        📁 CREATOR LAB &amp; SHOWCASE
                       </span>
                       <span className="text-[9px] text-amber-400 font-bold bg-amber-950/80 px-1.5 py-0.2 rounded border border-amber-500/30">
                         ANNUAL PASS
@@ -1771,18 +2003,187 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                               </div>
                               <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
                                 {ch.id === 'visualizers-3d'
-                                  ? 'Blender & Octane render discussion'
-                                  : ch.id === 'music-daw-lounge'
-                                  ? 'Synthesizer patches & Ableton files'
-                                  : 'Member renders, fan art & remix stems'}
+                                  ? 'Blender & Octane 3D scene architecture'
+                                  : 'Community 4K renders & art showcase'}
                               </div>
                             </div>
                           </div>
-                          <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0 ml-1" />
+                          {!isVipOrAbove && <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0 ml-1" />}
                         </button>
                       );
                     })}
                   </div>
+
+                  {/* CATEGORY 3: 📁 COLLABORATION BOARD */}
+                  <div className="space-y-1.5 pt-2 border-t border-white/5">
+                    <div className="text-[10px] font-mono font-bold text-cyan-300/80 tracking-wider flex items-center justify-between uppercase px-1 pb-1">
+                      <span className="flex items-center gap-1.5">
+                        📁 COLLABORATION BOARD
+                      </span>
+                      <span className="text-[9px] text-cyan-400 font-bold bg-cyan-950/80 px-1.5 py-0.2 rounded border border-cyan-500/30">
+                        OPEN COLLAB
+                      </span>
+                    </div>
+                    {collabChannels.map((ch) => {
+                      const isChActive = activeChannelId === ch.id;
+                      return (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveChannelId(ch.id);
+                            soundManager.playTone(600, 0.05);
+                          }}
+                          className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
+                            isChActive
+                              ? 'bg-cyan-950/60 border-cyan-400/60 text-white shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                              : 'bg-black/40 border-white/5 hover:border-white/15 text-white/70 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-cyan-400' : 'text-white/40 group-hover:text-cyan-400'}`} />
+                            <div className="min-w-0">
+                              <div className="text-xs font-mono font-semibold truncate leading-tight">
+                                {ch.name}
+                              </div>
+                              <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
+                                {ch.id === 'music-x-visuals'
+                                  ? 'Music producers x 3D animators'
+                                  : 'Co-op tracks, stems & asset swaps'}
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* CATEGORY 4: 📁 PRO AUDIO LOUNGE (🔒 ARTISTS ONLY) */}
+                  <div className="space-y-1.5 pt-2 border-t border-white/5">
+                    <div className="text-[10px] font-mono font-bold text-purple-300/80 tracking-wider flex items-center justify-between uppercase px-1 pb-1">
+                      <span className="flex items-center gap-1.5">
+                        📁 PRO AUDIO LOUNGE
+                      </span>
+                      <span className="text-[9px] text-purple-400 font-bold bg-purple-950/80 px-1.5 py-0.2 rounded border border-purple-500/30">
+                        ARTISTS ONLY
+                      </span>
+                    </div>
+                    {proAudioChannels.map((ch) => {
+                      const isChActive = activeChannelId === ch.id;
+                      return (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveChannelId(ch.id);
+                            soundManager.playTone(600, 0.05);
+                          }}
+                          className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
+                            isChActive
+                              ? 'bg-purple-950/50 border-purple-400/60 text-white shadow-[0_0_12px_rgba(168,85,247,0.2)]'
+                              : 'bg-black/40 border-white/5 hover:border-white/15 text-white/70 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-purple-400' : 'text-white/40 group-hover:text-purple-400'}`} />
+                            <div className="min-w-0">
+                              <div className="text-xs font-mono font-semibold truncate leading-tight">
+                                {ch.name}
+                              </div>
+                              <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
+                                Curated VST/AU deals &amp; DAW templates
+                              </div>
+                            </div>
+                          </div>
+                          {!isArtist && <Lock className="w-3.5 h-3.5 text-purple-400 shrink-0 ml-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* CATEGORY 5: 📁 FOUNDERS & VIP (🔒 VIP PASS HOLDERS) */}
+                  <div className="space-y-1.5 pt-2 border-t border-white/5">
+                    <div className="text-[10px] font-mono font-bold text-yellow-300/80 tracking-wider flex items-center justify-between uppercase px-1 pb-1">
+                      <span className="flex items-center gap-1.5">
+                        📁 FOUNDERS &amp; VIP
+                      </span>
+                      <span className="text-[9px] text-yellow-400 font-bold bg-yellow-950/80 px-1.5 py-0.2 rounded border border-yellow-500/30">
+                        VIP PASS
+                      </span>
+                    </div>
+                    {foundersVipChannels.map((ch) => {
+                      const isChActive = activeChannelId === ch.id;
+                      return (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveChannelId(ch.id);
+                            soundManager.playTone(600, 0.05);
+                          }}
+                          className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
+                            isChActive
+                              ? 'bg-yellow-950/50 border-yellow-400/60 text-white shadow-[0_0_12px_rgba(234,179,8,0.2)]'
+                              : 'bg-black/40 border-white/5 hover:border-white/15 text-white/70 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-yellow-400' : 'text-white/40 group-hover:text-yellow-400'}`} />
+                            <div className="min-w-0">
+                              <div className="text-xs font-mono font-semibold truncate leading-tight">
+                                {ch.name}
+                              </div>
+                              <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
+                                Founding NFC Pass Holders (#001–#100)
+                              </div>
+                            </div>
+                          </div>
+                          {!isVip && !hasVipPass && <Crown className="w-3.5 h-3.5 text-yellow-400 shrink-0 ml-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Portfolio of the Month Spotlight Mini-Widget */}
+                  {topCreator && (
+                    <div className="pt-3 border-t border-white/10">
+                      <div
+                        onClick={() => {
+                          soundManager.playTone(660, 0.05);
+                          setSelectedCreatorUsername(topCreator.username);
+                          setActiveSection('creators');
+                          if (onOpenCreator) onOpenCreator(topCreator.username);
+                        }}
+                        className="p-3 rounded-xl bg-gradient-to-r from-amber-950/50 via-black to-black border border-amber-500/30 hover:border-amber-400/60 transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[9px] font-mono font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                            <Trophy className="w-3 h-3 text-amber-400" />
+                            PORTFOLIO OF THE MONTH
+                          </span>
+                          <span className="text-[9px] font-mono text-amber-400 font-bold">#1</span>
+                        </div>
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-8 h-8 rounded-lg bg-gradient-to-tr ${topCreator.avatarGradient} flex items-center justify-center font-bold text-xs text-white shrink-0`}>
+                            {topCreator.fullName.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors truncate">
+                              {topCreator.fullName}
+                            </div>
+                            <div className="text-[9.5px] font-mono text-white/50 flex items-center gap-1">
+                              <Heart className="w-2.5 h-2.5 text-rose-400 fill-rose-400" />
+                              <span>{topCreator.likesCount} appreciations</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-2 text-[10px] font-mono text-cyan-400 flex items-center justify-between group-hover:translate-x-0.5 transition-transform">
+                          <span>Explore Portfolio</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </aside>
 
                 {/* RIGHT CHAT AREA */}
@@ -1796,8 +2197,14 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           {activeChannel.name}
                         </h2>
                         <span className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                          activeChannel.isAnnualPass
+                          activeChannel.category === 'FOUNDERS & VIP'
+                            ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/40'
+                            : activeChannel.category === 'PRO AUDIO LOUNGE'
+                            ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
+                            : activeChannel.category === 'CREATOR LAB & SHOWCASE'
                             ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
+                            : activeChannel.category === 'COLLABORATION BOARD'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40'
                             : 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
                         }`}>
                           {activeChannel.category}
@@ -1819,159 +2226,105 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                     </div>
                   </div>
 
-                  {/* Channel Filtered Message Feed */}
-                  <div className="space-y-4">
-                    {channelPosts.length === 0 ? (
-                      <div className="p-8 rounded-2xl bg-black/40 border border-white/10 text-center space-y-2">
-                        <MessageSquare className="w-8 h-8 text-white/30 mx-auto" />
-                        <div className="text-sm font-display font-bold text-white">
-                          No transmissions in #{activeChannel.name} yet
+                  {/* Channel Gating Check */}
+                  {isProAudioLocked ? (
+                    <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-purple-950/40 via-black/80 to-black border border-purple-500/40 shadow-[0_0_40px_rgba(168,85,247,0.15)] space-y-5 text-center sm:text-left">
+                      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-purple-500/20 border border-purple-400/50 flex items-center justify-center text-purple-400 shrink-0 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                          <Lock className="w-7 h-7" />
                         </div>
-                        <p className="text-xs text-white/50 font-sans max-w-sm mx-auto">
-                          Be the first to transmit a message or drop project feedback in this channel!
-                        </p>
-                      </div>
-                    ) : (
-                      channelPosts.map((post) => (
-                        <div
-                          key={post.id}
-                          className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 hover:border-white/20 transition-all space-y-3 shadow-[0_4px_25px_rgba(0,0,0,0.5)]"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className={`w-9 h-9 rounded-full bg-gradient-to-tr ${post.avatarBg} flex items-center justify-center font-bold text-xs text-black shrink-0`}
-                              >
-                                {post.author.slice(0, 2).toUpperCase()}
-                              </div>
-                              <div>
-                                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                                  <span>{post.author}</span>
-                                  <span
-                                    className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                                      post.role === 'CREATOR'
-                                        ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
-                                        : post.role === 'ANNUAL PASS' || post.role === 'ANNUAL PASS MEMBER'
-                                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
-                                        : post.role === 'VIP GUEST' || post.role === 'PATRON' || post.role === 'PATRON MEMBER'
-                                        ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
-                                        : 'bg-slate-500/20 text-slate-300 border border-slate-400/40'
-                                    }`}
-                                  >
-                                    {post.role === 'PATRON' || post.role === 'PATRON MEMBER' ? 'VIP GUEST' : post.role}
-                                  </span>
-                                </div>
-                                <div className="text-[10px] font-mono text-white/40">{post.timestamp}</div>
-                              </div>
-                            </div>
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-400/40 font-bold">
+                              PRO AUDIO LOUNGE 🔒
+                            </span>
+                            <span className="text-[10px] font-mono text-purple-400">ARTIST VERIFICATION REQUIRED</span>
                           </div>
-
-                          <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-sans whitespace-pre-line">
-                            {post.content}
+                          <h3 className="text-lg sm:text-xl font-display font-bold text-white">
+                            Producer &amp; Sound Designer Vault Locked
+                          </h3>
+                          <p className="text-xs sm:text-sm text-white/70 font-sans leading-relaxed">
+                            Channel <span className="font-mono text-purple-300">#plugins-deals-vault</span> is exclusively open to verified music producers, audio engineers, and sound designers. Verify your artist credentials to unlock instant access to manufacturer discount codes, studio master DAW chains, and stem swap pools.
                           </p>
-
-                          {/* Large High-Res Image Post Attachment (Strictly disabled in #general-chat) */}
-                          {post.imageUrl && post.channelId !== 'general-chat' && (
-                            <div className="rounded-xl overflow-hidden border border-white/10 max-h-96 bg-black/80 flex items-center justify-center">
-                              <img src={post.imageUrl} alt="Attached" className="max-h-96 w-full object-cover" />
-                            </div>
-                          )}
-
-                          {/* Like & Reply Bar */}
-                          <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleDiscussionLike(post.id)}
-                              className={`min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
-                                post.hasLiked
-                                  ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold'
-                                  : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
-                              }`}
-                            >
-                              <ThumbsUp className={`w-3.5 h-3.5 ${post.hasLiked ? 'text-cyan-400' : ''}`} />
-                              <span>{post.likes}</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => setActiveReplyPost(post)}
-                              className="min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5" />
-                              <span>{post.replies.length} Replies</span>
-                            </button>
-                          </div>
-
-                          {/* Inline replies */}
-                          {post.replies.length > 0 && (
-                            <div className="pt-2 border-t border-white/5 space-y-2">
-                              {post.replies.map((rep) => (
-                                <div key={rep.id} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 text-xs">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="font-bold text-cyan-300 text-[11px]">{rep.author}</span>
-                                    <span className="text-[9px] font-mono text-white/40">{rep.timestamp}</span>
-                                  </div>
-                                  <p className="text-white/80 font-sans">{rep.content}</p>
-                                </div>
-                              ))}
-                            </div>
-                          )}
                         </div>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Bottom Discord-Style Message Input Box */}
-                  <form
-                    onSubmit={handleCreateDiscussionPost}
-                    className="p-4 sm:p-5 rounded-2xl bg-black/75 border border-white/10 focus-within:border-cyan-400/50 space-y-3 transition-colors shadow-2xl"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-7 h-7 rounded-full bg-gradient-to-tr ${
-                          role === 'CREATOR'
-                            ? 'from-amber-400 to-amber-600'
-                            : role === 'ANNUAL_PASS'
-                            ? 'from-cyan-400 to-indigo-600'
-                            : role === 'VIP_GUEST'
-                            ? 'from-purple-400 to-purple-600'
-                            : 'from-slate-400 to-slate-600'
-                        } flex items-center justify-center font-bold text-[10px] text-black shrink-0`}
-                      >
-                        {(userDisplayName || 'US').slice(0, 2).toUpperCase()}
                       </div>
-                      <div>
-                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <span>{userDisplayName}</span>
-                          <span
-                            className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                              role === 'CREATOR'
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
-                                : role === 'ANNUAL_PASS'
-                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
-                                : role === 'VIP_GUEST'
-                                ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
-                                : 'bg-slate-500/20 text-slate-300 border border-slate-400/40'
-                            }`}
-                          >
-                            {role === 'CREATOR'
-                              ? 'CREATOR'
-                              : role === 'ANNUAL_PASS'
-                              ? 'ANNUAL PASS'
-                              : role === 'VIP_GUEST'
-                              ? 'VIP GUEST'
-                              : 'FREE MEMBER'}
-                          </span>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        <div className="p-3 rounded-xl bg-purple-950/30 border border-purple-500/20 text-xs">
+                          <div className="font-bold text-purple-300 mb-0.5">💎 VST/AU Partner Deals</div>
+                          <div className="text-[11px] text-white/60">40% FabFilter &amp; UAD native coupon codes</div>
                         </div>
+                        <div className="p-3 rounded-xl bg-purple-950/30 border border-purple-500/20 text-xs">
+                          <div className="font-bold text-purple-300 mb-0.5">🎛️ DAW Master Racks</div>
+                          <div className="text-[11px] text-white/60">Ableton 12 &amp; Bitwig analog saturator templates</div>
+                        </div>
+                        <div className="p-3 rounded-xl bg-purple-950/30 border border-purple-500/20 text-xs">
+                          <div className="font-bold text-purple-300 mb-0.5">⚡ Stem Collaboration</div>
+                          <div className="text-[11px] text-white/60">Direct stem downloads and feedback loops</div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-3 border-t border-purple-500/20">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundManager.playTone(660, 0.05);
+                            setIsArtistModalOpen(true);
+                          }}
+                          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-mono font-bold text-xs shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all flex items-center gap-2 cursor-pointer"
+                        >
+                          <ShieldCheck className="w-4 h-4" />
+                          <span>Request Artist Verification</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleInstantArtistVerify}
+                          className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-purple-400/30 text-purple-300 font-mono text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                          <span>Instant Syndicate Access (Demo)</span>
+                        </button>
                       </div>
                     </div>
-
-                    {activeChannel.isAnnualPass && !isVipOrAbove && (
-                      <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 text-xs font-mono text-amber-300">
-                          <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
-                          <span className="whitespace-normal break-words leading-tight">Creator Lab transmission requires VIP Guest Pass or Annual Pass</span>
+                  ) : isFoundersVipLocked ? (
+                    <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-yellow-950/40 via-black/80 to-black border border-yellow-500/40 shadow-[0_0_40px_rgba(234,179,8,0.15)] space-y-5 text-center sm:text-left">
+                      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-yellow-500/20 border border-yellow-400/50 flex items-center justify-center text-yellow-400 shrink-0 shadow-[0_0_20px_rgba(234,179,8,0.3)]">
+                          <Crown className="w-7 h-7" />
                         </div>
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-yellow-950 text-yellow-300 border border-yellow-400/40 font-bold">
+                              FOUNDERS &amp; VIP 👑
+                            </span>
+                            <span className="text-[10px] font-mono text-yellow-400">VIP PASS RESTRICTED</span>
+                          </div>
+                          <h3 className="text-lg sm:text-xl font-display font-bold text-white">
+                            Founders Council Chamber Restricted
+                          </h3>
+                          <p className="text-xs sm:text-sm text-white/70 font-sans leading-relaxed">
+                            Channel <span className="font-mono text-yellow-300">#founders-vip-lounge</span> is strictly reserved for owners of physical Äkinoya NFC Master Passes (#001–#100) and verified VIP members.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        <div className="p-3 rounded-xl bg-yellow-950/30 border border-yellow-500/20 text-xs">
+                          <div className="font-bold text-yellow-300 mb-0.5">👑 Direct Creative Council</div>
+                          <div className="text-[11px] text-white/60">Direct channel with Odi and lead production team</div>
+                        </div>
+                        <div className="p-3 rounded-xl bg-yellow-950/30 border border-yellow-500/20 text-xs">
+                          <div className="font-bold text-yellow-300 mb-0.5">🎬 4K 60FPS Test Streams</div>
+                          <div className="text-[11px] text-white/60">Unreleased cinematic cut previews &amp; ProRes masters</div>
+                        </div>
+                        <div className="p-3 rounded-xl bg-yellow-950/30 border border-yellow-500/20 text-xs">
+                          <div className="font-bold text-yellow-300 mb-0.5">🗳️ Lifetime Governance</div>
+                          <div className="text-[11px] text-white/60">Binding narrative votes &amp; physical drop whitelist</div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-3 border-t border-yellow-500/20">
                         <button
                           type="button"
                           onClick={() => {
@@ -1981,87 +2334,338 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                               openAuthModal('signin');
                             }
                           }}
-                          className="min-h-[48px] px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all shrink-0 cursor-pointer"
+                          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all flex items-center gap-2 cursor-pointer"
                         >
-                          {isAuthenticated ? 'VERIFY / CLAIM VIP PASS' : 'SIGN IN / REGISTER'}
+                          <Crown className="w-4 h-4" />
+                          <span>{isAuthenticated ? 'Verify / Claim VIP Pass' : 'Sign In to Claim VIP Pass'}</span>
                         </button>
                       </div>
-                    )}
+                    </div>
+                  ) : (
+                    <>
+                      {/* Channel Filtered Message Feed */}
+                      <div className="space-y-4">
+                        {channelPosts.length === 0 ? (
+                          <div className="p-8 rounded-2xl bg-black/40 border border-white/10 text-center space-y-2">
+                            <MessageSquare className="w-8 h-8 text-white/30 mx-auto" />
+                            <div className="text-sm font-display font-bold text-white">
+                              No transmissions in #{activeChannel.name} yet
+                            </div>
+                            <p className="text-xs text-white/50 font-sans max-w-sm mx-auto">
+                              Be the first to transmit a message or drop project feedback in this channel!
+                            </p>
+                          </div>
+                        ) : (
+                          channelPosts.map((post) => (
+                            <div
+                              key={post.id}
+                              className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 hover:border-white/20 transition-all space-y-3 shadow-[0_4px_25px_rgba(0,0,0,0.5)]"
+                            >
+                              <div className="flex items-center justify-between">
+                                {(() => {
+                                  const creatorMap: Record<string, string> = {
+                                    'Odi': 'odi',
+                                    'Elena Vance': 'elena-vance',
+                                    'Kaelen Voss': 'kaelen-voss',
+                                    'Kaelen Thorne': 'kaelen-voss',
+                                    'Sora Takahashi': 'sora-t',
+                                  };
+                                  const authorUsername = creatorMap[post.author] || post.author.toLowerCase().replace(/\s+/g, '-');
 
-                    <textarea
-                      value={discussionInput}
-                      onChange={(e) => setDiscussionInput(e.target.value)}
-                      placeholder={
-                        activeChannel.isAnnualPass && !isVipOrAbove
-                          ? `Redeem VIP Pass to message #${activeChannel.name}...`
-                          : `Message #${activeChannel.name}...`
-                      }
-                      rows={3}
-                      className="w-full bg-transparent text-xs sm:text-sm text-white placeholder-white/30 outline-none resize-none font-sans"
-                    />
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        soundManager.playTone(660, 0.05);
+                                        setSelectedCreatorUsername(authorUsername);
+                                        setActiveSection('creators');
+                                        if (onOpenCreator) onOpenCreator(authorUsername);
+                                      }}
+                                      className="flex items-center gap-2.5 text-left group cursor-pointer"
+                                      title={`View ${post.author}'s Creator Portfolio`}
+                                    >
+                                      <div
+                                        className={`w-9 h-9 rounded-full bg-gradient-to-tr ${post.avatarBg} flex items-center justify-center font-bold text-xs text-black shrink-0 group-hover:scale-105 transition-transform`}
+                                      >
+                                        {post.author.slice(0, 2).toUpperCase()}
+                                      </div>
+                                      <div>
+                                        <div className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors flex items-center gap-1.5">
+                                          <span>{post.author}</span>
+                                          <span
+                                            className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                                              post.role === 'CREATOR'
+                                                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
+                                                : post.role === 'ANNUAL PASS' || post.role === 'ANNUAL PASS MEMBER'
+                                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                                                : post.role === 'VIP GUEST' || post.role === 'PATRON' || post.role === 'PATRON MEMBER'
+                                                ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
+                                                : 'bg-slate-500/20 text-slate-300 border border-slate-400/40'
+                                            }`}
+                                          >
+                                            {post.role === 'PATRON' || post.role === 'PATRON MEMBER' ? 'VIP GUEST' : post.role}
+                                          </span>
+                                        </div>
+                                        <div className="text-[10px] font-mono text-white/40">{post.timestamp}</div>
+                                      </div>
+                                    </button>
+                                  );
+                                })()}
+                              </div>
 
-                    {discussionImage && activeChannelId !== 'general-chat' && (
-                      <div className="flex items-center gap-2 bg-white/5 p-2 rounded-xl w-fit border border-cyan-500/30">
-                        <img src={discussionImage} alt="Upload" className="w-16 h-16 object-cover rounded-lg" />
-                        <button
-                          type="button"
-                          onClick={() => setDiscussionImage(null)}
-                          className="p-1 text-white/50 hover:text-white"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                              <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-sans whitespace-pre-line">
+                                {post.content}
+                              </p>
+
+                              {/* Large High-Res Image Post Attachment (Strictly disabled in #general-chat) */}
+                              {post.imageUrl && post.channelId !== 'general-chat' && (
+                                <div className="rounded-xl overflow-hidden border border-white/10 max-h-96 bg-black/80 flex items-center justify-center">
+                                  <img src={post.imageUrl} alt="Attached" className="max-h-96 w-full object-cover" />
+                                </div>
+                              )}
+
+                              {/* Like & Reply Bar */}
+                              <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleDiscussionLike(post.id)}
+                                  className={`min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
+                                    post.hasLiked
+                                      ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold'
+                                      : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
+                                  }`}
+                                >
+                                  <ThumbsUp className={`w-3.5 h-3.5 ${post.hasLiked ? 'text-cyan-400' : ''}`} />
+                                  <span>{post.likes}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveReplyPost(post)}
+                                  className="min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5" />
+                                  <span>{post.replies.length} Replies</span>
+                                </button>
+                              </div>
+
+                              {/* Inline replies */}
+                              {post.replies.length > 0 && (
+                                <div className="pt-2 border-t border-white/5 space-y-2">
+                                  {post.replies.map((rep) => (
+                                    <div key={rep.id} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 text-xs">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <span className="font-bold text-cyan-300 text-[11px]">{rep.author}</span>
+                                        <span className="text-[9px] font-mono text-white/40">{rep.timestamp}</span>
+                                      </div>
+                                      <p className="text-white/80 font-sans">{rep.content}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        )}
                       </div>
-                    )}
 
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10">
-                      {activeChannelId === 'general-chat' ? (
-                        <div className="flex items-center gap-1.5 text-[11px] font-mono text-white/40">
-                          <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>#general-chat is strictly text-only</span>
+                      {/* Bottom Discord-Style Message Input Box */}
+                      <form
+                        onSubmit={handleCreateDiscussionPost}
+                        className="p-4 sm:p-5 rounded-2xl bg-black/75 border border-white/10 focus-within:border-cyan-400/50 space-y-3 transition-colors shadow-2xl"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={`w-7 h-7 rounded-full bg-gradient-to-tr ${
+                              role === 'CREATOR'
+                                ? 'from-amber-400 to-amber-600'
+                                : role === 'ANNUAL_PASS'
+                                ? 'from-cyan-400 to-indigo-600'
+                                : role === 'VIP_GUEST'
+                                ? 'from-purple-400 to-purple-600'
+                                : 'from-slate-400 to-slate-600'
+                            } flex items-center justify-center font-bold text-[10px] text-black shrink-0`}
+                          >
+                            {(userDisplayName || 'US').slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                              <span>{userDisplayName}</span>
+                              <span
+                                className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                                  role === 'CREATOR'
+                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
+                                    : role === 'ANNUAL_PASS'
+                                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                                    : role === 'VIP_GUEST'
+                                    ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
+                                    : 'bg-slate-500/20 text-slate-300 border border-slate-400/40'
+                                }`}
+                              >
+                                {role === 'CREATOR'
+                                  ? 'CREATOR'
+                                  : role === 'ANNUAL_PASS'
+                                  ? 'ANNUAL PASS'
+                                  : role === 'VIP_GUEST'
+                                  ? 'VIP GUEST'
+                                  : 'FREE MEMBER'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      ) : (
-                        <>
-                          <input
-                            type="file"
-                            ref={discussionFileInputRef}
-                            accept="image/*"
-                            onChange={(e) => {
-                              const f = e.target.files?.[0];
-                              if (f) {
-                                const r = new FileReader();
-                                r.onload = () => typeof r.result === 'string' && setDiscussionImage(r.result);
-                                r.readAsDataURL(f);
-                              }
-                            }}
-                            className="hidden"
-                          />
+
+                        {activeChannel.isAnnualPass && !isVipOrAbove && (
+                          <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 text-xs font-mono text-amber-300">
+                              <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
+                              <span className="whitespace-normal break-words leading-tight">Creator Lab transmission requires VIP Guest Pass or Annual Pass</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (isAuthenticated) {
+                                  window.location.href = '/verify';
+                                } else {
+                                  openAuthModal('signin');
+                                }
+                              }}
+                              className="min-h-[48px] px-3.5 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all shrink-0 cursor-pointer"
+                            >
+                              {isAuthenticated ? 'VERIFY / CLAIM VIP PASS' : 'SIGN IN / REGISTER'}
+                            </button>
+                          </div>
+                        )}
+
+                        <textarea
+                          value={discussionInput}
+                          onChange={(e) => setDiscussionInput(e.target.value)}
+                          placeholder={
+                            activeChannel.isAnnualPass && !isVipOrAbove
+                              ? `Redeem VIP Pass to message #${activeChannel.name}...`
+                              : `Message #${activeChannel.name}...`
+                          }
+                          rows={3}
+                          className="w-full bg-transparent text-xs sm:text-sm text-white placeholder-white/30 outline-none resize-none font-sans"
+                        />
+
+                        {discussionImage && activeChannelId !== 'general-chat' && (
+                          <div className="flex items-center gap-2 bg-white/5 p-2 rounded-xl w-fit border border-cyan-500/30">
+                            <img src={discussionImage} alt="Upload" className="w-16 h-16 object-cover rounded-lg" />
+                            <button
+                              type="button"
+                              onClick={() => setDiscussionImage(null)}
+                              className="p-1 text-white/50 hover:text-white"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10">
+                          {activeChannelId === 'general-chat' ? (
+                            <div className="flex items-center gap-1.5 text-[11px] font-mono text-white/40">
+                              <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
+                              <span>#general-chat is strictly text-only</span>
+                            </div>
+                          ) : (
+                            <>
+                              <input
+                                type="file"
+                                ref={discussionFileInputRef}
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (f) {
+                                    const r = new FileReader();
+                                    r.onload = () => typeof r.result === 'string' && setDiscussionImage(r.result);
+                                    r.readAsDataURL(f);
+                                  }
+                                }}
+                                className="hidden"
+                              />
+
+                              <button
+                                type="button"
+                                onClick={() => discussionFileInputRef.current?.click()}
+                                className="min-h-[48px] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
+                              >
+                                <ImageIcon className="w-4 h-4 text-cyan-400" />
+                                <span>Attach Image</span>
+                              </button>
+                            </>
+                          )}
 
                           <button
-                            type="button"
-                            onClick={() => discussionFileInputRef.current?.click()}
-                            className="min-h-[48px] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
+                            type="submit"
+                            disabled={!discussionInput.trim() && !discussionImage}
+                            className="min-h-[48px] px-5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-30 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ml-auto"
                           >
-                            <ImageIcon className="w-4 h-4 text-cyan-400" />
-                            <span>Attach Image</span>
+                            <Send className="w-3.5 h-3.5" />
+                            <span>TRANSMIT MESSAGE</span>
                           </button>
-                        </>
-                      )}
-
-                      <button
-                        type="submit"
-                        disabled={!discussionInput.trim() && !discussionImage}
-                        className="min-h-[48px] px-5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-30 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ml-auto"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                        <span>TRANSMIT MESSAGE</span>
-                      </button>
-                    </div>
-                  </form>
+                        </div>
+                      </form>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>
           );
         })()}
+
+        {/* ======================================================== */}
+        {/* SECTION 5: CREATOR PORTFOLIOS & LEADERBOARD              */}
+        {/* ======================================================== */}
+        {activeSection === 'creators' && (
+          <motion.div
+            key="section-creators"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="space-y-6"
+          >
+            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-amber-950/40 via-black/50 to-black/80 border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-400/40 text-amber-300 font-bold tracking-wider">
+                    MODULE 05 · CREATOR NETWORK &amp; PORTFOLIOS
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">
+                    LIVE LEADERBOARD · PUBLIC PORTFOLIOS
+                  </span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
+                  🏆 Creator Syndicate &amp; Leaderboards
+                </h1>
+                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
+                  Explore public creator portfolios, celebrate the Portfolio of the Month, leave appreciations, and transmit direct peer-to-peer collaboration proposals.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              <div className="lg:col-span-1">
+                <CreatorLeaderboard
+                  selectedUsername={selectedCreatorUsername}
+                  onSelectCreator={(u) => {
+                    setSelectedCreatorUsername(u);
+                    if (onOpenCreator) onOpenCreator(u);
+                  }}
+                />
+              </div>
+              <div className="lg:col-span-2">
+                <CreatorPortfolioView
+                  username={selectedCreatorUsername}
+                  onBackToCommunity={() => setActiveSection('discussion')}
+                  onBackToHome={onBackToHome}
+                  onNavigateToCreator={(u) => {
+                    setSelectedCreatorUsername(u);
+                    if (onOpenCreator) onOpenCreator(u);
+                  }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* ======================================================== */}
         {/* SECTION 5: LORE & GOVERNANCE PORTAL                      */}
@@ -2412,7 +3016,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 </button>
               </div>
 
-              {/* Public Channels */}
+              {/* CATEGORY 1: PUBLIC HUB */}
               <div className="space-y-2">
                 <div className="text-[11px] font-mono font-bold text-white/50 uppercase tracking-wider px-1">
                   📁 PUBLIC HUB (FREE &amp; OPEN)
@@ -2448,15 +3052,15 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                 })}
               </div>
 
-              {/* Creator Lab Channels */}
+              {/* CATEGORY 2: CREATOR LAB & SHOWCASE */}
               <div className="space-y-2 pt-2 border-t border-white/5">
                 <div className="text-[11px] font-mono font-bold text-amber-300/80 uppercase tracking-wider px-1 flex items-center justify-between">
-                  <span>📁 CREATOR LAB (VIP / ANNUAL PASS)</span>
+                  <span>📁 CREATOR LAB &amp; SHOWCASE</span>
                   <span className="text-[9.5px] bg-amber-950/80 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">
                     VIP PASS REQUIRED
                   </span>
                 </div>
-                {CHAT_CHANNELS.filter((c) => c.category === 'CREATOR LAB (ANNUAL PASS)').map((ch) => {
+                {CHAT_CHANNELS.filter((c) => c.category === 'CREATOR LAB & SHOWCASE').map((ch) => {
                   const isChActive = activeChannelId === ch.id;
                   return (
                     <button
@@ -2480,11 +3084,261 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({ onBackToHome, onOpen
                           <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
                         </div>
                       </div>
-                      <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
+                      {!isVipOrAbove && <Lock className="w-4 h-4 text-yellow-400 shrink-0" />}
                     </button>
                   );
                 })}
               </div>
+
+              {/* CATEGORY 3: COLLABORATION BOARD */}
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <div className="text-[11px] font-mono font-bold text-cyan-300/80 uppercase tracking-wider px-1 flex items-center justify-between">
+                  <span>📁 COLLABORATION BOARD</span>
+                  <span className="text-[9.5px] bg-cyan-950/80 text-cyan-300 px-2 py-0.5 rounded border border-cyan-500/30">
+                    OPEN COLLAB
+                  </span>
+                </div>
+                {CHAT_CHANNELS.filter((c) => c.category === 'COLLABORATION BOARD').map((ch) => {
+                  const isChActive = activeChannelId === ch.id;
+                  return (
+                    <button
+                      key={ch.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveChannelId(ch.id);
+                        setIsMobileChannelsOpen(false);
+                        soundManager.playTone(600, 0.05);
+                      }}
+                      className={`w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                        isChActive
+                          ? 'bg-cyan-950/60 border-cyan-400 text-white shadow-[0_0_15px_rgba(56,189,248,0.25)]'
+                          : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-cyan-400' : 'text-white/40'}`} />
+                        <div className="min-w-0">
+                          <div className="text-xs font-mono font-bold truncate">#{ch.name}</div>
+                          <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
+                        </div>
+                      </div>
+                      {isChActive && <Check className="w-4 h-4 text-cyan-400 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* CATEGORY 4: PRO AUDIO LOUNGE */}
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <div className="text-[11px] font-mono font-bold text-purple-300/80 uppercase tracking-wider px-1 flex items-center justify-between">
+                  <span>📁 PRO AUDIO LOUNGE</span>
+                  <span className="text-[9.5px] bg-purple-950/80 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">
+                    ARTISTS ONLY 🔒
+                  </span>
+                </div>
+                {CHAT_CHANNELS.filter((c) => c.category === 'PRO AUDIO LOUNGE').map((ch) => {
+                  const isChActive = activeChannelId === ch.id;
+                  return (
+                    <button
+                      key={ch.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveChannelId(ch.id);
+                        setIsMobileChannelsOpen(false);
+                        soundManager.playTone(600, 0.05);
+                      }}
+                      className={`w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                        isChActive
+                          ? 'bg-purple-950/50 border-purple-400 text-white shadow-[0_0_15px_rgba(168,85,247,0.25)]'
+                          : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-purple-400' : 'text-white/40'}`} />
+                        <div className="min-w-0">
+                          <div className="text-xs font-mono font-bold truncate">#{ch.name}</div>
+                          <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
+                        </div>
+                      </div>
+                      {!isArtist && <Lock className="w-4 h-4 text-purple-400 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* CATEGORY 5: FOUNDERS & VIP */}
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <div className="text-[11px] font-mono font-bold text-yellow-300/80 uppercase tracking-wider px-1 flex items-center justify-between">
+                  <span>📁 FOUNDERS &amp; VIP</span>
+                  <span className="text-[9.5px] bg-yellow-950/80 text-yellow-300 px-2 py-0.5 rounded border border-yellow-500/30">
+                    VIP PASS 👑
+                  </span>
+                </div>
+                {CHAT_CHANNELS.filter((c) => c.category === 'FOUNDERS & VIP').map((ch) => {
+                  const isChActive = activeChannelId === ch.id;
+                  return (
+                    <button
+                      key={ch.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveChannelId(ch.id);
+                        setIsMobileChannelsOpen(false);
+                        soundManager.playTone(600, 0.05);
+                      }}
+                      className={`w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                        isChActive
+                          ? 'bg-yellow-950/50 border-yellow-400 text-white shadow-[0_0_15px_rgba(234,179,8,0.25)]'
+                          : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-yellow-400' : 'text-white/40'}`} />
+                        <div className="min-w-0">
+                          <div className="text-xs font-mono font-bold truncate">#{ch.name}</div>
+                          <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
+                        </div>
+                      </div>
+                      {!isVip && !hasVipPass && <Crown className="w-4 h-4 text-yellow-400 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Creator Syndicate Shortcut */}
+              <div className="pt-2 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileChannelsOpen(false);
+                    setActiveSection('creators');
+                    soundManager.playTone(660, 0.05);
+                  }}
+                  className="w-full min-h-[48px] p-3 rounded-xl bg-gradient-to-r from-amber-950/60 via-black to-black border border-amber-500/40 text-amber-300 text-xs font-mono font-bold flex items-center justify-between cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                    <span>Explore Syndicate Creator Leaderboards</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Artist Verification Modal */}
+      <AnimatePresence>
+        {isArtistModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-[#070b14] border border-purple-500/40 rounded-2xl p-6 shadow-[0_0_50px_rgba(168,85,247,0.25)] space-y-5"
+            >
+              <button
+                type="button"
+                onClick={() => setIsArtistModalOpen(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-lg text-white/50 hover:text-white bg-white/5 hover:bg-white/10 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-400">
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-display font-bold text-white tracking-wide">
+                    Pro Audio Syndicate · Artist Verification
+                  </h3>
+                  <p className="text-xs text-purple-300/80 font-mono">
+                    Unlock #plugins-deals-vault, master chains &amp; stem swaps
+                  </p>
+                </div>
+              </div>
+
+              {artistSuccess ? (
+                <div className="p-6 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-center space-y-2">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto animate-bounce" />
+                  <h4 className="text-sm font-bold text-white">Artist Credentials Verified!</h4>
+                  <p className="text-xs text-white/70">
+                    Welcome to the Pro Audio Lounge. Unlocking #plugins-deals-vault...
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleArtistVerificationSubmit} className="space-y-4">
+                  <p className="text-xs text-white/70 font-sans leading-relaxed">
+                    Verified artists, music producers, and sound designers receive lifetime access to curated VST/AU discounts (FabFilter, UAD), custom Ableton 12 / Bitwig racks, and production stems.
+                  </p>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-mono text-white/70 uppercase">
+                      Artist / Producer Alias
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={artistAlias || userDisplayName}
+                      onChange={(e) => setArtistAlias(e.target.value)}
+                      placeholder="e.g. Sillow Mill, Vance, etc."
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-white/10 focus:border-purple-400 text-xs text-white outline-none font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-mono text-white/70 uppercase">
+                      Primary Genre / Discipline
+                    </label>
+                    <select
+                      value={artistGenre}
+                      onChange={(e) => setArtistGenre(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-white/10 focus:border-purple-400 text-xs text-white outline-none font-mono"
+                    >
+                      <option value="Electronic / Ambient Sound Design">Electronic / Ambient Sound Design</option>
+                      <option value="Cinematic / Hybrid Orchestral">Cinematic / Hybrid Orchestral</option>
+                      <option value="Drum & Bass / Neurofunk">Drum & Bass / Neurofunk</option>
+                      <option value="Techno / Industrial">Techno / Industrial</option>
+                      <option value="Hip-Hop / Lo-Fi Beats">Hip-Hop / Lo-Fi Beats</option>
+                      <option value="Game Audio / Interactive FMOD">Game Audio / Interactive FMOD</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-mono text-white/70 uppercase">
+                      Portfolio or Music Link (SoundCloud, Spotify, YouTube, Bandcamp)
+                    </label>
+                    <input
+                      type="url"
+                      value={artistLink}
+                      onChange={(e) => setArtistLink(e.target.value)}
+                      placeholder="https://soundcloud.com/your-artist-profile"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-white/10 focus:border-purple-400 text-xs text-white outline-none font-mono"
+                    />
+                  </div>
+
+                  <div className="pt-2 space-y-2">
+                    <button
+                      type="submit"
+                      disabled={artistSubmitting}
+                      className="w-full min-h-[46px] rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-mono font-bold text-xs shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>{artistSubmitting ? 'VERIFYING CREDENTIALS...' : 'CONFIRM & VERIFY ARTIST STATUS'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleInstantArtistVerify}
+                      className="w-full min-h-[40px] rounded-xl bg-white/5 hover:bg-white/10 border border-purple-500/30 text-purple-300 font-mono text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                      <span>Instant Syndicate Access (Demo / Fast Pass)</span>
+                    </button>
+                  </div>
+                </form>
+              )}
             </motion.div>
           </div>
         )}
