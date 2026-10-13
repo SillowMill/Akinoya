@@ -1,33 +1,64 @@
 import { PlanetSubmission, WizardAnswers } from '../types/contest';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
-// Visual Assets
+// Visual Assets (Sillow Mill 2D Sci-Fi Anime Aesthetics)
 import planetHeroImg from '../assets/images/planet_akinoya_1790852629401.jpg';
 import twilightWorldImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
 import mushroomValleyImg from '../assets/images/akinoya_mushroom_valley.jpg';
 import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import heroBgImg from '../assets/images/akinoya_hero_bg.jpg';
+import moodboardImg from '../assets/images/Mood.png';
 
 const LOCAL_SUBMISSIONS_KEY = 'akinoya_planet_submissions';
 const LOCAL_CONTEST_VOTES_KEY = 'akinoya_contest_votes';
 
+/**
+ * Enforces the mandatory Äkinoya planetary naming rule:
+ * All planet names must start with 'Ä' (e.g. Ämlemie, Älkan, Ämero, Äkinoya Prime).
+ * Automatically converts or prepends 'Ä' if missing (e.g. Xyris -> Äxyris).
+ */
+export const formatAkinoyaPlanetName = (rawName?: string): string => {
+  if (!rawName || !rawName.trim()) return 'Äkinoya Prime';
+  let clean = rawName.trim();
+  // Strip redundant English prefixes
+  clean = clean.replace(/^(Planet|MyPlanet|Sector\s*\d*|World)\s+/i, '');
+  if (!clean) return 'Äkinoya Prime';
+
+  // If already starts with Ä or ä
+  if (clean.startsWith('Ä') || clean.startsWith('ä')) {
+    return 'Ä' + clean.slice(1);
+  }
+
+  // If starts with A or a (without umlaut)
+  if (/^[Aa]/.test(clean)) {
+    return 'Ä' + clean.slice(1);
+  }
+
+  // Prepend Ä (e.g. Xyris -> Äxyris, Mero -> Ämero)
+  if (/^[A-Z][a-z0-9]/.test(clean)) {
+    return 'Ä' + clean.charAt(0).toLowerCase() + clean.slice(1);
+  }
+
+  return 'Ä' + clean;
+};
+
 export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
   {
-    id: 'PLN-2027-ZEPHYR',
+    id: 'PLN-2027-AKINOYA-PRIME',
     userId: 'creator-elena',
     authorName: 'Elena Vance',
     authorUsername: 'elena-vance',
     authorAvatarGradient: 'from-cyan-400 via-blue-500 to-indigo-600',
-    planetName: 'Planet Zephyria-9',
-    atmosphere: 'Hyper-Oxygenated Bioluminescent Jungle',
+    planetName: 'Äkinoya Prime',
+    atmosphere: 'Electric Blue Ionized Resonance & Icy Silhouette Ring',
     flora: 'Giant Resonance Spore Mushrooms (Glowing Violet)',
     fauna: 'Leviathan Plasma-Wings drifting in upper troposphere',
     sonicVibe: 'Deep Modular Sub-Bass & Cinematic ACEScc Synthesizers',
-    visualAesthetic: '4K Octane Render Spectral & Volumetric Light Shafts',
+    visualAesthetic: '2D High-End Anime Sci-Fi Cel-Shaded Art (Sillow Mill Aesthetic)',
     landmark: 'The Obsidian Spire (Infinite Energy Conduit)',
     additionalNotes: 'Sub-surface tunnels carry liquid neon energy that pulses in time with atmospheric pressure waves.',
     generatedLore:
-      'Discovered in the twilight belt of Sector 7, Zephyria-9 rotates synchronously with its twin cobalt suns. Its troposphere is alive with ionized bioluminescence, where gargantuan spore canopies filter solar radiation into pure resonant harmonics. Indigenous pilots utilize the Obsidian Spire to recharge quantum navigation drives before deep-space jumps.',
+      'Discovered at the epicenter of the Äkinoya energy sphere, Äkinoya Prime radiates with celestial 2D anime grandeur. Its troposphere is alive with electric blue ionized bioluminescence, where gargantuan spore canopies filter cosmic radiation into pure resonant harmonics. Indigenous pilots utilize the Obsidian Spire to recharge quantum navigation drives before deep-space jumps.',
     renders: {
       hero: planetHeroImg,
       atmosphere: twilightWorldImg,
@@ -40,21 +71,21 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     votingDeadline: 'June 30, 2027',
   },
   {
-    id: 'PLN-2027-AURA',
+    id: 'PLN-2027-AMLEMIE',
     userId: 'creator-kaelen',
     authorName: 'Kaelen Voss',
     authorUsername: 'kaelen-voss',
     authorAvatarGradient: 'from-violet-400 via-purple-500 to-fuchsia-600',
-    planetName: 'Sector 9 Nexus: Caelum',
-    atmosphere: 'Ionized Basalt & Twilight Auroras',
-    flora: 'Silicon-Veined Metallic Foliage',
-    fauna: 'Silicon-Shelled Crystalline Predators',
+    planetName: 'Ämlemie',
+    atmosphere: 'Cosmic 2D Space Vista & Deep Purple Orbital Rings',
+    flora: 'Silicon-Veined Metallic Foliage & Star-Pollen Canopy',
+    fauna: 'Silicon-Shelled Crystalline Predators & Void Gliders',
     sonicVibe: 'Aggressive Neurofunk Drops & Industrial Metallic Transients',
-    visualAesthetic: 'Unreal Engine 5.4 Lumen Neon Cyberpunk Atmosphere',
+    visualAesthetic: '2D Cel-Shaded Cosmic Anime Concept Art (Sillow Mill House Style)',
     landmark: 'Celestial Dyson Ring Fragment hovering at equator',
-    additionalNotes: 'Orbital wreckage from the First Collapse has settled into a permanently glowing particle ring.',
+    additionalNotes: 'Orbital wreckage from the First Collapse has settled into a permanently glowing cosmic particle ring.',
     generatedLore:
-      'Caelum was forged in the gravitational wake of a collapsed white dwarf. Its crust is woven from magnetic obsidian veins, reacting violent tremors whenever magnetic storms batter the Dyson Ring Fragment. The predatory wildlife feeds directly on static electricity discharges, hunting along crystalline ridges.',
+      'Ämlemie is an enigmatic ringed sanctuary framed in the classic 2D anime space vista style of Sillow Mill. Woven with deep cosmic purple hues and bioluminescent neon turquoise, its celestial ring fragment casts permanent twilight across alien valleys where crystalline predators feed on static electrical discharges.',
     renders: {
       hero: visualizerThumbnailImg,
       atmosphere: heroBgImg,
@@ -67,26 +98,26 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     votingDeadline: 'June 30, 2027',
   },
   {
-    id: 'PLN-2027-CRYO',
+    id: 'PLN-2027-ALKAN-IV',
     userId: 'creator-sora',
     authorName: 'Sora Takahashi',
     authorUsername: 'sora-t',
     authorAvatarGradient: 'from-emerald-400 via-teal-500 to-cyan-600',
-    planetName: 'MyPlanet Glacies-IV',
-    atmosphere: 'Sub-Zero Cryo-Methane Glacier Rings',
-    flora: 'Floating Aerial Kelp & Hydrogen Blossoms',
-    fauna: 'Bioluminescent Hexapod Crawlers in volcanic caverns',
+    planetName: 'Älkan-IV',
+    atmosphere: 'Bioluminescent Neon Forest & Canopy Atmosphere',
+    flora: 'Floating Aerial Kelp, Hydrogen Blossoms & Spore Trees',
+    fauna: 'Bioluminescent Hexapod Crawlers in cockpit view valleys',
     sonicVibe: 'Glitch Ambient Lo-Fi & Ethereal Tape Saturation',
-    visualAesthetic: '35mm Anamorphic Film Grain with ACEScc Color Science',
+    visualAesthetic: '2D Sillow Mill Cockpit Moodboard Style & Cel-Shaded Neon',
     landmark: 'The Sunken Cobalt Caldera of Upper Äkinoya',
-    additionalNotes: 'Sub-glacial geothermal vents create enclosed tropical biomes under three kilometers of ice.',
+    additionalNotes: 'Sub-glacial geothermal vents create enclosed tropical bioluminescent biomes matching the expedition cockpit moodboard.',
     generatedLore:
-      'A world perpetually suspended in cryogenic suspension. Beneath its reflective methane oceans lie tectonic thermal chimneys that nurture delicate floating hydrogen blossoms. Explorers describe the acoustic experience as an endless, soothing drone of shifting glacial sheets and binaural hydro-resonance.',
+      'Anchored directly in the visual heritage of the Sillow Mill ship cockpit and landing moodboard, Älkan-IV is a lush bioluminescent frontier world. Glowing turquoise mosses and violet spore canopies illuminate misty alien canopies, echoing with the tape-saturated frequencies of lone interstellar explorers.',
     renders: {
-      hero: mushroomValleyImg,
-      atmosphere: planetHeroImg,
-      ecosystem: heroBgImg,
-      landmark: twilightWorldImg,
+      hero: moodboardImg,
+      atmosphere: mushroomValleyImg,
+      ecosystem: twilightWorldImg,
+      landmark: planetHeroImg,
     },
     votesCount: 47,
     status: 'PUBLISHED',
@@ -95,8 +126,26 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
   },
 ];
 
-// Retrieve all stored planet submissions (merged with defaults)
+// Retrieve all stored planet submissions (merged with defaults and sanitized with Ä rule)
 export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
+  const sanitize = (list: PlanetSubmission[]): PlanetSubmission[] =>
+    list.map((sub) => {
+      // Migrate legacy default IDs if present
+      if (sub.id === 'PLN-2027-ZEPHYR') {
+        return INITIAL_SUBMISSIONS[0];
+      }
+      if (sub.id === 'PLN-2027-AURA') {
+        return INITIAL_SUBMISSIONS[1];
+      }
+      if (sub.id === 'PLN-2027-CRYO') {
+        return INITIAL_SUBMISSIONS[2];
+      }
+      return {
+        ...sub,
+        planetName: formatAkinoyaPlanetName(sub.planetName),
+      };
+    });
+
   if (typeof window === 'undefined') return INITIAL_SUBMISSIONS;
   try {
     const raw = localStorage.getItem(LOCAL_SUBMISSIONS_KEY);
@@ -105,7 +154,7 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
       // Merge unique by ID
       const existingIds = new Set(parsed.map((p) => p.id));
       const merged = [...parsed, ...INITIAL_SUBMISSIONS.filter((p) => !existingIds.has(p.id))];
-      return merged;
+      return sanitize(merged);
     }
   } catch (err) {
     console.warn('[Contest] Error reading stored submissions:', err);
@@ -123,26 +172,46 @@ export const getUserContestSubmission = (userId?: string, email?: string): Plane
   return match || null;
 };
 
-// Generate high-end AI cinematic lore from wizard answers
+// Generate high-end AI cinematic lore from wizard answers adhering strictly to Sillow Mill aesthetic
 export const generatePlanetLore = (answers: WizardAnswers, authorName: string): string => {
-  const planetName = answers.planetName || 'Planet Äkinoya Prime';
+  const planetName = formatAkinoyaPlanetName(answers.planetName);
   const atmo = answers.atmosphere || 'Atmosphere of ionized violet twilight';
   const flora = answers.flora || 'Resonant bioluminescent flora';
   const fauna = answers.fauna || 'Apex plasma fauna roaming high-altitude thermals';
   const vibe = answers.sonicVibe || 'Cinematic analog modular synthesis';
-  const visual = answers.visualAesthetic || '4K Octane spectral rendering';
+  const visual = answers.visualAesthetic || '2D high-end anime sci-fi concept art (Sillow Mill aesthetic)';
   const landmark = answers.landmark || 'The Ancient Obsidian Spire';
   const notes = answers.additionalNotes ? ` World architect notes specify: "${answers.additionalNotes}"` : '';
 
-  return `Classified by architect ${authorName}, ${planetName} is a high-entropy frontier world situated in the outer rings of the Äkinoya system. Its planetary envelope features ${atmo}, creating an awe-inspiring visual signature rendered with ${visual}.
+  return `Classified by architect ${authorName}, ${planetName} is a high-entropy frontier world situated in the outer rings of the Äkinoya system. Rendered strictly in the signature Sillow Mill 2D anime aesthetic with bioluminescent neon turquoise and deep cosmic purple hues, its planetary envelope features ${atmo}, creating an awe-inspiring visual signature rendered with ${visual}.
 
 The surface ecology is defined by ${flora}, which forms a mutualistic symbiotic network alongside ${fauna}. Dominating the equatorial horizon stands ${landmark}, serving as a harmonic anchor point where the world's sonic signature—characterized by ${vibe}—echoes across mountain ranges and baselines.${notes}
 
 This planetary territory is officially registered for the 2027 Äkinoya Lore Governance Council. Community votes cast before June 30 determine whether this sector will be featured in the official Sillow Mill album visualizer and animated storyline.`;
 };
 
-// Map wizard inputs to 4 visual render assets
-export const resolvePlanetRenders = (_answers: WizardAnswers): PlanetSubmission['renders'] => {
+// Map wizard inputs to 4 visual render assets anchored in Sillow Mill 2D style
+export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['renders'] => {
+  const text = `${answers.planetName} ${answers.atmosphere} ${answers.visualAesthetic} ${answers.landmark}`.toLowerCase();
+
+  if (text.includes('moodboard') || text.includes('cockpit') || text.includes('forest') || text.includes('älkan')) {
+    return {
+      hero: moodboardImg,
+      atmosphere: mushroomValleyImg,
+      ecosystem: twilightWorldImg,
+      landmark: planetHeroImg,
+    };
+  }
+
+  if (text.includes('ring') || text.includes('ämlemie') || text.includes('space') || text.includes('dyson')) {
+    return {
+      hero: visualizerThumbnailImg,
+      atmosphere: heroBgImg,
+      ecosystem: twilightWorldImg,
+      landmark: planetHeroImg,
+    };
+  }
+
   return {
     hero: planetHeroImg,
     atmosphere: twilightWorldImg,

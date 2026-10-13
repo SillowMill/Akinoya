@@ -20,6 +20,7 @@ import {
 import millAvatar from '../assets/images/mill_photo.jpg';
 import { WizardAnswers, ChatMessage } from '../types/contest';
 import { soundManager } from '../utils/audio';
+import { formatAkinoyaPlanetName } from '../data/contest';
 
 interface PlanetGeneratorChatProps {
   userDisplayName: string;
@@ -42,13 +43,13 @@ interface StepConfig {
 const WIZARD_STEPS: StepConfig[] = [
   {
     step: 1,
-    title: 'Planet Name Scheme',
+    title: 'Planet Designation (Äkinoya Convention)',
     category: 'DESIGNATION',
     prompt:
-      'What is the official celestial designation for your world? Select a naming convention below or type a custom planetary title.',
-    placeholder: 'e.g. Planet Äkinoya Prime, MyPlanet Zephyria...',
+      'Under the Äkinoya Planetary Protocol, all designated frontier worlds must begin with the letter "Ä" (e.g. Ämlemie, Älkan, Ämero, Äkinoya Prime). Select an official designation below or type your custom planetary name (e.g. Xyris → Äxyris):',
+    placeholder: 'e.g. Ämlemie, Älkan-IV, Ämero, Äkinoya Prime...',
     icon: Globe2,
-    presets: ['Planet Äkinoya Prime', 'MyPlanet Zephyria', 'Sector 9 Nexus'],
+    presets: ['Äkinoya Prime', 'Ämlemie', 'Älkan-IV'],
     field: 'planetName',
   },
   {
@@ -116,13 +117,13 @@ const WIZARD_STEPS: StepConfig[] = [
     title: 'Visual Rendering Aesthetic',
     category: 'CINEMATIC PIPELINE',
     prompt:
-      'What rendering engine style and color science should we apply to your planetary visualizers?',
-    placeholder: 'e.g. Octane spectral raytracing, 60fps lumen glow...',
+      'All planetary visualizers are anchored to the official Sillow Mill 2D sci-fi anime aesthetic (bioluminescent neon turquoise, deep cosmic purple, and cel-shaded atmosphere). Which visual treatment should lead your cards?',
+    placeholder: 'e.g. 2D Anime Sci-Fi Concept Art, Cel-shaded neon turquoise...',
     icon: Camera,
     presets: [
-      '4K Octane Render Spectral & Volumetric Light Shafts',
-      'Unreal Engine 5.4 Lumen Neon Cyberpunk Atmosphere',
-      '35mm Anamorphic Film Grain with ACEScc Color Science',
+      '2D High-End Anime Sci-Fi Concept Art (Sillow Mill Aesthetic)',
+      'Bioluminescent Neon Turquoise & Deep Cosmic Purple Cel-Shaded',
+      '2D Cockpit Moodboard Atmosphere & Anamorphic Hand-Drawn Grain',
     ],
     field: 'visualAesthetic',
   },
@@ -217,8 +218,18 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
 
   // Handle advancing step with an answer
   const handleAnswer = (answerText: string) => {
-    const trimmed = answerText.trim();
+    let trimmed = answerText.trim();
     if (!trimmed) return;
+
+    // Enforce Äkinoya 'Ä' convention if currently answering planetName
+    let wasModifiedWithA = false;
+    if (currentStep.field === 'planetName') {
+      const formatted = formatAkinoyaPlanetName(trimmed);
+      if (formatted !== trimmed) {
+        wasModifiedWithA = true;
+      }
+      trimmed = formatted;
+    }
 
     soundManager.playTone(740, 0.05);
 
@@ -247,10 +258,13 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
 
       setTimeout(() => {
         soundManager.playTone(820, 0.06);
+        const ackSuffix = wasModifiedWithA
+          ? ` (formatted under the Äkinoya 'Ä' protocol)`
+          : '';
         const millNextMsg: ChatMessage = {
           id: `mill-${Date.now()}`,
           sender: 'mill',
-          text: `Acknowledged: "${trimmed}".\n\nStep 0${nextStepConfig.step} (${nextStepConfig.title}):\n${nextStepConfig.prompt}`,
+          text: `Acknowledged: "${trimmed}"${ackSuffix}.\n\nStep 0${nextStepConfig.step} (${nextStepConfig.title}):\n${nextStepConfig.prompt}`,
           step: nextStepConfig.step,
           timestamp: 'Just now',
           options: nextStepConfig.presets,

@@ -32,6 +32,7 @@ import { WizardAnswers, PlanetSubmission } from '../types/contest';
 import {
   getStoredPlanetSubmissions,
   getUserContestSubmission,
+  formatAkinoyaPlanetName,
   generatePlanetLore,
   resolvePlanetRenders,
   savePlanetSubmission,
@@ -98,13 +99,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
   // Called when Mill completes the 8 questions
   const handleWizardComplete = (answers: WizardAnswers) => {
-    setPendingAnswers(answers);
+    const planetName = formatAkinoyaPlanetName(answers.planetName);
+    const answersWithFormattedName = { ...answers, planetName };
+    setPendingAnswers(answersWithFormattedName);
     setIsChatOpen(false);
 
     // Build draft dossier
-    const planetName = answers.planetName || 'Planet Äkinoya Prime';
-    const lore = generatePlanetLore(answers, userDisplayName);
-    const renders = resolvePlanetRenders(answers);
+    const lore = generatePlanetLore(answersWithFormattedName, userDisplayName);
+    const renders = resolvePlanetRenders(answersWithFormattedName);
 
     const draft: PlanetSubmission = {
       id: `PLN-2027-${Date.now().toString(36).toUpperCase()}`,

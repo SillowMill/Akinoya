@@ -14,6 +14,7 @@ import {
   isValidPassId,
 } from './nfcDnaService';
 import { handleCertificateAction } from '../../api/nfc/_certificateService.js';
+import { buildPlanetPrompts } from '../../api/generate-planet';
 
 export const apiApp = express();
 export const apiRouter = express.Router();
@@ -316,6 +317,24 @@ apiRouter.get('/nfc/generate-test-cipher', (req: Request, res: Response): void =
     sampleAuthenticUrl: `https://sillowmill.com/verify?token=${token}&enc=${cipher}`,
     message: 'Generated authentic dynamic AES-128 cipher for testing.',
   });
+});
+
+// ─── 10. Generate Planet Prompts & Visuals (Sillow Mill 2D Anime Aesthetic) ───
+apiRouter.all(['/generate-planet', '/planet/generate'], (req: Request, res: Response): void => {
+  try {
+    const body = req.body || {};
+    const result = buildPlanetPrompts(body);
+    res.status(200).json({
+      success: true,
+      ...result,
+    });
+  } catch (err: any) {
+    console.error('[API] generate-planet error:', err);
+    res.status(500).json({
+      success: false,
+      error: err?.message || 'Failed to generate planet visualizer prompts',
+    });
+  }
 });
 
 // ─── Mount router ─────────────────────────────────────────────────────────────
