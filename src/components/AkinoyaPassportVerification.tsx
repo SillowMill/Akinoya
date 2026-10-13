@@ -34,7 +34,7 @@ import {
   deriveEditionNumber,
   TOTAL_EDITION_LIMIT,
 } from '../utils/certificate';
-import { checkVipTokenStatus } from '../lib/vipTokens';
+import { checkVipTokenStatus, OTHER_ACCOUNT_VIP_ERROR } from '../lib/vipTokens';
 
 interface AkinoyaPassportVerificationProps {
   tokenIdFromRoute?: string;
@@ -52,12 +52,16 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const autoClaimAttemptedRef = useRef(false);
 
   const isUserVip = Boolean(
-    isVip ||
-    hasVipPass ||
-    profile?.has_vip_pass ||
-    profile?.is_vip ||
-    role === 'VIP_GUEST' ||
-    role === 'CREATOR'
+    role !== 'FREE' &&
+    role !== 'GUEST' &&
+    (
+      isVip ||
+      hasVipPass ||
+      profile?.has_vip_pass ||
+      profile?.is_vip ||
+      role === 'VIP_GUEST' ||
+      role === 'CREATOR'
+    )
   );
 
   // Extract query params: token / id, enc (NTAG 424 DNA dynamic cipher), claim (transfer key)
@@ -97,8 +101,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     if (typeof window !== 'undefined' && activeToken && !isMaster && isValidPassId(activeToken)) {
       localStorage.setItem('akinoya_pending_vip_pass', activeToken);
       sessionStorage.setItem('pending_vip_code', activeToken);
-      localStorage.setItem('pending_role', 'VIP_GUEST');
-      sessionStorage.setItem('pending_role', 'VIP_GUEST');
     }
   }, [activeToken, isMaster]);
 
@@ -211,16 +213,20 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       return;
     }
 
-    // Strict single-claim check in Supabase
+    // Strict ownership validation in Supabase
     if (!isMaster) {
       const tokenStatus = await checkVipTokenStatus(token, user?.id);
       if (tokenStatus.isAlreadyClaimed) {
-        setIsDnaAuthentic(false);
-        setStatusText('ALREADY CLAIMED');
-        setDnaError('ALREADY CLAIMED VIP LINK');
-        soundManager.playError();
-        setIsValidating(false);
-        return;
+        if (tokenStatus.isClaimedByMe) {
+          // If it matches the original owner: seamlessly grant/maintain VIP access!
+        } else {
+          setIsDnaAuthentic(false);
+          setStatusText('ALREADY CLAIMED');
+          setDnaError(OTHER_ACCOUNT_VIP_ERROR);
+          soundManager.playError();
+          setIsValidating(false);
+          return;
+        }
       }
     }
 
@@ -330,7 +336,12 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       if (!isMaster) {
         const tokenStatus = await checkVipTokenStatus(activeToken, currentUser?.id);
         if (tokenStatus.isAlreadyClaimed) {
-          setClaimError('ALREADY CLAIMED VIP LINK');
+          if (tokenStatus.isClaimedByMe) {
+            // Already claimed by this user!
+            soundManager.playUnlockChime();
+            return;
+          }
+          setClaimError(OTHER_ACCOUNT_VIP_ERROR);
           soundManager.playError();
           setIsClaiming(false);
           return;
@@ -445,7 +456,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       </div>
 
       {/* Security Warning if Cloned/Invalid */}
-      {dnaError && dnaError !== 'ALREADY CLAIMED VIP LINK' && (
+      {dnaError && dnaError !== 'ALREADY CLAIMED VIP LINK' && dnaError !== OTHER_ACCOUNT_VIP_ERROR && (
         <div className="mb-5 p-4 rounded-xl bg-rose-950/50 border border-rose-500/40 text-rose-200 text-xs font-mono space-y-1">
           <div className="font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -457,8 +468,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         </div>
       )}
 
-      {/* VIEW: ALREADY CLAIMED VIP LINK SCREEN */}
-      {dnaError === 'ALREADY CLAIMED VIP LINK' ? (
+      {/* VIEW: ALREADY CLAIMED / OTHER ACCOUNT VIP LINK SCREEN */}
+      {dnaError && (dnaError === 'ALREADY CLAIMED VIP LINK' || dnaError === OTHER_ACCOUNT_VIP_ERROR) ? (
         <motion.div
           key="already-claimed-card"
           initial={{ opacity: 0, y: 12 }}
@@ -471,7 +482,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold text-rose-300 bg-rose-950/70 border border-rose-500/40 shadow-[0_0_12px_rgba(239,68,68,0.2)]">
                 <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                <span>ALREADY CLAIMED VIP LINK</span>
+                <span>THIS VIP LINK BELONGS TO ANOTHER ACCOUNT</span>
               </span>
               <span className="text-[10px] font-mono text-rose-400/90 font-bold tracking-wider">
                 LOCKED
@@ -479,10 +490,10 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             </div>
 
             <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
-              This VIP Link Has Already Been Claimed
+              VIP Pass Belongs to Another Account
             </h1>
-            <p className="text-xs font-mono text-white/60 leading-relaxed">
-              This VIP pass ({passData.tokenId}) has already been redeemed and permanently bound to an account. To eliminate link misuse and token duplication, each Äkinoya VIP pass link can only be claimed once.
+            <p className="text-xs font-mono text-rose-200/95 leading-relaxed font-semibold">
+              THIS VIP LINK BELONGS TO ANOTHER ACCOUNT. Logging in here will create a standard Free account.
             </p>
           </div>
 

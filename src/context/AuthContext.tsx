@@ -9,6 +9,7 @@ import {
   getUserBoundVipToken,
   normalizeVipToken,
   ALREADY_CLAIMED_VIP_ERROR,
+  OTHER_ACCOUNT_VIP_ERROR,
 } from '../lib/vipTokens';
 
 interface AuthContextType {
@@ -74,7 +75,13 @@ export const clearPendingVipStorage = () => {
     localStorage.removeItem('sillow_vip_bound_token');
     sessionStorage.removeItem('sillow_vip_bound_token');
     localStorage.removeItem('sillow_vip_device_access');
+    sessionStorage.removeItem('sillow_vip_device_access');
+    localStorage.removeItem('akinoya_vip_unlocked');
     sessionStorage.removeItem('akinoya_vip_unlocked');
+    localStorage.removeItem(PATRON_TOKEN_KEY);
+    sessionStorage.removeItem(PATRON_TOKEN_KEY);
+    localStorage.removeItem(PATRON_ROLE_KEY);
+    sessionStorage.removeItem(PATRON_ROLE_KEY);
   } catch {}
 };
 
@@ -102,10 +109,6 @@ const checkAndCaptureReferral = (): boolean => {
       const clean = normalizeVipToken(activeToken);
       localStorage.setItem(PENDING_VIP_PASS_KEY, clean);
       sessionStorage.setItem('pending_vip_code', clean);
-      localStorage.setItem(PENDING_ROLE_KEY, 'VIP_GUEST');
-      sessionStorage.setItem(PENDING_ROLE_KEY, 'VIP_GUEST');
-      localStorage.setItem('sillow_vip_bound_token', clean);
-      sessionStorage.setItem('sillow_vip_bound_token', clean);
       return true;
     }
 
@@ -353,84 +356,72 @@ const resolveAndLinkVipProfile = async (
   // 1. Check if an active VIP token entry in vip_tokens is already bound to this user ID
   const boundVipToken = authUser?.id ? await getUserBoundVipToken(authUser.id) : null;
 
-  // Determine if user or session is tied to VIP in any form
-  const isTiedToVip = Boolean(
-    boundVipToken ||
+  // 2. Check if user already has verified VIP profile in Supabase public.profiles
+  const userHasProfileVip = Boolean(
     rawProfData?.has_vip_pass ||
     rawProfData?.is_vip ||
     rawProfData?.role === 'VIP_GUEST' ||
     rawProfData?.role === 'CREATOR' ||
-    rawProfData?.vip_code_redeemed ||
-    hasReferralClaim ||
-    hasDeviceVip ||
-    Boolean(pendingPass) ||
-    metaHasVip ||
-    cachedProf?.has_vip_pass ||
-    cachedProf?.role === 'VIP_GUEST' ||
-    cachedProf?.role === 'CREATOR'
+    metaHasVip
   );
 
   const currentSubStatus = rawProfData?.subscription_status || 'inactive';
   let targetRole: UserRole = rawProfData?.role || 'FREE';
+  let targetHasVip = Boolean(boundVipToken || userHasProfileVip);
+  let targetPassCode: string | null = boundVipToken?.token_code || rawProfData?.vip_code_redeemed || metaPass || null;
 
-  if (cachedProf?.role) {
-    targetRole = pickHigherRole(targetRole, cachedProf.role);
-  }
-
-  let targetHasVip = isTiedToVip;
   if (boundVipToken) {
     targetHasVip = true;
     const boundRole: UserRole = boundVipToken.token_code === 'AKN-VIP-2027-X0914' ? 'CREATOR' : 'VIP_GUEST';
     targetRole = pickHigherRole(targetRole, boundRole);
-  } else if (rawProfData?.is_vip || rawProfData?.has_vip_pass) {
+    targetPassCode = boundVipToken.token_code;
+  } else if (userHasProfileVip) {
     targetHasVip = true;
     if (targetRole === 'FREE' || targetRole === 'GUEST') {
       targetRole = rawProfData?.role === 'CREATOR' ? 'CREATOR' : 'VIP_GUEST';
     }
-  } else if (targetHasVip && (targetRole === 'FREE' || targetRole === 'GUEST')) {
-    targetRole = 'VIP_GUEST';
   }
 
-  let targetPassCode =
-    boundVipToken?.token_code ||
-    pendingPass ||
-    rawProfData?.vip_code_redeemed ||
-    metaPass ||
-    cachedProf?.vip_code_redeemed ||
-    (typeof window !== 'undefined' ? localStorage.getItem('sillow_vip_bound_token') : null) ||
-    (targetHasVip ? 'VIP-REFERRAL-CLAIM' : null);
+  // 3. Strict owner validation on candidate/pending VIP token
+  const candidatePass = pendingPass || (typeof window !== 'undefined' ? localStorage.getItem('sillow_vip_bound_token') : null);
 
-  // Strict Single-Claim VIP token check & permanent user account binding
-  if (pendingPass) {
-    const tokenCheck = await checkVipTokenStatus(pendingPass, authUser.id);
+  if (candidatePass) {
+    const tokenCheck = await checkVipTokenStatus(candidatePass, authUser.id);
     if (tokenCheck.isAlreadyClaimed) {
-      clearPendingVipStorage();
-      targetHasVip = Boolean(boundVipToken || rawProfData?.has_vip_pass || rawProfData?.is_vip || cachedProf?.has_vip_pass || cachedProf?.is_vip);
-      targetPassCode = boundVipToken?.token_code || rawProfData?.vip_code_redeemed || cachedProf?.vip_code_redeemed || null;
-      if (!targetHasVip && targetRole === 'VIP_GUEST') {
-        targetRole = rawProfData?.role && rawProfData.role !== 'VIP_GUEST' ? rawProfData.role : 'FREE';
+      if (tokenCheck.isClaimedByMe) {
+        // MATCHES ORIGINAL OWNER: seamlessly grant/maintain VIP access!
+        targetHasVip = true;
+        const vipRole = resolveRoleForCode(candidatePass);
+        targetRole = pickHigherRole(targetRole, vipRole);
+        targetPassCode = candidatePass;
+      } else {
+        // DOES NOT MATCH: strictly block VIP elevation!
+        clearPendingVipStorage();
+        if (!boundVipToken && !userHasProfileVip) {
+          targetHasVip = false;
+          targetPassCode = null;
+          if (targetRole === 'VIP_GUEST') {
+            targetRole = 'FREE';
+          }
+        }
       }
     } else if (tokenCheck.allowed) {
-      const vipRole = resolveRoleForCode(pendingPass);
+      // Unclaimed token: claim for this user
+      const vipRole = resolveRoleForCode(candidatePass);
       targetRole = pickHigherRole(targetRole, vipRole);
-      targetPassCode = pendingPass;
+      targetPassCode = candidatePass;
       targetHasVip = true;
       if (authUser?.id) {
-        await claimVipTokenForUser(pendingPass, authUser.id);
+        await claimVipTokenForUser(candidatePass, authUser.id);
       }
     }
-  } else if (targetPassCode && targetPassCode !== 'VIP-REFERRAL-CLAIM' && (!boundVipToken || boundVipToken.token_code !== targetPassCode)) {
-    const tokenCheck = await checkVipTokenStatus(targetPassCode, authUser.id);
-    if (tokenCheck.isAlreadyClaimed) {
-      clearPendingVipStorage();
-      targetHasVip = Boolean(boundVipToken || rawProfData?.has_vip_pass || rawProfData?.is_vip);
-      targetPassCode = boundVipToken?.token_code || rawProfData?.vip_code_redeemed || null;
-      if (!targetHasVip && targetRole === 'VIP_GUEST') {
-        targetRole = rawProfData?.role && rawProfData.role !== 'VIP_GUEST' ? rawProfData.role : 'FREE';
-      }
-    } else if (tokenCheck.allowed && authUser?.id) {
-      await claimVipTokenForUser(targetPassCode, authUser.id);
-    }
+  }
+
+  // Force standard Free user if not verified VIP or Subscriber
+  if (!targetHasVip && targetRole !== 'ANNUAL_PASS' && targetRole !== 'SUBSCRIBER' && targetRole !== 'CREATOR') {
+    targetRole = 'FREE';
+    targetHasVip = false;
+    targetPassCode = null;
   }
 
   const meta = authUser.user_metadata || {};
@@ -508,6 +499,8 @@ const resolveAndLinkVipProfile = async (
         localStorage.setItem('sillow_vip_bound_token', targetPassCode);
         sessionStorage.setItem('sillow_vip_bound_token', targetPassCode);
       }
+    } else {
+      clearPendingVipStorage();
     }
     // Clean up temporary pending invitation flags now that pass is permanently claimed
     localStorage.removeItem(PENDING_ROLE_KEY);
@@ -625,23 +618,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Derived Dynamic Entitlements
   const isVip = Boolean(
-    profile?.has_vip_pass === true ||
-    profile?.is_vip === true ||
-    role === 'VIP_GUEST' ||
-    role === 'CREATOR' ||
-    Boolean(profile?.vip_code_redeemed) ||
-    Boolean(getStoredVipPass()) ||
-    (typeof window !== 'undefined' &&
-      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
-       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
-       Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
-       Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
-       Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
-       Boolean(sessionStorage.getItem('sillow_vip_bound_token')) ||
-       localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
-       localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST' ||
-       localStorage.getItem(PENDING_ROLE_KEY) === 'VIP_GUEST' ||
-       sessionStorage.getItem(PENDING_ROLE_KEY) === 'VIP_GUEST'))
+    !vipLinkError &&
+    role !== 'FREE' &&
+    role !== 'GUEST' &&
+    (
+      profile?.has_vip_pass === true ||
+      profile?.is_vip === true ||
+      role === 'VIP_GUEST' ||
+      role === 'CREATOR' ||
+      (!user && (
+        localStorage.getItem('sillow_vip_device_access') === 'true' ||
+        sessionStorage.getItem('akinoya_vip_unlocked') === 'true'
+      ))
+    )
   );
 
   const isSubscriber = Boolean(
@@ -658,7 +647,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     (typeof window !== 'undefined' && localStorage.getItem('akinoya_is_artist') === 'true')
   );
 
-  const hasVipPass = Boolean(profile?.has_vip_pass ?? isVip);
+  const hasVipPass = Boolean(
+    !vipLinkError &&
+    role !== 'FREE' &&
+    role !== 'GUEST' &&
+    (profile?.has_vip_pass || profile?.is_vip || isVip)
+  );
   const subscriptionStatus = profile?.subscription_status || (isSubscriber ? 'active' : 'inactive');
 
   const updateProfile = async (updates: Partial<Profile>): Promise<{ success: boolean; error?: string }> => {
@@ -717,15 +711,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (candidateToken) {
           const tokenStatus = await checkVipTokenStatus(candidateToken, cachedUser?.id);
           if (tokenStatus.isAlreadyClaimed) {
-            clearPendingVipStorage();
-            if (mounted) {
-              setVipLinkError(ALREADY_CLAIMED_VIP_ERROR);
-              setHasPendingVipInvitation(false);
-              soundManager.playError();
+            if (tokenStatus.isClaimedByMe) {
+              if (mounted) {
+                setVipLinkError(null);
+              }
+            } else {
+              clearPendingVipStorage();
+              if (mounted) {
+                setVipLinkError(OTHER_ACCOUNT_VIP_ERROR);
+                setHasPendingVipInvitation(false);
+                soundManager.playError();
+              }
+              if (cachedProf && !cachedProf.is_vip && cachedProf.role === 'VIP_GUEST') {
+                cachedProf = { ...cachedProf, has_vip_pass: false, role: 'FREE' };
+                cachedRole = 'FREE';
+              }
             }
-            if (cachedProf && !cachedProf.is_vip && cachedProf.role === 'VIP_GUEST') {
-              cachedProf = { ...cachedProf, has_vip_pass: false, role: 'FREE' };
-              cachedRole = 'FREE';
+          } else if (tokenStatus.valid && tokenStatus.allowed) {
+            if (mounted) {
+              setVipLinkError(null);
             }
           }
         }
@@ -1180,14 +1184,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Please enter a VIP pass code.' };
     }
 
-    // Strict single-claim verification
+    // Strict ownership verification
     const tokenCheck = await checkVipTokenStatus(clean, user?.id);
     if (tokenCheck.isAlreadyClaimed) {
+      if (tokenCheck.isClaimedByMe) {
+        soundManager.playUnlockChime();
+        return {
+          success: true,
+          message: 'VIP Pass already bound to your account.',
+        };
+      }
       soundManager.playError();
-      setVipLinkError(ALREADY_CLAIMED_VIP_ERROR);
+      setVipLinkError(OTHER_ACCOUNT_VIP_ERROR);
       return {
         success: false,
-        message: ALREADY_CLAIMED_VIP_ERROR,
+        message: OTHER_ACCOUNT_VIP_ERROR,
       };
     }
 

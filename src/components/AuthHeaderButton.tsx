@@ -30,12 +30,16 @@ export const AuthHeaderButton: React.FC = () => {
   }, []);
 
   const isUserVip = Boolean(
-    isVip ||
-    hasVipPass ||
-    profile?.has_vip_pass ||
-    profile?.is_vip ||
-    role === 'VIP_GUEST' ||
-    role === 'CREATOR'
+    role !== 'FREE' &&
+    role !== 'GUEST' &&
+    (
+      isVip ||
+      hasVipPass ||
+      profile?.has_vip_pass ||
+      profile?.is_vip ||
+      role === 'VIP_GUEST' ||
+      role === 'CREATOR'
+    )
   );
 
   const getRoleBadge = () => {

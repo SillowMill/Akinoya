@@ -206,7 +206,7 @@ export const AuthModal: React.FC = () => {
             </button>
           </div>
 
-          {/* Already Claimed VIP Link Error Banner */}
+          {/* Already Claimed / Other Account VIP Link Notice Banner */}
           {vipLinkError && (
             <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-red-950/90 via-rose-950/85 to-red-950/90 border border-red-500/60 text-red-200 shadow-[0_0_25px_rgba(239,68,68,0.3)] flex items-start gap-3 select-none">
               <div className="p-1.5 rounded-lg bg-red-500/20 text-red-400 shrink-0 mt-0.5">
@@ -214,10 +214,10 @@ export const AuthModal: React.FC = () => {
               </div>
               <div className="text-left flex-1 min-w-0">
                 <div className="text-xs font-mono font-bold tracking-wider uppercase text-red-400">
-                  ALREADY CLAIMED VIP LINK
+                  THIS VIP LINK BELONGS TO ANOTHER ACCOUNT
                 </div>
-                <p className="text-xs text-red-200/90 font-sans mt-1 leading-relaxed">
-                  This VIP invitation link has already been permanently bound to another account. Each VIP invitation can only be redeemed once.
+                <p className="text-xs text-red-200 font-sans mt-1 leading-relaxed font-semibold">
+                  THIS VIP LINK BELONGS TO ANOTHER ACCOUNT. Logging in here will create a standard Free account.
                 </p>
               </div>
             </div>
