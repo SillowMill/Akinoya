@@ -632,9 +632,9 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                   onNavigateHome();
                 }
               }}
-              className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(34,211,238,0.35)] min-h-[48px]"
+              className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[48px]"
             >
-              <AudioWaveform className="w-4 h-4 text-black" />
+              <AudioWaveform className="w-4 h-4 text-black shrink-0" />
               <span>OPEN VISUALIZER HUB &amp; VIP ASSETS</span>
             </button>
 
