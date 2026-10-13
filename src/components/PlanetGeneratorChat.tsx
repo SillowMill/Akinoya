@@ -36,7 +36,6 @@ interface StepConfig {
   prompt: string;
   placeholder: string;
   icon: React.ElementType;
-  presets: string[];
   field: keyof WizardAnswers;
   isFreeform?: boolean;
 }
@@ -47,70 +46,49 @@ const WIZARD_STEPS: StepConfig[] = [
     title: 'Planet Designation (Äkinoya Convention)',
     category: 'DESIGNATION',
     prompt:
-      'Under the Äkinoya Planetary Protocol, all designated frontier worlds must begin with the letter "Ä" (e.g. Ämlemie, Älkan, Ämero, Äkinoya Prime). Select an official designation below or type your custom planetary name (e.g. Xyris → Äxyris):',
-    placeholder: 'e.g. Ämlemie, Älkan-IV, Ämero, Äkinoya Prime...',
+      'Under the Äkinoya Planetary Protocol, all designated frontier worlds must begin with the letter "Ä" (such as Ämlemie, Älkan-IV, Ämero, or Äkinoya Prime). What designation do you bestow upon this planetary sector? (If you enter a title without an "Ä", I will automatically align it with the protocol, e.g. Xyris → Äxyris):',
+    placeholder: 'Enter planet designation (e.g. Ämlemie, Älkan-IV, Ämero, Äxyris)...',
     icon: Globe2,
-    presets: ['Äkinoya Prime', 'Ämlemie', 'Älkan-IV'],
     field: 'planetName',
   },
   {
     step: 2,
-    title: 'Atmosphere & Biome',
+    title: 'Atmosphere & Biome Spectra',
     category: 'CLIMATE & SPECTRA',
     prompt:
-      'Describe the atmosphere, sky gradient, and planetary biomes. What dominates the atmospheric horizon?',
-    placeholder: 'e.g. Ionized basalt dust with violet aurora storms...',
+      'Describe the atmosphere, sky gradient, and planetary biomes. What dominates the atmospheric horizon? (e.g., Ionized basalt dust with violet aurora storms and neon turquoise ring shadows, super-dense methane storm clouds, crystalline auroral bands):',
+    placeholder: 'Describe atmospheric composition, sky color gradients, aurora phenomena, cloud horizons...',
     icon: Layers,
-    presets: [
-      'Ionized Basalt & Twilight Auroras',
-      'Hyper-Oxygenated Bioluminescent Jungle',
-      'Sub-Zero Cryo-Methane Glacier Rings',
-    ],
     field: 'atmosphere',
   },
   {
     step: 3,
-    title: 'Flora & Botanical Life',
+    title: 'Flora & Botanical Life Systems',
     category: 'BOTANY',
     prompt:
-      'What plant and fungal organisms thrive on the planetary surface? Describe the botanical energy transfer.',
-    placeholder: 'e.g. Massive neon spore towers, metallic moss...',
+      'What plant and fungal organisms thrive on the planetary surface? Describe the foliage, bio-structures, and glowing spores that explorers encounter upon landing. (e.g., Giant resonance spore mushrooms emitting glowing violet luminescence, subterranean root networks transmitting bio-signals, silicon-veined crystalline moss):',
+    placeholder: 'Describe surface botany, glowing spore towers, alien canopies, bio-luminescence...',
     icon: Trees,
-    presets: [
-      'Giant Resonance Spore Mushrooms (Glowing Violet)',
-      'Silicon-Veined Metallic Foliage',
-      'Floating Aerial Kelp & Hydrogen Blossoms',
-    ],
     field: 'flora',
   },
   {
     step: 4,
-    title: 'Fauna & Wildlife System',
+    title: 'Fauna & Wildlife Ecosystem',
     category: 'ECOLOGY',
     prompt:
-      'What creatures and wildlife inhabit the ecosystems? How do they navigate or survive this environment?',
-    placeholder: 'e.g. Plasma flyers in the high thermals, subterranean crawlers...',
+      'What creatures and wildlife inhabit the ecosystems? How do they navigate or survive this environment? (e.g., Leviathan plasma-wings drifting in upper troposphere thermals, bioluminescent hexapod crawlers in cobalt valleys, silicon-shelled crystalline predators):',
+    placeholder: 'Describe apex fauna, wildlife adaptations, predatory behaviors, aerial lifeforms...',
     icon: Compass,
-    presets: [
-      'Leviathan Plasma-Wings drifting in upper troposphere',
-      'Bioluminescent Hexapod Crawlers in volcanic caverns',
-      'Silicon-Shelled Crystalline Predators',
-    ],
     field: 'fauna',
   },
   {
     step: 5,
-    title: 'Sonic Vibe & Audio Style',
+    title: 'Sonic Vibe & Audio Profile',
     category: 'AUDIO COLLAB',
     prompt:
-      'For the official Sillow Mill music collaboration, what acoustic frequency or genre best defines this world?',
-    placeholder: 'e.g. Sub-bass 808s, ethereal ambient synth pads...',
+      'For the official Sillow Mill music collaboration, what sonic profile and acoustic frequency characterize this world? What instruments, synthesizers, or rhythms resonate across this landscape? (e.g., Deep modular sub-bass 808s and cinematic ACEScc synthesizer pads, glitch ambient lo-fi with tape saturation, aggressive neurofunk drops):',
+    placeholder: 'Describe the acoustic profile, synth textures, bassline aesthetic, musical genre...',
     icon: Volume2,
-    presets: [
-      'Deep Modular Sub-Bass & Cinematic ACEScc Synthesizers',
-      'Glitch Ambient Lo-Fi & Ethereal Tape Saturation',
-      'Aggressive Neurofunk Drops & Industrial Metallic Transients',
-    ],
     field: 'sonicVibe',
   },
   {
@@ -118,29 +96,19 @@ const WIZARD_STEPS: StepConfig[] = [
     title: 'Visual Rendering Aesthetic',
     category: 'CINEMATIC PIPELINE',
     prompt:
-      'All planetary visualizers are anchored to the official Sillow Mill 2D sci-fi anime aesthetic (bioluminescent neon turquoise, deep cosmic purple, and cel-shaded atmosphere). Which visual treatment should lead your cards?',
-    placeholder: 'e.g. 2D Anime Sci-Fi Concept Art, Cel-shaded neon turquoise...',
+      'All planetary visualizers adhere to the official Sillow Mill 2D sci-fi anime aesthetic (anchored by Mood.png and akinoya_hero_bg.jpg). How should the cinematography, lighting, and camera perspectives frame your world? (e.g., 2D cel-shaded anime concept art with heavy film grain, cinematic cockpit canopy landing angle, neon turquoise and cosmic violet palette):',
+    placeholder: 'Describe visual lighting, camera angles, anime cel-shading style, palette focus...',
     icon: Camera,
-    presets: [
-      '2D High-End Anime Sci-Fi Concept Art (Sillow Mill Aesthetic)',
-      'Bioluminescent Neon Turquoise & Deep Cosmic Purple Cel-Shaded',
-      '2D Cockpit Moodboard Atmosphere & Anamorphic Hand-Drawn Grain',
-    ],
     field: 'visualAesthetic',
   },
   {
     step: 7,
-    title: 'Iconic Planet Landmark',
+    title: 'Iconic Planetary Landmark',
     category: 'MONUMENTS',
     prompt:
-      'Every planet requires an iconic megastructure or natural wonder. What monument anchors this territory?',
-    placeholder: 'e.g. The Obsidian Spire, Floating Ring Shard...',
+      'Every territory requires an iconic megastructure, natural anomaly, or monumental wonder visible from orbit. What monument anchors this territory? (e.g., The Obsidian Spire infinite energy conduit, a shattered celestial Dyson ring fragment hovering at the equator, the sunken cobalt caldera of Upper Äkinoya):',
+    placeholder: 'Describe your iconic megastructure, alien monolith, or natural wonder...',
     icon: Sparkles,
-    presets: [
-      'The Obsidian Spire (Infinite Energy Conduit)',
-      'The Sunken Cobalt Caldera of Upper Äkinoya',
-      'Celestial Dyson Ring Fragment hovering at equator',
-    ],
     field: 'landmark',
   },
   {
@@ -148,14 +116,9 @@ const WIZARD_STEPS: StepConfig[] = [
     title: 'Additional World Lore & Secrets',
     category: 'FREEFORM CREATIVITY',
     prompt:
-      'Unrestricted Creative Freedom: Detail any secret factions, pilot backstory, planetary lore, or hidden anomalies. Let your imagination run wild!',
-    placeholder: 'Provide your deep storyline secrets, forgotten tech, faction conflicts, or pilot logs...',
+      'Unrestricted Creative Freedom: Take the final minutes of your protocol to detail any secret lore, pilot logs, forgotten factions, derelict transmissions, or hidden anomalies. Let your imagination run wild!',
+    placeholder: 'Detail secret factions, pilot backstories, hidden anomalies, forgotten tech...',
     icon: Edit3,
-    presets: [
-      'An abandoned ancient broadcast station still emits encrypted telemetry.',
-      'Pilots believe the core contains an artificial sentient intelligence.',
-      'Gravity fluctuates unpredictably every solar eclipse cycle.',
-    ],
     field: 'additionalNotes',
     isFreeform: true,
   },
@@ -195,14 +158,14 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         {
           id: 'msg-locked',
           sender: 'mill',
-          text: `⚠️ SUBMISSION LOCKED — TICKET USED\n\nGreetings ${userDisplayName || 'Architect'}. Your single Golden Ticket planet entry for this account has already been synthesized and submitted to the 2027 Lore Governance Council.\n\nTo preserve API token limits, each account is permitted one golden ticket generation. You can inspect your active 5-photo planetary dossier directly on the launchpad.`,
+          text: `⚠️ SUBMISSION LOCKED — 1 GOLDEN TICKET USED\n\nGreetings ${userDisplayName || 'Architect'}. Your single Golden Ticket planet entry for this account has already been synthesized and submitted to the 2027 Lore Governance Council.\n\nTo preserve API token limits, each account is permitted one golden ticket generation. You can inspect your active 5-photo planetary dossier directly on the launchpad.`,
           timestamp: 'Just now',
         },
       ]);
       return;
     }
 
-    const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nI will guide you through an 8-question planetary synthesis wizard. Your submission will receive a full 5-photo 2D visual gallery (anchored strictly to Mood.png and akinoya_hero_bg.jpg), an official lore dossier, and be entered into the June 30 Lore Governance vote.\n\nLet us begin with Step 01: ${WIZARD_STEPS[0].title}.`;
+    const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nThis is an open-ended, guided worldbuilding protocol designed to take ~10 minutes of deep creative focus. There are no preset shortcut chips—you have full creative freedom to describe your sector of the Äkinoya galaxy.\n\nUpon completing all 8 questions, I will synthesize a full 5-photo 2D anime visual dossier (anchored strictly to Mood.png and akinoya_hero_bg.jpg), technical telemetry, and official lore for the June 30 Lore Governance vote.\n\nLet us begin with Step 01: ${WIZARD_STEPS[0].title}.`;
 
     const firstQuestionText = WIZARD_STEPS[0].prompt;
 
@@ -219,7 +182,6 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         text: firstQuestionText,
         step: 1,
         timestamp: 'Just now',
-        options: WIZARD_STEPS[0].presets,
       },
     ]);
   }, [userDisplayName, isLocked]);
@@ -282,7 +244,6 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           text: `Acknowledged: "${trimmed}"${ackSuffix}.\n\nStep 0${nextStepConfig.step} (${nextStepConfig.title}):\n${nextStepConfig.prompt}`,
           step: nextStepConfig.step,
           timestamp: 'Just now',
-          options: nextStepConfig.presets,
         };
         setMessages((prev) => [...prev, millNextMsg]);
       }, 400);
@@ -295,7 +256,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         const finalMsg: ChatMessage = {
           id: `mill-done-${Date.now()}`,
           sender: 'mill',
-          text: `Territory synthesis complete! All 8 planetary coordinates have been recorded. Generating your 5-photo high-resolution visual gallery and lore dossier...`,
+          text: `Territory protocol complete! All 8 planetary coordinates have been recorded. Initializing Google Gemini AI live synthesis for your 5-photo visual dossier and registered lore...`,
           timestamp: 'Just now',
         };
         setMessages((prev) => [...prev, finalMsg]);
@@ -309,17 +270,14 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
     }
   };
 
-  const handlePresetClick = (preset: string) => {
-    handleAnswer(preset);
-  };
-
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputVal.trim()) return;
+    if (!inputVal.trim() || isLocked) return;
     handleAnswer(inputVal);
   };
 
   const handleReset = () => {
+    if (isLocked) return;
     soundManager.playTone(400, 0.06);
     setCurrentStepIndex(0);
     setAnswers({
@@ -337,10 +295,9 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       {
         id: `reset-${Date.now()}`,
         sender: 'mill',
-        text: `Wizard reset. Let us begin anew:\n\nStep 01 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`,
+        text: `Wizard reset. Let us begin anew (~10 mins guided workflow):\n\nStep 01 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`,
         step: 1,
         timestamp: 'Just now',
-        options: WIZARD_STEPS[0].presets,
       },
     ]);
   };
@@ -374,20 +331,22 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
                 </span>
               </div>
               <p className="text-[11px] font-mono text-white/50 truncate">
-                8-Step Worldbuilding Wizard · 1 Golden Ticket
+                Open-Ended Worldbuilding Protocol (~10 Mins) · 1 Golden Ticket
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-              title="Reset Wizard"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
+            {!isLocked && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                title="Reset Wizard"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -400,29 +359,31 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         </header>
 
         {/* Wizard Progress Ribbon */}
-        <div className="px-4 sm:px-6 py-2 bg-black/40 border-b border-white/5 flex items-center justify-between gap-2 text-xs font-mono shrink-0">
-          <div className="flex items-center gap-2 text-cyan-300">
-            <span className="font-bold">STEP {Math.min(currentStepIndex + 1, 8)} OF 8:</span>
-            <span className="text-white/80 truncate max-w-[200px] sm:max-w-none">
-              {currentStep ? currentStep.title : 'Generating Dossier'}
-            </span>
-          </div>
+        {!isLocked && (
+          <div className="px-4 sm:px-6 py-2 bg-black/40 border-b border-white/5 flex items-center justify-between gap-2 text-xs font-mono shrink-0">
+            <div className="flex items-center gap-2 text-cyan-300">
+              <span className="font-bold">STEP {Math.min(currentStepIndex + 1, 8)} OF 8:</span>
+              <span className="text-white/80 truncate max-w-[200px] sm:max-w-none">
+                {currentStep ? currentStep.title : 'Generating Dossier'}
+              </span>
+            </div>
 
-          <div className="flex items-center gap-1">
-            {WIZARD_STEPS.map((s, idx) => (
-              <span
-                key={s.step}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  idx < currentStepIndex
-                    ? 'bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.6)]'
-                    : idx === currentStepIndex
-                    ? 'bg-amber-400 animate-pulse'
-                    : 'bg-white/20'
-                }`}
-              />
-            ))}
+            <div className="flex items-center gap-1">
+              {WIZARD_STEPS.map((s, idx) => (
+                <span
+                  key={s.step}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    idx < currentStepIndex
+                      ? 'bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.6)]'
+                      : idx === currentStepIndex
+                      ? 'bg-amber-400 animate-pulse'
+                      : 'bg-white/20'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Message Feed Area */}
         <div
@@ -450,28 +411,6 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
                 }`}
               >
                 {msg.text}
-
-                {/* Optional Preset Buttons embedded inside Mill's message */}
-                {msg.sender === 'mill' && msg.options && msg.step === currentStepIndex + 1 && (
-                  <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
-                    <span className="text-[10.5px] font-mono text-cyan-300 block font-semibold">
-                      QUICK PRESET OPTIONS:
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {msg.options.map((opt, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => handlePresetClick(opt)}
-                          className="min-h-[44px] px-3.5 py-2 rounded-xl bg-white/5 hover:bg-cyan-500/20 border border-cyan-400/30 hover:border-cyan-400 text-white text-xs font-mono transition-all text-left flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.01]"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                          <span className="break-words leading-tight">{opt}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           ))}
@@ -480,14 +419,18 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           {isSynthesizing && (
             <div className="flex items-center gap-3 p-4 rounded-xl bg-cyan-950/40 border border-cyan-400/30 text-cyan-300 text-xs font-mono animate-pulse">
               <Sparkles className="w-4 h-4 animate-spin text-cyan-400 shrink-0" />
-              <span>Mill is synthesizing 4K planetary renders &amp; orbital lore dossier...</span>
+              <span>Mill is synthesizing 4K planetary renders &amp; orbital lore dossier with Gemini AI...</span>
             </div>
           )}
         </div>
 
         {/* Input Bar Form */}
         <footer className="p-3 sm:p-4 bg-[#070b16] border-t border-white/10 shrink-0 box-border">
-          {currentStepIndex < WIZARD_STEPS.length ? (
+          {isLocked ? (
+            <div className="py-2.5 text-center text-xs font-mono text-amber-300 flex items-center justify-center gap-2 bg-amber-950/40 rounded-xl border border-amber-500/30">
+              <span>⚠️ Account Ticket Used · Inspect Your Active Dossier on Launchpad</span>
+            </div>
+          ) : currentStepIndex < WIZARD_STEPS.length ? (
             <form onSubmit={handleFormSubmit} className="space-y-2">
               <div className="flex items-center gap-2">
                 {currentStep.isFreeform ? (
@@ -518,9 +461,9 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
                 </button>
               </div>
 
-              <div className="flex items-center justify-between text-[10.5px] font-mono text-white/40 px-1">
-                <span>Or select a preset option above</span>
-                <span>Press Enter to submit</span>
+              <div className="flex items-center justify-between text-[10.5px] font-mono text-white/50 px-1">
+                <span className="text-cyan-400 font-semibold">~10-min guided worldbuilding protocol · Type freely</span>
+                <span>Press Enter ↵ to submit</span>
               </div>
             </form>
           ) : (

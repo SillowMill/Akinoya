@@ -3,11 +3,13 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 // Visual Assets (Sillow Mill 2D Sci-Fi Anime Aesthetics)
 import planetHeroImg from '../assets/images/planet_akinoya_1790852629401.jpg';
+import exactPlanetImg from '../assets/images/akinoya_exact_planet_1790853678690.jpg';
 import twilightWorldImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
 import mushroomValleyImg from '../assets/images/akinoya_mushroom_valley.jpg';
 import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import heroBgImg from '../assets/images/akinoya_hero_bg.jpg';
 import moodboardImg from '../assets/images/Mood.png';
+import mobileBgImg from '../assets/images/akinoya_mobile_bg_1790853703270.jpg';
 
 const LOCAL_SUBMISSIONS_KEY = 'akinoya_planet_submissions';
 const LOCAL_CONTEST_VOTES_KEY = 'akinoya_contest_votes';
@@ -89,11 +91,11 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     generatedLore:
       'Ämlemie is an enigmatic ringed sanctuary framed in the classic 2D anime space vista style of Sillow Mill. Woven with deep cosmic purple hues and bioluminescent neon turquoise, its celestial ring fragment casts permanent twilight across alien valleys where crystalline predators feed on static electrical discharges.',
     renders: {
-      hero: visualizerThumbnailImg, // 1. Main Orbital
+      hero: exactPlanetImg, // 1. Main Orbital (High-entropy celestial sphere)
       flora: twilightWorldImg, // 2. Flora
-      fauna: heroBgImg, // 3. Fauna
+      fauna: mobileBgImg, // 3. Fauna
       atmosphere: moodboardImg, // 4. Cockpit / Landing Atmosphere (Mood.png style)
-      landmark: planetHeroImg, // 5. Landmark
+      landmark: heroBgImg, // 5. Landmark
       ecosystem: twilightWorldImg,
     },
     votesCount: 64,
@@ -118,7 +120,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     generatedLore:
       'Anchored directly in the visual heritage of the Sillow Mill ship cockpit and landing moodboard, Älkan-IV is a lush bioluminescent frontier world. Glowing turquoise mosses and violet spore canopies illuminate misty alien canopies, echoing with the tape-saturated frequencies of lone interstellar explorers.',
     renders: {
-      hero: moodboardImg, // 1. Main Orbital / Storyboard Hero (Mood.png)
+      hero: visualizerThumbnailImg, // 1. Main Orbital / Storyboard Hero (Mood.png)
       flora: mushroomValleyImg, // 2. Flora
       fauna: twilightWorldImg, // 3. Fauna
       atmosphere: heroBgImg, // 4. Cockpit / Landing Atmosphere (akinoya_hero_bg.jpg style)
@@ -323,6 +325,7 @@ export const savePlanetSubmission = async (
           landmark: submission.landmark,
           additional_notes: submission.additionalNotes,
           generated_lore: submission.generatedLore,
+          renders: submission.renders,
           votes_count: submission.votesCount,
           status: submission.status,
           created_at: submission.createdAt,

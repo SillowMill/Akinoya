@@ -69,6 +69,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   const [activeSubmission, setActiveSubmission] = useState<PlanetSubmission | null>(null);
   const [allSubmissions, setAllSubmissions] = useState<PlanetSubmission[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isGeneratingRenders, setIsGeneratingRenders] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [modalPlanet, setModalPlanet] = useState<PlanetSubmission | null>(null);
 
@@ -113,43 +114,104 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     setIsChatOpen(true);
   };
 
-  // Called when Mill completes the 8 questions
-  const handleWizardComplete = (answers: WizardAnswers) => {
+  // Called when Mill completes the 8 questions (Live Gemini AI Synthesis)
+  const handleWizardComplete = async (answers: WizardAnswers) => {
     const planetName = formatAkinoyaPlanetName(answers.planetName);
     const answersWithFormattedName = { ...answers, planetName };
     setPendingAnswers(answersWithFormattedName);
     setIsChatOpen(false);
+    setIsGeneratingRenders(true);
+    soundManager.playTone(660, 0.08);
 
-    // Build draft dossier
-    const lore = generatePlanetLore(answersWithFormattedName, userDisplayName);
-    const renders = resolvePlanetRenders(answersWithFormattedName);
+    try {
+      // 1. Call live Gemini AI generation endpoint
+      const res = await fetch('/api/generate-planet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id || profile?.id,
+          email: user?.email,
+          planetName,
+          atmosphere: answers.atmosphere,
+          flora: answers.flora,
+          fauna: answers.fauna,
+          sonicVibe: answers.sonicVibe,
+          visualAesthetic: answers.visualAesthetic,
+          landmark: answers.landmark,
+          additionalNotes: answers.additionalNotes,
+        }),
+      });
 
-    const draft: PlanetSubmission = {
-      id: `PLN-2027-${Date.now().toString(36).toUpperCase()}`,
-      userId: user?.id || profile?.id || 'anon-user',
-      authorName: userDisplayName,
-      authorUsername: username,
-      authorEmail: user?.email,
-      authorAvatarGradient: 'from-amber-400 via-yellow-500 to-amber-700',
-      planetName,
-      atmosphere: answers.atmosphere,
-      flora: answers.flora,
-      fauna: answers.fauna,
-      sonicVibe: answers.sonicVibe,
-      visualAesthetic: answers.visualAesthetic,
-      landmark: answers.landmark,
-      additionalNotes: answers.additionalNotes,
-      generatedLore: lore,
-      renders,
-      votesCount: 1,
-      hasVoted: true,
-      status: 'SUBMITTED',
-      createdAt: new Date().toISOString().split('T')[0],
-      votingDeadline: 'June 30, 2027',
-    };
+      let finalRenders = resolvePlanetRenders(answersWithFormattedName);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.renders) {
+          finalRenders = json.renders;
+        }
+      }
 
-    setPreviewDossier(draft);
-    window.scrollTo({ top: 300, behavior: 'smooth' });
+      // 2. Synthesize official sector lore
+      const lore = generatePlanetLore(answersWithFormattedName, userDisplayName);
+
+      const draft: PlanetSubmission = {
+        id: `PLN-2027-${Date.now().toString(36).toUpperCase()}`,
+        userId: user?.id || profile?.id || 'anon-user',
+        authorName: userDisplayName,
+        authorUsername: username,
+        authorEmail: user?.email,
+        authorAvatarGradient: 'from-amber-400 via-yellow-500 to-amber-700',
+        planetName,
+        atmosphere: answers.atmosphere,
+        flora: answers.flora,
+        fauna: answers.fauna,
+        sonicVibe: answers.sonicVibe,
+        visualAesthetic: answers.visualAesthetic,
+        landmark: answers.landmark,
+        additionalNotes: answers.additionalNotes,
+        generatedLore: lore,
+        renders: finalRenders,
+        votesCount: 1,
+        hasVoted: true,
+        status: 'SUBMITTED',
+        createdAt: new Date().toISOString().split('T')[0],
+        votingDeadline: 'June 30, 2027',
+      };
+
+      setPreviewDossier(draft);
+      soundManager.playUnlockChime();
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    } catch (err) {
+      console.warn('[Contest] Live AI synthesis network error:', err);
+      const fallbackRenders = resolvePlanetRenders(answersWithFormattedName);
+      const lore = generatePlanetLore(answersWithFormattedName, userDisplayName);
+      const draft: PlanetSubmission = {
+        id: `PLN-2027-${Date.now().toString(36).toUpperCase()}`,
+        userId: user?.id || profile?.id || 'anon-user',
+        authorName: userDisplayName,
+        authorUsername: username,
+        authorEmail: user?.email,
+        authorAvatarGradient: 'from-amber-400 via-yellow-500 to-amber-700',
+        planetName,
+        atmosphere: answers.atmosphere,
+        flora: answers.flora,
+        fauna: answers.fauna,
+        sonicVibe: answers.sonicVibe,
+        visualAesthetic: answers.visualAesthetic,
+        landmark: answers.landmark,
+        additionalNotes: answers.additionalNotes,
+        generatedLore: lore,
+        renders: fallbackRenders,
+        votesCount: 1,
+        hasVoted: true,
+        status: 'SUBMITTED',
+        createdAt: new Date().toISOString().split('T')[0],
+        votingDeadline: 'June 30, 2027',
+      };
+      setPreviewDossier(draft);
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    } finally {
+      setIsGeneratingRenders(false);
+    }
   };
 
   // User explicitly approves and submits their golden ticket entry
@@ -310,7 +372,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                   <div className="p-3.5 rounded-xl bg-amber-950/70 border border-amber-500/50 text-center space-y-1 shadow-lg">
                     <span className="text-[10px] font-mono text-amber-300 font-bold flex items-center justify-center gap-1.5 uppercase tracking-wider">
                       <Lock className="w-3.5 h-3.5 text-amber-400" />
-                      SUBMISSION LOCKED — TICKET USED
+                      SUBMISSION LOCKED — 1 GOLDEN TICKET USED
                     </span>
                     <div className="text-sm font-display font-bold text-white truncate">
                       {activeSubmission?.planetName || 'Territory Submitted'}
@@ -362,6 +424,21 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           </div>
         </section>
 
+        {/* LIVE GEMINI AI SYNTHESIZER LOADER */}
+        {isGeneratingRenders && (
+          <section className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-cyan-950/70 via-indigo-950/50 to-black border-2 border-cyan-400/60 shadow-[0_0_50px_rgba(6,182,212,0.3)] flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left animate-pulse">
+            <Sparkles className="w-8 h-8 text-cyan-400 animate-spin shrink-0" />
+            <div className="space-y-1">
+              <h3 className="text-sm sm:text-base font-display font-bold text-white tracking-wider uppercase">
+                SYNTHESIZING 5-PHOTO PLANETARY DOSSIER WITH GOOGLE GEMINI AI
+              </h3>
+              <p className="text-xs font-mono text-cyan-300">
+                Generating real-time 2D anime orbital renders, botanical flora, apex fauna, cockpit landing perspectives, and landmark monuments...
+              </p>
+            </div>
+          </section>
+        )}
+
         {/* PREVIEW & APPROVAL DOSSIER (IF WIZARD COMPLETED BUT NOT YET SUBMITTED) */}
         {previewDossier && !activeSubmission && (
           <section className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-cyan-950/40 via-black to-black border-2 border-cyan-400/60 shadow-[0_0_50px_rgba(6,182,212,0.25)] space-y-6">
@@ -379,15 +456,6 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsChatOpen(true)}
-                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5"
-                >
-                  <Edit className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Edit with Mill</span>
-                </button>
-
                 <button
                   type="button"
                   onClick={() => setModalPlanet(previewDossier)}

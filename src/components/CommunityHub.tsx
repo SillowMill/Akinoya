@@ -1079,7 +1079,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           <button
             type="button"
             disabled={true}
-            className="hidden sm:flex px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-amber-950/40 border border-amber-500/30 text-amber-300/80 text-[10.5px] sm:text-[11px] font-mono font-semibold cursor-not-allowed items-center gap-1.5 whitespace-nowrap min-h-[48px] sm:min-h-[44px] select-none opacity-85"
+            className="hidden md:flex px-2.5 py-1.5 rounded-xl bg-amber-950/50 border border-amber-500/40 text-amber-300 text-[10.5px] lg:text-[11px] font-mono font-semibold cursor-not-allowed items-center gap-1.5 whitespace-nowrap min-h-[44px] select-none shadow-sm"
             title="Public membership launches on 09/01/2027"
           >
             <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
@@ -1190,7 +1190,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               <button
                 type="button"
                 disabled={true}
-                className="px-4 py-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 text-xs font-mono font-semibold cursor-not-allowed flex items-center justify-center gap-2 select-none opacity-85 text-center whitespace-normal break-words leading-tight"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs font-mono font-semibold cursor-not-allowed flex items-center justify-center gap-2 select-none text-center whitespace-normal break-words leading-tight shadow-md shrink-0"
                 title="Full vault downloads launch on 09/01/2027"
               >
                 <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
@@ -1305,12 +1305,15 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                             <span>DOWNLOAD ASSET ({asset.fileSize.split('·')[0].trim()})</span>
                           </>
                         ) : (
-                          <>
-                            <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                            <span className="whitespace-normal break-words text-center leading-snug">
-                              Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-center py-1">
+                            <span className="flex items-center gap-1.5 font-bold text-amber-300 text-xs">
+                              <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                              <span>LOCKED: ÄKINOYA ANNUAL PASS</span>
                             </span>
-                          </>
+                            <span className="text-[10px] sm:text-[11px] text-white/50 font-mono">
+                              (Launches 09/01/2027 · €60/yr)
+                            </span>
+                          </div>
                         )}
                       </button>
                     </div>
@@ -2553,8 +2556,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   onClick={handleStripeUpgrade}
                   className={
                     isMembershipLaunchLocked
-                      ? "w-full min-h-[48px] py-3.5 px-4 rounded-xl font-mono text-sm font-semibold text-amber-300/80 bg-amber-950/40 border border-amber-500/30 cursor-not-allowed flex items-center justify-center gap-2 select-none opacity-85"
-                      : "w-full min-h-[48px] py-3.5 px-4 rounded-xl font-mono text-sm font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                      ? "w-full min-h-[48px] py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-semibold text-amber-300 bg-amber-950/60 border border-amber-500/40 cursor-not-allowed flex items-center justify-center gap-2 select-none shadow-md"
+                      : "w-full min-h-[48px] py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2"
                   }
                 >
                   {isMembershipLaunchLocked ? (

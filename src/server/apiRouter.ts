@@ -14,7 +14,7 @@ import {
   isValidPassId,
 } from './nfcDnaService';
 import { handleCertificateAction } from '../../api/nfc/_certificateService.js';
-import { buildPlanetPrompts } from '../../api/generate-planet';
+import { generatePlanetRenders, checkAndLockUserGeneration } from '../../api/generate-planet';
 
 export const apiApp = express();
 export const apiRouter = express.Router();
@@ -320,10 +320,21 @@ apiRouter.get('/nfc/generate-test-cipher', (req: Request, res: Response): void =
 });
 
 // ─── 10. Generate Planet Prompts & Visuals (Sillow Mill 2D Anime Aesthetic) ───
-apiRouter.all(['/generate-planet', '/planet/generate'], (req: Request, res: Response): void => {
+apiRouter.all(['/generate-planet', '/planet/generate'], async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body || {};
-    const result = buildPlanetPrompts(body);
+    if (body.userId) {
+      const lockCheck = checkAndLockUserGeneration(body.userId);
+      if (!lockCheck.allowed) {
+        res.status(403).json({
+          success: false,
+          error: 'SUBMISSION_LOCKED',
+          message: lockCheck.reason,
+        });
+        return;
+      }
+    }
+    const result = await generatePlanetRenders(body);
     res.status(200).json({
       success: true,
       ...result,
@@ -332,7 +343,7 @@ apiRouter.all(['/generate-planet', '/planet/generate'], (req: Request, res: Resp
     console.error('[API] generate-planet error:', err);
     res.status(500).json({
       success: false,
-      error: err?.message || 'Failed to generate planet visualizer prompts',
+      error: err?.message || 'Failed to generate planet visuals',
     });
   }
 });
