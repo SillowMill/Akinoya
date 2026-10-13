@@ -153,15 +153,24 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const [copiedToken, setCopiedToken] = useState(false);
 
   // Determine if this pass is officially claimed by the active account or previously
+  const isUserLoggedIn = Boolean(user || profile);
+
   const isClaimedByUser = Boolean(
-    isUserVip ||
-    (profile?.has_vip_pass &&
-      (profile?.vip_code_redeemed === activeToken || profile?.role === 'CREATOR' || isMaster))
+    isUserLoggedIn && (
+      isUserVip ||
+      (profile?.has_vip_pass && (
+        profile?.vip_code_redeemed === activeToken ||
+        profile?.role === 'CREATOR' ||
+        (isMaster && (user?.email?.toLowerCase() === 'odi@sillowmill.com' || profile?.role === 'CREATOR'))
+      ))
+    )
   );
+
+  const hasClaimedPass = Boolean(isUserLoggedIn && isClaimedByUser);
 
   const isClaimed =
     isMaster ||
-    isClaimedByUser ||
+    hasClaimedPass ||
     Boolean(passData.isClaimed && passData.ownerName && passData.ownerName.trim().length > 0) ||
     Boolean(localStoredCert && localStoredCert.holderName && localStoredCert.holderName.trim().length > 0) ||
     Boolean(localStoredName && localStoredName.trim().length > 0);
@@ -312,6 +321,22 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     setTimeout(() => setCopiedToken(false), 2000);
   };
 
+  // Primary CTA Action: Claim VIP Invitation
+  const handleClaimVipInvitation = () => {
+    soundManager.playTone(660, 0.08);
+    // Explicitly record pending VIP token in storage for auth binding
+    localStorage.setItem('akinoya_pending_vip_pass', activeToken);
+    sessionStorage.setItem('pending_vip_code', activeToken);
+    localStorage.setItem('pending_role', 'VIP_GUEST');
+    sessionStorage.setItem('pending_role', 'VIP_GUEST');
+
+    if (user || profile) {
+      executeClaimForUser(user, profile);
+    } else {
+      openAuthModal('signup');
+    }
+  };
+
   // Execute Claim for Authenticated User (binds Pass ID to user account)
   const executeClaimForUser = async (targetUser?: any, targetProfile?: any) => {
     if (isClaiming || isMaster || dnaError) return;
@@ -439,7 +464,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     if (
       !isValidating &&
       !isMaster &&
-      !isClaimed &&
       !isClaimedByUser &&
       (user || profile) &&
       !autoClaimAttemptedRef.current &&
@@ -449,7 +473,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       autoClaimAttemptedRef.current = true;
       executeClaimForUser(user, profile);
     }
-  }, [user, profile, isClaimed, isClaimedByUser, isValidating, isMaster, dnaError, isClaiming]);
+  }, [user, profile, isClaimedByUser, isValidating, isMaster, dnaError, isClaiming]);
 
   return (
     <div className="relative z-20 w-full max-w-2xl mx-auto px-3 sm:px-6 py-6 sm:py-12 text-white font-sans">
@@ -624,17 +648,17 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                   type="button"
                   disabled={isClaiming || isValidating}
                   onClick={() => executeClaimForUser(user, profile)}
-                  className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(34,211,238,0.35)] disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
+                  className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
                 >
                   {isClaiming ? (
                     <>
-                      <Sparkles className="w-4 h-4 animate-spin text-black" />
-                      <span>CLAIMING &amp; ISSUING CERTIFICATE...</span>
+                      <Sparkles className="w-4 h-4 animate-spin text-black shrink-0" />
+                      <span>CLAIMING VIP INVITATION...</span>
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="w-4 h-4 text-black" />
-                      <span>CLAIM VIP PASS TO MY ACCOUNT</span>
+                      <Sparkles className="w-4 h-4 text-black shrink-0" />
+                      <span>CLAIM VIP INVITATION →</span>
                     </>
                   )}
                 </button>
@@ -649,17 +673,11 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                 <button
                   type="button"
                   disabled={isValidating}
-                  onClick={() => {
-                    localStorage.setItem('akinoya_pending_vip_pass', activeToken);
-                    sessionStorage.setItem('pending_vip_code', activeToken);
-                    localStorage.setItem('pending_role', 'VIP_GUEST');
-                    sessionStorage.setItem('pending_role', 'VIP_GUEST');
-                    openAuthModal('signup');
-                  }}
-                  className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(34,211,238,0.35)] min-h-[48px]"
+                  onClick={handleClaimVipInvitation}
+                  className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] min-h-[48px]"
                 >
-                  <Sparkles className="w-4 h-4 text-black" />
-                  <span>CLAIM VIP PASS &amp; CREATE ACCOUNT</span>
+                  <Sparkles className="w-4 h-4 text-black shrink-0" />
+                  <span>CLAIM VIP INVITATION →</span>
                 </button>
 
                 <button
@@ -672,9 +690,9 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                     sessionStorage.setItem('pending_role', 'VIP_GUEST');
                     openAuthModal('signin');
                   }}
-                  className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 hover:border-cyan-400/40 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
+                  className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 hover:border-amber-400/40 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
                 >
-                  <Lock className="w-3.5 h-3.5 text-cyan-400" />
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
                   <span>SIGN IN TO CLAIM</span>
                 </button>
 
@@ -713,6 +731,16 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               <span className="text-amber-400 font-semibold">UNCLAIMED / READY TO ONBOARD</span>
             </div>
           </div>
+
+          {/* Official Certificate Preview */}
+          <div className="space-y-2 pt-2">
+            <div className="text-[10px] font-mono font-bold text-white/40 uppercase tracking-wider text-center">
+              CERTIFICATE OF AUTHENTICITY PREVIEW
+            </div>
+            <div className="rounded-xl overflow-hidden shadow-[0_0_35px_rgba(245,158,11,0.15)]">
+              <CertificateOfAuthenticity certificate={activeCertificate} compact />
+            </div>
+          </div>
         </motion.div>
       ) : (
         /* VIEW B: CLAIMED PERSONALIZED CERTIFICATE & VIP PORTAL */
@@ -727,25 +755,49 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           <div className="rounded-2xl bg-[#090d16] border border-emerald-500/30 p-4 sm:p-6 shadow-[0_0_35px_rgba(16,185,129,0.12)] flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                  <span>OFFICIALLY VERIFIED &amp; ACTIVE</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
-                  <span>VIP PASS UNLOCKED — STRIKT GEKOPPELD AAN DIT ACCOUNT</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase bg-gradient-to-r from-amber-400 to-amber-200 text-black">
-                  ROLE: VIP
-                </span>
+                {hasClaimedPass ? (
+                  <>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                      <span>OFFICIALLY VERIFIED &amp; ACTIVE</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40">
+                      <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>VIP PASS UNLOCKED — STRIKT GEKOPPELD AAN DIT ACCOUNT</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase bg-gradient-to-r from-amber-400 to-amber-200 text-black">
+                      ROLE: VIP
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-cyan-300 bg-cyan-950/70 border border-cyan-500/40">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+                      <span>VIP INVITATION DETECTED</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-amber-300 bg-amber-950/70 border border-amber-500/40">
+                      <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+                      <span>UNCLAIMED — BIND TO YOUR ACCOUNT</span>
+                    </span>
+                  </>
+                )}
               </div>
               <h1 className="text-lg sm:text-2xl font-display font-bold text-white tracking-wide">
                 Official Digital Passport
               </h1>
               <p className="text-[11px] sm:text-xs font-mono text-white/50">
-                Registered Founding VIP Holder: <strong className="text-cyan-300">{activeHolderName}</strong>
-                {activeHolderEmail && (
-                  <span className="text-white/40 font-mono text-[10px] ml-1.5">({activeHolderEmail})</span>
+                {hasClaimedPass ? (
+                  <>
+                    Registered Founding VIP Holder: <strong className="text-cyan-300">{activeHolderName}</strong>
+                    {activeHolderEmail && (
+                      <span className="text-white/40 font-mono text-[10px] ml-1.5">({activeHolderEmail})</span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    Founding Physical Edition: <strong className="text-amber-300">{passData.edition}</strong>
+                    <span className="text-white/40 font-mono text-[10px] ml-1.5">· Claim below to permanently bind to your account</span>
+                  </>
                 )}
               </p>
             </div>
@@ -767,21 +819,43 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             <CertificateOfAuthenticity certificate={activeCertificate} />
           </div>
 
-          {/* Action Button: Open Visualizer Hub */}
+          {/* Action Button: Open Visualizer Hub / Claim VIP Invitation */}
           <div className="space-y-3 pt-1">
-            <button
-              onClick={() => {
-                if (onOpenVisualizerHub) {
-                  onOpenVisualizerHub();
-                } else {
-                  onNavigateHome();
-                }
-              }}
-              className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[48px]"
-            >
-              <AudioWaveform className="w-4 h-4 text-black shrink-0" />
-              <span>OPEN VISUALIZER HUB &amp; VIP ASSETS</span>
-            </button>
+            {!hasClaimedPass ? (
+              <button
+                type="button"
+                disabled={isClaiming || isValidating}
+                onClick={handleClaimVipInvitation}
+                className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
+              >
+                {isClaiming ? (
+                  <>
+                    <Sparkles className="w-4 h-4 animate-spin text-black shrink-0" />
+                    <span>CLAIMING VIP INVITATION...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-black shrink-0" />
+                    <span>CLAIM VIP INVITATION →</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onOpenVisualizerHub) {
+                    onOpenVisualizerHub();
+                  } else {
+                    onNavigateHome();
+                  }
+                }}
+                className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[48px]"
+              >
+                <AudioWaveform className="w-4 h-4 text-black shrink-0" />
+                <span>OPEN VISUALIZER HUB &amp; VIP ASSETS</span>
+              </button>
+            )}
 
             <button
               type="button"
