@@ -306,14 +306,12 @@ export const toggleCreatorLike = async (
       if (nextLiked) {
         await supabase
           .from('portfolio_likes')
-          .insert({ user_id: userId, profile_id: creatorId })
-          .catch(() => {});
+          .insert({ user_id: userId, profile_id: creatorId });
       } else {
         await supabase
           .from('portfolio_likes')
           .delete()
-          .match({ user_id: userId, profile_id: creatorId })
-          .catch(() => {});
+          .match({ user_id: userId, profile_id: creatorId });
       }
     } catch {}
   }

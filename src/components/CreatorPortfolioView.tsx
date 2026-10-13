@@ -92,6 +92,11 @@ export const CreatorPortfolioView: React.FC<CreatorPortfolioViewProps> = ({
 
   // Handle Like Toggle
   const handleLike = async () => {
+    if (!isAuthenticated) {
+      soundManager.playTone(330, 0.08);
+      openAuthModal('signin');
+      return;
+    }
     soundManager.playTone(720, 0.08);
     const result = await toggleCreatorLike(creator.id, user?.id);
     if (result.success) {
@@ -124,6 +129,11 @@ export const CreatorPortfolioView: React.FC<CreatorPortfolioViewProps> = ({
   // Handle P2P Transmission Submission
   const handleP2PSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      soundManager.playTone(330, 0.08);
+      openAuthModal('signin');
+      return;
+    }
     if (!p2pMessage.trim() || !p2pSubject.trim()) return;
 
     setP2PSubmitting(true);

@@ -889,6 +889,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
   // Add Comment to Workflow
   const handleAddWorkflowComment = (workflowId: string) => {
+    if (!isAuthenticated) {
+      soundManager.playTone(330, 0.08);
+      openAuthModal('signin');
+      return;
+    }
     const text = workflowCommentInputs[workflowId]?.trim();
     if (!text) return;
 
@@ -925,6 +930,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   // Artist Verification Handlers
   const handleArtistVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      soundManager.playTone(330, 0.08);
+      openAuthModal('signin');
+      return;
+    }
     setArtistSubmitting(true);
     try {
       await updateProfile({
@@ -955,6 +965,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   };
 
   const handleInstantArtistVerify = async () => {
+    if (!isAuthenticated) {
+      soundManager.playTone(330, 0.08);
+      openAuthModal('signin');
+      return;
+    }
     setArtistSubmitting(true);
     try {
       await updateProfile({ is_artist: true });
@@ -984,6 +999,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   // Handle Discussion Post Submit (RBAC-enforced)
   const handleCreateDiscussionPost = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      soundManager.playTone(330, 0.08);
+      openAuthModal('signin');
+      return;
+    }
     if (!discussionInput.trim() && !discussionImage) return;
 
     // RBAC: Check if channel requires VIP/Artist/Annual Pass
@@ -1055,6 +1075,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
   // Toggle Discussion Like
   const handleToggleDiscussionLike = (postId: string) => {
+    if (!isAuthenticated) {
+      soundManager.playTone(330, 0.08);
+      openAuthModal('signin');
+      return;
+    }
     soundManager.playTone(840, 0.08);
     setDiscussionPosts((prev) =>
       prev.map((p) => {
@@ -1074,6 +1099,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   // Add Reply to Discussion
   const handleSendReply = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      soundManager.playTone(330, 0.08);
+      openAuthModal('signin');
+      return;
+    }
     if (!replyInputText.trim() || !activeReplyPost) return;
 
     soundManager.playTone(780, 0.06);
@@ -1119,6 +1149,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
   // Vote on Ballot
   const handleVoteBallot = (ballotId: string, optionId: string, isFirstBallot: boolean) => {
+    if (!isAuthenticated) {
+      soundManager.playTone(330, 0.08);
+      openAuthModal('signin');
+      return;
+    }
     if (!isVipOrAbove && !isFirstBallot) {
       soundManager.playTone(480, 0.08);
       setUpgradeModalReason('Council Ballot #02 is reserved for verified VIP and Patron members. Annual membership (€60/year, ~€5/month) launches on 09/01/2027.');
@@ -1794,6 +1829,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           const foundersVipChannels = CHAT_CHANNELS.filter((c) => c.category === 'FOUNDERS & VIP');
           const topCreator = getStoredCreators().sort((a, b) => b.likesCount - a.likesCount)[0];
 
+          const isProAudioLocked = Boolean(activeChannel.requiresArtist && !isArtist);
+          const isFoundersVipLocked = Boolean(
+            activeChannel.requiresVip && !isVip && !hasVipPass && !profile?.has_vip_pass && !isVipOrAbove
+          );
+
           return (
             <motion.div
               key="section-discussion"
@@ -2269,17 +2309,27 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                           type="button"
                           onClick={() => {
                             soundManager.playTone(660, 0.05);
-                            setIsArtistModalOpen(true);
+                            if (isAuthenticated) {
+                              setIsArtistModalOpen(true);
+                            } else {
+                              openAuthModal('signin');
+                            }
                           }}
                           className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-mono font-bold text-xs shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all flex items-center gap-2 cursor-pointer"
                         >
                           <ShieldCheck className="w-4 h-4" />
-                          <span>Request Artist Verification</span>
+                          <span>{isAuthenticated ? 'Request Artist Verification' : 'Sign In to Verify Artist'}</span>
                         </button>
 
                         <button
                           type="button"
-                          onClick={handleInstantArtistVerify}
+                          onClick={() => {
+                            if (isAuthenticated) {
+                              handleInstantArtistVerify();
+                            } else {
+                              openAuthModal('signin');
+                            }
+                          }}
                           className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-purple-400/30 text-purple-300 font-mono text-xs transition-colors cursor-pointer flex items-center gap-1.5"
                         >
                           <Zap className="w-3.5 h-3.5 text-yellow-400" />
@@ -2441,7 +2491,14 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
                                 <button
                                   type="button"
-                                  onClick={() => setActiveReplyPost(post)}
+                                  onClick={() => {
+                                    if (!isAuthenticated) {
+                                      soundManager.playTone(330, 0.08);
+                                      openAuthModal('signin');
+                                      return;
+                                    }
+                                    setActiveReplyPost(post);
+                                  }}
                                   className="min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
                                 >
                                   <MessageCircle className="w-3.5 h-3.5" />
@@ -2537,9 +2594,27 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
                         <textarea
                           value={discussionInput}
-                          onChange={(e) => setDiscussionInput(e.target.value)}
+                          onClick={() => {
+                            if (!isAuthenticated) {
+                              openAuthModal('signin');
+                            }
+                          }}
+                          onFocus={() => {
+                            if (!isAuthenticated) {
+                              openAuthModal('signin');
+                            }
+                          }}
+                          onChange={(e) => {
+                            if (!isAuthenticated) {
+                              openAuthModal('signin');
+                              return;
+                            }
+                            setDiscussionInput(e.target.value);
+                          }}
                           placeholder={
-                            activeChannel.isAnnualPass && !isVipOrAbove
+                            !isAuthenticated
+                              ? `Sign in to message #${activeChannel.name}...`
+                              : activeChannel.isAnnualPass && !isVipOrAbove
                               ? `Redeem VIP Pass to message #${activeChannel.name}...`
                               : `Message #${activeChannel.name}...`
                           }
@@ -2585,7 +2660,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
                               <button
                                 type="button"
-                                onClick={() => discussionFileInputRef.current?.click()}
+                                onClick={() => {
+                                  if (!isAuthenticated) {
+                                    openAuthModal('signin');
+                                    return;
+                                  }
+                                  discussionFileInputRef.current?.click();
+                                }}
                                 className="min-h-[48px] flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
                               >
                                 <ImageIcon className="w-4 h-4 text-cyan-400" />
@@ -2973,8 +3054,19 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                 <input
                   type="text"
                   value={replyInputText}
-                  onChange={(e) => setReplyInputText(e.target.value)}
-                  placeholder="Reply to thread..."
+                  onFocus={() => {
+                    if (!isAuthenticated) {
+                      openAuthModal('signin');
+                    }
+                  }}
+                  onChange={(e) => {
+                    if (!isAuthenticated) {
+                      openAuthModal('signin');
+                      return;
+                    }
+                    setReplyInputText(e.target.value);
+                  }}
+                  placeholder={!isAuthenticated ? 'Sign in to reply...' : 'Reply to thread...'}
                   className="flex-1 min-h-[44px] bg-black/60 border border-white/20 focus:border-cyan-400 rounded-xl px-3.5 py-2 text-xs text-white outline-none font-mono"
                 />
                 <button
