@@ -761,7 +761,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     if (!isAnnualOrCreator) {
       soundManager.playTone(330, 0.08);
       setUpgradeModalReason(
-        'Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)'
+        'Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr · launches 09/01/2027)'
       );
       setIsUpgradeModalOpen(true);
       return;
@@ -1074,16 +1074,24 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         </div>
 
         {/* Right Status Actions: Auth Status Profile Button + Locked Membership Badge */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+          <a
+            href="/contest"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold text-black bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition-all min-h-[44px] shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:scale-[1.01]"
+          >
+            <Trophy className="w-3.5 h-3.5 text-black shrink-0" />
+            <span className="hidden xs:inline">WORLDBUILDING CONTEST →</span>
+            <span className="xs:hidden">CONTEST →</span>
+          </a>
           <AuthHeaderButton />
           <button
             type="button"
             disabled={true}
-            className="hidden md:flex px-2.5 py-1.5 rounded-xl bg-amber-950/50 border border-amber-500/40 text-amber-300 text-[10.5px] lg:text-[11px] font-mono font-semibold cursor-not-allowed items-center gap-1.5 whitespace-nowrap min-h-[44px] select-none shadow-sm"
+            className="hidden sm:inline-flex px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold cursor-not-allowed items-center gap-2 whitespace-normal break-words leading-snug min-h-[44px] select-none shadow-sm"
             title="Public membership launches on 09/01/2027"
           >
             <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-            <span>LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
+            <span>LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)</span>
           </button>
         </div>
       </header>
@@ -1190,11 +1198,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               <button
                 type="button"
                 disabled={true}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs font-mono font-semibold cursor-not-allowed flex items-center justify-center gap-2 select-none text-center whitespace-normal break-words leading-tight shadow-md shrink-0"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold cursor-not-allowed flex items-center justify-center gap-2 select-none text-center whitespace-normal break-words leading-snug shadow-md shrink-0 min-h-[44px]"
                 title="Full vault downloads launch on 09/01/2027"
               >
                 <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
-                <span>LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
+                <span>LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)</span>
               </button>
             </div>
 
@@ -1296,7 +1304,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                         title={
                           isAnnualOrCreator
                             ? `Download ${asset.fileName}`
-                            : 'Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr — launches 09/01/2027)'
+                            : 'Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr · launches 09/01/2027)'
                         }
                       >
                         {isAnnualOrCreator ? (
@@ -2567,10 +2575,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   )}
                   <span className="whitespace-normal break-words text-center leading-snug">
                     {isMembershipLaunchLocked
-                      ? 'LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)'
+                      ? 'LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)'
                       : isSubscribing
                       ? 'INITIALIZING STRIPE...'
-                      : 'ACTIVATE ANNUAL MEMBERSHIP — €60/YEAR (~€5/MONTH)'}
+                      : 'ACTIVATE ANNUAL MEMBERSHIP · €60/YEAR (~€5/MONTH)'}
                   </span>
                 </button>
 
