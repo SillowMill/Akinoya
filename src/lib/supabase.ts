@@ -17,6 +17,7 @@ export interface Profile {
   is_subscriber?: boolean;
   is_annual_member?: boolean;
   unlocked_assets?: string[];
+  contest_submission_id?: string | null;
   // Creator Portfolios & Artist Verification
   username?: string;
   bio?: string;

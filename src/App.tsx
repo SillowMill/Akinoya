@@ -18,6 +18,7 @@ import { NfcHudToast } from './components/NfcHudToast';
 import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerification';
 import { CommunityHub } from './components/CommunityHub';
 import { CreatorPortfolioView } from './components/CreatorPortfolioView';
+import { ContestLaunchpad } from './components/ContestLaunchpad';
 import { useAuth } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -117,10 +118,11 @@ export default function App() {
     return 'odi';
   });
 
-  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators'>(() => {
+  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest'>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
       const search = window.location.search.toLowerCase();
+      if (path === '/contest' || path.startsWith('/contest/')) return 'contest';
       if (path === '/creators' || path.startsWith('/creators/')) return 'creators';
       if (path === '/community' || path.startsWith('/community/')) return 'community';
       if (path === '/auth/callback' || path.startsWith('/auth/callback')) {
@@ -178,7 +180,9 @@ export default function App() {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
       const search = window.location.search.toLowerCase();
-      if (path === '/creators' || path.startsWith('/creators/')) {
+      if (path === '/contest' || path.startsWith('/contest/')) {
+        setRoute('contest');
+      } else if (path === '/creators' || path.startsWith('/creators/')) {
         const u = window.location.pathname.replace(/^\/creators\/?/, '').split('/')[0].trim() || 'odi';
         setCreatorUsername(u);
         setRoute('creators');
@@ -213,7 +217,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigateTo = (newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators', path: string) => {
+  const navigateTo = (newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest', path: string) => {
     try {
       window.history.pushState({}, '', path);
     } catch {
@@ -285,7 +289,7 @@ export default function App() {
       <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isCanvasUnlocked} />
 
       {/* Top Bar Navigation (Zone 1, 2, 3) */}
-      {!backdropOnly && route !== 'community' && route !== 'creators' && (
+      {!backdropOnly && route !== 'community' && route !== 'creators' && route !== 'contest' && (
         <TopBar
           isUnlocked={isVipRoute || isUserVip ? true : isSiteUnlocked}
           isVip={isVipRoute || isUserVip}
@@ -300,7 +304,18 @@ export default function App() {
 
       {/* Route-Based Dynamic Content */}
       <ErrorBoundary>
-        {route === 'creators' ? (
+        {route === 'contest' ? (
+          <div className="relative z-20 flex-1 w-full flex flex-col">
+            <ContestLaunchpad
+              onBackToHome={() => navigateTo('home', '/')}
+              onNavigateToCommunity={() => navigateTo('community', '/community')}
+              onNavigateToCreator={(u) => {
+                setCreatorUsername(u);
+                navigateTo('creators', `/creators/${u}`);
+              }}
+            />
+          </div>
+        ) : route === 'creators' ? (
           <div className="relative z-20 flex-1 w-full flex flex-col">
             <CreatorPortfolioView
               username={creatorUsername}
@@ -426,7 +441,7 @@ export default function App() {
       </ErrorBoundary>
 
       {/* Luxury Minimalist Footer */}
-      {!backdropOnly && route !== 'community' && route !== 'creators' && (
+      {!backdropOnly && route !== 'community' && route !== 'creators' && route !== 'contest' && (
         <footer className="relative z-10 w-full border-t border-white/5 bg-black/60 backdrop-blur-md py-4 px-4 sm:px-6 text-center space-y-2.5">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-white/40">
             <div>

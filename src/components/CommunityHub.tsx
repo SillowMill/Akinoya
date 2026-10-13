@@ -51,6 +51,7 @@ import { useAuth } from '../context/AuthContext';
 import { AuthHeaderButton } from './AuthHeaderButton';
 import { CreatorLeaderboard } from './CreatorLeaderboard';
 import { CreatorPortfolioView } from './CreatorPortfolioView';
+import { LoreGovernancePortal } from './LoreGovernancePortal';
 import { getStoredCreators } from '../data/creators';
 
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
@@ -144,16 +145,6 @@ interface DiscussionReply {
   avatarBg: string;
   timestamp: string;
   content: string;
-}
-
-interface GovernanceBallot {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  totalVotes: number;
-  userVoteId?: string;
-  options: { id: string; label: string; votes: number }[];
 }
 
 interface CommunityHubProps {
@@ -774,38 +765,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     },
   ]);
 
-  // 5. LORE & GOVERNANCE DATA
-  const [governanceBallots, setGovernanceBallots] = useState<GovernanceBallot[]>([
-    {
-      id: 'ballot-territory',
-      title: 'Council Ballot #01: Chapter 2 Planetary Territory Exploration',
-      category: 'FREE SAMPLE BALLOT',
-      description:
-        'Community & Patrons vote to decide which territory within Planet Äkinoya will serve as the primary setting for Chapter 2 of the animated story.',
-      totalVotes: 104,
-      options: [
-        { id: 'opt-spire', label: 'Sector 04 — The Obsidian Spire & Resonance Core', votes: 52 },
-        { id: 'opt-archipelago', label: 'The Neon Archipelago of Upper Äkinoya', votes: 34 },
-        { id: 'opt-caverns', label: 'Sub-Surface Crystal Caverns & Bioluminescent Vault', votes: 18 },
-      ],
-      userVoteId: undefined,
-    },
-    {
-      id: 'ballot-merch',
-      title: 'Council Ballot #02: Wave 2 Exclusive Physical Artifact Drop',
-      category: 'PATRON EXCLUSIVE BALLOT',
-      description:
-        'Which physical collector piece should be prioritized for the upcoming batch release for Founding Pass & Patron members?',
-      totalVotes: 78,
-      options: [
-        { id: 'opt-jacket', label: 'Embroidered Äkinoya Pilot Flight Jacket', votes: 38 },
-        { id: 'opt-hoodie', label: 'Heavyweight Screenprinted Graphic Hooded Fleece', votes: 27 },
-        { id: 'opt-keycard', label: 'Anodized Titanium VIP Keycard & NFC Medallion', votes: 13 },
-      ],
-      userVoteId: undefined,
-    },
-  ]);
-
   // Test Access Activator (Disabled in preview-only mode)
   const handleActivateTestAccess = () => {
     soundManager.playTone(330, 0.08);
@@ -1145,42 +1104,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
     setActiveReplyPost((prev) => (prev ? { ...prev, replies: [...prev.replies, newReply] } : null));
     setReplyInputText('');
-  };
-
-  // Vote on Ballot
-  const handleVoteBallot = (ballotId: string, optionId: string, isFirstBallot: boolean) => {
-    if (!isAuthenticated) {
-      soundManager.playTone(330, 0.08);
-      openAuthModal('signin');
-      return;
-    }
-    if (!isVipOrAbove && !isFirstBallot) {
-      soundManager.playTone(480, 0.08);
-      setUpgradeModalReason('Council Ballot #02 is reserved for verified VIP and Patron members. Annual membership (€60/year, ~€5/month) launches on 09/01/2027.');
-      setIsUpgradeModalOpen(true);
-      return;
-    }
-
-    soundManager.playUnlockChime();
-    setGovernanceBallots((prev) =>
-      prev.map((b) => {
-        if (b.id === ballotId) {
-          const prevVoted = b.userVoteId;
-          const updatedOptions = b.options.map((opt) => {
-            if (opt.id === optionId) return { ...opt, votes: opt.votes + 1 };
-            if (prevVoted && opt.id === prevVoted) return { ...opt, votes: Math.max(0, opt.votes - 1) };
-            return opt;
-          });
-          return {
-            ...b,
-            options: updatedOptions,
-            userVoteId: optionId,
-            totalVotes: prevVoted ? b.totalVotes : b.totalVotes + 1,
-          };
-        }
-        return b;
-      })
-    );
   };
 
   return (
@@ -2759,130 +2682,20 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             exit={{ opacity: 0, y: -12 }}
             className="space-y-6"
           >
-            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-black/50 to-black/80 border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-bold tracking-wider">
-                    MODULE 05 · LORE GOVERNANCE
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                    1 FREE BALLOT SAMPLE UNLOCKED
-                  </span>
-                </div>
-                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
-                  🗳️ Lore &amp; Governance Portal
-                </h1>
-                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  Cast binding votes on storyline territory branches, pilot armor variants, and batch merchandise priorities.
-                </p>
-              </div>
-            </div>
-
-            {/* Polls Container */}
-            <div className="space-y-6">
-              {governanceBallots.map((ballot, index) => {
-                const isFirstBallot = index === 0;
-                const isLocked = !isPatron && !isFirstBallot;
-
-                return (
-                  <div
-                    key={ballot.id}
-                    className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-emerald-500/30 shadow-[0_4px_25px_rgba(0,0,0,0.5)] space-y-4 relative overflow-hidden"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-950/80 px-2.5 py-0.5 rounded-md border border-emerald-400/40">
-                        {ballot.category}
-                      </span>
-                      <span className="text-xs font-mono text-white/50">{ballot.totalVotes} Total Ballots</span>
-                    </div>
-
-                    <h2 className="text-base sm:text-lg font-display font-bold text-white">
-                      {ballot.title}
-                    </h2>
-
-                    <p className="text-xs sm:text-sm text-white/70 font-sans">
-                      {ballot.description}
-                    </p>
-
-                    {/* Paywall Overlay on Ballot #02 */}
-                    {isLocked ? (
-                      <div className="p-6 rounded-xl backdrop-blur-md bg-black/70 border border-emerald-500/30 text-center flex flex-col items-center justify-center">
-                        <Lock className="w-8 h-8 text-yellow-400 mb-2" />
-                        <div className="text-sm font-display font-bold text-white mb-1">
-                          COUNCIL BALLOT #02 RESERVED FOR PATRONS
-                        </div>
-                        <p className="text-xs text-white/70 mb-4 max-w-sm">
-                          Activate membership for €60/year (~€5/mo) to cast your binding vote on physical merchandise drops and lore directives.
-                        </p>
-                        <button
-                          type="button"
-                          disabled={true}
-                          className="min-h-[44px] px-5 py-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 font-mono font-semibold text-xs cursor-not-allowed flex items-center justify-center gap-1.5 opacity-85 select-none text-center whitespace-normal break-words leading-tight"
-                          title="Voting unlocks on 09/01/2027"
-                        >
-                          <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                          <span>LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3 pt-2">
-                        {ballot.options.map((opt) => {
-                          const pct = ballot.totalVotes > 0 ? Math.round((opt.votes / ballot.totalVotes) * 100) : 0;
-                          const isVoted = ballot.userVoteId === opt.id;
-
-                          return (
-                            <button
-                              key={opt.id}
-                              type="button"
-                              onClick={() => handleVoteBallot(ballot.id, opt.id, isFirstBallot)}
-                              className={`w-full min-h-[44px] text-left p-3.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${
-                                isVoted
-                                  ? 'bg-emerald-950/60 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.25)]'
-                                  : 'bg-black/50 border-white/10 hover:border-emerald-500/40 text-white/80'
-                              }`}
-                            >
-                              <div
-                                className="absolute inset-y-0 left-0 bg-emerald-500/15 pointer-events-none transition-all duration-500"
-                                style={{ width: `${pct}%` }}
-                              />
-
-                              <div className="relative z-10 flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <div
-                                    className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                                      isVoted
-                                        ? 'border-emerald-400 bg-emerald-400'
-                                        : 'border-white/30 group-hover:border-emerald-400'
-                                    }`}
-                                  >
-                                    {isVoted && <CheckCircle2 className="w-3 h-3 text-black" />}
-                                  </div>
-                                  <span className="text-xs sm:text-sm font-semibold truncate">
-                                    {opt.label}
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-2 shrink-0 font-mono text-xs">
-                                  <span className="text-emerald-400 font-bold">{pct}%</span>
-                                  <span className="text-white/40 text-[11px]">({opt.votes})</span>
-                                </div>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {ballot.userVoteId && (
-                      <div className="pt-2 flex items-center gap-1.5 text-[11px] font-mono text-emerald-300">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Ballot recorded against your identity.</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <LoreGovernancePortal
+              onNavigateToContest={() => {
+                window.location.href = '/contest';
+              }}
+              onOpenCreator={(u) => {
+                setSelectedCreatorUsername(u);
+                setActiveSection('creators');
+                if (onOpenCreator) onOpenCreator(u);
+              }}
+              onOpenUpgradeModal={(reason) => {
+                setUpgradeModalReason(reason);
+                setIsUpgradeModalOpen(true);
+              }}
+            />
           </motion.div>
         )}
       </main>

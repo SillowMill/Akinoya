@@ -1,4 +1,4 @@
-import { ShieldCheck, Sparkles } from 'lucide-react';
+import { ShieldCheck, Sparkles, Trophy } from 'lucide-react';
 import { SoundtrackButton } from './SoundtrackButton';
 import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
@@ -58,6 +58,10 @@ export const TopBar: React.FC<TopBarProps> = ({
         <nav className="hidden md:flex items-center gap-6 text-xs font-mono text-white/60">
           <a href="#archives" className="hover:text-white transition-colors">
             Archive
+          </a>
+          <a href="/contest" className="hover:text-amber-300 transition-colors flex items-center gap-1.5 text-amber-300/90 font-semibold">
+            <Trophy className="w-3.5 h-3.5 text-amber-400" />
+            <span>Contest</span>
           </a>
           <a href="/community" className="hover:text-cyan-300 transition-colors flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-cyan-400" />

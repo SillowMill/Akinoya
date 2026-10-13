@@ -350,9 +350,86 @@ export const getP2PTransmissionsForCreator = (username: string): P2PTransmission
     const clean = username.trim().toLowerCase().replace(/^@/, '');
     const raw = localStorage.getItem(LOCAL_P2P_KEY);
     if (!raw) return [];
-    const list: P2PTransmission[] = JSON.parse(raw);
+    const list: P2PTransmission[] = raw ? JSON.parse(raw) : [];
     return list.filter((tx) => tx.recipientUsername.toLowerCase() === clean);
   } catch {
     return [];
+  }
+};
+
+// Automatically attach contest renders and lore to the user's public portfolio (/creators/[username])
+export const attachContestSubmissionToCreator = (
+  username: string,
+  fullName: string,
+  submission: {
+    id: string;
+    planetName: string;
+    generatedLore: string;
+    renders: {
+      hero: string;
+      atmosphere: string;
+      ecosystem: string;
+      landmark: string;
+    };
+    authorAvatarGradient?: string;
+  }
+): void => {
+  try {
+    const clean = (username || 'user').trim().toLowerCase().replace(/^@/, '');
+    const creators = getStoredCreators();
+    const existingIndex = creators.findIndex((c) => c.username.toLowerCase() === clean);
+
+    const renderShowcaseItem: ShowcaseItem = {
+      id: `sc-contest-render-${submission.id}`,
+      title: `${submission.planetName} · 4K Environment Render`,
+      type: '3D_RENDER',
+      description: `Official Worldbuilding Contest Entry. High-resolution planetary terrain visualization generated with Mill AI.`,
+      mediaUrl: submission.renders.hero,
+      stats: { views: '1', downloads: '0' },
+      tags: ['Contest Entry', 'Worldbuilding', '4K Render'],
+    };
+
+    const loreShowcaseItem: ShowcaseItem = {
+      id: `sc-contest-lore-${submission.id}`,
+      title: `${submission.planetName} · Lore Dossier`,
+      type: 'LORE',
+      description: submission.generatedLore,
+      mediaUrl: submission.renders.atmosphere,
+      stats: { views: '1' },
+      tags: ['Council Ballot', 'Sector Lore', 'Äkinoya 2027'],
+    };
+
+    if (existingIndex >= 0) {
+      const target = creators[existingIndex];
+      // Filter out previous contest entries if re-attaching
+      const filteredItems = target.showcaseItems.filter((i) => !i.id.startsWith('sc-contest-'));
+      target.showcaseItems = [renderShowcaseItem, loreShowcaseItem, ...filteredItems];
+      creators[existingIndex] = target;
+    } else {
+      // Create new creator profile for this user
+      const newCreator: CreatorProfile = {
+        id: `creator-${clean}`,
+        username: clean,
+        fullName: fullName || clean,
+        role: 'CREATOR',
+        isArtist: true,
+        hasVipPass: true,
+        vipEdition: 'Worldbuilding Architect',
+        avatarGradient: submission.authorAvatarGradient || 'from-cyan-400 via-blue-500 to-indigo-600',
+        headline: `World Architect · Creator of ${submission.planetName}`,
+        bio: `Syndicate creator and official worldbuilder for Planet Äkinoya. Participating in the 2027 Community Worldbuilding Contest with ${submission.planetName}.`,
+        location: 'Planet Äkinoya · Deep Space Orbit',
+        joinedDate: 'Contest 2026',
+        likesCount: 1,
+        socialLinks: {},
+        skills: ['Worldbuilding', 'Planetary Architecture', 'Lore Design'],
+        showcaseItems: [renderShowcaseItem, loreShowcaseItem],
+      };
+      creators.push(newCreator);
+    }
+
+    localStorage.setItem(LOCAL_CREATORS_KEY, JSON.stringify(creators));
+  } catch (err) {
+    console.warn('[creators] Error attaching contest submission:', err);
   }
 };

@@ -39,6 +39,7 @@ import {
   Gem,
   User,
   Download,
+  Trophy,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
@@ -982,6 +983,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                       {/* Access / Pricing Bar inside widget top */}
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                        <a
+                          href="/contest"
+                          className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[48px] shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-[1.01]"
+                        >
+                          <Trophy className="w-4 h-4 text-black shrink-0" />
+                          <span>WORLDBUILDING CONTEST →</span>
+                        </a>
+
                         <a
                           href="/community"
                           className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all cursor-pointer min-h-[48px] shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:scale-[1.01]"
