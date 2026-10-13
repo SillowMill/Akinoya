@@ -238,7 +238,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const activeCertificate: BingaaCertificate =
     bingaaCertificate ||
     (isMaster
-      ? getMasterCertificate()
+      ? getMasterCertificate(holderName, user?.email || undefined)
       : {
           certificateId: `COA-BNG1-${String(activeEditionNumber).padStart(3, '0')}-VERIFIED`,
           title: 'Bingäa Issue #1 — Certificate of Authenticity',

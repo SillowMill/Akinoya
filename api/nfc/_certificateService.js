@@ -39,7 +39,7 @@ export function deriveEditionNumber(passId) {
     clean === 'AKN-2027' ||
     clean === 'AKN-VIP-2027'
   ) {
-    return 1;
+    return 0; // Founders Pass (#0)
   }
   const xMatch = clean.match(/X(\d{3,4})$/);
   if (xMatch) {
@@ -237,13 +237,14 @@ export function sanitizeHolderName(name) {
 
 export function issueCertificate(passId, holderName, emailVerified = true, holderEmail = '') {
   const normalizedId = normalizePassId(passId);
-  const editionNumber = deriveEditionNumber(normalizedId);
+  const isMaster = normalizedId === 'AKN-VIP-2027-X0914';
+  const editionNumber = isMaster ? 0 : deriveEditionNumber(normalizedId);
   const claimedAt = new Date().toISOString();
   const payload = ['BINGAA-ISSUE-1', normalizedId, holderName, editionNumber, claimedAt].join('|');
   const signature = hmacHex(CERT_SECRET, payload).toUpperCase();
 
   return {
-    certificateId: `COA-BNG1-${String(editionNumber).padStart(3, '0')}-${signature.slice(0, 6)}`,
+    certificateId: isMaster ? 'COA-BNG1-001-FOUNDER' : `COA-BNG1-${String(editionNumber).padStart(3, '0')}-${signature.slice(0, 6)}`,
     title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
     passId: normalizedId,
     holderName,

@@ -137,73 +137,91 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   }>({
     tokenId: `#${activeToken}`,
     edition: isMaster ? 'Founders Pass (#0)' : `${derivedEdition} of 100`,
-    editionNumber: derivedEdition,
+    editionNumber: isMaster ? 0 : derivedEdition,
     origin: 'Genesis Archive (Leuven Origin)',
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
-    status: isMaster ? 'MASTER FOUNDER ORIGINAL' : 'UNASSIGNED / READY TO CLAIM',
-    ownerName: isMaster ? 'Odi Selis' : (localStoredName || ''),
-    ownerEmail: isMaster ? 'Odi@sillowmill.com' : null,
-    isClaimed: isMaster || Boolean(localStoredName || localStoredCert),
-    registeredAt: isMaster ? '2026-10-09T00:00:00.000Z' : null,
-    certificate: isMaster ? getMasterCertificate() : localStoredCert,
+    status: isMaster
+      ? (localStoredName || localStoredCert ? 'MASTER FOUNDER ORIGINAL' : 'FOUNDERS PASS (#0) / READY TO CLAIM')
+      : (localStoredName || localStoredCert ? 'OFFICIALLY VERIFIED' : 'UNASSIGNED / READY TO CLAIM'),
+    ownerName: localStoredName || '',
+    ownerEmail: null,
+    isClaimed: Boolean(localStoredName || localStoredCert),
+    registeredAt: localStoredCert?.claimedAt || null,
+    certificate: localStoredCert || null,
   });
 
   // UI helpers
   const [copiedToken, setCopiedToken] = useState(false);
 
+  // Helper for identifying creator/founder email
+  const isFounderEmail = (email?: string | null): boolean => {
+    if (!email) return false;
+    const clean = email.trim().toLowerCase();
+    return clean === 'odi@sillowmill.com' || clean === 'odi.selis3@gmail.com';
+  };
+
   // Determine if this pass is officially claimed by the active account or previously
   const isUserLoggedIn = Boolean(user || profile);
+  const currentUserEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+  const isFounderAccount = isFounderEmail(currentUserEmail) || profile?.role === 'CREATOR';
 
   const isClaimedByUser = Boolean(
     isUserLoggedIn && (
-      isUserVip ||
-      (profile?.has_vip_pass && (
+      (isMaster && isFounderAccount && (
+        profile?.has_vip_pass ||
         profile?.vip_code_redeemed === activeToken ||
-        profile?.role === 'CREATOR' ||
-        (isMaster && (user?.email?.toLowerCase() === 'odi@sillowmill.com' || profile?.role === 'CREATOR'))
+        passData.isClaimed ||
+        Boolean(localStoredCert)
+      )) ||
+      (!isMaster && (
+        isUserVip ||
+        (profile?.has_vip_pass && (
+          profile?.vip_code_redeemed === activeToken ||
+          profile?.role === 'CREATOR'
+        ))
       ))
     )
   );
 
-  const hasClaimedPass = Boolean(isUserLoggedIn && isClaimedByUser);
+  const hasClaimedPass = Boolean(
+    isUserLoggedIn && (
+      isClaimedByUser ||
+      (passData.isClaimed && passData.ownerEmail && (currentUserEmail === passData.ownerEmail.toLowerCase()))
+    )
+  );
 
   const isClaimed =
-    isMaster ||
     hasClaimedPass ||
     Boolean(passData.isClaimed && passData.ownerName && passData.ownerName.trim().length > 0) ||
     Boolean(localStoredCert && localStoredCert.holderName && localStoredCert.holderName.trim().length > 0) ||
     Boolean(localStoredName && localStoredName.trim().length > 0);
 
-  const activeHolderName = isMaster
-    ? 'Odi Selis'
-    : (
-        passData.ownerName ||
-        profile?.full_name ||
-        (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : null) ||
-        user?.user_metadata?.full_name ||
-        user?.user_metadata?.name ||
-        (user?.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim() : null) ||
-        localStoredCert?.holderName ||
-        localStoredName ||
-        user?.email?.split('@')[0] ||
-        'Founding VIP Member'
-      );
+  const activeHolderName =
+    passData.ownerName ||
+    (isMaster && (user || profile) ? (profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || 'Odi Selis') : '') ||
+    profile?.full_name ||
+    (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : null) ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    (user?.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim() : null) ||
+    localStoredCert?.holderName ||
+    localStoredName ||
+    (user?.email ? user.email.split('@')[0] : '') ||
+    (isMaster ? 'Odi Selis' : 'Founding VIP Member');
 
-  const activeHolderEmail = isMaster
-    ? 'Odi@sillowmill.com'
-    : (
-        passData.ownerEmail ||
-        profile?.email ||
-        user?.email ||
-        null
-      );
+  const activeHolderEmail =
+    passData.ownerEmail ||
+    profile?.email ||
+    user?.email ||
+    localStoredCert?.holderEmail ||
+    (isMaster ? 'odi.selis3@gmail.com' : null);
 
   const activeCertificate: BingaaCertificate =
     localStoredCert ||
     passData.certificate ||
     (isMaster
-      ? getMasterCertificate(activeHolderName)
+      ? getMasterCertificate(activeHolderName, activeHolderEmail || undefined)
       : {
           certificateId: `COA-BNG1-${String(passData.editionNumber).padStart(3, '0')}-VERIFIED`,
           title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
@@ -269,24 +287,28 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
         if (data.pass) {
           const pass = data.pass;
+          const isPassClaimed = Boolean(pass.isClaimed && pass.ownerName);
           setPassData((prev) => ({
             ...prev,
             ...pass,
-            ownerName: isMaster ? 'Odi Selis' : (pass.ownerName || prev.ownerName),
-            ownerEmail: isMaster ? 'Odi@sillowmill.com' : (pass.ownerEmail || prev.ownerEmail),
-            isClaimed: isMaster ? true : (Boolean(pass.isClaimed && pass.ownerName) || prev.isClaimed),
+            ownerName: pass.ownerName || prev.ownerName,
+            ownerEmail: pass.ownerEmail || prev.ownerEmail,
+            isClaimed: isPassClaimed || prev.isClaimed,
+            status: isMaster
+              ? (isPassClaimed ? 'MASTER FOUNDER ORIGINAL' : 'FOUNDERS PASS (#0) / READY TO CLAIM')
+              : (pass.status || prev.status),
           }));
 
           if (pass.certificate) {
             saveCertificate(pass.certificate);
           }
-          if (pass.ownerName && !isMaster) {
+          if (pass.ownerName) {
             saveHolderName(pass.ownerName, token);
           }
         }
 
         // Grant persistent VIP access only once the pass is claimed
-        if (isMaster || getHolderName(token) || (data.pass && data.pass.isClaimed)) {
+        if (hasClaimedPass || (data.pass && data.pass.isClaimed && data.pass.ownerName)) {
           setExplicitVipRouteActive(true);
           setDeviceSession(token);
           unlockVip(token);
@@ -299,7 +321,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       }
     } catch (err: any) {
       console.error('Verification error:', err);
-      if (isMaster || localStoredName || localStoredCert) {
+      if (hasClaimedPass || localStoredCert) {
         setExplicitVipRouteActive(true);
         setDeviceSession(token);
         unlockVip(token);
@@ -339,7 +361,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
   // Execute Claim for Authenticated User (binds Pass ID to user account)
   const executeClaimForUser = async (targetUser?: any, targetProfile?: any) => {
-    if (isClaiming || isMaster || dnaError) return;
+    if (isClaiming || dnaError) return;
     const currentUser = targetUser || user;
     const currentProfile = targetProfile || profile;
 
@@ -364,13 +386,23 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       currentUser?.user_metadata?.name ||
       (currentUser?.user_metadata?.first_name ? `${currentUser.user_metadata.first_name} ${currentUser.user_metadata.last_name || ''}`.trim() : null) ||
       currentUser?.email?.split('@')[0] ||
-      'Founding VIP Member';
+      (isMaster ? 'Odi Selis' : 'Founding VIP Member');
 
-    const cleanName = sanitizeHolderName(rawName) || 'Founding VIP Member';
+    const cleanName = sanitizeHolderName(rawName) || (isMaster ? 'Odi Selis' : 'Founding VIP Member');
     const cleanEmail = (currentUser?.email || currentProfile?.email || '').trim().toLowerCase();
 
     try {
-      if (!isMaster) {
+      if (isMaster) {
+        const isFounder = isFounderEmail(cleanEmail) || currentProfile?.role === 'CREATOR';
+        if (!isFounder) {
+          setClaimError(
+            'The Founders Pass (#0) is reserved for the creator (Odi Selis). Please sign in with odi.selis3@gmail.com or Odi@sillowmill.com.'
+          );
+          soundManager.playError();
+          setIsClaiming(false);
+          return;
+        }
+      } else {
         const tokenStatus = await checkVipTokenStatus(activeToken, currentUser?.id);
         if (tokenStatus.isAlreadyClaimed) {
           if (tokenStatus.isClaimedByMe) {
@@ -385,7 +417,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         }
       }
 
-      // 1. Call server-side NFC register endpoint (records pass in backend & syncs Blad1 row in Google Sheets)
+      // 1. Call server-side NFC register endpoint (records pass in backend & syncs Blad1/VIP GUESTS row in Google Sheets)
       const res = await fetch('/api/nfc/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -407,21 +439,37 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       await redeemVipCode(activeToken);
 
       // 3. Issue and persist unique Certificate of Authenticity with authenticated claimant details
-      const cert: BingaaCertificate = {
-        ...(data?.certificate || {}),
-        certificateId: (data && data.certificate?.certificateId) || `COA-BNG1-${String(passData.editionNumber).padStart(3, '0')}-VERIFIED`,
-        title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
-        passId: activeToken,
-        holderName: cleanName,
-        holderEmail: cleanEmail || undefined,
-        editionNumber: passData.editionNumber,
-        editionTotal: TOTAL_EDITION_LIMIT,
-        status: (data && data.certificate?.status) || 'OFFICIALLY VERIFIED',
-        emailVerified: Boolean(cleanEmail),
-        claimedAt: (data && data.certificate?.claimedAt) || new Date().toISOString(),
-        signatureAlgorithm: (data && data.certificate?.signatureAlgorithm) || 'HMAC-SHA256',
-        signature: (data && data.certificate?.signature) || 'Sillow Mill · Creative Syndicate',
-      };
+      const cert: BingaaCertificate = isMaster
+        ? {
+            ...(data?.certificate || {}),
+            certificateId: (data && data.certificate?.certificateId) || 'COA-BNG1-001-FOUNDER',
+            title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
+            passId: activeToken,
+            holderName: cleanName || 'Odi Selis',
+            holderEmail: cleanEmail || undefined,
+            editionNumber: 0,
+            editionTotal: TOTAL_EDITION_LIMIT,
+            status: (data && data.certificate?.status) || 'MASTER FOUNDER ORIGINAL',
+            emailVerified: Boolean(cleanEmail),
+            claimedAt: (data && data.certificate?.claimedAt) || new Date().toISOString(),
+            signatureAlgorithm: (data && data.certificate?.signatureAlgorithm) || 'HMAC-SHA256',
+            signature: (data && data.certificate?.signature) || 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637',
+          }
+        : {
+            ...(data?.certificate || {}),
+            certificateId: (data && data.certificate?.certificateId) || `COA-BNG1-${String(passData.editionNumber).padStart(3, '0')}-VERIFIED`,
+            title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
+            passId: activeToken,
+            holderName: cleanName,
+            holderEmail: cleanEmail || undefined,
+            editionNumber: passData.editionNumber,
+            editionTotal: TOTAL_EDITION_LIMIT,
+            status: (data && data.certificate?.status) || 'OFFICIALLY VERIFIED',
+            emailVerified: Boolean(cleanEmail),
+            claimedAt: (data && data.certificate?.claimedAt) || new Date().toISOString(),
+            signatureAlgorithm: (data && data.certificate?.signatureAlgorithm) || 'HMAC-SHA256',
+            signature: (data && data.certificate?.signature) || 'Sillow Mill · Creative Syndicate',
+          };
 
       saveCertificate(cert);
       saveHolderName(cleanName, activeToken);
@@ -438,7 +486,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         ownerName: cleanName,
         ownerEmail: cleanEmail,
         isClaimed: true,
-        status: 'CLAIMED / OFFICIALLY VERIFIED',
+        status: isMaster ? 'MASTER FOUNDER ORIGINAL' : 'CLAIMED / OFFICIALLY VERIFIED',
         registeredAt: new Date().toISOString(),
         certificate: cert,
       }));
@@ -463,13 +511,18 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   useEffect(() => {
     if (
       !isValidating &&
-      !isMaster &&
       !isClaimedByUser &&
       (user || profile) &&
       !autoClaimAttemptedRef.current &&
       !isClaiming &&
       !dnaError
     ) {
+      if (isMaster) {
+        const email = (user?.email || profile?.email || '').trim().toLowerCase();
+        if (!isFounderEmail(email) && profile?.role !== 'CREATOR') {
+          return;
+        }
+      }
       autoClaimAttemptedRef.current = true;
       executeClaimForUser(user, profile);
     }

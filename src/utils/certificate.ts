@@ -44,12 +44,12 @@ export const deriveEditionNumber = (passId: string): number => {
     clean === 'AKN-2027' ||
     clean === 'AKN-VIP-2027'
   ) {
-    return 1;
+    return 0; // Founders Pass (#0)
   }
   const xMatch = clean.match(/X(\d{3,4})$/);
   if (xMatch) {
     const num = parseInt(xMatch[1], 10);
-    if (num === 914) return 1;
+    if (num === 914) return 0;
     return Math.min(Math.max(num, 1), TOTAL_EDITION_LIMIT);
   }
   const match = clean.match(/(\d+)/g);
@@ -70,13 +70,13 @@ const readAll = (): Record<string, BingaaCertificate> => {
   }
 };
 
-export const getMasterCertificate = (customHolder?: string): BingaaCertificate => ({
+export const getMasterCertificate = (customHolder?: string, customEmail?: string): BingaaCertificate => ({
   certificateId: 'COA-BNG1-001-FOUNDER',
   title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
   passId: 'AKN-VIP-2027-X0914',
   holderName: customHolder || 'Odi Selis',
-  holderEmail: 'Odi@sillowmill.com',
-  editionNumber: 1,
+  holderEmail: customEmail || 'Odi@sillowmill.com',
+  editionNumber: 0,
   editionTotal: TOTAL_EDITION_LIMIT,
   status: 'MASTER FOUNDER ORIGINAL',
   emailVerified: true,

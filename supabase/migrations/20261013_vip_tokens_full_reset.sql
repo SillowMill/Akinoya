@@ -69,14 +69,16 @@ set
   claimed_at = null,
   updated_at = now();
 
--- 3. Upsert known VIP master pass permanently bound to Odi Selis
-insert into public.vip_tokens (token_code, is_claimed, claimed_holder_name, claimed_holder_email)
+-- 3. Upsert VIP master pass ready for dynamic claim by Odi Selis
+insert into public.vip_tokens (token_code, is_claimed)
 values
-  ('AKN-VIP-2027-X0914', true, 'Odi Selis', 'Odi@sillowmill.com')
+  ('AKN-VIP-2027-X0914', false)
 on conflict (token_code) do update set
-  is_claimed = true,
-  claimed_holder_name = 'Odi Selis',
-  claimed_holder_email = 'Odi@sillowmill.com',
+  is_claimed = false,
+  claimed_by_user_id = null,
+  claimed_holder_name = null,
+  claimed_holder_email = null,
+  claimed_at = null,
   updated_at = now();
 
 -- Test tokens
