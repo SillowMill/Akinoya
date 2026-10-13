@@ -142,10 +142,10 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
     status: isMaster ? 'MASTER FOUNDER ORIGINAL' : 'UNASSIGNED / READY TO CLAIM',
-    ownerName: localStoredName || '',
-    ownerEmail: null,
-    isClaimed: Boolean(localStoredName || localStoredCert),
-    registeredAt: null,
+    ownerName: isMaster ? 'Odi Selis' : (localStoredName || ''),
+    ownerEmail: isMaster ? 'Odi@sillowmill.com' : null,
+    isClaimed: isMaster || Boolean(localStoredName || localStoredCert),
+    registeredAt: isMaster ? '2026-10-09T00:00:00.000Z' : null,
     certificate: isMaster ? getMasterCertificate() : localStoredCert,
   });
 
@@ -156,32 +156,39 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const isClaimedByUser = Boolean(
     isUserVip ||
     (profile?.has_vip_pass &&
-      (profile?.vip_code_redeemed === activeToken || profile?.role === 'CREATOR'))
+      (profile?.vip_code_redeemed === activeToken || profile?.role === 'CREATOR' || isMaster))
   );
 
   const isClaimed =
+    isMaster ||
     isClaimedByUser ||
     Boolean(passData.isClaimed && passData.ownerName && passData.ownerName.trim().length > 0) ||
     Boolean(localStoredCert && localStoredCert.holderName && localStoredCert.holderName.trim().length > 0) ||
     Boolean(localStoredName && localStoredName.trim().length > 0);
 
-  const activeHolderName =
-    passData.ownerName ||
-    profile?.full_name ||
-    (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : null) ||
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    (user?.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim() : null) ||
-    localStoredCert?.holderName ||
-    localStoredName ||
-    user?.email?.split('@')[0] ||
-    'Founding VIP Member';
+  const activeHolderName = isMaster
+    ? 'Odi Selis'
+    : (
+        passData.ownerName ||
+        profile?.full_name ||
+        (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : null) ||
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        (user?.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim() : null) ||
+        localStoredCert?.holderName ||
+        localStoredName ||
+        user?.email?.split('@')[0] ||
+        'Founding VIP Member'
+      );
 
-  const activeHolderEmail =
-    passData.ownerEmail ||
-    profile?.email ||
-    user?.email ||
-    null;
+  const activeHolderEmail = isMaster
+    ? 'Odi@sillowmill.com'
+    : (
+        passData.ownerEmail ||
+        profile?.email ||
+        user?.email ||
+        null
+      );
 
   const activeCertificate: BingaaCertificate =
     localStoredCert ||
@@ -256,20 +263,21 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           setPassData((prev) => ({
             ...prev,
             ...pass,
-            ownerName: pass.ownerName || prev.ownerName,
-            isClaimed: Boolean(pass.isClaimed && pass.ownerName) || prev.isClaimed,
+            ownerName: isMaster ? 'Odi Selis' : (pass.ownerName || prev.ownerName),
+            ownerEmail: isMaster ? 'Odi@sillowmill.com' : (pass.ownerEmail || prev.ownerEmail),
+            isClaimed: isMaster ? true : (Boolean(pass.isClaimed && pass.ownerName) || prev.isClaimed),
           }));
 
           if (pass.certificate) {
             saveCertificate(pass.certificate);
           }
-          if (pass.ownerName) {
+          if (pass.ownerName && !isMaster) {
             saveHolderName(pass.ownerName, token);
           }
         }
 
         // Grant persistent VIP access only once the pass is claimed
-        if (getHolderName(token) || (data.pass && data.pass.isClaimed)) {
+        if (isMaster || getHolderName(token) || (data.pass && data.pass.isClaimed)) {
           setExplicitVipRouteActive(true);
           setDeviceSession(token);
           unlockVip(token);
@@ -282,7 +290,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       }
     } catch (err: any) {
       console.error('Verification error:', err);
-      if (localStoredName || localStoredCert) {
+      if (isMaster || localStoredName || localStoredCert) {
         setExplicitVipRouteActive(true);
         setDeviceSession(token);
         unlockVip(token);
@@ -373,19 +381,21 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       // 2. Permanently link VIP status to Supabase public.profiles & sync to Google Sheets Subscribers tab
       await redeemVipCode(activeToken);
 
-      // 3. Issue and persist unique Certificate of Authenticity
-      const cert: BingaaCertificate = (data && data.certificate) || {
-        certificateId: `COA-BNG1-${String(passData.editionNumber).padStart(3, '0')}-VERIFIED`,
+      // 3. Issue and persist unique Certificate of Authenticity with authenticated claimant details
+      const cert: BingaaCertificate = {
+        ...(data?.certificate || {}),
+        certificateId: (data && data.certificate?.certificateId) || `COA-BNG1-${String(passData.editionNumber).padStart(3, '0')}-VERIFIED`,
         title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
         passId: activeToken,
         holderName: cleanName,
+        holderEmail: cleanEmail || undefined,
         editionNumber: passData.editionNumber,
         editionTotal: TOTAL_EDITION_LIMIT,
-        status: 'OFFICIALLY VERIFIED',
+        status: (data && data.certificate?.status) || 'OFFICIALLY VERIFIED',
         emailVerified: Boolean(cleanEmail),
-        claimedAt: new Date().toISOString(),
-        signatureAlgorithm: 'HMAC-SHA256',
-        signature: 'Sillow Mill · Creative Syndicate',
+        claimedAt: (data && data.certificate?.claimedAt) || new Date().toISOString(),
+        signatureAlgorithm: (data && data.certificate?.signatureAlgorithm) || 'HMAC-SHA256',
+        signature: (data && data.certificate?.signature) || 'Sillow Mill · Creative Syndicate',
       };
 
       saveCertificate(cert);

@@ -115,20 +115,36 @@ export async function syncPassClaimToGoogleSheets(passId, holderName, holderEmai
 
     const statusVal = targetRow === 2 ? 'Active / Primary Key' : 'Claimed';
 
+    let vipTab = 'VIP GUESTS';
+    try {
+      const metaRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties.title`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (metaRes.ok) {
+        const meta = await metaRes.json();
+        const sheetTitles = (meta.sheets || []).map((s) => s.properties?.title);
+        if (sheetTitles.includes('VIP GUESTS')) vipTab = 'VIP GUESTS';
+        else if (sheetTitles.includes('VIP Guests')) vipTab = 'VIP Guests';
+        else if (sheetTitles.includes('Blad1')) vipTab = 'Blad1';
+        else if (sheetTitles[0]) vipTab = sheetTitles[0];
+      }
+    } catch {}
+
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`;
     const payload = {
       valueInputOption: 'USER_ENTERED',
       data: [
         {
-          range: `Blad1!C${targetRow}`,
+          range: `'${vipTab}'!C${targetRow}`,
           values: [[cleanName]],
         },
         {
-          range: `Blad1!D${targetRow}`,
+          range: `'${vipTab}'!D${targetRow}`,
           values: [[cleanEmail || '']],
         },
         {
-          range: `Blad1!F${targetRow}`,
+          range: `'${vipTab}'!F${targetRow}`,
           values: [[statusVal]],
         },
       ],

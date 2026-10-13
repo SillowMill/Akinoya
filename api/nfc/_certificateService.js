@@ -235,7 +235,7 @@ export function sanitizeHolderName(name) {
   return String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40);
 }
 
-export function issueCertificate(passId, holderName, emailVerified = true) {
+export function issueCertificate(passId, holderName, emailVerified = true, holderEmail = '') {
   const normalizedId = normalizePassId(passId);
   const editionNumber = deriveEditionNumber(normalizedId);
   const claimedAt = new Date().toISOString();
@@ -247,6 +247,7 @@ export function issueCertificate(passId, holderName, emailVerified = true) {
     title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
     passId: normalizedId,
     holderName,
+    holderEmail: holderEmail || undefined,
     editionNumber,
     editionTotal: TOTAL_EDITION_LIMIT,
     status: 'OFFICIALLY VERIFIED',
@@ -300,7 +301,7 @@ export async function handleCertificateAction(body = {}) {
       return { status: 400, body: { success: false, error: 'MISSING_NAME', message: 'A holder name is required.' } };
     }
 
-    const cert = issueCertificate(passId, holderName, Boolean(email));
+    const cert = issueCertificate(passId, holderName, Boolean(email), email);
     return {
       status: 200,
       body: {

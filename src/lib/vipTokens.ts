@@ -395,6 +395,7 @@ export const resetAllVipTokens = async (): Promise<{ success: boolean; count?: n
   if (isSupabaseConfigured) {
     try {
       const nowIso = new Date().toISOString();
+      // Reset all 100 public editions to unclaimed
       const { data, error } = await supabase
         .from('vip_tokens')
         .update({
@@ -405,8 +406,19 @@ export const resetAllVipTokens = async (): Promise<{ success: boolean; count?: n
           claimed_at: null,
           updated_at: nowIso,
         })
-        .neq('token_code', '___NON_EXISTENT___')
+        .neq('token_code', 'AKN-VIP-2027-X0914')
         .select();
+
+      // Ensure Master Pass remains permanently active and bound to Odi Selis
+      await supabase
+        .from('vip_tokens')
+        .update({
+          is_claimed: true,
+          claimed_holder_name: 'Odi Selis',
+          claimed_holder_email: 'Odi@sillowmill.com',
+          updated_at: nowIso,
+        })
+        .eq('token_code', 'AKN-VIP-2027-X0914');
 
       if (error) {
         console.warn('[VipTokens] Supabase reset error:', error.message);
