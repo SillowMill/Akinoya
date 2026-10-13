@@ -357,7 +357,6 @@ export const getP2PTransmissionsForCreator = (username: string): P2PTransmission
   }
 };
 
-// Automatically attach contest renders and lore to the user's public portfolio (/creators/[username])
 export const attachContestSubmissionToCreator = (
   username: string,
   fullName: string,
@@ -368,8 +367,10 @@ export const attachContestSubmissionToCreator = (
     renders: {
       hero: string;
       atmosphere: string;
-      ecosystem: string;
-      landmark: string;
+      ecosystem?: string;
+      flora?: string;
+      fauna?: string;
+      landmark?: string;
     };
     authorAvatarGradient?: string;
   }

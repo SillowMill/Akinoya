@@ -24,6 +24,7 @@ import { formatAkinoyaPlanetName } from '../data/contest';
 
 interface PlanetGeneratorChatProps {
   userDisplayName: string;
+  isLocked?: boolean;
   onComplete: (answers: WizardAnswers) => void;
   onClose: () => void;
 }
@@ -162,6 +163,7 @@ const WIZARD_STEPS: StepConfig[] = [
 
 export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   userDisplayName,
+  isLocked,
   onComplete,
   onClose,
 }) => {
@@ -187,7 +189,20 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   // Initialize Mill's opening transmission
   useEffect(() => {
     soundManager.playTone(660, 0.08);
-    const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nI will guide you through an 8-question planetary synthesis wizard. Your submission will receive 4 high-resolution visual cards, an official lore dossier, and be entered into the June 30 Lore Governance vote.\n\nLet us begin with Step 01: ${WIZARD_STEPS[0].title}.`;
+
+    if (isLocked) {
+      setMessages([
+        {
+          id: 'msg-locked',
+          sender: 'mill',
+          text: `⚠️ SUBMISSION LOCKED — TICKET USED\n\nGreetings ${userDisplayName || 'Architect'}. Your single Golden Ticket planet entry for this account has already been synthesized and submitted to the 2027 Lore Governance Council.\n\nTo preserve API token limits, each account is permitted one golden ticket generation. You can inspect your active 5-photo planetary dossier directly on the launchpad.`,
+          timestamp: 'Just now',
+        },
+      ]);
+      return;
+    }
+
+    const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nI will guide you through an 8-question planetary synthesis wizard. Your submission will receive a full 5-photo 2D visual gallery (anchored strictly to Mood.png and akinoya_hero_bg.jpg), an official lore dossier, and be entered into the June 30 Lore Governance vote.\n\nLet us begin with Step 01: ${WIZARD_STEPS[0].title}.`;
 
     const firstQuestionText = WIZARD_STEPS[0].prompt;
 
@@ -207,7 +222,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         options: WIZARD_STEPS[0].presets,
       },
     ]);
-  }, [userDisplayName]);
+  }, [userDisplayName, isLocked]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -280,7 +295,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         const finalMsg: ChatMessage = {
           id: `mill-done-${Date.now()}`,
           sender: 'mill',
-          text: `Territory synthesis complete! All 8 planetary coordinates have been recorded. Generating your high-resolution visual cards and lore dossier...`,
+          text: `Territory synthesis complete! All 8 planetary coordinates have been recorded. Generating your 5-photo high-resolution visual gallery and lore dossier...`,
           timestamp: 'Just now',
         };
         setMessages((prev) => [...prev, finalMsg]);

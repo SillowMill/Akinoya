@@ -1,8 +1,10 @@
 export interface PlanetSubmissionRenders {
-  hero: string;
-  atmosphere: string;
-  ecosystem: string;
-  landmark: string;
+  hero: string; // 1. Main Orbital Planet Render (akinoya_hero_bg.jpg style)
+  flora: string; // 2. Botanical Flora System (Mood.png panel style)
+  fauna: string; // 3. Exotic Fauna & Wildlife System
+  atmosphere: string; // 4. Cockpit / Ship Landing Atmosphere Detail
+  landmark: string; // 5. Iconic Landmark / Secret Location Detail
+  ecosystem?: string; // backwards compatibility alias
 }
 
 export interface PlanetSubmission {

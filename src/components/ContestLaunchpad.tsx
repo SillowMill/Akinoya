@@ -18,16 +18,17 @@ import {
   Trees,
   Compass,
   Volume2,
-  Camera,
   Calendar,
   Vote,
   Edit,
   ThumbsUp,
+  Camera,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
 import millAvatar from '../assets/images/mill_photo.jpg';
 import { PlanetGeneratorChat } from './PlanetGeneratorChat';
+import { PlanetDossierModal } from './PlanetDossierModal';
 import { WizardAnswers, PlanetSubmission } from '../types/contest';
 import {
   getStoredPlanetSubmissions,
@@ -69,6 +70,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   const [allSubmissions, setAllSubmissions] = useState<PlanetSubmission[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [modalPlanet, setModalPlanet] = useState<PlanetSubmission | null>(null);
+
+  // Strict Token-Protection Lock Pre-Check
+  const hasSubmittedContest = Boolean(
+    profile?.has_submitted_contest ||
+    profile?.contest_submission_id ||
+    activeSubmission
+  );
 
   // Load submissions and check user's ticket status
   useEffect(() => {
@@ -91,6 +100,13 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     if (!isAuthenticated) {
       soundManager.playTone(330, 0.08);
       openAuthModal('signin');
+      return;
+    }
+    if (hasSubmittedContest) {
+      soundManager.playTone(330, 0.08);
+      if (activeSubmission) {
+        setModalPlanet(activeSubmission);
+      }
       return;
     }
     soundManager.playTone(660, 0.08);
@@ -146,8 +162,11 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       // 1. Save entry to planet_submissions
       await savePlanetSubmission(previewDossier);
 
-      // 2. Lock golden ticket on profile
-      await updateProfile({ contest_submission_id: previewDossier.id });
+      // 2. Lock golden ticket on profile (Strict Token Protection Lock)
+      await updateProfile({
+        contest_submission_id: previewDossier.id,
+        has_submitted_contest: true,
+      });
 
       // 3. Attach renders & lore to creator's public portfolio (/creators/[username])
       attachContestSubmissionToCreator(username, userDisplayName, previewDossier);
@@ -286,35 +305,40 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 </div>
               </div>
 
-              {activeSubmission ? (
+              {hasSubmittedContest ? (
                 <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-amber-950/60 border border-amber-500/40 text-center space-y-1">
-                    <span className="text-[10px] font-mono text-amber-300 font-bold flex items-center justify-center gap-1">
-                      <Lock className="w-3 h-3 text-amber-400" />
-                      ENTRY ACTIVE · SUBMISSION LOCKED
+                  <div className="p-3.5 rounded-xl bg-amber-950/70 border border-amber-500/50 text-center space-y-1 shadow-lg">
+                    <span className="text-[10px] font-mono text-amber-300 font-bold flex items-center justify-center gap-1.5 uppercase tracking-wider">
+                      <Lock className="w-3.5 h-3.5 text-amber-400" />
+                      SUBMISSION LOCKED — TICKET USED
                     </span>
                     <div className="text-sm font-display font-bold text-white truncate">
-                      {activeSubmission.planetName}
+                      {activeSubmission?.planetName || 'Territory Submitted'}
                     </div>
+                    <p className="text-[10.5px] text-white/60 font-mono">
+                      Single submission hard lock active.
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-between text-xs font-mono text-white/60 px-1">
                     <span>Live Votes:</span>
-                    <span className="text-amber-400 font-bold">{activeSubmission.votesCount}</span>
+                    <span className="text-amber-400 font-bold">{activeSubmission?.votesCount || 1} Ballots</span>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      soundManager.playTone(660, 0.05);
-                      const el = document.getElementById('user-dossier-card');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
-                  >
-                    <span>View Your Planet Dossier</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  {activeSubmission && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundManager.playTone(660, 0.05);
+                        setModalPlanet(activeSubmission);
+                      }}
+                      className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>View 5-Photo Planet Dossier</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -350,7 +374,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                   {previewDossier.planetName}
                 </h2>
                 <p className="text-xs text-white/60 font-mono">
-                  Review your synthesized planet specs and lore before publishing to the Governance Council.
+                  Review your 5-photo synthesized specs and lore before publishing to the Governance Council.
                 </p>
               </div>
 
@@ -366,6 +390,15 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
                 <button
                   type="button"
+                  onClick={() => setModalPlanet(previewDossier)}
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-400/50 text-cyan-300 text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Inspect 5-Photo Modal</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleApproveAndSubmit}
                   disabled={isSubmitting}
                   className="min-h-[48px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs shadow-[0_0_25px_rgba(245,158,11,0.4)] transition-all cursor-pointer flex items-center gap-2"
@@ -376,44 +409,54 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               </div>
             </div>
 
-            {/* 4 Responsive Visual Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* 5 Sillow Mill 2D Visual Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/60 space-y-2">
-                <div className="h-44 w-full overflow-hidden bg-black/80">
+                <div className="h-36 w-full overflow-hidden bg-black/80">
                   <img src={previewDossier.renders.hero} alt="Hero View" className="w-full h-full object-cover" />
                 </div>
-                <div className="p-3">
-                  <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase">CARD 01 · ORBITAL HERO</div>
+                <div className="p-2.5">
+                  <div className="text-[9.5px] font-mono text-cyan-400 font-bold uppercase">01 · ORBITAL HERO</div>
                   <div className="text-xs font-bold text-white truncate">{previewDossier.planetName}</div>
                 </div>
               </div>
 
               <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/60 space-y-2">
-                <div className="h-44 w-full overflow-hidden bg-black/80">
-                  <img src={previewDossier.renders.atmosphere} alt="Atmosphere" className="w-full h-full object-cover" />
+                <div className="h-36 w-full overflow-hidden bg-black/80">
+                  <img src={previewDossier.renders.flora || previewDossier.renders.ecosystem} alt="Flora" className="w-full h-full object-cover" />
                 </div>
-                <div className="p-3">
-                  <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase">CARD 02 · ATMOSPHERIC VISTA</div>
-                  <div className="text-xs font-bold text-white truncate">{previewDossier.atmosphere}</div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/60 space-y-2">
-                <div className="h-44 w-full overflow-hidden bg-black/80">
-                  <img src={previewDossier.renders.ecosystem} alt="Ecosystem" className="w-full h-full object-cover" />
-                </div>
-                <div className="p-3">
-                  <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase">CARD 03 · FLORA & FAUNA</div>
+                <div className="p-2.5">
+                  <div className="text-[9.5px] font-mono text-emerald-400 font-bold uppercase">02 · BOTANICAL FLORA</div>
                   <div className="text-xs font-bold text-white truncate">{previewDossier.flora}</div>
                 </div>
               </div>
 
               <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/60 space-y-2">
-                <div className="h-44 w-full overflow-hidden bg-black/80">
+                <div className="h-36 w-full overflow-hidden bg-black/80">
+                  <img src={previewDossier.renders.fauna} alt="Fauna" className="w-full h-full object-cover" />
+                </div>
+                <div className="p-2.5">
+                  <div className="text-[9.5px] font-mono text-purple-400 font-bold uppercase">03 · EXOTIC FAUNA</div>
+                  <div className="text-xs font-bold text-white truncate">{previewDossier.fauna}</div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/60 space-y-2">
+                <div className="h-36 w-full overflow-hidden bg-black/80">
+                  <img src={previewDossier.renders.atmosphere} alt="Atmosphere" className="w-full h-full object-cover" />
+                </div>
+                <div className="p-2.5">
+                  <div className="text-[9.5px] font-mono text-cyan-400 font-bold uppercase">04 · COCKPIT ATMOSPHERE</div>
+                  <div className="text-xs font-bold text-white truncate">{previewDossier.atmosphere}</div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/60 space-y-2">
+                <div className="h-36 w-full overflow-hidden bg-black/80">
                   <img src={previewDossier.renders.landmark} alt="Landmark" className="w-full h-full object-cover" />
                 </div>
-                <div className="p-3">
-                  <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase">CARD 04 · MONUMENT</div>
+                <div className="p-2.5">
+                  <div className="text-[9.5px] font-mono text-amber-400 font-bold uppercase">05 · ICONIC MONUMENT</div>
                   <div className="text-xs font-bold text-white truncate">{previewDossier.landmark}</div>
                 </div>
               </div>
@@ -457,6 +500,18 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
+                  onClick={() => {
+                    soundManager.playTone(660, 0.05);
+                    setModalPlanet(activeSubmission);
+                  }}
+                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-amber-400 text-black hover:bg-amber-300 font-mono font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>View 5-Photo Dossier</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleCopyShare}
                   className="min-h-[44px] px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5"
                 >
@@ -477,44 +532,69 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               </div>
             </div>
 
-            {/* 4 Cards Showcase */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/60 space-y-2">
-                <div className="h-44 w-full overflow-hidden bg-black/80">
-                  <img src={activeSubmission.renders.hero} alt="Hero" className="w-full h-full object-cover" />
+            {/* 5 Sillow Mill 2D Visual Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div
+                onClick={() => setModalPlanet(activeSubmission)}
+                className="cursor-pointer group rounded-2xl overflow-hidden border border-white/10 hover:border-amber-400/50 bg-black/60 space-y-2 transition-all"
+              >
+                <div className="h-36 w-full overflow-hidden bg-black/80">
+                  <img src={activeSubmission.renders.hero} alt="Hero View" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
-                <div className="p-3">
-                  <div className="text-[10px] font-mono text-amber-400 font-bold uppercase">HERO RENDER</div>
+                <div className="p-2.5">
+                  <div className="text-[9.5px] font-mono text-cyan-400 font-bold uppercase">01 · ORBITAL HERO</div>
                   <div className="text-xs font-bold text-white truncate">{activeSubmission.planetName}</div>
                 </div>
               </div>
 
-              <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/60 space-y-2">
-                <div className="h-44 w-full overflow-hidden bg-black/80">
-                  <img src={activeSubmission.renders.atmosphere} alt="Atmosphere" className="w-full h-full object-cover" />
+              <div
+                onClick={() => setModalPlanet(activeSubmission)}
+                className="cursor-pointer group rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 bg-black/60 space-y-2 transition-all"
+              >
+                <div className="h-36 w-full overflow-hidden bg-black/80">
+                  <img src={activeSubmission.renders.flora || activeSubmission.renders.ecosystem} alt="Flora" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
-                <div className="p-3">
-                  <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase">ATMOSPHERE</div>
-                  <div className="text-xs font-bold text-white truncate">{activeSubmission.atmosphere}</div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/60 space-y-2">
-                <div className="h-44 w-full overflow-hidden bg-black/80">
-                  <img src={activeSubmission.renders.ecosystem} alt="Ecosystem" className="w-full h-full object-cover" />
-                </div>
-                <div className="p-3">
-                  <div className="text-[10px] font-mono text-emerald-400 font-bold uppercase">ECOSYSTEM</div>
+                <div className="p-2.5">
+                  <div className="text-[9.5px] font-mono text-emerald-400 font-bold uppercase">02 · BOTANICAL FLORA</div>
                   <div className="text-xs font-bold text-white truncate">{activeSubmission.flora}</div>
                 </div>
               </div>
 
-              <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/60 space-y-2">
-                <div className="h-44 w-full overflow-hidden bg-black/80">
-                  <img src={activeSubmission.renders.landmark} alt="Landmark" className="w-full h-full object-cover" />
+              <div
+                onClick={() => setModalPlanet(activeSubmission)}
+                className="cursor-pointer group rounded-2xl overflow-hidden border border-white/10 hover:border-purple-400/50 bg-black/60 space-y-2 transition-all"
+              >
+                <div className="h-36 w-full overflow-hidden bg-black/80">
+                  <img src={activeSubmission.renders.fauna} alt="Fauna" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
-                <div className="p-3">
-                  <div className="text-[10px] font-mono text-purple-400 font-bold uppercase">LANDMARK</div>
+                <div className="p-2.5">
+                  <div className="text-[9.5px] font-mono text-purple-400 font-bold uppercase">03 · EXOTIC FAUNA</div>
+                  <div className="text-xs font-bold text-white truncate">{activeSubmission.fauna}</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => setModalPlanet(activeSubmission)}
+                className="cursor-pointer group rounded-2xl overflow-hidden border border-white/10 hover:border-cyan-400/50 bg-black/60 space-y-2 transition-all"
+              >
+                <div className="h-36 w-full overflow-hidden bg-black/80">
+                  <img src={activeSubmission.renders.atmosphere} alt="Atmosphere" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                </div>
+                <div className="p-2.5">
+                  <div className="text-[9.5px] font-mono text-cyan-400 font-bold uppercase">04 · COCKPIT ATMOSPHERE</div>
+                  <div className="text-xs font-bold text-white truncate">{activeSubmission.atmosphere}</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => setModalPlanet(activeSubmission)}
+                className="cursor-pointer group rounded-2xl overflow-hidden border border-white/10 hover:border-amber-400/50 bg-black/60 space-y-2 transition-all"
+              >
+                <div className="h-36 w-full overflow-hidden bg-black/80">
+                  <img src={activeSubmission.renders.landmark} alt="Landmark" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                </div>
+                <div className="p-2.5">
+                  <div className="text-[9.5px] font-mono text-amber-400 font-bold uppercase">05 · ICONIC MONUMENT</div>
                   <div className="text-xs font-bold text-white truncate">{activeSubmission.landmark}</div>
                 </div>
               </div>
@@ -581,7 +661,13 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 className="rounded-2xl overflow-hidden bg-black/60 border border-white/10 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
               >
                 <div>
-                  <div className="relative h-48 w-full overflow-hidden bg-black/90">
+                  <div
+                    onClick={() => {
+                      soundManager.playTone(660, 0.05);
+                      setModalPlanet(sub);
+                    }}
+                    className="relative h-48 w-full overflow-hidden bg-black/90 cursor-pointer"
+                  >
                     <img
                       src={sub.renders.hero}
                       alt={sub.planetName}
@@ -597,7 +683,13 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
                   <div className="p-4 sm:p-5 space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className="text-base font-display font-bold text-white truncate">
+                      <h3
+                        onClick={() => {
+                          soundManager.playTone(660, 0.05);
+                          setModalPlanet(sub);
+                        }}
+                        className="text-base font-display font-bold text-white truncate cursor-pointer hover:text-amber-400 transition-colors"
+                      >
                         {sub.planetName}
                       </h3>
                     </div>
@@ -625,6 +717,19 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 </div>
 
                 <div className="p-4 border-t border-white/10 flex items-center justify-between gap-2 bg-[#050812]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playTone(660, 0.05);
+                      setModalPlanet(sub);
+                    }}
+                    className="min-h-[44px] px-3 py-2 rounded-xl bg-white/5 hover:bg-cyan-950/60 border border-white/10 hover:border-cyan-400/40 text-white/80 hover:text-cyan-300 text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    title="View 5-Photo Dossier"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Dossier</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => handleVoteSubmission(sub.id)}
@@ -660,11 +765,21 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         {isChatOpen && (
           <PlanetGeneratorChat
             userDisplayName={userDisplayName}
+            isLocked={hasSubmittedContest}
             onComplete={handleWizardComplete}
             onClose={() => setIsChatOpen(false)}
           />
         )}
       </AnimatePresence>
+
+      {/* 5-PHOTO PLANET DOSSIER MODAL */}
+      <PlanetDossierModal
+        planet={modalPlanet}
+        isOpen={Boolean(modalPlanet)}
+        onClose={() => setModalPlanet(null)}
+        onVote={handleVoteSubmission}
+        onOpenCreator={onNavigateToCreator}
+      />
     </div>
   );
 };

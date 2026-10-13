@@ -57,7 +57,7 @@ import { getStoredCreators } from '../data/creators';
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
 export const isMembershipLaunchLocked = new Date() < MEMBERSHIP_LAUNCH_DATE;
 
-export type CreativeHubSection = 'downloads' | 'workflows' | 'visualizer' | 'discussion' | 'creators' | 'governance';
+export type CreativeHubSection = 'downloads' | 'workflows' | 'discussion' | 'creators' | 'governance';
 
 interface AssetVaultItem {
   id: string;
@@ -92,18 +92,6 @@ interface WorkflowComment {
   role: 'CREATOR' | 'ANNUAL PASS MEMBER' | 'ANNUAL PASS' | 'PATRON' | 'PATRON MEMBER' | 'VIP GUEST' | 'COMMUNITY MEMBER' | 'FREE';
   timestamp: string;
   text: string;
-}
-
-interface VisualizerTrackItem {
-  id: string;
-  trackNumber: string;
-  title: string;
-  status: string;
-  duration: string;
-  fps: string;
-  renderEngine: string;
-  synopsis: string;
-  previewImage: string;
 }
 
 export type ChannelCategory =
@@ -232,11 +220,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
   // Audio Preview state in Asset Vault
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-
-  // Visualizer Theater state
-  const [activeVisualizerTrack, setActiveVisualizerTrack] = useState<number>(0);
-  const [isTheaterPlaying, setIsTheaterPlaying] = useState<boolean>(false);
-  const [isTheaterMuted, setIsTheaterMuted] = useState<boolean>(false);
 
   // Workflows Comments Drawer state
   const [openWorkflowDrawerId, setOpenWorkflowDrawerId] = useState<string | null>(null);
@@ -426,47 +409,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     },
   ]);
 
-  // 3. EARLY ACCESS VISUALIZER HUB DATA
-  const visualizerTracks: VisualizerTrackItem[] = [
-    {
-      id: 'vt-1',
-      trackNumber: '01',
-      title: "Don't Need — Kinetic Typographic Visualizer (Draft 02)",
-      status: 'FREE SAMPLE PREVIEW',
-      duration: '03:18',
-      fps: '60 FPS',
-      renderEngine: 'UNREAL ENGINE 5.4 · LUMEN',
-      synopsis:
-        'High-energy typographic sequence with volumetric camera sweeps across the neon skyline of Upper Äkinoya.',
-      previewImage: visualizerThumbnailImg,
-    },
-    {
-      id: 'vt-2',
-      trackNumber: '02',
-      title: 'Bingäa — Twilight Descent (Cinematic Sequence Render)',
-      status: '4K ANIMATION PREVIEW',
-      duration: '04:02',
-      fps: '60 FPS',
-      renderEngine: 'BLENDER OCTANE · VOLUMETRICS',
-      synopsis:
-        'Full atmospheric entry sequence showing the pilot vessel gliding across the ionizing cloud ceiling into Sector 02.',
-      previewImage: moodboardImg,
-    },
-    {
-      id: 'vt-3',
-      trackNumber: '03',
-      title: 'Memories — Ambient Synthesizer World Loop',
-      status: 'WORK IN PROGRESS',
-      duration: '03:45',
-      fps: '30 FPS',
-      renderEngine: 'AFTER EFFECTS · PARTICLE ILLUSION',
-      synopsis:
-        'Meditative environmental loop depicting the slow rotation of Äkinoya against the binary star backdrop.',
-      previewImage: akinoyaVistaImg,
-    },
-  ];
-
-  // 4. DISCORD-STYLE MULTI-CHANNEL COMM-NET CHANNELS
+  // 3. DISCORD-STYLE MULTI-CHANNEL COMM-NET CHANNELS
   const CHAT_CHANNELS: ChatChannel[] = [
     // PUBLIC HUB
     {
@@ -1176,10 +1119,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           {[
             { id: 'downloads', label: 'Asset & Download Vault', icon: FolderDown, count: '4' },
             { id: 'workflows', label: 'Workflows & Creative Lab', icon: Sliders, count: '4 Steps' },
-            { id: 'visualizer', label: 'Early Access Visualizer Hub', icon: Film, count: '3' },
             { id: 'discussion', label: 'Comm-Net Chat (8 Channels)', icon: MessageSquare, count: '8 Channels' },
             { id: 'creators', label: 'Creator Portfolios & Leaderboard', icon: Trophy, count: 'Spotlight' },
-            { id: 'governance', label: 'Lore & Governance Portal', icon: Vote, count: '2' },
+            { id: 'governance', label: 'Lore & Governance Portal', icon: Vote, count: 'Contest' },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeSection === tab.id;
@@ -1580,167 +1522,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         )}
 
         {/* ======================================================== */}
-        {/* SECTION 3: EARLY ACCESS VISUALIZER HUB (THEATER SPELER) */}
-        {/* ======================================================== */}
-        {activeSection === 'visualizer' && (
-          <motion.div
-            key="section-visualizer"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            className="space-y-6"
-          >
-            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-black/50 to-black/80 border border-cyan-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(56,189,248,0.1)]">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold tracking-wider">
-                    MODULE 03 · THEATER PLAYER
-                  </span>
-                  <span className="text-[10px] font-mono text-cyan-400 font-semibold">
-                    CINEMATIC 4K UHD PREVIEWS
-                  </span>
-                </div>
-                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
-                  🎬 Early Access Visualizer Hub
-                </h1>
-                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  Dedicated master theater player previewing unreleased animated sequences, kinetic typographic tests, and world loops in 4K UHD.
-                </p>
-              </div>
-            </div>
-
-            {/* Theater Player Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Cinema Viewport (2 cols) */}
-              <div className="lg:col-span-2 space-y-4">
-                <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-black/95 border border-cyan-500/40 shadow-[0_0_50px_rgba(56,189,248,0.2)] flex items-center justify-center group">
-                  <img
-                    src={visualizerTracks[activeVisualizerTrack].previewImage}
-                    alt="Theater Visual"
-                    className={`absolute inset-0 w-full h-full object-cover ${
-                      !isPatron && activeVisualizerTrack > 0 ? 'blur-md opacity-40' : 'opacity-85'
-                    }`}
-                  />
-
-                  {/* Paywall overlay on tracks 2 & 3 for free users */}
-                  {!isPatron && activeVisualizerTrack > 0 ? (
-                    <div className="relative z-20 backdrop-blur-md bg-black/60 p-6 rounded-2xl border border-cyan-400/30 flex flex-col items-center justify-center text-center max-w-sm">
-                      <Lock className="w-8 h-8 text-yellow-400 mb-2" />
-                      <div className="text-sm font-display font-bold text-white mb-1">
-                        PATRON 4K THEATER PREVIEW
-                      </div>
-                      <p className="text-xs text-white/70 mb-4 font-sans">
-                        Full early access sequence render is reserved for Patrons. Track 01 is unlocked for free preview!
-                      </p>
-                      <button
-                        type="button"
-                        disabled={true}
-                        className="min-h-[44px] px-4 py-2 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300/80 font-mono font-semibold text-xs cursor-not-allowed flex items-center justify-center gap-1.5 opacity-85 select-none text-center whitespace-normal break-words leading-tight"
-                        title="Theater unlocks on 09/01/2027"
-                      >
-                        <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                        <span>LAUNCHES 09/01/2027 — €60/YEAR (~€5/MONTH)</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsTheaterPlaying(!isTheaterPlaying);
-                        soundManager.playTone(620, 0.08);
-                      }}
-                      className="relative z-10 w-16 h-16 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center transition-transform hover:scale-110 shadow-[0_0_25px_rgba(56,189,248,0.6)] cursor-pointer"
-                    >
-                      {isTheaterPlaying ? <Pause className="w-7 h-7 fill-black" /> : <Play className="w-7 h-7 fill-black ml-1" />}
-                    </button>
-                  )}
-                </div>
-
-                {/* Theater Controls Bar (With clean specs strip) */}
-                <div className="p-4 rounded-xl bg-black/60 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="min-w-0 w-full sm:w-auto">
-                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 font-semibold">
-                        {visualizerTracks[activeVisualizerTrack].status}
-                      </span>
-                      <span className="text-[10px] font-mono text-white/50">
-                        {visualizerTracks[activeVisualizerTrack].fps} · {visualizerTracks[activeVisualizerTrack].renderEngine} · {visualizerTracks[activeVisualizerTrack].duration}
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-display font-bold text-white truncate">
-                      {visualizerTracks[activeVisualizerTrack].title}
-                    </h3>
-                    <p className="text-[11px] text-white/60 font-sans mt-0.5 truncate">
-                      {visualizerTracks[activeVisualizerTrack].synopsis}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                    <button
-                      type="button"
-                      onClick={() => setIsTheaterMuted(!isTheaterMuted)}
-                      className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-                    >
-                      {isTheaterMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sequence Playlist Selector (1 col) */}
-              <div className="space-y-3">
-                <div className="text-xs font-mono font-bold text-white/50 uppercase tracking-wider px-1">
-                  SEQUENCES PLAYLIST
-                </div>
-
-                {visualizerTracks.map((trk, idx) => {
-                  const isLocked = !isPatron && idx > 0;
-
-                  return (
-                    <button
-                      key={trk.id}
-                      type="button"
-                      onClick={() => {
-                        setActiveVisualizerTrack(idx);
-                        soundManager.playTone(560, 0.06);
-                      }}
-                      className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-center gap-3 min-h-[44px] ${
-                        activeVisualizerTrack === idx
-                          ? 'bg-cyan-950/70 border-cyan-400 text-white shadow-[0_0_15px_rgba(56,189,248,0.2)]'
-                          : 'bg-black/50 border-white/10 hover:border-white/20 text-white/70'
-                      }`}
-                    >
-                      <div className="relative w-16 h-12 rounded-lg overflow-hidden shrink-0 border border-white/10">
-                        <img
-                          src={trk.previewImage}
-                          alt={trk.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300">
-                          <span>TRACK #{trk.trackNumber}</span>
-                          <span>{trk.duration}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-1.5 mt-0.5">
-                          <h4 className="text-xs font-display font-bold text-white truncate">
-                            {trk.title}
-                          </h4>
-                          {isLocked && <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />}
-                        </div>
-                        <span className="text-[9.5px] font-mono text-white/40">{trk.status}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ======================================================== */}
-        {/* SECTION 4: CREATOR DISCUSSION BOARD (DISCORD MULTI-HUB)  */}
+        {/* SECTION 3: CREATOR DISCUSSION BOARD (DISCORD MULTI-HUB)  */}
         {/* ======================================================== */}
         {activeSection === 'discussion' && (() => {
           const activeChannel = CHAT_CHANNELS.find((c) => c.id === activeChannelId) || CHAT_CHANNELS[0];

@@ -51,7 +51,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     authorAvatarGradient: 'from-cyan-400 via-blue-500 to-indigo-600',
     planetName: 'Äkinoya Prime',
     atmosphere: 'Electric Blue Ionized Resonance & Icy Silhouette Ring',
-    flora: 'Giant Resonance Spore Mushrooms (Glowing Violet)',
+    flora: 'Giant Resonance Spore Mushrooms (Glowing Violet & Neon Turquoise)',
     fauna: 'Leviathan Plasma-Wings drifting in upper troposphere',
     sonicVibe: 'Deep Modular Sub-Bass & Cinematic ACEScc Synthesizers',
     visualAesthetic: '2D High-End Anime Sci-Fi Cel-Shaded Art (Sillow Mill Aesthetic)',
@@ -60,10 +60,12 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     generatedLore:
       'Discovered at the epicenter of the Äkinoya energy sphere, Äkinoya Prime radiates with celestial 2D anime grandeur. Its troposphere is alive with electric blue ionized bioluminescence, where gargantuan spore canopies filter cosmic radiation into pure resonant harmonics. Indigenous pilots utilize the Obsidian Spire to recharge quantum navigation drives before deep-space jumps.',
     renders: {
-      hero: planetHeroImg,
-      atmosphere: twilightWorldImg,
+      hero: planetHeroImg, // 1. Main Orbital (akinoya_hero_bg.jpg style)
+      flora: mushroomValleyImg, // 2. Flora (Mood.png panel style)
+      fauna: twilightWorldImg, // 3. Fauna
+      atmosphere: heroBgImg, // 4. Cockpit / Landing Atmosphere
+      landmark: visualizerThumbnailImg, // 5. Landmark
       ecosystem: mushroomValleyImg,
-      landmark: visualizerThumbnailImg,
     },
     votesCount: 88,
     status: 'FINALIST',
@@ -87,10 +89,12 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     generatedLore:
       'Ämlemie is an enigmatic ringed sanctuary framed in the classic 2D anime space vista style of Sillow Mill. Woven with deep cosmic purple hues and bioluminescent neon turquoise, its celestial ring fragment casts permanent twilight across alien valleys where crystalline predators feed on static electrical discharges.',
     renders: {
-      hero: visualizerThumbnailImg,
-      atmosphere: heroBgImg,
+      hero: visualizerThumbnailImg, // 1. Main Orbital
+      flora: twilightWorldImg, // 2. Flora
+      fauna: heroBgImg, // 3. Fauna
+      atmosphere: moodboardImg, // 4. Cockpit / Landing Atmosphere (Mood.png style)
+      landmark: planetHeroImg, // 5. Landmark
       ecosystem: twilightWorldImg,
-      landmark: planetHeroImg,
     },
     votesCount: 64,
     status: 'PUBLISHED',
@@ -114,10 +118,12 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     generatedLore:
       'Anchored directly in the visual heritage of the Sillow Mill ship cockpit and landing moodboard, Älkan-IV is a lush bioluminescent frontier world. Glowing turquoise mosses and violet spore canopies illuminate misty alien canopies, echoing with the tape-saturated frequencies of lone interstellar explorers.',
     renders: {
-      hero: moodboardImg,
-      atmosphere: mushroomValleyImg,
-      ecosystem: twilightWorldImg,
-      landmark: planetHeroImg,
+      hero: moodboardImg, // 1. Main Orbital / Storyboard Hero (Mood.png)
+      flora: mushroomValleyImg, // 2. Flora
+      fauna: twilightWorldImg, // 3. Fauna
+      atmosphere: heroBgImg, // 4. Cockpit / Landing Atmosphere (akinoya_hero_bg.jpg style)
+      landmark: planetHeroImg, // 5. Landmark
+      ecosystem: mushroomValleyImg,
     },
     votesCount: 47,
     status: 'PUBLISHED',
@@ -131,18 +137,28 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
   const sanitize = (list: PlanetSubmission[]): PlanetSubmission[] =>
     list.map((sub) => {
       // Migrate legacy default IDs if present
-      if (sub.id === 'PLN-2027-ZEPHYR') {
+      if (sub.id === 'PLN-2027-ZEPHYR' || sub.id === 'PLN-2027-AKINOYA-PRIME') {
         return INITIAL_SUBMISSIONS[0];
       }
-      if (sub.id === 'PLN-2027-AURA') {
+      if (sub.id === 'PLN-2027-AURA' || sub.id === 'PLN-2027-AMLEMIE') {
         return INITIAL_SUBMISSIONS[1];
       }
-      if (sub.id === 'PLN-2027-CRYO') {
+      if (sub.id === 'PLN-2027-CRYO' || sub.id === 'PLN-2027-ALKAN-IV') {
         return INITIAL_SUBMISSIONS[2];
       }
+      // Ensure 5 renders exist
+      const renders = {
+        hero: sub.renders?.hero || planetHeroImg,
+        flora: sub.renders?.flora || sub.renders?.ecosystem || mushroomValleyImg,
+        fauna: sub.renders?.fauna || twilightWorldImg,
+        atmosphere: sub.renders?.atmosphere || heroBgImg,
+        landmark: sub.renders?.landmark || visualizerThumbnailImg,
+        ecosystem: sub.renders?.ecosystem || sub.renders?.flora || mushroomValleyImg,
+      };
       return {
         ...sub,
         planetName: formatAkinoyaPlanetName(sub.planetName),
+        renders,
       };
     });
 
@@ -183,41 +199,101 @@ export const generatePlanetLore = (answers: WizardAnswers, authorName: string): 
   const landmark = answers.landmark || 'The Ancient Obsidian Spire';
   const notes = answers.additionalNotes ? ` World architect notes specify: "${answers.additionalNotes}"` : '';
 
-  return `Classified by architect ${authorName}, ${planetName} is a high-entropy frontier world situated in the outer rings of the Äkinoya system. Rendered strictly in the signature Sillow Mill 2D anime aesthetic with bioluminescent neon turquoise and deep cosmic purple hues, its planetary envelope features ${atmo}, creating an awe-inspiring visual signature rendered with ${visual}.
+  return `Classified by architect ${authorName}, ${planetName} is a high-entropy frontier world situated in the outer rings of the Äkinoya system. Rendered strictly in the signature Sillow Mill 2D anime aesthetic with bioluminescent neon turquoise and deep cosmic purple hues (anchored by Mood.png and akinoya_hero_bg.jpg), its planetary envelope features ${atmo}, creating an awe-inspiring visual signature rendered with ${visual}.
 
 The surface ecology is defined by ${flora}, which forms a mutualistic symbiotic network alongside ${fauna}. Dominating the equatorial horizon stands ${landmark}, serving as a harmonic anchor point where the world's sonic signature—characterized by ${vibe}—echoes across mountain ranges and baselines.${notes}
 
 This planetary territory is officially registered for the 2027 Äkinoya Lore Governance Council. Community votes cast before June 30 determine whether this sector will be featured in the official Sillow Mill album visualizer and animated storyline.`;
 };
 
-// Map wizard inputs to 4 visual render assets anchored in Sillow Mill 2D style
+// Map wizard inputs to 5 visual render assets anchored in Mood.png & akinoya_hero_bg.jpg
 export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['renders'] => {
   const text = `${answers.planetName} ${answers.atmosphere} ${answers.visualAesthetic} ${answers.landmark}`.toLowerCase();
 
   if (text.includes('moodboard') || text.includes('cockpit') || text.includes('forest') || text.includes('älkan')) {
     return {
-      hero: moodboardImg,
-      atmosphere: mushroomValleyImg,
-      ecosystem: twilightWorldImg,
-      landmark: planetHeroImg,
+      hero: moodboardImg, // 1. Main Orbital / Storyboard Hero (Mood.png)
+      flora: mushroomValleyImg, // 2. Flora
+      fauna: twilightWorldImg, // 3. Fauna
+      atmosphere: heroBgImg, // 4. Cockpit / Landing Atmosphere (akinoya_hero_bg.jpg)
+      landmark: planetHeroImg, // 5. Landmark
+      ecosystem: mushroomValleyImg,
     };
   }
 
   if (text.includes('ring') || text.includes('ämlemie') || text.includes('space') || text.includes('dyson')) {
     return {
-      hero: visualizerThumbnailImg,
-      atmosphere: heroBgImg,
+      hero: visualizerThumbnailImg, // 1. Main Orbital
+      flora: twilightWorldImg, // 2. Flora
+      fauna: heroBgImg, // 3. Fauna
+      atmosphere: moodboardImg, // 4. Cockpit / Landing Atmosphere (Mood.png)
+      landmark: planetHeroImg, // 5. Landmark
       ecosystem: twilightWorldImg,
-      landmark: planetHeroImg,
     };
   }
 
   return {
-    hero: planetHeroImg,
-    atmosphere: twilightWorldImg,
+    hero: planetHeroImg, // 1. Main Orbital (akinoya_hero_bg.jpg)
+    flora: mushroomValleyImg, // 2. Flora (Mood.png)
+    fauna: twilightWorldImg, // 3. Fauna
+    atmosphere: heroBgImg, // 4. Cockpit Atmosphere
+    landmark: visualizerThumbnailImg, // 5. Landmark
     ecosystem: mushroomValleyImg,
-    landmark: visualizerThumbnailImg,
   };
+};
+
+export interface PlanetPhotoCard {
+  id: string;
+  title: string;
+  category: string;
+  url: string;
+  description: string;
+  styleAnchor: string;
+}
+
+export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] => {
+  return [
+    {
+      id: 'photo-hero',
+      title: 'Main Orbital Planet Render',
+      category: '01 · ORBITAL HORIZON',
+      url: sub.renders.hero,
+      description: `Planetary disc and orbital curvature of ${sub.planetName}. Electric blue resonance, icy bol textures, and deep cosmic violet horizon.`,
+      styleAnchor: 'Aesthetic Reference: akinoya_hero_bg.jpg (Cosmic sci-fi planet, radiant energy sphere, zero photorealistic noise)',
+    },
+    {
+      id: 'photo-flora',
+      title: 'Botanical Flora System',
+      category: '02 · BOTANICAL BIOME',
+      url: sub.renders.flora || sub.renders.ecosystem || sub.renders.atmosphere,
+      description: sub.flora,
+      styleAnchor: 'Storyboard Reference: Mood.png (Cinematic anime storyboard panel, bioluminescent flora, atmospheric cel-shading)',
+    },
+    {
+      id: 'photo-fauna',
+      title: 'Exotic Fauna & Wildlife System',
+      category: '03 · FAUNA ECOSYSTEM',
+      url: sub.renders.fauna || sub.renders.atmosphere,
+      description: sub.fauna,
+      styleAnchor: 'Storyboard Reference: Mood.png (Dynamic anime composition, alien apex lifeforms drifting through neon thermals)',
+    },
+    {
+      id: 'photo-atmosphere',
+      title: 'Cockpit / Ship Landing Atmosphere Detail',
+      category: '04 · COCKPIT ATMOSPHERE',
+      url: sub.renders.atmosphere,
+      description: sub.atmosphere,
+      styleAnchor: 'Aesthetic Reference: akinoya_hero_bg.jpg (Volumetric light shafts, cockpit HUD reflections, neon turquoise/purple haze)',
+    },
+    {
+      id: 'photo-landmark',
+      title: 'Iconic Landmark & Ancient Wonder',
+      category: '05 · MEGASTRUCTURE',
+      url: sub.renders.landmark,
+      description: sub.landmark,
+      styleAnchor: 'Sillow Mill Anime House Style (Ancient energy conduit, grand scale monument, cel-shaded linework)',
+    },
+  ];
 };
 
 // Save a new contest entry

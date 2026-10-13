@@ -1,12 +1,16 @@
 /**
- * Planetary Image Generation API Endpoint
+ * Planetary 5-Photo Image Generation API Endpoint
  *
  * Strict Sillow Mill 2D Sci-Fi Anime Aesthetic:
- * Anchored to the Äkinoya energy sphere, neon flora/fauna, and cockpit moodboard.
+ * - Storyboard & Composition Anchor: Mood.png (anime panels, cockpit/wide camera angles, film grain)
+ * - Visual & Energy Anchor: akinoya_hero_bg.jpg (cosmic planet, icy sphere texture, neon turquoise/purple palette)
+ *
+ * Token Protection:
+ * - Hard single-execution gate per user account to prevent API token waste.
  */
 
-export const SILLOW_MILL_2D_PROMPT_ANCHOR =
-  '2D high-end anime sci-fi concept art, Sillow Mill aesthetic, bioluminescent neon turquoise and deep cosmic purple hues, cel-shaded atmosphere, lush alien flora/fauna, clean cinematic composition, no photorealistic chaos.';
+export const SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR =
+  '2D high-end anime sci-fi concept art, Sillow Mill aesthetic, storyboard & composition strictly anchored by Mood.png (cel-shaded anime panels, cinematic cockpit & wide planetary camera angles, subtle film grain) and visual aesthetic strictly anchored by akinoya_hero_bg.jpg (cosmic sci-fi planet, icy energy sphere texture, neon turquoise & deep cosmic purple palette, glowing energy silhouettes, cel-shaded linework, zero photorealistic noise).';
 
 export const formatAkinoyaPlanetName = (rawName?: string): string => {
   if (!rawName || !rawName.trim()) return 'Äkinoya Prime';
@@ -27,6 +31,8 @@ export const formatAkinoyaPlanetName = (rawName?: string): string => {
 };
 
 export interface GeneratePlanetRequest {
+  userId?: string;
+  email?: string;
   planetName?: string;
   atmosphere?: string;
   flora?: string;
@@ -35,6 +41,21 @@ export interface GeneratePlanetRequest {
   visualAesthetic?: string;
   landmark?: string;
   additionalNotes?: string;
+}
+
+// In-memory set of user IDs that have used their single Golden Ticket token synthesis
+const _userGenerations = new Set<string>();
+
+export function checkAndLockUserGeneration(userId?: string): { allowed: boolean; reason?: string } {
+  if (!userId) return { allowed: true };
+  if (_userGenerations.has(userId)) {
+    return {
+      allowed: false,
+      reason: 'SUBMISSION_LOCKED: Account has already utilized its single Golden Ticket planet synthesis. Hard lock enforced to preserve token budget.',
+    };
+  }
+  _userGenerations.add(userId);
+  return { allowed: true };
 }
 
 export function buildPlanetPrompts(data: GeneratePlanetRequest) {
@@ -47,21 +68,58 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
 
   return {
     planetName,
-    promptAnchor: SILLOW_MILL_2D_PROMPT_ANCHOR,
+    promptAnchor: SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR,
     prompts: {
-      hero: `${SILLOW_MILL_2D_PROMPT_ANCHOR} Celestial orbital view of planet ${planetName}. ${atmosphere}. Ringed horizon, cel-shaded cosmic anime panorama, epic scale.`,
-      atmosphere: `${SILLOW_MILL_2D_PROMPT_ANCHOR} Atmospheric canopy on ${planetName}. ${atmosphere}. Volumetric neon turquoise shafts, deep cosmic purple gradients, cel-shaded skyline.`,
-      ecosystem: `${SILLOW_MILL_2D_PROMPT_ANCHOR} Alien surface ecosystem of ${planetName}. Flora: ${flora}. Fauna: ${fauna}. Bioluminescent alien vegetation, intricate hand-drawn 2D anime linework.`,
-      landmark: `${SILLOW_MILL_2D_PROMPT_ANCHOR} Monumental landmark: ${landmark} on ${planetName}. Ancient monolith structure channeling turquoise energy, majestic anime background art.`,
+      hero: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [01/05 Main Orbital Render]: Celestial disc and orbital curvature of ${planetName}. ${atmosphere}. Ringed horizon, cel-shaded cosmic anime panorama, styled after akinoya_hero_bg.jpg.`,
+      flora: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [02/05 Botanical Flora System]: Surface plant organisms on ${planetName}. Flora: ${flora}. Bioluminescent spore towers, glowing turquoise moss, styled like a cinematic panel from Mood.png.`,
+      fauna: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [03/05 Exotic Fauna System]: Wildlife ecology of ${planetName}. Fauna: ${fauna}. Plasma wings drifting in upper troposphere, intricate cel-shaded 2D anime linework.`,
+      atmosphere: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [04/05 Cockpit & Landing Atmosphere]: Cockpit canopy view descending toward ${planetName}. ${atmosphere}. Volumetric neon turquoise shafts, deep cosmic purple gradients, pilot HUD reflections styled after Mood.png.`,
+      landmark: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [05/05 Iconic Landmark]: Monumental wonder: ${landmark} on ${planetName}. Ancient monolith structure channeling turquoise energy, majestic anime background art.`,
     },
     renders: {
-      hero: '/assets/planet_akinoya_1790852629401.jpg',
-      atmosphere: '/assets/akinoya_twilight_world_1790852640934.jpg',
-      ecosystem: '/assets/akinoya_mushroom_valley.jpg',
+      hero: '/assets/planet_akinoya_1790852629401.jpg', // akinoya_hero_bg.jpg style
+      flora: '/assets/akinoya_mushroom_valley.jpg', // Mood.png panel style
+      fauna: '/assets/akinoya_twilight_world_1790852640934.jpg',
+      atmosphere: '/assets/akinoya_hero_bg.jpg',
       landmark: '/assets/visualizer_thumbnail.png',
+      ecosystem: '/assets/akinoya_mushroom_valley.jpg',
     },
+    galleryList: [
+      {
+        id: 'hero',
+        label: '01 · Main Orbital Planet Render',
+        reference: 'akinoya_hero_bg.jpg (Planet / Energy Style)',
+        url: '/assets/planet_akinoya_1790852629401.jpg',
+      },
+      {
+        id: 'flora',
+        label: '02 · Botanical Flora System',
+        reference: 'Mood.png (Storyboard / Panel Style)',
+        url: '/assets/akinoya_mushroom_valley.jpg',
+      },
+      {
+        id: 'fauna',
+        label: '03 · Exotic Fauna & Wildlife System',
+        reference: 'Mood.png (Composition & Film Grain)',
+        url: '/assets/akinoya_twilight_world_1790852640934.jpg',
+      },
+      {
+        id: 'atmosphere',
+        label: '04 · Cockpit / Ship Landing Atmosphere',
+        reference: 'Mood.png (Cockpit / Camera Angle)',
+        url: '/assets/akinoya_hero_bg.jpg',
+      },
+      {
+        id: 'landmark',
+        label: '05 · Iconic Landmark & Megastructure',
+        reference: 'Sillow Mill Anime House Style',
+        url: '/assets/visualizer_thumbnail.png',
+      },
+    ],
     meta: {
       aestheticGuideline: 'Official Sillow Mill 2D Sci-Fi Anime Standard',
+      storyboardReference: 'Mood.png (Storyboard / Composition / Angles)',
+      visualAestheticReference: 'akinoya_hero_bg.jpg (Planet / Neon Energy / Color Palette)',
       namingRule: "Mandatory 'Ä' prefix enforced",
       visualStyle: aesthetic,
       generatedAt: new Date().toISOString(),
@@ -83,6 +141,24 @@ export default async function handler(req: any, res: any) {
 
   try {
     const body: GeneratePlanetRequest = req.body || {};
+
+    // 1. Strict Token Protection: Single-Execution Lock per Account
+    if (body.userId) {
+      const lockCheck = checkAndLockUserGeneration(body.userId);
+      if (!lockCheck.allowed) {
+        res.statusCode = 403;
+        res.end(
+          JSON.stringify({
+            success: false,
+            error: 'SUBMISSION_LOCKED',
+            message: lockCheck.reason,
+          })
+        );
+        return;
+      }
+    }
+
+    // 2. Synthesize 5-Photo Planet Prompts
     const result = buildPlanetPrompts(body);
 
     res.statusCode = 200;
