@@ -142,10 +142,10 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
     status: isMaster ? 'MASTER FOUNDER ORIGINAL' : 'UNASSIGNED / READY TO CLAIM',
-    ownerName: isMaster ? 'Odi Selis' : (localStoredName || ''),
-    ownerEmail: isMaster ? 'odi.selis3@gmail.com' : null,
-    isClaimed: isMaster || Boolean(localStoredName || localStoredCert),
-    registeredAt: isMaster ? '2026-10-09T00:00:00.000Z' : null,
+    ownerName: localStoredName || '',
+    ownerEmail: null,
+    isClaimed: Boolean(localStoredName || localStoredCert),
+    registeredAt: null,
     certificate: isMaster ? getMasterCertificate() : localStoredCert,
   });
 
@@ -156,34 +156,38 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const isClaimedByUser = Boolean(
     isUserVip ||
     (profile?.has_vip_pass &&
-      (profile?.vip_code_redeemed === activeToken || profile?.role === 'CREATOR' || isMaster))
+      (profile?.vip_code_redeemed === activeToken || profile?.role === 'CREATOR'))
   );
 
   const isClaimed =
-    isMaster ||
     isClaimedByUser ||
     Boolean(passData.isClaimed && passData.ownerName && passData.ownerName.trim().length > 0) ||
     Boolean(localStoredCert && localStoredCert.holderName && localStoredCert.holderName.trim().length > 0) ||
     Boolean(localStoredName && localStoredName.trim().length > 0);
 
-  const activeHolderName = isMaster
-    ? 'Odi Selis'
-    : (
-        passData.ownerName ||
-        profile?.full_name ||
-        (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : null) ||
-        user?.user_metadata?.full_name ||
-        user?.user_metadata?.name ||
-        localStoredCert?.holderName ||
-        localStoredName ||
-        ''
-      );
+  const activeHolderName =
+    passData.ownerName ||
+    profile?.full_name ||
+    (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : null) ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    (user?.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim() : null) ||
+    localStoredCert?.holderName ||
+    localStoredName ||
+    user?.email?.split('@')[0] ||
+    'Founding VIP Member';
+
+  const activeHolderEmail =
+    passData.ownerEmail ||
+    profile?.email ||
+    user?.email ||
+    null;
 
   const activeCertificate: BingaaCertificate =
     localStoredCert ||
     passData.certificate ||
     (isMaster
-      ? getMasterCertificate()
+      ? getMasterCertificate(activeHolderName)
       : {
           certificateId: `COA-BNG1-${String(passData.editionNumber).padStart(3, '0')}-VERIFIED`,
           title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
@@ -192,8 +196,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           editionNumber: passData.editionNumber,
           editionTotal: TOTAL_EDITION_LIMIT,
           status: 'OFFICIALLY VERIFIED',
-          emailVerified: true,
-          claimedAt: passData.registeredAt || '2026-10-09T00:00:00.000Z',
+          emailVerified: Boolean(activeHolderEmail),
+          claimedAt: passData.registeredAt || new Date().toISOString(),
           signatureAlgorithm: 'HMAC-SHA256',
           signature: 'Sillow Mill · Creative Syndicate',
         });
@@ -252,20 +256,20 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           setPassData((prev) => ({
             ...prev,
             ...pass,
-            ownerName: isMaster ? 'Odi Selis' : (pass.ownerName || prev.ownerName),
-            isClaimed: isMaster ? true : (Boolean(pass.isClaimed && pass.ownerName) || prev.isClaimed),
+            ownerName: pass.ownerName || prev.ownerName,
+            isClaimed: Boolean(pass.isClaimed && pass.ownerName) || prev.isClaimed,
           }));
 
           if (pass.certificate) {
             saveCertificate(pass.certificate);
           }
-          if (pass.ownerName && !isMaster) {
+          if (pass.ownerName) {
             saveHolderName(pass.ownerName, token);
           }
         }
 
         // Grant persistent VIP access only once the pass is claimed
-        if (isMaster || getHolderName(token) || (data.pass && data.pass.isClaimed)) {
+        if (getHolderName(token) || (data.pass && data.pass.isClaimed)) {
           setExplicitVipRouteActive(true);
           setDeviceSession(token);
           unlockVip(token);
@@ -278,7 +282,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       }
     } catch (err: any) {
       console.error('Verification error:', err);
-      if (isMaster || localStoredName || localStoredCert) {
+      if (localStoredName || localStoredCert) {
         setExplicitVipRouteActive(true);
         setDeviceSession(token);
         unlockVip(token);
@@ -719,7 +723,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40">
                   <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
-                  <span>VIP PASS ACTIVE — LINKED TO ACCOUNT</span>
+                  <span>VIP PASS UNLOCKED — STRIKT GEKOPPELD AAN DIT ACCOUNT</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase bg-gradient-to-r from-amber-400 to-amber-200 text-black">
                   ROLE: VIP
@@ -730,6 +734,9 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               </h1>
               <p className="text-[11px] sm:text-xs font-mono text-white/50">
                 Registered Founding VIP Holder: <strong className="text-cyan-300">{activeHolderName}</strong>
+                {activeHolderEmail && (
+                  <span className="text-white/40 font-mono text-[10px] ml-1.5">({activeHolderEmail})</span>
+                )}
               </p>
             </div>
 
@@ -795,10 +802,16 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                 <span className="text-white/40">REGISTERED HOLDER</span>
                 <span className="text-cyan-300 font-semibold">{activeHolderName.toUpperCase()}</span>
               </div>
+              {activeHolderEmail && (
+                <div className="py-2 flex items-center justify-between gap-3">
+                  <span className="text-white/40">REGISTERED EMAIL</span>
+                  <span className="text-white/80 font-mono text-[11px]">{activeHolderEmail}</span>
+                </div>
+              )}
               <div className="py-2 flex items-center justify-between gap-3">
                 <span className="text-white/40">EDITION</span>
                 <span className="text-white font-medium">
-                  {isMaster ? 'Master / Founders Pass (#0)' : `Founding Member Copy #${passData.editionNumber} of ${TOTAL_EDITION_LIMIT}`}
+                  {`Founding Member Copy #${passData.editionNumber} of ${TOTAL_EDITION_LIMIT}`}
                 </span>
               </div>
               <div className="py-2 flex items-center justify-between gap-3">

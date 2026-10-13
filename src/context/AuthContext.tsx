@@ -412,7 +412,16 @@ const resolveAndLinkVipProfile = async (
       targetPassCode = candidatePass;
       targetHasVip = true;
       if (authUser?.id) {
-        await claimVipTokenForUser(candidatePass, authUser.id);
+        const m = authUser.user_metadata || {};
+        const fName = (
+          rawProfData?.full_name ||
+          m.full_name ||
+          m.name ||
+          (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : null) ||
+          authUser.email?.split('@')[0] ||
+          'Founding VIP Member'
+        ).trim();
+        await claimVipTokenForUser(candidatePass, authUser.id, fName, authUser.email);
       }
     }
   }

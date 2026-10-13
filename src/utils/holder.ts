@@ -49,9 +49,6 @@ export const sanitizeHolderName = (name: string): string =>
 export const getHolderName = (passId?: string): string => {
   if (typeof window === 'undefined') return '';
   const cleanId = (passId || '').trim().toUpperCase().replace(/^#/, '');
-  if (cleanId === 'AKN-VIP-2027-X0914') {
-    return 'Odi Selis';
-  }
   try {
     if (cleanId) {
       const perPass = localStorage.getItem(`akinoya_holder_name_${cleanId}`);

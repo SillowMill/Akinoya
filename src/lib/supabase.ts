@@ -41,6 +41,8 @@ export interface VipTokenRecord {
   token_code: string;
   is_claimed: boolean;
   claimed_by_user_id?: string | null;
+  claimed_holder_name?: string | null;
+  claimed_holder_email?: string | null;
   claimed_at?: string | null;
   created_at?: string;
   updated_at?: string;

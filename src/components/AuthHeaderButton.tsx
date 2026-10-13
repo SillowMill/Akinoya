@@ -160,11 +160,18 @@ export const AuthHeaderButton: React.FC = () => {
 
               {/* Strict Account-Bound VIP Pass Badge */}
               {isUserVip && (
-                <div className="mt-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-950/90 via-teal-950/85 to-emerald-950/90 border border-emerald-500/60 text-emerald-300 font-mono text-[9px] sm:text-[9.5px] font-bold flex items-center gap-2 shadow-[0_0_14px_rgba(16,185,129,0.3)] select-none">
+                <div
+                  aria-label="VIP PASS UNLOCKED — STRIKT GEKOPPELD AAN DIT ACCOUNT"
+                  className="mt-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-950/90 via-teal-950/85 to-emerald-950/90 border border-emerald-500/60 text-emerald-300 font-mono text-[9px] sm:text-[9.5px] font-bold flex items-center gap-2 shadow-[0_0_14px_rgba(16,185,129,0.3)] select-none"
+                >
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   <div className="leading-tight flex flex-col">
-                    <span className="font-extrabold text-emerald-200 uppercase tracking-wide">VIP PASS ACTIVE — LINKED TO ACCOUNT</span>
-                    <span className="text-[8.5px] text-emerald-400/80 font-normal">STRIKT GEKOPPELD AAN DIT ACCOUNT</span>
+                    <span className="font-extrabold text-emerald-200 uppercase tracking-wide">
+                      VIP PASS UNLOCKED — STRIKT GEKOPPELD AAN DIT ACCOUNT
+                    </span>
+                    <span className="text-[8.5px] text-emerald-400/80 font-normal">
+                      PERMANENT ACCOUNT BINDING VERIFIED
+                    </span>
                   </div>
                 </div>
               )}

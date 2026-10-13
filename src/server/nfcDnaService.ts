@@ -127,25 +127,11 @@ function createDefaultPassRecord(tokenId: string): PassRecord {
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
     status: isMaster ? 'MASTER FOUNDER ORIGINAL' : 'UNASSIGNED / READY TO CLAIM',
-    ownerName: isMaster ? 'Odi Selis' : '',
-    ownerEmail: isMaster ? 'Odi@sillowmill.com' : null,
-    isClaimed: isMaster,
-    registeredAt: isMaster ? '2026-10-09T00:00:00.000Z' : null,
-    certificate: isMaster
-      ? {
-          certificateId: 'COA-BNG1-001-FOUNDER',
-          title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
-          passId: 'AKN-VIP-2027-X0914',
-          holderName: 'Odi Selis',
-          editionNumber: 1,
-          editionTotal: 100,
-          status: 'MASTER FOUNDER ORIGINAL',
-          emailVerified: true,
-          claimedAt: '2026-10-09T00:00:00.000Z',
-          signatureAlgorithm: 'HMAC-SHA256',
-          signature: 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637',
-        }
-      : null,
+    ownerName: '',
+    ownerEmail: null,
+    isClaimed: false,
+    registeredAt: null,
+    certificate: null,
     boundDeviceId: null,
     lastCounter: 0,
     usedEncSignatures: [],
@@ -222,27 +208,7 @@ export function getPassRecord(tokenId: string): PassRecord {
     saveStore();
   }
   const pass = _store.passes[normalized];
-  if (normalized === 'AKN-VIP-2027-X0914') {
-    pass.ownerName = 'Odi Selis';
-    pass.ownerEmail = 'Odi@sillowmill.com';
-    pass.isClaimed = true;
-    pass.status = 'MASTER FOUNDER ORIGINAL';
-    if (!pass.certificate) {
-      pass.certificate = {
-        certificateId: 'COA-BNG1-001-FOUNDER',
-        title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
-        passId: 'AKN-VIP-2027-X0914',
-        holderName: 'Odi Selis',
-        editionNumber: 1,
-        editionTotal: 100,
-        status: 'MASTER FOUNDER ORIGINAL',
-        emailVerified: true,
-        claimedAt: '2026-10-09T00:00:00.000Z',
-        signatureAlgorithm: 'HMAC-SHA256',
-        signature: 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637',
-      };
-    }
-  } else if (pass.ownerName === 'Founding Holder' || (!pass.isClaimed && !pass.registeredAt)) {
+  if (pass.ownerName === 'Founding Holder' || (!pass.isClaimed && !pass.registeredAt)) {
     pass.ownerName = pass.isClaimed ? pass.ownerName : '';
     pass.isClaimed = Boolean(pass.isClaimed && pass.ownerName);
     if (!pass.isClaimed) {

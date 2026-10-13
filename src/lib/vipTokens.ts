@@ -239,7 +239,9 @@ export const checkVipTokenStatus = async (
  */
 export const claimVipTokenForUser = async (
   rawToken: string,
-  userId: string
+  userId: string,
+  holderName?: string,
+  holderEmail?: string
 ): Promise<VipTokenClaimResult> => {
   const clean = normalizeVipToken(rawToken);
 
@@ -271,6 +273,15 @@ export const claimVipTokenForUser = async (
         .eq('token_code', clean)
         .maybeSingle();
 
+      const updateData: Record<string, any> = {
+        is_claimed: true,
+        claimed_by_user_id: userId,
+        claimed_at: nowIso,
+        updated_at: nowIso,
+      };
+      if (holderName) updateData.claimed_holder_name = holderName;
+      if (holderEmail) updateData.claimed_holder_email = holderEmail;
+
       if (existing) {
         if (existing.is_claimed) {
           if (existing.claimed_by_user_id === userId) {
@@ -285,12 +296,7 @@ export const claimVipTokenForUser = async (
 
         const { data: updated, error: updateErr } = await supabase
           .from('vip_tokens')
-          .update({
-            is_claimed: true,
-            claimed_by_user_id: userId,
-            claimed_at: nowIso,
-            updated_at: nowIso,
-          })
+          .update(updateData)
           .eq('token_code', clean)
           .select()
           .single();
@@ -318,15 +324,19 @@ export const claimVipTokenForUser = async (
         }
       } else {
         // Insert new claimed token record
+        const insertData: Record<string, any> = {
+          token_code: clean,
+          is_claimed: true,
+          claimed_by_user_id: userId,
+          claimed_at: nowIso,
+          updated_at: nowIso,
+        };
+        if (holderName) insertData.claimed_holder_name = holderName;
+        if (holderEmail) insertData.claimed_holder_email = holderEmail;
+
         const { data: inserted, error: insertErr } = await supabase
           .from('vip_tokens')
-          .insert({
-            token_code: clean,
-            is_claimed: true,
-            claimed_by_user_id: userId,
-            claimed_at: nowIso,
-            updated_at: nowIso,
-          })
+          .insert(insertData)
           .select()
           .single();
 
@@ -362,4 +372,51 @@ export const claimVipTokenForUser = async (
     success: true,
     message: 'VIP Pass officially bound to your account.',
   };
+};
+
+/**
+ * Resets all 100 VIP tokens in Supabase and local cache to unclaimed.
+ * Sets is_claimed = false, clears claimed_by_user_id, claimed_at, holder name and email.
+ */
+export const resetAllVipTokens = async (): Promise<{ success: boolean; count?: number; error?: string }> => {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_CLAIMED_KEY);
+      localStorage.removeItem('sillow_vip_bound_token');
+      sessionStorage.removeItem('sillow_vip_bound_token');
+      localStorage.removeItem('sillow_vip_device_access');
+      sessionStorage.removeItem('akinoya_vip_unlocked');
+      localStorage.removeItem('pending_vip_pass');
+      localStorage.removeItem('akinoya_pending_vip_pass');
+      sessionStorage.removeItem('pending_vip_code');
+    } catch {}
+  }
+
+  if (isSupabaseConfigured) {
+    try {
+      const nowIso = new Date().toISOString();
+      const { data, error } = await supabase
+        .from('vip_tokens')
+        .update({
+          is_claimed: false,
+          claimed_by_user_id: null,
+          claimed_holder_name: null,
+          claimed_holder_email: null,
+          claimed_at: null,
+          updated_at: nowIso,
+        })
+        .neq('token_code', '___NON_EXISTENT___')
+        .select();
+
+      if (error) {
+        console.warn('[VipTokens] Supabase reset error:', error.message);
+        return { success: false, error: error.message };
+      }
+      return { success: true, count: data?.length || 100 };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  return { success: true, count: 100 };
 };

@@ -24,14 +24,17 @@ export const CertificateOfAuthenticity: React.FC<CertificateOfAuthenticityProps>
         <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">OWNER</dt>
         <dd className="text-[11px] sm:text-xs text-white font-semibold break-words">
           REGISTERED HOLDER: {(certificate?.holderName || 'FOUNDING VIP MEMBER').toUpperCase()}
+          {certificate?.holderEmail && (
+            <span className="block text-[10px] text-cyan-300/90 font-normal lowercase tracking-normal font-mono">
+              {certificate.holderEmail}
+            </span>
+          )}
         </dd>
       </div>
       <div className="min-w-0">
         <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">EDITION</dt>
         <dd className="text-[11px] sm:text-xs text-white font-semibold">
-          {certificate?.passId === 'AKN-VIP-2027-X0914' || certificate?.editionNumber === 0
-            ? 'FOUNDERS PASS (#0)'
-            : `FOUNDING MEMBER COPY #${certificate?.editionNumber || 1} OF ${certificate?.editionTotal || 100}`}
+          FOUNDING MEMBER COPY #{certificate?.editionNumber || 1} OF {certificate?.editionTotal || 100}
         </dd>
       </div>
       <div className="min-w-0">
@@ -68,7 +71,7 @@ export const CertificateOfAuthenticity: React.FC<CertificateOfAuthenticityProps>
           <span className="text-[8px] sm:text-[9px] font-bold tracking-wider">OFFICIAL</span>
           <span className="text-[9px] sm:text-[10px] font-extrabold tracking-wider">AUTHENTIC</span>
           <span className="text-[7px] sm:text-[8px] mt-0.5">
-            {certificate?.passId === 'AKN-VIP-2027-X0914' || certificate?.editionNumber === 0 ? 'FOUNDERS (#0)' : `${certificate?.editionNumber || 1}/${certificate?.editionTotal || 100}`}
+            {`COPY #${certificate?.editionNumber || 1}/${certificate?.editionTotal || 100}`}
           </span>
         </div>
       </div>
