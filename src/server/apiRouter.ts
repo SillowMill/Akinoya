@@ -15,6 +15,7 @@ import {
 } from './nfcDnaService';
 import { handleCertificateAction } from '../../api/nfc/_certificateService.js';
 import { generatePlanetRenders, checkAndLockUserGeneration } from '../../api/generate-planet';
+import { checkVipTokenStatus, claimVipTokenForUser } from '../lib/vipTokens';
 
 export const apiApp = express();
 export const apiRouter = express.Router();
@@ -351,8 +352,10 @@ apiRouter.all(['/generate-planet', '/planet/generate'], async (req: Request, res
 // ─── 11. VIP Token Verification & Single-Claim ────────────────────────────────
 apiRouter.all(['/vip/verify'], async (req: Request, res: Response): Promise<void> => {
   try {
-    const handler = (await import('../../api/vip/verify.js')).default;
-    await handler(req as any, res as any);
+    const token = ((req.query?.token || req.query?.vip_token || req.body?.token || req.body?.vip_token) as string) || '';
+    const userId = ((req.query?.userId || req.body?.userId) as string) || '';
+    const result = await checkVipTokenStatus(token, userId);
+    res.status(result.allowed ? 200 : (result.isAlreadyClaimed ? 403 : 400)).json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'VIP verify failed' });
   }
@@ -360,8 +363,10 @@ apiRouter.all(['/vip/verify'], async (req: Request, res: Response): Promise<void
 
 apiRouter.all(['/vip/claim'], async (req: Request, res: Response): Promise<void> => {
   try {
-    const handler = (await import('../../api/vip/claim.js')).default;
-    await handler(req as any, res as any);
+    const token = ((req.body?.token || req.body?.vip_token || req.query?.token) as string) || '';
+    const userId = ((req.body?.userId || req.query?.userId) as string) || '';
+    const result = await claimVipTokenForUser(token, userId);
+    res.status(result.success ? 200 : (result.error?.includes('ALREADY') ? 403 : 400)).json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'VIP claim failed' });
   }

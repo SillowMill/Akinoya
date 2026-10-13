@@ -8,6 +8,10 @@
       "destination": "/api/nfc/register"
     },
     {
+      "source": "/api/nfc/verify",
+      "destination": "/api/nfc/redeem"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
