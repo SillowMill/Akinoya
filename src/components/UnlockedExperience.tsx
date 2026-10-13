@@ -41,6 +41,10 @@ import {
   Download,
   Trophy,
   Camera,
+  MessageSquare,
+  ThumbsUp,
+  Flame,
+  Share2,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
@@ -48,7 +52,16 @@ import { useHolderName, isValidPassId, TOTAL_EDITION_LIMIT } from '../utils/hold
 import { useVipAccess } from '../context/VipAccessContext';
 import { useAuth } from '../context/AuthContext';
 import { PlanetSubmission } from '../types/contest';
-import { getUserContestSubmission } from '../data/contest';
+import {
+  getUserContestSubmission,
+  fetchUserContestSubmission,
+  getPlanetPhotoCards,
+  getStoredPlanetSubmissions,
+  togglePlanetSubmissionVote,
+  getPlanetComments,
+  addPlanetComment,
+  PlanetComment,
+} from '../data/contest';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import {
   BINGAA_PDF_URL,
@@ -171,19 +184,62 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   onNavigateToPassport,
   onNavigateToContest,
 }) => {
-  const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'assets'>('pass');
+  const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'my-world' | 'assets'>('pass');
   const { user, isVip: authIsVip, profile, role } = useAuth();
   const [userDossier, setUserDossier] = useState<PlanetSubmission | null>(null);
   const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);
+  const [planetComments, setPlanetComments] = useState<PlanetComment[]>([]);
+  const [commentInput, setCommentInput] = useState('');
+  const [isCopiedDossierLink, setIsCopiedDossierLink] = useState(false);
 
   useEffect(() => {
-    if (user?.id || profile?.id || user?.email) {
-      const sub = getUserContestSubmission(user?.id || profile?.id, user?.email);
-      if (sub) {
-        setUserDossier(sub);
-      }
+    const userId = user?.id || profile?.id;
+    const email = user?.email;
+    if (userId || email) {
+      fetchUserContestSubmission(userId, email).then((sub) => {
+        if (sub) {
+          setUserDossier(sub);
+          setPlanetComments(getPlanetComments(sub.id));
+        }
+      });
     }
   }, [user?.id, profile?.id, user?.email]);
+
+  const handleVoteUserDossier = async () => {
+    if (!userDossier) return;
+    soundManager.playTone(740, 0.06);
+    const res = await togglePlanetSubmissionVote(userDossier.id, user?.id);
+    setUserDossier((prev) => (prev ? { ...prev, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : null));
+  };
+
+  const handleAddComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userDossier || !commentInput.trim()) return;
+    soundManager.playTone(680, 0.05);
+    const authorName = (profile?.first_name ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}` : profile?.full_name) || user?.email?.split('@')[0] || 'Community Scout';
+    const authorUsername = authorName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const updated = addPlanetComment(userDossier.id, {
+      planetId: userDossier.id,
+      authorName,
+      authorUsername,
+      text: commentInput.trim(),
+    });
+    setPlanetComments(updated);
+    setCommentInput('');
+  };
+
+  const handleShareDossier = () => {
+    soundManager.playTone(600, 0.04);
+    if (typeof window !== 'undefined' && userDossier) {
+      const shareUrl = `${window.location.origin}/contest?planet=${userDossier.id}`;
+      navigator.clipboard.writeText(shareUrl);
+      setIsCopiedDossierLink(true);
+      setTimeout(() => setIsCopiedDossierLink(false), 2500);
+    }
+  };
+
+  const storedPlanets = getStoredPlanetSubmissions().sort((a, b) => b.votesCount - a.votesCount);
+  const planetRank = userDossier ? storedPlanets.findIndex((p) => p.id === userDossier.id) + 1 : 0;
   const isVipMode = Boolean(
     Boolean(user || profile) && (
       isVip ||
@@ -837,7 +893,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       {/* Main Tabs and Content Area */}
       <div className="space-y-4 sm:space-y-6 w-full">
         {/* Navigation Tabs (Mobile optimized scrollable / grid) */}
-        <div className={`grid ${isVipMode ? 'grid-cols-3' : 'grid-cols-2'} gap-1 xs:gap-1.5 p-1 xs:p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
+        <div className={`grid ${isVipMode ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-1 xs:gap-1.5 p-1 xs:p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
             <button
               onClick={() => setActiveTab('pass')}
               className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[44px] ${
@@ -860,6 +916,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <BookOpen className="w-3 h-3 xs:w-3.5 xs:h-3.5 shrink-0" />
               <span className="truncate">Comic</span>
             </button>
+            <button
+              onClick={() => setActiveTab('my-world')}
+              className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[44px] ${
+                activeTab === 'my-world'
+                  ? 'bg-amber-400 text-black font-bold shadow-[0_0_15px_rgba(245,158,11,0.35)]'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <Globe2 className={`w-3 h-3 xs:w-3.5 xs:h-3.5 shrink-0 ${activeTab === 'my-world' ? 'text-black' : 'text-amber-400'}`} />
+              <span className="truncate">My World</span>
+            </button>
             {isVipMode && (
               <button
                 onClick={() => setActiveTab('assets')}
@@ -870,13 +937,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 }`}
               >
                 <Gem className="w-3 h-3 xs:w-3.5 xs:h-3.5 shrink-0" />
-                <span className="truncate">My Assets</span>
+                <span className="truncate">VIP Lounge / Assets</span>
               </button>
             )}
           </div>
 
           {/* Tab 1: VIP Perks & Visualizer Hub */}
-          {(activeTab === 'pass' || (!isVipMode && activeTab === 'assets')) && (
+          {activeTab === 'pass' && (
             <AnimatePresence mode="wait">
               {passSubView === 'overview' ? (
                 <motion.div
@@ -1551,7 +1618,381 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </div>
           )}
 
-          {/* Tab 3: My Assets — exclusively the 3 verified holder assets (strictly gated to explicit VIP verification route) */}
+          {/* Tab 3: My World — User's 5-Photo Anime Dossier & Social Metrics */}
+          {activeTab === 'my-world' && (
+            <motion.div
+              key="my-world-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              {!userDossier ? (
+                /* Empty state: No world synthesized yet */
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#090d18] via-[#070a14] to-black border border-white/10 p-6 sm:p-10 text-center space-y-6 shadow-2xl">
+                  <div className="absolute top-0 right-1/2 translate-x-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                  <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.25)]">
+                    <Globe2 className="w-10 h-10 animate-pulse" />
+                  </div>
+
+                  <div className="space-y-2 max-w-xl mx-auto">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-widest uppercase bg-amber-400/15 text-amber-300 border border-amber-400/30">
+                      <Sparkles className="w-3 h-3 fill-amber-300" />
+                      SECTOR SYNTHESIS · 1 GOLDEN TICKET READY
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
+                      You Haven't Synthesized Your Planetary Sector Yet
+                    </h3>
+                    <p className="text-xs sm:text-sm text-white/60 font-sans leading-relaxed">
+                      Answer Mill's 8 human-centric questions to calibrate your sector's atmospheric chemistry, bioluminescent flora, apex fauna, and sonic signature. Your 5-photo anime dossier will be minted in real-time and entered into the 2027 Lore Governance Council.
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundManager.playTone(660, 0.05);
+                        if (onNavigateToContest) {
+                          onNavigateToContest();
+                        } else if (typeof window !== 'undefined') {
+                          window.location.href = '/contest';
+                        }
+                      }}
+                      className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_30px_rgba(245,158,11,0.4)] transition-all cursor-pointer transform hover:scale-[1.02]"
+                    >
+                      <Sparkles className="w-4 h-4 fill-black" />
+                      <span>OPEN MILL WIZARD →</span>
+                    </button>
+                  </div>
+
+                  {/* 3 Value Pillars */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-white/10 text-left">
+                    <div className="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                      <div className="flex items-center gap-2 text-amber-300 font-mono text-xs font-bold mb-1">
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>5 High-Res Anime Renders</span>
+                      </div>
+                      <p className="text-[11px] text-white/60 font-sans">
+                        Orbital horizon, cockpit canopy, botanical flora, apex fauna, and lore cover.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                      <div className="flex items-center gap-2 text-cyan-300 font-mono text-xs font-bold mb-1">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Strict Sillow Mill Aesthetic</span>
+                      </div>
+                      <p className="text-[11px] text-white/60 font-sans">
+                        Composed from akinoya_hero_bg.jpg and atmospheric panels from Mood.png.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-white/5 border border-white/5">
+                      <div className="flex items-center gap-2 text-emerald-300 font-mono text-xs font-bold mb-1">
+                        <Trophy className="w-3.5 h-3.5" />
+                        <span>Lore Governance Voting</span>
+                      </div>
+                      <p className="text-[11px] text-white/60 font-sans">
+                        Compete on "Group's Favorite Planets" for canon integration in Sillow Mill series.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Active state: User's synthesized planet dossier */
+                <div className="space-y-6">
+                  {/* Top Sector Dossier Header Banner */}
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/80 via-black/80 to-[#070b14] border border-amber-500/40 p-5 sm:p-6 shadow-[0_0_35px_rgba(245,158,11,0.2)]">
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4 relative z-10">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 rounded-lg bg-amber-400 text-black shrink-0">
+                          <Globe2 className="w-4 h-4" />
+                        </span>
+                        <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-amber-300">
+                          My Synthesized Sector · Dossier Active
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-400/40 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>GOLDEN TICKET EXPENDED · ONE-SHOT LOCKED</span>
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-400/40 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-cyan-400" />
+                          <span>BOUND TO ACCOUNT</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2.5">
+                          <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-wide truncate">
+                            {userDossier.planetName}
+                          </h2>
+                          <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 shrink-0">
+                            SECTOR ID: {userDossier.id}
+                          </span>
+                        </div>
+                        <p className="text-xs font-mono text-white/60 mt-1">
+                          Synthesized by {userDossier.authorName} ({userDossier.authorEmail || user?.email || 'Verified Account'})
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={handleShareDossier}
+                          className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          {isCopiedDossierLink ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              <span className="text-emerald-400">Link Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Share2 className="w-3.5 h-3.5" />
+                              <span>Share Dossier</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundManager.playTone(660, 0.05);
+                            setSelectedDossierModal(userDossier);
+                          }}
+                          className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono text-xs font-bold shadow-[0_0_20px_rgba(245,158,11,0.3)] flex items-center gap-2 transition-all cursor-pointer"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          <span>Inspect 5-Photo Dossier</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3 Live Social Engagement Metric Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+                    {/* Metric 1: Likes / Votes Count */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 flex items-center justify-between gap-3 shadow-lg">
+                      <div>
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 block">
+                          Community Votes
+                        </span>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <span className="text-2xl sm:text-3xl font-display font-extrabold text-amber-400">
+                            {userDossier.votesCount}
+                          </span>
+                          <span className="text-xs font-mono text-white/50">total votes</span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleVoteUserDossier}
+                        className={`p-3 rounded-xl font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                          userDossier.hasVoted
+                            ? 'bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                            : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10'
+                        }`}
+                        title="Cast Vote"
+                      >
+                        <ThumbsUp className={`w-4 h-4 ${userDossier.hasVoted ? 'fill-black' : ''}`} />
+                        <span>{userDossier.hasVoted ? 'Voted' : 'Vote'}</span>
+                      </button>
+                    </div>
+
+                    {/* Metric 2: Leaderboard Position */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 flex items-center justify-between gap-3 shadow-lg">
+                      <div>
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 block">
+                          Leaderboard Position
+                        </span>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <span className="text-2xl sm:text-3xl font-display font-extrabold text-cyan-400">
+                            #{planetRank > 0 ? planetRank : 1}
+                          </span>
+                          <span className="text-xs font-mono text-white/50">on Group's Favorites</span>
+                        </div>
+                      </div>
+
+                      <a
+                        href="/community"
+                        className="px-3 py-2 rounded-xl bg-cyan-950/50 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-500/30 font-mono text-xs transition-colors flex items-center gap-1"
+                      >
+                        <Trophy className="w-3.5 h-3.5" />
+                        <span>Board</span>
+                      </a>
+                    </div>
+
+                    {/* Metric 3: Lore Governance Status */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 flex items-center justify-between gap-3 shadow-lg">
+                      <div>
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 block">
+                          Lore Governance Council
+                        </span>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <span className="text-base sm:text-lg font-display font-bold text-emerald-400">
+                            Active Candidate
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono text-white/40 block mt-0.5">
+                          Voting Closes: June 30, 2027
+                        </span>
+                      </div>
+
+                      <div className="w-10 h-10 rounded-xl bg-emerald-950/60 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shrink-0">
+                        <Vote className="w-5 h-5" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 5-Photo Anime Gallery Section */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-4 shadow-xl">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                      <div className="flex items-center gap-2">
+                        <Camera className="w-4 h-4 text-amber-400" />
+                        <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
+                          Synthesized 5-Photo Visual Archive
+                        </h3>
+                      </div>
+                      <span className="text-[10px] font-mono text-cyan-400">
+                        Click any render to open full 4K view
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                      {getPlanetPhotoCards(userDossier).map((photo) => (
+                        <div
+                          key={photo.id}
+                          onClick={() => {
+                            soundManager.playTone(660, 0.05);
+                            setSelectedDossierModal(userDossier);
+                          }}
+                          className="group relative rounded-xl overflow-hidden bg-black/80 border border-white/10 hover:border-amber-400/50 transition-all cursor-pointer aspect-square flex flex-col justify-end p-2.5 shadow-md"
+                        >
+                          <img
+                            src={photo.url}
+                            alt={photo.title}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
+
+                          <div className="relative z-10 space-y-0.5">
+                            <span className="text-[8.5px] font-mono font-bold tracking-wider text-amber-300 uppercase block truncate">
+                              {photo.category}
+                            </span>
+                            <h4 className="text-[11px] font-sans font-semibold text-white truncate group-hover:text-amber-200">
+                              {photo.title}
+                            </h4>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Story & Philosophy Creed */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-3 shadow-xl">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                      <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
+                        Archival Lore & Philosophical Creed
+                      </h3>
+                    </div>
+
+                    {userDossier.futurePromise && (
+                      <blockquote className="p-3.5 rounded-xl bg-amber-400/10 border-l-4 border-amber-400 text-xs sm:text-sm text-amber-200 font-sans italic leading-relaxed">
+                        "{userDossier.futurePromise}"
+                      </blockquote>
+                    )}
+
+                    <p className="text-xs sm:text-sm text-white/70 font-sans leading-relaxed whitespace-pre-line">
+                      {userDossier.generatedLore}
+                    </p>
+                  </div>
+
+                  {/* Community Feedback & Live Comments */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-[#080d19] border border-cyan-500/30 space-y-4 shadow-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/10">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-cyan-400" />
+                        <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
+                          Community Feedback & Lore Discussions
+                        </h3>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 border border-cyan-400/30">
+                          {planetComments.length} {planetComments.length === 1 ? 'Comment' : 'Comments'}
+                        </span>
+                      </div>
+
+                      <a
+                        href="/community"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-semibold transition-all cursor-pointer"
+                      >
+                        <span>View &amp; Reply in Community Hub</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+
+                    {/* Comments list */}
+                    <div className="space-y-2.5">
+                      {planetComments.map((comm) => (
+                        <div
+                          key={comm.id}
+                          className="p-3 sm:p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-1"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono font-bold text-cyan-300">
+                                {comm.authorName}
+                              </span>
+                              <span className="text-[10px] font-mono text-white/40">
+                                @{comm.authorUsername}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-mono text-white/40">
+                              {comm.createdAt}
+                            </span>
+                          </div>
+                          <p className="text-xs text-white/80 font-sans leading-relaxed">
+                            {comm.text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add comment input */}
+                    <form onSubmit={handleAddComment} className="pt-2 flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={commentInput}
+                        onChange={(e) => setCommentInput(e.target.value)}
+                        placeholder="Leave feedback on this sector's lore..."
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs font-mono text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-colors"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!commentInput.trim()}
+                        className="px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed text-black font-mono font-bold text-xs transition-all cursor-pointer shrink-0"
+                      >
+                        Post
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Tab 4: My Assets — exclusively the 3 verified holder assets (strictly gated to explicit VIP verification route) */}
           {isVipMode && activeTab === 'assets' && (
             <motion.div
               key="assets-view"

@@ -59,7 +59,6 @@ export const CreatorPortfolioView: React.FC<CreatorPortfolioViewProps> = ({
     return getCreatorByUsername(targetUsername) || allCreators[0];
   });
 
-  const [activeTab, setActiveTab] = useState<'ALL' | 'AUDIO' | '3D_RENDER' | 'DAW_TEMPLATE' | 'LORE'>('ALL');
   const [isLiked, setIsLiked] = useState<boolean>(() => hasUserLikedCreator(creator.id, user?.id));
   const [likesCount, setLikesCount] = useState<number>(creator.likesCount);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
@@ -167,12 +166,6 @@ export const CreatorPortfolioView: React.FC<CreatorPortfolioViewProps> = ({
       setP2PLink('');
     }, 2000);
   };
-
-  // Filter showcase items
-  const filteredShowcase = creator.showcaseItems.filter((item) => {
-    if (activeTab === 'ALL') return true;
-    return item.type === activeTab;
-  });
 
   return (
     <div className="relative z-20 w-full max-w-5xl mx-auto px-3 sm:px-6 py-6 sm:py-10 text-white font-sans">
@@ -448,114 +441,7 @@ export const CreatorPortfolioView: React.FC<CreatorPortfolioViewProps> = ({
         </div>
       </div>
 
-      {/* Showcase Section */}
-      <div className="mt-10 sm:mt-12 space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-base sm:text-lg font-display font-bold uppercase tracking-wider text-white">
-              Creative Vault &amp; Showcase
-            </h2>
-            <span className="text-xs font-mono text-white/40">({creator.showcaseItems.length} items)</span>
-          </div>
 
-          {/* Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-black/60 rounded-xl border border-white/10 text-xs font-mono">
-            {(['ALL', 'AUDIO', '3D_RENDER', 'DAW_TEMPLATE', 'LORE'] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => {
-                  soundManager.playTone(560, 0.03);
-                  setActiveTab(tab);
-                }}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  activeTab === tab
-                    ? 'bg-cyan-500 text-black font-bold shadow-[0_0_10px_rgba(6,182,212,0.3)]'
-                    : 'text-white/60 hover:text-white'
-                }`}
-              >
-                {tab === 'ALL'
-                  ? 'All Works'
-                  : tab === 'AUDIO'
-                  ? 'Audio Masters'
-                  : tab === '3D_RENDER'
-                  ? '3D & Visualizers'
-                  : tab === 'DAW_TEMPLATE'
-                  ? 'DAW Templates'
-                  : 'Lore'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Showcase Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredShowcase.map((item) => (
-            <div
-              key={item.id}
-              className="group rounded-2xl bg-[#090d16] border border-white/10 hover:border-cyan-500/40 transition-all overflow-hidden flex flex-col shadow-lg hover:shadow-[0_0_25px_rgba(6,182,212,0.15)]"
-            >
-              {/* Media Preview Image */}
-              {item.mediaUrl && (
-                <div className="relative aspect-video w-full overflow-hidden bg-black/60">
-                  <img
-                    src={item.mediaUrl}
-                    alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#090d16] via-transparent to-transparent opacity-80" />
-
-                  {/* Type Badge */}
-                  <div className="absolute top-3 left-3">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-extrabold bg-black/80 backdrop-blur-md text-cyan-300 border border-cyan-500/30">
-                      {item.type}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Item Info */}
-              <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-                <div className="space-y-2">
-                  <h3 className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors line-clamp-1">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-white/70 font-sans line-clamp-2 leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-
-                {/* Tags and Stats */}
-                <div className="pt-2 border-t border-white/5 space-y-2.5">
-                  <div className="flex flex-wrap items-center gap-1">
-                    {item.tags.map((tag, tIdx) => (
-                      <span
-                        key={tIdx}
-                        className="px-2 py-0.5 rounded text-[9px] font-mono bg-white/5 text-white/50"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] font-mono text-white/40">
-                    <div className="flex items-center gap-3">
-                      {item.stats?.plays && <span>▶ {item.stats.plays} plays</span>}
-                      {item.stats?.views && <span>👁 {item.stats.views} views</span>}
-                      {item.stats?.downloads && <span>⬇ {item.stats.downloads}</span>}
-                    </div>
-
-                    <span className="text-cyan-400 font-semibold group-hover:underline">
-                      Explore Asset →
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* P2P Direct Message / Collaboration Transmission Modal */}
       {isP2PModalOpen && (

@@ -1071,7 +1071,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
             <span className="text-xs sm:text-sm font-display font-bold tracking-wider text-white uppercase truncate">
-              CREATIVE VAULT &amp; PRODUCT HUB
+              ÄKINOYA COMMUNITY HUB · LORE &amp; GOVERNANCE
             </span>
           </div>
         </div>
@@ -2459,7 +2459,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
-                  🏆 Group's Favorite Planets &amp; Creator Showcase
+                  🏆 Group's Favorite Planets Leaderboard
                 </h1>
                 <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
                   Explore the community's top-voted planets, inspect complete 5-photo anime dossiers, and celebrate syndicate creator portfolios.

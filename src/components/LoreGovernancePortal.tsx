@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { PlanetSubmission } from '../types/contest';
 import {
   getStoredPlanetSubmissions,
+  fetchPlanetSubmissions,
   togglePlanetSubmissionVote,
   subscribeToPlanetSubmissions,
 } from '../data/contest';
@@ -36,9 +37,14 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetSubmission | null>(null);
 
   useEffect(() => {
-    // Initial load
+    // Initial load from local store
     const initial = getStoredPlanetSubmissions();
     setContestSubmissions([...initial].sort((a, b) => b.votesCount - a.votesCount));
+
+    // Live cloud load from Supabase user_dossiers
+    fetchPlanetSubmissions().then((fresh) => {
+      setContestSubmissions([...fresh].sort((a, b) => b.votesCount - a.votesCount));
+    });
 
     // Supabase Realtime Subscription
     const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
@@ -128,96 +134,119 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {contestSubmissions.map((sub, idx) => (
-            <div
-              key={sub.id}
-              className="rounded-2xl overflow-hidden bg-black/60 border border-white/10 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
+        {contestSubmissions.length === 0 ? (
+          <div className="p-8 sm:p-12 rounded-2xl bg-[#090d16] border border-cyan-500/20 text-center space-y-4 shadow-[0_0_40px_rgba(6,182,212,0.08)]">
+            <div className="w-14 h-14 rounded-2xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 mx-auto flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.2)]">
+              <Sparkles className="w-6 h-6 animate-pulse" />
+            </div>
+            <div className="space-y-1.5 max-w-md mx-auto">
+              <h3 className="text-base sm:text-lg font-display font-bold text-white">
+                No sectors synthesized yet
+              </h3>
+              <p className="text-xs sm:text-sm font-sans text-white/60 leading-relaxed">
+                No sectors synthesized yet. Be the first creator to claim a world! Answer the 8 human-centric questions in the Mill Wizard to forge your 5-photo anime dossier.
+              </p>
+            </div>
+            <a
+              href="/contest"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all cursor-pointer"
             >
+              <Trophy className="w-4 h-4 text-black shrink-0" />
+              <span>CLAIM &amp; SYNTHESIZE A WORLD →</span>
+            </a>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {contestSubmissions.map((sub, idx) => (
               <div
-                onClick={() => handleOpenDossier(sub)}
-                className="cursor-pointer"
+                key={sub.id}
+                className="rounded-2xl overflow-hidden bg-black/60 border border-white/10 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
               >
-                <div className="relative h-44 w-full overflow-hidden bg-black/90">
-                  <img
-                    src={sub.renders.hero}
-                    alt={sub.planetName}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/40">
-                    #{idx + 1} RANK
-                  </div>
-                  <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-black/80 backdrop-blur-md text-cyan-300 border border-cyan-400/40 flex items-center gap-1">
-                    <Camera className="w-3 h-3 text-cyan-300" />
-                    <span>5 PHOTOS</span>
-                  </div>
-                </div>
-
-                <div className="p-4 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-display font-bold text-white group-hover:text-amber-300 transition-colors truncate">
-                      {sub.planetName}
-                    </h3>
-                    <span className="text-[10px] font-mono text-cyan-400 shrink-0">
-                      View Dossier →
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-[11px] font-mono text-white/60">
-                    <div
-                      className={`w-4 h-4 rounded-full bg-gradient-to-tr ${
-                        sub.authorAvatarGradient || 'from-cyan-400 to-indigo-600'
-                      } flex items-center justify-center font-bold text-[8px] text-black`}
-                    >
-                      {sub.authorName.slice(0, 1)}
-                    </div>
-                    <span className="truncate">By {sub.authorName}</span>
-                  </div>
-
-                  <p className="text-xs text-white/70 font-sans line-clamp-2 leading-relaxed">
-                    {sub.futurePromise || sub.generatedLore}
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-3.5 border-t border-white/10 flex items-center justify-between gap-2 bg-[#050812]">
-                <button
-                  type="button"
-                  onClick={() => handleVoteContest(sub.id)}
-                  className={`min-h-[40px] flex-1 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    sub.hasVoted
-                      ? 'bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                      : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10'
-                  }`}
-                >
-                  <ThumbsUp className={`w-3.5 h-3.5 ${sub.hasVoted ? 'fill-black' : ''}`} />
-                  <span>{sub.hasVoted ? 'Voted' : 'Vote for World'} ({sub.votesCount})</span>
-                </button>
-
-                <button
-                  type="button"
+                <div
                   onClick={() => handleOpenDossier(sub)}
-                  className="min-h-[40px] px-3 py-1.5 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 transition-colors cursor-pointer text-xs font-mono flex items-center gap-1"
-                  title="Open 5-Photo Dossier"
+                  className="cursor-pointer"
                 >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>Dossier</span>
-                </button>
+                  <div className="relative h-44 w-full overflow-hidden bg-black/90">
+                    <img
+                      src={sub.renders.hero}
+                      alt={sub.planetName}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/40">
+                      #{idx + 1} RANK
+                    </div>
+                    <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-black/80 backdrop-blur-md text-cyan-300 border border-cyan-400/40 flex items-center gap-1">
+                      <Camera className="w-3 h-3 text-cyan-300" />
+                      <span>5 PHOTOS</span>
+                    </div>
+                  </div>
 
-                {onOpenCreator && (
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-sm font-display font-bold text-white group-hover:text-amber-300 transition-colors truncate">
+                        {sub.planetName}
+                      </h3>
+                      <span className="text-[10px] font-mono text-cyan-400 shrink-0">
+                        View Dossier →
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-white/60">
+                      <div
+                        className={`w-4 h-4 rounded-full bg-gradient-to-tr ${
+                          sub.authorAvatarGradient || 'from-cyan-400 to-indigo-600'
+                        } flex items-center justify-center font-bold text-[8px] text-black`}
+                      >
+                        {sub.authorName.slice(0, 1)}
+                      </div>
+                      <span className="truncate">By {sub.authorName}</span>
+                    </div>
+
+                    <p className="text-xs text-white/70 font-sans line-clamp-2 leading-relaxed">
+                      {sub.futurePromise || sub.generatedLore}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3.5 border-t border-white/10 flex items-center justify-between gap-2 bg-[#050812]">
                   <button
                     type="button"
-                    onClick={() => onOpenCreator(sub.authorUsername)}
-                    className="min-h-[40px] px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-cyan-300 transition-colors cursor-pointer text-xs font-mono"
-                    title="View Creator Portfolio"
+                    onClick={() => handleVoteContest(sub.id)}
+                    className={`min-h-[40px] flex-1 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      sub.hasVoted
+                        ? 'bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                        : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10'
+                    }`}
                   >
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    <ThumbsUp className={`w-3.5 h-3.5 ${sub.hasVoted ? 'fill-black' : ''}`} />
+                    <span>{sub.hasVoted ? 'Voted' : 'Vote for World'} ({sub.votesCount})</span>
                   </button>
-                )}
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenDossier(sub)}
+                    className="min-h-[40px] px-3 py-1.5 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 transition-colors cursor-pointer text-xs font-mono flex items-center gap-1"
+                    title="Open 5-Photo Dossier"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Dossier</span>
+                  </button>
+
+                  {onOpenCreator && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenCreator(sub.authorUsername)}
+                      className="min-h-[40px] px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-cyan-300 transition-colors cursor-pointer text-xs font-mono"
+                      title="View Creator Portfolio"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Interactive 5-Photo Planet Dossier Modal */}

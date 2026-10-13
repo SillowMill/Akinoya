@@ -102,140 +102,106 @@ export const derivePlanetAttributesFromHumanAnswers = (answers: WizardAnswers): 
   };
 };
 
-export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
-  {
-    id: 'PLN-2027-AKINOYA-PRIME',
-    userId: 'creator-elena',
-    authorName: 'Elena Vance',
-    authorUsername: 'elena-vance',
-    authorAvatarGradient: 'from-cyan-400 via-blue-500 to-indigo-600',
-    planetName: 'Äkinoya Prime',
-    atmosphere: 'Electric Blue Ionized Resonance & Icy Silhouette Ring',
-    flora: 'Giant Resonance Spore Mushrooms (Glowing Violet & Neon Turquoise)',
-    fauna: 'Leviathan Plasma-Wings drifting in upper troposphere',
-    sonicVibe: 'Deep Modular Sub-Bass & Cinematic ACEScc Synthesizers',
-    visualAesthetic: '2D High-End Anime Sci-Fi Cel-Shaded Art (Sillow Mill Aesthetic)',
-    landmark: 'The Obsidian Spire (Infinite Energy Conduit)',
-    futurePromise: 'Never forget that true beauty lies in curiosity and persistence.',
-    additionalNotes: 'Sub-surface tunnels carry liquid neon energy that pulses in time with atmospheric pressure waves.',
-    generatedLore:
-      'Discovered at the epicenter of the Äkinoya energy sphere, Äkinoya Prime radiates with celestial 2D anime grandeur. Its troposphere is alive with electric blue ionized bioluminescence, where gargantuan spore canopies filter cosmic radiation into pure resonant harmonics. Indigenous pilots utilize the Obsidian Spire to recharge quantum navigation drives before deep-space jumps.',
-    renders: {
-      hero: planetHeroImg, // 1. Main Orbital (akinoya_hero_bg.jpg style)
-      flora: mushroomValleyImg, // 2. Flora (Mood.png panel style)
-      fauna: twilightWorldImg, // 3. Fauna
-      atmosphere: heroBgImg, // 4. Cockpit / Landing Atmosphere
-      landmark: visualizerThumbnailImg, // 5. Landmark / Archival Cover
-      ecosystem: mushroomValleyImg,
-    },
-    votesCount: 88,
-    status: 'FINALIST',
-    createdAt: '2026-10-08',
-    votingDeadline: 'June 30, 2027',
-  },
-  {
-    id: 'PLN-2027-AMLEMIE',
-    userId: 'creator-kaelen',
-    authorName: 'Kaelen Voss',
-    authorUsername: 'kaelen-voss',
-    authorAvatarGradient: 'from-violet-400 via-purple-500 to-fuchsia-600',
-    planetName: 'Ämlemie',
-    atmosphere: 'Cosmic 2D Space Vista & Deep Purple Orbital Rings',
-    flora: 'Silicon-Veined Metallic Foliage & Star-Pollen Canopy',
-    fauna: 'Silicon-Shelled Crystalline Predators & Void Gliders',
-    sonicVibe: 'Aggressive Neurofunk Drops & Industrial Metallic Transients',
-    visualAesthetic: '2D Cel-Shaded Cosmic Anime Concept Art (Sillow Mill House Style)',
-    landmark: 'Celestial Dyson Ring Fragment hovering at equator',
-    futurePromise: 'That technology and nature can harmoniously merge.',
-    additionalNotes: 'Orbital wreckage from the First Collapse has settled into a permanently glowing cosmic particle ring.',
-    generatedLore:
-      'Ämlemie is an enigmatic ringed sanctuary framed in the classic 2D anime space vista style of Sillow Mill. Woven with deep cosmic purple hues and bioluminescent neon turquoise, its celestial ring fragment casts permanent twilight across alien valleys where crystalline predators feed on static electrical discharges.',
-    renders: {
-      hero: exactPlanetImg, // 1. Main Orbital
-      flora: twilightWorldImg, // 2. Flora
-      fauna: mobileBgImg, // 3. Fauna
-      atmosphere: moodboardImg, // 4. Cockpit Atmosphere (Mood.png style)
-      landmark: heroBgImg, // 5. Landmark / Archival Cover
-      ecosystem: twilightWorldImg,
-    },
-    votesCount: 64,
-    status: 'PUBLISHED',
-    createdAt: '2026-10-09',
-    votingDeadline: 'June 30, 2027',
-  },
-  {
-    id: 'PLN-2027-ALKAN-IV',
-    userId: 'creator-sora',
-    authorName: 'Sora Takahashi',
-    authorUsername: 'sora-t',
-    authorAvatarGradient: 'from-emerald-400 via-teal-500 to-cyan-600',
-    planetName: 'Älkan-IV',
-    atmosphere: 'Bioluminescent Neon Forest & Canopy Atmosphere',
-    flora: 'Floating Aerial Kelp, Hydrogen Blossoms & Spore Trees',
-    fauna: 'Bioluminescent Hexapod Crawlers in cockpit view valleys',
-    sonicVibe: 'Glitch Ambient Lo-Fi & Ethereal Tape Saturation',
-    visualAesthetic: '2D Sillow Mill Cockpit Moodboard Style & Cel-Shaded Neon',
-    landmark: 'The Sunken Cobalt Caldera of Upper Äkinoya',
-    futurePromise: 'Curiosity is the compass of the stars.',
-    additionalNotes: 'Sub-glacial geothermal vents create enclosed tropical bioluminescent biomes matching the expedition cockpit moodboard.',
-    generatedLore:
-      'Anchored directly in the visual heritage of the Sillow Mill ship cockpit and landing moodboard, Älkan-IV is a lush bioluminescent frontier world. Glowing turquoise mosses and violet spore canopies illuminate misty alien canopies, echoing with the tape-saturated frequencies of lone interstellar explorers.',
-    renders: {
-      hero: visualizerThumbnailImg, // 1. Main Orbital / Storyboard Hero
-      flora: mushroomValleyImg, // 2. Flora
-      fauna: twilightWorldImg, // 3. Fauna
-      atmosphere: heroBgImg, // 4. Cockpit / Landing Atmosphere
-      landmark: planetHeroImg, // 5. Landmark / Archival Cover
-      ecosystem: mushroomValleyImg,
-    },
-    votesCount: 47,
-    status: 'PUBLISHED',
-    createdAt: '2026-10-10',
-    votingDeadline: 'June 30, 2027',
-  },
-];
+export const MOCK_PLANET_IDS = new Set([
+  'PLN-2027-AKINOYA-PRIME',
+  'PLN-2027-AMLEMIE',
+  'PLN-2027-ALKAN-IV',
+  'PLN-2027-ASPER-7',
+  'PLN-2027-ATHERIS-IX',
+  'PLN-2027-AVORIA-DELTA',
+  'PLN-2027-ZEPHYR',
+  'PLN-2027-AURA',
+  'PLN-2027-CRYO',
+]);
 
-// Retrieve all stored planet submissions (merged with defaults and sanitized with Ä rule)
+export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [];
+
+// Retrieve all stored planet submissions (purges obsolete mocks and enforces Ä rule)
 export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
-  const sanitize = (list: PlanetSubmission[]): PlanetSubmission[] =>
-    list.map((sub) => {
-      if (sub.id === 'PLN-2027-ZEPHYR' || sub.id === 'PLN-2027-AKINOYA-PRIME') {
-        return INITIAL_SUBMISSIONS[0];
-      }
-      if (sub.id === 'PLN-2027-AURA' || sub.id === 'PLN-2027-AMLEMIE') {
-        return INITIAL_SUBMISSIONS[1];
-      }
-      if (sub.id === 'PLN-2027-CRYO' || sub.id === 'PLN-2027-ALKAN-IV') {
-        return INITIAL_SUBMISSIONS[2];
-      }
-      const renders = {
-        hero: sub.renders?.hero || planetHeroImg,
-        flora: sub.renders?.flora || sub.renders?.ecosystem || mushroomValleyImg,
-        fauna: sub.renders?.fauna || twilightWorldImg,
-        atmosphere: sub.renders?.atmosphere || heroBgImg,
-        landmark: sub.renders?.landmark || visualizerThumbnailImg,
-        ecosystem: sub.renders?.ecosystem || sub.renders?.flora || mushroomValleyImg,
-      };
-      return {
-        ...sub,
-        planetName: formatAkinoyaPlanetName(sub.planetName),
-        renders,
-      };
-    });
-
-  if (typeof window === 'undefined') return INITIAL_SUBMISSIONS;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(LOCAL_SUBMISSIONS_KEY);
     if (raw) {
       const parsed: PlanetSubmission[] = JSON.parse(raw);
-      const existingIds = new Set(parsed.map((p) => p.id));
-      const merged = [...parsed, ...INITIAL_SUBMISSIONS.filter((p) => !existingIds.has(p.id))];
-      return sanitize(merged);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((p) => p && p.id && !MOCK_PLANET_IDS.has(p.id))
+          .map((sub) => ({
+            ...sub,
+            planetName: formatAkinoyaPlanetName(sub.planetName),
+            renders: {
+              hero: sub.renders?.hero || planetHeroImg,
+              flora: sub.renders?.flora || sub.renders?.ecosystem || mushroomValleyImg,
+              fauna: sub.renders?.fauna || twilightWorldImg,
+              atmosphere: sub.renders?.atmosphere || heroBgImg,
+              landmark: sub.renders?.landmark || visualizerThumbnailImg,
+              ecosystem: sub.renders?.ecosystem || sub.renders?.flora || mushroomValleyImg,
+            },
+          }));
+      }
     }
   } catch (err) {
     console.warn('[Contest] Error reading stored submissions:', err);
   }
-  return INITIAL_SUBMISSIONS;
+  return [];
+};
+
+/**
+ * Asynchronously fetches live submissions from Supabase user_dossiers
+ */
+export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('user_dossiers')
+        .select('*')
+        .order('votes_count', { ascending: false });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const live: PlanetSubmission[] = data.map((d: any) => ({
+          id: d.id,
+          userId: d.user_id,
+          authorName: d.author_name || 'Anonymous Creator',
+          authorUsername: d.author_username || 'creator',
+          authorEmail: d.author_email || '',
+          authorAvatarGradient: d.author_avatar_gradient || 'from-amber-400 to-amber-600',
+          planetName: formatAkinoyaPlanetName(d.planet_name),
+          atmosphere: d.atmosphere || '',
+          flora: d.flora || '',
+          fauna: d.fauna || '',
+          sonicVibe: d.sonic_vibe || '',
+          visualAesthetic: d.visual_aesthetic || '',
+          landmark: d.landmark || '',
+          additionalNotes: d.additional_notes || '',
+          humanAnswers: d.human_answers || {},
+          generatedLore: d.generated_lore || '',
+          renders: d.renders || {
+            hero: planetHeroImg,
+            flora: mushroomValleyImg,
+            fauna: twilightWorldImg,
+            atmosphere: heroBgImg,
+            landmark: visualizerThumbnailImg,
+            ecosystem: mushroomValleyImg,
+          },
+          votesCount: d.votes_count || 1,
+          status: (d.status as any) || 'PUBLISHED',
+          createdAt: d.created_at || new Date().toISOString(),
+          votingDeadline: 'June 30, 2027',
+        }));
+
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(live));
+          } catch {}
+        }
+        return live;
+      }
+    } catch (err) {
+      console.warn('[Contest] fetchPlanetSubmissions exception:', err);
+    }
+  }
+
+  return getStoredPlanetSubmissions();
 };
 
 // Check if a specific user already has a golden ticket submission
@@ -248,6 +214,58 @@ export const getUserContestSubmission = (userId?: string, email?: string): Plane
       (email && s.authorEmail && s.authorEmail.toLowerCase() === email.toLowerCase())
   );
   return match || null;
+};
+
+export const fetchUserContestSubmission = async (userId?: string, email?: string): Promise<PlanetSubmission | null> => {
+  const localMatch = getUserContestSubmission(userId, email);
+  if (localMatch) return localMatch;
+
+  if (isSupabaseConfigured && (userId || email)) {
+    try {
+      let query = supabase.from('user_dossiers').select('*');
+      if (userId) {
+        query = query.eq('user_id', userId);
+      } else if (email) {
+        query = query.ilike('author_email', email);
+      }
+      const { data, error } = await query.maybeSingle();
+      if (!error && data) {
+        const sub: PlanetSubmission = {
+          id: data.id,
+          userId: data.user_id,
+          authorName: data.author_name || 'Anonymous Creator',
+          authorUsername: data.author_username || 'creator',
+          authorEmail: data.author_email || '',
+          authorAvatarGradient: data.author_avatar_gradient || 'from-amber-400 to-amber-600',
+          planetName: formatAkinoyaPlanetName(data.planet_name),
+          atmosphere: data.atmosphere || '',
+          flora: data.flora || '',
+          fauna: data.fauna || '',
+          sonicVibe: data.sonic_vibe || '',
+          visualAesthetic: data.visual_aesthetic || '',
+          landmark: data.landmark || '',
+          additionalNotes: data.additional_notes || '',
+          humanAnswers: data.human_answers || {},
+          generatedLore: data.generated_lore || '',
+          renders: data.renders || {},
+          votesCount: data.votes_count || 1,
+          status: (data.status as any) || 'PUBLISHED',
+          createdAt: data.created_at || new Date().toISOString(),
+          votingDeadline: 'June 30, 2027',
+        };
+        try {
+          const existing = getStoredPlanetSubmissions();
+          const updated = [sub, ...existing.filter((s) => s.id !== sub.id)];
+          localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(updated));
+        } catch {}
+        return sub;
+      }
+    } catch (err) {
+      console.warn('[Contest] fetchUserContestSubmission exception:', err);
+    }
+  }
+
+  return null;
 };
 
 // Generate high-end AI cinematic lore from wizard answers adhering strictly to Sillow Mill aesthetic
@@ -510,4 +528,56 @@ export const subscribeToPlanetSubmissions = (
   return () => {
     supabase.removeChannel(channel);
   };
+};
+
+export interface PlanetComment {
+  id: string;
+  planetId: string;
+  authorName: string;
+  authorUsername: string;
+  text: string;
+  createdAt: string;
+}
+
+export const getPlanetComments = (planetId: string): PlanetComment[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(`akinoya_planet_comments_${planetId}`);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [
+    {
+      id: `comm-1-${planetId}`,
+      planetId,
+      authorName: 'Akinoya Lore Scout',
+      authorUsername: 'lorescout',
+      text: 'The atmospheric resonance in this sector feels straight out of the Sillow Mill pilot episode! Voted +1.',
+      createdAt: '2 hours ago',
+    },
+    {
+      id: `comm-2-${planetId}`,
+      planetId,
+      authorName: 'Nova Architect',
+      authorUsername: 'nova_arch',
+      text: 'Exquisite color palette. The bioluminescent flora composition is incredible.',
+      createdAt: '5 hours ago',
+    },
+  ];
+};
+
+export const addPlanetComment = (
+  planetId: string,
+  comment: Omit<PlanetComment, 'id' | 'createdAt'>
+): PlanetComment[] => {
+  const existing = getPlanetComments(planetId);
+  const newComment: PlanetComment = {
+    ...comment,
+    id: `comm-${Date.now()}`,
+    createdAt: 'Just now',
+  };
+  const updated = [newComment, ...existing];
+  try {
+    localStorage.setItem(`akinoya_planet_comments_${planetId}`, JSON.stringify(updated));
+  } catch {}
+  return updated;
 };
