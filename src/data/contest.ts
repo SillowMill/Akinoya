@@ -435,6 +435,19 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
   return null;
 };
 
+export const clearUserContestSubmission = (userId?: string, email?: string): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    const list = getStoredPlanetSubmissions();
+    const filtered = list.filter((s) => {
+      if (userId && s.userId === userId) return false;
+      if (email && s.authorEmail && s.authorEmail.toLowerCase() === email.toLowerCase()) return false;
+      return true;
+    });
+    localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(filtered));
+  } catch {}
+};
+
 // Generate high-end AI cinematic lore from wizard answers adhering strictly to Sillow Mill aesthetic
 export const generatePlanetLore = (answers: WizardAnswers, authorName: string): string => {
   const planetName = formatAkinoyaPlanetName(answers.planetName);

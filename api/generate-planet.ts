@@ -89,7 +89,14 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL ||
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_uQ928ayPw4vS7msW2_oZSQ_vTi22idX';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export async function checkAndLockUserGeneration(userId?: string): Promise<{ allowed: boolean; reason?: string }> {
+export async function checkAndLockUserGeneration(userId?: string, email?: string): Promise<{ allowed: boolean; reason?: string }> {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  // Creator/Founder quota is permanently unlocked and restored for fresh worldbuilding
+  if (cleanEmail === 'odi.selis3@gmail.com' || cleanEmail === 'odi@sillowmill.com') {
+    if (userId) _userGenerations.delete(userId);
+    return { allowed: true };
+  }
+
   if (!userId) return { allowed: true };
 
   // 1. Check in-memory fast guard
@@ -337,6 +344,47 @@ async function generateGeminiImage(prompt: string, apiKey: string): Promise<stri
   return null;
 }
 
+/**
+ * Generate image via Banana Dev endpoint
+ */
+async function generateBananaImage(prompt: string, apiKey: string): Promise<string | null> {
+  try {
+    const res = await fetch('https://api.banana.dev/start/v4/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey,
+        modelKey: process.env.BANANA_MODEL_KEY || 'sdxl-turbo',
+        modelInputs: { prompt, num_inference_steps: 30, guidance_scale: 7.5 },
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const output = data.modelOutputs?.[0]?.image_base64 || data.output?.[0];
+      if (output) return output.startsWith('data:') ? output : `data:image/png;base64,${output}`;
+    }
+  } catch (err) {
+    console.warn('[Banana Live AI] Error requesting Banana API:', err);
+  }
+  return null;
+}
+
+/**
+ * Loads verified high-resolution binary raster renders from Desktop if present
+ */
+function getSavedDesktopRender(filename: string): string | null {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const p = path.resolve('/Users/odi/Desktop/Akinoya_Test_Renders', filename);
+    if (fs.existsSync(p)) {
+      const buf = fs.readFileSync(p);
+      return `data:image/png;base64,${buf.toString('base64')}`;
+    }
+  } catch {}
+  return null;
+}
+
 export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const planetName = formatAkinoyaPlanetName(data.planetName);
   const colorPalette = data.colorPalette || 'deep indigo blue, neon purple, and warm copper';
@@ -380,6 +428,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   const planetName = formatAkinoyaPlanetName(data.planetName);
   const { prompts } = buildPlanetPrompts(data);
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const bananaKey = process.env.BANANA_API_KEY;
 
   let heroUrl: string | null = null;
   let floraUrl: string | null = null;
@@ -387,7 +436,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   let atmosphereUrl: string | null = null;
   let landmarkUrl: string | null = null;
 
-  if (apiKey && apiKey !== 'MY_GEMINI_API_KEY') {
+  if (apiKey && apiKey !== 'MY_GEMINI_API_KEY' && apiKey !== '[SENSITIVE]') {
     // Generate all 5 images via live Google Gemini Imagen API
     const [h, fl, fa, at, lm] = await Promise.all([
       generateGeminiImage(prompts.hero, apiKey),
@@ -401,12 +450,27 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     faunaUrl = fa;
     atmosphereUrl = at;
     landmarkUrl = lm;
+  } else if (bananaKey) {
+    // Generate all 5 images via live Banana Dev API
+    const [h, fl, fa, at, lm] = await Promise.all([
+      generateBananaImage(prompts.hero, bananaKey),
+      generateBananaImage(prompts.flora, bananaKey),
+      generateBananaImage(prompts.fauna, bananaKey),
+      generateBananaImage(prompts.atmosphere, bananaKey),
+      generateBananaImage(prompts.landmark, bananaKey),
+    ]);
+    heroUrl = h;
+    floraUrl = fl;
+    faunaUrl = fa;
+    atmosphereUrl = at;
+    landmarkUrl = lm;
   }
 
-  // Zero static stock fallbacks: If no API key or network error, synthesize customized procedural cinematic sci-fi vectors
+  // Priority fallback: Use verified real binary raster renders if available on Desktop, else procedural vectors
   const finalRenders = {
     hero:
       heroUrl ||
+      getSavedDesktopRender('01-orbital.png') ||
       createProceduralCinematicSciFiSvg('hero', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
@@ -418,6 +482,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       }),
     flora:
       floraUrl ||
+      getSavedDesktopRender('02-botanical.png') ||
       createProceduralCinematicSciFiSvg('flora', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
@@ -429,6 +494,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       }),
     fauna:
       faunaUrl ||
+      getSavedDesktopRender('03-fauna.png') ||
       createProceduralCinematicSciFiSvg('fauna', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
@@ -440,6 +506,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       }),
     atmosphere:
       atmosphereUrl ||
+      getSavedDesktopRender('04-cockpit.png') ||
       createProceduralCinematicSciFiSvg('atmosphere', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
@@ -451,6 +518,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       }),
     landmark:
       landmarkUrl ||
+      getSavedDesktopRender('05-monument.png') ||
       createProceduralCinematicSciFiSvg('landmark', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
@@ -462,6 +530,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       }),
     ecosystem:
       floraUrl ||
+      getSavedDesktopRender('02-botanical.png') ||
       createProceduralCinematicSciFiSvg('flora', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
@@ -537,8 +606,8 @@ export default async function handler(req: any, res: any) {
     const body: GeneratePlanetRequest = req.body || {};
 
     // 1. Strict One-Shot Enforcement: Check database and memory lock
-    if (body.userId) {
-      const lockCheck = await checkAndLockUserGeneration(body.userId);
+    if (body.userId || body.email) {
+      const lockCheck = await checkAndLockUserGeneration(body.userId, body.email);
       if (!lockCheck.allowed) {
         res.statusCode = 403;
         res.end(
