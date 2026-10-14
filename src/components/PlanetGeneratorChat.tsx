@@ -43,12 +43,12 @@ interface StepConfig {
 export const WIZARD_STEPS: StepConfig[] = [
   {
     step: 1,
-    title: 'Planeet Naam & Aanduiding',
+    title: 'Planet Name & Designation',
     category: 'PLANET NAME',
     prompt:
-      'Hoe wil jij je planeet noemen? (What do you want to name your planet?)\nGive your new world an evocative, organic name (e.g. Arbitron, Lucina, Elysia, Valerion). Machine codes, serial numbers, hyphens, and numbers are strictly prohibited.',
-    placeholder: 'e.g., Arbitron, Lucina, Elysia, Valerion, Aethelgard...',
-    helperExample: 'Arbitron',
+      'What do you want to name your planet?\nGive your new world an evocative, organic name (e.g. Ämlemi, Valerion, Elysia, Aethelgard). Machine codes, serial numbers, hyphens, and numbers are strictly prohibited.',
+    placeholder: 'e.g., Ämlemi, Valerion, Elysia, Aethelgard...',
+    helperExample: 'Ämlemi',
     icon: Globe2,
     field: 'planetName',
   },

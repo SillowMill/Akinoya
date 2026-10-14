@@ -44,6 +44,12 @@ import stage02Img from '../assets/images/stage_02_character_reference_sheet.jpg'
 import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
 import stage04Img from '../assets/images/stage_04_cybernetic_prompt_datastream.jpg';
 import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
+
+// Character Locking Master Assets (from Character Locking folder)
+import millCharacterImg from '../assets/images/character_locking/MilLLL.PNG';
+import odiCharacterImg from '../assets/images/character_locking/Odi.JPG';
+import sillowCharacterImg from '../assets/images/character_locking/Sillow.JPG';
+
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME } from '../utils/certificate';
 
 export interface DriveFolderVaultProps {
@@ -233,41 +239,45 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           files: [
             {
               id: 'file-02-1',
-              name: 'Sillow_Lead_Explorer_Turnaround.png',
-              extension: 'PNG',
-              size: '14.2 MB',
-              typeBadge: '4K Model Sheet',
+              name: 'Sillow.JPG',
+              extension: 'JPG',
+              size: '280 KB',
+              typeBadge: 'Explorer Sheet',
               badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
-              modified: 'Oct 13, 2026',
+              modified: 'Oct 14, 2026',
               isLocked: false,
-              downloadUrl: stage02Img,
-              downloadFileName: 'Sillow_Lead_Explorer_Turnaround.png',
-              previewImg: stage02Img,
-              description: 'High-res 4-angle turnaround sheet with cybernetic visor annotations and exploration suit Mark IV specs.',
+              downloadUrl: '/assets/character_locking/Sillow.JPG',
+              downloadFileName: 'Sillow.JPG',
+              previewImg: sillowCharacterImg,
+              description: 'Master 4-angle turnaround character reference sheet for Sillow with cybernetic visor annotations and exploration suit Mark IV specs.',
             },
             {
               id: 'file-02-2',
-              name: 'Odi_Mechanic_Rig_Turnaround.png',
-              extension: 'PNG',
-              size: '13.8 MB',
-              typeBadge: '4K Model Sheet',
-              badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
-              modified: 'Oct 13, 2026',
+              name: 'Odi.JPG',
+              extension: 'JPG',
+              size: '275 KB',
+              typeBadge: 'Scout Rig',
+              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+              modified: 'Oct 14, 2026',
               isLocked: false,
-              previewImg: stage02Img,
-              description: 'Turnaround plates detailing Odi’s armored reconnaissance suit, tool holsters, and heavy terrain boots.',
+              downloadUrl: '/assets/character_locking/Odi.JPG',
+              downloadFileName: 'Odi.JPG',
+              previewImg: odiCharacterImg,
+              description: 'Turnaround plates detailing Odi’s armored reconnaissance suit, tactical harness, tool holsters, and heavy terrain boots.',
             },
             {
               id: 'file-02-3',
-              name: 'Mill_BioAnalyst_Suit_Turnaround.png',
+              name: 'MiLLLL.PNG',
               extension: 'PNG',
-              size: '12.6 MB',
-              typeBadge: '4K Model Sheet',
+              size: '6.7 MB',
+              typeBadge: '4K Master Anchor',
               badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-              modified: 'Oct 13, 2026',
+              modified: 'Oct 14, 2026',
               isLocked: false,
-              previewImg: stage02Img,
-              description: 'Character turnaround model sheet for Mill in environmental bio-analyst suit with cyan visor display.',
+              downloadUrl: '/assets/character_locking/MilLLL.PNG',
+              downloadFileName: 'MiLLLL.PNG',
+              previewImg: millCharacterImg,
+              description: 'Master lossless character turnaround and visual anchor plate for Mill with environmental bio-analyst suit and cyan visor display.',
             },
           ],
         },
@@ -624,35 +634,37 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       {/* ======================================================== */}
       <div className="rounded-3xl bg-gradient-to-b from-[#0f1424]/95 via-[#0b0f1a]/95 to-[#070912]/98 border border-cyan-500/30 shadow-[0_10px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(0,242,254,0.12)] overflow-hidden">
         {/* macOS Title Bar with Window Controls */}
-        <div className="px-5 py-3.5 bg-black/60 border-b border-white/10 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="px-3 sm:px-5 py-2.5 sm:py-3.5 bg-black/60 border-b border-white/10 flex items-center justify-between gap-2 sm:gap-4 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Apple Traffic Light Dots */}
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] inline-block shadow-sm" />
-              <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] inline-block shadow-sm" />
-              <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] inline-block shadow-sm" />
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] inline-block shadow-sm" />
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] inline-block shadow-sm" />
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#27c93f] border border-[#1aab29] inline-block shadow-sm" />
             </div>
 
-            <div className="h-4 w-px bg-white/15 mx-1" />
+            <div className="h-4 w-px bg-white/15 mx-0.5 sm:mx-1 shrink-0" />
 
-            <div className="flex items-center gap-2 text-xs font-mono text-white/70">
-              <HardDrive className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="font-bold text-white">Sillow Mill Production Drive</span>
-              <span className="text-white/40">· macOS / Drive Hybrid Vault</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-mono text-white/70 min-w-0 truncate">
+              <HardDrive className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span className="font-bold text-white truncate">Sillow Mill Drive</span>
+              <span className="text-white/40 hidden md:inline truncate">· macOS / Drive Hybrid Vault</span>
             </div>
           </div>
 
           {/* Access Status Pill */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {isMember ? (
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold flex items-center gap-1 shadow-sm">
-                <Crown className="w-3 h-3 text-emerald-400" />
-                PAID SUBSCRIBER ACTIVE
+              <span className="text-[9.5px] sm:text-[10px] font-mono px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold flex items-center gap-1 shadow-sm whitespace-nowrap">
+                <Crown className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span className="hidden xs:inline">PAID SUBSCRIBER ACTIVE</span>
+                <span className="xs:hidden">SUBSCRIBER</span>
               </span>
             ) : (
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold flex items-center gap-1 shadow-sm">
-                <Lock className="w-3 h-3 text-amber-400" />
-                VIEW-ONLY PREVIEWS · GATED
+              <span className="text-[9.5px] sm:text-[10px] font-mono px-2 sm:px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold flex items-center gap-1 shadow-sm whitespace-nowrap">
+                <Lock className="w-3 h-3 text-amber-400 shrink-0" />
+                <span className="hidden xs:inline">VIEW-ONLY PREVIEWS · GATED</span>
+                <span className="xs:hidden">GATED</span>
               </span>
             )}
           </div>

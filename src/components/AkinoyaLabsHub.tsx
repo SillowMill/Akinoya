@@ -53,6 +53,11 @@ import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
 import stage04Img from '../assets/images/stage_04_cybernetic_prompt_datastream.jpg';
 import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
 
+// Character Locking Master Assets (from Character Locking folder)
+import millLockingImg from '../assets/images/character_locking/MilLLL.PNG';
+import odiLockingImg from '../assets/images/character_locking/Odi.JPG';
+import sillowLockingImg from '../assets/images/character_locking/Sillow.JPG';
+
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME } from '../utils/certificate';
 
 export const LABS_RELEASE_DATE = new Date('2027-01-09T00:00:00Z');
@@ -103,6 +108,15 @@ interface StageDetail {
     specs: Array<{ key: string; val: string }>;
   };
   technicalSpecs: Array<{ label: string; value: string }>;
+  characterDownloads?: Array<{
+    name: string;
+    fileName: string;
+    size: string;
+    format: string;
+    img: string;
+    downloadUrl: string;
+    description: string;
+  }>;
 }
 
 // Stylized Footprint Pair SVG Icon ("de voetstapjes")
@@ -323,9 +337,9 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       subtitle: 'Multi-modal conditioning and character turnaround sheets',
       vaultFolderMapping: '02 · Art Direction',
       isAdvancedLocked: false,
-      heroImage: stage02Img,
-      heroImageAlt: 'Multi-modal character reference sheet featuring Sillow, Odi, and Mill',
-      themeDescription: 'Multi-modal character reference sheet featuring Sillow, Odi, and Mill (Gemini/Imagen 3)',
+      heroImage: millLockingImg,
+      heroImageAlt: 'Character locking hero visual featuring Mill in biological exploration suit (MiLLLL.PNG)',
+      themeDescription: 'Master character locking turnaround plate (MiLLLL.PNG)',
       millTransmission:
         'Style drift is the silent killer of AI cinema! Anchor your character sheets and color palettes before rendering a single final frame.',
       millProTip:
@@ -353,35 +367,65 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         ],
       },
       odiCaseStudy: {
-        title: 'Locking the Äkinoya Style',
-        summary: 'How Äkinoya.jpg and Mood.png were established as strict style anchors.',
+        title: 'Locking the Äkinoya Style & Core Cast',
+        summary: 'How Mill, Odi, and Sillow were locked using high-resolution turnaround plates.',
         deepDiveNarrative:
-          'To achieve a signature aesthetic across hundreds of experimental generation passes, Odi locked two foundational master images: Äkinoya.jpg for cosmic atmospheric horizons and Mood.png for interior cinematic lighting and creature anatomy. Character sheets were formalized for Sillow (Lead Explorer), Odi (Scout/Mechanic), and Mill (Bio-Analyst), freezing their visors, harnesses, and cyan/purple palette swatches.',
+          'To achieve a signature aesthetic across hundreds of experimental generation passes, Odi locked three foundational character reference sheets from the Character Locking vault: Mill in her environmental bio-analyst suit (MiLLLL.PNG), Odi in tactical mechanic reconnaissance armor (Odi.JPG), and Sillow as the lead planetary explorer (Sillow.JPG). Character sheets were formalized, freezing their visors, harnesses, and cyan/purple palette swatches.',
         previewThumbnails: [
-          { img: moodboardImg, caption: 'Mood.png Primary Atmospheric Style Anchor' },
-          { img: akinoyaVistaImg, caption: 'Äkinoya.jpg Twilight Planetary Horizon' },
+          { img: millLockingImg, caption: 'Mill Lead Bio-Analyst Master Turnaround (MiLLLL.PNG)' },
+          { img: odiLockingImg, caption: 'Odi Scout Mechanic Turnaround (Odi.JPG)' },
+          { img: sillowLockingImg, caption: 'Sillow Lead Explorer Turnaround (Sillow.JPG)' },
         ],
       },
+      characterDownloads: [
+        {
+          name: 'Mill — Lead Bio-Analyst Master Plate',
+          fileName: 'MilLLL.PNG',
+          size: '6.7 MB',
+          format: '4K UHD Lossless PNG',
+          img: millLockingImg,
+          downloadUrl: '/assets/character_locking/MilLLL.PNG',
+          description: 'Master lossless character turnaround and visual anchor plate for Mill with environmental bio-analyst suit and cyan visor.',
+        },
+        {
+          name: 'Odi — Scout & Mechanic Model Sheet',
+          fileName: 'Odi.JPG',
+          size: '275 KB',
+          format: 'High-Res JPG · 300 DPI',
+          img: odiLockingImg,
+          downloadUrl: '/assets/character_locking/Odi.JPG',
+          description: 'Armored reconnaissance suit model plate detailing tactical harness, tool holsters, and terrain equipment.',
+        },
+        {
+          name: 'Sillow — Lead Explorer Master Sheet',
+          fileName: 'Sillow.JPG',
+          size: '280 KB',
+          format: 'High-Res JPG · 300 DPI',
+          img: sillowLockingImg,
+          downloadUrl: '/assets/character_locking/Sillow.JPG',
+          description: 'Master 4-angle turnaround character sheet for Sillow with cybernetic visor annotations and exploration suit Mark IV specs.',
+        },
+      ],
       masterAsset: {
-        title: 'Äkinoya Master Style Anchor Pack v1',
-        fileName: 'Sillow_Lead_Explorer_Turnaround.png',
-        fileSize: '28.6 MB',
-        fileFormat: 'ZIP Archive (4K PNGs + ASE Swatches)',
-        vaultPath: 'Drive / 02 · Art Direction & Character Anchors',
-        description: '24 high-resolution reference anchors, character turnaround plates, and digital optical token tables.',
-        downloadUrl: moodboardImg,
-        downloadFileName: 'Akinoya_Style_Anchor_Pack_v1.png',
+        title: 'Äkinoya Character Locking Master Pack (Mill, Odi, Sillow)',
+        fileName: 'MilLLL.PNG',
+        fileSize: '7.3 MB',
+        fileFormat: 'PNG + JPG Master Set',
+        vaultPath: 'Drive / 02 · Art Direction & Character Anchors / Character_Sheets_Sillow_Odi_Mill',
+        description: 'Complete 3-character high-resolution reference locking plates: MiLLLL.PNG (Mill), Odi.JPG (Odi), and Sillow.JPG (Sillow).',
+        downloadUrl: '/assets/character_locking/MilLLL.PNG',
+        downloadFileName: 'MilLLL.PNG',
         specs: [
           { key: 'Resolution', val: '4096 x 2160 (4K UHD)' },
-          { key: 'Color Profiles', val: 'ACEScc + sRGB' },
-          { key: 'Character Plates', val: 'Sillow, Odi, Mill (360°)' },
-          { key: 'Access Tier', val: 'Paid Monthly Subscriber / VIP' },
+          { key: 'Lead Character', val: 'Mill (MiLLLL.PNG)' },
+          { key: 'Scout Rig', val: 'Odi (Odi.JPG)' },
+          { key: 'Explorer Sheet', val: 'Sillow (Sillow.JPG)' },
         ],
       },
       technicalSpecs: [
         { label: 'Conditioning Denoise', value: '0.65 – 0.72' },
         { label: 'Palette Swatches', value: '#00f2fe / #b142f0' },
-        { label: 'Character Rigs', value: 'Sillow, Odi, Mill' },
+        { label: 'Character Locking', value: 'Mill, Odi, Sillow' },
         { label: 'Diffusion Model', value: 'Imagen 3 Multi-Modal' },
       ],
     },
@@ -653,6 +697,36 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     }
   };
 
+  const handleDownloadCustomFile = (url: string, fileName: string) => {
+    if (!isMember) {
+      soundManager.playTone(330, 0.08);
+      alert(
+        `🔒 Character Sheet Download Restricted\n\nDirect file downloads from the Äkinoya Vault require an active Paid Monthly Subscription or VIP Pass.\n\nFile: ${fileName}\nOfficial Public Release: January 9, 2027.`
+      );
+      if (onOpenAuthModal) onOpenAuthModal();
+      return;
+    }
+
+    soundManager.playTone(720, 0.09);
+    try {
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.65 },
+        colors: ['#00f2fe', '#fbbf24', '#b142f0'],
+      });
+    } catch {
+      // Fallback
+    }
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="relative w-full text-white font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Background Cosmic Atmosphere */}
@@ -850,8 +924,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
                   {/* Full-Width Mobile Cards & Staggered Desktop Layout */}
                   <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-14 items-center">
-                    {/* Visual Card Column */}
-                    <div className={`space-y-4 ${isEven ? 'md:order-1' : 'md:order-2'}`}>
+                    {/* Visual Card Column (Hidden on Mobile for Stage 01 for Clean Text Layout) */}
+                    <div className={`space-y-4 ${isEven ? 'md:order-1' : 'md:order-2'} ${stage.id === 1 ? 'hidden md:block' : ''}`}>
                       <div
                         onClick={() => handleOpenStageModal(stage)}
                         className={`relative rounded-3xl overflow-hidden border transition-all cursor-pointer shadow-[0_4px_35px_rgba(0,0,0,0.7)] ${
@@ -1286,6 +1360,85 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                   ))}
                 </div>
               </div>
+
+              {/* Character Locking Download Plates (Stage 02 Custom Master Files) */}
+              {selectedStageForModal.characterDownloads && (
+                <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#0e1222]/90 to-black/90 border border-purple-500/40 space-y-4 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+                  <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Crown className="w-4 h-4 text-purple-400" />
+                      <h4 className="text-sm font-mono font-bold text-purple-200 tracking-wider uppercase">
+                        Character Locking Vault Plates (MiLLLL.PNG · Odi.JPG · Sillow.JPG)
+                      </h4>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-400/30">
+                      3 MASTER PLATES
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-white/70 font-sans">
+                    Official character turnaround sheets and visual anchors from the Character Locking vault, ready for direct multi-modal conditioning and pipeline study.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                    {selectedStageForModal.characterDownloads.map((char) => (
+                      <div
+                        key={char.fileName}
+                        className="p-3.5 rounded-xl bg-black/60 border border-white/10 hover:border-purple-400/40 space-y-3 flex flex-col justify-between transition-all"
+                      >
+                        <div className="space-y-2">
+                          <div
+                            onClick={() => setSelectedPreviewImage(char.img)}
+                            className="aspect-[4/3] rounded-lg overflow-hidden bg-black/80 border border-white/10 cursor-pointer relative group/char"
+                          >
+                            <img
+                              src={char.img}
+                              alt={char.name}
+                              className="w-full h-full object-cover group-hover/char:scale-105 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
+                              <span className="text-[9.5px] font-mono text-purple-300 truncate">
+                                Click to inspect plate
+                              </span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="flex items-center justify-between text-xs font-mono font-bold text-white">
+                              <span className="truncate">{char.fileName}</span>
+                              <span className="text-[10px] text-purple-300 shrink-0 font-normal">{char.size}</span>
+                            </div>
+                            <span className="text-[10px] font-mono text-white/50 block">{char.name}</span>
+                            <p className="text-[10.5px] text-white/70 font-sans mt-1 line-clamp-2">
+                              {char.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        {isMember ? (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadCustomFile(char.downloadUrl, char.fileName)}
+                            className="w-full py-2 px-3 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Download {char.fileName}</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadCustomFile(char.downloadUrl, char.fileName)}
+                            className="w-full py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Lock className="w-3 h-3 text-amber-400" />
+                            <span>Locked · Subscribers</span>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Master Archive Download Card (Clean UI - Uploaders Removed) */}
               <div className="p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-black/90 border border-cyan-500/40 space-y-4 shadow-[0_0_30px_rgba(0,242,254,0.15)]">

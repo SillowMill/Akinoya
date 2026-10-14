@@ -11,14 +11,21 @@ import heroBgImg from '../assets/images/akinoya_hero_bg.jpg';
 import moodboardImg from '../assets/images/Mood.png';
 import mobileBgImg from '../assets/images/akinoya_mobile_bg_1790853703270.jpg';
 
-const LOCAL_SUBMISSIONS_KEY = 'akinoya_planet_submissions';
+// 5 Canonical Ämlemi Showcase Renders (from Akinoya_Test_Renders)
+import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
+import amlemiBotanicalImg from '../assets/images/amlemi_renders/02-botanical.png';
+import amlemiFaunaImg from '../assets/images/amlemi_renders/03-fauna.png';
+import amlemiCockpitImg from '../assets/images/amlemi_renders/04-cockpit.png';
+import amlemiMonumentImg from '../assets/images/amlemi_renders/05-monument.png';
+
+const LOCAL_SUBMISSIONS_KEY = 'akinoya_planet_submissions_v5';
 const LOCAL_CONTEST_VOTES_KEY = 'akinoya_contest_votes';
 
 /**
  * Endless Organic Naming Protocol:
  * Generates pure, evocative, organic proper names with endless variation.
  * STRICTLY PROHIBITED: Sci-fi serial numbers, hyphens, technical machine codes, digits, or underscores.
- * REQUIRED: Pure organic proper names (e.g. Arbitron, Lucina, Lucia, Elysia, Valerion, Aethelgard, Zephyria).
+ * REQUIRED: Pure organic proper names (e.g. Ämlemi, Elysia, Valerion, Aethelgard, Zephyria).
  */
 const ORGANIC_NAME_PREFIXES = [
   'Arbi', 'Luci', 'Ely', 'Vale', 'Aethel', 'Zephy', 'Sola', 'Aure', 'Celes', 'Vespe',
@@ -121,32 +128,35 @@ export const MOCK_PLANET_IDS = new Set([
   'PLN-2027-ZEPHYR',
   'PLN-2027-AURA',
   'PLN-2027-CRYO',
+  'planet-arbitron-genesis-01',
+  'planet-lucina-genesis-02',
+  'planet-elysia-genesis-03',
 ]);
 
 /**
- * 3 Seeded Authentic High-Fidelity Test Planets:
- * 1. Arbitron (Odi Selis - #1 Ranked, 42 votes)
- * 2. Lucina (Esther Philippen - #2 Ranked, 38 votes)
- * 3. Elysia (Sillow Mill Archive - #3 Ranked, 29 votes)
+ * Single Canonical Community Benchmark Planet:
+ * Ämlemi (Odi Selis - #1 Showcase, 42 votes)
+ * Linked to the 5 official cinematic test renders from Akinoya_Test_Renders:
+ * 01-orbital.png, 02-botanical.png, 03-fauna.png, 04-cockpit.png, 05-monument.png
  */
 export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
   {
-    id: 'planet-arbitron-genesis-01',
+    id: 'planet-amlemi-genesis-01',
     userId: 'user-odi-founder',
     authorName: 'Odi Selis',
     authorUsername: 'odiselis',
-    authorEmail: 'Odi@sillowmill.com',
+    authorEmail: 'odi.selis3@gmail.com',
     authorAvatarGradient: 'from-amber-400 to-yellow-600',
-    planetName: 'Arbitron',
-    atmosphere: 'Dense ionized argon atmosphere radiating with deep cobalt blue and electric auroral flares.',
-    flora: 'Bioluminescent crystalline forests and resonant spore canopies humming at 432Hz.',
-    fauna: 'Apex celestial plasma gliders soaring through high-altitude electromagnetic jet streams.',
-    sonicVibe: 'Deep analog modular synthesis, 432Hz harmonic drone, sub-bass seismic pulse.',
+    planetName: 'Ämlemi',
+    atmosphere: 'Dense ionized argon atmosphere radiating with deep cobalt blue, incandescent amber hues, and electric auroral filaments.',
+    flora: 'Bioluminescent crystalline forests, giant resonant fungal canopies, and photosynthetic spore flora humming at 432Hz.',
+    fauna: 'Apex celestial plasma gliders and armored reconnaissance creatures soaring through high-altitude electromagnetic currents.',
+    sonicVibe: 'Deep analog modular synthesis, 432Hz harmonic drone, sub-bass seismic impact and tape-saturated cosmic pads.',
     visualAesthetic: 'High-resolution cinematic sci-fi render, photorealistic conceptual space art (Sillow Mill aesthetic).',
-    landmark: 'The Obsidian Spire of Arbitron: An ancient planetary conduit channeling celestial core energy.',
-    additionalNotes: 'Sector #01 of the Äkinoya outer rim. Founding territorial sanctuary.',
+    landmark: 'The Obsidian Spire of Ämlemi: An ancient monumental planetary conduit channeling celestial white dwarf core energy.',
+    additionalNotes: 'Canonical community benchmark sector for the Sillow Mill universe.',
     humanAnswers: {
-      planetName: 'Arbitron',
+      planetName: 'Ämlemi',
       relaxation: 'Walking through ancient redwood groves under twilight and modular synthesis by candlelight.',
       creativeExpression: 'Deep analog synthesizers, cinematic space photography, brutalist architecture.',
       naturalEnvironment: 'Misty mountain ridges overlooking ionized ocean horizons.',
@@ -155,131 +165,33 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       colorPalette: 'Deep cosmic cobalt, ionized cyan, and warm incandescent amber.',
       resilienceStory: 'Forging the Sillow Mill universe from a solitary notebook into an expansive reality.',
       futurePromise: 'Across the ionization rift, light always finds the horizon.',
-      atmosphere: 'Dense ionized argon atmosphere radiating with deep cobalt blue.',
+      atmosphere: 'Dense ionized argon atmosphere radiating with deep cobalt blue and amber filaments.',
       flora: 'Bioluminescent crystalline forests humming at 432Hz.',
       fauna: 'Apex celestial plasma gliders soaring through electromagnetic jet streams.',
       sonicVibe: 'Deep analog modular synthesis, 432Hz harmonic drone.',
       visualAesthetic: 'High-resolution cinematic sci-fi render, photorealistic conceptual space art.',
-      landmark: 'The Obsidian Spire of Arbitron.',
-      additionalNotes: 'Genesis sector.',
+      landmark: 'The Obsidian Spire of Ämlemi.',
+      additionalNotes: 'Canonical community benchmark.',
     },
     futurePromise: 'Across the ionization rift, light always finds the horizon.',
-    generatedLore: `Classified by world architect Odi Selis, Arbitron is an authentic high-resolution frontier sector anchored in the Sillow Mill universe. Anchored strictly to the photorealistic depth of Äkinoya.jpg and the volumetric atmospheric lighting of Mood.png, its skies glow with deep cobalt and incandescent amber.\n\nThe planetary ecology thrives through bioluminescent crystalline forests humming at 432Hz. Across the high troposphere roam apex plasma gliders, while the equatorial meridian is anchored by the ancient Obsidian Spire conduit.\n\nFOUNDING CREED:\n"Across the ionization rift, light always finds the horizon."`,
+    generatedLore: `Classified by world architect Odi Selis, Ämlemi is the premier canonical benchmark sector anchoring the Sillow Mill universe. Anchored strictly to the photorealistic depth of Äkinoya and the volumetric atmospheric lighting of Mood.png, its skies glow with deep cobalt and incandescent amber.\n\nThe planetary ecology thrives through bioluminescent crystalline forests humming at 432Hz. Across the high troposphere roam apex plasma gliders, while the equatorial meridian is anchored by the ancient Obsidian Spire conduit.\n\nFOUNDING CREED:\n"Across the ionization rift, light always finds the horizon."`,
     renders: {
-      hero: planetHeroImg,
-      flora: mushroomValleyImg,
-      fauna: twilightWorldImg,
-      atmosphere: heroBgImg,
-      landmark: visualizerThumbnailImg,
-      ecosystem: mushroomValleyImg,
+      hero: amlemiOrbitalImg,
+      flora: amlemiBotanicalImg,
+      fauna: amlemiFaunaImg,
+      atmosphere: amlemiCockpitImg,
+      landmark: amlemiMonumentImg,
+      ecosystem: amlemiBotanicalImg,
     },
     votesCount: 42,
     hasVoted: false,
     status: 'PUBLISHED',
-    createdAt: '2026-10-12T08:00:00.000Z',
-    votingDeadline: 'June 30, 2027',
-  },
-  {
-    id: 'planet-lucina-genesis-02',
-    userId: 'user-esther-vip-01',
-    authorName: 'Esther Philippen',
-    authorUsername: 'estherp',
-    authorEmail: 'estherphilippen@msn.com',
-    authorAvatarGradient: 'from-cyan-400 to-blue-600',
-    planetName: 'Lucina',
-    atmosphere: 'Stratified crystalline vapor atmosphere with emerald auroras and radiant twilight belts.',
-    flora: 'Bioluminescent fungal canopies and silver fern ecosystems thriving along thermal fissures.',
-    fauna: 'Silken luminescent manta gliders migrating through low-gravity cloud corridors.',
-    sonicVibe: 'Cinematic ambient strings, sub-bass pulse, tape reverberation and warm analog pads.',
-    visualAesthetic: 'High-resolution cinematic sci-fi render, photorealistic conceptual space art.',
-    landmark: 'The Luminous Obsidian Citadel: Ancient monolithic archive preserving planetary frequency.',
-    additionalNotes: 'Founding Member Copy #1 sector.',
-    humanAnswers: {
-      planetName: 'Lucina',
-      relaxation: 'Quiet moments of reading by dawn light and walking beside serene waters.',
-      creativeExpression: 'Acoustic piano, cinematic orchestral textures, minimal design.',
-      naturalEnvironment: 'A secluded crystalline fjord under a dual-star twilight sky.',
-      lifePhilosophy: 'Grace, patience, and unwavering belief in organic beauty.',
-      admiredCreature: 'The oceanic manta ray drifting effortlessly through silent depths.',
-      colorPalette: 'Luminous emerald, twilight indigo, and crystalline pearl.',
-      resilienceStory: 'Finding strength through quiet perseverance during times of uncertainty.',
-      futurePromise: 'In silence and perseverance, the crystalline seas awaken.',
-      atmosphere: 'Stratified crystalline vapor atmosphere with emerald auroras.',
-      flora: 'Bioluminescent fungal canopies and silver fern ecosystems.',
-      fauna: 'Silken luminescent manta gliders migrating through low-gravity corridors.',
-      sonicVibe: 'Cinematic ambient strings, sub-bass pulse, tape reverberation.',
-      visualAesthetic: 'High-resolution cinematic sci-fi render.',
-      landmark: 'The Luminous Obsidian Citadel.',
-      additionalNotes: 'Founding Copy #1.',
-    },
-    futurePromise: 'In silence and perseverance, the crystalline seas awaken.',
-    generatedLore: `Synthesized by founding architect Esther Philippen, Lucina stands as an ethereal sanctuary sector within the Äkinoya celestial cluster. Locked to the photorealistic cosmic lighting of Äkinoya.jpg and the deep organic textures of Mood.png, Lucina radiates with luminous emerald twilight.\n\nIts valleys harbor bioluminescent flora that pulse with oceanic calm. High above, silken manta gliders navigate low-gravity cloud valleys, while the horizon is crowned by the Luminous Obsidian Citadel.\n\nFOUNDING CREED:\n"In silence and perseverance, the crystalline seas awaken."`,
-    renders: {
-      hero: moodboardImg,
-      flora: twilightWorldImg,
-      fauna: mushroomValleyImg,
-      atmosphere: heroBgImg,
-      landmark: planetHeroImg,
-      ecosystem: twilightWorldImg,
-    },
-    votesCount: 38,
-    hasVoted: false,
-    status: 'PUBLISHED',
-    createdAt: '2026-10-13T09:30:00.000Z',
-    votingDeadline: 'June 30, 2027',
-  },
-  {
-    id: 'planet-elysia-genesis-03',
-    userId: 'user-sillow-archive',
-    authorName: 'Sillow Mill Archive',
-    authorUsername: 'sillowmill',
-    authorEmail: 'contact@sillowmill.com',
-    authorAvatarGradient: 'from-purple-500 to-indigo-600',
-    planetName: 'Elysia',
-    atmosphere: 'Ionized atmospheric halo refracting golden sunlight through violet planetary rings.',
-    flora: 'Towering solar lichen spires and bioluminescent moss terraces capturing geothermal heat.',
-    fauna: 'High-speed kinetic raptors with iridescent plasma plumes navigating canyon ridges.',
-    sonicVibe: 'Ethereal choral textures, analog brass swells, ACEScc cosmic pads.',
-    visualAesthetic: 'High-resolution cinematic sci-fi render, photorealistic conceptual space art.',
-    landmark: 'The Grand Resonant Spire: A colossal spire tuned to the cosmic frequency of Äkinoya.',
-    additionalNotes: 'Archival sector dedicated to community worldbuilders.',
-    humanAnswers: {
-      planetName: 'Elysia',
-      relaxation: 'Deep listening sessions on analog monitors surrounded by natural foliage.',
-      creativeExpression: 'Orchestral electronic crossover, photorealistic sci-fi cinematography.',
-      naturalEnvironment: 'High alpine volcanic plateaus overlooking expansive cloud oceans.',
-      lifePhilosophy: 'Harmony forged between organic resonance and celestial architecture.',
-      admiredCreature: 'The falcon soaring over boundless horizons with unwavering clarity.',
-      colorPalette: 'Deep violet, burnished brass, and radiant solar gold.',
-      resilienceStory: 'Transforming technical limitation into artistic innovation.',
-      futurePromise: 'Harmony forged between organic resonance and celestial architecture.',
-      atmosphere: 'Ionized atmospheric halo refracting golden sunlight.',
-      flora: 'Solar lichen spires and bioluminescent moss terraces.',
-      fauna: 'Kinetic raptors with iridescent plasma plumes.',
-      sonicVibe: 'Ethereal choral textures, analog brass swells.',
-      visualAesthetic: 'High-resolution cinematic sci-fi render.',
-      landmark: 'The Grand Resonant Spire.',
-      additionalNotes: 'Sillow Mill Genesis archive.',
-    },
-    futurePromise: 'Harmony forged between organic resonance and celestial architecture.',
-    generatedLore: `Documented by the Sillow Mill Archive, Elysia is an iconic planetary sector anchoring the 2027 Lore Governance Council. Composed strictly from the photorealistic lighting of Äkinoya.jpg and the panoramic perspective of Mood.png, Elysia features majestic violet rings and warm golden daylight.\n\nSolar lichen terraces blanket volcanic plateaus while kinetic raptors soar through thermal updrafts. The Grand Resonant Spire stands as a beacon for all creators forging sectors in Äkinoya.\n\nFOUNDING CREED:\n"Harmony forged between organic resonance and celestial architecture."`,
-    renders: {
-      hero: visualizerThumbnailImg,
-      flora: mushroomValleyImg,
-      fauna: heroBgImg,
-      atmosphere: moodboardImg,
-      landmark: planetHeroImg,
-      ecosystem: mushroomValleyImg,
-    },
-    votesCount: 29,
-    hasVoted: false,
-    status: 'PUBLISHED',
-    createdAt: '2026-10-13T14:15:00.000Z',
+    createdAt: '2026-10-14T12:00:00.000Z',
     votingDeadline: 'June 30, 2027',
   },
 ];
 
-// Retrieve all stored planet submissions (purges obsolete mocks and seeds 3 authentic test planets)
+// Retrieve all stored planet submissions (purges obsolete mocks and seeds single benchmark Ämlemi)
 export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
   if (typeof window === 'undefined') return INITIAL_SUBMISSIONS;
   try {
@@ -287,20 +199,46 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
     if (raw) {
       const parsed: PlanetSubmission[] = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const cleaned = parsed
-          .filter((p) => p && p.id && !MOCK_PLANET_IDS.has(p.id))
-          .map((sub) => ({
-            ...sub,
-            planetName: formatAkinoyaPlanetName(sub.planetName),
-            renders: {
-              hero: sub.renders?.hero || planetHeroImg,
-              flora: sub.renders?.flora || sub.renders?.ecosystem || mushroomValleyImg,
-              fauna: sub.renders?.fauna || twilightWorldImg,
-              atmosphere: sub.renders?.atmosphere || heroBgImg,
-              landmark: sub.renders?.landmark || visualizerThumbnailImg,
-              ecosystem: sub.renders?.ecosystem || sub.renders?.flora || mushroomValleyImg,
-            },
-          }));
+        const cleaned: PlanetSubmission[] = parsed
+          .filter(
+            (p) =>
+              p &&
+              p.id &&
+              !MOCK_PLANET_IDS.has(p.id) &&
+              p.planetName !== 'Arbitron' &&
+              p.planetName !== 'Lucina' &&
+              p.planetName !== 'Elysia'
+          )
+          .map((sub): PlanetSubmission => {
+            const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
+            return {
+              ...sub,
+              planetName: isAmlemi ? 'Ämlemi' : formatAkinoyaPlanetName(sub.planetName),
+              renders: isAmlemi
+                ? {
+                    hero: amlemiOrbitalImg,
+                    flora: amlemiBotanicalImg,
+                    fauna: amlemiFaunaImg,
+                    atmosphere: amlemiCockpitImg,
+                    landmark: amlemiMonumentImg,
+                    ecosystem: amlemiBotanicalImg,
+                  }
+                : {
+                    hero: sub.renders?.hero || amlemiOrbitalImg,
+                    flora: sub.renders?.flora || sub.renders?.ecosystem || amlemiBotanicalImg,
+                    fauna: sub.renders?.fauna || amlemiFaunaImg,
+                    atmosphere: sub.renders?.atmosphere || amlemiCockpitImg,
+                    landmark: sub.renders?.landmark || amlemiMonumentImg,
+                    ecosystem: sub.renders?.ecosystem || sub.renders?.flora || amlemiBotanicalImg,
+                  },
+            };
+          });
+
+        // Ensure Ämlemi is always present as the benchmark
+        if (!cleaned.some((p) => p.planetName === 'Ämlemi' || p.id === 'planet-amlemi-genesis-01')) {
+          cleaned.unshift(INITIAL_SUBMISSIONS[0]);
+        }
+
         if (cleaned.length > 0) return cleaned;
       }
     }
@@ -325,36 +263,51 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
         .order('votes_count', { ascending: false });
 
       if (!error && Array.isArray(data) && data.length > 0) {
-        const live: PlanetSubmission[] = data.map((d: any) => ({
-          id: d.id,
-          userId: d.user_id,
-          authorName: d.author_name || 'Anonymous Creator',
-          authorUsername: d.author_username || 'creator',
-          authorEmail: d.author_email || '',
-          authorAvatarGradient: d.author_avatar_gradient || 'from-amber-400 to-amber-600',
-          planetName: formatAkinoyaPlanetName(d.planet_name),
-          atmosphere: d.atmosphere || '',
-          flora: d.flora || '',
-          fauna: d.fauna || '',
-          sonicVibe: d.sonic_vibe || '',
-          visualAesthetic: d.visual_aesthetic || '',
-          landmark: d.landmark || '',
-          additionalNotes: d.additional_notes || '',
-          humanAnswers: d.human_answers || {},
-          generatedLore: d.generated_lore || '',
-          renders: d.renders || {
-            hero: planetHeroImg,
-            flora: mushroomValleyImg,
-            fauna: twilightWorldImg,
-            atmosphere: heroBgImg,
-            landmark: visualizerThumbnailImg,
-            ecosystem: mushroomValleyImg,
-          },
-          votesCount: d.votes_count || 1,
-          status: (d.status as any) || 'PUBLISHED',
-          createdAt: d.created_at || new Date().toISOString(),
-          votingDeadline: 'June 30, 2027',
-        }));
+        const live: PlanetSubmission[] = data
+          .filter((d: any) => {
+            const name = (d.planet_name || '').toLowerCase();
+            return (
+              name !== 'arbitron' &&
+              name !== 'lucina' &&
+              name !== 'elysia' &&
+              !MOCK_PLANET_IDS.has(d.id)
+            );
+          })
+          .map((d: any) => ({
+            id: d.id,
+            userId: d.user_id,
+            authorName: d.author_name || 'Anonymous Creator',
+            authorUsername: d.author_username || 'creator',
+            authorEmail: d.author_email || '',
+            authorAvatarGradient: d.author_avatar_gradient || 'from-amber-400 to-amber-600',
+            planetName: formatAkinoyaPlanetName(d.planet_name),
+            atmosphere: d.atmosphere || '',
+            flora: d.flora || '',
+            fauna: d.fauna || '',
+            sonicVibe: d.sonic_vibe || '',
+            visualAesthetic: d.visual_aesthetic || '',
+            landmark: d.landmark || '',
+            additionalNotes: d.additional_notes || '',
+            humanAnswers: d.human_answers || {},
+            generatedLore: d.generated_lore || '',
+            renders: d.renders || {
+              hero: amlemiOrbitalImg,
+              flora: amlemiBotanicalImg,
+              fauna: amlemiFaunaImg,
+              atmosphere: amlemiCockpitImg,
+              landmark: amlemiMonumentImg,
+              ecosystem: amlemiBotanicalImg,
+            },
+            votesCount: d.votes_count || 1,
+            status: (d.status as any) || 'PUBLISHED',
+            createdAt: d.created_at || new Date().toISOString(),
+            votingDeadline: 'June 30, 2027',
+          }));
+
+        // Always ensure canonical Ämlemi is included
+        if (!live.some((p) => p.planetName === 'Ämlemi' || p.id === 'planet-amlemi-genesis-01')) {
+          live.unshift(INITIAL_SUBMISSIONS[0]);
+        }
 
         if (typeof window !== 'undefined') {
           try {
