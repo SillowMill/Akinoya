@@ -1161,7 +1161,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         </div>
 
         {/* Right Status Actions: Auth Status Profile Button + Locked Membership Badge */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto max-w-full overflow-visible">
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto max-w-full overflow-visible">
           <a
             href="/contest"
             className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold text-black bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition-all min-h-[44px] shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:scale-[1.01]"

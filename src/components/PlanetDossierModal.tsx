@@ -206,13 +206,10 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                   <Maximize2 className="w-3.5 h-3.5" />
                 </button>
 
-                {/* Bottom Style Anchor strip */}
+                {/* Bottom Photo Caption */}
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-3 sm:p-4 text-left">
                   <p className="text-xs font-mono font-semibold text-white truncate">
                     {currentPhoto.description}
-                  </p>
-                  <p className="text-[10px] font-mono text-cyan-300/80 mt-0.5 truncate">
-                    {currentPhoto.styleAnchor}
                   </p>
                 </div>
               </div>

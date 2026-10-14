@@ -172,10 +172,10 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
             </div>
 
             <div className="flex items-center gap-2 text-[10.5px] font-mono text-white/60">
-              <span className="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-400/40 text-amber-300 font-bold">
-                🔒 RELEASE: 09/29
+              <span className="px-2.5 py-0.5 rounded bg-amber-950/80 border border-amber-400/40 text-amber-300 font-bold whitespace-nowrap">
+                🔒 RELEASE: JANUARY 9, 2027
               </span>
-              <span className="px-2 py-0.5 rounded bg-black/60 border border-white/10 text-white/80">
+              <span className="hidden sm:inline px-2 py-0.5 rounded bg-black/60 border border-white/10 text-white/80">
                 16:9 CINEMATIC · 4K UHD
               </span>
             </div>
@@ -204,41 +204,41 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
               }}
             />
 
-            {/* Gold Lock Overlay (Release Day: 09/29) */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-4 z-20">
+            {/* Gold Lock Overlay (Release Day: January 9, 2027) */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-3 sm:p-6 text-center space-y-2 sm:space-y-4 z-20">
               {/* Prominent Gold Lock Icon */}
               <div
                 onClick={() => {
                   soundManager.playTone(330, 0.08);
                   alert(
-                    "🔒 Personal Studio Transmission Locked\n\nPersonal Studio Transmission will be available on release day: 09/29.\n\nOdi's personal welcome & system breakdown recorded live from the home studio."
+                    "🔒 Personal Studio Transmission Locked\n\nPersonal Studio Transmission will be available on release day: January 9, 2027.\n\nOdi's personal welcome & system breakdown recorded live from the home studio."
                   );
                 }}
-                className="relative group/lock flex items-center justify-center cursor-pointer"
-                title="Personal Studio Transmission will be available on release day: 09/29"
+                className="relative group/lock flex items-center justify-center cursor-pointer shrink-0"
+                title="Personal Studio Transmission will be available on release day: January 9, 2027"
               >
                 <div className="absolute -inset-4 rounded-full bg-amber-400/25 blur-2xl group-hover/lock:bg-amber-400/40 transition-all duration-300" />
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-300 text-black flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.6)] group-hover/lock:scale-110 transition-transform border-2 border-amber-200">
-                  <Lock className="w-8 h-8 sm:w-9 sm:h-9 text-black fill-black/20" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-300 text-black flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.6)] group-hover/lock:scale-110 transition-transform border-2 border-amber-200">
+                  <Lock className="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 text-black fill-black/20" />
                 </div>
               </div>
 
               {/* Gold Lock Overlay Badge & Text */}
-              <div className="space-y-2 max-w-xl">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/80 border border-amber-400/50 text-amber-300 font-mono text-[10.5px] font-bold tracking-wider uppercase shadow-md">
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>TRANSMISSION LOCKED · RELEASES 09/29</span>
+              <div className="space-y-1.5 sm:space-y-2 max-w-xl px-2">
+                <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-amber-950/80 border border-amber-400/50 text-amber-300 font-mono text-[9px] sm:text-[10.5px] font-bold tracking-wider uppercase shadow-md">
+                  <Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0" />
+                  <span>TRANSMISSION LOCKED · RELEASES JANUARY 9, 2027</span>
                 </div>
 
-                <h3 className="text-lg sm:text-2xl md:text-3xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 drop-shadow-md">
-                  Personal Studio Transmission will be available on release day: 09/29
+                <h3 className="text-sm xs:text-base sm:text-xl md:text-2xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 drop-shadow-md leading-tight">
+                  Personal Studio Transmission will be available on release day: January 9, 2027
                 </h3>
 
-                <p className="text-xs sm:text-sm text-amber-100/90 font-sans drop-shadow-sm max-w-md mx-auto leading-relaxed">
+                <p className="text-[11px] sm:text-xs md:text-sm text-amber-100/90 font-sans drop-shadow-sm max-w-md mx-auto leading-relaxed line-clamp-2 sm:line-clamp-none">
                   Odi&apos;s personal welcome &amp; system breakdown recorded live from the home studio.
                 </p>
 
-                <div className="pt-1 flex items-center justify-center gap-2 text-[10.5px] font-mono text-white/50">
+                <div className="pt-0.5 sm:pt-1 hidden xs:flex items-center justify-center gap-2 text-[9.5px] sm:text-[10.5px] font-mono text-white/50">
                   <span>STUDIO 4K RAW MASTER</span>
                   <span>·</span>
                   <span>RECORDED FROM HOME STUDIO</span>

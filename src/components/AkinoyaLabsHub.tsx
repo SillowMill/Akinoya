@@ -941,10 +941,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             alt={stage.heroImageAlt}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover/banner:scale-105 opacity-85 group-hover/banner:opacity-100"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                          <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
 
-                          {/* Top Overlay Badges */}
-                          <div className="absolute top-4 left-4 right-4 flex items-center justify-between gap-2">
+                          {/* Top Overlay Badges (Hidden on mobile < md to keep render 100% clean & unobscured) */}
+                          <div className="hidden md:flex absolute top-4 left-4 right-4 items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <span className="px-2.5 py-1 rounded-lg bg-cyan-400 text-black font-mono font-extrabold text-xs tracking-wider shadow-md">
                                 STAGE {stage.stageNumber}
@@ -967,8 +967,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             )}
                           </div>
 
-                          {/* Bottom Overlay Title & Action Indicator */}
-                          <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                          {/* Bottom Overlay Title & Action Indicator (Hidden on mobile < md) */}
+                          <div className="hidden md:flex absolute bottom-4 left-4 right-4 items-end justify-between">
                             <div className="space-y-0.5 max-w-[80%]">
                               <span className="text-[10px] font-mono text-cyan-300/80 uppercase tracking-wider">
                                 {stage.timeframe}
@@ -985,7 +985,40 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         </div>
 
                         {/* Card Body Brief */}
-                        <div className="p-5 space-y-3">
+                        <div className="p-4 sm:p-5 space-y-3">
+                          {/* Mobile-Only Header Block (Positioned neatly below visual container) */}
+                          <div className="md:hidden space-y-1.5 pb-2 border-b border-white/10">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5">
+                                <span className="px-2 py-0.5 rounded bg-cyan-400 text-black font-mono font-extrabold text-[10px] tracking-wider shadow-sm">
+                                  STAGE {stage.stageNumber}
+                                </span>
+                                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded bg-black/60 border border-cyan-400/40 text-cyan-300 font-bold uppercase">
+                                  {stage.tag}
+                                </span>
+                              </div>
+                              {isStageLocked ? (
+                                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold flex items-center gap-1">
+                                  <Lock className="w-2.5 h-2.5 text-amber-400" />
+                                  LOCKED
+                                </span>
+                              ) : (
+                                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold flex items-center gap-1">
+                                  <Eye className="w-2.5 h-2.5" />
+                                  DEEP DIVE
+                                </span>
+                              )}
+                            </div>
+                            <div className="space-y-0.5 pt-0.5">
+                              <span className="text-[9.5px] font-mono text-cyan-300/80 uppercase tracking-wider block">
+                                {stage.timeframe}
+                              </span>
+                              <h3 className="text-base font-display font-bold text-white leading-tight">
+                                {stage.title}
+                              </h3>
+                            </div>
+                          </div>
+
                           <p className="text-xs sm:text-sm text-white/70 font-sans leading-relaxed">
                             {stage.subtitle}
                           </p>
