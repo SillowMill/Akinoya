@@ -63,9 +63,9 @@ async function resetOdiAccount() {
           has_submitted_contest: false,
           contest_submission_id: null,
           role: 'CREATOR',
-          has_vip_pass: true,
-          is_vip: true,
-          vip_code_redeemed: MASTER_PASS,
+          vip_code_redeemed: null,
+          has_vip_pass: false,
+          is_vip: false,
           updated_at: new Date().toISOString(),
         })
         .eq('id', prof.id);
@@ -82,9 +82,9 @@ async function resetOdiAccount() {
     console.warn('[2] Notice checking profiles:', err?.message || err);
   }
 
-  // 3. Hardlock Founder Pass (#0) exclusively to odi.selis3@gmail.com
+  // 3. Reset Founder Pass (#0) to unclaimed state ready for fresh claim
   try {
-    console.log(`\n[3] Hardlocking Master Pass (${MASTER_PASS}) exclusively to ${TARGET_EMAIL}:`);
+    console.log(`\n[3] Setting Master Pass (${MASTER_PASS}) to UNCLAIMED state for ${TARGET_EMAIL}:`);
     const { data: existingToken } = await supabase
       .from('vip_tokens')
       .select('id, token_code')
@@ -93,10 +93,10 @@ async function resetOdiAccount() {
 
     const tokenPayload = {
       token_code: MASTER_PASS,
-      is_claimed: true,
-      claimed_holder_name: 'Odi Selis',
-      claimed_holder_email: TARGET_EMAIL,
-      claimed_at: new Date().toISOString(),
+      is_claimed: false,
+      claimed_holder_name: null,
+      claimed_holder_email: null,
+      claimed_at: null,
       updated_at: new Date().toISOString(),
     };
 

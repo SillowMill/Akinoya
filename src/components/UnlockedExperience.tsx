@@ -322,7 +322,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             editionTotal: TOTAL_EDITION_LIMIT,
             status: 'ACTIVE_VERIFIED',
             emailVerified: true,
-            claimedAt: '2026-10-09T00:00:00.000Z',
+            claimedAt: bingaaCertificate?.claimedAt || new Date().toISOString(),
             signatureAlgorithm: 'HMAC-SHA256-DETERMINISTIC',
             signature: 'Sillow Mill · Creative Syndicate',
           });

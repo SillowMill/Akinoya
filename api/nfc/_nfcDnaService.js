@@ -336,10 +336,11 @@ export async function registerPassHolder(tokenId, ownerName, ownerEmail, deviceI
   const cleanName = ownerName ? ownerName.trim() : '';
   const cleanEmail = ownerEmail ? ownerEmail.trim().toLowerCase() : null;
 
+  const isMaster = pass.normalizedId === 'AKN-VIP-2027-X0914';
   pass.ownerName = cleanName;
   pass.ownerEmail = cleanEmail;
   pass.isClaimed = true;
-  pass.status = 'CLAIMED / OFFICIALLY VERIFIED';
+  pass.status = isMaster ? 'MASTER FOUNDER ORIGINAL' : 'CLAIMED / OFFICIALLY VERIFIED';
   pass.registeredAt = new Date().toISOString();
   if (deviceId) {
     pass.boundDeviceId = deviceId;

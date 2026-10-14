@@ -70,7 +70,11 @@ const readAll = (): Record<string, BingaaCertificate> => {
   }
 };
 
-export const getMasterCertificate = (customHolder?: string, customEmail?: string): BingaaCertificate => ({
+export const getMasterCertificate = (
+  customHolder?: string,
+  customEmail?: string,
+  customClaimedAt?: string
+): BingaaCertificate => ({
   certificateId: 'COA-BNG1-001-FOUNDER',
   title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
   passId: 'AKN-VIP-2027-X0914',
@@ -80,16 +84,13 @@ export const getMasterCertificate = (customHolder?: string, customEmail?: string
   editionTotal: TOTAL_EDITION_LIMIT,
   status: 'MASTER FOUNDER ORIGINAL',
   emailVerified: true,
-  claimedAt: '2026-10-09T00:00:00.000Z',
+  claimedAt: customClaimedAt || new Date().toISOString(),
   signatureAlgorithm: 'HMAC-SHA256',
   signature: 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637',
 });
 
 export const getCertificate = (passId: string): BingaaCertificate | null => {
   const clean = normalizePassId(passId);
-  if (clean === 'AKN-VIP-2027-X0914') {
-    return readAll()[clean] || getMasterCertificate();
-  }
   const cert = readAll()[clean];
   return cert && cert.signature && cert.passId ? cert : null;
 };

@@ -23,7 +23,7 @@ export const CertificateOfAuthenticity: React.FC<CertificateOfAuthenticityProps>
       <div className="min-w-0">
         <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">OWNER</dt>
         <dd className="text-[11px] sm:text-xs text-white font-semibold break-words">
-          REGISTERED HOLDER: {(certificate?.holderName || 'FOUNDING VIP MEMBER').toUpperCase()}
+          REGISTERED HOLDER: {certificate?.holderName ? certificate.holderName.toUpperCase() : 'UNCLAIMED / PENDING'}
           {certificate?.holderEmail && (
             <span className="block text-[10px] text-cyan-300/90 font-normal lowercase tracking-normal font-mono">
               {certificate.holderEmail}
@@ -41,7 +41,13 @@ export const CertificateOfAuthenticity: React.FC<CertificateOfAuthenticityProps>
       </div>
       <div className="min-w-0">
         <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">STATUS</dt>
-        <dd className="text-[11px] sm:text-xs text-emerald-300 font-semibold">{certificate?.status || 'ACTIVE_VERIFIED'}</dd>
+        <dd className={`text-[11px] sm:text-xs font-semibold ${
+          certificate?.status?.includes('READY') || certificate?.status?.includes('UNASSIGNED') || certificate?.status === 'UNCLAIMED'
+            ? 'text-amber-300'
+            : 'text-emerald-300'
+        }`}>
+          {certificate?.status || 'OFFICIALLY VERIFIED'}
+        </dd>
       </div>
       <div className="min-w-0">
         <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">CERTIFICATE ID</dt>
@@ -58,7 +64,9 @@ export const CertificateOfAuthenticity: React.FC<CertificateOfAuthenticityProps>
           {formatSignature(certificate?.signature || '', 8)}
         </div>
         <div className="text-[9px] sm:text-[10px] text-white/40 mt-1">
-          Claimed {formatClaimDate(certificate?.claimedAt || new Date().toISOString())} · Pass #{certificate?.passId || 'AKN-VIP-2027'}
+          {certificate?.claimedAt && certificate.claimedAt !== 'UNCLAIMED'
+            ? `Claimed ${formatClaimDate(certificate.claimedAt)}`
+            : 'Pending Claim'} · Pass #{certificate?.passId || 'AKN-VIP-2027'}
           {certificate?.emailVerified ? ' · Email verified' : ''}
         </div>
       </div>

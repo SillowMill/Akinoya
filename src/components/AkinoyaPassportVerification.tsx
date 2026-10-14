@@ -157,66 +157,78 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   // Determine if this pass is officially claimed by the active account or previously
   const isUserLoggedIn = Boolean(user || profile);
   const currentUserEmail = (user?.email || profile?.email || '').trim().toLowerCase();
-  const isFounderAccount = isFounderEmail(currentUserEmail) || profile?.role === 'CREATOR';
+  const isFounderAccount = isFounderEmail(currentUserEmail);
+
+  // Check if this specific pass has been officially claimed in database or storage
+  const isPassClaimedInRecord = Boolean(
+    passData.isClaimed &&
+    passData.ownerName &&
+    passData.ownerName.trim().length > 0 &&
+    passData.status !== 'UNASSIGNED / READY TO CLAIM' &&
+    passData.status !== 'FOUNDERS PASS (#0) / READY TO CLAIM'
+  );
 
   const isClaimedByUser = Boolean(
     isUserLoggedIn && (
       (isMaster && isFounderAccount && (
-        profile?.has_vip_pass ||
         profile?.vip_code_redeemed === activeToken ||
-        passData.isClaimed ||
-        Boolean(localStoredCert) ||
-        isFounderEmail(currentUserEmail)
+        (isPassClaimedInRecord && passData.ownerEmail && isFounderEmail(passData.ownerEmail)) ||
+        Boolean(localStoredCert)
       )) ||
       (!isMaster && (
-        isUserVip ||
-        (profile?.has_vip_pass && (
-          profile?.vip_code_redeemed === activeToken ||
-          profile?.role === 'CREATOR'
-        ))
+        profile?.vip_code_redeemed === activeToken ||
+        (isPassClaimedInRecord && passData.ownerEmail && currentUserEmail === passData.ownerEmail.toLowerCase()) ||
+        Boolean(localStoredCert && localStoredCert.passId === activeToken)
       ))
     )
   );
 
   const hasClaimedPass = Boolean(
-    isUserLoggedIn && (
-      isClaimedByUser ||
-      (isMaster && isFounderAccount) ||
-      (passData.isClaimed && passData.ownerEmail && (currentUserEmail === passData.ownerEmail.toLowerCase()))
-    )
+    isClaimedByUser ||
+    (isUserLoggedIn && isPassClaimedInRecord && passData.ownerEmail && (currentUserEmail === passData.ownerEmail.toLowerCase()))
   );
 
-  const isClaimed =
+  const isClaimed = Boolean(
     hasClaimedPass ||
-    Boolean(passData.isClaimed && passData.ownerName && passData.ownerName.trim().length > 0) ||
-    Boolean(localStoredCert && localStoredCert.holderName && localStoredCert.holderName.trim().length > 0) ||
-    Boolean(localStoredName && localStoredName.trim().length > 0);
+    isPassClaimedInRecord ||
+    Boolean(localStoredCert && localStoredCert.holderName && localStoredCert.holderName.trim().length > 0)
+  );
 
-  const activeHolderName =
-    passData.ownerName ||
-    (isMaster && (user || profile) ? (profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || 'Odi Selis') : '') ||
-    profile?.full_name ||
-    (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : null) ||
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    (user?.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim() : null) ||
-    localStoredCert?.holderName ||
-    localStoredName ||
-    (user?.email ? user.email.split('@')[0] : '') ||
-    (isMaster ? 'Odi Selis' : 'Founding VIP Member');
+  const activeHolderName = isClaimed
+    ? (passData.ownerName ||
+       localStoredCert?.holderName ||
+       localStoredName ||
+       (isMaster && (profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || 'Odi Selis')) ||
+       profile?.full_name ||
+       (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : null) ||
+       user?.user_metadata?.full_name ||
+       (isMaster ? 'Odi Selis' : 'Founding VIP Member'))
+    : '';
 
-  const activeHolderEmail =
-    passData.ownerEmail ||
-    profile?.email ||
-    user?.email ||
-    localStoredCert?.holderEmail ||
-    (isMaster ? 'odi.selis3@gmail.com' : null);
+  const activeHolderEmail = isClaimed
+    ? (passData.ownerEmail ||
+       localStoredCert?.holderEmail ||
+       (isMaster ? (profile?.email || user?.email || 'odi.selis3@gmail.com') : profile?.email || user?.email))
+    : null;
 
   const activeCertificate: BingaaCertificate =
     localStoredCert ||
     passData.certificate ||
     (isMaster
-      ? getMasterCertificate(activeHolderName, activeHolderEmail || undefined)
+      ? {
+          certificateId: 'COA-BNG1-001-FOUNDER',
+          title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
+          passId: activeToken,
+          holderName: activeHolderName || 'Odi Selis',
+          holderEmail: activeHolderEmail || undefined,
+          editionNumber: 0,
+          editionTotal: TOTAL_EDITION_LIMIT,
+          status: hasClaimedPass ? 'MASTER FOUNDER ORIGINAL' : 'FOUNDERS PASS (#0) / READY TO CLAIM',
+          emailVerified: Boolean(activeHolderEmail),
+          claimedAt: passData.registeredAt || (hasClaimedPass ? new Date().toISOString() : 'UNCLAIMED'),
+          signatureAlgorithm: 'HMAC-SHA256',
+          signature: 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637',
+        }
       : {
           certificateId: `COA-BNG1-${String(passData.editionNumber).padStart(3, '0')}-VERIFIED`,
           title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
@@ -224,9 +236,9 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           holderName: activeHolderName || 'Founding VIP Member',
           editionNumber: passData.editionNumber,
           editionTotal: TOTAL_EDITION_LIMIT,
-          status: 'OFFICIALLY VERIFIED',
+          status: hasClaimedPass ? 'OFFICIALLY VERIFIED' : 'UNASSIGNED / READY TO CLAIM',
           emailVerified: Boolean(activeHolderEmail),
-          claimedAt: passData.registeredAt || new Date().toISOString(),
+          claimedAt: passData.registeredAt || (hasClaimedPass ? new Date().toISOString() : 'UNCLAIMED'),
           signatureAlgorithm: 'HMAC-SHA256',
           signature: 'Sillow Mill · Creative Syndicate',
         });
@@ -928,49 +940,63 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           </div>
 
           {/* Technical Provenance List */}
-          <div className="rounded-2xl bg-black/40 border border-white/10 p-4 font-mono text-xs space-y-2">
-            <div className="text-[10px] font-bold text-white/40 tracking-wider uppercase px-1">
-              PROVENANCE METADATA
+          <div className="rounded-2xl bg-[#050812]/95 border border-white/10 backdrop-blur-xl shadow-2xl p-5 sm:p-6 font-mono text-xs space-y-3">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+                <span className="text-xs font-bold text-white uppercase tracking-widest">
+                  PROVENANCE METADATA
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-cyan-300/80 px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-400/30 font-bold">
+                NXP NTAG 424 DNA
+              </span>
             </div>
-            <div className="divide-y divide-white/5">
-              <div className="py-2 flex items-center justify-between gap-3">
-                <span className="text-white/40">TOKEN ID</span>
+            <div className="divide-y divide-white/10">
+              <div className="py-2.5 flex items-center justify-between gap-3">
+                <span className="text-white/60 font-medium">TOKEN ID</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-white font-semibold">{passData.tokenId}</span>
-                  <button onClick={handleCopyToken} className="p-1 text-white/40 hover:text-white cursor-pointer" title="Copy">
-                    {copiedToken ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  <span className="text-white font-bold">{passData.tokenId}</span>
+                  <button onClick={handleCopyToken} className="p-1 text-white/50 hover:text-white cursor-pointer transition-colors" title="Copy Token ID">
+                    {copiedToken ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-white/60" />}
                   </button>
                 </div>
               </div>
-              <div className="py-2 flex items-center justify-between gap-3">
-                <span className="text-white/40">REGISTERED HOLDER</span>
-                <span className="text-cyan-300 font-semibold">{activeHolderName.toUpperCase()}</span>
+              <div className="py-2.5 flex items-center justify-between gap-3">
+                <span className="text-white/60 font-medium">REGISTERED HOLDER</span>
+                <span className={`font-bold ${activeHolderName ? 'text-cyan-300' : 'text-amber-300/80'}`}>
+                  {activeHolderName ? activeHolderName.toUpperCase() : 'UNCLAIMED / PENDING'}
+                </span>
               </div>
               {activeHolderEmail && (
-                <div className="py-2 flex items-center justify-between gap-3">
-                  <span className="text-white/40">REGISTERED EMAIL</span>
-                  <span className="text-white/80 font-mono text-[11px]">{activeHolderEmail}</span>
+                <div className="py-2.5 flex items-center justify-between gap-3">
+                  <span className="text-white/60 font-medium">REGISTERED EMAIL</span>
+                  <span className="text-white font-medium font-mono text-[11px] sm:text-xs">{activeHolderEmail}</span>
                 </div>
               )}
-              <div className="py-2 flex items-center justify-between gap-3">
-                <span className="text-white/40">EDITION</span>
-                <span className="text-white font-medium">
+              <div className="py-2.5 flex items-center justify-between gap-3">
+                <span className="text-white/60 font-medium">EDITION</span>
+                <span className="text-white font-semibold">
                   {isMaster
                     ? 'Founders Pass (#0)'
                     : `Founding Member Copy #${passData.editionNumber} of ${TOTAL_EDITION_LIMIT}`}
                 </span>
               </div>
-              <div className="py-2 flex items-center justify-between gap-3">
-                <span className="text-white/40">ORIGIN</span>
-                <span className="text-white/70">{passData.origin}</span>
+              <div className="py-2.5 flex items-center justify-between gap-3">
+                <span className="text-white/60 font-medium">ORIGIN</span>
+                <span className="text-white/90">{passData.origin}</span>
               </div>
-              <div className="py-2 flex items-center justify-between gap-3">
-                <span className="text-white/40">COORDINATES</span>
-                <span className="text-white/70">{passData.coordinates}</span>
+              <div className="py-2.5 flex items-center justify-between gap-3">
+                <span className="text-white/60 font-medium">COORDINATES</span>
+                <span className="text-white/90">{passData.coordinates}</span>
               </div>
-              <div className="py-2 flex items-center justify-between gap-3">
-                <span className="text-white/40">STATUS</span>
-                <span className="text-emerald-400 font-semibold">{passData.status}</span>
+              <div className="py-2.5 flex items-center justify-between gap-3">
+                <span className="text-white/60 font-medium">STATUS</span>
+                <span className={`font-bold ${hasClaimedPass || passData.isClaimed ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {hasClaimedPass || passData.isClaimed
+                    ? (isMaster ? 'MASTER FOUNDER ORIGINAL' : 'CLAIMED / OFFICIALLY VERIFIED')
+                    : 'UNCLAIMED'}
+                </span>
               </div>
             </div>
           </div>

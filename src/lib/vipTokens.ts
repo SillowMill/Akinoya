@@ -150,37 +150,18 @@ export const checkVipTokenStatus = async (
 
   // Founder Pass (#0) special handling:
   // Strictly bound to Odi Selis (odi.selis3@gmail.com / odi@sillowmill.com).
-  // When accessed by Odi, it is ALWAYS allowed and treated as owned, never blocked.
+  // Non-founders attempting to access/claim Founder Pass are immediately blocked.
   if (isMasterToken) {
-    if (currentUserEmail) {
-      if (isFounderEmail(currentUserEmail)) {
-        return {
-          valid: true,
-          allowed: true,
-          isAlreadyClaimed: true,
-          isClaimedByMe: true,
-          tokenCode: clean,
-        };
-      } else {
-        // Non-founder attempting to access/claim Founder Pass
-        return {
-          valid: true,
-          allowed: false,
-          isAlreadyClaimed: true,
-          isClaimedByMe: false,
-          tokenCode: clean,
-          error: OTHER_ACCOUNT_VIP_ERROR,
-        };
-      }
+    if (currentUserEmail && !isFounderEmail(currentUserEmail)) {
+      return {
+        valid: true,
+        allowed: false,
+        isAlreadyClaimed: true,
+        isClaimedByMe: false,
+        tokenCode: clean,
+        error: OTHER_ACCOUNT_VIP_ERROR,
+      };
     }
-    // Unauthenticated initial view
-    return {
-      valid: true,
-      allowed: true,
-      isAlreadyClaimed: false,
-      isClaimedByMe: false,
-      tokenCode: clean,
-    };
   }
 
   // 1. Supabase live database check
@@ -197,7 +178,8 @@ export const checkVipTokenStatus = async (
         if (tokenRecord.is_claimed) {
           const isOwner = Boolean(
             (currentUserId && tokenRecord.claimed_by_user_id === currentUserId) ||
-            (currentUserEmail && tokenRecord.claimed_holder_email && currentUserEmail.trim().toLowerCase() === tokenRecord.claimed_holder_email.trim().toLowerCase())
+            (currentUserEmail && tokenRecord.claimed_holder_email && currentUserEmail.trim().toLowerCase() === tokenRecord.claimed_holder_email.trim().toLowerCase()) ||
+            (isMasterToken && currentUserEmail && isFounderEmail(currentUserEmail))
           );
           if (isOwner) {
             return {
@@ -474,6 +456,13 @@ export const resetAllVipTokens = async (): Promise<{ success: boolean; count?: n
       localStorage.removeItem('pending_vip_pass');
       localStorage.removeItem('akinoya_pending_vip_pass');
       sessionStorage.removeItem('pending_vip_code');
+      localStorage.removeItem('akinoya_bingaa_certificates');
+      localStorage.removeItem('akinoya_holder_name');
+      Object.keys(localStorage).forEach((k) => {
+        if (k.startsWith('akinoya_holder_name_') || k.startsWith('akinoya_pending_')) {
+          localStorage.removeItem(k);
+        }
+      });
     } catch {}
   }
 
@@ -492,6 +481,25 @@ export const resetAllVipTokens = async (): Promise<{ success: boolean; count?: n
           updated_at: nowIso,
         })
         .select();
+
+      // Clear redeemed pass bindings from profiles
+      await supabase
+        .from('profiles')
+        .update({
+          vip_code_redeemed: null,
+          has_vip_pass: false,
+          is_vip: false,
+          updated_at: nowIso,
+        })
+        .neq('role', 'CREATOR');
+
+      await supabase
+        .from('profiles')
+        .update({
+          vip_code_redeemed: null,
+          updated_at: nowIso,
+        })
+        .eq('role', 'CREATOR');
 
       if (error) {
         console.warn('[VipTokens] Supabase reset error:', error.message);
