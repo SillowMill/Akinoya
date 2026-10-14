@@ -51,7 +51,6 @@ import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME, BINGAA_COVER_URL, BINGAA_COVER_FIL
 import { useAuth } from '../context/AuthContext';
 import { AuthHeaderButton } from './AuthHeaderButton';
 import { CreatorLeaderboard } from './CreatorLeaderboard';
-import { CreatorPortfolioView } from './CreatorPortfolioView';
 import { LoreGovernancePortal } from './LoreGovernancePortal';
 import { AkinoyaLabsHub } from './AkinoyaLabsHub';
 import { DriveFolderVault } from './DriveFolderVault';
@@ -2431,32 +2430,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   🏆 Group's Favorite Planets Leaderboard
                 </h1>
                 <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  Explore the community's top-voted planets, inspect complete 5-photo cinematic sci-fi dossiers, and celebrate syndicate creator portfolios.
+                  Explore the community&apos;s top-voted planets and inspect complete 5-photo cinematic sci-fi dossiers.
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-              <div className="lg:col-span-1">
-                <CreatorLeaderboard
-                  selectedUsername={selectedCreatorUsername}
-                  onSelectCreator={(u) => {
-                    setSelectedCreatorUsername(u);
-                    if (onOpenCreator) onOpenCreator(u);
-                  }}
-                />
-              </div>
-              <div className="lg:col-span-2">
-                <CreatorPortfolioView
-                  username={selectedCreatorUsername}
-                  onBackToCommunity={() => setActiveSection('discussion')}
-                  onBackToHome={onBackToHome}
-                  onNavigateToCreator={(u) => {
-                    setSelectedCreatorUsername(u);
-                    if (onOpenCreator) onOpenCreator(u);
-                  }}
-                />
-              </div>
+            <div className="w-full">
+              <CreatorLeaderboard />
             </div>
           </motion.div>
         )}
