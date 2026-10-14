@@ -30,6 +30,9 @@ import {
   HardDrive,
   Info,
   ExternalLink,
+  Laptop,
+  Box,
+  Disc,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
@@ -68,6 +71,7 @@ export interface DriveFolder {
   id: string;
   name: string;
   displayName: string;
+  richIcon: string;
   category: string;
   itemCount: number;
   totalSize: string;
@@ -86,19 +90,20 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     { id: 'root', name: 'Sillow Mill Production Vault' },
   ]);
 
-  // View Mode: 'list' or 'grid'
+  // View Mode: 'list' or 'grid' (Apple Finder style)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFileForPreview, setSelectedFileForPreview] = useState<DriveFile | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
 
-  // Workflow-Mapped Google Drive Directory Architecture
+  // Workflow-Mapped Apple & Google Drive Directory Hierarchy
   const DRIVE_HIERARCHY: DriveFolder[] = [
     {
       id: 'folder-01',
       name: '01_PreProduction_Storyboards',
       displayName: '01_PreProduction_Storyboards',
-      category: 'Stage 01 · Pre-Production',
+      richIcon: '🎬',
+      category: 'Storyboards & Script breakdowns',
       itemCount: 6,
       totalSize: '33.1 MB',
       isLocked: false,
@@ -107,6 +112,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           id: 'subfolder-01-1',
           name: 'Bingaa_Comic_Script_Breakdown',
           displayName: 'Bingaa_Comic_Script_Breakdown',
+          richIcon: '📄',
           category: 'Director Script & Panels',
           itemCount: 3,
           totalSize: '20.6 MB',
@@ -156,6 +162,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           id: 'subfolder-01-2',
           name: 'Framing_Beat_Sheets',
           displayName: 'Framing_Beat_Sheets',
+          richIcon: '📐',
           category: 'Pacing & Beat Timelines',
           itemCount: 3,
           totalSize: '12.5 MB',
@@ -205,7 +212,8 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       id: 'folder-02',
       name: '02_ArtDirection_StyleAnchors',
       displayName: '02_ArtDirection_StyleAnchors',
-      category: 'Stage 02 · Art Direction',
+      richIcon: '🎨',
+      category: 'Character sheets, brand assets & mood anchors',
       itemCount: 6,
       totalSize: '52.6 MB',
       isLocked: false,
@@ -214,6 +222,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           id: 'subfolder-02-1',
           name: 'Character_Sheets_Sillow_Odi_Mill',
           displayName: 'Character_Sheets_Sillow_Odi_Mill',
+          richIcon: '👤',
           category: 'Character Turnarounds',
           itemCount: 3,
           totalSize: '40.6 MB',
@@ -263,6 +272,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           id: 'subfolder-02-2',
           name: 'Chromatic_Color_Profiles',
           displayName: 'Chromatic_Color_Profiles',
+          richIcon: '🌈',
           category: 'Color Palettes & Swatches',
           itemCount: 3,
           totalSize: '12.0 MB',
@@ -313,15 +323,75 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     },
     {
       id: 'folder-03',
-      name: '03_Blender_3D_Previs_Rigs',
-      displayName: '03_Blender_3D_Previs_Rigs',
-      category: 'Stage 03 · 3D Previs',
+      name: '03_Audio_DAW_Templates',
+      displayName: '03_Audio_DAW_Templates',
+      richIcon: '🎵',
+      category: 'Studio audio masters & Ableton .als templates',
+      itemCount: 4,
+      totalSize: '537.0 MB',
+      isLocked: false,
+      files: [
+        {
+          id: 'file-03-1',
+          name: 'Sillow_Mill_Teaser_Audio_Master_96kHz.wav',
+          extension: 'WAV',
+          size: '185 MB',
+          typeBadge: '24-bit 96kHz Master',
+          badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+          modified: 'Oct 14, 2026',
+          isLocked: false,
+          isAudio: true,
+          previewImg: stage05Img,
+          description: 'Uncompressed studio master recording featuring modular analog synthesis, 432Hz harmonic drones, and sub-bass impact.',
+        },
+        {
+          id: 'file-03-2',
+          name: 'Bingaa_Atmospheric_Stem_Pack_128BPM.zip',
+          extension: 'ZIP',
+          size: '240 MB',
+          typeBadge: 'Studio Stems Bundle',
+          badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+          modified: 'Oct 13, 2026',
+          isLocked: false,
+          description: 'Isolated stems: Sub-Bass, Analog Arp, Modular Drones, Granular FX, and Cinematic Percussion at 128 BPM.',
+        },
+        {
+          id: 'file-03-3',
+          name: 'Akinoya_Modular_Synth_Ableton_Template.als',
+          extension: 'ALS',
+          size: '48 MB',
+          typeBadge: 'Ableton Live 11/12',
+          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+          modified: 'Oct 12, 2026',
+          isLocked: false,
+          description: 'Production DAW project file with routing, custom operator chains, and analog saturation racks ready to load.',
+        },
+        {
+          id: 'file-03-4',
+          name: 'Analog_Drones_432Hz_SubBass_Impulse.wav',
+          extension: 'WAV',
+          size: '64 MB',
+          typeBadge: 'Sub-Bass Impulse',
+          badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+          modified: 'Oct 11, 2026',
+          isLocked: false,
+          isAudio: true,
+          description: 'Sub-bass celestial resonance impulse calibrated to 432Hz fundamental frequency for sci-fi atmosphere.',
+        },
+      ],
+    },
+    {
+      id: 'folder-04',
+      name: '04_Blender_3D_Previs_Rigs',
+      displayName: '04_Blender_3D_Previs_Rigs',
+      richIcon: '🧊',
+      category: '3D cockpit & warp rigs (Locked)',
       itemCount: 4,
       totalSize: '601.4 MB',
       isLocked: true,
       files: [
         {
-          id: 'file-03-1',
+          id: 'file-04-1',
           name: 'Cockpit_Camera_Velocity_Rig.blend',
           extension: 'BLEND',
           size: '148 MB',
@@ -333,7 +403,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           description: 'Fully rigged 3D cockpit scene with animated camera tracking curves (CAM_TRAJ_A) and forward velocity paths.',
         },
         {
-          id: 'file-03-2',
+          id: 'file-04-2',
           name: 'Warp_Tunnel_Kinematic_Curves.fbx',
           extension: 'FBX',
           size: '32 MB',
@@ -345,7 +415,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           description: 'High-speed hyperspace warp tunnel polygonal mesh with vertex color coordinates for emissive shader passes.',
         },
         {
-          id: 'file-03-3',
+          id: 'file-04-3',
           name: '16bit_ZDepth_Normal_Pass_Sequence.exr',
           extension: 'EXR',
           size: '420 MB',
@@ -357,7 +427,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           description: 'Uncompressed 16-bit float depth and normal map sequence for multi-modal ControlNet video conditioning.',
         },
         {
-          id: 'file-03-4',
+          id: 'file-04-4',
           name: 'Anamorphic_Lens_Camera_Tracking_Data.json',
           extension: 'JSON',
           size: '1.4 MB',
@@ -370,16 +440,17 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       ],
     },
     {
-      id: 'folder-04',
-      name: '04_Prompt_Engineering_Bibles',
-      displayName: '04_Prompt_Engineering_Bibles',
-      category: 'Stage 04 · Prompt Architecture',
+      id: 'folder-05',
+      name: '05_Prompt_Engineering_Bibles',
+      displayName: '05_Prompt_Engineering_Bibles',
+      richIcon: '⚡',
+      category: 'Multi-block prompt json vaults (Locked)',
       itemCount: 4,
-      totalSize: '6.5 MB',
+      totalSize: '90.7 MB',
       isLocked: true,
       files: [
         {
-          id: 'file-04-1',
+          id: 'file-05-1',
           name: 'Master_Prompt_Vault_120_Templates.json',
           extension: 'JSON',
           size: '2.1 MB',
@@ -391,7 +462,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           description: 'Centralized database containing 120 production-tested 4-block syntax prompts for Gemini 1.5 Pro and Imagen 3.',
         },
         {
-          id: 'file-04-2',
+          id: 'file-05-2',
           name: 'Negative_Token_Suppression_Dictionary.txt',
           extension: 'TXT',
           size: '180 KB',
@@ -403,7 +474,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           description: 'Weighted negative token array designed to suppress digital plastic shaders, deformed geometry, and edge noise.',
         },
         {
-          id: 'file-04-3',
+          id: 'file-05-3',
           name: 'Gemini_Imagen3_Seed_Matrix.json',
           extension: 'JSON',
           size: '840 KB',
@@ -414,79 +485,22 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           description: 'Verified deterministic seed numbers yielding photorealistic results across Äkinoya cosmic planetary landscapes.',
         },
         {
-          id: 'file-04-4',
-          name: 'MultiBlock_Syntax_Cheatsheet.pdf',
-          extension: 'PDF',
-          size: '3.4 MB',
-          typeBadge: 'PDF Reference',
-          badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
-          modified: 'Oct 09, 2026',
-          isLocked: true,
-          description: 'Quick reference cheat sheet deconstructing syntax blocks: [Subject] + [Lighting] + [Camera Optics] + [Negative].',
-        },
-      ],
-    },
-    {
-      id: 'folder-05',
-      name: '05_DaVinci_LUTs_AudioMasters',
-      displayName: '05_DaVinci_LUTs_AudioMasters',
-      category: 'Stage 05 · Theatrical Finishing',
-      itemCount: 4,
-      totalSize: '337.7 MB',
-      isLocked: true,
-      files: [
-        {
-          id: 'file-05-1',
+          id: 'file-05-4',
           name: 'Akinoya_ACEScc_PrintFilm_Emulation.cube',
           extension: 'CUBE',
           size: '84.2 MB',
           typeBadge: '3D LUT Cube',
           badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-          modified: 'Oct 14, 2026',
+          modified: 'Oct 09, 2026',
           isLocked: true,
           previewImg: stage05Img,
           description: 'Official 65x65x65 3D LUT cube calibrated for ACEScc and Rec.709 color spaces with custom film print density.',
-        },
-        {
-          id: 'file-05-2',
-          name: 'Sillow_Mill_Teaser_Audio_Master_96kHz.wav',
-          extension: 'WAV',
-          size: '185 MB',
-          typeBadge: '24-bit 96kHz Master',
-          badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
-          modified: 'Oct 13, 2026',
-          isLocked: true,
-          isAudio: true,
-          previewImg: stage05Img,
-          description: 'Uncompressed studio master recording featuring modular analog synthesis, 432Hz harmonic drones, and sub-bass impact.',
-        },
-        {
-          id: 'file-05-3',
-          name: 'Temporal_Deflicker_OFX_Preset.drx',
-          extension: 'DRX',
-          size: '4.5 MB',
-          typeBadge: 'DaVinci PowerGrade',
-          badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-          modified: 'Oct 11, 2026',
-          isLocked: true,
-          description: 'DaVinci Resolve node tree containing 3-frame optical flow temporal stabilization and spatial noise reduction.',
-        },
-        {
-          id: 'file-05-4',
-          name: 'Rec709_Atmospheric_Finishing_LUTS.zip',
-          extension: 'ZIP',
-          size: '64 MB',
-          typeBadge: 'LUT Bundle',
-          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-          modified: 'Oct 10, 2026',
-          isLocked: true,
-          description: 'Collection of 8 theatrical finishing LUTs designed for SDR web broadcast and high-contrast OLED screens.',
         },
       ],
     },
   ];
 
-  // Helper: Find current folder object or return root
+  // Helper: Find current folder object or return null (root)
   const getCurrentFolder = (): DriveFolder | null => {
     if (currentFolderId === 'root') return null;
 
@@ -510,7 +524,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     if (folder.isLocked && !isMember) {
       soundManager.playTone(330, 0.08);
       alert(
-        `🔒 ${folder.displayName} is Locked\n\nAdvanced production stages 03–05 and master project archives are reserved for Paid Monthly Subscribers & VIP Pass Holders.\n\nPublic Release: January 9, 2027.`
+        `🔒 ${folder.displayName} is Locked\n\nAdvanced production stages 04–05 and master 3D/prompt archives are reserved for Paid Monthly Subscribers & VIP Pass Holders.\n\nOfficial Public Release: January 9, 2027.`
       );
       if (onOpenAuthModal) onOpenAuthModal();
       return;
@@ -598,357 +612,364 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     : filesToRender;
 
   return (
-    <div className="relative w-full text-white font-sans space-y-6">
+    <div className="relative w-full text-white font-sans space-y-5">
       {/* ======================================================== */}
-      {/* DRIVE HEADER BAR & TELEMETRY TOOLBAR                     */}
+      {/* APPLE-VIBES MACOS FINDER WINDOW FRAME                    */}
       {/* ======================================================== */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#0d1326]/90 via-[#0a0f1d]/90 to-[#070a14]/95 border border-cyan-500/30 shadow-[0_0_35px_rgba(0,242,254,0.1)] flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
+      <div className="rounded-3xl bg-gradient-to-b from-[#0f1424]/95 via-[#0b0f1a]/95 to-[#070912]/98 border border-cyan-500/30 shadow-[0_10px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(0,242,254,0.12)] overflow-hidden">
+        {/* macOS Title Bar with Window Controls */}
+        <div className="px-5 py-3.5 bg-black/60 border-b border-white/10 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            {/* Apple Traffic Light Dots */}
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] inline-block shadow-sm" />
+              <span className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] inline-block shadow-sm" />
+              <span className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] inline-block shadow-sm" />
+            </div>
+
+            <div className="h-4 w-px bg-white/15 mx-1" />
+
+            <div className="flex items-center gap-2 text-xs font-mono text-white/70">
+              <HardDrive className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="font-bold text-white">Sillow Mill Production Drive</span>
+              <span className="text-white/40">· macOS / Drive Hybrid Vault</span>
+            </div>
+          </div>
+
+          {/* Access Status Pill */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold tracking-wider flex items-center gap-1.5 shadow-sm">
-              <HardDrive className="w-3 h-3 text-cyan-400" />
-              GOOGLE DRIVE ARCHIVE SYSTEM
-            </span>
             {isMember ? (
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold flex items-center gap-1">
+              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold flex items-center gap-1 shadow-sm">
                 <Crown className="w-3 h-3 text-emerald-400" />
-                PAID SUBSCRIBER FULL ACCESS
+                PAID SUBSCRIBER ACTIVE
               </span>
             ) : (
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold flex items-center gap-1">
+              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold flex items-center gap-1 shadow-sm">
                 <Lock className="w-3 h-3 text-amber-400" />
                 VIEW-ONLY PREVIEWS · GATED
               </span>
             )}
           </div>
-          <h2 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-tight flex items-center gap-2">
-            <span>Production Directory &amp; File Vault</span>
-          </h2>
-          <p className="text-xs text-white/70 font-sans max-w-2xl">
-            Structured hierarchical directory mapped across Stages 01 to 05. Free guests have
-            view-only inspection access; master asset downloads require an active paid subscription.
-          </p>
         </div>
 
-        {/* Search Bar & View Mode Toggle */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="relative min-w-[200px] sm:min-w-[240px]">
-            <Search className="w-3.5 h-3.5 text-cyan-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search files &amp; 3D rigs..."
-              className="w-full bg-black/60 border border-white/15 focus:border-cyan-400 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white outline-none font-sans"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center bg-black/60 border border-white/15 rounded-xl p-0.5">
-            <button
-              type="button"
-              onClick={() => {
-                soundManager.playTone(480, 0.04);
-                setViewMode('list');
-              }}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                viewMode === 'list'
-                  ? 'bg-cyan-400 text-black shadow-sm'
-                  : 'text-white/50 hover:text-white'
-              }`}
-              title="List View"
-            >
-              <List className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                soundManager.playTone(480, 0.04);
-                setViewMode('grid');
-              }}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                viewMode === 'grid'
-                  ? 'bg-cyan-400 text-black shadow-sm'
-                  : 'text-white/50 hover:text-white'
-              }`}
-              title="Grid View"
-            >
-              <Grid className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ======================================================== */}
-      {/* INTERACTIVE DRIVE BREADCRUMBS PATH                       */}
-      {/* ======================================================== */}
-      <div className="px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar text-xs font-mono">
-        <div className="flex items-center gap-1.5 min-w-max text-white/80">
-          <HardDrive className="w-3.5 h-3.5 text-cyan-400 shrink-0 mr-1" />
-          {folderPath.map((item, index) => {
-            const isLast = index === folderPath.length - 1;
-            return (
-              <React.Fragment key={item.id}>
-                {index > 0 && <ChevronRight className="w-3 h-3 text-white/30 shrink-0" />}
-                <button
-                  type="button"
-                  onClick={() => handleNavigateBreadcrumb(index)}
-                  className={`hover:text-cyan-300 transition-colors cursor-pointer ${
-                    isLast
-                      ? 'text-cyan-300 font-bold underline underline-offset-4 decoration-cyan-400'
-                      : 'text-white/60'
-                  }`}
-                >
-                  {item.name}
-                </button>
-              </React.Fragment>
-            );
-          })}
-        </div>
-
-        {folderPath.length > 1 && (
-          <button
-            type="button"
-            onClick={() => handleNavigateBreadcrumb(folderPath.length - 2)}
-            className="flex items-center gap-1 text-[11px] font-mono text-cyan-300 hover:text-white transition-colors cursor-pointer shrink-0 ml-4"
-          >
-            <ArrowLeft className="w-3 h-3" />
-            <span>Up one level</span>
-          </button>
-        )}
-      </div>
-
-      {/* ======================================================== */}
-      {/* FOLDERS SECTION                                          */}
-      {/* ======================================================== */}
-      {filteredFolders.length > 0 && (
-        <div className="space-y-3">
-          <span className="text-[11px] font-mono font-bold text-white/50 uppercase tracking-wider block">
-            Folders ({filteredFolders.length})
-          </span>
-
-          <div
-            className={
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5'
-                : 'space-y-2'
-            }
-          >
-            {filteredFolders.map((folder) => {
-              const isLockedForUser = folder.isLocked && !isMember;
-
+        {/* macOS Toolbar (Search, Breadcrumbs & View Toggle) */}
+        <div className="p-4 bg-black/40 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Breadcrumb Path */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs font-mono text-white/70">
+            {folderPath.map((item, index) => {
+              const isLast = index === folderPath.length - 1;
               return (
-                <div
-                  key={folder.id}
-                  onClick={() => handleOpenFolder(folder)}
-                  className={`group rounded-2xl border transition-all cursor-pointer ${
-                    viewMode === 'grid' ? 'p-4 space-y-3' : 'p-3 flex items-center justify-between gap-3'
-                  } ${
-                    isLockedForUser
-                      ? 'bg-black/40 border-white/10 hover:border-amber-400/40 opacity-70 hover:opacity-85'
-                      : 'bg-[#0a0e1b]/80 border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(0,242,254,0.15)] hover:scale-[1.01]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                        isLockedForUser
-                          ? 'bg-amber-950/40 border border-amber-400/30 text-amber-300'
-                          : 'bg-cyan-950/60 border border-cyan-400/40 text-cyan-300'
-                      }`}
-                    >
-                      {isLockedForUser ? (
-                        <Lock className="w-4 h-4 text-amber-400" />
-                      ) : (
-                        <Folder className="w-5 h-5 text-cyan-400" />
-                      )}
-                    </div>
-
-                    <div className="min-w-0 space-y-0.5">
-                      <div className="text-xs sm:text-sm font-mono font-bold text-white group-hover:text-cyan-200 truncate">
-                        {folder.displayName}
-                      </div>
-                      <div className="text-[10px] font-mono text-white/50 flex items-center gap-2">
-                        <span>{folder.category}</span>
-                        <span>·</span>
-                        <span>{folder.itemCount} items</span>
-                        <span>·</span>
-                        <span>{folder.totalSize}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {isLockedForUser ? (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold">
-                        LOCKED
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-mono text-cyan-400/80 group-hover:text-cyan-200 flex items-center gap-0.5">
-                        Open <ChevronRight className="w-3.5 h-3.5" />
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <React.Fragment key={item.id}>
+                  {index > 0 && <ChevronRight className="w-3 h-3 text-white/30 shrink-0" />}
+                  <button
+                    type="button"
+                    onClick={() => handleNavigateBreadcrumb(index)}
+                    className={`hover:text-cyan-300 transition-colors cursor-pointer whitespace-nowrap ${
+                      isLast
+                        ? 'text-cyan-300 font-bold underline underline-offset-4 decoration-cyan-400'
+                        : 'text-white/60'
+                    }`}
+                  >
+                    {item.name}
+                  </button>
+                </React.Fragment>
               );
             })}
           </div>
-        </div>
-      )}
 
-      {/* ======================================================== */}
-      {/* FILES SECTION                                            */}
-      {/* ======================================================== */}
-      {filteredFiles.length > 0 && (
-        <div className="space-y-3 pt-2">
-          <span className="text-[11px] font-mono font-bold text-white/50 uppercase tracking-wider block">
-            Files ({filteredFiles.length})
-          </span>
-
-          <div
-            className={
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5'
-                : 'space-y-2'
-            }
-          >
-            {filteredFiles.map((file) => {
-              const isLockedForUser = file.isLocked && !isMember;
-
-              return (
-                <div
-                  key={file.id}
-                  className={`group rounded-2xl border transition-all ${
-                    viewMode === 'grid'
-                      ? 'p-4 space-y-3 bg-[#0a0f1e]/80 border-white/10 hover:border-cyan-400/40'
-                      : 'p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/60 border-white/10 hover:border-cyan-400/40'
-                  }`}
+          {/* Search & View Switcher */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="relative min-w-[190px] sm:min-w-[220px]">
+              <Search className="w-3.5 h-3.5 text-cyan-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search vault files..."
+                className="w-full bg-black/60 border border-white/15 focus:border-cyan-400 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white outline-none font-sans"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    {/* File Icon / Type Badge */}
-                    <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
-                      {file.extension === 'PDF' && <FileText className="w-5 h-5 text-red-400" />}
-                      {file.extension === 'PNG' && <Film className="w-5 h-5 text-cyan-400" />}
-                      {file.extension === 'JPG' && <Film className="w-5 h-5 text-purple-400" />}
-                      {file.extension === 'BLEND' && <Layers className="w-5 h-5 text-amber-400" />}
-                      {file.extension === 'JSON' && <FileCode className="w-5 h-5 text-emerald-400" />}
-                      {file.extension === 'CUBE' && <Sliders className="w-5 h-5 text-purple-400" />}
-                      {file.extension === 'WAV' && <Music className="w-5 h-5 text-teal-400" />}
-                      {file.extension !== 'PDF' &&
-                        file.extension !== 'PNG' &&
-                        file.extension !== 'JPG' &&
-                        file.extension !== 'BLEND' &&
-                        file.extension !== 'JSON' &&
-                        file.extension !== 'CUBE' &&
-                        file.extension !== 'WAV' && (
-                          <File className="w-5 h-5 text-white/60" />
-                        )}
-                    </div>
+                  ✕
+                </button>
+              )}
+            </div>
 
-                    <div className="min-w-0 space-y-0.5">
-                      <div className="text-xs sm:text-sm font-mono font-bold text-white group-hover:text-cyan-200 truncate flex items-center gap-2">
-                        <span className="truncate">{file.name}</span>
-                        {file.isAudio && (
-                          <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-teal-500/20 text-teal-300 border border-teal-400/30">
-                            AUDIO MASTER
+            {/* Apple View Mode Switch */}
+            <div className="flex items-center bg-black/60 border border-white/15 rounded-xl p-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  soundManager.playTone(480, 0.04);
+                  setViewMode('list');
+                }}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  viewMode === 'list'
+                    ? 'bg-cyan-400 text-black shadow-sm'
+                    : 'text-white/50 hover:text-white'
+                }`}
+                title="List View"
+              >
+                <List className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  soundManager.playTone(480, 0.04);
+                  setViewMode('grid');
+                }}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  viewMode === 'grid'
+                    ? 'bg-cyan-400 text-black shadow-sm'
+                    : 'text-white/50 hover:text-white'
+                }`}
+                title="Grid View"
+              >
+                <Grid className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Directory Content Area */}
+        <div className="p-5 sm:p-6 space-y-6">
+          {/* Folders Group */}
+          {filteredFolders.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono font-bold text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                  <Folder className="w-3.5 h-3.5 text-cyan-400" />
+                  Folders ({filteredFolders.length})
+                </span>
+                {folderPath.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleNavigateBreadcrumb(folderPath.length - 2)}
+                    className="text-[11px] font-mono text-cyan-300 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                    <span>Back up</span>
+                  </button>
+                )}
+              </div>
+
+              <div
+                className={
+                  viewMode === 'grid'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5'
+                    : 'space-y-2'
+                }
+              >
+                {filteredFolders.map((folder) => {
+                  const isLockedForUser = folder.isLocked && !isMember;
+
+                  return (
+                    <div
+                      key={folder.id}
+                      onClick={() => handleOpenFolder(folder)}
+                      className={`group rounded-2xl border transition-all cursor-pointer ${
+                        viewMode === 'grid'
+                          ? 'p-4 space-y-3'
+                          : 'p-3.5 flex items-center justify-between gap-3'
+                      } ${
+                        isLockedForUser
+                          ? 'bg-black/40 border-white/10 hover:border-amber-400/40 opacity-70 hover:opacity-85'
+                          : 'bg-[#0a0e1b]/80 border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(0,242,254,0.15)] hover:scale-[1.01]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Rich Folder Emoji / Icon */}
+                        <div
+                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl transition-transform group-hover:scale-105 ${
+                            isLockedForUser
+                              ? 'bg-amber-950/40 border border-amber-400/30 shadow-sm'
+                              : 'bg-cyan-950/60 border border-cyan-400/40 shadow-[0_0_12px_rgba(0,242,254,0.2)]'
+                          }`}
+                        >
+                          {isLockedForUser ? '🔒' : folder.richIcon}
+                        </div>
+
+                        <div className="min-w-0 space-y-0.5">
+                          <div className="text-xs sm:text-sm font-mono font-bold text-white group-hover:text-cyan-200 truncate">
+                            {folder.displayName}
+                          </div>
+                          <div className="text-[10px] font-mono text-white/50 flex flex-wrap items-center gap-2">
+                            <span>{folder.category}</span>
+                            <span>·</span>
+                            <span>{folder.itemCount} items</span>
+                            <span>·</span>
+                            <span>{folder.totalSize}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {isLockedForUser ? (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold">
+                            LOCKED · JAN 9
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-mono text-cyan-400/80 group-hover:text-cyan-200 flex items-center gap-0.5">
+                            Open <ChevronRight className="w-3.5 h-3.5" />
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] font-mono text-white/50 flex flex-wrap items-center gap-2">
-                        <span className={`px-1.5 py-0.2 rounded border text-[9px] font-bold ${file.badgeColor}`}>
-                          {file.typeBadge}
-                        </span>
-                        <span>{file.size}</span>
-                        <span>·</span>
-                        <span>Modified {file.modified}</span>
-                      </div>
                     </div>
-                  </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-                  {/* Actions & Audio Player */}
-                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                    {/* Audio Preview Trigger */}
-                    {file.isAudio && (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleAudio(file.id)}
-                        className="p-2 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/40 text-teal-300 text-xs font-mono font-bold transition-colors cursor-pointer flex items-center gap-1.5"
-                        title="Preview Audio"
-                      >
-                        {playingAudioId === file.id ? (
-                          <>
-                            <Pause className="w-3.5 h-3.5 fill-teal-300" />
-                            <span>Playing</span>
-                          </>
-                        ) : (
-                          <>
-                            <Play className="w-3.5 h-3.5 fill-teal-300 ml-0.5" />
-                            <span>Listen</span>
-                          </>
-                        )}
-                      </button>
-                    )}
+          {/* Files Group */}
+          {filteredFiles.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <span className="text-[11px] font-mono font-bold text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                <File className="w-3.5 h-3.5 text-cyan-400" />
+                Files ({filteredFiles.length})
+              </span>
 
-                    {/* Preview Image Trigger */}
-                    {file.previewImg && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedFileForPreview(file)}
-                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
-                        title="Quick Preview"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+              <div
+                className={
+                  viewMode === 'grid'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5'
+                    : 'space-y-2'
+                }
+              >
+                {filteredFiles.map((file) => {
+                  const isLockedForUser = file.isLocked && !isMember;
 
-                    {/* Download Button */}
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadFile(file)}
-                      className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                        isLockedForUser
-                          ? 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300'
-                          : 'bg-cyan-400 hover:bg-cyan-300 text-black shadow-[0_0_12px_rgba(0,242,254,0.3)]'
+                  return (
+                    <div
+                      key={file.id}
+                      className={`group rounded-2xl border transition-all ${
+                        viewMode === 'grid'
+                          ? 'p-4 space-y-3 bg-[#0a0f1e]/80 border-white/10 hover:border-cyan-400/40'
+                          : 'p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/60 border-white/10 hover:border-cyan-400/40'
                       }`}
                     >
-                      {isLockedForUser ? (
-                        <>
-                          <Lock className="w-3 h-3 text-amber-400" />
-                          <span>Gated</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-3 h-3" />
-                          <span>Download</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* File Format Icon */}
+                        <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
+                          {file.extension === 'PDF' && <FileText className="w-5 h-5 text-red-400" />}
+                          {file.extension === 'PNG' && <Film className="w-5 h-5 text-cyan-400" />}
+                          {file.extension === 'JPG' && <Film className="w-5 h-5 text-purple-400" />}
+                          {file.extension === 'BLEND' && <Layers className="w-5 h-5 text-amber-400" />}
+                          {file.extension === 'JSON' && <FileCode className="w-5 h-5 text-emerald-400" />}
+                          {file.extension === 'CUBE' && <Sliders className="w-5 h-5 text-purple-400" />}
+                          {file.extension === 'WAV' && <Music className="w-5 h-5 text-teal-400" />}
+                          {file.extension === 'ALS' && <Disc className="w-5 h-5 text-amber-400" />}
+                          {file.extension !== 'PDF' &&
+                            file.extension !== 'PNG' &&
+                            file.extension !== 'JPG' &&
+                            file.extension !== 'BLEND' &&
+                            file.extension !== 'JSON' &&
+                            file.extension !== 'CUBE' &&
+                            file.extension !== 'WAV' &&
+                            file.extension !== 'ALS' && (
+                              <File className="w-5 h-5 text-white/60" />
+                            )}
+                        </div>
 
-      {/* Empty Folder Notice */}
-      {filteredFolders.length === 0 && filteredFiles.length === 0 && (
-        <div className="p-8 text-center rounded-2xl bg-black/40 border border-white/10 space-y-2">
-          <FolderOpen className="w-8 h-8 text-white/30 mx-auto" />
-          <p className="text-xs font-mono text-white/60">No files or folders found matching query.</p>
+                        <div className="min-w-0 space-y-0.5">
+                          <div className="text-xs sm:text-sm font-mono font-bold text-white group-hover:text-cyan-200 truncate flex items-center gap-2">
+                            <span className="truncate">{file.name}</span>
+                            {file.isAudio && (
+                              <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-teal-500/20 text-teal-300 border border-teal-400/30">
+                                AUDIO
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] font-mono text-white/50 flex flex-wrap items-center gap-2">
+                            <span className={`px-1.5 py-0.2 rounded border text-[9px] font-bold ${file.badgeColor}`}>
+                              {file.typeBadge}
+                            </span>
+                            <span>{file.size}</span>
+                            <span>·</span>
+                            <span>Modified {file.modified}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Bar */}
+                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                        {file.isAudio && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleAudio(file.id)}
+                            className="p-2 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/40 text-teal-300 text-xs font-mono font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                            title="Preview Audio"
+                          >
+                            {playingAudioId === file.id ? (
+                              <>
+                                <Pause className="w-3.5 h-3.5 fill-teal-300" />
+                                <span>Playing</span>
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-3.5 h-3.5 fill-teal-300 ml-0.5" />
+                                <span>Listen</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+
+                        {file.previewImg && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedFileForPreview(file)}
+                            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
+                            title="Quick Preview"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadFile(file)}
+                          className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            isLockedForUser
+                              ? 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300'
+                              : 'bg-cyan-400 hover:bg-cyan-300 text-black shadow-[0_0_12px_rgba(0,242,254,0.3)]'
+                          }`}
+                        >
+                          {isLockedForUser ? (
+                            <>
+                              <Lock className="w-3 h-3 text-amber-400" />
+                              <span>Gated</span>
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-3 h-3" />
+                              <span>Download</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {filteredFolders.length === 0 && filteredFiles.length === 0 && (
+            <div className="p-8 text-center rounded-2xl bg-black/40 border border-white/10 space-y-2">
+              <FolderOpen className="w-8 h-8 text-white/30 mx-auto" />
+              <p className="text-xs font-mono text-white/60">No files or folders found matching query.</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* ======================================================== */}
-      {/* QUICK PREVIEW LIGHTBOX MODAL                             */}
+      {/* APPLE QUICKLOOK STYLE PREVIEW LIGHTBOX                   */}
       {/* ======================================================== */}
       <AnimatePresence>
         {selectedFileForPreview && (
@@ -970,7 +991,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div className="space-y-0.5">
                   <span className="text-xs font-mono text-cyan-300 font-bold uppercase">
-                    FILE INSPECTOR · {selectedFileForPreview.extension}
+                    APPLE QUICKLOOK · {selectedFileForPreview.extension}
                   </span>
                   <h3 className="text-base sm:text-lg font-display font-bold text-white">
                     {selectedFileForPreview.name}
@@ -1008,12 +1029,12 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                 <button
                   type="button"
                   onClick={() => handleDownloadFile(selectedFileForPreview)}
-                  className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-2"
+                  className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-2 shadow-[0_0_15px_rgba(0,242,254,0.3)]"
                 >
                   {selectedFileForPreview.isLocked && !isMember ? (
                     <>
                       <Lock className="w-3.5 h-3.5 text-black" />
-                      <span>UNLOCK WITH PASS</span>
+                      <span>UNLOCK WITH SUBSCRIBER PASS</span>
                     </>
                   ) : (
                     <>
