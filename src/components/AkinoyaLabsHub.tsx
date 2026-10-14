@@ -215,6 +215,41 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     return () => clearInterval(timer);
   }, []);
 
+  // Active Stage Detection on Scroll (for Fast-Jump Bar)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const stageNum = Number(entry.target.id.replace('stage-', ''));
+            if (stageNum >= 1 && stageNum <= 5) {
+              setActiveStageId(stageNum);
+            }
+          }
+        }
+      },
+      { rootMargin: '-15% 0px -60% 0px', threshold: 0.1 }
+    );
+
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById(`stage-${i}`);
+      if (el) observer.observe(el);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleJumpToStage = (stageNum: number) => {
+    setActiveStageId(stageNum);
+    soundManager.playTone(580, 0.05);
+    const target = document.getElementById(`stage-${stageNum}`);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   // Comprehensive 5-Stage Data Architecture
   const STAGES: StageDetail[] = [
     {
@@ -688,126 +723,113 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         <div className="absolute top-2/3 left-1/3 w-[500px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
         {/* ======================================================== */}
-        {/* HEADER: ÄKINOYA LABS UNIVERSAL WORKFLOW VAULT           */}
+        {/* COMPACT HEADER: ÄKINOYA LABS KNOWLEDGE PORTAL           */}
         {/* ======================================================== */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative rounded-3xl bg-gradient-to-r from-[#0d1222]/90 via-[#0a0e1c]/90 to-[#070912]/95 border border-cyan-500/30 p-6 sm:p-10 shadow-[0_0_50px_rgba(0,242,254,0.12)] overflow-hidden"
+          className="relative rounded-2xl bg-gradient-to-r from-[#0d1222]/90 via-[#0a0e1c]/90 to-[#070912]/95 border border-cyan-500/30 p-3.5 sm:p-4 shadow-[0_0_25px_rgba(0,242,254,0.1)] overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            <div className="space-y-4 max-w-3xl">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-cyan-300 font-bold tracking-wider flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,242,254,0.25)]">
-                  <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-                  ÄKINOYA LABS · KNOWLEDGE PORTAL
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-cyan-300 font-bold tracking-wider flex items-center gap-1 shadow-sm">
+                  <Cpu className="w-3 h-3 text-cyan-400" />
+                  ÄKINOYA LABS
                 </span>
-                <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-purple-950/80 border border-purple-400/40 text-purple-300 font-bold tracking-wider">
-                  5-STAGE ROADMAP · DEEP-DIVE MODALS
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-950/80 border border-purple-400/40 text-purple-300 font-bold tracking-wider">
+                  5-STAGE ROADMAP
                 </span>
                 {isMember ? (
-                  <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 font-bold tracking-wider flex items-center gap-1">
-                    <Crown className="w-3.5 h-3.5 text-amber-400" />
-                    PAID SUBSCRIBER / VIP PASS ACTIVE
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 font-bold tracking-wider flex items-center gap-1">
+                    <Crown className="w-3 h-3 text-amber-400" />
+                    PAID SUBSCRIBER ACTIVE
                   </span>
                 ) : (
-                  <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300/90 font-semibold tracking-wider flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-amber-400" />
-                    DOWNLOADS &amp; STAGES 3–5 GATED
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300/90 font-semibold tracking-wider flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5 text-amber-400" />
+                    STAGES 1–2 FREE · 3–5 GATED JAN 9, 2027
                   </span>
                 )}
               </div>
 
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-display font-black text-white tracking-tight leading-tight">
-                Interactive Production Roadmap &amp;{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-purple-400">
-                  Deep-Dive Vault
-                </span>
-              </h1>
-
-              <p className="text-sm sm:text-base text-white/75 font-sans leading-relaxed">
-                Step into the battle-tested hybrid AI &amp; Blender production pipeline developed by
-                Sillow Mill. Guided by <strong>Mill</strong> along our glowing cyan footstep trail,
-                each stage widget is an interactive portal opening a deep-dive knowledge modal with
-                custom-generated Gemini/Imagen visuals. Full asset downloads and advanced features
-                are strictly reserved for active <strong>paid monthly subscribers &amp; VIP members</strong>,
-                tied to the official countdown of <strong>January 9, 2027</strong>.
-              </p>
-            </div>
-
-            {/* Guide Avatar & Transmission Callout */}
-            <div className="shrink-0 flex items-center gap-4 p-4 rounded-2xl bg-black/60 border border-cyan-500/40 shadow-[0_0_25px_rgba(0,242,254,0.15)] max-w-md">
-              <div className="relative shrink-0">
-                <img
-                  src={millAvatar}
-                  alt="Mill - Pipeline Guide"
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-400 shadow-[0_0_15px_rgba(0,242,254,0.5)]"
-                />
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-cyan-400 text-black flex items-center justify-center font-bold text-[10px] shadow-sm">
-                  ✓
-                </span>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-cyan-300 tracking-wider">
-                    GUIDE: MILL
+              <div className="flex flex-wrap items-baseline gap-2">
+                <h1 className="text-base sm:text-xl font-display font-extrabold text-white tracking-tight">
+                  Interactive Production Roadmap &amp;{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-purple-400">
+                    Deep-Dive Vault
                   </span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                    ONLINE
-                  </span>
-                </div>
-                <p className="text-xs text-white/80 font-sans leading-snug">
-                  &ldquo;Click any roadmap stage widget to enter its Deep-Dive Modal! Explore the
-                  Gemini-generated visuals and director blueprints.&rdquo;
+                </h1>
+                <p className="text-xs text-white/60 font-sans hidden lg:inline">
+                  Hybrid AI &amp; Blender pipeline guided by Mill. Click any stage to enter the Deep-Dive Modal.
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Quick-Jump Milestone Navigation */}
-          <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-xs font-mono text-cyan-300 font-bold uppercase tracking-wider">
-              <FootstepIcon className="w-4 h-4" isActive pulse />
-              <span>Interactive Stages:</span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {STAGES.map((s) => {
-                const isLocked = s.isAdvancedLocked && !isMember;
-
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => handleOpenStageModal(s)}
-                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer ${
-                      isLocked
-                        ? 'bg-black/50 hover:bg-black/80 text-white/40 border border-white/10 hover:border-amber-400/40'
-                        : 'bg-white/10 hover:bg-cyan-500/20 text-white hover:text-cyan-200 border border-cyan-500/30 shadow-[0_0_10px_rgba(0,242,254,0.15)]'
-                    }`}
-                  >
-                    <span>{s.stageNumber} {s.tag}</span>
-                    {isLocked ? (
-                      <Lock className="w-3 h-3 text-amber-400" />
-                    ) : (
-                      <ChevronRight className="w-3 h-3 text-cyan-400" />
-                    )}
-                  </button>
-                );
-              })}
+            {/* Compact Mill Guide Callout */}
+            <div className="shrink-0 flex items-center gap-2.5 p-2 px-3 rounded-xl bg-black/60 border border-cyan-500/30 self-start md:self-auto">
+              <div className="relative shrink-0">
+                <img
+                  src={millAvatar}
+                  alt="Mill"
+                  className="w-8 h-8 rounded-lg object-cover border border-cyan-400"
+                />
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-cyan-400" />
+              </div>
+              <div className="text-[11px] leading-tight font-sans">
+                <span className="font-mono font-bold text-cyan-300 mr-1.5">Mill:</span>
+                <span className="text-white/80">&ldquo;Follow the cyan footsteps below!&rdquo;</span>
+              </div>
             </div>
           </div>
         </motion.div>
 
         {/* ======================================================== */}
+        {/* STICKY STAGE FAST-JUMP BAR (MOBILE & DESKTOP)            */}
+        {/* ======================================================== */}
+        <div className="sticky top-2 z-40 my-2 flex justify-center w-full px-2 pointer-events-none">
+          <div className="pointer-events-auto backdrop-blur-xl bg-black/85 border border-cyan-500/40 rounded-full px-2 py-1 shadow-[0_4px_30px_rgba(0,242,254,0.25)] flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar max-w-full">
+            <div className="flex items-center gap-1 px-2 text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider shrink-0 border-r border-white/10 hidden sm:flex">
+              <FootstepIcon className="w-3.5 h-3.5" isActive pulse />
+              <span>Fast Jump:</span>
+            </div>
+
+            {[
+              { id: 1, label: '01 Pre-Prod', locked: false },
+              { id: 2, label: '02 Art Dir', locked: false },
+              { id: 3, label: '03 3D Previs', locked: !isMember },
+              { id: 4, label: '04 Prompts', locked: !isMember },
+              { id: 5, label: '05 Polish', locked: !isMember },
+            ].map((pill) => {
+              const isActive = activeStageId === pill.id;
+              return (
+                <button
+                  key={pill.id}
+                  type="button"
+                  onClick={() => handleJumpToStage(pill.id)}
+                  className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-xs font-mono font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                    isActive
+                      ? 'bg-cyan-400 text-black shadow-[0_0_15px_rgba(0,242,254,0.7)] font-extrabold scale-105'
+                      : pill.locked
+                      ? 'bg-white/5 hover:bg-white/10 text-white/50 border border-white/10 hover:border-amber-400/40'
+                      : 'bg-white/10 hover:bg-white/20 text-white/80 hover:text-white border border-white/10'
+                  }`}
+                >
+                  {isActive && <FootstepIcon className="w-3 h-3" isActive />}
+                  <span>{pill.label}</span>
+                  {pill.locked && <Lock className="w-2.5 h-2.5 text-amber-400" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ======================================================== */}
         {/* 5-STAGE INTERACTIVE ROADMAP CARDS & WEAVING FOOTSTEPS     */}
         {/* ======================================================== */}
-        <div className="relative space-y-12">
+        <div className="relative space-y-10 sm:space-y-12 pt-2">
           {/* Vertical Glowing Cyan Spine */}
           <div className="absolute left-6 md:left-1/2 top-10 bottom-24 w-1 -translate-x-1/2 bg-gradient-to-b from-cyan-400 via-purple-500 to-cyan-500/40 rounded-full shadow-[0_0_15px_rgba(0,242,254,0.5)] z-0 pointer-events-none" />
 

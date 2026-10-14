@@ -54,6 +54,7 @@ import { CreatorLeaderboard } from './CreatorLeaderboard';
 import { CreatorPortfolioView } from './CreatorPortfolioView';
 import { LoreGovernancePortal } from './LoreGovernancePortal';
 import { AkinoyaLabsHub } from './AkinoyaLabsHub';
+import { DriveFolderVault } from './DriveFolderVault';
 import { getStoredCreators } from '../data/creators';
 
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
@@ -1154,7 +1155,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       <nav className="relative z-20 w-full bg-[#04070e]/95 border-b border-white/10 px-3 sm:px-6 py-2 overflow-x-auto no-scrollbar scroll-smooth shrink-0 shadow-lg" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-3 min-w-max">
           {[
-            { id: 'downloads', label: 'Asset & Download Vault', icon: FolderDown, count: '4' },
+            { id: 'downloads', label: 'Drive Asset Vault', icon: FolderDown, count: '5 Folders' },
             { id: 'workflows', label: 'Äkinoya Labs & Workflows', icon: Sliders, count: '5 Stages' },
             { id: 'discussion', label: 'Comm-Net Chat (8 Channels)', icon: MessageSquare, count: '8 Channels' },
             { id: 'creators', label: "Group's Favorite Planets & Leaderboard", icon: Trophy, count: 'Spotlight' },
@@ -1195,7 +1196,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       {/* Main Content Viewport */}
       <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
         {/* ======================================================== */}
-        {/* SECTION 1: ASSET & DOWNLOAD VAULT (LARGE MEDIA BANNERS)  */}
+        {/* SECTION 1: ASSET & DOWNLOAD VAULT (DRIVE DIRECTORY UI)   */}
         {/* ======================================================== */}
         {activeSection === 'downloads' && (
           <motion.div
@@ -1205,159 +1206,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             exit={{ opacity: 0, y: -12 }}
             className="space-y-6"
           >
-            {/* Header intro banner */}
-            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-black/50 to-black/80 border border-cyan-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(56,189,248,0.1)]">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold tracking-wider">
-                    MODULE 01 · ASSETS &amp; DOWNLOADS
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                    1 FREE SAMPLE UNLOCKED · €60/YR (~€5/MO)
-                  </span>
-                </div>
-                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
-                  📦 Asset &amp; Download Vault
-                </h1>
-                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  Download production-ready project templates, uncompressed 24-bit VIP audio masters, raw 4K visualizer wallpapers, and storyboards directly to your machine.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                disabled={true}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold cursor-not-allowed flex items-center justify-center gap-2 select-none text-center max-w-full truncate sm:whitespace-normal break-words leading-snug shadow-md shrink-0 min-h-[44px]"
-                title="Full vault downloads launch on 09/01/2027"
-              >
-                <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
-                <span className="max-w-full truncate sm:whitespace-normal break-words">LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)</span>
-              </button>
-            </div>
-
-            {/* Asset Grid: Large 16:9 Visual Preview Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-              {assetVaultItems.map((asset, index) => {
-                const isFreeSample = index === 0;
-                const isLockedForUser = !isPatron && !isFreeSample;
-
-                return (
-                  <div
-                    key={asset.id}
-                    className="rounded-2xl bg-black/60 border border-white/10 hover:border-cyan-500/40 transition-all flex flex-col justify-between shadow-[0_4px_30px_rgba(0,0,0,0.6)] group relative overflow-hidden"
-                  >
-                    <div>
-                      {/* Large Hero Media Container (16:9 Cinematic Preview - 100% Clean) */}
-                      <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/90 border-b border-white/10">
-                        <img
-                          src={asset.heroBannerUrl}
-                          alt={asset.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
-                        />
-                      </div>
-
-                      {/* Content Section below large preview */}
-                      <div className="p-5 sm:p-6 space-y-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-400/40 font-semibold tracking-wider flex items-center gap-1">
-                              <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
-                              READ-ONLY PREVIEW
-                            </span>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-cyan-300 border border-white/10 uppercase font-semibold">
-                              {asset.category}
-                            </span>
-                            <span className="text-[11px] font-mono text-cyan-400 font-semibold">{asset.fileFormat}</span>
-                          </div>
-                          <span className="text-[10px] font-mono text-white/50">
-                            {asset.fileSize}
-                          </span>
-                        </div>
-
-                        <h2 className="text-base sm:text-lg font-display font-bold text-white group-hover:text-cyan-200 transition-colors leading-snug">
-                          {asset.title}
-                        </h2>
-
-                        <p className="text-xs text-white/65 leading-relaxed font-sans">
-                          {asset.description}
-                        </p>
-
-                        {/* Audio Waveform preview bar positioned cleanly in content area if audio asset */}
-                        {asset.isAudio && (
-                          <div className="bg-black/60 border border-cyan-500/30 p-2.5 rounded-xl flex items-center justify-between gap-3 mt-3">
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleToggleAudio(asset.id)}
-                                className="w-8 h-8 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                              >
-                                {playingAudioId === asset.id ? (
-                                  <Pause className="w-4 h-4 fill-black" />
-                                ) : (
-                                  <Play className="w-4 h-4 fill-black ml-0.5" />
-                                )}
-                              </button>
-                              <div className="min-w-0">
-                                <div className="text-[11px] font-bold text-white truncate">Studio Audio Master</div>
-                                <div className="text-[9.5px] font-mono text-cyan-300">96kHz / 24-BIT WAV</div>
-                              </div>
-                            </div>
-
-                            {/* Waveform Telemetry Visualizer */}
-                            <div className="flex items-center gap-1 h-6">
-                              {[35, 65, 95, 45, 80, 100, 75, 40, 60, 85, 50, 90, 70].map((h, i) => (
-                                <div
-                                  key={i}
-                                  className="w-1 rounded-full bg-cyan-400 transition-all duration-300"
-                                  style={{
-                                    height: playingAudioId === asset.id ? `${h}%` : '20%',
-                                  }}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Bottom Action Footer: Seamless transition from description to CTA */}
-                    <div className="p-5 sm:p-6 pt-0 mt-auto">
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadAsset(asset, index)}
-                        className={`w-full min-h-[48px] px-4 py-2.5 rounded-xl text-xs font-mono font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                          isAnnualOrCreator
-                            ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_15px_rgba(56,189,248,0.35)]'
-                            : 'bg-white/[0.04] hover:bg-white/10 border border-white/10 text-white/70 hover:text-white'
-                        }`}
-                        title={
-                          isAnnualOrCreator
-                            ? `Download ${asset.fileName}`
-                            : 'Asset Vault locked: Requires Äkinoya Annual Pass (€60/yr · launches 09/01/2027)'
-                        }
-                      >
-                        {isAnnualOrCreator ? (
-                          <>
-                            <Download className="w-3.5 h-3.5" />
-                            <span>DOWNLOAD ASSET ({asset.fileSize.split('·')[0].trim()})</span>
-                          </>
-                        ) : (
-                          <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-center py-1">
-                            <span className="flex items-center gap-1.5 font-bold text-amber-300 text-xs">
-                              <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                              <span>LOCKED: ÄKINOYA ANNUAL PASS</span>
-                            </span>
-                            <span className="text-[10px] sm:text-[11px] text-white/50 font-mono">
-                              (Launches 09/01/2027 · €60/yr)
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <DriveFolderVault
+              isMember={isVipOrAbove}
+              onOpenAuthModal={() => openAuthModal('signin')}
+            />
           </motion.div>
         )}
 
