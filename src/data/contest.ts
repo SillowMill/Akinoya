@@ -27,7 +27,16 @@ const LOCAL_CONTEST_VOTES_KEY = 'akinoya_contest_votes';
  * Strictly purges any wireframe sketches, minimalist outlines, or SVG data URIs.
  */
 export const isCleanPhotorealistic = (url?: string): boolean =>
-  Boolean(url && typeof url === 'string' && !url.startsWith('data:image/svg'));
+  Boolean(
+    url &&
+      typeof url === 'string' &&
+      url.length > 20 &&
+      (url.startsWith('data:image/') ||
+        url.startsWith('http://') ||
+        url.startsWith('https://') ||
+        url.startsWith('/assets/') ||
+        url.startsWith('/'))
+  );
 
 /**
  * Endless Organic Naming Protocol:
@@ -243,18 +252,22 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
                     ecosystem: amlemiBotanicalImg,
                   }
                 : {
-                    hero: (isCleanPhotorealistic(sub.renders?.hero) ? sub.renders?.hero : null) || amlemiOrbitalImg,
+                    hero: (isCleanPhotorealistic(sub.renders?.hero) ? sub.renders?.hero : null) || sub.renders?.hero || '',
                     flora:
                       (isCleanPhotorealistic(sub.renders?.flora) ? sub.renders?.flora : null) ||
                       (isCleanPhotorealistic(sub.renders?.ecosystem) ? sub.renders?.ecosystem : null) ||
-                      amlemiBotanicalImg,
-                    fauna: (isCleanPhotorealistic(sub.renders?.fauna) ? sub.renders?.fauna : null) || amlemiFaunaImg,
-                    atmosphere: (isCleanPhotorealistic(sub.renders?.atmosphere) ? sub.renders?.atmosphere : null) || amlemiCockpitImg,
-                    landmark: (isCleanPhotorealistic(sub.renders?.landmark) ? sub.renders?.landmark : null) || amlemiMonumentImg,
+                      sub.renders?.flora ||
+                      sub.renders?.ecosystem ||
+                      '',
+                    fauna: (isCleanPhotorealistic(sub.renders?.fauna) ? sub.renders?.fauna : null) || sub.renders?.fauna || '',
+                    atmosphere: (isCleanPhotorealistic(sub.renders?.atmosphere) ? sub.renders?.atmosphere : null) || sub.renders?.atmosphere || '',
+                    landmark: (isCleanPhotorealistic(sub.renders?.landmark) ? sub.renders?.landmark : null) || sub.renders?.landmark || '',
                     ecosystem:
                       (isCleanPhotorealistic(sub.renders?.ecosystem) ? sub.renders?.ecosystem : null) ||
                       (isCleanPhotorealistic(sub.renders?.flora) ? sub.renders?.flora : null) ||
-                      amlemiBotanicalImg,
+                      sub.renders?.ecosystem ||
+                      sub.renders?.flora ||
+                      '',
                   },
             };
           });
@@ -333,18 +346,22 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
                     ecosystem: amlemiBotanicalImg,
                   }
                 : {
-                    hero: (isCleanPhotorealistic(d.renders?.hero) ? d.renders?.hero : null) || amlemiOrbitalImg,
+                    hero: (isCleanPhotorealistic(d.renders?.hero) ? d.renders?.hero : null) || d.renders?.hero || '',
                     flora:
                       (isCleanPhotorealistic(d.renders?.flora) ? d.renders?.flora : null) ||
                       (isCleanPhotorealistic(d.renders?.ecosystem) ? d.renders?.ecosystem : null) ||
-                      amlemiBotanicalImg,
-                    fauna: (isCleanPhotorealistic(d.renders?.fauna) ? d.renders?.fauna : null) || amlemiFaunaImg,
-                    atmosphere: (isCleanPhotorealistic(d.renders?.atmosphere) ? d.renders?.atmosphere : null) || amlemiCockpitImg,
-                    landmark: (isCleanPhotorealistic(d.renders?.landmark) ? d.renders?.landmark : null) || amlemiMonumentImg,
+                      d.renders?.flora ||
+                      d.renders?.ecosystem ||
+                      '',
+                    fauna: (isCleanPhotorealistic(d.renders?.fauna) ? d.renders?.fauna : null) || d.renders?.fauna || '',
+                    atmosphere: (isCleanPhotorealistic(d.renders?.atmosphere) ? d.renders?.atmosphere : null) || d.renders?.atmosphere || '',
+                    landmark: (isCleanPhotorealistic(d.renders?.landmark) ? d.renders?.landmark : null) || d.renders?.landmark || '',
                     ecosystem:
                       (isCleanPhotorealistic(d.renders?.ecosystem) ? d.renders?.ecosystem : null) ||
                       (isCleanPhotorealistic(d.renders?.flora) ? d.renders?.flora : null) ||
-                      amlemiBotanicalImg,
+                      d.renders?.ecosystem ||
+                      d.renders?.flora ||
+                      '',
                   },
               votesCount,
               hasVoted: userVoted,
@@ -434,18 +451,22 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
                 ecosystem: amlemiBotanicalImg,
               }
             : {
-                hero: (isCleanPhotorealistic(data.renders?.hero) ? data.renders?.hero : null) || amlemiOrbitalImg,
+                hero: (isCleanPhotorealistic(data.renders?.hero) ? data.renders?.hero : null) || data.renders?.hero || '',
                 flora:
                   (isCleanPhotorealistic(data.renders?.flora) ? data.renders?.flora : null) ||
                   (isCleanPhotorealistic(data.renders?.ecosystem) ? data.renders?.ecosystem : null) ||
-                  amlemiBotanicalImg,
-                fauna: (isCleanPhotorealistic(data.renders?.fauna) ? data.renders?.fauna : null) || amlemiFaunaImg,
-                atmosphere: (isCleanPhotorealistic(data.renders?.atmosphere) ? data.renders?.atmosphere : null) || amlemiCockpitImg,
-                landmark: (isCleanPhotorealistic(data.renders?.landmark) ? data.renders?.landmark : null) || amlemiMonumentImg,
+                  data.renders?.flora ||
+                  data.renders?.ecosystem ||
+                  '',
+                fauna: (isCleanPhotorealistic(data.renders?.fauna) ? data.renders?.fauna : null) || data.renders?.fauna || '',
+                atmosphere: (isCleanPhotorealistic(data.renders?.atmosphere) ? data.renders?.atmosphere : null) || data.renders?.atmosphere || '',
+                landmark: (isCleanPhotorealistic(data.renders?.landmark) ? data.renders?.landmark : null) || data.renders?.landmark || '',
                 ecosystem:
                   (isCleanPhotorealistic(data.renders?.ecosystem) ? data.renders?.ecosystem : null) ||
                   (isCleanPhotorealistic(data.renders?.flora) ? data.renders?.flora : null) ||
-                  amlemiBotanicalImg,
+                  data.renders?.ecosystem ||
+                  data.renders?.flora ||
+                  '',
               },
           votesCount,
           hasVoted: userVoted,
@@ -507,15 +528,27 @@ This planetary territory is officially registered in the 2027 Äkinoya Lore Gove
 
 // Map wizard inputs to 5 rich, photorealistic full-color visual render assets anchored in Mood.png & Äkinoya.jpg
 export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['renders'] => {
+  const isAmlemi = answers.planetName === 'Ämlemi';
+  if (isAmlemi) {
+    return {
+      hero: amlemiOrbitalImg,
+      flora: amlemiBotanicalImg,
+      fauna: amlemiFaunaImg,
+      atmosphere: amlemiCockpitImg,
+      landmark: amlemiMonumentImg,
+      ecosystem: amlemiBotanicalImg,
+    };
+  }
+
   const text = `${answers.planetName} ${answers.atmosphere} ${answers.visualAesthetic} ${answers.colorPalette}`.toLowerCase();
 
   if (text.includes('moodboard') || text.includes('green') || text.includes('forest') || text.includes('moss')) {
     return {
       hero: moodboardImg, // 1. Main Orbital (Mood.png)
       flora: mushroomValleyImg, // 2. Botanical Flora
-      fauna: amlemiFaunaImg, // 3. Exotic Fauna
-      atmosphere: amlemiCockpitImg, // 4. Cockpit Atmosphere
-      landmark: amlemiMonumentImg, // 5. Iconic Monument
+      fauna: heroBgImg, // 3. Exotic Fauna
+      atmosphere: twilightWorldImg, // 4. Cockpit Atmosphere
+      landmark: exactPlanetImg, // 5. Iconic Monument
       ecosystem: mushroomValleyImg,
     };
   }
@@ -524,20 +557,20 @@ export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['
     return {
       hero: visualizerThumbnailImg, // 1. Main Orbital
       flora: twilightWorldImg, // 2. Botanical Flora
-      fauna: amlemiFaunaImg, // 3. Exotic Fauna
-      atmosphere: amlemiCockpitImg, // 4. Cockpit Atmosphere
-      landmark: amlemiMonumentImg, // 5. Iconic Monument
+      fauna: heroBgImg, // 3. Exotic Fauna
+      atmosphere: moodboardImg, // 4. Cockpit Atmosphere
+      landmark: exactPlanetImg, // 5. Iconic Monument
       ecosystem: twilightWorldImg,
     };
   }
 
   return {
-    hero: amlemiOrbitalImg, // 1. Main Orbital Hero (01-orbital.png)
-    flora: amlemiBotanicalImg, // 2. Botanical Flora (02-botanical.png)
-    fauna: amlemiFaunaImg, // 3. Exotic Fauna (03-fauna.png)
-    atmosphere: amlemiCockpitImg, // 4. Cockpit Atmosphere (04-cockpit.png)
-    landmark: amlemiMonumentImg, // 5. Iconic Monument (05-monument.png)
-    ecosystem: amlemiBotanicalImg,
+    hero: exactPlanetImg, // 1. Main Orbital Hero (Äkinoya.jpg)
+    flora: mushroomValleyImg, // 2. Botanical Flora
+    fauna: heroBgImg, // 3. Exotic Fauna
+    atmosphere: twilightWorldImg, // 4. Cockpit Atmosphere
+    landmark: moodboardImg, // 5. Iconic Monument
+    ecosystem: mushroomValleyImg,
   };
 };
 
@@ -551,14 +584,29 @@ export interface PlanetPhotoCard {
 }
 
 export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] => {
-  const heroUrl = (isCleanPhotorealistic(sub.renders?.hero) ? sub.renders.hero : null) || amlemiOrbitalImg;
+  const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
+  const heroUrl =
+    (isCleanPhotorealistic(sub.renders?.hero) ? sub.renders.hero : null) ||
+    sub.renders?.hero ||
+    (isAmlemi ? amlemiOrbitalImg : '');
   const floraUrl =
     (isCleanPhotorealistic(sub.renders?.flora) ? sub.renders.flora : null) ||
     (isCleanPhotorealistic(sub.renders?.ecosystem) ? sub.renders.ecosystem : null) ||
-    amlemiBotanicalImg;
-  const faunaUrl = (isCleanPhotorealistic(sub.renders?.fauna) ? sub.renders.fauna : null) || amlemiFaunaImg;
-  const atmoUrl = (isCleanPhotorealistic(sub.renders?.atmosphere) ? sub.renders.atmosphere : null) || amlemiCockpitImg;
-  const landmarkUrl = (isCleanPhotorealistic(sub.renders?.landmark) ? sub.renders.landmark : null) || amlemiMonumentImg;
+    sub.renders?.flora ||
+    sub.renders?.ecosystem ||
+    (isAmlemi ? amlemiBotanicalImg : '');
+  const faunaUrl =
+    (isCleanPhotorealistic(sub.renders?.fauna) ? sub.renders.fauna : null) ||
+    sub.renders?.fauna ||
+    (isAmlemi ? amlemiFaunaImg : '');
+  const atmoUrl =
+    (isCleanPhotorealistic(sub.renders?.atmosphere) ? sub.renders.atmosphere : null) ||
+    sub.renders?.atmosphere ||
+    (isAmlemi ? amlemiCockpitImg : '');
+  const landmarkUrl =
+    (isCleanPhotorealistic(sub.renders?.landmark) ? sub.renders.landmark : null) ||
+    sub.renders?.landmark ||
+    (isAmlemi ? amlemiMonumentImg : '');
 
   return [
     {

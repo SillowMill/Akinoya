@@ -5,6 +5,11 @@ import { soundManager } from '../utils/audio';
 
 interface AkinoyaSciFiLoaderProps {
   planetName?: string;
+  progress?: number;
+  stageName?: string;
+  stageDetails?: string;
+  slotIndex?: number;
+  totalSlots?: number;
   onComplete?: () => void;
 }
 
@@ -18,58 +23,64 @@ interface TelemetryStage {
 const TELEMETRY_STAGES: TelemetryStage[] = [
   {
     threshold: 0,
-    stageName: 'ANALYZING PLANETARY DATA...',
-    details: 'Parsing 8 human-centric coordinates, color spectra, and biome resonance parameters.',
-    icon: Terminal,
-  },
-  {
-    threshold: 25,
-    stageName: 'SYNTHESIZING FLORA & FAUNA...',
-    details: 'Synthesizing bioluminescent botany, spore towers, and apex wildlife anchored in Mood.png.',
-    icon: Trees,
-  },
-  {
-    threshold: 50,
-    stageName: 'APPLYING ÄKINOYA 2D STRUCTURE...',
-    details: 'Aligning 2D celestial sphere curvature, ring geometry, and energy aura to akinoya_hero_bg.jpg.',
+    stageName: 'GENERATING ORBITAL HERO (1/5)...',
+    details: 'Synthesizing planetary sphere, atmospheric corona, and deep space horizon via Google Gemini Imagen 3...',
     icon: Globe2,
   },
   {
-    threshold: 75,
-    stageName: 'COMPOSING COCKPIT CANOPY & LANDMARK...',
-    details: 'Framing cockpit descent camera angle and monumental obsidian energy conduit.',
+    threshold: 20,
+    stageName: 'RENDERING BOTANICAL FLORA (2/5)...',
+    details: 'Synthesizing bioluminescent alien vegetation, spore towers, and botanical ecology...',
+    icon: Trees,
+  },
+  {
+    threshold: 40,
+    stageName: 'PAINTING EXOTIC FAUNA (3/5)...',
+    details: 'Synthesizing xenobiological wildlife, soaring pack lifeforms, and planetary creatures...',
+    icon: Compass,
+  },
+  {
+    threshold: 60,
+    stageName: 'SIMULATING COCKPIT ATMOSPHERE (4/5)...',
+    details: 'Framing cockpit descent canopy, pilot HUD vector reflections, and atmospheric cloud density...',
     icon: Layers,
   },
   {
-    threshold: 92,
-    stageName: 'FINALIZING LORE DOSSIER...',
-    details: 'Inscribing founding creed, generating orbital coordinates, and sealing official dossier.',
+    threshold: 80,
+    stageName: 'INSCRIBING LORE MONUMENT (5/5)...',
+    details: 'Erecting monumental architectural landmark and sealing official lore dossier cover...',
     icon: ShieldCheck,
   },
 ];
 
 export const AkinoyaSciFiLoader: React.FC<AkinoyaSciFiLoaderProps> = ({
   planetName = 'Äkinoya Frontier Sector',
+  progress: externalProgress,
+  stageName: externalStageName,
+  stageDetails: externalStageDetails,
+  slotIndex: externalSlotIndex,
+  totalSlots = 5,
   onComplete,
 }) => {
-  const [progress, setProgress] = useState<number>(0);
+  const [internalProgress, setInternalProgress] = useState<number>(0);
+  const isControlled = externalProgress !== undefined;
+  const progress = isControlled ? externalProgress : internalProgress;
 
   useEffect(() => {
+    if (isControlled) return;
     soundManager.playTone(550, 0.08);
 
     const interval = setInterval(() => {
-      setProgress((prev) => {
+      setInternalProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           if (onComplete) onComplete();
           return 100;
         }
-        // Progress speed: smooth, non-linear progression
         const increment = prev < 30 ? 2.5 : prev < 70 ? 1.8 : prev < 90 ? 1.2 : 0.8;
         const next = Math.min(100, Math.round((prev + increment) * 10) / 10);
 
-        // Sound blips at key thresholds
-        if (Math.floor(next) % 25 === 0 && Math.floor(prev) !== Math.floor(next)) {
+        if (Math.floor(next) % 20 === 0 && Math.floor(prev) !== Math.floor(next)) {
           soundManager.playTone(600 + (next * 2), 0.03);
         }
 
@@ -78,12 +89,14 @@ export const AkinoyaSciFiLoader: React.FC<AkinoyaSciFiLoaderProps> = ({
     }, 120);
 
     return () => clearInterval(interval);
-  }, [onComplete]);
+  }, [isControlled, onComplete]);
 
   // Determine current active telemetry stage
-  const currentStage =
+  const defaultStage =
     [...TELEMETRY_STAGES].reverse().find((s) => progress >= s.threshold) || TELEMETRY_STAGES[0];
-  const Icon = currentStage.icon;
+  const activeStageName = externalStageName || defaultStage.stageName;
+  const activeStageDetails = externalStageDetails || defaultStage.details;
+  const Icon = defaultStage.icon;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl overflow-hidden">
@@ -135,10 +148,10 @@ export const AkinoyaSciFiLoader: React.FC<AkinoyaSciFiLoaderProps> = ({
 
           <div className="space-y-1 relative z-10 max-w-md">
             <div className="text-xs sm:text-sm font-mono font-bold text-cyan-300 tracking-wider">
-              {currentStage.stageName}
+              {activeStageName}
             </div>
             <p className="text-[11px] font-mono text-white/60 line-clamp-2">
-              {currentStage.details}
+              {activeStageDetails}
             </p>
           </div>
         </div>
@@ -153,11 +166,12 @@ export const AkinoyaSciFiLoader: React.FC<AkinoyaSciFiLoaderProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-between text-[10px] font-mono text-white/40">
-            <span>01 · ORBITAL DATA</span>
-            <span>02 · FLORA / FAUNA</span>
-            <span>03 · CINEMATIC VOLUMETRIC MESH</span>
-            <span>04 · LORE ARCHIVE</span>
+          <div className="flex items-center justify-between text-[9.5px] font-mono text-white/40">
+            <span className={progress >= 20 ? 'text-cyan-300 font-bold' : ''}>01 · ORBITAL</span>
+            <span className={progress >= 40 ? 'text-cyan-300 font-bold' : ''}>02 · FLORA</span>
+            <span className={progress >= 60 ? 'text-cyan-300 font-bold' : ''}>03 · FAUNA</span>
+            <span className={progress >= 80 ? 'text-cyan-300 font-bold' : ''}>04 · COCKPIT</span>
+            <span className={progress >= 100 ? 'text-amber-300 font-bold' : ''}>05 · MONUMENT</span>
           </div>
         </div>
 

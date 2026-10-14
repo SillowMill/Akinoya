@@ -382,3 +382,76 @@ export async function syncPassClaimToGoogleSheets(passId, holderName, holderEmai
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Resets a VIP Pass in Google Sheets to Unclaimed / Ready to claim state.
+ * Clears Holder Name (Col C) and Holder Email (Col D), sets Status (Col F) to Unclaimed.
+ */
+export async function resetPassInGoogleSheets(passId) {
+  try {
+    const cleanId = normalizePassIdForLookup(passId);
+    if (!cleanId) return { success: false, reason: 'MISSING_PASS_ID' };
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.warn('[Google Sheets] Skipped reset: No access token available.');
+      return { success: false, reason: 'NO_TOKEN' };
+    }
+
+    const vipTab = await resolveVipTabName(accessToken);
+    const targetRow = await findPassRowInSheet(accessToken, vipTab, cleanId);
+    if (!targetRow) {
+      console.warn(`[Google Sheets] Could not locate sheet row for Pass ID: ${cleanId}`);
+      return { success: false, reason: 'ROW_NOT_FOUND' };
+    }
+
+    const isMaster = cleanId === 'AKN-VIP-2027-X0914' || cleanId === '0' || targetRow === 2;
+    const statusVal = isMaster ? 'Ready to claim / Master Key' : 'Unclaimed / Ready to claim';
+
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`;
+    const payload = {
+      valueInputOption: 'USER_ENTERED',
+      data: [
+        {
+          range: `'${vipTab}'!C${targetRow}`,
+          values: [['']],
+        },
+        {
+          range: `'${vipTab}'!D${targetRow}`,
+          values: [['']],
+        },
+        {
+          range: `'${vipTab}'!F${targetRow}`,
+          values: [[statusVal]],
+        },
+      ],
+    };
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn(`[Google Sheets] batchUpdate reset failed for row ${targetRow}:`, res.status, errText);
+      return { success: false, reason: 'API_ERROR', details: errText };
+    }
+
+    const resData = await res.json();
+    return {
+      success: true,
+      row: targetRow,
+      updatedCells: resData.totalUpdatedCells,
+      tab: vipTab,
+      passId: cleanId,
+    };
+  } catch (err) {
+    console.warn('[Google Sheets] Exception during pass reset in sheets:', err);
+    return { success: false, error: err.message };
+  }
+}

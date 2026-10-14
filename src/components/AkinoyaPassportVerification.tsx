@@ -243,6 +243,53 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           signature: 'Sillow Mill · Creative Syndicate',
         });
 
+  const [isResettingPass, setIsResettingPass] = useState(false);
+
+  const handleResetPass = async () => {
+    setIsResettingPass(true);
+    soundManager.playTone(480, 0.05);
+    try {
+      localStorage.removeItem(`akinoya_holder_name_${activeToken}`);
+      localStorage.removeItem(`akinoya_holder_name_#${activeToken}`);
+      const rawCerts = localStorage.getItem('akinoya_bingaa_certificates');
+      if (rawCerts) {
+        try {
+          const parsed = JSON.parse(rawCerts);
+          if (Array.isArray(parsed)) {
+            const filtered = parsed.filter((c: any) => c.passId !== activeToken && c.passId !== `#${activeToken}`);
+            localStorage.setItem('akinoya_bingaa_certificates', JSON.stringify(filtered));
+          }
+        } catch {}
+      }
+      localStorage.removeItem('akinoya_pending_vip_pass');
+      sessionStorage.removeItem('pending_vip_code');
+
+      await fetch('/api/nfc/reset-pass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: activeToken }),
+      }).catch((e) => console.warn('Reset endpoint notice:', e));
+
+      setDnaError(null);
+      setPassData((prev) => ({
+        ...prev,
+        status: isMaster ? 'FOUNDERS PASS (#0) / READY TO CLAIM' : 'UNASSIGNED / READY TO CLAIM',
+        ownerName: '',
+        ownerEmail: null,
+        isClaimed: false,
+        registeredAt: null,
+        certificate: null,
+      }));
+
+      await executeVerification(activeToken, queryParams.enc, queryParams.cmac);
+      soundManager.playUnlockChime();
+    } catch (err) {
+      console.warn('Reset pass exception:', err);
+    } finally {
+      setIsResettingPass(false);
+    }
+  };
+
   // Execute verification against server-side NTAG engine
   const executeVerification = async (token: string, enc: string | null, cmac: string | null) => {
     setIsValidating(true);
@@ -306,23 +353,31 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
         if (data.pass) {
           const pass = data.pass;
-          const isPassClaimed = Boolean(pass.isClaimed && pass.ownerName);
+          const isPassClaimed = Boolean(pass.isClaimed && pass.ownerName && pass.ownerName.trim().length > 0);
           setPassData((prev) => ({
             ...prev,
             ...pass,
-            ownerName: pass.ownerName || prev.ownerName,
-            ownerEmail: pass.ownerEmail || prev.ownerEmail,
-            isClaimed: isPassClaimed || prev.isClaimed,
+            ownerName: isPassClaimed ? (pass.ownerName || prev.ownerName) : '',
+            ownerEmail: isPassClaimed ? (pass.ownerEmail || prev.ownerEmail) : null,
+            isClaimed: isPassClaimed,
             status: isMaster
               ? (isPassClaimed ? 'MASTER FOUNDER ORIGINAL' : 'FOUNDERS PASS (#0) / READY TO CLAIM')
-              : (pass.status || prev.status),
+              : (pass.status || (isPassClaimed ? 'OFFICIALLY VERIFIED' : 'UNASSIGNED / READY TO CLAIM')),
           }));
 
-          if (pass.certificate) {
-            saveCertificate(pass.certificate);
-          }
-          if (pass.ownerName) {
-            saveHolderName(pass.ownerName, token);
+          if (isPassClaimed) {
+            if (pass.certificate) {
+              saveCertificate(pass.certificate);
+            }
+            if (pass.ownerName) {
+              saveHolderName(pass.ownerName, token);
+            }
+          } else {
+            // Clean up stale local storage for unclaimed/reset token
+            try {
+              localStorage.removeItem(`akinoya_holder_name_${token}`);
+              localStorage.removeItem(`akinoya_holder_name_#${token}`);
+            } catch {}
           }
         }
 
@@ -560,9 +615,22 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           <ArrowLeft className="w-3.5 h-3.5 text-white/50" />
           <span>Back to Home</span>
         </button>
-        <span className="text-[10px] sm:text-[11px] font-mono text-cyan-400 uppercase tracking-widest">
-          ÄKINOYA PROTOCOL · 2027
-        </span>
+        <div className="flex items-center gap-2">
+          {activeToken === 'AKN-VIP-2027-X001' && (
+            <button
+              type="button"
+              onClick={handleResetPass}
+              disabled={isResettingPass}
+              className="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 cursor-pointer transition-colors font-bold shadow-sm"
+              title="Reset pass to fresh unclaimed state"
+            >
+              {isResettingPass ? 'RESETTING...' : 'RESET PASS (FRESH TEST)'}
+            </button>
+          )}
+          <span className="text-[10px] sm:text-[11px] font-mono text-cyan-400 uppercase tracking-widest">
+            ÄKINOYA PROTOCOL · 2027
+          </span>
+        </div>
       </div>
 
       {/* Security Warning if Cloned/Invalid */}
@@ -650,6 +718,17 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                   className="w-full py-3 px-4 rounded-xl font-mono text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
                 >
                   <span>RETURN TO HOME</span>
+                </button>
+              </div>
+
+              <div className="pt-2 border-t border-white/10 text-center">
+                <button
+                  type="button"
+                  onClick={handleResetPass}
+                  disabled={isResettingPass}
+                  className="text-[11px] font-mono text-cyan-400 hover:text-cyan-200 underline cursor-pointer p-1"
+                >
+                  {isResettingPass ? 'Resetting Pass...' : `[TEST MODE]: Clear & Reset ${activeToken} to Fresh Unassigned Status`}
                 </button>
               </div>
             </div>

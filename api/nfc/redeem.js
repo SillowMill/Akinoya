@@ -50,6 +50,13 @@ function saveRedemptions() {
   }
 }
 
+export function resetRedemption(tokenId) {
+  loadRedemptions();
+  const token = (tokenId || '').trim().toUpperCase();
+  _redemptionsMemory.delete(token);
+  saveRedemptions();
+}
+
 export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -74,6 +81,12 @@ export default async function handler(req, res) {
 
   const rawToken = body.token || (req.query && req.query.token);
   const rawDeviceId = body.deviceId || (req.query && req.query.deviceId);
+
+  if (body.action === 'reset' || (req.query && req.query.action === 'reset')) {
+    if (rawToken) resetRedemption(rawToken);
+    res.statusCode = 200;
+    return res.end(JSON.stringify({ success: true, message: `Redemption for token ${rawToken} reset.` }));
+  }
 
   if (!rawToken || typeof rawToken !== 'string') {
     res.statusCode = 400;

@@ -168,6 +168,17 @@ export function saveStore() {
   }
 }
 
+export function resetPassRecord(tokenId) {
+  loadStore();
+  const normalized = normalizeTokenId(tokenId);
+  _store.passes[normalized] = createDefaultPassRecord(normalized);
+  if (_store.transferKeys && _store.transferKeys[normalized]) {
+    delete _store.transferKeys[normalized];
+  }
+  saveStore();
+  return _store.passes[normalized];
+}
+
 export function getPassRecord(tokenId) {
   loadStore();
   const normalized = normalizeTokenId(tokenId);

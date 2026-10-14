@@ -8,13 +8,14 @@ import {
 } from './stripeService';
 import {
   getPassRecord,
+  resetPassRecord,
   verifyDnaCipher,
   generateAuthenticDnaCipher,
   registerPassHolder,
   isValidPassId,
 } from './nfcDnaService';
 import { handleCertificateAction } from '../../api/nfc/_certificateService.js';
-import { generatePlanetRenders, checkAndLockUserGeneration } from '../../api/generate-planet';
+import { generatePlanetRenders, generateSlotRender, checkAndLockUserGeneration } from '../../api/generate-planet';
 import { checkVipTokenStatus, claimVipTokenForUser } from '../lib/vipTokens';
 
 export const apiApp = express();
@@ -290,6 +291,18 @@ apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<voi
   res.status(200).json(result);
 });
 
+// ─── 6.5. Reset VIP Pass (Development / Test Reset) ──────────────────────────
+apiRouter.all('/nfc/reset-pass', async (req: Request, res: Response): Promise<void> => {
+  const token = ((req.body?.token || req.body?.id || req.query?.token || req.query?.id || 'AKN-VIP-2027-X001') as string).trim().toUpperCase();
+  const passRecord = resetPassRecord(token);
+  res.status(200).json({
+    success: true,
+    token,
+    message: `Digital VIP Pass ${token} has been reset to active / unclaimed status.`,
+    pass: passRecord,
+  });
+});
+
 // ─── 7. Whitelist Subscription ────────────────────────────────────────────────
 apiRouter.post('/whitelist/subscribe', (req: Request, res: Response): void => {
   const rawEmail = ((req.body?.email as string) || '').trim().toLowerCase();
@@ -324,7 +337,7 @@ apiRouter.get('/nfc/generate-test-cipher', (req: Request, res: Response): void =
 apiRouter.all(['/generate-planet', '/planet/generate'], async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body || {};
-    if (body.userId) {
+    if (body.userId && !body.slot) {
       const lockCheck = await checkAndLockUserGeneration(body.userId);
       if (!lockCheck.allowed) {
         res.status(403).json({
@@ -334,6 +347,11 @@ apiRouter.all(['/generate-planet', '/planet/generate'], async (req: Request, res
         });
         return;
       }
+    }
+    if (body.slot) {
+      const slotResult = await generateSlotRender(body.slot, body);
+      res.status(200).json(slotResult);
+      return;
     }
     const result = await generatePlanetRenders(body);
     res.status(200).json({

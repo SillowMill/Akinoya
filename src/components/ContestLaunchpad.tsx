@@ -73,6 +73,10 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   const [allSubmissions, setAllSubmissions] = useState<PlanetSubmission[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isGeneratingRenders, setIsGeneratingRenders] = useState<boolean>(false);
+  const [generationProgress, setGenerationProgress] = useState<number>(0);
+  const [generationStageName, setGenerationStageName] = useState<string>('ANALYZING PLANETARY DATA...');
+  const [generationStageDetails, setGenerationStageDetails] = useState<string>('Parsing 8 human-centric coordinates...');
+  const [generationSlotIndex, setGenerationSlotIndex] = useState<number>(1);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [modalPlanet, setModalPlanet] = useState<PlanetSubmission | null>(null);
 
@@ -158,59 +162,116 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     setPendingAnswers(answersWithFormattedName);
     setIsChatOpen(false);
     setIsGeneratingRenders(true);
+    setGenerationProgress(5);
+    setGenerationStageName('INITIALIZING GEMINI AI PIPELINE...');
+    setGenerationStageDetails(`Configuring 5-photo photorealistic prompts for ${planetName}...`);
     soundManager.playTone(660, 0.08);
 
     try {
-      // 1. Call live Gemini AI generation endpoint with the 8 human inputs
-      const res = await fetch('/api/generate-planet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id || profile?.id,
-          email: user?.email,
-          relaxation: answers.relaxation,
-          creativeExpression: answers.creativeExpression,
-          naturalEnvironment: answers.naturalEnvironment,
-          lifePhilosophy: answers.lifePhilosophy,
-          admiredCreature: answers.admiredCreature,
-          colorPalette: answers.colorPalette,
-          resilienceStory: answers.resilienceStory,
-          futurePromise: answers.futurePromise,
-          planetName,
-          atmosphere: answers.atmosphere,
-          flora: answers.flora,
-          fauna: answers.fauna,
-          sonicVibe: answers.sonicVibe,
-          visualAesthetic: answers.visualAesthetic,
-          landmark: answers.landmark,
-          additionalNotes: answers.additionalNotes,
-          biome: answers.biome,
-          sectorName: answers.sectorName,
-        }),
-      });
+      const slots: Array<'hero' | 'flora' | 'fauna' | 'atmosphere' | 'landmark'> = [
+        'hero',
+        'flora',
+        'fauna',
+        'atmosphere',
+        'landmark',
+      ];
 
-      if (res.status === 403) {
-        const json = await res.json();
-        setIsGeneratingRenders(false);
-        soundManager.playError();
-        alert(json.message || 'SUBMISSION_LOCKED: Account has already utilized its single Golden Ticket planet synthesis.');
-        return;
-      }
+      const slotLabels = {
+        hero: {
+          name: 'GENERATING ORBITAL HERO (1/5)...',
+          details: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Google Gemini Imagen 3...',
+        },
+        flora: {
+          name: 'RENDERING BOTANICAL FLORA (2/5)...',
+          details: 'Synthesizing bioluminescent alien vegetation, spore towers, and botanical ecology...',
+        },
+        fauna: {
+          name: 'PAINTING EXOTIC FAUNA (3/5)...',
+          details: 'Synthesizing xenobiological wildlife, soaring pack lifeforms, and planetary creatures...',
+        },
+        atmosphere: {
+          name: 'SIMULATING COCKPIT ATMOSPHERE (4/5)...',
+          details: 'Framing cockpit descent canopy, pilot HUD vector reflections, and atmospheric cloud density...',
+        },
+        landmark: {
+          name: 'INSCRIBING LORE MONUMENT (5/5)...',
+          details: 'Erecting monumental architectural landmark and sealing official lore dossier cover...',
+        },
+      };
 
-      let finalRenders = resolvePlanetRenders(answersWithFormattedName);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.renders) {
-          finalRenders = {
-            hero: isCleanPhotorealistic(json.renders.hero) ? json.renders.hero : finalRenders.hero,
-            flora: isCleanPhotorealistic(json.renders.flora) ? json.renders.flora : finalRenders.flora,
-            fauna: isCleanPhotorealistic(json.renders.fauna) ? json.renders.fauna : finalRenders.fauna,
-            atmosphere: isCleanPhotorealistic(json.renders.atmosphere) ? json.renders.atmosphere : finalRenders.atmosphere,
-            landmark: isCleanPhotorealistic(json.renders.landmark) ? json.renders.landmark : finalRenders.landmark,
-            ecosystem: isCleanPhotorealistic(json.renders.ecosystem) ? json.renders.ecosystem : finalRenders.ecosystem,
-          };
+      const collectedRenders: Record<string, string> = {};
+
+      for (let i = 0; i < slots.length; i++) {
+        const slot = slots[i];
+        const meta = slotLabels[slot];
+        setGenerationSlotIndex(i + 1);
+        setGenerationStageName(meta.name);
+        setGenerationStageDetails(meta.details);
+        setGenerationProgress(Math.round((i / slots.length) * 100));
+
+        const res = await fetch('/api/generate-planet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user?.id || profile?.id,
+            email: user?.email,
+            relaxation: answers.relaxation,
+            creativeExpression: answers.creativeExpression,
+            naturalEnvironment: answers.naturalEnvironment,
+            lifePhilosophy: answers.lifePhilosophy,
+            admiredCreature: answers.admiredCreature,
+            colorPalette: answers.colorPalette,
+            resilienceStory: answers.resilienceStory,
+            futurePromise: answers.futurePromise,
+            planetName,
+            atmosphere: answers.atmosphere,
+            flora: answers.flora,
+            fauna: answers.fauna,
+            sonicVibe: answers.sonicVibe,
+            visualAesthetic: answers.visualAesthetic,
+            landmark: answers.landmark,
+            additionalNotes: answers.additionalNotes,
+            biome: answers.biome,
+            sectorName: answers.sectorName,
+            slot,
+          }),
+        });
+
+        if (res.status === 403) {
+          const json = await res.json();
+          setIsGeneratingRenders(false);
+          soundManager.playError();
+          alert(json.message || 'SUBMISSION_LOCKED: Account has already utilized its single Golden Ticket planet synthesis.');
+          return;
         }
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.imageUrl) {
+            collectedRenders[slot] = json.imageUrl;
+          }
+        }
+
+        setGenerationProgress(Math.round(((i + 1) / slots.length) * 100));
+        soundManager.playTone(600 + (i * 80), 0.04);
       }
+
+      setGenerationProgress(100);
+      setGenerationStageName('SYNTHESIS COMPLETE!');
+      setGenerationStageDetails('All 5 high-resolution cinematic sci-fi images successfully generated.');
+      soundManager.playUnlockChime();
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setIsGeneratingRenders(false);
+
+      const finalRenders = {
+        hero: collectedRenders.hero || '',
+        flora: collectedRenders.flora || '',
+        fauna: collectedRenders.fauna || '',
+        atmosphere: collectedRenders.atmosphere || '',
+        landmark: collectedRenders.landmark || '',
+        ecosystem: collectedRenders.flora || '',
+      };
 
       // 2. Synthesize official sector lore incorporating founding creed
       const lore = generatePlanetLore(answersWithFormattedName, userDisplayName);
@@ -541,7 +602,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
         {/* SCI-FI BRAND LOADING SCREEN DURING LIVE GENERATION */}
         {isGeneratingRenders && (
-          <AkinoyaSciFiLoader planetName={pendingAnswers?.planetName || 'Äkinoya Frontier Sector'} />
+          <AkinoyaSciFiLoader
+            planetName={pendingAnswers?.planetName || 'Äkinoya Frontier Sector'}
+            progress={generationProgress}
+            stageName={generationStageName}
+            stageDetails={generationStageDetails}
+            slotIndex={generationSlotIndex}
+            totalSlots={5}
+          />
         )}
 
         {/* PREVIEW & APPROVAL DOSSIER (IF WIZARD COMPLETED BUT NOT YET SUBMITTED) */}
