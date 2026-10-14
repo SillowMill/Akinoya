@@ -380,6 +380,13 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
       }
       const { data, error } = await query.maybeSingle();
       if (!error && data) {
+        const isAmlemi = data.id === 'planet-amlemi-genesis-01' || data.planet_name === 'Ämlemi';
+        const userVoted = hasUserVotedOnSubmission(data.id);
+        let votesCount = Math.max(1, data.votes_count || 1);
+        if (isAmlemi) {
+          votesCount = userVoted ? 4 : 3;
+        }
+
         const sub: PlanetSubmission = {
           id: data.id,
           userId: data.user_id,
@@ -387,7 +394,7 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           authorUsername: data.author_username || 'creator',
           authorEmail: data.author_email || '',
           authorAvatarGradient: data.author_avatar_gradient || 'from-amber-400 to-amber-600',
-          planetName: formatAkinoyaPlanetName(data.planet_name),
+          planetName: isAmlemi ? 'Ämlemi' : formatAkinoyaPlanetName(data.planet_name),
           atmosphere: data.atmosphere || '',
           flora: data.flora || '',
           fauna: data.fauna || '',
@@ -398,7 +405,8 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           humanAnswers: data.human_answers || {},
           generatedLore: data.generated_lore || '',
           renders: data.renders || {},
-          votesCount: data.votes_count || 1,
+          votesCount,
+          hasVoted: userVoted,
           status: (data.status as any) || 'PUBLISHED',
           createdAt: data.created_at || new Date().toISOString(),
           votingDeadline: 'June 30, 2027',
@@ -629,15 +637,18 @@ export const togglePlanetSubmissionVote = async (
     localStorage.setItem(LOCAL_CONTEST_VOTES_KEY, JSON.stringify(map));
   } catch {}
 
-  const isAmlemiId = submissionId === 'planet-amlemi-genesis-01';
-  const minBaseline = isAmlemiId ? 3 : 1;
-
   const submissions = getStoredPlanetSubmissions();
+  const targetSub = submissions.find((s) => s.id === submissionId);
+  const isAmlemi = submissionId === 'planet-amlemi-genesis-01' || targetSub?.planetName === 'Ämlemi';
+  const minBaseline = isAmlemi ? 3 : 1;
+
   let updatedCount = minBaseline;
   const updatedSubmissions = submissions.map((sub) => {
-    if (sub.id === submissionId || (isAmlemiId && sub.planetName === 'Ämlemi')) {
-      const base = isAmlemiId ? (sub.votesCount >= 3 ? sub.votesCount : 3) : Math.max(1, sub.votesCount || 1);
-      const nextCount = Math.max(minBaseline, base + (nextVoted ? 1 : -1));
+    const isThisSubAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
+    if (sub.id === submissionId || (isAmlemi && isThisSubAmlemi)) {
+      const nextCount = isThisSubAmlemi
+        ? (nextVoted ? 4 : 3)
+        : Math.max(minBaseline, (sub.votesCount || 1) + (nextVoted ? 1 : -1));
       updatedCount = nextCount;
       return { ...sub, votesCount: nextCount, hasVoted: nextVoted };
     }

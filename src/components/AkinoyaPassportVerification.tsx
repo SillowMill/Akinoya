@@ -835,7 +835,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                     </span>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40">
                       <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span>VIP PASS UNLOCKED — STRIKT GEKOPPELD AAN DIT ACCOUNT</span>
+                      <span>VIP PASS UNLOCKED — STRICTLY BOUND TO THIS ACCOUNT</span>
                     </span>
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase bg-gradient-to-r from-amber-400 to-amber-200 text-black">
                       ROLE: VIP
