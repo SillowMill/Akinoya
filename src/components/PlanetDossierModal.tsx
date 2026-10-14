@@ -15,7 +15,6 @@ import {
   ChevronRight,
   Layers,
   ShieldCheck,
-  Maximize2,
   CheckCircle2,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
@@ -154,7 +153,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 <div className="flex items-center gap-2">
                   <Camera className="w-4 h-4 text-cyan-400" />
                   <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-                    Sillow Mill 2D Visual Gallery · Photo 0{activePhotoIdx + 1} of 05
+                    {currentPhoto.title} · Photo 0{activePhotoIdx + 1} of 05
                   </h3>
                 </div>
                 <span className="text-[10px] font-mono text-cyan-400/80">
@@ -190,28 +189,6 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
-
-                {/* Photo Badge Overlay */}
-                <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/85 backdrop-blur-md border border-cyan-400/40 text-[10px] font-mono text-cyan-300 font-bold">
-                  {currentPhoto.title}
-                </div>
-
-                {/* Zoom toggle button */}
-                <button
-                  type="button"
-                  onClick={() => setIsZoomed(!isZoomed)}
-                  className="absolute top-3 right-3 p-2 rounded-full bg-black/85 backdrop-blur-md border border-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
-                  title={isZoomed ? 'Zoom Out' : 'Zoom In'}
-                >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </button>
-
-                {/* Bottom Photo Caption */}
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-3 sm:p-4 text-left">
-                  <p className="text-xs font-mono font-semibold text-white truncate">
-                    {currentPhoto.description}
-                  </p>
-                </div>
               </div>
 
               {/* 5-Photo Thumbnail Filmstrip */}
