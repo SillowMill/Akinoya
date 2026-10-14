@@ -1,7 +1,8 @@
-import { ShieldCheck, Sparkles, Trophy } from 'lucide-react';
+import { ShieldCheck, Sparkles, Trophy, Globe2 } from 'lucide-react';
 import { SoundtrackButton } from './SoundtrackButton';
 import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
+import { openClaimWorldModal } from '../utils/pioneer';
 
 interface TopBarProps {
   isUnlocked: boolean;
@@ -63,6 +64,14 @@ export const TopBar: React.FC<TopBarProps> = ({
             <Trophy className="w-3.5 h-3.5 text-amber-400" />
             <span>Contest</span>
           </a>
+          <button
+            type="button"
+            onClick={() => openClaimWorldModal()}
+            className="hover:text-amber-300 transition-colors flex items-center gap-1.5 text-amber-300/90 font-semibold cursor-pointer"
+          >
+            <Globe2 className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+            <span>Claim World</span>
+          </button>
           <a href="/community" className="hover:text-cyan-300 transition-colors flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
             <span>Community Hub</span>

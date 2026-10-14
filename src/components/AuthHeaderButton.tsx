@@ -151,12 +151,22 @@ export const AuthHeaderButton: React.FC = () => {
                 <span className={`text-[9px] font-mono px-2 py-0.5 rounded font-bold uppercase ${roleBadge.className}`}>
                   ROLE: {roleBadge.label}
                 </span>
+                {profile?.is_pioneer !== false && (
+                  <span className="text-[9px] font-mono px-2 py-0.5 rounded font-extrabold uppercase bg-amber-400 text-black shadow-[0_0_8px_rgba(245,158,11,0.5)]">
+                    [PIONEER-2027]
+                  </span>
+                )}
                 {profile?.vip_code_redeemed && (
                   <span className="text-[9px] font-mono text-emerald-400 font-semibold truncate">
                     #{profile.vip_code_redeemed}
                   </span>
                 )}
               </div>
+              {profile?.claimed_sector && (
+                <div className="text-[9.5px] font-mono text-cyan-300 pt-0.5 truncate">
+                  🪐 SECTOR: {profile.claimed_sector}
+                </div>
+              )}
 
               {/* Strict Account-Bound VIP Pass Badge */}
               {isUserVip && (

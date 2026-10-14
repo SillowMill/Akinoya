@@ -24,6 +24,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
+import { openClaimWorldModal } from '../utils/pioneer';
 
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
 import akinoyaPlanetImg from '../assets/images/akinoya_exact_planet_1790853678690.jpg';
@@ -57,14 +58,8 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
   };
 
   const handleClaimPlanetClick = () => {
-    soundManager.playTone(330, 0.08);
-    if (onOpenAuthModal) {
-      onOpenAuthModal();
-    } else {
-      alert(
-        '🔒 Planetary Governance Gated\n\nCustom planet claiming and VR metaverse integration launch on January 9, 2027.\nClaim your VIP Pass or sign in to verify your founder privileges.'
-      );
-    }
+    soundManager.playTone(520, 0.05);
+    openClaimWorldModal();
   };
 
   return (
@@ -334,8 +329,8 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
               onClick={handleClaimPlanetClick}
               className="pt-2 text-xs font-mono font-bold text-amber-300 hover:text-amber-100 flex items-center gap-1.5 transition-colors cursor-pointer group"
             >
-              <Lock className="w-3.5 h-3.5 text-amber-400" />
-              <span>Claim Your Planet (VIP Locked)</span>
+              <Globe2 className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+              <span>Claim Your World [PIONEER-2027] →</span>
             </button>
           </div>
         </div>
@@ -394,15 +389,17 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
             <button
               type="button"
               onClick={handleClaimPlanetClick}
-              className="p-4 sm:p-5 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300 font-mono font-bold text-xs sm:text-sm transition-all cursor-pointer flex flex-col items-center justify-center gap-2 group hover:scale-[1.02]"
+              className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-500/25 hover:from-amber-500/35 hover:to-yellow-500/30 border border-amber-400/60 text-amber-300 font-mono font-bold text-xs sm:text-sm transition-all cursor-pointer flex flex-col items-center justify-center gap-2 group hover:scale-[1.02] shadow-[0_0_20px_rgba(245,158,11,0.2)]"
             >
               <div className="flex items-center gap-1.5">
-                <Lock className="w-5 h-5 text-amber-400" />
-                <Globe2 className="w-5 h-5 text-amber-300" />
+                <Globe2 className="w-5 h-5 text-amber-400 animate-pulse" />
+                <span className="text-[11px] px-2 py-0.5 rounded bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono font-extrabold">
+                  [PIONEER-2027]
+                </span>
               </div>
-              <span>Claim Your Planet (VIP Only 🔒)</span>
-              <span className="text-[10px] font-sans font-normal text-amber-200/70">
-                VR Governance · Jan 9, 2027
+              <span>Claim Your World →</span>
+              <span className="text-[10px] font-sans font-normal text-amber-200/80">
+                Sector Claims · Launch Jan 9, 2027
               </span>
             </button>
           </div>

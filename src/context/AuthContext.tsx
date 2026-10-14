@@ -256,6 +256,21 @@ const enrichProfile = (
     '';
   const full = (raw.full_name || `${first} ${last}`).trim() || raw.email;
 
+  const regDate = raw.created_at || new Date().toISOString();
+  const isPioneer = new Date(regDate).getTime() < new Date('2027-01-09T00:00:00+01:00').getTime();
+  const storedSector =
+    typeof window !== 'undefined'
+      ? (() => {
+          try {
+            const parsed = JSON.parse(localStorage.getItem('sillow_claimed_sector') || '');
+            return parsed?.sectorName || null;
+          } catch {
+            return localStorage.getItem('sillow_claimed_sector') || null;
+          }
+        })()
+      : null;
+  const claimedSector = raw.claimed_sector || storedSector || null;
+
   return {
     id: raw.id,
     first_name: first,
@@ -271,7 +286,10 @@ const enrichProfile = (
     is_subscriber: isSubscriber,
     is_annual_member: isSubscriber,
     unlocked_assets: isVip || isSubscriber ? ['master_audio', 'visualizer_3d', 'lore_doc'] : [],
-    created_at: raw.created_at || new Date().toISOString(),
+    is_pioneer: isPioneer,
+    pioneer_badge: isPioneer ? '[PIONEER-2027]' : undefined,
+    claimed_sector: claimedSector,
+    created_at: regDate,
     updated_at: raw.updated_at || new Date().toISOString(),
   };
 };
@@ -291,6 +309,9 @@ const persistProfileToSupabase = async (prof: Profile) => {
         has_vip_pass: Boolean(prof.has_vip_pass),
         subscription_status: prof.subscription_status || 'inactive',
         vip_code_redeemed: prof.vip_code_redeemed || null,
+        is_pioneer: prof.is_pioneer ?? true,
+        pioneer_badge: prof.pioneer_badge || '[PIONEER-2027]',
+        claimed_sector: prof.claimed_sector || null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'id' }
@@ -318,6 +339,9 @@ const syncToGoogleSheets = async (prof: Partial<Profile>, codeUsed?: string) => 
         subscription_status: prof.subscription_status || 'inactive',
         vip_code_redeemed: codeUsed || prof.vip_code_redeemed || 'N/A',
         created_at: prof.created_at || new Date().toISOString(),
+        is_pioneer: prof.is_pioneer ?? true,
+        pioneer_badge: prof.pioneer_badge || '[PIONEER-2027]',
+        claimed_sector: prof.claimed_sector || undefined,
       }),
     });
   } catch (err) {

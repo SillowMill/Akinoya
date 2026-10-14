@@ -40,6 +40,7 @@ import {
   Users,
   Trophy,
   Heart,
+  Globe2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
@@ -56,6 +57,7 @@ import { AkinoyaLabsHub } from './AkinoyaLabsHub';
 import { DriveFolderVault } from './DriveFolderVault';
 import { WelcomeVisionPortal } from './WelcomeVisionPortal';
 import { getStoredCreators } from '../data/creators';
+import { openClaimWorldModal } from '../utils/pioneer';
 
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
 export const isMembershipLaunchLocked = new Date() < MEMBERSHIP_LAUNCH_DATE;
@@ -1453,6 +1455,18 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       Paid memberships &amp; VR planet minting launch worldwide.
                     </p>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playTone(520, 0.05);
+                      openClaimWorldModal();
+                    }}
+                    className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/25 to-amber-500/20 hover:from-amber-500/30 hover:to-yellow-500/35 border border-amber-400/50 text-amber-300 font-mono text-[10.5px] font-bold tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_14px_rgba(245,158,11,0.2)] transition-all cursor-pointer hover:scale-[1.02]"
+                  >
+                    <Globe2 className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                    <span>CLAIM YOUR WORLD</span>
+                  </button>
 
                   <a
                     href="/contest"

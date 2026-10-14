@@ -104,6 +104,23 @@ export default async function handler(req, res) {
       ? 'AKN-VIP-2027-X0914'
       : String(record.vip_code_redeemed || record.vipCode || '').trim();
     const registrationDate = record.created_at || new Date().toISOString();
+    const isPioneer = new Date(registrationDate).getTime() < new Date('2027-01-09T00:00:00+01:00').getTime();
+    const pioneerBadge = isPioneer ? '[PIONEER-2027]' : '';
+    const claimedSector = String(record.claimed_sector || record.sector || '').trim();
+
+    // Tag role with [PIONEER-2027] for tracking in Google Sheets Subscribers tab
+    let roleDisplay = role;
+    if (isPioneer && !roleDisplay.includes('PIONEER')) {
+      roleDisplay = `${role} [PIONEER-2027]`;
+    }
+
+    if (claimedSector) {
+      if (!vipCode || vipCode === 'N/A') {
+        vipCode = `SECTOR: ${claimedSector}`;
+      } else if (!vipCode.includes(claimedSector)) {
+        vipCode = `${vipCode} · SECTOR: ${claimedSector}`;
+      }
+    }
 
     if (!email || !email.includes('@')) {
       return res.status(400).json({ error: 'Valid email is required for subscriber sync' });
@@ -216,7 +233,9 @@ export default async function handler(req, res) {
       const existing = subscriberMap.get(email);
       if (firstName) existing.firstName = firstName;
       if (lastName) existing.lastName = lastName;
-      existing.role = isFounder ? 'CREATOR' : (role || existing.role);
+      existing.role = isFounder
+        ? 'CREATOR [PIONEER-2027]'
+        : (roleDisplay || existing.role);
       existing.vipCode = isFounder
         ? 'AKN-VIP-2027-X0914'
         : (vipCode && vipCode !== 'N/A' ? vipCode : existing.vipCode);
@@ -226,7 +245,7 @@ export default async function handler(req, res) {
         firstName: firstName || (isFounder ? 'Odi' : 'Subscriber'),
         lastName: lastName || (isFounder ? 'Selis' : ''),
         email,
-        role: isFounder ? 'CREATOR' : (role || 'FREE'),
+        role: isFounder ? 'CREATOR [PIONEER-2027]' : (roleDisplay || 'FREE [PIONEER-2027]'),
         vipCode: isFounder ? 'AKN-VIP-2027-X0914' : (vipCode || 'N/A'),
         registrationDate: registrationDate || new Date().toISOString(),
       });
@@ -277,8 +296,11 @@ export default async function handler(req, res) {
     }
 
     // Real-Time Dual Tab Sync: If a VIP pass is attached or redeemed, also update the VIP GUESTS tab
-    let targetVipPassId = vipCode;
-    if (!targetVipPassId || targetVipPassId === 'N/A') {
+    let targetVipPassId = isFounder
+      ? 'AKN-VIP-2027-X0914'
+      : String(record.vip_code_redeemed || record.vipCode || '').trim();
+
+    if (!targetVipPassId || targetVipPassId === 'N/A' || targetVipPassId.startsWith('SECTOR:')) {
       if (isFounder) {
         targetVipPassId = 'AKN-VIP-2027-X0914';
       } else if (
@@ -286,6 +308,8 @@ export default async function handler(req, res) {
         `${firstName} ${lastName}`.toLowerCase().includes('esther')
       ) {
         targetVipPassId = 'AKN-VIP-2027-X001';
+      } else {
+        targetVipPassId = null;
       }
     }
 
@@ -305,7 +329,10 @@ export default async function handler(req, res) {
       action,
       totalSubscribers: consolidatedRows.length,
       email,
-      role,
+      role: roleDisplay,
+      is_pioneer: isPioneer,
+      pioneer_badge: pioneerBadge,
+      claimed_sector: claimedSector || null,
       vipSynced: Boolean(vipSyncResult && vipSyncResult.success),
       vipSyncDetails: vipSyncResult,
     });

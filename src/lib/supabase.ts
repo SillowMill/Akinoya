@@ -32,6 +32,10 @@ export interface Profile {
   };
   is_artist?: boolean;
   portfolio_likes_count?: number;
+  // Pioneer 2027 Pre-Launch Status & Sector Claim
+  is_pioneer?: boolean;
+  pioneer_badge?: string; // '[PIONEER-2027]'
+  claimed_sector?: string | null;
   created_at?: string;
   updated_at?: string;
 }

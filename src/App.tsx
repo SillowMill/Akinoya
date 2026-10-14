@@ -19,6 +19,8 @@ import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerific
 import { CommunityHub } from './components/CommunityHub';
 import { CreatorPortfolioView } from './components/CreatorPortfolioView';
 import { ContestLaunchpad } from './components/ContestLaunchpad';
+import { PioneerCampaignBanner } from './components/PioneerCampaignBanner';
+import { ClaimYourWorldModal } from './components/ClaimYourWorldModal';
 import { useAuth } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -106,6 +108,7 @@ export default function App() {
 
   // VIP Sub-view inside /verify route: 'passport' (HUD Certificate) | 'portal' (Personalized VIP Unlocked Portal)
   const [vipSubView, setVipSubView] = useState<'passport' | 'portal'>('passport');
+  const [isClaimWorldOpen, setIsClaimWorldOpen] = useState<boolean>(false);
 
   const [creatorUsername, setCreatorUsername] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -257,6 +260,9 @@ export default function App() {
 
   return (
     <main className="relative min-h-[100dvh] w-full bg-[#050505] text-white flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Official Pioneer Launch Countdown Announcement Banner */}
+      <PioneerCampaignBanner onOpenClaimModal={() => setIsClaimWorldOpen(true)} />
+
       {/* Global VIP Referral Invitation Top Banner */}
       {hasPendingVipInvitation && !isAuthenticated && (
         <div className="relative z-[60] w-full bg-gradient-to-r from-amber-950/95 via-yellow-950/90 to-amber-950/95 border-b border-amber-500/40 px-3 sm:px-6 py-2 sm:py-2.5 backdrop-blur-xl flex flex-wrap items-center justify-between gap-2 shadow-[0_4px_25px_rgba(245,158,11,0.25)] shrink-0">
@@ -491,6 +497,9 @@ export default function App() {
 
       {/* Floating Audio Stop/Play Control (Always accessible while scrolling) */}
       {!backdropOnly && route !== 'community' && route !== 'creators' && <FloatingAudioControl />}
+
+      {/* Claim Your World / Pioneer 2027 Early Access Interactive Modal */}
+      <ClaimYourWorldModal isOpen={isClaimWorldOpen} onClose={() => setIsClaimWorldOpen(false)} />
     </main>
   );
 }
