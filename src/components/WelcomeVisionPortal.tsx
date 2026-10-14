@@ -163,20 +163,20 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
           className="relative rounded-3xl overflow-hidden border-2 border-cyan-500/40 bg-black shadow-[0_0_50px_rgba(0,242,254,0.2)] group/video"
         >
           {/* Top Video Header Chrome */}
-          <div className="p-3 sm:p-4 bg-[#070b16]/95 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
+          <div className="p-3 sm:p-4 bg-[#070b16]/95 border-b border-amber-500/20 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(0,242,254,0.8)]" />
-              <span className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider truncate">
-                TRANSMISSION 01 · [Odi&apos;s Personal Welcome &amp; Vision Transmission - Video Placeholder]
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+              <span className="text-xs font-mono font-bold text-amber-300 uppercase tracking-wider truncate">
+                TRANSMISSION LOCKED · [Odi&apos;s Personal Welcome &amp; Vision Transmission - Video Placeholder]
               </span>
             </div>
 
             <div className="flex items-center gap-2 text-[10.5px] font-mono text-white/60">
+              <span className="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-400/40 text-amber-300 font-bold">
+                🔒 RELEASE: 09/29
+              </span>
               <span className="px-2 py-0.5 rounded bg-black/60 border border-white/10 text-white/80">
                 16:9 CINEMATIC · 4K UHD
-              </span>
-              <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold">
-                04:18 · 24 FPS
               </span>
             </div>
           </div>
@@ -187,13 +187,14 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
             <img
               src={akinoyaVistaImg}
               alt="Äkinoya Vista Transmission"
-              className={`w-full h-full object-cover transition-transform duration-1000 ${
-                isVideoPlaying ? 'scale-105 filter brightness-110' : 'group-hover/video:scale-102 brightness-90'
-              }`}
+              className="w-full h-full object-cover brightness-75 filter group-hover/video:scale-102 transition-transform duration-1000"
             />
 
             {/* Cinematic Gradient Vignette */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/60 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/70 pointer-events-none" />
+
+            {/* Glowing Amber/Gold Ambient Core */}
+            <div className="absolute inset-0 bg-amber-500/10 blur-3xl pointer-events-none" />
 
             {/* Glowing Cyan Vector Scanline Overlay */}
             <div
@@ -203,81 +204,47 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
               }}
             />
 
-            {/* Video State: Paused Overlay */}
-            {!isVideoPlaying ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-4">
-                <button
-                  type="button"
-                  onClick={handleToggleVideo}
-                  className="relative group/play flex items-center justify-center cursor-pointer"
-                  aria-label="Play transmission"
-                >
-                  <div className="absolute -inset-4 rounded-full bg-cyan-400/20 blur-xl group-hover/play:bg-cyan-400/40 transition-all duration-300" />
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-cyan-400 text-black flex items-center justify-center shadow-[0_0_35px_rgba(0,242,254,0.7)] group-hover/play:scale-110 transition-transform">
-                    <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-black ml-1 text-black" />
-                  </div>
-                </button>
-
-                <div className="space-y-1.5 max-w-xl">
-                  <h3 className="text-base sm:text-xl font-display font-black text-white drop-shadow-md">
-                    Transmission from the Fringe: The Vision Behind Äkinoya &amp; Bingäa
-                  </h3>
-                  <p className="text-xs sm:text-sm text-cyan-200/90 font-sans drop-shadow-sm">
-                    Presented by <strong>Odi</strong> · Creator &amp; Systems Architect, Sillow Mill
-                  </p>
-                  <p className="text-[11px] font-mono text-white/60">
-                    Click to launch high-fidelity video transmission stream
-                  </p>
+            {/* Gold Lock Overlay (Release Day: 09/29) */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-4 z-20">
+              {/* Prominent Gold Lock Icon */}
+              <div
+                onClick={() => {
+                  soundManager.playTone(330, 0.08);
+                  alert(
+                    "🔒 Personal Studio Transmission Locked\n\nPersonal Studio Transmission will be available on release day: 09/29.\n\nOdi's personal welcome & system breakdown recorded live from the home studio."
+                  );
+                }}
+                className="relative group/lock flex items-center justify-center cursor-pointer"
+                title="Personal Studio Transmission will be available on release day: 09/29"
+              >
+                <div className="absolute -inset-4 rounded-full bg-amber-400/25 blur-2xl group-hover/lock:bg-amber-400/40 transition-all duration-300" />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-300 text-black flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.6)] group-hover/lock:scale-110 transition-transform border-2 border-amber-200">
+                  <Lock className="w-8 h-8 sm:w-9 sm:h-9 text-black fill-black/20" />
                 </div>
               </div>
-            ) : (
-              /* Simulated Active Video Player Screen */
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col justify-between p-4 sm:p-6">
-                <div className="flex items-center justify-between text-xs font-mono text-cyan-300">
-                  <span className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                    LIVE TRANSMISSION · FEED CONNECTED
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsMuted(!isMuted)}
-                    className="p-2 rounded-xl bg-black/60 hover:bg-black/90 border border-white/20 text-white cursor-pointer"
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-cyan-300" />}
-                  </button>
+
+              {/* Gold Lock Overlay Badge & Text */}
+              <div className="space-y-2 max-w-xl">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/80 border border-amber-400/50 text-amber-300 font-mono text-[10.5px] font-bold tracking-wider uppercase shadow-md">
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>TRANSMISSION LOCKED · RELEASES 09/29</span>
                 </div>
 
-                <div className="self-center text-center space-y-2 p-4 rounded-2xl bg-black/75 border border-cyan-500/40 max-w-lg shadow-2xl">
-                  <p className="text-xs sm:text-sm text-cyan-100 font-sans italic">
-                    &ldquo;We created this universe so you don&apos;t just observe worlds—you build, own, and govern them with professional-grade tools.&rdquo;
-                  </p>
-                  <span className="text-[10px] font-mono text-cyan-400 block font-bold">
-                    — Odi · Transmission Stream Active
-                  </span>
-                </div>
+                <h3 className="text-lg sm:text-2xl md:text-3xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 drop-shadow-md">
+                  Personal Studio Transmission will be available on release day: 09/29
+                </h3>
 
-                {/* Bottom Video Progress Scrub & Pause */}
-                <div className="space-y-2">
-                  <div className="w-full h-1.5 rounded-full bg-white/20 overflow-hidden relative">
-                    <div className="h-full bg-gradient-to-r from-cyan-400 to-purple-500 w-2/3 shadow-[0_0_10px_rgba(0,242,254,0.8)]" />
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] font-mono text-white/70">
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={handleToggleVideo}
-                        className="text-cyan-300 hover:text-white flex items-center gap-1 cursor-pointer font-bold"
-                      >
-                        <Pause className="w-3.5 h-3.5 fill-cyan-300" />
-                        <span>Pause Transmission</span>
-                      </button>
-                      <span>02:45 / 04:18</span>
-                    </div>
-                    <span className="text-cyan-400">1080p 60FPS ACEScc</span>
-                  </div>
+                <p className="text-xs sm:text-sm text-amber-100/90 font-sans drop-shadow-sm max-w-md mx-auto leading-relaxed">
+                  Odi&apos;s personal welcome &amp; system breakdown recorded live from the home studio.
+                </p>
+
+                <div className="pt-1 flex items-center justify-center gap-2 text-[10.5px] font-mono text-white/50">
+                  <span>STUDIO 4K RAW MASTER</span>
+                  <span>·</span>
+                  <span>RECORDED FROM HOME STUDIO</span>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </motion.div>
 

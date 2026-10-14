@@ -320,7 +320,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   return (
     <div className="relative min-h-[100dvh] w-full max-w-full box-border bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
       {/* Universal Sticky Header */}
-      <header className="relative z-40 w-full border-b border-white/10 bg-[#050811]/90 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3 shrink-0">
+      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <button
             type="button"

@@ -213,6 +213,87 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
   // Active Hub Section (00 · Welcome & Vision Portal as primary landing page)
   const [activeSection, setActiveSection] = useState<CreativeHubSection>('welcome');
+  const [activeStageId, setActiveStageId] = useState<number>(1);
+
+  // Workflow Pipeline Stages for Left Sidebar Sub-Menu
+  const WORKFLOW_STAGES = [
+    { id: 1, num: '01', title: 'Storyboards & Framing' },
+    { id: 2, num: '02', title: 'Character & World Specs' },
+    { id: 3, num: '03', title: 'Blender 4.2 & Octane 3D' },
+    { id: 4, num: '04', title: 'Prompts & Diffusion Matrix' },
+    { id: 5, num: '05', title: 'DaVinci Grading & Ableton' },
+  ];
+
+  const handleSwitchSection = (section: CreativeHubSection) => {
+    setActiveSection(section);
+    soundManager.playTone(580, 0.05);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Instant top-scroll on tab switch or section reset
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeSection]);
+
+  // Scroll-spy observer for Stage 01–05 when in Labs & Workflows
+  useEffect(() => {
+    if (typeof window === 'undefined' || activeSection !== 'workflows') return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const stageNum = Number(entry.target.id.replace('stage-', ''));
+            if (stageNum >= 1 && stageNum <= 5) {
+              setActiveStageId(stageNum);
+            }
+          }
+        }
+      },
+      { rootMargin: '-15% 0px -55% 0px', threshold: 0.1 }
+    );
+
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById(`stage-${i}`);
+      if (el) observer.observe(el);
+    }
+
+    return () => observer.disconnect();
+  }, [activeSection]);
+
+  const handleJumpToStage = (stageNum: number) => {
+    setActiveStageId(stageNum);
+    soundManager.playTone(580, 0.05);
+    const target = document.getElementById(`stage-${stageNum}`);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const getDynamicHeaderTitle = () => {
+    switch (activeSection) {
+      case 'welcome':
+        return 'ÄKINOYA COMMUNITY HUB · WELCOME & VISION';
+      case 'workflows':
+        return 'ÄKINOYA COMMUNITY HUB · LABS & WORKFLOWS';
+      case 'downloads':
+        return 'ÄKINOYA COMMUNITY HUB · DRIVE ASSET VAULT';
+      case 'discussion':
+        return 'ÄKINOYA COMMUNITY HUB · COMM-NET CHAT';
+      case 'creators':
+        return 'ÄKINOYA COMMUNITY HUB · FAVORITE PLANETS & LEADERBOARD';
+      case 'governance':
+        return 'ÄKINOYA COMMUNITY HUB · LORE & GOVERNANCE PORTAL';
+      default:
+        return 'ÄKINOYA COMMUNITY HUB';
+    }
+  };
 
   // Paywall Upgrade Modal state
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
@@ -1058,7 +1139,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   return (
     <div className="relative min-h-[100dvh] w-full bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
       {/* Top Universal Header Bar */}
-      <header className="relative z-50 w-full border-b border-white/10 bg-[#050811]/90 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 w-full max-w-full overflow-visible">
+      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/80 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 w-full max-w-full overflow-visible">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"
@@ -1074,7 +1155,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
             <span className="text-xs sm:text-sm font-display font-bold tracking-wider text-white uppercase truncate">
-              ÄKINOYA COMMUNITY HUB · LORE &amp; GOVERNANCE
+              {getDynamicHeaderTitle()}
             </span>
           </div>
         </div>
@@ -1223,10 +1304,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     <button
                       key={tab.id}
                       type="button"
-                      onClick={() => {
-                        setActiveSection(tab.id as CreativeHubSection);
-                        soundManager.playTone(580, 0.05);
-                      }}
+                      onClick={() => handleSwitchSection(tab.id as CreativeHubSection)}
                       className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap min-h-[44px] ${
                         isActive
                           ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(56,189,248,0.35)] font-bold scale-[1.02]'
@@ -1253,7 +1331,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               {/* ======================================================== */}
               {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION (>= 768px)   */}
               {/* ======================================================== */}
-              <aside className="hidden md:flex w-64 lg:w-72 shrink-0 flex-col justify-between bg-[#050812]/90 backdrop-blur-xl border-r border-white/10 p-4 lg:p-5 sticky top-14 h-[calc(100dvh-3.5rem)] overflow-y-auto z-30 space-y-6">
+              <aside className="hidden md:flex w-64 lg:w-72 shrink-0 flex-col justify-between bg-[#050812]/90 backdrop-blur-xl border-r border-white/10 p-4 lg:p-5 sticky top-20 h-[calc(100dvh-5rem)] overflow-y-auto z-30 space-y-6">
                 <div className="space-y-4">
                   {/* Sidebar Branding Header */}
                   <div className="pb-3 border-b border-white/10 space-y-1">
@@ -1278,49 +1356,88 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       const isActive = activeSection === tab.id;
 
                       return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => {
-                            setActiveSection(tab.id as CreativeHubSection);
-                            soundManager.playTone(580, 0.05);
-                          }}
-                          className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group min-h-[46px] ${
-                            isActive
-                              ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.4)] font-bold scale-[1.01]'
-                              : 'bg-white/[0.03] border-white/5 hover:border-cyan-400/40 hover:bg-white/[0.07] text-white/70 hover:text-white'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <Icon
-                              className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
-                                isActive ? 'text-black' : 'text-cyan-400'
-                              }`}
-                            />
-                            <div className="min-w-0">
-                              <span className="text-xs font-mono font-bold block truncate">
-                                {tab.label}
-                              </span>
-                              <span
-                                className={`text-[9.5px] font-sans block truncate ${
-                                  isActive ? 'text-black/80 font-medium' : 'text-white/40'
-                                }`}
-                              >
-                                {tab.desc}
-                              </span>
-                            </div>
-                          </div>
-
-                          <span
-                            className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full font-bold shrink-0 ml-1.5 ${
+                        <div key={tab.id} className="space-y-1">
+                          <button
+                            type="button"
+                            onClick={() => handleSwitchSection(tab.id as CreativeHubSection)}
+                            className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group min-h-[46px] ${
                               isActive
-                                ? 'bg-black/20 text-black'
-                                : 'bg-white/10 text-white/60 group-hover:bg-cyan-500/20 group-hover:text-cyan-300'
+                                ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.4)] font-bold scale-[1.01]'
+                                : 'bg-white/[0.03] border-white/5 hover:border-cyan-400/40 hover:bg-white/[0.07] text-white/70 hover:text-white'
                             }`}
                           >
-                            {tab.count}
-                          </span>
-                        </button>
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <Icon
+                                className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
+                                  isActive ? 'text-black' : 'text-cyan-400'
+                                }`}
+                              />
+                              <div className="min-w-0">
+                                <span className="text-xs font-mono font-bold block truncate">
+                                  {tab.label}
+                                </span>
+                                <span
+                                  className={`text-[9.5px] font-sans block truncate ${
+                                    isActive ? 'text-black/80 font-medium' : 'text-white/40'
+                                  }`}
+                                >
+                                  {tab.desc}
+                                </span>
+                              </div>
+                            </div>
+
+                            <span
+                              className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full font-bold shrink-0 ml-1.5 ${
+                                isActive
+                                  ? 'bg-black/20 text-black'
+                                  : 'bg-white/10 text-white/60 group-hover:bg-cyan-500/20 group-hover:text-cyan-300'
+                              }`}
+                            >
+                              {tab.count}
+                            </span>
+                          </button>
+
+                          {/* Nested Pipeline Stages sub-menu when on Labs & Workflows */}
+                          {isActive && tab.id === 'workflows' && (
+                            <div className="ml-3 pl-3 border-l-2 border-cyan-500/40 space-y-1 pt-1.5 pb-1">
+                              <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-400/90 block px-2 pb-0.5">
+                                PIPELINE STAGES
+                              </span>
+                              {WORKFLOW_STAGES.map((st) => {
+                                const isStageActive = activeStageId === st.id;
+                                return (
+                                  <button
+                                    key={st.id}
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleJumpToStage(st.id);
+                                    }}
+                                    className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-mono transition-all flex items-center justify-between cursor-pointer ${
+                                      isStageActive
+                                        ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/60 shadow-[0_0_12px_rgba(0,242,254,0.35)] font-bold'
+                                        : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
+                                    }`}
+                                  >
+                                    <span className="flex items-center gap-1.5 truncate">
+                                      <span
+                                        className={`text-[10px] ${
+                                          isStageActive ? 'text-cyan-300 font-bold' : 'text-white/40'
+                                        }`}
+                                      >
+                                        [{st.num}]
+                                      </span>
+                                      <span className="truncate text-[11px]">{st.title}</span>
+                                    </span>
+                                    {isStageActive && (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0 ml-1 shadow-[0_0_6px_#00f2fe]" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -1349,7 +1466,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               </aside>
 
               {/* Main Content Viewport */}
-              <main className="flex-1 min-w-0 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8">
+              <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8">
                 {/* ======================================================== */}
                 {/* SECTION 0: 00 · WELCOME & VISION PORTAL (PRIMARY LANDING)*/}
                 {/* ======================================================== */}
@@ -1363,10 +1480,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   >
                     <WelcomeVisionPortal
                       isMember={isVipOrAbove}
-                      onNavigateToWorkflows={() => setActiveSection('workflows')}
-                      onNavigateToVault={() => setActiveSection('downloads')}
-                      onNavigateToDiscussion={() => setActiveSection('discussion')}
-                      onNavigateToLeaderboard={() => setActiveSection('creators')}
+                      onNavigateToWorkflows={() => handleSwitchSection('workflows')}
+                      onNavigateToVault={() => handleSwitchSection('downloads')}
+                      onNavigateToDiscussion={() => handleSwitchSection('discussion')}
+                      onNavigateToLeaderboard={() => handleSwitchSection('creators')}
                       onOpenAuthModal={() => openAuthModal('signin')}
                     />
                   </motion.div>
@@ -1389,7 +1506,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       onNavigateVerify={() => {
                         window.location.href = '/verify';
                       }}
-                      onNavigateToVault={() => setActiveSection('downloads')}
+                      onNavigateToVault={() => handleSwitchSection('downloads')}
                     />
                   </motion.div>
                 )}

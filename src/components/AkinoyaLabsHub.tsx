@@ -742,9 +742,9 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         </motion.div>
 
         {/* ======================================================== */}
-        {/* MOBILE STICKY STAGE FAST-JUMP BAR (HIDDEN ON DESKTOP)    */}
+        {/* MOBILE STICKY STAGE FAST-JUMP BAR (< 768px)              */}
         {/* ======================================================== */}
-        <div className="lg:hidden sticky top-2 z-40 my-2 flex justify-center w-full px-2 pointer-events-none">
+        <div className="md:hidden sticky top-2 z-40 my-2 flex justify-center w-full px-2 pointer-events-none">
           <div className="pointer-events-auto backdrop-blur-xl bg-black/85 border border-cyan-500/40 rounded-full px-2 py-1 shadow-[0_4px_30px_rgba(0,242,254,0.25)] flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full">
             {STAGES.map((s) => {
               const isActive = activeStageId === s.id;
@@ -772,94 +772,9 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         </div>
 
         {/* ======================================================== */}
-        {/* RESPONSIVE LAYOUT: DESKTOP SIDEBAR + 5-STAGE ROADMAP     */}
+        {/* UNIFIED 5-STAGE ROADMAP (INTEGRATED SINGLE SIDEBAR)      */}
         {/* ======================================================== */}
-        <div className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-8 items-start">
-          {/* ====================================================== */}
-          {/* DESKTOP STICKY VERTICAL SIDEBAR DOCK                    */}
-          {/* ====================================================== */}
-          <aside className="hidden lg:block sticky top-24 self-start space-y-4">
-            <div className="p-4 rounded-3xl bg-[#090e1c]/90 border border-cyan-500/30 backdrop-blur-xl shadow-[0_0_30px_rgba(0,242,254,0.1)] space-y-4">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider">
-                  <FootstepIcon className="w-4 h-4" isActive pulse />
-                  <span>Pipeline Navigator</span>
-                </div>
-                <span className="text-[10px] font-mono text-white/40">5 STAGES</span>
-              </div>
-
-              {/* Vertical Stage Milestones List with Connecting Spine */}
-              <div className="relative space-y-2 before:absolute before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-gradient-to-b before:from-cyan-400 before:via-purple-500 before:to-cyan-500/40 before:rounded-full">
-                {STAGES.map((stage) => {
-                  const isActive = activeStageId === stage.id;
-                  const isLocked = stage.isAdvancedLocked && !isMember;
-
-                  return (
-                    <button
-                      key={stage.id}
-                      type="button"
-                      onClick={() => handleJumpToStage(stage.id)}
-                      className={`relative z-10 w-full p-2.5 rounded-2xl flex items-center justify-between gap-3 text-left transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-cyan-400 text-black shadow-[0_0_20px_rgba(0,242,254,0.6)] font-bold scale-[1.02]'
-                          : isLocked
-                          ? 'bg-black/40 hover:bg-black/60 text-white/50 border border-white/5 hover:border-amber-400/30'
-                          : 'bg-white/[0.04] hover:bg-white/10 text-white/80 hover:text-white border border-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span
-                          className={`w-7 h-7 rounded-xl flex items-center justify-center font-mono text-xs font-extrabold shrink-0 ${
-                            isActive
-                              ? 'bg-black text-cyan-300'
-                              : isLocked
-                              ? 'bg-amber-950/60 text-amber-300'
-                              : 'bg-cyan-950/60 text-cyan-300'
-                          }`}
-                        >
-                          {stage.stageNumber}
-                        </span>
-
-                        <div className="min-w-0">
-                          <span className="text-xs font-display font-bold block truncate">
-                            {stage.richIcon} {stage.navLabel}
-                          </span>
-                          <span
-                            className={`text-[9.5px] font-mono block truncate ${
-                              isActive ? 'text-black/70' : 'text-white/40'
-                            }`}
-                          >
-                            {stage.vaultFolderMapping}
-                          </span>
-                        </div>
-                      </div>
-
-                      {isLocked ? (
-                        <Lock className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-black' : 'text-amber-400'}`} />
-                      ) : (
-                        <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-black' : 'text-cyan-400'}`} />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Bottom Quick-Link to Asset Vault */}
-              {onNavigateToVault && (
-                <div className="pt-2 border-t border-white/10">
-                  <button
-                    type="button"
-                    onClick={onNavigateToVault}
-                    className="w-full py-2 px-3 rounded-xl bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-400/40 text-cyan-300 hover:text-white text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <FolderDown className="w-3.5 h-3.5" />
-                    <span>Open Drive Vault</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </aside>
-
+        <div className="w-full">
           {/* ====================================================== */}
           {/* MAIN ROADMAP CARDS & WEAVING FOOTSTEPS                  */}
           {/* ====================================================== */}
