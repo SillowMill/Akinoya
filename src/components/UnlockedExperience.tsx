@@ -271,18 +271,31 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   // Verified holder assets: active pass is the NFC-bound token for this device session
   const { nfcToken } = useVipAccess();
+  const authHolderName = profile?.first_name ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}` : profile?.full_name || null;
+  const userEmail = (user?.email || profile?.email || '').toLowerCase().trim();
+  const isOdiUser = userEmail === 'odi@sillowmill.com' || userEmail === 'odi.selis3@gmail.com';
+  const isEstherUser = userEmail === 'estherphilippen@msn.com' || Boolean(authHolderName && authHolderName.toLowerCase().includes('esther'));
+
+  // Default fallback pass: only Odi can fall back to FOUNDING_PASS_ID. Esther and other VIP guests fall back to AKN-VIP-2027-X001
+  const defaultPassId = isOdiUser ? FOUNDING_PASS_ID : (isEstherUser ? 'AKN-VIP-2027-X001' : 'AKN-VIP-2027-X001');
   const rawCandidatePassId = isVipMode
     ? ((isValidPassId(nfcToken) ? nfcToken : null) ||
        profile?.vip_code_redeemed ||
        (typeof window !== 'undefined' ? (localStorage.getItem('akinoya_patron_token') || sessionStorage.getItem('akinoya_patron_token')) : null) ||
-       FOUNDING_PASS_ID)
+       defaultPassId)
     : null;
-  const activePassId = rawCandidatePassId && isValidPassId(rawCandidatePassId) ? normalizePassId(rawCandidatePassId) : FOUNDING_PASS_ID;
-  const authHolderName = profile?.first_name ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}` : profile?.full_name || null;
-  const holderName = isVipMode ? (authHolderName || useHolderName(activePassId) || 'Founding VIP Member') : (authHolderName || 'Guest');
-  const isMaster = isVipMode && (activePassId === 'AKN-VIP-2027-X0914' || activePassId === FOUNDING_PASS_ID);
-  const activeEditionNumber = deriveEditionNumber(activePassId);
-  const isFoundersPass = isMaster || (isVipMode && (activePassId === 'AKN-VIP-2027-X0914' || activePassId === FOUNDING_PASS_ID || activeEditionNumber === 1 || activeEditionNumber === 0));
+  const candidatePass = rawCandidatePassId && isValidPassId(rawCandidatePassId) ? normalizePassId(rawCandidatePassId) : defaultPassId;
+  // Strictly prevent non-Odi users from inheriting Founder Pass (#0 / X0914)
+  const activePassId = (!isOdiUser && (candidatePass === 'AKN-VIP-2027-X0914' || candidatePass === FOUNDING_PASS_ID))
+    ? (isEstherUser ? 'AKN-VIP-2027-X001' : 'AKN-VIP-2027-X001')
+    : candidatePass;
+
+  const holderName = isVipMode
+    ? (authHolderName || (isEstherUser ? 'Esther Philippen' : (isOdiUser ? 'Odi Selis' : useHolderName(activePassId) || 'Founding VIP Member')))
+    : (authHolderName || 'Guest');
+  const isMaster = isVipMode && isOdiUser && (activePassId === 'AKN-VIP-2027-X0914' || activePassId === FOUNDING_PASS_ID);
+  const activeEditionNumber = isMaster ? 0 : deriveEditionNumber(activePassId);
+  const isFoundersPass = isMaster;
   const foundersEditionLabel = 'Founders Pass (#0)';
   const editionDisplay = activeEditionNumber;
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -292,22 +305,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   // Human Certification Protocol active: certified directly for VIP holders
   const activeCertificate: BingaaCertificate =
-    bingaaCertificate ||
-    (isMaster
-      ? getMasterCertificate(holderName, user?.email || undefined)
-      : {
-          certificateId: `COA-BNG1-${String(activeEditionNumber).padStart(3, '0')}-VERIFIED`,
-          title: 'Bingäa Issue #1 — Certificate of Authenticity',
-          passId: activePassId,
-          holderName: holderName || 'Founding VIP Member',
-          editionNumber: activeEditionNumber,
-          editionTotal: TOTAL_EDITION_LIMIT,
-          status: 'ACTIVE_VERIFIED',
-          emailVerified: true,
-          claimedAt: '2026-10-09T00:00:00.000Z',
-          signatureAlgorithm: 'HMAC-SHA256-DETERMINISTIC',
-          signature: 'Sillow Mill · Creative Syndicate',
-        });
+    bingaaCertificate && (isMaster ? bingaaCertificate.editionNumber === 0 : bingaaCertificate.editionNumber > 0)
+      ? bingaaCertificate
+      : (isMaster
+        ? getMasterCertificate(holderName, user?.email || undefined)
+        : {
+            certificateId: `COA-BNG1-${String(activeEditionNumber).padStart(3, '0')}-VERIFIED`,
+            title: 'Bingäa Issue #1 — Certificate of Authenticity',
+            passId: activePassId,
+            holderName: holderName || 'Founding VIP Member',
+            holderEmail: user?.email || profile?.email || (isEstherUser ? 'estherphilippen@msn.com' : undefined),
+            editionNumber: activeEditionNumber,
+            editionTotal: TOTAL_EDITION_LIMIT,
+            status: 'ACTIVE_VERIFIED',
+            emailVerified: true,
+            claimedAt: '2026-10-09T00:00:00.000Z',
+            signatureAlgorithm: 'HMAC-SHA256-DETERMINISTIC',
+            signature: 'Sillow Mill · Creative Syndicate',
+          });
 
   const handlePerksStripeCheckout = async () => {
     if (isMembershipLaunchLocked) {
@@ -1365,7 +1380,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </span>
                     </div>
 
-                    {/* Central Cover Art: Clean, Uninterrupted Illustration with interactive reader trigger */}
+                    {/* Central Cover Art: Clean Graphic Novel Cover with interactive reader trigger */}
                     <button
                       type="button"
                       onClick={() => setShowComicReader(true)}
@@ -1618,7 +1633,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </div>
           )}
 
-          {/* Tab 3: My World — User's 5-Photo Anime Dossier & Social Metrics */}
+          {/* Tab 3: My World — User's 5-Photo Cinematic Sci-Fi Dossier & Social Metrics */}
           {activeTab === 'my-world' && (
             <motion.div
               key="my-world-view"
@@ -1646,7 +1661,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       You Haven't Synthesized Your Planetary Sector Yet
                     </h3>
                     <p className="text-xs sm:text-sm text-white/60 font-sans leading-relaxed">
-                      Answer Mill's 8 human-centric questions to calibrate your sector's atmospheric chemistry, bioluminescent flora, apex fauna, and sonic signature. Your 5-photo anime dossier will be minted in real-time and entered into the 2027 Lore Governance Council.
+                      Answer Mill's 8 human-centric questions to calibrate your sector's atmospheric chemistry, bioluminescent flora, apex fauna, and sonic signature. Your 5-photo high-resolution cinematic sci-fi dossier will be minted in real-time and entered into the 2027 Lore Governance Council.
                     </p>
                   </div>
 
@@ -1673,7 +1688,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="p-3.5 rounded-xl bg-white/5 border border-white/5">
                       <div className="flex items-center gap-2 text-amber-300 font-mono text-xs font-bold mb-1">
                         <Camera className="w-3.5 h-3.5" />
-                        <span>5 High-Res Anime Renders</span>
+                        <span>5 Cinematic Sci-Fi Renders</span>
                       </div>
                       <p className="text-[11px] text-white/60 font-sans">
                         Orbital horizon, cockpit canopy, botanical flora, apex fauna, and lore cover.
@@ -1856,7 +1871,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
 
-                  {/* 5-Photo Anime Gallery Section */}
+                  {/* 5-Photo Cinematic Sci-Fi Gallery Section */}
                   <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-4 shadow-xl">
                     <div className="flex items-center justify-between pb-3 border-b border-white/10">
                       <div className="flex items-center gap-2">
@@ -2173,84 +2188,98 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               </div>
 
               {/* Asset 4: Synthesized 5-Photo Planetary Sector Dossier */}
-              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">
-                    Asset 04 · Synthesized Planetary Sector Dossier
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-400/40 text-[9.5px] sm:text-[10px] font-mono font-semibold tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)] max-w-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                    <span className="truncate sm:whitespace-normal">
-                      {userDossier ? 'ONE-SHOT CLAIMED · BOUND TO ACCOUNT' : '1 GOLDEN TICKET READY'}
+              <div className="relative overflow-hidden rounded-2xl border border-cyan-400/25 bg-black/60 backdrop-blur-xl p-5 sm:p-7 shadow-[0_0_35px_rgba(6,182,212,0.12)] space-y-5">
+                <div className="absolute -top-24 -right-24 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-cyan-400 uppercase">
+                      Asset 04 · Synthesized Planetary Sector Dossier
+                    </span>
+                    <h3 className="text-base sm:text-lg font-display font-bold text-white tracking-wide">
+                      {userDossier ? userDossier.planetName : 'Personal Planetary Worldbuilding'}
+                    </h3>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/70 border border-cyan-400/40 text-[10px] font-mono font-semibold tracking-wider text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.25)] self-start sm:self-auto">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+                    <span>
+                      {userDossier ? 'ONE-SHOT REGISTERED · BOUND TO ACCOUNT' : '1 GOLDEN TICKET READY'}
                     </span>
                   </span>
                 </div>
 
                 {userDossier ? (
-                  <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row items-start gap-4">
-                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-white/15 shrink-0 bg-black">
+                  <div className="space-y-5">
+                    {/* Large Widescreen 16:9 Glassmorphism Card */}
+                    <div className="relative group rounded-xl overflow-hidden border border-white/15 bg-gradient-to-b from-white/5 to-black/80 p-1 shadow-2xl">
+                      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg bg-black">
                         <img
                           src={userDossier.renders.hero}
                           alt={userDossier.planetName}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
-                      </div>
-                      <div className="min-w-0 flex-1 space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base sm:text-lg font-display font-extrabold text-white truncate">
-                            {userDossier.planetName}
-                          </h3>
-                          <span className="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-cyan-950 text-cyan-300 border border-cyan-400/30 shrink-0">
-                            5 PHOTOS
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
+                        
+                        {/* Live Badges Overlay */}
+                        <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-black/70 backdrop-blur-md text-cyan-300 border border-cyan-400/40 shadow-lg">
+                            HIGH-RES CINEMATIC RENDER
+                          </span>
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-black/70 backdrop-blur-md text-amber-300 border border-amber-400/40 shadow-lg flex items-center gap-1">
+                            <Trophy className="w-3 h-3 text-amber-400" />
+                            {userDossier.votesCount} VOTES
                           </span>
                         </div>
-                        <p className="text-[11px] font-mono text-white/60">
-                          Registered Sector ID: {userDossier.id} · Votes: {userDossier.votesCount}
-                        </p>
-                        <p className="text-xs text-white/80 font-sans italic line-clamp-2">
-                          "{userDossier.futurePromise || userDossier.generatedLore}"
-                        </p>
+
+                        {/* Bottom Information Bar */}
+                        <div className="absolute bottom-3 left-3 right-3 space-y-1 text-left">
+                          <div className="text-[11px] font-mono text-cyan-300/80 tracking-wider">
+                            COORDINATES: {userDossier.id}
+                          </div>
+                          <p className="text-xs sm:text-sm text-white/95 font-sans italic line-clamp-2 drop-shadow-md">
+                            "{userDossier.futurePromise || userDossier.generatedLore}"
+                          </p>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {/* Social & Explorer Action Bar */}
+                    <div className="flex flex-wrap items-center gap-2.5 pt-1">
                       <button
                         type="button"
                         onClick={() => {
                           soundManager.playTone(660, 0.05);
                           setSelectedDossierModal(userDossier);
                         }}
-                        className="flex-1 min-h-[44px] px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                        className="flex-1 min-h-[46px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(6,182,212,0.35)]"
                       >
-                        <Camera className="w-3.5 h-3.5" />
-                        <span>Inspect 5-Photo Dossier Modal</span>
+                        <Camera className="w-4 h-4" />
+                        <span>Inspect 5-Photo Cinematic Dossier</span>
                       </button>
 
                       {onNavigateToContest && (
                         <button
                           type="button"
                           onClick={onNavigateToContest}
-                          className="px-4 py-2 min-h-[44px] rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5"
+                          className="min-h-[46px] px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white text-xs font-mono transition-all cursor-pointer flex items-center gap-2 shadow-lg"
                         >
-                          <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                          <span>Contest Launchpad</span>
+                          <Trophy className="w-4 h-4 text-amber-400" />
+                          <span>Voting Hub</span>
                         </button>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-3 p-4 rounded-xl bg-white/5 border border-white/5">
-                    <p className="text-xs text-white/70 font-sans leading-relaxed">
-                      Your account holds 1 Golden Ticket. Answer Mill's 8 human-centric questions to synthesize your official 5-photo anime dossier and sector lore.
+                  <div className="space-y-4 p-5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md">
+                    <p className="text-xs sm:text-sm text-white/80 font-sans leading-relaxed">
+                      Your account holds 1 Golden Ticket. Answer Mill's 8 human-centric questions to synthesize your official 5-photo high-resolution cinematic sci-fi dossier and sector lore.
                     </p>
                     {onNavigateToContest && (
                       <button
                         type="button"
                         onClick={onNavigateToContest}
-                        className="w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                        className="w-full sm:w-auto min-h-[46px] px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(245,158,11,0.35)]"
                       >
-                        <Sparkles className="w-3.5 h-3.5 fill-black" />
+                        <Sparkles className="w-4 h-4 fill-black" />
                         <span>Launch 8-Step Worldbuilding Protocol</span>
                       </button>
                     )}

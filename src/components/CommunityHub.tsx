@@ -2462,7 +2462,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   🏆 Group's Favorite Planets Leaderboard
                 </h1>
                 <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  Explore the community's top-voted planets, inspect complete 5-photo anime dossiers, and celebrate syndicate creator portfolios.
+                  Explore the community's top-voted planets, inspect complete 5-photo cinematic sci-fi dossiers, and celebrate syndicate creator portfolios.
                 </p>
               </div>
             </div>

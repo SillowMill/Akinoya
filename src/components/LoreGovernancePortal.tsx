@@ -104,7 +104,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
             🗳️ Lore &amp; Governance Portal
           </h1>
           <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-            Cast binding community votes on official planetary territories competing in the 2027 Äkinoya Worldbuilding Contest. Every submission features a complete 5-photo anime dossier and lore archive.
+            Cast binding community votes on official planetary territories competing in the 2027 Äkinoya Worldbuilding Contest. Every submission features a complete 5-photo cinematic sci-fi dossier and lore archive.
           </p>
         </div>
 
@@ -144,7 +144,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
                 No sectors synthesized yet
               </h3>
               <p className="text-xs sm:text-sm font-sans text-white/60 leading-relaxed">
-                No sectors synthesized yet. Be the first creator to claim a world! Answer the 8 human-centric questions in the Mill Wizard to forge your 5-photo anime dossier.
+                No sectors synthesized yet. Be the first creator to claim a world! Answer the 8 human-centric questions in the Mill Wizard to forge your 5-photo high-resolution cinematic sci-fi dossier.
               </p>
             </div>
             <a

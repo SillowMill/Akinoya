@@ -59,8 +59,8 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
 
   const handleVotePlanet = async (submissionId: string) => {
     soundManager.playTone(740, 0.06);
-    const updated = await togglePlanetSubmissionVote(submissionId);
-    setPlanetSubmissions(updated);
+    await togglePlanetSubmissionVote(submissionId);
+    setPlanetSubmissions(getStoredPlanetSubmissions());
   };
 
   return (

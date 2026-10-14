@@ -320,7 +320,7 @@ apiRouter.get('/nfc/generate-test-cipher', (req: Request, res: Response): void =
   });
 });
 
-// ─── 10. Generate Planet Prompts & Visuals (Sillow Mill 2D Anime Aesthetic) ───
+// ─── 10. Generate Planet Prompts & Visuals (Sillow Mill High-Resolution Cinematic Sci-Fi Standard) ───
 apiRouter.all(['/generate-planet', '/planet/generate'], async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body || {};

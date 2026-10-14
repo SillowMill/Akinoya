@@ -400,7 +400,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               </h1>
 
               <p className="text-sm sm:text-base text-white/70 font-sans leading-relaxed max-w-2xl">
-                Collaborate with <strong>Mill</strong>, our planetary AI synthesizer. Answer 8 human-centric questions (~10 minutes) to generate a complete 5-photo anime visual dossier, orbital specs, and sector lore.
+                Collaborate with <strong>Mill</strong>, our planetary AI synthesizer. Answer 8 human-centric questions (~10 minutes) to generate a complete 5-photo high-resolution cinematic sci-fi dossier, orbital specs, and sector lore.
               </p>
 
               {/* Contest Rules Ribbon */}
@@ -416,8 +416,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-start gap-2.5">
                   <Camera className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                   <div>
-                    <div className="font-bold text-white">5-Photo Anime Dossier</div>
-                    <div className="text-[11px] text-white/50">Mood.png &amp; akinoya_hero_bg.jpg</div>
+                    <div className="font-bold text-white">5-Photo Cinematic Dossier</div>
+                    <div className="text-[11px] text-white/50">Mood.png &amp; Äkinoya.jpg</div>
                   </div>
                 </div>
 

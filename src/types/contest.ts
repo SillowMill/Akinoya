@@ -1,5 +1,5 @@
 export interface PlanetSubmissionRenders {
-  hero: string; // 1. Main Orbital Planet Render (akinoya_hero_bg.jpg style)
+  hero: string; // 1. Main Orbital Planet Render (Äkinoya.jpg style)
   flora: string; // 2. Botanical Flora System (Mood.png panel style)
   fauna: string; // 3. Exotic Fauna & Wildlife System
   atmosphere: string; // 4. Cockpit / Ship Landing Atmosphere Detail

@@ -1,9 +1,9 @@
 /**
  * Planetary 5-Photo Image Generation API Endpoint
  *
- * Strict Sillow Mill 2D Sci-Fi Anime Aesthetic:
- * - Photo 1 (Hero Planet): akinoya_hero_bg.jpg (structural 2D composition reference, custom user color palette)
- * - Photos 2, 3, 4 (Interior / Flora / Fauna / Details): Mood.png (stylistic & atmospheric reference, anime panels)
+ * Strict Sillow Mill High-Resolution Cinematic Sci-Fi Standard:
+ * - Photo 1 (Hero Planet): Äkinoya.jpg (celestial curvature & orbital composition reference, custom user color palette)
+ * - Photos 2, 3, 4 (Interior / Flora / Fauna / Details): Mood.png (stylistic & atmospheric reference, volumetric depth & lighting)
  * - Photo 5 (Lore Dossier Cover): Archival cover combining monument lore and the user's future promise/message
  *
  * Strict One-Shot Token Protection:
@@ -11,30 +11,51 @@
  *
  * Live Generation:
  * - Powered by Google Gemini Imagen 3 via process.env.GEMINI_API_KEY.
- * - Procedural 2D anime SVG synthesis with user-specific color palettes and inscriptions when key is offline.
+ * - Procedural high-resolution cinematic sci-fi SVG synthesis with user-specific color palettes and inscriptions when key is offline.
  */
 
 import { createClient } from '@supabase/supabase-js';
 
 export const SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR =
-  '2D high-end anime sci-fi concept art, Sillow Mill aesthetic, storyboard & composition strictly anchored by Mood.png (cel-shaded anime panels, cinematic cockpit & wide planetary camera angles, subtle film grain) and visual aesthetic strictly anchored by akinoya_hero_bg.jpg (cosmic sci-fi planet, icy energy sphere texture, custom palette, glowing energy silhouettes, cel-shaded linework, zero photorealistic noise).';
+  'High-resolution cinematic sci-fi render, photorealistic conceptual space art, Sillow Mill aesthetic, visual depth and atmosphere strictly anchored by Mood.png (cinematic atmospheric lighting, volumetric depth, photorealistic textures, wide planetary camera angles) and celestial composition strictly anchored by Äkinoya.jpg (deep space planetary sphere, high-detail cosmic surface textures, photorealistic atmospheric glow, 8k resolution, cinematic lighting).';
+
+const ORGANIC_NAME_PREFIXES = [
+  'Arbi', 'Luci', 'Ely', 'Vale', 'Aethel', 'Zephy', 'Sola', 'Aure', 'Celes', 'Vespe',
+  'Nova', 'Illy', 'Kaele', 'Mira', 'Sylva', 'Ophi', 'Althe', 'Corv', 'Mari', 'Erida',
+  'Vae', 'Kyro', 'Amal', 'Zeni', 'Arctu', 'Sele', 'Elo', 'Thala', 'Borea', 'Caeli',
+  'Faelo', 'Helio', 'Lumi', 'Naiad', 'Orphi', 'Pyra', 'Rhea', 'Siria', 'Tauri', 'Zora'
+];
+
+const ORGANIC_NAME_SUFFIXES = [
+  'tron', 'na', 'cia', 'sia', 'rion', 'gard', 'ria', 'ris', 'lia', 'tia',
+  'pera', 'lis', 'nis', 'thea', 'dien', 'ros', 'thar', 'turis', 'ne', 'ra',
+  'nos', 'dian', 'dor', 'mira', 'vahn', 'sol', 'mar', 'ren', 'wyn', 'thos'
+];
+
+export const generateOrganicPlanetName = (): string => {
+  const p = ORGANIC_NAME_PREFIXES[Math.floor(Math.random() * ORGANIC_NAME_PREFIXES.length)];
+  const s = ORGANIC_NAME_SUFFIXES[Math.floor(Math.random() * ORGANIC_NAME_SUFFIXES.length)];
+  return `${p}${s}`;
+};
 
 export const formatAkinoyaPlanetName = (rawName?: string): string => {
-  if (!rawName || !rawName.trim()) return 'Äkinoya Prime';
+  if (!rawName || !rawName.trim()) {
+    return generateOrganicPlanetName();
+  }
   let clean = rawName.trim();
-  clean = clean.replace(/^(Planet|MyPlanet|Sector\s*\d*|World)\s+/i, '');
-  if (!clean) return 'Äkinoya Prime';
+  // Strip tech prefixes: Planet, Sector, World, Sector_01, AKN-, etc.
+  clean = clean.replace(/^(Planet|MyPlanet|Sector|World|System|Zone|Star)\s*[_#-]?\s*\d*/i, '').trim();
+  // Strip machine codes, digits, hyphens, underscores
+  clean = clean.replace(/[_\-#0-9]/g, '').trim();
+  // Strip technical serial patterns like X01, AKN99, etc.
+  clean = clean.replace(/\b[A-Z]{1,3}\d+\b/gi, '').trim();
 
-  if (clean.startsWith('Ä') || clean.startsWith('ä')) {
-    return 'Ä' + clean.slice(1);
+  if (!clean || clean.length < 2) {
+    return generateOrganicPlanetName();
   }
-  if (/^[Aa]/.test(clean)) {
-    return 'Ä' + clean.slice(1);
-  }
-  if (/^[A-Z][a-z0-9]/.test(clean)) {
-    return 'Ä' + clean.charAt(0).toLowerCase() + clean.slice(1);
-  }
-  return 'Ä' + clean;
+
+  // Capitalize properly as a natural proper name
+  return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
 };
 
 export interface GeneratePlanetRequest {
@@ -132,12 +153,12 @@ function parsePaletteHues(colorText?: string): { hue1: number; hue2: number; isD
 }
 
 /**
- * Procedural 2D Anime SVG Generator
+ * Procedural Cinematic Sci-Fi SVG Generator
  * Used when Gemini API key is offline or in local test mode.
- * Strictly eliminates static stock images by dynamically rendering custom celestial anime vectors
- * anchored to akinoya_hero_bg.jpg (Photo 1) and Mood.png (Photos 2-4) and Archival Cover (Photo 5).
+ * Strictly eliminates static stock images by dynamically rendering custom celestial vectors
+ * anchored to Äkinoya.jpg (Photo 1) and Mood.png (Photos 2-4) and Archival Cover (Photo 5).
  */
-function createProcedural2DAnimeSvg(
+function createProceduralCinematicSciFiSvg(
   type: 'hero' | 'flora' | 'fauna' | 'atmosphere' | 'landmark',
   data: {
     planetName: string;
@@ -156,7 +177,7 @@ function createProcedural2DAnimeSvg(
   let svgContent = '';
 
   if (type === 'hero') {
-    // 01 · Main Orbital Planet Render (akinoya_hero_bg.jpg structural reference, custom palette)
+    // 01 · Main Orbital Planet Render (Äkinoya.jpg structural reference, custom palette)
     svgContent = `
       <defs>
         <radialGradient id="planetGlow" cx="45%" cy="45%" r="55%">
@@ -177,14 +198,14 @@ function createProcedural2DAnimeSvg(
       <circle cx="340" cy="80" r="1.5" fill="#ffffff" />
       <circle cx="980" cy="120" r="3" fill="hsl(${hue2}, 100%, 80%)" />
       <circle cx="1120" cy="520" r="2" fill="hsl(${hue1}, 100%, 70%)" />
-      <!-- 2D Celestial Sphere (akinoya_hero_bg.jpg structure) -->
+      <!-- High-resolution Celestial Sphere (Äkinoya.jpg structure) -->
       <circle cx="640" cy="360" r="235" fill="url(#planetGlow)" />
-      <!-- Cel-shaded anime ring structure -->
+      <!-- Cinematic orbital ring structure -->
       <ellipse cx="640" cy="360" rx="390" ry="88" fill="none" stroke="url(#ringGrad)" stroke-width="28" transform="rotate(-18 640 360)" />
       <ellipse cx="640" cy="360" rx="420" ry="94" fill="none" stroke="hsl(${hue1}, 100%, 75%)" stroke-width="2" opacity="0.6" transform="rotate(-18 640 360)" />
       <!-- Telemetry overlay -->
       <text x="60" y="650" font-family="monospace" font-size="26" font-weight="bold" fill="hsl(${hue1}, 100%, 75%)" letter-spacing="4">01 · MAIN ORBITAL PLANET RENDER</text>
-      <text x="60" y="685" font-family="sans-serif" font-size="16" fill="#e0f2fe">${name} · Reference: akinoya_hero_bg.jpg</text>
+      <text x="60" y="685" font-family="sans-serif" font-size="16" fill="#e0f2fe">${name} · Reference: Äkinoya.jpg</text>
     `;
   } else if (type === 'flora') {
     // 02 · Botanical Flora System (Mood.png panel style)
@@ -206,7 +227,7 @@ function createProcedural2DAnimeSvg(
       <circle cx="630" cy="160" r="7" fill="hsl(${hue2}, 100%, 80%)" />
       <circle cx="820" cy="120" r="10" fill="hsl(${hue1}, 100%, 85%)" />
       <text x="60" y="650" font-family="monospace" font-size="26" font-weight="bold" fill="hsl(${hue1}, 100%, 70%)" letter-spacing="4">02 · BOTANICAL FLORA SYSTEM</text>
-      <text x="60" y="685" font-family="sans-serif" font-size="16" fill="#ccfbf1">${name} · Reference: Mood.png (Storyboards)</text>
+      <text x="60" y="685" font-family="sans-serif" font-size="16" fill="#ccfbf1">${name} · Reference: Mood.png (Cinematic Environments)</text>
     `;
   } else if (type === 'fauna') {
     // 03 · Exotic Fauna & Wildlife System (Mood.png creature design)
@@ -329,11 +350,11 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   return {
     planetName,
     prompts: {
-      hero: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 1 - Main Orbital Hero]: Celestial disc and orbital curvature of ${planetName}. Composition strictly anchored to akinoya_hero_bg.jpg (exact 2D planetary sphere and ring geometry). Custom color palette: ${colorPalette}. Glowing celestial corona, cel-shaded anime linework, dark cosmic starfields, zero photorealistic noise.`,
-      flora: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 2 - Botanical Flora System]: Planetary interior botanical organisms on ${planetName}. Stylistic and atmospheric reference strictly anchored to Mood.png (cinematic anime storyboard panel). Flora: ${flora}, glowing spore towers, alien canopies inspired by ${environment}, cel-shaded linework, film grain.`,
-      fauna: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 3 - Exotic Fauna & Wildlife]: Wildlife ecology and apex creatures on ${planetName}. Stylistic reference strictly anchored to Mood.png. Celestial creature design: ${creature}, drifting through atmospheric thermals, cel-shaded 2D anime linework, bioluminescent markings.`,
-      atmosphere: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 4 - Cockpit & Landing Atmosphere]: Cockpit canopy descent into ${planetName}. Camera angle strictly anchored to Mood.png (cockpit perspective). Atmosphere: ${atmosphere}, interior HUD reflections, volumetric light beams, alien mountain horizons, cel-shaded background art.`,
-      landmark: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 5 - Lore Dossier Cover]: Official Lore Dossier Cover for planet ${planetName}. Monument: ${landmark}. Framed as a high-end sci-fi archival document cover inscribed with the founding creed: "${promise}". Ancient energy conduit, grand scale monument, cel-shaded anime linework.`,
+      hero: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 1 - Main Orbital Hero]: Celestial disc and orbital curvature of ${planetName}. Composition strictly anchored to Äkinoya.jpg (exact planetary sphere and ring geometry). Custom color palette: ${colorPalette}. Glowing celestial corona, high-resolution cinematic sci-fi render, photorealistic conceptual space art, dark cosmic starfields, 8k resolution, volumetric cosmic lighting.`,
+      flora: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 2 - Botanical Flora System]: Planetary interior botanical organisms on ${planetName}. Stylistic and atmospheric reference strictly anchored to Mood.png (cinematic sci-fi environment). Flora: ${flora}, glowing spore towers, alien canopies inspired by ${environment}, high-detail digital sci-fi landscape photography, volumetric atmospheric mist.`,
+      fauna: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 3 - Exotic Fauna & Wildlife]: Wildlife ecology and apex creatures on ${planetName}. Stylistic reference strictly anchored to Mood.png. Celestial creature design: ${creature}, drifting through atmospheric thermals, high-resolution cinematic sci-fi render, photorealistic speculative xenobiology, bioluminescent markings.`,
+      atmosphere: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 4 - Cockpit & Landing Atmosphere]: Cockpit canopy descent into ${planetName}. Camera angle strictly anchored to Mood.png (cockpit perspective). Atmosphere: ${atmosphere}, interior HUD reflections, volumetric light beams, alien mountain horizons, photorealistic cinematic sci-fi art.`,
+      landmark: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 5 - Lore Dossier Cover]: Official Lore Dossier Cover for planet ${planetName}. Monument: ${landmark}. Framed as a high-end sci-fi archival document cover inscribed with the founding creed: "${promise}". Ancient energy conduit, grand scale monument, high-resolution cinematic sci-fi render.`,
     },
   };
 }
@@ -382,11 +403,11 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     landmarkUrl = lm;
   }
 
-  // Zero static stock fallbacks: If no API key or network error, synthesize customized procedural 2D anime vectors
+  // Zero static stock fallbacks: If no API key or network error, synthesize customized procedural cinematic sci-fi vectors
   const finalRenders = {
     hero:
       heroUrl ||
-      createProcedural2DAnimeSvg('hero', {
+      createProceduralCinematicSciFiSvg('hero', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
         flora: data.flora || 'Resonant spore mushrooms',
@@ -397,7 +418,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       }),
     flora:
       floraUrl ||
-      createProcedural2DAnimeSvg('flora', {
+      createProceduralCinematicSciFiSvg('flora', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
         flora: data.flora || 'Resonant spore mushrooms',
@@ -408,7 +429,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       }),
     fauna:
       faunaUrl ||
-      createProcedural2DAnimeSvg('fauna', {
+      createProceduralCinematicSciFiSvg('fauna', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
         flora: data.flora || 'Resonant spore mushrooms',
@@ -419,7 +440,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       }),
     atmosphere:
       atmosphereUrl ||
-      createProcedural2DAnimeSvg('atmosphere', {
+      createProceduralCinematicSciFiSvg('atmosphere', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
         flora: data.flora || 'Resonant spore mushrooms',
@@ -430,7 +451,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       }),
     landmark:
       landmarkUrl ||
-      createProcedural2DAnimeSvg('landmark', {
+      createProceduralCinematicSciFiSvg('landmark', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
         flora: data.flora || 'Resonant spore mushrooms',
@@ -441,7 +462,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       }),
     ecosystem:
       floraUrl ||
-      createProcedural2DAnimeSvg('flora', {
+      createProceduralCinematicSciFiSvg('flora', {
         planetName,
         atmosphere: data.atmosphere || 'Atmosphere of ionized violet and copper',
         flora: data.flora || 'Resonant spore mushrooms',
@@ -456,19 +477,19 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     {
       id: 'hero',
       label: '01 · Main Orbital Planet Render',
-      reference: 'akinoya_hero_bg.jpg (2D Celestial Sphere Composition Reference)',
+      reference: 'Äkinoya.jpg (Orbital Cinematic Composition Reference)',
       url: finalRenders.hero,
     },
     {
       id: 'flora',
       label: '02 · Botanical Flora System',
-      reference: 'Mood.png (Storyboard Panel Style & Botanical Life)',
+      reference: 'Mood.png (Cinematic Environments & Botanical Life)',
       url: finalRenders.flora,
     },
     {
       id: 'fauna',
       label: '03 · Exotic Fauna & Wildlife System',
-      reference: 'Mood.png (Composition, Creature Linework & Film Grain)',
+      reference: 'Mood.png (Composition, Speculative Biology & Lighting)',
       url: finalRenders.fauna,
     },
     {
@@ -490,11 +511,11 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     renders: finalRenders,
     galleryList,
     meta: {
-      engine: apiKey && apiKey !== 'MY_GEMINI_API_KEY' ? 'Google Gemini Imagen 3 (Live)' : 'Procedural 2D Anime Synthesis',
-      aestheticGuideline: 'Official Sillow Mill 2D Sci-Fi Anime Standard',
-      heroCompositionReference: 'akinoya_hero_bg.jpg (Exact 2D Sphere & Ring Structure)',
-      interiorStylisticReference: 'Mood.png (Storyboards, Angles & Film Grain)',
-      namingRule: "Mandatory 'Ä' prefix enforced",
+      engine: apiKey && apiKey !== 'MY_GEMINI_API_KEY' ? 'Google Gemini Imagen 3 (Live)' : 'Procedural High-Resolution Cinematic Sci-Fi Synthesis',
+      aestheticGuideline: 'Official Sillow Mill High-Resolution Cinematic Sci-Fi Standard',
+      heroCompositionReference: 'Äkinoya.jpg (Exact Sphere & Ring Structure)',
+      interiorStylisticReference: 'Mood.png (Environments, Lighting & Volumetric Atmosphere)',
+      namingRule: "Organic planet naming enforced",
       generatedAt: new Date().toISOString(),
     },
   };

@@ -113,7 +113,7 @@ export async function syncPassClaimToGoogleSheets(passId, holderName, holderEmai
       return { success: false, reason: 'NO_TOKEN' };
     }
 
-    const statusVal = targetRow === 2 ? 'Active / Primary Key' : 'Claimed';
+    const statusVal = targetRow === 2 ? 'Active / Primary Key' : 'Active / Claimed';
 
     let vipTab = 'VIP GUESTS';
     try {

@@ -19,7 +19,7 @@ import {
 import millAvatar from '../assets/images/mill_photo.jpg';
 import { WizardAnswers, ChatMessage } from '../types/contest';
 import { soundManager } from '../utils/audio';
-import { formatAkinoyaPlanetName, derivePlanetAttributesFromHumanAnswers } from '../data/contest';
+import { formatAkinoyaPlanetName, generateOrganicPlanetName, derivePlanetAttributesFromHumanAnswers } from '../data/contest';
 
 interface PlanetGeneratorChatProps {
   userDisplayName: string;
@@ -43,6 +43,17 @@ interface StepConfig {
 export const WIZARD_STEPS: StepConfig[] = [
   {
     step: 1,
+    title: 'Planeet Naam & Aanduiding',
+    category: 'PLANET NAME',
+    prompt:
+      'Hoe wil jij je planeet noemen? (What do you want to name your planet?)\nGive your new world an evocative, organic name (e.g. Arbitron, Lucina, Elysia, Valerion). Machine codes, serial numbers, hyphens, and numbers are strictly prohibited.',
+    placeholder: 'e.g., Arbitron, Lucina, Elysia, Valerion, Aethelgard...',
+    helperExample: 'Arbitron',
+    icon: Globe2,
+    field: 'planetName',
+  },
+  {
+    step: 2,
     title: 'Free Time & Inner Relaxation',
     category: 'RELAXATION & CALM',
     prompt:
@@ -53,18 +64,18 @@ export const WIZARD_STEPS: StepConfig[] = [
     field: 'relaxation',
   },
   {
-    step: 2,
+    step: 3,
     title: 'Creative, Visual & Musical Expression',
     category: 'ART & SONIC VIBE',
     prompt:
       'What forms of art, music, or creative expressions resonate most deeply with you?\n(This defines the acoustic frequency, synthesizers, and artistic architecture of your sector.)',
-    placeholder: 'e.g., Cyberpunk aesthetics, 2D anime films, deep analog synth soundtracks, ambient soundscapes...',
-    helperExample: 'Cyberpunk aesthetics, 2D anime films, deep analog synth soundtracks, ambient soundscapes.',
+    placeholder: 'e.g., Cyberpunk aesthetics, cinematic space epics, deep analog synth soundtracks, ambient soundscapes...',
+    helperExample: 'Cyberpunk aesthetics, cinematic space epics, deep analog synth soundtracks, ambient soundscapes.',
     icon: Volume2,
     field: 'creativeExpression',
   },
   {
-    step: 3,
+    step: 4,
     title: 'Comforting Natural Environments & Horizons',
     category: 'NATURAL ENVIRONMENT',
     prompt:
@@ -73,17 +84,6 @@ export const WIZARD_STEPS: StepConfig[] = [
     helperExample: 'A misty mountain ridge at sunrise, a bioluminescent rainforest, a secluded ocean cove under starlight.',
     icon: Layers,
     field: 'naturalEnvironment',
-  },
-  {
-    step: 4,
-    title: 'Personal Life Philosophy & Guiding Dream',
-    category: 'GUIDING PHILOSOPHY',
-    prompt:
-      'What is your personal life philosophy or guiding dream for the future?\n(This establishes the planetary core purpose and harmonious worldview of your civilization.)',
-    placeholder: 'e.g., That technology and nature can harmoniously merge, endless curiosity across the unknown...',
-    helperExample: 'That technology and nature can harmoniously merge, endless curiosity across the unknown.',
-    icon: Compass,
-    field: 'lifePhilosophy',
   },
   {
     step: 5,
@@ -124,7 +124,7 @@ export const WIZARD_STEPS: StepConfig[] = [
     title: 'Future Promise & Planetary Creed',
     category: 'PLANETARY PROMISE',
     prompt:
-      'What is your future promise or message for the new world?\n(This founding creed will be permanently inscribed upon your Lore Dossier Cover and archival documents.)',
+      'What is your future promise, guiding philosophy, or message for the new world?\n(This founding creed will be permanently inscribed upon your Lore Dossier Cover and archival documents.)',
     placeholder: 'e.g., Never forget that true beauty lies in curiosity and persistence...',
     helperExample: 'Never forget that true beauty lies in curiosity and persistence.',
     icon: Globe2,
@@ -182,7 +182,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       return;
     }
 
-    const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nThis is an open-ended, human-centric worldbuilding protocol designed to take ~10 minutes of genuine creative exploration. There are no rigid presets—I will ask you 8 thoughtful questions about your life, passions, aesthetics, and vision.\n\nUpon completion, your answers will synthesize a custom 5-photo 2D anime visual dossier (anchored to Mood.png and akinoya_hero_bg.jpg), technical telemetry, and official lore for the June 30 Lore Governance Council.\n\nLet us begin with Question 01: ${WIZARD_STEPS[0].title}.`;
+    const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nThis is an open-ended, human-centric worldbuilding protocol designed to take ~10 minutes of genuine creative exploration. There are no rigid presets—I will ask you 8 thoughtful questions about your life, passions, aesthetics, and vision.\n\nUpon completion, your answers will synthesize a custom 5-photo high-resolution cinematic sci-fi dossier (anchored to Mood.png and Äkinoya.jpg), technical telemetry, and official lore for the June 30 Lore Governance Council.\n\nLet us begin with Question 01: ${WIZARD_STEPS[0].title}.`;
 
     const firstQuestionText = WIZARD_STEPS[0].prompt;
 
@@ -217,17 +217,20 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
 
     soundManager.playTone(740, 0.05);
 
+    const processedText =
+      currentStep.field === 'planetName' ? formatAkinoyaPlanetName(trimmed) : trimmed;
+
     // Record user message
     const userMsg: ChatMessage = {
       id: `usr-${Date.now()}`,
       sender: 'user',
-      text: trimmed,
+      text: processedText,
       timestamp: 'Just now',
     };
 
     const nextAnswers: WizardAnswers = {
       ...answers,
-      [currentStep.field]: trimmed,
+      [currentStep.field]: processedText,
     };
     setAnswers(nextAnswers);
     setInputVal('');
@@ -257,14 +260,20 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       soundManager.playUnlockChime();
 
       // Derive planetary attributes & Äkinoya designation
-      const completeAnswers = derivePlanetAttributesFromHumanAnswers(nextAnswers);
+      const completeAnswers = derivePlanetAttributesFromHumanAnswers({
+        ...nextAnswers,
+        lifePhilosophy:
+          nextAnswers.lifePhilosophy ||
+          nextAnswers.futurePromise ||
+          'Harmony between technology, creativity, and nature',
+      });
       setAnswers(completeAnswers);
 
       setTimeout(() => {
         const finalMsg: ChatMessage = {
           id: `mill-done-${Date.now()}`,
           sender: 'mill',
-          text: `Territory protocol complete! All 8 human-centric coordinates recorded.\n\nDesignated World: ${completeAnswers.planetName}\n\nInitializing Google Gemini AI live synthesis for your 5-photo visual dossier and registered lore...`,
+          text: `Territory protocol complete! All 8 human-centric coordinates recorded.\n\nDesignated World: ${completeAnswers.planetName}\n\nInitializing Google Gemini AI live synthesis for your 5-photo high-resolution cinematic sci-fi dossier and registered lore...`,
           timestamp: 'Just now',
         };
         setMessages((prev) => [...prev, finalMsg]);
@@ -287,7 +296,11 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   const handleAdoptExample = () => {
     if (!currentStep) return;
     soundManager.playTone(600, 0.04);
-    setInputVal(currentStep.helperExample);
+    if (currentStep.field === 'planetName') {
+      setInputVal(generateOrganicPlanetName());
+    } else {
+      setInputVal(currentStep.helperExample);
+    }
   };
 
   const handleReset = () => {

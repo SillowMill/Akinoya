@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { syncPassClaimToGoogleSheets } from '../nfc/_googleSheetsSync.js';
 
 const SPREADSHEET_ID =
   process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '1gCYEDFNCZ2QlStvE2IuJiq4gUxrAJ08spaOvZM6Ke_0';
@@ -344,12 +345,32 @@ export default async function handler(req, res) {
       console.warn('[Google Sheets Sync] Sync write failed:', putRes.status, errText);
     }
 
+    // Parallel Dual-Tab Sync: If VIP Pass is present or redeemed, sync to VIP GUESTS tab simultaneously
+    let targetVipPassId = vipCode;
+    if (!targetVipPassId || targetVipPassId === 'N/A') {
+      if (email === 'odi@sillowmill.com' || email === 'odi.selis3@gmail.com') {
+        targetVipPassId = 'AKN-VIP-2027-X0914';
+      } else if (email === 'estherphilippen@msn.com' || `${firstName} ${lastName}`.toLowerCase().includes('esther')) {
+        targetVipPassId = 'AKN-VIP-2027-X001';
+      }
+    }
+
+    if (targetVipPassId && targetVipPassId !== 'N/A') {
+      try {
+        const holderFullName = `${firstName} ${lastName}`.trim() || firstName || (email === 'odi@sillowmill.com' ? 'Odi Selis' : email);
+        await syncPassClaimToGoogleSheets(targetVipPassId, holderFullName, email);
+      } catch (err) {
+        console.warn('[Google Sheets Sync] Parallel VIP GUESTS sync warning:', err);
+      }
+    }
+
     return res.status(200).json({
       success: true,
       action,
       totalSubscribers: consolidatedRows.length,
       email,
       role,
+      vipSynced: Boolean(targetVipPassId && targetVipPassId !== 'N/A'),
     });
   } catch (error) {
     console.error('[Google Sheets Sync] Unhandled exception:', error);

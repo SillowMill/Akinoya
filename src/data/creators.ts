@@ -181,7 +181,7 @@ export const INITIAL_CREATORS: CreatorProfile[] = [
         id: 'sc-kaelen-2',
         title: 'Bioluminescent Canopy 8K Concept Render',
         type: 'CONCEPT_ART',
-        description: 'Detailed concept illustration of the twilight forest fungal blooms under Äkinoya binary moonlight.',
+        description: 'Detailed concept render of the twilight forest fungal blooms under Äkinoya binary moonlight.',
         mediaUrl: mushroomValleyImg,
         stats: { views: '3.1k' },
         tags: ['8K Render', 'Concept Art', 'Lighting'],

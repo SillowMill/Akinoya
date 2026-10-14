@@ -156,7 +156,7 @@ export const AkinoyaSciFiLoader: React.FC<AkinoyaSciFiLoaderProps> = ({
           <div className="flex items-center justify-between text-[10px] font-mono text-white/40">
             <span>01 · ORBITAL DATA</span>
             <span>02 · FLORA / FAUNA</span>
-            <span>03 · 2D ANIME STRUCTURE</span>
+            <span>03 · CINEMATIC VOLUMETRIC MESH</span>
             <span>04 · LORE ARCHIVE</span>
           </div>
         </div>
