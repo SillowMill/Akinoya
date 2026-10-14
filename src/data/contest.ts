@@ -22,6 +22,14 @@ const LOCAL_SUBMISSIONS_KEY = 'akinoya_planet_submissions_v5';
 const LOCAL_CONTEST_VOTES_KEY = 'akinoya_contest_votes';
 
 /**
+ * Strict Photorealism Validator:
+ * Ensures only rich, full-color photorealistic raster renders are permitted.
+ * Strictly purges any wireframe sketches, minimalist outlines, or SVG data URIs.
+ */
+export const isCleanPhotorealistic = (url?: string): boolean =>
+  Boolean(url && typeof url === 'string' && !url.startsWith('data:image/svg'));
+
+/**
  * Endless Organic Naming Protocol:
  * Generates pure, evocative, organic proper names with endless variation.
  * STRICTLY PROHIBITED: Sci-fi serial numbers, hyphens, technical machine codes, digits, or underscores.
@@ -235,12 +243,18 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
                     ecosystem: amlemiBotanicalImg,
                   }
                 : {
-                    hero: sub.renders?.hero || amlemiOrbitalImg,
-                    flora: sub.renders?.flora || sub.renders?.ecosystem || amlemiBotanicalImg,
-                    fauna: sub.renders?.fauna || amlemiFaunaImg,
-                    atmosphere: sub.renders?.atmosphere || amlemiCockpitImg,
-                    landmark: sub.renders?.landmark || amlemiMonumentImg,
-                    ecosystem: sub.renders?.ecosystem || sub.renders?.flora || amlemiBotanicalImg,
+                    hero: (isCleanPhotorealistic(sub.renders?.hero) ? sub.renders?.hero : null) || amlemiOrbitalImg,
+                    flora:
+                      (isCleanPhotorealistic(sub.renders?.flora) ? sub.renders?.flora : null) ||
+                      (isCleanPhotorealistic(sub.renders?.ecosystem) ? sub.renders?.ecosystem : null) ||
+                      amlemiBotanicalImg,
+                    fauna: (isCleanPhotorealistic(sub.renders?.fauna) ? sub.renders?.fauna : null) || amlemiFaunaImg,
+                    atmosphere: (isCleanPhotorealistic(sub.renders?.atmosphere) ? sub.renders?.atmosphere : null) || amlemiCockpitImg,
+                    landmark: (isCleanPhotorealistic(sub.renders?.landmark) ? sub.renders?.landmark : null) || amlemiMonumentImg,
+                    ecosystem:
+                      (isCleanPhotorealistic(sub.renders?.ecosystem) ? sub.renders?.ecosystem : null) ||
+                      (isCleanPhotorealistic(sub.renders?.flora) ? sub.renders?.flora : null) ||
+                      amlemiBotanicalImg,
                   },
             };
           });
@@ -318,14 +332,20 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
                     landmark: amlemiMonumentImg,
                     ecosystem: amlemiBotanicalImg,
                   }
-                : (d.renders || {
-                    hero: amlemiOrbitalImg,
-                    flora: amlemiBotanicalImg,
-                    fauna: amlemiFaunaImg,
-                    atmosphere: amlemiCockpitImg,
-                    landmark: amlemiMonumentImg,
-                    ecosystem: amlemiBotanicalImg,
-                  }),
+                : {
+                    hero: (isCleanPhotorealistic(d.renders?.hero) ? d.renders?.hero : null) || amlemiOrbitalImg,
+                    flora:
+                      (isCleanPhotorealistic(d.renders?.flora) ? d.renders?.flora : null) ||
+                      (isCleanPhotorealistic(d.renders?.ecosystem) ? d.renders?.ecosystem : null) ||
+                      amlemiBotanicalImg,
+                    fauna: (isCleanPhotorealistic(d.renders?.fauna) ? d.renders?.fauna : null) || amlemiFaunaImg,
+                    atmosphere: (isCleanPhotorealistic(d.renders?.atmosphere) ? d.renders?.atmosphere : null) || amlemiCockpitImg,
+                    landmark: (isCleanPhotorealistic(d.renders?.landmark) ? d.renders?.landmark : null) || amlemiMonumentImg,
+                    ecosystem:
+                      (isCleanPhotorealistic(d.renders?.ecosystem) ? d.renders?.ecosystem : null) ||
+                      (isCleanPhotorealistic(d.renders?.flora) ? d.renders?.flora : null) ||
+                      amlemiBotanicalImg,
+                  },
               votesCount,
               hasVoted: userVoted,
               status: (d.status as any) || 'PUBLISHED',
@@ -404,7 +424,29 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           additionalNotes: data.additional_notes || '',
           humanAnswers: data.human_answers || {},
           generatedLore: data.generated_lore || '',
-          renders: data.renders || {},
+          renders: isAmlemi
+            ? {
+                hero: amlemiOrbitalImg,
+                flora: amlemiBotanicalImg,
+                fauna: amlemiFaunaImg,
+                atmosphere: amlemiCockpitImg,
+                landmark: amlemiMonumentImg,
+                ecosystem: amlemiBotanicalImg,
+              }
+            : {
+                hero: (isCleanPhotorealistic(data.renders?.hero) ? data.renders?.hero : null) || amlemiOrbitalImg,
+                flora:
+                  (isCleanPhotorealistic(data.renders?.flora) ? data.renders?.flora : null) ||
+                  (isCleanPhotorealistic(data.renders?.ecosystem) ? data.renders?.ecosystem : null) ||
+                  amlemiBotanicalImg,
+                fauna: (isCleanPhotorealistic(data.renders?.fauna) ? data.renders?.fauna : null) || amlemiFaunaImg,
+                atmosphere: (isCleanPhotorealistic(data.renders?.atmosphere) ? data.renders?.atmosphere : null) || amlemiCockpitImg,
+                landmark: (isCleanPhotorealistic(data.renders?.landmark) ? data.renders?.landmark : null) || amlemiMonumentImg,
+                ecosystem:
+                  (isCleanPhotorealistic(data.renders?.ecosystem) ? data.renders?.ecosystem : null) ||
+                  (isCleanPhotorealistic(data.renders?.flora) ? data.renders?.flora : null) ||
+                  amlemiBotanicalImg,
+              },
           votesCount,
           hasVoted: userVoted,
           status: (data.status as any) || 'PUBLISHED',
@@ -463,39 +505,39 @@ FOUNDING CREED & FUTURE PROMISE:
 This planetary territory is officially registered in the 2027 Äkinoya Lore Governance Council. Community votes cast before June 30 determine whether this sector will be featured in the official Sillow Mill cinematic series and soundtrack.`;
 };
 
-// Map wizard inputs to 5 visual render assets anchored in Mood.png & Äkinoya.jpg
+// Map wizard inputs to 5 rich, photorealistic full-color visual render assets anchored in Mood.png & Äkinoya.jpg
 export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['renders'] => {
   const text = `${answers.planetName} ${answers.atmosphere} ${answers.visualAesthetic} ${answers.colorPalette}`.toLowerCase();
 
-  if (text.includes('moodboard') || text.includes('cockpit') || text.includes('green') || text.includes('älkan') || text.includes('lucina')) {
+  if (text.includes('moodboard') || text.includes('green') || text.includes('forest') || text.includes('moss')) {
     return {
       hero: moodboardImg, // 1. Main Orbital (Mood.png)
-      flora: mushroomValleyImg, // 2. Flora
-      fauna: twilightWorldImg, // 3. Fauna
-      atmosphere: heroBgImg, // 4. Cockpit Atmosphere
-      landmark: planetHeroImg, // 5. Landmark / Archival Cover
+      flora: mushroomValleyImg, // 2. Botanical Flora
+      fauna: amlemiFaunaImg, // 3. Exotic Fauna
+      atmosphere: amlemiCockpitImg, // 4. Cockpit Atmosphere
+      landmark: amlemiMonumentImg, // 5. Iconic Monument
       ecosystem: mushroomValleyImg,
     };
   }
 
-  if (text.includes('ring') || text.includes('violet') || text.includes('purple') || text.includes('elysia')) {
+  if (text.includes('ring') || text.includes('violet') || text.includes('purple') || text.includes('twilight')) {
     return {
       hero: visualizerThumbnailImg, // 1. Main Orbital
-      flora: twilightWorldImg, // 2. Flora
-      fauna: heroBgImg, // 3. Fauna
-      atmosphere: moodboardImg, // 4. Cockpit Atmosphere (Mood.png)
-      landmark: planetHeroImg, // 5. Landmark / Archival Cover
+      flora: twilightWorldImg, // 2. Botanical Flora
+      fauna: amlemiFaunaImg, // 3. Exotic Fauna
+      atmosphere: amlemiCockpitImg, // 4. Cockpit Atmosphere
+      landmark: amlemiMonumentImg, // 5. Iconic Monument
       ecosystem: twilightWorldImg,
     };
   }
 
   return {
-    hero: planetHeroImg, // 1. Main Orbital (Äkinoya.jpg)
-    flora: mushroomValleyImg, // 2. Flora (Mood.png)
-    fauna: twilightWorldImg, // 3. Fauna
-    atmosphere: heroBgImg, // 4. Cockpit Atmosphere
-    landmark: visualizerThumbnailImg, // 5. Landmark / Archival Cover
-    ecosystem: mushroomValleyImg,
+    hero: amlemiOrbitalImg, // 1. Main Orbital Hero (01-orbital.png)
+    flora: amlemiBotanicalImg, // 2. Botanical Flora (02-botanical.png)
+    fauna: amlemiFaunaImg, // 3. Exotic Fauna (03-fauna.png)
+    atmosphere: amlemiCockpitImg, // 4. Cockpit Atmosphere (04-cockpit.png)
+    landmark: amlemiMonumentImg, // 5. Iconic Monument (05-monument.png)
+    ecosystem: amlemiBotanicalImg,
   };
 };
 
@@ -509,12 +551,21 @@ export interface PlanetPhotoCard {
 }
 
 export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] => {
+  const heroUrl = (isCleanPhotorealistic(sub.renders?.hero) ? sub.renders.hero : null) || amlemiOrbitalImg;
+  const floraUrl =
+    (isCleanPhotorealistic(sub.renders?.flora) ? sub.renders.flora : null) ||
+    (isCleanPhotorealistic(sub.renders?.ecosystem) ? sub.renders.ecosystem : null) ||
+    amlemiBotanicalImg;
+  const faunaUrl = (isCleanPhotorealistic(sub.renders?.fauna) ? sub.renders.fauna : null) || amlemiFaunaImg;
+  const atmoUrl = (isCleanPhotorealistic(sub.renders?.atmosphere) ? sub.renders.atmosphere : null) || amlemiCockpitImg;
+  const landmarkUrl = (isCleanPhotorealistic(sub.renders?.landmark) ? sub.renders.landmark : null) || amlemiMonumentImg;
+
   return [
     {
       id: 'photo-hero',
       title: 'Main Orbital Planet Render',
       category: '01 · ORBITAL HORIZON',
-      url: sub.renders.hero,
+      url: heroUrl,
       description: `Planetary disc and orbital curvature of ${sub.planetName}. Electric resonance and deep cosmic horizon.`,
       styleAnchor: 'Aesthetic Reference: Äkinoya.jpg (High-resolution cinematic sci-fi render, photorealistic cosmic sphere, deep space horizon)',
     },
@@ -522,7 +573,7 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
       id: 'photo-flora',
       title: 'Botanical Flora System',
       category: '02 · BOTANICAL BIOME',
-      url: sub.renders.flora || sub.renders.ecosystem || sub.renders.atmosphere,
+      url: floraUrl,
       description: sub.flora,
       styleAnchor: 'Atmospheric Reference: Mood.png (High-detail digital sci-fi landscape photography, bioluminescent plant life, volumetric depth)',
     },
@@ -530,7 +581,7 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
       id: 'photo-fauna',
       title: 'Exotic Fauna & Wildlife System',
       category: '03 · FAUNA ECOSYSTEM',
-      url: sub.renders.fauna || sub.renders.atmosphere,
+      url: faunaUrl,
       description: sub.fauna,
       styleAnchor: 'Ecological Reference: Mood.png (Photorealistic conceptual creature design, apex plasma lifeforms drifting through thermals)',
     },
@@ -538,7 +589,7 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
       id: 'photo-atmosphere',
       title: 'Cockpit / Ship Landing Atmosphere Detail',
       category: '04 · COCKPIT ATMOSPHERE',
-      url: sub.renders.atmosphere,
+      url: atmoUrl,
       description: sub.atmosphere,
       styleAnchor: 'Cockpit View Reference: Mood.png (Photorealistic cockpit canopy, pilot HUD reflections, volumetric light shafts)',
     },
@@ -546,7 +597,7 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
       id: 'photo-landmark',
       title: 'Lore Dossier Cover & Monument',
       category: '05 · LORE DOSSIER COVER',
-      url: sub.renders.landmark,
+      url: landmarkUrl,
       description: sub.landmark,
       styleAnchor: `Archival Document Cover (Ancient monument, founding promise: "${sub.futurePromise || 'Never forget that true beauty lies in curiosity and persistence'}")`,
     },

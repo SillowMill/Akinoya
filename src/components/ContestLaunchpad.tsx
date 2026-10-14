@@ -39,6 +39,7 @@ import {
   savePlanetSubmission,
   togglePlanetSubmissionVote,
   subscribeToPlanetSubmissions,
+  isCleanPhotorealistic,
 } from '../data/contest';
 import { attachContestSubmissionToCreator } from '../data/creators';
 import { isPostLaunch, hasPaidMembership, openMembershipGateModal } from '../utils/pioneer';
@@ -200,7 +201,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.renders) {
-          finalRenders = json.renders;
+          finalRenders = {
+            hero: isCleanPhotorealistic(json.renders.hero) ? json.renders.hero : finalRenders.hero,
+            flora: isCleanPhotorealistic(json.renders.flora) ? json.renders.flora : finalRenders.flora,
+            fauna: isCleanPhotorealistic(json.renders.fauna) ? json.renders.fauna : finalRenders.fauna,
+            atmosphere: isCleanPhotorealistic(json.renders.atmosphere) ? json.renders.atmosphere : finalRenders.atmosphere,
+            landmark: isCleanPhotorealistic(json.renders.landmark) ? json.renders.landmark : finalRenders.landmark,
+            ecosystem: isCleanPhotorealistic(json.renders.ecosystem) ? json.renders.ecosystem : finalRenders.ecosystem,
+          };
         }
       }
 
