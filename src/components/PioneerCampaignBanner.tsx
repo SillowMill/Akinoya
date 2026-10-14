@@ -55,7 +55,7 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ on
           className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#050812]/95 border border-amber-400/50 hover:border-amber-400 text-amber-300 font-mono text-[11px] shadow-[0_0_20px_rgba(245,158,11,0.35)] backdrop-blur-xl transition-all cursor-pointer hover:scale-105"
         >
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <span className="font-bold tracking-wider">CLAIM YOUR WORLD · JAN 9, 2027</span>
+          <span className="font-bold tracking-wider">CREATE YOUR FREE WORLD · BEFORE 09/01/2027</span>
         </button>
       </div>
     );
@@ -94,7 +94,7 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ on
 
           <p className="text-[11px] sm:text-xs text-white/90 font-sans leading-snug text-center md:text-left">
             <span className="font-semibold text-amber-300 font-mono tracking-wide">
-              Claim Your World now for FREE before January 9, 2027.
+              Create your free world before 09/01/2027.
             </span>{' '}
             <span className="text-white/75">
               After launch, planetary claims and full community access require a paid membership (€60/year)!
@@ -118,7 +118,7 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ on
             onClick={handleOpen}
             className="w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs tracking-wider transition-all duration-200 cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5 shrink-0 min-h-[40px] sm:min-h-0"
           >
-            <span>Claim Your World →</span>
+            <span>Create Your Free World →</span>
           </button>
 
           {/* Desktop dismiss button */}

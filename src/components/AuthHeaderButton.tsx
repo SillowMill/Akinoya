@@ -137,7 +137,7 @@ export const AuthHeaderButton: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.18 }}
-            className="absolute right-0 top-full mt-2 w-[90vw] max-w-[calc(100vw-2rem)] sm:w-80 sm:max-w-md origin-top-right rounded-2xl bg-[#0b0f17] border border-white/10 p-3 sm:p-3.5 shadow-2xl z-[100] space-y-2 text-xs font-sans backdrop-blur-xl ring-1 ring-white/5 overflow-hidden"
+            className="fixed sm:absolute left-0 right-0 sm:left-auto sm:right-0 top-16 sm:top-full mt-1 sm:mt-2 mx-auto sm:mx-0 w-[92vw] max-w-[92vw] sm:w-80 sm:max-w-md origin-top sm:origin-top-right rounded-2xl bg-[#0b0f17] border border-white/10 p-3 sm:p-3.5 shadow-2xl z-[100] space-y-2 text-xs font-sans backdrop-blur-xl ring-1 ring-white/5 overflow-y-auto max-h-[85vh]"
           >
             {/* Header info */}
             <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 space-y-1 overflow-hidden">

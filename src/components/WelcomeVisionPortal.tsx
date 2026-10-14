@@ -330,7 +330,7 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
               className="pt-2 text-xs font-mono font-bold text-amber-300 hover:text-amber-100 flex items-center gap-1.5 transition-colors cursor-pointer group"
             >
               <Globe2 className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-              <span>Claim Your World [PIONEER-2027] →</span>
+              <span>Create Your Free World [PIONEER-2027] →</span>
             </button>
           </div>
         </div>
@@ -397,9 +397,9 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
                   [PIONEER-2027]
                 </span>
               </div>
-              <span>Claim Your World →</span>
+              <span>Create Your Free World →</span>
               <span className="text-[10px] font-sans font-normal text-amber-200/80">
-                Sector Claims · Launch Jan 9, 2027
+                Create your free world before 09/01/2027
               </span>
             </button>
           </div>

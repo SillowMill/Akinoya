@@ -296,11 +296,11 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                 </div>
 
                 <h2 className="text-2xl sm:text-3xl font-display font-black text-white tracking-tight uppercase">
-                  Claim Your World
+                  Create Your Free World
                 </h2>
 
                 <p className="text-xs sm:text-sm text-white/75 font-sans leading-relaxed">
-                  Official Launch: <span className="text-amber-300 font-semibold">January 9, 2027</span>. Secure your paid membership today to unlock planetary sector claims, full community channels, and permanent Pioneer status.
+                  Official Launch: <span className="text-amber-300 font-semibold">January 9, 2027</span>. <strong className="text-amber-300 font-semibold">Create your free world before 09/01/2027</strong> to unlock planetary sector claims, full community channels, and permanent Pioneer status.
                 </p>
               </div>
 

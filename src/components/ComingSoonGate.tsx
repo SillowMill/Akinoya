@@ -356,10 +356,10 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
               className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/25 to-amber-500/20 hover:from-amber-500/30 hover:to-yellow-500/35 border border-amber-400/50 text-amber-300 font-mono text-[11px] sm:text-xs font-bold tracking-wider flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(245,158,11,0.2)] transition-all cursor-pointer hover:scale-[1.02]"
             >
               <Globe2 className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span>CLAIM YOUR WORLD [PIONEER-2027] →</span>
+              <span>CREATE YOUR FREE WORLD BEFORE 09/01/2027 →</span>
             </button>
             <p className="text-[10px] text-white/50 font-sans">
-              Official Launch: Jan 9, 2027 · Pre-register planetary sector &amp; permanent Pioneer status.
+              Official Launch: Jan 9, 2027 · Create your free world before 09/01/2027.
             </p>
           </div>
 
