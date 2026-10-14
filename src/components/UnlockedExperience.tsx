@@ -76,6 +76,7 @@ import {
   BingaaCertificate,
 } from '../utils/certificate';
 import { CertificateOfAuthenticity } from './CertificateOfAuthenticity';
+import { isFounderEmail } from '../lib/vipTokens';
 
 // pdf.js is heavy — only fetch the reader chunk when a verified holder opens the comic
 const BingaaComicReader = lazy(() => import('./BingaaComicReader'));
@@ -238,6 +239,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
+  const authHolderName = profile?.first_name ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}` : profile?.full_name || null;
+  const userEmail = (user?.email || profile?.email || '').toLowerCase().trim();
+  const isOdiUser = isFounderEmail(userEmail);
+  const isEstherUser = userEmail === 'estherphilippen@msn.com' || Boolean(authHolderName && authHolderName.toLowerCase().includes('esther'));
+
   const storedPlanets = getStoredPlanetSubmissions().sort((a, b) => b.votesCount - a.votesCount);
   const planetRank = userDossier ? storedPlanets.findIndex((p) => p.id === userDossier.id) + 1 : 0;
   const isVipMode = Boolean(
@@ -249,6 +255,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       role === 'VIP_GUEST' ||
       role === 'CREATOR' ||
       Boolean(profile?.vip_code_redeemed) ||
+      isOdiUser ||
       (typeof window !== 'undefined' &&
         (Boolean(localStorage.getItem('akinoya_patron_token')) ||
          Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
@@ -271,10 +278,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   // Verified holder assets: active pass is the NFC-bound token for this device session
   const { nfcToken } = useVipAccess();
-  const authHolderName = profile?.first_name ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}` : profile?.full_name || null;
-  const userEmail = (user?.email || profile?.email || '').toLowerCase().trim();
-  const isOdiUser = userEmail === 'odi@sillowmill.com' || userEmail === 'odi.selis3@gmail.com';
-  const isEstherUser = userEmail === 'estherphilippen@msn.com' || Boolean(authHolderName && authHolderName.toLowerCase().includes('esther'));
 
   // Default fallback pass: only Odi can fall back to FOUNDING_PASS_ID. Esther and other VIP guests fall back to AKN-VIP-2027-X001
   const defaultPassId = isOdiUser ? FOUNDING_PASS_ID : (isEstherUser ? 'AKN-VIP-2027-X001' : 'AKN-VIP-2027-X001');

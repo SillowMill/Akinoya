@@ -34,7 +34,7 @@ import {
   deriveEditionNumber,
   TOTAL_EDITION_LIMIT,
 } from '../utils/certificate';
-import { checkVipTokenStatus, OTHER_ACCOUNT_VIP_ERROR } from '../lib/vipTokens';
+import { checkVipTokenStatus, OTHER_ACCOUNT_VIP_ERROR, isFounderEmail } from '../lib/vipTokens';
 
 interface AkinoyaPassportVerificationProps {
   tokenIdFromRoute?: string;
@@ -154,13 +154,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   // UI helpers
   const [copiedToken, setCopiedToken] = useState(false);
 
-  // Helper for identifying creator/founder email
-  const isFounderEmail = (email?: string | null): boolean => {
-    if (!email) return false;
-    const clean = email.trim().toLowerCase();
-    return clean === 'odi@sillowmill.com' || clean === 'odi.selis3@gmail.com';
-  };
-
   // Determine if this pass is officially claimed by the active account or previously
   const isUserLoggedIn = Boolean(user || profile);
   const currentUserEmail = (user?.email || profile?.email || '').trim().toLowerCase();
@@ -172,7 +165,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         profile?.has_vip_pass ||
         profile?.vip_code_redeemed === activeToken ||
         passData.isClaimed ||
-        Boolean(localStoredCert)
+        Boolean(localStoredCert) ||
+        isFounderEmail(currentUserEmail)
       )) ||
       (!isMaster && (
         isUserVip ||
@@ -187,6 +181,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const hasClaimedPass = Boolean(
     isUserLoggedIn && (
       isClaimedByUser ||
+      (isMaster && isFounderAccount) ||
       (passData.isClaimed && passData.ownerEmail && (currentUserEmail === passData.ownerEmail.toLowerCase()))
     )
   );
@@ -253,13 +248,25 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
     // Strict ownership validation in Supabase
     if (!isMaster) {
-      const tokenStatus = await checkVipTokenStatus(token, user?.id);
+      const tokenStatus = await checkVipTokenStatus(token, user?.id, currentUserEmail);
       if (tokenStatus.isAlreadyClaimed) {
         if (tokenStatus.isClaimedByMe) {
           // If it matches the original owner: seamlessly grant/maintain VIP access!
         } else {
           setIsDnaAuthentic(false);
           setStatusText('ALREADY CLAIMED');
+          setDnaError(OTHER_ACCOUNT_VIP_ERROR);
+          soundManager.playError();
+          setIsValidating(false);
+          return;
+        }
+      }
+    } else {
+      // It is the Master Founder Pass (AKN-VIP-2027-X0914)
+      if (currentUserEmail) {
+        if (!isFounderEmail(currentUserEmail) && profile?.role !== 'CREATOR') {
+          setIsDnaAuthentic(false);
+          setStatusText('RESTRICTED');
           setDnaError(OTHER_ACCOUNT_VIP_ERROR);
           soundManager.playError();
           setIsValidating(false);
@@ -403,7 +410,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           return;
         }
       } else {
-        const tokenStatus = await checkVipTokenStatus(activeToken, currentUser?.id);
+        const tokenStatus = await checkVipTokenStatus(activeToken, currentUser?.id, cleanEmail);
         if (tokenStatus.isAlreadyClaimed) {
           if (tokenStatus.isClaimedByMe) {
             // Already claimed by this user!
@@ -948,7 +955,9 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               <div className="py-2 flex items-center justify-between gap-3">
                 <span className="text-white/40">EDITION</span>
                 <span className="text-white font-medium">
-                  {`Founding Member Copy #${passData.editionNumber} of ${TOTAL_EDITION_LIMIT}`}
+                  {isMaster
+                    ? 'Founders Pass (#0)'
+                    : `Founding Member Copy #${passData.editionNumber} of ${TOTAL_EDITION_LIMIT}`}
                 </span>
               </div>
               <div className="py-2 flex items-center justify-between gap-3">

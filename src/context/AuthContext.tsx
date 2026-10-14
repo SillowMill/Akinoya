@@ -8,6 +8,7 @@ import {
   claimVipTokenForUser,
   getUserBoundVipToken,
   normalizeVipToken,
+  isFounderEmail,
   ALREADY_CLAIMED_VIP_ERROR,
   OTHER_ACCOUNT_VIP_ERROR,
 } from '../lib/vipTokens';
@@ -353,11 +354,15 @@ const resolveAndLinkVipProfile = async (
   );
   const metaPass = authUser.user_metadata?.vip_pass_id || authUser.user_metadata?.vip_code || null;
 
+  const authUserEmail = (authUser.email || rawProfData?.email || '').trim().toLowerCase();
+  const isFounder = isFounderEmail(authUserEmail);
+
   // 1. Check if an active VIP token entry in vip_tokens is already bound to this user ID
   const boundVipToken = authUser?.id ? await getUserBoundVipToken(authUser.id) : null;
 
   // 2. Check if user already has verified VIP profile in Supabase public.profiles
   const userHasProfileVip = Boolean(
+    isFounder ||
     rawProfData?.has_vip_pass ||
     rawProfData?.is_vip ||
     rawProfData?.role === 'VIP_GUEST' ||
@@ -366,11 +371,15 @@ const resolveAndLinkVipProfile = async (
   );
 
   const currentSubStatus = rawProfData?.subscription_status || 'inactive';
-  let targetRole: UserRole = rawProfData?.role || 'FREE';
-  let targetHasVip = Boolean(boundVipToken || userHasProfileVip);
-  let targetPassCode: string | null = boundVipToken?.token_code || rawProfData?.vip_code_redeemed || metaPass || null;
+  let targetRole: UserRole = isFounder ? 'CREATOR' : (rawProfData?.role || 'FREE');
+  let targetHasVip = Boolean(isFounder || boundVipToken || userHasProfileVip);
+  let targetPassCode: string | null = isFounder ? 'AKN-VIP-2027-X0914' : (boundVipToken?.token_code || rawProfData?.vip_code_redeemed || metaPass || null);
 
-  if (boundVipToken) {
+  if (isFounder) {
+    targetHasVip = true;
+    targetRole = 'CREATOR';
+    targetPassCode = 'AKN-VIP-2027-X0914';
+  } else if (boundVipToken) {
     targetHasVip = true;
     const boundRole: UserRole = boundVipToken.token_code === 'AKN-VIP-2027-X0914' ? 'CREATOR' : 'VIP_GUEST';
     targetRole = pickHigherRole(targetRole, boundRole);
@@ -383,51 +392,62 @@ const resolveAndLinkVipProfile = async (
   }
 
   // 3. Strict owner validation on candidate/pending VIP token
-  const candidatePass = pendingPass || (typeof window !== 'undefined' ? localStorage.getItem('sillow_vip_bound_token') : null);
+  const candidatePass = isFounder
+    ? 'AKN-VIP-2027-X0914'
+    : (pendingPass || (typeof window !== 'undefined' ? localStorage.getItem('sillow_vip_bound_token') : null));
 
   if (candidatePass) {
-    const tokenCheck = await checkVipTokenStatus(candidatePass, authUser.id);
-    if (tokenCheck.isAlreadyClaimed) {
-      if (tokenCheck.isClaimedByMe) {
-        // MATCHES ORIGINAL OWNER: seamlessly grant/maintain VIP access!
-        targetHasVip = true;
+    if (isFounder) {
+      targetHasVip = true;
+      targetRole = 'CREATOR';
+      targetPassCode = 'AKN-VIP-2027-X0914';
+      if (authUser?.id) {
+        await claimVipTokenForUser('AKN-VIP-2027-X0914', authUser.id, authUser.user_metadata?.full_name || 'Odi Selis', authUserEmail);
+      }
+    } else {
+      const tokenCheck = await checkVipTokenStatus(candidatePass, authUser.id, authUserEmail);
+      if (tokenCheck.isAlreadyClaimed) {
+        if (tokenCheck.isClaimedByMe) {
+          // MATCHES ORIGINAL OWNER: seamlessly grant/maintain VIP access!
+          targetHasVip = true;
+          const vipRole = resolveRoleForCode(candidatePass);
+          targetRole = pickHigherRole(targetRole, vipRole);
+          targetPassCode = candidatePass;
+        } else {
+          // DOES NOT MATCH: strictly block VIP elevation!
+          clearPendingVipStorage();
+          if (!boundVipToken && !userHasProfileVip) {
+            targetHasVip = false;
+            targetPassCode = null;
+            if (targetRole === 'VIP_GUEST') {
+              targetRole = 'FREE';
+            }
+          }
+        }
+      } else if (tokenCheck.allowed) {
+        // Unclaimed token: claim for this user
         const vipRole = resolveRoleForCode(candidatePass);
         targetRole = pickHigherRole(targetRole, vipRole);
         targetPassCode = candidatePass;
-      } else {
-        // DOES NOT MATCH: strictly block VIP elevation!
-        clearPendingVipStorage();
-        if (!boundVipToken && !userHasProfileVip) {
-          targetHasVip = false;
-          targetPassCode = null;
-          if (targetRole === 'VIP_GUEST') {
-            targetRole = 'FREE';
-          }
+        targetHasVip = true;
+        if (authUser?.id) {
+          const m = authUser.user_metadata || {};
+          const fName = (
+            rawProfData?.full_name ||
+            m.full_name ||
+            m.name ||
+            (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : null) ||
+            authUser.email?.split('@')[0] ||
+            'Founding VIP Member'
+          ).trim();
+          await claimVipTokenForUser(candidatePass, authUser.id, fName, authUser.email);
         }
-      }
-    } else if (tokenCheck.allowed) {
-      // Unclaimed token: claim for this user
-      const vipRole = resolveRoleForCode(candidatePass);
-      targetRole = pickHigherRole(targetRole, vipRole);
-      targetPassCode = candidatePass;
-      targetHasVip = true;
-      if (authUser?.id) {
-        const m = authUser.user_metadata || {};
-        const fName = (
-          rawProfData?.full_name ||
-          m.full_name ||
-          m.name ||
-          (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : null) ||
-          authUser.email?.split('@')[0] ||
-          'Founding VIP Member'
-        ).trim();
-        await claimVipTokenForUser(candidatePass, authUser.id, fName, authUser.email);
       }
     }
   }
 
-  // Force standard Free user if not verified VIP or Subscriber
-  if (!targetHasVip && targetRole !== 'ANNUAL_PASS' && targetRole !== 'SUBSCRIBER' && targetRole !== 'CREATOR') {
+  // Force standard Free user if not verified VIP, Subscriber, or Creator
+  if (!isFounder && !targetHasVip && targetRole !== 'ANNUAL_PASS' && targetRole !== 'SUBSCRIBER' && targetRole !== 'CREATOR') {
     targetRole = 'FREE';
     targetHasVip = false;
     targetPassCode = null;
@@ -718,7 +738,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let cachedRole = getCachedRole();
 
         if (candidateToken) {
-          const tokenStatus = await checkVipTokenStatus(candidateToken, cachedUser?.id);
+          const userEmail = (cachedUser?.email || cachedProf?.email || '').trim().toLowerCase();
+          const tokenStatus = await checkVipTokenStatus(candidateToken, cachedUser?.id, userEmail);
           if (tokenStatus.isAlreadyClaimed) {
             if (tokenStatus.isClaimedByMe) {
               if (mounted) {
@@ -1157,8 +1178,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const pendingPass = getStoredVipPass();
     if (pendingPass) {
-      const tokenStatus = await checkVipTokenStatus(pendingPass, user.id);
-      if (tokenStatus.isAlreadyClaimed) {
+      const userEmail = (user.email || profile?.email || '').trim().toLowerCase();
+      const tokenStatus = await checkVipTokenStatus(pendingPass, user.id, userEmail);
+      if (tokenStatus.isAlreadyClaimed && !tokenStatus.isClaimedByMe) {
         clearPendingVipStorage();
         setVipLinkError(ALREADY_CLAIMED_VIP_ERROR);
         soundManager.playError();
@@ -1193,8 +1215,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Please enter a VIP pass code.' };
     }
 
+    const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
     // Strict ownership verification
-    const tokenCheck = await checkVipTokenStatus(clean, user?.id);
+    const tokenCheck = await checkVipTokenStatus(clean, user?.id, userEmail);
     if (tokenCheck.isAlreadyClaimed) {
       if (tokenCheck.isClaimedByMe) {
         soundManager.playUnlockChime();

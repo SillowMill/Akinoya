@@ -117,6 +117,12 @@ export const getUserBoundVipToken = async (userId: string): Promise<VipTokenReco
   return null;
 };
 
+export const isFounderEmail = (email?: string | null): boolean => {
+  if (!email) return false;
+  const clean = email.trim().toLowerCase();
+  return clean === 'odi.selis3@gmail.com' || clean === 'odi@sillowmill.com';
+};
+
 /**
  * Checks token claim status in Supabase before granting elevation.
  * Enforces single-claim: If an already-claimed link/token is accessed again by ANY user
@@ -124,7 +130,8 @@ export const getUserBoundVipToken = async (userId: string): Promise<VipTokenReco
  */
 export const checkVipTokenStatus = async (
   rawToken: string,
-  currentUserId?: string | null
+  currentUserId?: string | null,
+  currentUserEmail?: string | null
 ): Promise<VipTokenCheckResult> => {
   const clean = normalizeVipToken(rawToken);
 
@@ -136,6 +143,43 @@ export const checkVipTokenStatus = async (
       isClaimedByMe: false,
       tokenCode: '',
       error: 'Please enter a valid VIP token.',
+    };
+  }
+
+  const isMasterToken = clean === 'AKN-VIP-2027-X0914' || clean === 'AKN-2027' || clean === 'AKN-VIP-2027';
+
+  // Founder Pass (#0) special handling:
+  // Strictly bound to Odi Selis (odi.selis3@gmail.com / odi@sillowmill.com).
+  // When accessed by Odi, it is ALWAYS allowed and treated as owned, never blocked.
+  if (isMasterToken) {
+    if (currentUserEmail) {
+      if (isFounderEmail(currentUserEmail)) {
+        return {
+          valid: true,
+          allowed: true,
+          isAlreadyClaimed: true,
+          isClaimedByMe: true,
+          tokenCode: clean,
+        };
+      } else {
+        // Non-founder attempting to access/claim Founder Pass
+        return {
+          valid: true,
+          allowed: false,
+          isAlreadyClaimed: true,
+          isClaimedByMe: false,
+          tokenCode: clean,
+          error: OTHER_ACCOUNT_VIP_ERROR,
+        };
+      }
+    }
+    // Unauthenticated initial view
+    return {
+      valid: true,
+      allowed: true,
+      isAlreadyClaimed: false,
+      isClaimedByMe: false,
+      tokenCode: clean,
     };
   }
 
@@ -151,7 +195,10 @@ export const checkVipTokenStatus = async (
       if (!error && data) {
         const tokenRecord = data as VipTokenRecord;
         if (tokenRecord.is_claimed) {
-          const isOwner = Boolean(currentUserId && tokenRecord.claimed_by_user_id === currentUserId);
+          const isOwner = Boolean(
+            (currentUserId && tokenRecord.claimed_by_user_id === currentUserId) ||
+            (currentUserEmail && tokenRecord.claimed_holder_email && currentUserEmail.trim().toLowerCase() === tokenRecord.claimed_holder_email.trim().toLowerCase())
+          );
           if (isOwner) {
             return {
               valid: true,
@@ -249,8 +296,46 @@ export const claimVipTokenForUser = async (
     return { success: false, error: 'Token and User ID are required.' };
   }
 
+  const isMasterToken = clean === 'AKN-VIP-2027-X0914' || clean === 'AKN-2027' || clean === 'AKN-VIP-2027';
+
+  // Founder Pass (#0) Google Auth binding
+  if (isMasterToken) {
+    if (!isFounderEmail(holderEmail)) {
+      return { success: false, error: OTHER_ACCOUNT_VIP_ERROR, message: OTHER_ACCOUNT_VIP_ERROR };
+    }
+    const updateData: Record<string, any> = {
+      is_claimed: true,
+      claimed_by_user_id: userId,
+      claimed_holder_name: holderName || 'Odi Selis',
+      claimed_holder_email: holderEmail || 'odi.selis3@gmail.com',
+      claimed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    if (isSupabaseConfigured) {
+      try {
+        const { data: existing } = await supabase
+          .from('vip_tokens')
+          .select('id')
+          .eq('token_code', clean)
+          .maybeSingle();
+        if (existing) {
+          await supabase.from('vip_tokens').update(updateData).eq('token_code', clean);
+        } else {
+          await supabase.from('vip_tokens').insert({ token_code: clean, ...updateData });
+        }
+      } catch (err) {
+        console.warn('[VipTokens] Founder token update notice:', err);
+      }
+    }
+    setLocalClaim(clean, userId);
+    return {
+      success: true,
+      message: 'Founders Pass (#0) bound to your verified Google account.',
+    };
+  }
+
   // Pre-check status first
-  const status = await checkVipTokenStatus(clean, userId);
+  const status = await checkVipTokenStatus(clean, userId, holderEmail);
   if (status.isAlreadyClaimed) {
     if (status.isClaimedByMe) {
       return {

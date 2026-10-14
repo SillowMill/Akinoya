@@ -86,14 +86,16 @@ function deriveEdition(tokenId) {
 
 function createDefaultPassRecord(tokenId) {
   const normalized = normalizeTokenId(tokenId);
-  const { edition, editionNumber } = deriveEdition(normalized);
   const isMaster = normalized === 'AKN-VIP-2027-X0914';
+  const { edition, editionNumber } = isMaster
+    ? { edition: 'Founders Pass (#0)', editionNumber: 0 }
+    : deriveEdition(normalized);
 
   return {
     tokenId: `#${normalized}`,
     normalizedId: normalized,
-    edition: isMaster ? 'Founders Pass (#0)' : `${derivedEdition} of 100`,
-    editionNumber: isMaster ? 0 : derivedEdition,
+    edition,
+    editionNumber,
     origin: 'Genesis Archive (Leuven Origin)',
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",

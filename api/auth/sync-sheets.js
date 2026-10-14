@@ -171,8 +171,11 @@ export default async function handler(req, res) {
     const firstName = String(record.first_name || record.firstName || '').trim();
     const lastName = String(record.last_name || record.lastName || '').trim();
     const email = String(record.email || '').trim().toLowerCase();
-    const role = String(record.role || 'FREE').trim().toUpperCase();
-    const vipCode = String(record.vip_code_redeemed || record.vipCode || '').trim();
+    const isFounder = email === 'odi@sillowmill.com' || email === 'odi.selis3@gmail.com';
+    let role = isFounder ? 'CREATOR' : String(record.role || 'FREE').trim().toUpperCase();
+    let vipCode = isFounder
+      ? 'AKN-VIP-2027-X0914'
+      : String(record.vip_code_redeemed || record.vipCode || '').trim();
     const registrationDate = record.created_at || new Date().toISOString();
 
     if (!email || !email.includes('@')) {
@@ -287,16 +290,18 @@ export default async function handler(req, res) {
       const existing = subscriberMap.get(email);
       if (firstName) existing.firstName = firstName;
       if (lastName) existing.lastName = lastName;
-      if (role) existing.role = role;
-      if (vipCode && vipCode !== 'N/A') existing.vipCode = vipCode;
+      existing.role = isFounder ? 'CREATOR' : (role || existing.role);
+      existing.vipCode = isFounder
+        ? 'AKN-VIP-2027-X0914'
+        : (vipCode && vipCode !== 'N/A' ? vipCode : existing.vipCode);
       existing.registrationDate = registrationDate || new Date().toISOString();
     } else {
       subscriberMap.set(email, {
-        firstName: firstName || 'Subscriber',
-        lastName: lastName || '',
+        firstName: firstName || (isFounder ? 'Odi' : 'Subscriber'),
+        lastName: lastName || (isFounder ? 'Selis' : ''),
         email,
-        role: role || 'FREE',
-        vipCode: vipCode || 'N/A',
+        role: isFounder ? 'CREATOR' : (role || 'FREE'),
+        vipCode: isFounder ? 'AKN-VIP-2027-X0914' : (vipCode || 'N/A'),
         registrationDate: registrationDate || new Date().toISOString(),
       });
     }
@@ -348,7 +353,7 @@ export default async function handler(req, res) {
     // Parallel Dual-Tab Sync: If VIP Pass is present or redeemed, sync to VIP GUESTS tab simultaneously
     let targetVipPassId = vipCode;
     if (!targetVipPassId || targetVipPassId === 'N/A') {
-      if (email === 'odi@sillowmill.com' || email === 'odi.selis3@gmail.com') {
+      if (isFounder) {
         targetVipPassId = 'AKN-VIP-2027-X0914';
       } else if (email === 'estherphilippen@msn.com' || `${firstName} ${lastName}`.toLowerCase().includes('esther')) {
         targetVipPassId = 'AKN-VIP-2027-X001';
@@ -357,7 +362,7 @@ export default async function handler(req, res) {
 
     if (targetVipPassId && targetVipPassId !== 'N/A') {
       try {
-        const holderFullName = `${firstName} ${lastName}`.trim() || firstName || (email === 'odi@sillowmill.com' ? 'Odi Selis' : email);
+        const holderFullName = `${firstName} ${lastName}`.trim() || firstName || (isFounder ? 'Odi Selis' : email);
         await syncPassClaimToGoogleSheets(targetVipPassId, holderFullName, email);
       } catch (err) {
         console.warn('[Google Sheets Sync] Parallel VIP GUESTS sync warning:', err);
