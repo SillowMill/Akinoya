@@ -135,7 +135,7 @@ export const MOCK_PLANET_IDS = new Set([
 
 /**
  * Single Canonical Community Benchmark Planet:
- * Ämlemi (Odi Selis - #1 Showcase, 42 votes)
+ * Ämlemi (Odi Selis - #1 Showcase, 3 votes)
  * Linked to the 5 official cinematic test renders from Akinoya_Test_Renders:
  * 01-orbital.png, 02-botanical.png, 03-fauna.png, 04-cockpit.png, 05-monument.png
  */
@@ -183,7 +183,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       landmark: amlemiMonumentImg,
       ecosystem: amlemiBotanicalImg,
     },
-    votesCount: 42,
+    votesCount: 3,
     hasVoted: false,
     status: 'PUBLISHED',
     createdAt: '2026-10-14T12:00:00.000Z',
@@ -211,9 +211,17 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
           )
           .map((sub): PlanetSubmission => {
             const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
+            const userVoted = hasUserVotedOnSubmission(sub.id);
+            // Minimum vote baseline: 1 vote minimum. Ämlemi initial baseline: 3 votes.
+            let votesCount = Math.max(1, sub.votesCount || 1);
+            if (isAmlemi) {
+              votesCount = userVoted ? 4 : 3;
+            }
             return {
               ...sub,
               planetName: isAmlemi ? 'Ämlemi' : formatAkinoyaPlanetName(sub.planetName),
+              votesCount,
+              hasVoted: userVoted,
               renders: isAmlemi
                 ? {
                     hero: amlemiOrbitalImg,
@@ -273,36 +281,55 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
               !MOCK_PLANET_IDS.has(d.id)
             );
           })
-          .map((d: any) => ({
-            id: d.id,
-            userId: d.user_id,
-            authorName: d.author_name || 'Anonymous Creator',
-            authorUsername: d.author_username || 'creator',
-            authorEmail: d.author_email || '',
-            authorAvatarGradient: d.author_avatar_gradient || 'from-amber-400 to-amber-600',
-            planetName: formatAkinoyaPlanetName(d.planet_name),
-            atmosphere: d.atmosphere || '',
-            flora: d.flora || '',
-            fauna: d.fauna || '',
-            sonicVibe: d.sonic_vibe || '',
-            visualAesthetic: d.visual_aesthetic || '',
-            landmark: d.landmark || '',
-            additionalNotes: d.additional_notes || '',
-            humanAnswers: d.human_answers || {},
-            generatedLore: d.generated_lore || '',
-            renders: d.renders || {
-              hero: amlemiOrbitalImg,
-              flora: amlemiBotanicalImg,
-              fauna: amlemiFaunaImg,
-              atmosphere: amlemiCockpitImg,
-              landmark: amlemiMonumentImg,
-              ecosystem: amlemiBotanicalImg,
-            },
-            votesCount: d.votes_count || 1,
-            status: (d.status as any) || 'PUBLISHED',
-            createdAt: d.created_at || new Date().toISOString(),
-            votingDeadline: 'June 30, 2027',
-          }));
+          .map((d: any) => {
+            const isAmlemi = d.id === 'planet-amlemi-genesis-01' || d.planet_name === 'Ämlemi';
+            const userVoted = hasUserVotedOnSubmission(d.id);
+            // Minimum vote baseline: 1 vote minimum. Ämlemi initial baseline: 3 votes.
+            let votesCount = Math.max(1, d.votes_count || 1);
+            if (isAmlemi) {
+              votesCount = userVoted ? 4 : 3;
+            }
+            return {
+              id: d.id,
+              userId: d.user_id,
+              authorName: d.author_name || 'Anonymous Creator',
+              authorUsername: d.author_username || 'creator',
+              authorEmail: d.author_email || '',
+              authorAvatarGradient: d.author_avatar_gradient || 'from-amber-400 to-amber-600',
+              planetName: isAmlemi ? 'Ämlemi' : formatAkinoyaPlanetName(d.planet_name),
+              atmosphere: d.atmosphere || '',
+              flora: d.flora || '',
+              fauna: d.fauna || '',
+              sonicVibe: d.sonic_vibe || '',
+              visualAesthetic: d.visual_aesthetic || '',
+              landmark: d.landmark || '',
+              additionalNotes: d.additional_notes || '',
+              humanAnswers: d.human_answers || {},
+              generatedLore: d.generated_lore || '',
+              renders: isAmlemi
+                ? {
+                    hero: amlemiOrbitalImg,
+                    flora: amlemiBotanicalImg,
+                    fauna: amlemiFaunaImg,
+                    atmosphere: amlemiCockpitImg,
+                    landmark: amlemiMonumentImg,
+                    ecosystem: amlemiBotanicalImg,
+                  }
+                : (d.renders || {
+                    hero: amlemiOrbitalImg,
+                    flora: amlemiBotanicalImg,
+                    fauna: amlemiFaunaImg,
+                    atmosphere: amlemiCockpitImg,
+                    landmark: amlemiMonumentImg,
+                    ecosystem: amlemiBotanicalImg,
+                  }),
+              votesCount,
+              hasVoted: userVoted,
+              status: (d.status as any) || 'PUBLISHED',
+              createdAt: d.created_at || new Date().toISOString(),
+              votingDeadline: 'June 30, 2027',
+            };
+          });
 
         // Always ensure canonical Ämlemi is included
         if (!live.some((p) => p.planetName === 'Ämlemi' || p.id === 'planet-amlemi-genesis-01')) {
@@ -595,11 +622,15 @@ export const togglePlanetSubmissionVote = async (
     localStorage.setItem(LOCAL_CONTEST_VOTES_KEY, JSON.stringify(map));
   } catch {}
 
+  const isAmlemiId = submissionId === 'planet-amlemi-genesis-01';
+  const minBaseline = isAmlemiId ? 3 : 1;
+
   const submissions = getStoredPlanetSubmissions();
-  let updatedCount = 0;
+  let updatedCount = minBaseline;
   const updatedSubmissions = submissions.map((sub) => {
-    if (sub.id === submissionId) {
-      const nextCount = Math.max(0, sub.votesCount + (nextVoted ? 1 : -1));
+    if (sub.id === submissionId || (isAmlemiId && sub.planetName === 'Ämlemi')) {
+      const base = isAmlemiId ? (sub.votesCount >= 3 ? sub.votesCount : 3) : Math.max(1, sub.votesCount || 1);
+      const nextCount = Math.max(minBaseline, base + (nextVoted ? 1 : -1));
       updatedCount = nextCount;
       return { ...sub, votesCount: nextCount, hasVoted: nextVoted };
     }

@@ -17,7 +17,11 @@
 import { createClient } from '@supabase/supabase-js';
 
 export const SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR =
-  'High-resolution cinematic sci-fi render, photorealistic conceptual space art, Sillow Mill aesthetic, visual depth and atmosphere strictly anchored by Mood.png (cinematic atmospheric lighting, volumetric depth, photorealistic textures, wide planetary camera angles) and celestial composition strictly anchored by Äkinoya.jpg (deep space planetary sphere, high-detail cosmic surface textures, photorealistic atmospheric glow, 8k resolution, cinematic lighting).';
+  'High-resolution cinematic sci-fi render, photorealistic conceptual space art, Sillow Mill aesthetic. ' +
+  'STRUCTURAL PRESERVATION: Strictly maintain the exact visual structure, cinematic sci-fi composition, camera staging, and stylistic integrity as established in the portal design standard: ' +
+  'celestial planetary curvature and orbital ring geometry strictly anchored by Äkinoya.jpg (deep space planetary sphere, high-detail cosmic surface textures, photorealistic atmospheric glow, 8k resolution, cinematic lighting), ' +
+  'and atmospheric environmental depth strictly anchored by Mood.png (cinematic atmospheric lighting, volumetric depth, photorealistic textures, wide planetary camera angles). ' +
+  'COLOR FREEDOM DIRECTIVE: Complete freedom in color palettes and chromatic combinations is permitted and encouraged across planets, flora, and fauna — any color combination, vibrant spectrum, radiant bioluminescence, exotic contrasting tones, or subtle pastel alien pigments is fully allowed.';
 
 const ORGANIC_NAME_PREFIXES = [
   'Arbi', 'Luci', 'Ely', 'Vale', 'Aethel', 'Zephy', 'Sola', 'Aure', 'Celes', 'Vespe',
@@ -135,25 +139,46 @@ export async function checkAndLockUserGeneration(userId?: string, email?: string
  */
 function parsePaletteHues(colorText?: string): { hue1: number; hue2: number; isDark: boolean } {
   const text = (colorText || '').toLowerCase();
+  const isDark = text.includes('black') || text.includes('obsidian') || text.includes('dark');
   let hue1 = 195; // Default neon turquoise
   let hue2 = 280; // Default deep purple
-  let isDark = text.includes('black') || text.includes('obsidian') || text.includes('dark');
 
   if (text.includes('orange') || text.includes('copper') || text.includes('amber')) {
     hue1 = 28;
     hue2 = 18;
-  } else if (text.includes('green') || text.includes('emerald') || text.includes('forest')) {
+  } else if (text.includes('red') || text.includes('crimson') || text.includes('ruby')) {
+    hue1 = 350;
+    hue2 = 15;
+  } else if (text.includes('green') || text.includes('emerald') || text.includes('forest') || text.includes('jade')) {
     hue1 = 150;
     hue2 = 175;
+  } else if (text.includes('lime') || text.includes('chartreuse')) {
+    hue1 = 85;
+    hue2 = 120;
   } else if (text.includes('pink') || text.includes('rose') || text.includes('magenta')) {
     hue1 = 325;
     hue2 = 280;
   } else if (text.includes('gold') || text.includes('yellow')) {
     hue1 = 45;
     hue2 = 35;
-  } else if (text.includes('indigo') || text.includes('blue')) {
+  } else if (text.includes('indigo') || text.includes('blue') || text.includes('cobalt') || text.includes('azure')) {
     hue1 = 225;
     hue2 = 265;
+  } else if (text.includes('cyan') || text.includes('turquoise') || text.includes('teal')) {
+    hue1 = 180;
+    hue2 = 195;
+  } else if (text.includes('purple') || text.includes('violet') || text.includes('amethyst') || text.includes('lavender')) {
+    hue1 = 275;
+    hue2 = 310;
+  } else if (colorText && colorText.trim()) {
+    // Dynamic color freedom: hash custom palette input into complementary visual spectrum
+    let hash = 0;
+    for (let i = 0; i < colorText.length; i++) {
+      hash = (hash << 5) - hash + colorText.charCodeAt(i);
+      hash |= 0;
+    }
+    hue1 = Math.abs(hash) % 360;
+    hue2 = (hue1 + 80 + (Math.abs(hash >> 3) % 120)) % 360;
   }
 
   return { hue1, hue2, isDark };
@@ -387,22 +412,22 @@ function getSavedDesktopRender(filename: string): string | null {
 
 export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const planetName = formatAkinoyaPlanetName(data.planetName);
-  const colorPalette = data.colorPalette || 'deep indigo blue, neon purple, and warm copper';
+  const colorPalette = data.colorPalette || 'complete color freedom with exotic and harmonious alien hues';
   const environment = data.naturalEnvironment || 'misty mountain ridge and bioluminescent rainforest';
-  const flora = data.flora || 'resonant spore canopies and glowing moss';
+  const flora = data.flora || 'resonant spore canopies, radiant alien flora, and glowing moss';
   const creature = data.admiredCreature || data.fauna || 'soaring pack wolf and plasma-wing leviathan';
   const landmark = data.landmark || data.resilienceStory || 'The Obsidian Spire infinite energy conduit';
   const promise = data.futurePromise || 'Never forget that true beauty lies in curiosity and persistence.';
-  const atmosphere = data.atmosphere || `celestial atmosphere of ${colorPalette}`;
+  const atmosphere = data.atmosphere || `celestial atmosphere with dynamic color palette (${colorPalette})`;
 
   return {
     planetName,
     prompts: {
-      hero: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 1 - Main Orbital Hero]: Celestial disc and orbital curvature of ${planetName}. Composition strictly anchored to Äkinoya.jpg (exact planetary sphere and ring geometry). Custom color palette: ${colorPalette}. Glowing celestial corona, high-resolution cinematic sci-fi render, photorealistic conceptual space art, dark cosmic starfields, 8k resolution, volumetric cosmic lighting.`,
-      flora: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 2 - Botanical Flora System]: Planetary interior botanical organisms on ${planetName}. Stylistic and atmospheric reference strictly anchored to Mood.png (cinematic sci-fi environment). Flora: ${flora}, glowing spore towers, alien canopies inspired by ${environment}, high-detail digital sci-fi landscape photography, volumetric atmospheric mist.`,
-      fauna: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 3 - Exotic Fauna & Wildlife]: Wildlife ecology and apex creatures on ${planetName}. Stylistic reference strictly anchored to Mood.png. Celestial creature design: ${creature}, drifting through atmospheric thermals, high-resolution cinematic sci-fi render, photorealistic speculative xenobiology, bioluminescent markings.`,
-      atmosphere: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 4 - Cockpit & Landing Atmosphere]: Cockpit canopy descent into ${planetName}. Camera angle strictly anchored to Mood.png (cockpit perspective). Atmosphere: ${atmosphere}, interior HUD reflections, volumetric light beams, alien mountain horizons, photorealistic cinematic sci-fi art.`,
-      landmark: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 5 - Lore Dossier Cover]: Official Lore Dossier Cover for planet ${planetName}. Monument: ${landmark}. Framed as a high-end sci-fi archival document cover inscribed with the founding creed: "${promise}". Ancient energy conduit, grand scale monument, high-resolution cinematic sci-fi render.`,
+      hero: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 1 - Main Orbital Hero]: Celestial disc and orbital curvature of planet ${planetName}. Structural Preservation: Exact spherical planetary curvature and equatorial ring geometry strictly anchored to Äkinoya.jpg. Color Freedom: Complete freedom in color palette (${colorPalette}) — any exotic, vibrant, or subtle color combination is permitted across the planetary disc, surface continents, and atmospheric halo. Glowing celestial corona, high-resolution cinematic sci-fi render, photorealistic conceptual space art, dark cosmic starfields, 8k resolution, volumetric cosmic lighting.`,
+      flora: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 2 - Botanical Flora System]: Planetary interior botanical organisms on ${planetName}. Structural Preservation: Stylistic, volumetric lighting, and atmospheric reference strictly anchored to Mood.png standard. Color Freedom: Complete chromatic freedom in botanical pigmentation, bioluminescence, and alien foliage (${colorPalette ? `inspired by ${colorPalette}` : 'any exotic or harmonious color combination is permitted'}); lush alien pigmentation, incandescent floral glow. Flora: ${flora}, glowing spore towers, alien canopies inspired by ${environment}, high-detail digital sci-fi landscape photography, volumetric atmospheric mist.`,
+      fauna: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 3 - Exotic Fauna & Wildlife]: Wildlife ecology and apex creatures on ${planetName}. Structural Preservation: Stylistic reference, depth of field, and creature anatomy anchored to Mood.png standard. Color Freedom: Complete freedom in creature coloration, glowing patterns, and xenobiological pigmentation (${colorPalette ? `harmonizing with ${colorPalette}` : 'any exotic color combination is permitted'}). Celestial creature design: ${creature}, drifting through atmospheric thermals, high-resolution cinematic sci-fi render, photorealistic speculative xenobiology, bioluminescent markings.`,
+      atmosphere: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 4 - Cockpit & Landing Atmosphere]: Cockpit canopy descent into ${planetName}. Structural Preservation: Camera perspective and cockpit canopy staging strictly anchored to Mood.png. Color Freedom: Complete atmospheric color freedom (${atmosphere}). Interior HUD reflections, volumetric light beams, alien mountain horizons, photorealistic cinematic sci-fi art.`,
+      landmark: `${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 5 - Lore Dossier Cover]: Official Lore Dossier Cover for planet ${planetName}. Structural Preservation: Archival document composition combining monumental landmark and inscribed founding creed. Monument: ${landmark}. Founding creed: "${promise}". Color Freedom: Rich cinematic color palette (${colorPalette}). Ancient energy conduit, grand scale monument, high-resolution cinematic sci-fi render.`,
     },
   };
 }
