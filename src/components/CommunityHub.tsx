@@ -55,12 +55,13 @@ import { CreatorPortfolioView } from './CreatorPortfolioView';
 import { LoreGovernancePortal } from './LoreGovernancePortal';
 import { AkinoyaLabsHub } from './AkinoyaLabsHub';
 import { DriveFolderVault } from './DriveFolderVault';
+import { WelcomeVisionPortal } from './WelcomeVisionPortal';
 import { getStoredCreators } from '../data/creators';
 
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
 export const isMembershipLaunchLocked = new Date() < MEMBERSHIP_LAUNCH_DATE;
 
-export type CreativeHubSection = 'downloads' | 'workflows' | 'discussion' | 'creators' | 'governance';
+export type CreativeHubSection = 'welcome' | 'workflows' | 'downloads' | 'discussion' | 'creators' | 'governance';
 
 interface AssetVaultItem {
   id: string;
@@ -210,8 +211,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
   const isPatron = isVipOrAbove;
 
-  // Active Hub Section
-  const [activeSection, setActiveSection] = useState<CreativeHubSection>('downloads');
+  // Active Hub Section (00 · Welcome & Vision Portal as primary landing page)
+  const [activeSection, setActiveSection] = useState<CreativeHubSection>('welcome');
 
   // Paywall Upgrade Modal state
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
@@ -1151,88 +1152,265 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         </div>
       )}
 
-      {/* Futuristic Multi-Hub Navigation Sub-Bar */}
-      <nav className="relative z-20 w-full bg-[#04070e]/95 border-b border-white/10 px-3 sm:px-6 py-2 overflow-x-auto no-scrollbar scroll-smooth shrink-0 shadow-lg" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-3 min-w-max">
-          {[
-            { id: 'downloads', label: 'Drive Asset Vault', icon: FolderDown, count: '5 Folders' },
-            { id: 'workflows', label: 'Äkinoya Labs & Workflows', icon: Sliders, count: '5 Stages' },
-            { id: 'discussion', label: 'Comm-Net Chat (8 Channels)', icon: MessageSquare, count: '8 Channels' },
-            { id: 'creators', label: "Group's Favorite Planets & Leaderboard", icon: Trophy, count: 'Spotlight' },
-            { id: 'governance', label: 'Lore & Governance Portal', icon: Vote, count: 'Contest' },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeSection === tab.id;
+      {/* ======================================================== */}
+      {/* 6 HUB TABS (WELCOME FIRST PROTOCOL)                      */}
+      {/* ======================================================== */}
+      {(() => {
+        const HUB_TABS = [
+          {
+            id: 'welcome',
+            label: 'Welcome & Vision',
+            shortLabel: 'Welcome',
+            desc: 'Transmission & Meta-Vision',
+            icon: Sparkles,
+            count: 'START',
+          },
+          {
+            id: 'workflows',
+            label: 'Äkinoya Labs & Workflows',
+            shortLabel: 'Labs & Workflows',
+            desc: '5-Stage Production Pipeline',
+            icon: Sliders,
+            count: '5 Stages',
+          },
+          {
+            id: 'downloads',
+            label: 'Drive Asset Vault',
+            shortLabel: 'Drive Vault',
+            desc: '5-Stage Folder Directory',
+            icon: FolderDown,
+            count: '5 Folders',
+          },
+          {
+            id: 'discussion',
+            label: 'Comm-Net Chat',
+            shortLabel: 'Comm-Net',
+            desc: '8 Multi-Channel Hubs',
+            icon: MessageSquare,
+            count: '8 Channels',
+          },
+          {
+            id: 'creators',
+            label: "Favorite Planets & Leaderboard",
+            shortLabel: 'Leaderboard',
+            desc: 'Community Voting & Dossiers',
+            icon: Trophy,
+            count: 'Rankings',
+          },
+          {
+            id: 'governance',
+            label: 'Lore & Governance Portal',
+            shortLabel: 'Lore & Governance',
+            desc: 'Syndicate Timeline & Canon',
+            icon: Vote,
+            count: 'Contest',
+          },
+        ];
 
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => {
-                  setActiveSection(tab.id as CreativeHubSection);
-                  soundManager.playTone(580, 0.05);
-                }}
-                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap min-h-[44px] ${
-                  isActive
-                    ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(56,189,248,0.35)] font-bold scale-[1.02]'
-                    : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/5'
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-black' : 'text-cyan-400'}`} />
-                <span>{tab.label}</span>
-                <span
-                  className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-bold ${
-                    isActive ? 'bg-black/20 text-black' : 'bg-white/10 text-white/60'
-                  }`}
-                >
-                  {tab.count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+        return (
+          <>
+            {/* Mobile Touch / Swipe Navigation Bar (< 768px) */}
+            <nav
+              className="md:hidden relative z-20 w-full bg-[#04070e]/95 border-b border-white/10 px-3 py-2 overflow-x-auto no-scrollbar scroll-smooth shrink-0 shadow-lg"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              <div className="flex items-center gap-2 min-w-max">
+                {HUB_TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeSection === tab.id;
 
-      {/* Main Content Viewport */}
-      <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
-        {/* ======================================================== */}
-        {/* SECTION 1: ASSET & DOWNLOAD VAULT (DRIVE DIRECTORY UI)   */}
-        {/* ======================================================== */}
-        {activeSection === 'downloads' && (
-          <motion.div
-            key="section-downloads"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            className="space-y-6"
-          >
-            <DriveFolderVault
-              isMember={isVipOrAbove}
-              onOpenAuthModal={() => openAuthModal('signin')}
-            />
-          </motion.div>
-        )}
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveSection(tab.id as CreativeHubSection);
+                        soundManager.playTone(580, 0.05);
+                      }}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap min-h-[44px] ${
+                        isActive
+                          ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(56,189,248,0.35)] font-bold scale-[1.02]'
+                          : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-black' : 'text-cyan-400'}`} />
+                      <span>{tab.shortLabel}</span>
+                      <span
+                        className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-bold ${
+                          isActive ? 'bg-black/20 text-black' : 'bg-white/10 text-white/60'
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
 
-        {/* ======================================================== */}
-        {/* SECTION 2: ÄKINOYA LABS UNIVERSAL WORKFLOW & CASE STUDIES */}
-        {/* ======================================================== */}
-        {activeSection === 'workflows' && (
-          <motion.div
-            key="section-workflows"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            className="space-y-6"
-          >
-            <AkinoyaLabsHub
-              isMember={isVipOrAbove}
-              onOpenAuthModal={() => openAuthModal('signin')}
-              onNavigateVerify={() => {
-                window.location.href = '/verify';
-              }}
-            />
-          </motion.div>
-        )}
+            {/* Layout Wrapper: Desktop Left Sidebar + Main Content Viewport */}
+            <div className="flex-1 flex flex-col md:flex-row w-full max-w-[1700px] mx-auto min-h-0">
+              {/* ======================================================== */}
+              {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION (>= 768px)   */}
+              {/* ======================================================== */}
+              <aside className="hidden md:flex w-64 lg:w-72 shrink-0 flex-col justify-between bg-[#050812]/90 backdrop-blur-xl border-r border-white/10 p-4 lg:p-5 sticky top-14 h-[calc(100dvh-3.5rem)] overflow-y-auto z-30 space-y-6">
+                <div className="space-y-4">
+                  {/* Sidebar Branding Header */}
+                  <div className="pb-3 border-b border-white/10 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(0,242,254,0.8)]" />
+                        COMMUNITY OS v2.4
+                      </span>
+                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
+                        6 MODULES
+                      </span>
+                    </div>
+                    <div className="text-xs font-display font-black text-white tracking-wide">
+                      ÄKINOYA PORTAL NAVIGATOR
+                    </div>
+                  </div>
+
+                  {/* Vertical Navigation Tabs */}
+                  <div className="space-y-1.5">
+                    {HUB_TABS.map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeSection === tab.id;
+
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveSection(tab.id as CreativeHubSection);
+                            soundManager.playTone(580, 0.05);
+                          }}
+                          className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group min-h-[46px] ${
+                            isActive
+                              ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.4)] font-bold scale-[1.01]'
+                              : 'bg-white/[0.03] border-white/5 hover:border-cyan-400/40 hover:bg-white/[0.07] text-white/70 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon
+                              className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
+                                isActive ? 'text-black' : 'text-cyan-400'
+                              }`}
+                            />
+                            <div className="min-w-0">
+                              <span className="text-xs font-mono font-bold block truncate">
+                                {tab.label}
+                              </span>
+                              <span
+                                className={`text-[9.5px] font-sans block truncate ${
+                                  isActive ? 'text-black/80 font-medium' : 'text-white/40'
+                                }`}
+                              >
+                                {tab.desc}
+                              </span>
+                            </div>
+                          </div>
+
+                          <span
+                            className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full font-bold shrink-0 ml-1.5 ${
+                              isActive
+                                ? 'bg-black/20 text-black'
+                                : 'bg-white/10 text-white/60 group-hover:bg-cyan-500/20 group-hover:text-cyan-300'
+                            }`}
+                          >
+                            {tab.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Sidebar Bottom Footer Info */}
+                <div className="pt-4 border-t border-white/10 space-y-3">
+                  <div className="p-3 rounded-2xl bg-black/50 border border-white/5 space-y-1">
+                    <div className="flex items-center justify-between text-[10px] font-mono">
+                      <span className="text-white/40">SYSTEM LAUNCH</span>
+                      <span className="text-amber-400 font-bold">JAN 9, 2027</span>
+                    </div>
+                    <p className="text-[10px] text-white/60 font-sans leading-tight">
+                      Paid memberships &amp; VR planet minting launch worldwide.
+                    </p>
+                  </div>
+
+                  <a
+                    href="/contest"
+                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
+                  >
+                    <Trophy className="w-3.5 h-3.5 text-black" />
+                    <span>WORLDBUILDING CONTEST</span>
+                  </a>
+                </div>
+              </aside>
+
+              {/* Main Content Viewport */}
+              <main className="flex-1 min-w-0 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8">
+                {/* ======================================================== */}
+                {/* SECTION 0: 00 · WELCOME & VISION PORTAL (PRIMARY LANDING)*/}
+                {/* ======================================================== */}
+                {activeSection === 'welcome' && (
+                  <motion.div
+                    key="section-welcome"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    className="space-y-6"
+                  >
+                    <WelcomeVisionPortal
+                      isMember={isVipOrAbove}
+                      onNavigateToWorkflows={() => setActiveSection('workflows')}
+                      onNavigateToVault={() => setActiveSection('downloads')}
+                      onNavigateToDiscussion={() => setActiveSection('discussion')}
+                      onNavigateToLeaderboard={() => setActiveSection('creators')}
+                      onOpenAuthModal={() => openAuthModal('signin')}
+                    />
+                  </motion.div>
+                )}
+
+                {/* ======================================================== */}
+                {/* SECTION 1: ÄKINOYA LABS UNIVERSAL WORKFLOW & CASE STUDIES */}
+                {/* ======================================================== */}
+                {activeSection === 'workflows' && (
+                  <motion.div
+                    key="section-workflows"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    className="space-y-6"
+                  >
+                    <AkinoyaLabsHub
+                      isMember={isVipOrAbove}
+                      onOpenAuthModal={() => openAuthModal('signin')}
+                      onNavigateVerify={() => {
+                        window.location.href = '/verify';
+                      }}
+                      onNavigateToVault={() => setActiveSection('downloads')}
+                    />
+                  </motion.div>
+                )}
+
+                {/* ======================================================== */}
+                {/* SECTION 2: ASSET & DOWNLOAD VAULT (DRIVE DIRECTORY UI)   */}
+                {/* ======================================================== */}
+                {activeSection === 'downloads' && (
+                  <motion.div
+                    key="section-downloads"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    className="space-y-6"
+                  >
+                    <DriveFolderVault
+                      isMember={isVipOrAbove}
+                      onOpenAuthModal={() => openAuthModal('signin')}
+                    />
+                  </motion.div>
+                )}
 
         {/* ======================================================== */}
         {/* SECTION 3: CREATOR DISCUSSION BOARD (DISCORD MULTI-HUB)  */}
@@ -2194,6 +2372,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           </motion.div>
         )}
       </main>
+      </div>
+          </>
+        );
+      })()}
 
       {/* ======================================================== */}
       {/* FREEMIUM PAYWALL UPGRADE MODAL (€60/YEAR ANNUAL PASS)    */}

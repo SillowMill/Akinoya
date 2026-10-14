@@ -247,7 +247,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       timeframe: 'WEEK 01 · NARRATIVE BEDROCK',
       title: 'Pre-Production & Storyboards',
       subtitle: 'Translating narrative scripts into 2.39:1 anamorphic storyboards',
-      vaultFolderMapping: '01_PreProduction_Storyboards',
+      vaultFolderMapping: '01 · Storyboards',
       isAdvancedLocked: false,
       heroImage: stage01Img,
       heroImageAlt: 'Sci-fi cinematic storyboard blueprint under a cosmic teal sky',
@@ -321,7 +321,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       timeframe: 'WEEK 02 · AESTHETIC FOUNDATION',
       title: 'Art Direction & Character Locking',
       subtitle: 'Multi-modal conditioning and character turnaround sheets',
-      vaultFolderMapping: '02_ArtDirection_StyleAnchors',
+      vaultFolderMapping: '02 · Art Direction',
       isAdvancedLocked: false,
       heroImage: stage02Img,
       heroImageAlt: 'Multi-modal character reference sheet featuring Sillow, Odi, and Mill',
@@ -367,7 +367,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         fileName: 'Sillow_Lead_Explorer_Turnaround.png',
         fileSize: '28.6 MB',
         fileFormat: 'ZIP Archive (4K PNGs + ASE Swatches)',
-        vaultPath: 'Drive / 02_ArtDirection_StyleAnchors / Character_Sheets_Sillow_Odi_Mill',
+        vaultPath: 'Drive / 02 · Art Direction & Character Anchors',
         description: '24 high-resolution reference anchors, character turnaround plates, and digital optical token tables.',
         downloadUrl: moodboardImg,
         downloadFileName: 'Akinoya_Style_Anchor_Pack_v1.png',
@@ -394,7 +394,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       timeframe: 'WEEK 03 · SONIC MASTERING',
       title: 'Studio Audio Masters & DAW Templates',
       subtitle: 'Uncompressed 24-bit 96kHz audio masters and Ableton Live .als projects',
-      vaultFolderMapping: '03_Audio_DAW_Templates',
+      vaultFolderMapping: '03 · Audio Masters',
       isAdvancedLocked: false,
       heroImage: stage05Img,
       heroImageAlt: 'Studio audio master visualizer and Ableton modular synthesis chain',
@@ -439,7 +439,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         fileName: 'Sillow_Mill_Teaser_Audio_Master_96kHz.wav',
         fileSize: '185 MB',
         fileFormat: '24-bit 96kHz WAV + .als Project',
-        vaultPath: 'Drive / 03_Audio_DAW_Templates',
+        vaultPath: 'Drive / 03 · Audio Masters & DAW Templates',
         description: 'Uncompressed master recording and Ableton Live 11/12 project template with operator chains and stem groups.',
         specs: [
           { key: 'Audio Resolution', val: '24-bit / 96kHz Stereo' },
@@ -464,7 +464,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       timeframe: 'WEEK 04 · KINEMATIC STAGING',
       title: 'Blender 3D Previs & Motion Control',
       subtitle: 'Gray-box camera rigs, lens physics, and depth-map conditioning',
-      vaultFolderMapping: '04_Blender_3D_Previs_Rigs',
+      vaultFolderMapping: '04 · 3D Previs & Rigs',
       isAdvancedLocked: true,
       heroImage: stage03Img,
       heroImageAlt: '3D wireframe & gray-box spaceship cockpit staging with cyan volumetric light',
@@ -510,7 +510,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         fileName: 'Cockpit_Camera_Velocity_Rig.blend',
         fileSize: '148 MB',
         fileFormat: '.blend File (Blender 3.6 LTS / 4.2)',
-        vaultPath: 'Drive / 04_Blender_3D_Previs_Rigs',
+        vaultPath: 'Drive / 04 · Blender 3D Previs & Cockpit Rigs',
         description: 'Complete Blender 3.6+ project containing animated cockpit geometry, camera rigs, and depth render passes.',
         specs: [
           { key: 'Software', val: 'Blender 3.6 LTS / 4.2' },
@@ -535,7 +535,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       timeframe: 'WEEK 05 · GENERATIVE PRECISION',
       title: 'Prompt Engineering Bibles & LUTs',
       subtitle: 'The 4-block syntax token pipeline for Gemini & Imagen generative engines',
-      vaultFolderMapping: '05_Prompt_Engineering_Bibles',
+      vaultFolderMapping: '05 · Prompt Bibles',
       isAdvancedLocked: true,
       heroImage: stage04Img,
       heroImageAlt: 'Cybernetic data-stream interface showing 4-block structured syntax tokens',
@@ -724,42 +724,21 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
             </div>
           </div>
 
-          {/* Workflow-Asset 1-to-1 Mapping Ribbon */}
-          <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5 text-[11px] font-mono">
-            <span className="text-cyan-300 font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0">
-              <FolderDown className="w-3.5 h-3.5 text-cyan-400" />
-              Workflow ➔ Vault Mapping:
-            </span>
-
-            <div className="flex flex-wrap items-center gap-1.5">
-              {[
-                { s: '01', folder: '01_PreProduction_Storyboards', icon: '🎬' },
-                { s: '02', folder: '02_ArtDirection_StyleAnchors', icon: '🎨' },
-                { s: '03', folder: '03_Audio_DAW_Templates', icon: '🎵' },
-                { s: '04', folder: '04_Blender_3D_Previs_Rigs', icon: '🧊' },
-                { s: '05', folder: '05_Prompt_Engineering_Bibles', icon: '⚡' },
-              ].map((m) => (
-                <span
-                  key={m.s}
-                  className="px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 text-white/70 flex items-center gap-1 text-[10.5px]"
-                >
-                  <span className="font-bold text-cyan-300">Stage {m.s}</span>
-                  <span className="text-white/40">➔</span>
-                  <span>{m.icon} {m.folder}</span>
-                </span>
-              ))}
-            </div>
-
-            {onNavigateToVault && (
+          {onNavigateToVault && (
+            <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-3">
+              <span className="text-[11px] font-mono text-white/50">
+                Direct production deliverables available in the Drive Asset Vault.
+              </span>
               <button
                 type="button"
                 onClick={onNavigateToVault}
-                className="text-cyan-400 hover:text-white underline transition-colors cursor-pointer text-xs font-bold shrink-0 ml-auto"
+                className="text-cyan-400 hover:text-white text-xs font-mono font-bold transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
               >
-                Open Drive Vault ➔
+                <FolderDown className="w-3.5 h-3.5" />
+                <span>Open Drive Vault ➔</span>
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </motion.div>
 
         {/* ======================================================== */}
@@ -799,7 +778,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
           {/* ====================================================== */}
           {/* DESKTOP STICKY VERTICAL SIDEBAR DOCK                    */}
           {/* ====================================================== */}
-          <aside className="hidden lg:block sticky top-20 space-y-4">
+          <aside className="hidden lg:block sticky top-24 self-start space-y-4">
             <div className="p-4 rounded-3xl bg-[#090e1c]/90 border border-cyan-500/30 backdrop-blur-xl shadow-[0_0_30px_rgba(0,242,254,0.1)] space-y-4">
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2 text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider">
@@ -885,8 +864,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
           {/* MAIN ROADMAP CARDS & WEAVING FOOTSTEPS                  */}
           {/* ====================================================== */}
           <div className="relative space-y-10 sm:space-y-12">
-            {/* Center / Left Glowing Cyan Guide Line */}
-            <div className="absolute left-6 md:left-1/2 top-10 bottom-24 w-1 -translate-x-1/2 bg-gradient-to-b from-cyan-400 via-purple-500 to-cyan-500/40 rounded-full shadow-[0_0_15px_rgba(0,242,254,0.5)] z-0 pointer-events-none" />
+            {/* Desktop Center Glowing Cyan Guide Line (Hidden on Mobile) */}
+            <div className="hidden md:block absolute left-1/2 top-10 bottom-24 w-1 -translate-x-1/2 bg-gradient-to-b from-cyan-400 via-purple-500 to-cyan-500/40 rounded-full shadow-[0_0_15px_rgba(0,242,254,0.5)] z-0 pointer-events-none" />
 
             {STAGES.map((stage, index) => {
               const isStageLocked = stage.isAdvancedLocked && !isMember;
@@ -900,8 +879,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     isStageLocked ? 'group/locked' : 'group/active'
                   }`}
                 >
-                  {/* Center Node Footstep Marker */}
-                  <div className="absolute left-6 md:left-1/2 top-10 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-1">
+                  {/* Desktop Center Node Footstep Marker (Hidden on Mobile) */}
+                  <div className="hidden md:flex absolute left-1/2 top-10 -translate-x-1/2 -translate-y-1/2 z-20 flex-col items-center gap-1">
                     <button
                       type="button"
                       onClick={() => handleOpenStageModal(stage)}
@@ -923,8 +902,39 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     </span>
                   </div>
 
-                  {/* Staggered Desktop Card Layout */}
-                  <div className="pl-14 md:pl-0 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 items-center">
+                  {/* Mobile-Only Top Accent Footstep Badge */}
+                  <div className="md:hidden flex items-center justify-between gap-2 p-3 rounded-2xl bg-[#090e1c]/90 border border-cyan-500/40 mb-3 shadow-[0_0_15px_rgba(0,242,254,0.15)]">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center shrink-0">
+                        <FootstepIcon className="w-4 h-4" isActive pulse />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-xs font-mono font-bold text-cyan-300 block truncate">
+                          STAGE {stage.stageNumber} · {stage.richIcon} {stage.navLabel}
+                        </span>
+                        <span className="text-[10px] font-mono text-white/50 block truncate">
+                          {stage.timeframe}
+                        </span>
+                      </div>
+                    </div>
+
+                    {isStageLocked ? (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold shrink-0">
+                        LOCKED
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenStageModal(stage)}
+                        className="px-2.5 py-1 rounded-lg bg-cyan-400 text-black text-[10.5px] font-mono font-bold cursor-pointer shrink-0"
+                      >
+                        Deep Dive →
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Full-Width Mobile Cards & Staggered Desktop Layout */}
+                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-14 items-center">
                     {/* Visual Card Column */}
                     <div className={`space-y-4 ${isEven ? 'md:order-1' : 'md:order-2'}`}>
                       <div

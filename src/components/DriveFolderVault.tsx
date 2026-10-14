@@ -71,11 +71,12 @@ export interface DriveFolder {
   id: string;
   name: string;
   displayName: string;
+  shortName?: string;
   richIcon: string;
   category: string;
   itemCount: number;
   totalSize: string;
-  isLocked: boolean; // Root folders 03, 04, 05 locked until Jan 9, 2027
+  isLocked: boolean; // Root folders 04, 05 locked until Jan 9, 2027
   subfolders?: DriveFolder[];
   files?: DriveFile[];
 }
@@ -100,10 +101,11 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
   const DRIVE_HIERARCHY: DriveFolder[] = [
     {
       id: 'folder-01',
-      name: '01_PreProduction_Storyboards',
-      displayName: '01_PreProduction_Storyboards',
+      name: '01_Storyboards_Script_Blueprints',
+      displayName: '01 · Storyboards & Script Blueprints',
+      shortName: '01 · Storyboards',
       richIcon: '🎬',
-      category: 'Storyboards & Script breakdowns',
+      category: 'Storyboards & 2.39:1 framing specs',
       itemCount: 6,
       totalSize: '33.1 MB',
       isLocked: false,
@@ -210,8 +212,9 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     },
     {
       id: 'folder-02',
-      name: '02_ArtDirection_StyleAnchors',
-      displayName: '02_ArtDirection_StyleAnchors',
+      name: '02_ArtDirection_Character_Anchors',
+      displayName: '02 · Art Direction & Character Anchors',
+      shortName: '02 · Art Direction',
       richIcon: '🎨',
       category: 'Character sheets, brand assets & mood anchors',
       itemCount: 6,
@@ -323,8 +326,9 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     },
     {
       id: 'folder-03',
-      name: '03_Audio_DAW_Templates',
-      displayName: '03_Audio_DAW_Templates',
+      name: '03_AudioMasters_DAW_Templates',
+      displayName: '03 · Audio Masters & DAW Templates',
+      shortName: '03 · Audio Masters',
       richIcon: '🎵',
       category: 'Studio audio masters & Ableton .als templates',
       itemCount: 4,
@@ -382,10 +386,11 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     },
     {
       id: 'folder-04',
-      name: '04_Blender_3D_Previs_Rigs',
-      displayName: '04_Blender_3D_Previs_Rigs',
+      name: '04_Blender_3D_Previs_Cockpit_Rigs',
+      displayName: '04 · Blender 3D Previs & Cockpit Rigs',
+      shortName: '04 · 3D Previs & Rigs',
       richIcon: '🧊',
-      category: '3D cockpit & warp rigs (Locked)',
+      category: '3D cockpit & warp rigs — Locked',
       itemCount: 4,
       totalSize: '601.4 MB',
       isLocked: true,
@@ -442,9 +447,10 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     {
       id: 'folder-05',
       name: '05_Prompt_Engineering_Bibles',
-      displayName: '05_Prompt_Engineering_Bibles',
+      displayName: '05 · Prompt Engineering Bibles',
+      shortName: '05 · Prompt Bibles',
       richIcon: '⚡',
-      category: 'Multi-block prompt json vaults (Locked)',
+      category: 'Multi-block prompt json vaults — Locked',
       itemCount: 4,
       totalSize: '90.7 MB',
       isLocked: true,
@@ -795,14 +801,15 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
 
                         <div className="min-w-0 space-y-0.5">
                           <div className="text-xs sm:text-sm font-mono font-bold text-white group-hover:text-cyan-200 truncate">
-                            {folder.displayName}
+                            <span className="sm:hidden">{folder.shortName || folder.displayName}</span>
+                            <span className="hidden sm:inline">{folder.displayName}</span>
                           </div>
-                          <div className="text-[10px] font-mono text-white/50 flex flex-wrap items-center gap-2">
-                            <span>{folder.category}</span>
+                          <div className="text-[10px] font-mono text-white/50 flex flex-wrap items-center gap-1.5 sm:gap-2">
+                            <span className="truncate max-w-[140px] sm:max-w-none">{folder.category}</span>
                             <span>·</span>
                             <span>{folder.itemCount} items</span>
-                            <span>·</span>
-                            <span>{folder.totalSize}</span>
+                            <span className="hidden xs:inline">·</span>
+                            <span className="hidden xs:inline">{folder.totalSize}</span>
                           </div>
                         </div>
                       </div>
