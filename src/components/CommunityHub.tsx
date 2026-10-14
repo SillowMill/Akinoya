@@ -57,10 +57,10 @@ import { AkinoyaLabsHub } from './AkinoyaLabsHub';
 import { DriveFolderVault } from './DriveFolderVault';
 import { WelcomeVisionPortal } from './WelcomeVisionPortal';
 import { getStoredCreators } from '../data/creators';
-import { openClaimWorldModal } from '../utils/pioneer';
+import { openClaimWorldModal, isPostLaunch, openMembershipGateModal } from '../utils/pioneer';
 
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
-export const isMembershipLaunchLocked = new Date() < MEMBERSHIP_LAUNCH_DATE;
+export const isMembershipLaunchLocked = !isPostLaunch();
 
 export type CreativeHubSection = 'welcome' | 'workflows' | 'downloads' | 'discussion' | 'creators' | 'governance';
 
@@ -1174,12 +1174,17 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           <AuthHeaderButton />
           <button
             type="button"
-            disabled={true}
-            className="hidden sm:inline-flex px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold cursor-not-allowed items-center gap-2 max-w-full truncate sm:whitespace-normal break-words leading-snug min-h-[44px] select-none shadow-sm"
-            title="Public membership launches on 09/01/2027"
+            onClick={isPostLaunch() ? openMembershipGateModal : undefined}
+            disabled={!isPostLaunch()}
+            className={`hidden sm:inline-flex px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold items-center gap-2 max-w-full truncate sm:whitespace-normal break-words leading-snug min-h-[44px] shadow-sm ${
+              isPostLaunch() ? 'cursor-pointer hover:bg-amber-900/70 hover:border-amber-400' : 'cursor-not-allowed select-none'
+            }`}
+            title={isPostLaunch() ? 'Upgrade to Annual Membership (€60/year)' : 'Public membership launches on January 9, 2027'}
           >
             <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-            <span className="max-w-full truncate sm:whitespace-normal break-words">LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)</span>
+            <span className="max-w-full truncate sm:whitespace-normal break-words">
+              {isPostLaunch() ? 'UPGRADE TO ANNUAL MEMBERSHIP · €60/YEAR' : 'LAUNCHES JANUARY 9, 2027 · €60/YEAR'}
+            </span>
           </button>
         </div>
       </header>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export const PIONEER_LAUNCH_DATE_STR = '2027-01-09T00:00:00+01:00';
+export const PIONEER_LAUNCH_DATE_STR = '2027-01-09T00:00:00Z';
 export const PIONEER_LAUNCH_DATE = new Date(PIONEER_LAUNCH_DATE_STR).getTime();
 export const PIONEER_BADGE_TAG = '[PIONEER-2027]';
 
@@ -47,9 +47,51 @@ export const isEarlyPioneerVisitor = (timestamp?: string | number): boolean => {
   return time < PIONEER_LAUNCH_DATE;
 };
 
+export const isPreLaunch = (): boolean => {
+  if (typeof window !== 'undefined') {
+    if (localStorage.getItem('akinoya_force_post_launch') === 'true') return false;
+    if (new URLSearchParams(window.location.search).get('post_launch') === 'true') return false;
+  }
+  return Date.now() < PIONEER_LAUNCH_DATE;
+};
+
+export const isPostLaunch = (): boolean => {
+  if (typeof window !== 'undefined') {
+    if (localStorage.getItem('akinoya_force_post_launch') === 'true') return true;
+    if (new URLSearchParams(window.location.search).get('post_launch') === 'true') return true;
+  }
+  return Date.now() >= PIONEER_LAUNCH_DATE;
+};
+
+export const hasPaidMembership = (
+  user?: any,
+  profile?: any,
+  role?: string,
+  isVip?: boolean
+): boolean => {
+  if (isVip) return true;
+  const normalizedRole = (role || '').toUpperCase();
+  if (['PATRON', 'PRO', 'VIP_GUEST', 'ADMIN', 'ANNUAL_PASS', 'SUBSCRIBER', 'CREATOR'].includes(normalizedRole)) {
+    return true;
+  }
+  if (profile?.has_paid_membership === true || user?.has_paid_membership === true) {
+    return true;
+  }
+  if (profile?.membership_status === 'ACTIVE' || profile?.membership_status === 'PAID') {
+    return true;
+  }
+  return false;
+};
+
 export const openClaimWorldModal = () => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('akinoya-open-claim-world'));
+  }
+};
+
+export const openMembershipGateModal = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('akinoya-open-membership-gate'));
   }
 };
 

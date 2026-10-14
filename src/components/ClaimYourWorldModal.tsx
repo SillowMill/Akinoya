@@ -30,7 +30,11 @@ import {
   getStoredSectorClaim,
   saveSectorClaim,
   SectorClaimRecord,
+  isPostLaunch,
+  hasPaidMembership,
+  openMembershipGateModal,
 } from '../utils/pioneer';
+import { generateOrganicPlanetName, formatAkinoyaPlanetName } from '../data/contest';
 import { useAuth } from '../context/AuthContext';
 
 export interface ClaimYourWorldModalProps {
@@ -57,7 +61,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
   const isModalOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
 
   const [countdown, setCountdown] = useState<CountdownTime>(calculateLaunchCountdown);
-  const [sectorName, setSectorName] = useState('Sector Ä-01');
+  const [sectorName, setSectorName] = useState('');
   const [selectedBiome, setSelectedBiome] = useState(BIOME_OPTIONS[0]);
   const [visitorEmail, setVisitorEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,18 +109,37 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
   ) % 9000 + 1000}-A`;
 
   const handleStartWorldbuilding = () => {
-    const emailToUse = (user?.email || visitorEmail || '').trim().toLowerCase();
-    if (sectorName.trim()) {
-      const claimRecord: SectorClaimRecord = {
-        sectorName: sectorName.trim(),
-        biome: selectedBiome.label,
-        coordinates,
-        claimedAt: new Date().toISOString(),
-        pioneerBadge: PIONEER_BADGE_TAG,
-        holderEmail: emailToUse,
-      };
-      saveSectorClaim(claimRecord);
+    if (isPostLaunch() && !hasPaidMembership(user, profile, role, isVip)) {
+      handleClose();
+      openMembershipGateModal();
+      return;
     }
+
+    const emailToUse = (user?.email || visitorEmail || '').trim().toLowerCase();
+    const cleanPlanetName = formatAkinoyaPlanetName(sectorName.trim() || generateOrganicPlanetName());
+    const claimRecord: SectorClaimRecord = {
+      sectorName: cleanPlanetName,
+      biome: selectedBiome.label,
+      coordinates,
+      claimedAt: new Date().toISOString(),
+      pioneerBadge: PIONEER_BADGE_TAG,
+      holderEmail: emailToUse,
+    };
+    saveSectorClaim(claimRecord);
+
+    // Auto-advance Mill to Question 2
+    sessionStorage.setItem('akinoya_start_mill', 'true');
+    sessionStorage.setItem('akinoya_mill_start_step', '2');
+    window.dispatchEvent(
+      new CustomEvent('akinoya-start-mill', {
+        detail: {
+          planetName: cleanPlanetName,
+          biome: selectedBiome.label,
+          initialStep: 2,
+        },
+      })
+    );
+
     soundManager.playTone(660, 0.08);
     handleClose();
     if (onNavigateToContest) {
@@ -136,6 +159,11 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
     e.preventDefault();
     if (isSubmitting) return;
 
+    if (isPostLaunch() && !hasPaidMembership(user, profile, role, isVip)) {
+      openMembershipGateModal();
+      return;
+    }
+
     const emailToUse = (user?.email || visitorEmail || '').trim().toLowerCase();
 
     if (!emailToUse || !emailToUse.includes('@')) {
@@ -145,7 +173,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
     }
 
     if (!sectorName.trim()) {
-      setErrorMessage('Please specify a Sector designation or name.');
+      setErrorMessage('Please enter the name of your planet.');
       soundManager.playError();
       return;
     }
@@ -154,8 +182,9 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
     setErrorMessage('');
 
     try {
+      const cleanPlanetName = formatAkinoyaPlanetName(sectorName.trim());
       const claimRecord: SectorClaimRecord = {
-        sectorName: sectorName.trim(),
+        sectorName: cleanPlanetName,
         biome: selectedBiome.label,
         coordinates,
         claimedAt: new Date().toISOString(),
@@ -173,7 +202,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
         last_name: profile?.last_name || user?.user_metadata?.last_name || '',
         email: emailToUse,
         role: role || (isVip ? 'VIP_GUEST' : 'FREE'),
-        claimed_sector: `${sectorName.trim()} (${selectedBiome.label})`,
+        claimed_sector: `${cleanPlanetName} (${selectedBiome.label})`,
         is_pioneer: true,
         pioneer_badge: PIONEER_BADGE_TAG,
         created_at: profile?.created_at || new Date().toISOString(),
@@ -196,10 +225,23 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
         disableForReducedMotion: true,
       });
 
+      // Prepare Mill to seamlessly auto-advance to Question 2
+      sessionStorage.setItem('akinoya_start_mill', 'true');
+      sessionStorage.setItem('akinoya_mill_start_step', '2');
+      window.dispatchEvent(
+        new CustomEvent('akinoya-start-mill', {
+          detail: {
+            planetName: cleanPlanetName,
+            biome: selectedBiome.label,
+            initialStep: 2,
+          },
+        })
+      );
+
       setClaimSuccess(true);
     } catch (err: any) {
       console.warn('[Pioneer Modal] Claim error:', err);
-      setErrorMessage('Failed to register sector. Please check connection and try again.');
+      setErrorMessage('Failed to register planet. Please check connection and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -302,16 +344,16 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
               {/* Interactive Sector Claim Generator Form */}
               <form onSubmit={handleClaimSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {/* Sector Name Designation */}
+                  {/* Planet Name Designation */}
                   <div className="space-y-1.5 text-left">
                     <label className="text-[11px] font-mono uppercase text-white/60 tracking-wider">
-                      Planetary Sector Name
+                      Planet Name
                     </label>
                     <input
                       type="text"
                       value={sectorName}
                       onChange={(e) => setSectorName(e.target.value)}
-                      placeholder="e.g. Sector Ä-01, Nova Prime"
+                      placeholder="Name of your planet..."
                       maxLength={40}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-amber-400 text-white font-mono text-xs focus:outline-none transition-colors"
                       required
@@ -447,7 +489,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
               {confirmedClaim && (
                 <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-amber-500/40 text-left font-mono space-y-2.5 max-w-md mx-auto shadow-inner text-xs">
                   <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                    <span className="text-white/50">SECTOR DESIGNATION:</span>
+                    <span className="text-white/50">PLANET NAME:</span>
                     <span className="text-amber-300 font-bold">{confirmedClaim.sectorName}</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-white/10 pb-2">
@@ -476,7 +518,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Start Worldbuilding with Mill →</span>
+                  <span>Continue to Question 2 with Mill →</span>
                 </button>
 
                 <button

@@ -137,10 +137,10 @@ export const AuthHeaderButton: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.18 }}
-            className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-[90vw] sm:max-w-md sm:w-80 origin-top-right rounded-2xl bg-[#0b0f17] border border-white/10 p-3 shadow-2xl z-[100] space-y-2 text-xs font-sans backdrop-blur-xl ring-1 ring-white/5"
+            className="absolute right-0 top-full mt-2 w-[90vw] max-w-[calc(100vw-2rem)] sm:w-80 sm:max-w-md origin-top-right rounded-2xl bg-[#0b0f17] border border-white/10 p-3 sm:p-3.5 shadow-2xl z-[100] space-y-2 text-xs font-sans backdrop-blur-xl ring-1 ring-white/5 overflow-hidden"
           >
             {/* Header info */}
-            <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 space-y-1">
+            <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 space-y-1 overflow-hidden">
               <div className="font-bold text-white text-xs truncate">
                 {profile?.full_name || displayName}
               </div>
@@ -148,16 +148,16 @@ export const AuthHeaderButton: React.FC = () => {
                 {profile?.email || user?.email}
               </div>
               <div className="pt-1 flex flex-wrap items-center gap-1.5">
-                <span className={`text-[9px] font-mono px-2 py-0.5 rounded font-bold uppercase ${roleBadge.className}`}>
+                <span className={`text-[9px] font-mono px-2 py-0.5 rounded font-bold uppercase shrink-0 ${roleBadge.className}`}>
                   ROLE: {roleBadge.label}
                 </span>
                 {profile?.is_pioneer !== false && (
-                  <span className="text-[9px] font-mono px-2 py-0.5 rounded font-extrabold uppercase bg-amber-400 text-black shadow-[0_0_8px_rgba(245,158,11,0.5)]">
+                  <span className="text-[9px] font-mono px-2 py-0.5 rounded font-extrabold uppercase bg-amber-400 text-black shadow-[0_0_8px_rgba(245,158,11,0.5)] shrink-0">
                     [PIONEER-2027]
                   </span>
                 )}
                 {profile?.vip_code_redeemed && (
-                  <span className="text-[9px] font-mono text-emerald-400 font-semibold truncate">
+                  <span className="text-[9px] font-mono text-emerald-400 font-semibold truncate shrink-0">
                     #{profile.vip_code_redeemed}
                   </span>
                 )}
@@ -172,14 +172,14 @@ export const AuthHeaderButton: React.FC = () => {
               {isUserVip && (
                 <div
                   aria-label="VIP PASS UNLOCKED — STRICTLY BOUND TO THIS ACCOUNT"
-                  className="mt-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-950/90 via-teal-950/85 to-emerald-950/90 border border-emerald-500/60 text-emerald-300 font-mono text-[9px] sm:text-[9.5px] font-bold flex items-center gap-2 shadow-[0_0_14px_rgba(16,185,129,0.3)] select-none"
+                  className="mt-2 p-2.5 rounded-xl bg-gradient-to-r from-emerald-950/90 via-teal-950/85 to-emerald-950/90 border border-emerald-500/60 text-emerald-300 font-mono text-[9px] sm:text-[9.5px] font-bold flex items-center gap-2 shadow-[0_0_14px_rgba(16,185,129,0.3)] select-none overflow-hidden"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <div className="leading-tight flex flex-col">
-                    <span className="font-extrabold text-emerald-200 uppercase tracking-wide">
+                  <div className="leading-tight flex flex-col min-w-0 flex-1">
+                    <span className="font-extrabold text-emerald-200 uppercase tracking-wide truncate">
                       VIP PASS UNLOCKED — STRICTLY BOUND TO THIS ACCOUNT
                     </span>
-                    <span className="text-[8.5px] text-emerald-400/80 font-normal">
+                    <span className="text-[8.5px] text-emerald-400/80 font-normal truncate">
                       PERMANENT ACCOUNT BINDING VERIFIED
                     </span>
                   </div>

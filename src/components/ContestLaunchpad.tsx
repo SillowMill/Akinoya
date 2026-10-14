@@ -41,6 +41,7 @@ import {
   subscribeToPlanetSubmissions,
 } from '../data/contest';
 import { attachContestSubmissionToCreator } from '../data/creators';
+import { isPostLaunch, hasPaidMembership, openMembershipGateModal } from '../utils/pioneer';
 
 interface ContestLaunchpadProps {
   onBackToHome: () => void;
@@ -53,7 +54,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   onNavigateToCommunity,
   onNavigateToCreator,
 }) => {
-  const { user, profile, isAuthenticated, openAuthModal, updateProfile } = useAuth();
+  const { user, profile, isAuthenticated, openAuthModal, updateProfile, role, isVip } = useAuth();
 
   const userDisplayName = profile?.first_name
     ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}`
@@ -80,6 +81,24 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     profile?.contest_submission_id ||
     activeSubmission
   );
+
+  // Auto-start Mill if coming from Claim modal (Question 2 flow)
+  useEffect(() => {
+    const shouldStart = sessionStorage.getItem('akinoya_start_mill') === 'true';
+    if (shouldStart && !hasSubmittedContest) {
+      sessionStorage.removeItem('akinoya_start_mill');
+      setIsChatOpen(true);
+    }
+
+    const handleEventStart = () => {
+      if (!hasSubmittedContest) {
+        setIsChatOpen(true);
+      }
+    };
+
+    window.addEventListener('akinoya-start-mill', handleEventStart);
+    return () => window.removeEventListener('akinoya-start-mill', handleEventStart);
+  }, [hasSubmittedContest]);
 
   // Load submissions, check user's ticket status, and subscribe to realtime updates
   useEffect(() => {
@@ -109,6 +128,12 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
   // Handle launch button
   const handleStartWorldbuilding = () => {
+    if (isPostLaunch() && !hasPaidMembership(user, profile, role, isVip)) {
+      soundManager.playTone(330, 0.08);
+      openMembershipGateModal();
+      return;
+    }
+
     if (!isAuthenticated) {
       soundManager.playTone(330, 0.08);
       openAuthModal('signin');

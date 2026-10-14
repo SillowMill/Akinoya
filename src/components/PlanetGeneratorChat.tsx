@@ -140,9 +140,17 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   onComplete,
   onClose,
 }) => {
-  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
+  const initialClaim = getStoredSectorClaim();
+  const initialPlanetName = formatAkinoyaPlanetName(initialClaim?.sectorName || '');
+  const hasPreAnsweredPlanetName = Boolean(initialPlanetName && initialPlanetName.length > 1);
+
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(() => {
+    return hasPreAnsweredPlanetName ? 1 : 0;
+  });
+
   const [answers, setAnswers] = useState<WizardAnswers>(() => {
     const claim = getStoredSectorClaim();
+    const pName = formatAkinoyaPlanetName(claim?.sectorName || '');
     return {
       relaxation: '',
       creativeExpression: '',
@@ -152,7 +160,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       colorPalette: '',
       resilienceStory: '',
       futurePromise: '',
-      planetName: '',
+      planetName: pName,
       atmosphere: '',
       flora: '',
       fauna: '',
@@ -161,7 +169,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       landmark: '',
       additionalNotes: '',
       biome: claim?.biome || '',
-      sectorName: claim?.sectorName || '',
+      sectorName: pName,
     };
   });
 
@@ -189,29 +197,54 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
     }
 
     const claim = getStoredSectorClaim();
-    const sectorNote = claim?.sectorName
-      ? `\n\n[TERRAIN CALIBRATION ACTIVE]: Pioneer Sector "${claim.sectorName}" (${claim.biome || 'Bioluminescent Canopy'}) is linked to this session. Your worldbuilding answers will calibrate this terrain sector.`
-      : '';
+    const pName = formatAkinoyaPlanetName(claim?.sectorName || initialPlanetName);
 
-    const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.${sectorNote}\n\nThis is an open-ended, human-centric worldbuilding protocol designed to take ~10 minutes of genuine creative exploration. There are no rigid presets—I will ask you 8 thoughtful questions about your life, passions, aesthetics, and vision.\n\nUpon completion, your answers will synthesize a custom 5-photo high-resolution cinematic sci-fi dossier (anchored to Mood.png and Äkinoya.jpg), technical telemetry, and official lore for the June 30 Lore Governance Council.\n\nLet us begin with Question 01: ${WIZARD_STEPS[0].title}.`;
+    if (pName && pName.length > 1) {
+      // Question 1 satisfied via Claim Your World form -> Advance directly to Question 2
+      const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\n[QUESTION 01 SATISFIED]: Your world designation "${pName}" and terrain (${claim?.biome || 'Bioluminescent Canopy'}) have been confirmed and locked into active telemetry.\n\nWe now proceed directly to Question 02 of 08 (${WIZARD_STEPS[1].title}).`;
 
-    const firstQuestionText = WIZARD_STEPS[0].prompt;
+      setMessages([
+        {
+          id: 'msg-greeting',
+          sender: 'mill',
+          text: greetingText,
+          timestamp: 'Just now',
+        },
+        {
+          id: 'msg-q1-user',
+          sender: 'user',
+          text: pName,
+          step: 1,
+          timestamp: 'Just now',
+        },
+        {
+          id: 'msg-q2',
+          sender: 'mill',
+          text: `Question 02 of 08 (${WIZARD_STEPS[1].title}):\n${WIZARD_STEPS[1].prompt}`,
+          step: 2,
+          timestamp: 'Just now',
+        },
+      ]);
+    } else {
+      // Standard Question 1 flow
+      const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nThis is an open-ended, human-centric worldbuilding protocol designed to take ~10 minutes of genuine creative exploration. There are no rigid presets—I will ask you 8 thoughtful questions about your life, passions, aesthetics, and vision.\n\nUpon completion, your answers will synthesize a custom 5-photo high-resolution cinematic sci-fi dossier (anchored to Mood.png and Äkinoya.jpg), technical telemetry, and official lore for the June 30 Lore Governance Council.\n\nLet us begin with Question 01: ${WIZARD_STEPS[0].title}.`;
 
-    setMessages([
-      {
-        id: 'msg-greeting',
-        sender: 'mill',
-        text: greetingText,
-        timestamp: 'Just now',
-      },
-      {
-        id: 'msg-q1',
-        sender: 'mill',
-        text: firstQuestionText,
-        step: 1,
-        timestamp: 'Just now',
-      },
-    ]);
+      setMessages([
+        {
+          id: 'msg-greeting',
+          sender: 'mill',
+          text: greetingText,
+          timestamp: 'Just now',
+        },
+        {
+          id: 'msg-q1',
+          sender: 'mill',
+          text: WIZARD_STEPS[0].prompt,
+          step: 1,
+          timestamp: 'Just now',
+        },
+      ]);
+    }
   }, [userDisplayName, isLocked]);
 
   // Auto-scroll chat to bottom
@@ -339,8 +372,8 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       visualAesthetic: '',
       landmark: '',
       additionalNotes: '',
-      biome: claim?.biome || '',
-      sectorName: claim?.sectorName || '',
+      biome: '',
+      sectorName: '',
     });
     setInputVal('');
     setMessages([

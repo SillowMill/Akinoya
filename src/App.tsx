@@ -21,6 +21,7 @@ import { CreatorPortfolioView } from './components/CreatorPortfolioView';
 import { ContestLaunchpad } from './components/ContestLaunchpad';
 import { PioneerCampaignBanner } from './components/PioneerCampaignBanner';
 import { ClaimYourWorldModal } from './components/ClaimYourWorldModal';
+import { MembershipGateModal } from './components/MembershipGateModal';
 import { useAuth } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -504,6 +505,9 @@ export default function App() {
         onClose={() => setIsClaimWorldOpen(false)}
         onNavigateToContest={() => navigateTo('contest', '/contest')}
       />
+
+      {/* Post-Launch Membership Gate Modal */}
+      <MembershipGateModal />
     </main>
   );
 }
