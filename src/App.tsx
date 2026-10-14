@@ -499,7 +499,11 @@ export default function App() {
       {!backdropOnly && route !== 'community' && route !== 'creators' && <FloatingAudioControl />}
 
       {/* Claim Your World / Pioneer 2027 Early Access Interactive Modal */}
-      <ClaimYourWorldModal isOpen={isClaimWorldOpen} onClose={() => setIsClaimWorldOpen(false)} />
+      <ClaimYourWorldModal
+        isOpen={isClaimWorldOpen}
+        onClose={() => setIsClaimWorldOpen(false)}
+        onNavigateToContest={() => navigateTo('contest', '/contest')}
+      />
     </main>
   );
 }

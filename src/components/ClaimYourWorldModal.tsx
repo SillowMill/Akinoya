@@ -36,6 +36,7 @@ import { useAuth } from '../context/AuthContext';
 export interface ClaimYourWorldModalProps {
   isOpen?: boolean;
   onClose?: () => void;
+  onNavigateToContest?: () => void;
 }
 
 const BIOME_OPTIONS = [
@@ -49,6 +50,7 @@ const BIOME_OPTIONS = [
 export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
   isOpen: controlledIsOpen,
   onClose: controlledOnClose,
+  onNavigateToContest,
 }) => {
   const { user, profile, isAuthenticated, openAuthModal, role, isVip } = useAuth();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
@@ -101,6 +103,34 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
   const coordinates = `RA 04h 35m / +16° 30' · ${selectedBiome.prefix}-${Math.abs(
     sectorName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 104)
   ) % 9000 + 1000}-A`;
+
+  const handleStartWorldbuilding = () => {
+    const emailToUse = (user?.email || visitorEmail || '').trim().toLowerCase();
+    if (sectorName.trim()) {
+      const claimRecord: SectorClaimRecord = {
+        sectorName: sectorName.trim(),
+        biome: selectedBiome.label,
+        coordinates,
+        claimedAt: new Date().toISOString(),
+        pioneerBadge: PIONEER_BADGE_TAG,
+        holderEmail: emailToUse,
+      };
+      saveSectorClaim(claimRecord);
+    }
+    soundManager.playTone(660, 0.08);
+    handleClose();
+    if (onNavigateToContest) {
+      onNavigateToContest();
+    } else {
+      try {
+        window.history.pushState({}, '', '/contest');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      } catch {
+        // Fallback
+      }
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleClaimSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,7 +273,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                       Membership-Gated Exclusivity
                     </span>
                     <p className="text-white/80 leading-relaxed">
-                      Custom planetary sector claims, full VR galaxy metaverse integration, and restricted creator channels require an active membership. All accounts registered during this pre-launch phase receive irrevocable <strong className="text-amber-300">[PIONEER-2027]</strong> status.
+                      Custom planetary sector claims, official Worldbuilding Contest entry, and the opportunity to be featured in the official Sillow Mill visualizer releases with Odi Selis require an active membership. All accounts registered during this pre-launch phase receive irrevocable <strong className="text-amber-300">[PIONEER-2027]</strong> status.
                     </p>
                   </div>
                 </div>
@@ -260,11 +290,11 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   </div>
                   <div className="flex items-center gap-2">
                     <Layers className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                    <span>Restricted Channel Priority</span>
+                    <span>Worldbuilding Contest Priority</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Crown className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                    <span>VR Galaxy Whitelist Allocation</span>
+                    <span>Visualizer Feature with Odi Selis</span>
                   </div>
                 </div>
               </div>
@@ -346,19 +376,30 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   </div>
                 )}
 
-                {/* Action Button */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-200 cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <Globe2 className="w-4 h-4" />
-                  <span>
-                    {isSubmitting
-                      ? 'REGISTERING PIONEER SECTOR...'
-                      : 'CLAIM PLANETARY SECTOR & LOCK PIONEER STATUS'}
-                  </span>
-                </button>
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs tracking-wider uppercase transition-all duration-200 cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <Globe2 className="w-4 h-4" />
+                    <span>
+                      {isSubmitting
+                        ? 'REGISTERING PIONEER SECTOR...'
+                        : 'CLAIM SECTOR & LOCK PIONEER STATUS'}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleStartWorldbuilding}
+                    className="w-full sm:w-auto py-3 px-4 rounded-xl bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-400/50 text-cyan-300 hover:text-cyan-100 font-mono font-bold text-xs tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.25)]"
+                  >
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <span>Worldbuild with Mill →</span>
+                  </button>
+                </div>
               </form>
 
               {/* Paid Membership Pre-Order Prompt */}
@@ -431,6 +472,15 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
                 <button
                   type="button"
+                  onClick={handleStartWorldbuilding}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Start Worldbuilding with Mill →</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleClose}
                   className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-mono font-bold text-xs transition-colors cursor-pointer"
                 >
@@ -441,7 +491,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   <button
                     type="button"
                     onClick={handleOpenAuth}
-                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-colors cursor-pointer shadow-md"
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 border border-amber-400/50 text-amber-300 font-mono font-bold text-xs transition-colors cursor-pointer"
                   >
                     Complete Account Sign-Up →
                   </button>

@@ -77,13 +77,14 @@ export const derivePlanetAttributesFromHumanAnswers = (answers: WizardAnswers): 
     name = formatAkinoyaPlanetName(name);
   }
 
+  const biomeInfo = answers.biome ? ` with terrain calibrated to ${answers.biome}` : '';
   const atmosphere =
     answers.atmosphere ||
-    `Ionized celestial atmosphere styled with ${answers.colorPalette || 'deep cosmic cobalt and incandescent amber'} and serene horizons of ${answers.naturalEnvironment || 'misty mountain ridges'}`;
+    `Ionized celestial atmosphere styled with ${answers.colorPalette || 'deep cosmic cobalt and incandescent amber'}${biomeInfo} and serene horizons of ${answers.naturalEnvironment || 'misty mountain ridges'}`;
 
   const flora =
     answers.flora ||
-    `Bioluminescent botanical systems inspired by ${answers.naturalEnvironment || 'ancient rainforests'}, creating peaceful biomes echoing ${answers.relaxation || 'deep relaxation'}`;
+    `Bioluminescent botanical systems inspired by ${answers.biome || answers.naturalEnvironment || 'ancient rainforests'}, creating peaceful biomes echoing ${answers.relaxation || 'deep relaxation'}`;
 
   const fauna =
     answers.fauna ||
@@ -103,7 +104,7 @@ export const derivePlanetAttributesFromHumanAnswers = (answers: WizardAnswers): 
 
   const additionalNotes =
     answers.additionalNotes ||
-    `Founding Creed & Future Promise: "${answers.futurePromise || 'Never forget that true beauty lies in curiosity and persistence'}". Guided by core philosophy: "${answers.lifePhilosophy || 'Harmony between technology and nature'}".`;
+    `${answers.sectorName ? `Designated Sector: ${answers.sectorName}. Terrain Biome: ${answers.biome || 'Bioluminescent Canopy'}. ` : ''}Founding Creed & Future Promise: "${answers.futurePromise || 'Never forget that true beauty lies in curiosity and persistence'}". Guided by core philosophy: "${answers.lifePhilosophy || 'Harmony between technology and nature'}".`;
 
   return {
     ...answers,
@@ -115,6 +116,8 @@ export const derivePlanetAttributesFromHumanAnswers = (answers: WizardAnswers): 
     visualAesthetic,
     landmark,
     additionalNotes,
+    biome: answers.biome,
+    sectorName: answers.sectorName,
   };
 };
 
@@ -569,7 +572,11 @@ export const savePlanetSubmission = async (
           visual_aesthetic: submission.visualAesthetic,
           landmark: submission.landmark,
           additional_notes: submission.additionalNotes,
-          human_answers: submission.humanAnswers || {},
+          human_answers: {
+            ...(submission.humanAnswers || {}),
+            biome: submission.biome,
+            sectorName: submission.sectorName,
+          },
           generated_lore: submission.generatedLore,
           renders: submission.renders,
           votes_count: submission.votesCount,

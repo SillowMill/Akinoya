@@ -27,6 +27,8 @@ export interface WizardAnswers {
   visualAesthetic: string;
   landmark: string;
   additionalNotes: string;
+  biome?: string;
+  sectorName?: string;
 }
 
 export interface PlanetSubmission {
@@ -44,6 +46,8 @@ export interface PlanetSubmission {
   visualAesthetic: string;
   landmark: string;
   additionalNotes: string;
+  biome?: string;
+  sectorName?: string;
   humanAnswers?: WizardAnswers;
   futurePromise?: string;
   generatedLore: string;

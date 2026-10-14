@@ -158,6 +158,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           visualAesthetic: answers.visualAesthetic,
           landmark: answers.landmark,
           additionalNotes: answers.additionalNotes,
+          biome: answers.biome,
+          sectorName: answers.sectorName,
         }),
       });
 
@@ -195,6 +197,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         visualAesthetic: answers.visualAesthetic,
         landmark: answers.landmark,
         additionalNotes: answers.additionalNotes,
+        biome: answersWithFormattedName.biome,
+        sectorName: answersWithFormattedName.sectorName,
         humanAnswers: answersWithFormattedName,
         futurePromise: answers.futurePromise,
         generatedLore: lore,
@@ -228,6 +232,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         visualAesthetic: answers.visualAesthetic,
         landmark: answers.landmark,
         additionalNotes: answers.additionalNotes,
+        biome: answersWithFormattedName.biome,
+        sectorName: answersWithFormattedName.sectorName,
         humanAnswers: answersWithFormattedName,
         futurePromise: answers.futurePromise,
         generatedLore: lore,
@@ -513,10 +519,22 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-400/40 font-bold uppercase">
                   Dossier Preview · Approval Required
                 </span>
-                <h2 className="text-xl sm:text-2xl font-display font-bold text-white mt-1">
-                  {previewDossier.planetName}
-                </h2>
-                <p className="text-xs text-white/60 font-mono">
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <h2 className="text-xl sm:text-2xl font-display font-bold text-white">
+                    {previewDossier.planetName}
+                  </h2>
+                  {previewDossier.biome && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-amber-950/70 text-amber-300 border border-amber-400/40 font-bold">
+                      {previewDossier.biome}
+                    </span>
+                  )}
+                  {previewDossier.sectorName && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/10 text-white/80 border border-white/20">
+                      {previewDossier.sectorName}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-white/60 font-mono mt-0.5">
                   Review your 5-photo synthesized specs and lore before publishing to the Governance Council.
                 </p>
               </div>

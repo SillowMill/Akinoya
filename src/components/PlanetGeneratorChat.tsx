@@ -20,6 +20,7 @@ import millAvatar from '../assets/images/mill_photo.jpg';
 import { WizardAnswers, ChatMessage } from '../types/contest';
 import { soundManager } from '../utils/audio';
 import { formatAkinoyaPlanetName, generateOrganicPlanetName, derivePlanetAttributesFromHumanAnswers } from '../data/contest';
+import { getStoredSectorClaim } from '../utils/pioneer';
 
 interface PlanetGeneratorChatProps {
   userDisplayName: string;
@@ -140,23 +141,28 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   onClose,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
-  const [answers, setAnswers] = useState<WizardAnswers>({
-    relaxation: '',
-    creativeExpression: '',
-    naturalEnvironment: '',
-    lifePhilosophy: '',
-    admiredCreature: '',
-    colorPalette: '',
-    resilienceStory: '',
-    futurePromise: '',
-    planetName: '',
-    atmosphere: '',
-    flora: '',
-    fauna: '',
-    sonicVibe: '',
-    visualAesthetic: '',
-    landmark: '',
-    additionalNotes: '',
+  const [answers, setAnswers] = useState<WizardAnswers>(() => {
+    const claim = getStoredSectorClaim();
+    return {
+      relaxation: '',
+      creativeExpression: '',
+      naturalEnvironment: '',
+      lifePhilosophy: '',
+      admiredCreature: '',
+      colorPalette: '',
+      resilienceStory: '',
+      futurePromise: '',
+      planetName: '',
+      atmosphere: '',
+      flora: '',
+      fauna: '',
+      sonicVibe: '',
+      visualAesthetic: '',
+      landmark: '',
+      additionalNotes: '',
+      biome: claim?.biome || '',
+      sectorName: claim?.sectorName || '',
+    };
   });
 
   const [inputVal, setInputVal] = useState<string>('');
@@ -182,7 +188,12 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       return;
     }
 
-    const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nThis is an open-ended, human-centric worldbuilding protocol designed to take ~10 minutes of genuine creative exploration. There are no rigid presets—I will ask you 8 thoughtful questions about your life, passions, aesthetics, and vision.\n\nUpon completion, your answers will synthesize a custom 5-photo high-resolution cinematic sci-fi dossier (anchored to Mood.png and Äkinoya.jpg), technical telemetry, and official lore for the June 30 Lore Governance Council.\n\nLet us begin with Question 01: ${WIZARD_STEPS[0].title}.`;
+    const claim = getStoredSectorClaim();
+    const sectorNote = claim?.sectorName
+      ? `\n\n[TERRAIN CALIBRATION ACTIVE]: Pioneer Sector "${claim.sectorName}" (${claim.biome || 'Bioluminescent Canopy'}) is linked to this session. Your worldbuilding answers will calibrate this terrain sector.`
+      : '';
+
+    const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.${sectorNote}\n\nThis is an open-ended, human-centric worldbuilding protocol designed to take ~10 minutes of genuine creative exploration. There are no rigid presets—I will ask you 8 thoughtful questions about your life, passions, aesthetics, and vision.\n\nUpon completion, your answers will synthesize a custom 5-photo high-resolution cinematic sci-fi dossier (anchored to Mood.png and Äkinoya.jpg), technical telemetry, and official lore for the June 30 Lore Governance Council.\n\nLet us begin with Question 01: ${WIZARD_STEPS[0].title}.`;
 
     const firstQuestionText = WIZARD_STEPS[0].prompt;
 
@@ -260,8 +271,11 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       soundManager.playUnlockChime();
 
       // Derive planetary attributes & Äkinoya designation
+      const claim = getStoredSectorClaim();
       const completeAnswers = derivePlanetAttributesFromHumanAnswers({
         ...nextAnswers,
+        biome: nextAnswers.biome || claim?.biome || '',
+        sectorName: nextAnswers.sectorName || claim?.sectorName || '',
         lifePhilosophy:
           nextAnswers.lifePhilosophy ||
           nextAnswers.futurePromise ||
@@ -306,6 +320,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   const handleReset = () => {
     if (isLocked) return;
     soundManager.playTone(400, 0.06);
+    const claim = getStoredSectorClaim();
     setCurrentStepIndex(0);
     setAnswers({
       relaxation: '',
@@ -324,6 +339,8 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       visualAesthetic: '',
       landmark: '',
       additionalNotes: '',
+      biome: claim?.biome || '',
+      sectorName: claim?.sectorName || '',
     });
     setInputVal('');
     setMessages([
