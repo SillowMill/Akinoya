@@ -53,6 +53,7 @@ import { AuthHeaderButton } from './AuthHeaderButton';
 import { CreatorLeaderboard } from './CreatorLeaderboard';
 import { CreatorPortfolioView } from './CreatorPortfolioView';
 import { LoreGovernancePortal } from './LoreGovernancePortal';
+import { AkinoyaLabsHub } from './AkinoyaLabsHub';
 import { getStoredCreators } from '../data/creators';
 
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
@@ -1154,7 +1155,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-3 min-w-max">
           {[
             { id: 'downloads', label: 'Asset & Download Vault', icon: FolderDown, count: '4' },
-            { id: 'workflows', label: 'Workflows & Creative Lab', icon: Sliders, count: '4 Steps' },
+            { id: 'workflows', label: 'Äkinoya Labs & Workflows', icon: Sliders, count: '5 Stages' },
             { id: 'discussion', label: 'Comm-Net Chat (8 Channels)', icon: MessageSquare, count: '8 Channels' },
             { id: 'creators', label: "Group's Favorite Planets & Leaderboard", icon: Trophy, count: 'Spotlight' },
             { id: 'governance', label: 'Lore & Governance Portal', icon: Vote, count: 'Contest' },
@@ -1361,7 +1362,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         )}
 
         {/* ======================================================== */}
-        {/* SECTION 2: WORKFLOWS & CREATIVE LAB (LARGE MEDIA BANNERS)*/}
+        {/* SECTION 2: ÄKINOYA LABS UNIVERSAL WORKFLOW & CASE STUDIES */}
         {/* ======================================================== */}
         {activeSection === 'workflows' && (
           <motion.div
@@ -1371,192 +1372,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             exit={{ opacity: 0, y: -12 }}
             className="space-y-6"
           >
-            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-black/50 to-black/80 border border-purple-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_0_30px_rgba(168,85,247,0.1)]">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-purple-950/80 border border-purple-400/40 text-purple-300 font-bold tracking-wider">
-                    MODULE 02 · PRODUCTION WORKFLOWS
-                  </span>
-                  <span className="text-[10px] font-mono text-purple-300 font-semibold">
-                    4 PRODUCTION ROADMAP STEPS · €60/YR (~€5/MO)
-                  </span>
-                </div>
-                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
-                  🧪 Workflows &amp; Creative Lab
-                </h1>
-                <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  Vertical step-by-step production roadmap deconstructing 3D shaders, modular synthesis chains, and paneling architecture. Ask questions in the dedicated technical Q&amp;A drawer under each step.
-                </p>
-              </div>
-            </div>
-
-            {/* Vertical Timeline Production Step Roadmap */}
-            <div className="relative pl-0 md:pl-10 space-y-8 sm:space-y-12 before:hidden md:before:block before:absolute before:left-4 before:top-4 before:bottom-8 before:w-0.5 before:bg-gradient-to-b before:from-purple-500 before:via-cyan-400 before:to-purple-500/30">
-              {workflows.map((wf, index) => {
-                const isFreeSample = index === 0;
-                const isLockedForUser = !isPatron && !isFreeSample;
-
-                return (
-                  <div key={wf.id} className="relative group">
-                    {/* Glowing Timeline Node Indicator (Desktop) */}
-                    <div className="hidden md:flex absolute -left-10 top-6 -translate-x-1/2 w-9 h-9 rounded-full bg-[#080d1a] border-2 border-purple-400 items-center justify-center font-mono font-black text-xs text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.5)] z-10">
-                      {wf.stepNumber}
-                    </div>
-
-                    <div className="rounded-2xl bg-black/70 border border-purple-500/30 hover:border-purple-400/60 transition-all shadow-[0_4px_35px_rgba(0,0,0,0.7)] overflow-hidden space-y-4">
-                      {/* Step Header with Step Badge, Tag, Subtitle & Duration */}
-                      <div className="p-4 sm:p-5 border-b border-purple-500/20 bg-gradient-to-r from-purple-950/30 via-black/40 to-transparent flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex flex-wrap items-center gap-2.5">
-                          <span className="px-2.5 py-1 rounded-lg bg-purple-500 text-black font-mono font-extrabold text-xs tracking-wider shadow-[0_0_12px_rgba(168,85,247,0.4)]">
-                            STEP {wf.stepNumber}
-                          </span>
-                          <span className="px-2.5 py-1 rounded-lg bg-purple-950/80 border border-purple-400/40 text-purple-300 font-mono font-bold text-[10.5px] tracking-wider uppercase">
-                            TAG: {wf.tag}
-                          </span>
-                          <span className="text-xs sm:text-sm text-white/80 font-sans font-medium">
-                            {wf.subtitle}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-mono text-purple-300/80 bg-white/5 px-2.5 py-1 rounded-md border border-white/10">
-                            {wf.duration}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Full-Width 16:9 Cinematic Video Player Banner (Clean, Uncluttered) */}
-                      <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/95 border-y border-purple-500/20 group/media">
-                        <img
-                          src={wf.heroBannerUrl}
-                          alt={wf.title}
-                          className={`w-full h-full object-cover transition-transform duration-500 group-hover/media:scale-105 ${
-                            isLockedForUser ? 'blur-sm opacity-50 scale-105' : 'opacity-75'
-                          }`}
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() => soundManager.playTone(660, 0.08)}
-                          className="absolute inset-0 m-auto w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-purple-500/85 hover:bg-purple-400 text-black flex items-center justify-center transition-transform hover:scale-110 shadow-[0_0_25px_rgba(168,85,247,0.5)] cursor-pointer z-10"
-                          title="Preview workflow breakdown"
-                        >
-                          <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-black ml-0.5" />
-                        </button>
-                      </div>
-
-                      {/* Clean Dedicated Workflow Specs Bar (Positioned Below Media Container) */}
-                      <div className="px-4 py-3 sm:px-6 bg-black/60 border-b border-purple-500/20 flex flex-wrap items-center justify-between gap-2.5 text-[10.5px] sm:text-xs font-mono">
-                        <div className="flex flex-wrap items-center gap-2 text-purple-300">
-                          <span className="bg-purple-950/70 px-2.5 py-1 rounded-lg border border-purple-500/30 font-semibold">
-                            {wf.toolstack}
-                          </span>
-                          <span className="bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 text-white/70">
-                            {wf.metrics.fps}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 text-cyan-300">
-                          <span className="bg-cyan-950/60 px-2.5 py-1 rounded-lg border border-cyan-500/30">
-                            ENGINE: {wf.metrics.engine} · RES: {wf.metrics.resolution}
-                          </span>
-                          <span className="text-[10px] font-bold tracking-wider text-purple-400 hidden sm:inline">
-                            SILLOW MILL CREATIVE LAB
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Content Section */}
-                      <div className="p-5 sm:p-6 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-400/40 font-semibold tracking-wider flex items-center gap-1">
-                            <Sparkles className="w-2.5 h-2.5 text-purple-400" />
-                            READ-ONLY TIMELINE STEP
-                          </span>
-                          <span className="text-xs font-mono text-purple-300">{wf.toolstack}</span>
-                        </div>
-
-                        <h2 className="text-base sm:text-xl font-display font-bold text-white">
-                          {wf.title}
-                        </h2>
-
-                        <p className="text-xs sm:text-sm text-white/70 font-sans leading-relaxed">
-                          {wf.description}
-                        </p>
-
-                        {/* Expandable Q&A Drawer Trigger */}
-                        <div className="pt-3 border-t border-white/10 flex items-center justify-between">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setOpenWorkflowDrawerId(openWorkflowDrawerId === wf.id ? null : wf.id)
-                            }
-                            className="flex items-center gap-2 text-xs font-mono font-semibold text-purple-300 hover:text-white transition-colors cursor-pointer"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            <span>
-                              {wf.comments.length} Technical Q&amp;A Comments &amp; Dialogue
-                            </span>
-                            {openWorkflowDrawerId === wf.id ? (
-                              <ChevronDown className="w-3.5 h-3.5" />
-                            ) : (
-                              <ChevronRight className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Drawer Container */}
-                        {openWorkflowDrawerId === wf.id && (
-                          <div className="mt-3 p-4 rounded-xl bg-black/80 border border-purple-500/20 space-y-3">
-                            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                              {wf.comments.length === 0 ? (
-                                <div className="text-xs font-mono text-white/40 italic p-2">
-                                  No questions yet. Be the first to ask about this production setup!
-                                </div>
-                              ) : (
-                                wf.comments.map((c) => (
-                                  <div key={c.id} className="text-xs p-2.5 rounded-lg bg-white/[0.03] border border-white/5 space-y-1">
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-bold text-purple-300 text-[11px] flex items-center gap-1.5">
-                                        <span>{c.author}</span>
-                                        <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-300">
-                                          {c.role}
-                                        </span>
-                                      </span>
-                                      <span className="text-[9px] font-mono text-white/40">{c.timestamp}</span>
-                                    </div>
-                                    <p className="text-white/80 leading-relaxed font-sans">{c.text}</p>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-
-                            {/* Comment Input Box (Free for everyone to ask!) */}
-                            <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/10">
-                              <input
-                                type="text"
-                                value={workflowCommentInputs[wf.id] || ''}
-                                onChange={(e) =>
-                                  setWorkflowCommentInputs({ ...workflowCommentInputs, [wf.id]: e.target.value })
-                                }
-                                placeholder={`Ask director/artist a question about ${wf.title}...`}
-                                className="flex-1 min-h-[44px] bg-black/60 border border-white/15 focus:border-purple-400 rounded-xl px-3.5 py-2 text-xs text-white outline-none font-sans"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleAddWorkflowComment(wf.id)}
-                                className="w-full sm:w-auto min-h-[44px] px-5 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-black font-mono font-bold text-xs transition-colors cursor-pointer flex items-center justify-center"
-                              >
-                                Send
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <AkinoyaLabsHub
+              isMember={isVipOrAbove}
+              onOpenAuthModal={() => openAuthModal('signin')}
+              onNavigateVerify={() => {
+                window.location.href = '/verify';
+              }}
+            />
           </motion.div>
         )}
 
