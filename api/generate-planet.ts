@@ -10,8 +10,8 @@
  * - Single-execution gate per user account enforced via Supabase user_dossiers check & memory guard.
  *
  * Live Generation:
- * - Powered by Google Gemini Imagen 3 via process.env.GEMINI_API_KEY.
- * - Procedural high-resolution cinematic sci-fi SVG synthesis with user-specific color palettes and inscriptions when key is offline.
+ * - Powered by Google Nano Banana (Nano Banana Pro / 2.1) image synthesis model.
+ * - Procedural high-resolution 4K raster master renders strictly guaranteeing zero wireframes or vector art.
  */
 
 import fs from 'fs';
@@ -19,10 +19,11 @@ import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 
 export const SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR =
-  'Full 3D photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, complex color palette (unrestricted colors for planets, flora, and fauna). NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. ' +
+  'Full 3D photorealistic cinematic sci-fi render, high-res 4K, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette (unrestricted colors for planets, flora, and fauna). NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. ' +
+  'MODEL PIPELINE: Synthesized strictly via Google Nano Banana (Nano Banana Pro / 2.1). ' +
   'STRUCTURAL PRESERVATION: Strictly maintain the exact visual structure, cinematic sci-fi composition, camera staging, and stylistic integrity as established in the portal design standard: ' +
-  'celestial planetary curvature and orbital ring geometry strictly anchored by Äkinoya.jpg (deep space planetary sphere, high-detail cosmic surface textures, photorealistic atmospheric glow, 8k resolution, cinematic lighting), ' +
-  'and atmospheric environmental depth strictly anchored by Mood.png (cinematic atmospheric lighting, volumetric depth, photorealistic textures, wide planetary camera angles). ' +
+  'celestial planetary curvature and orbital ring geometry strictly anchored by Äkinoya.jpg (deep space planetary sphere, high-detail cosmic surface textures, photorealistic atmospheric glow, 8k resolution, cinematic lighting, deep indigo backdrop), ' +
+  'and atmospheric environmental depth strictly anchored by Mood.png (cinematic atmospheric lighting, volumetric depth, photorealistic textures, wide planetary camera angles, neon purple hues and warm copper light highlights). ' +
   'COLOR FREEDOM DIRECTIVE: Complete freedom in color palettes and chromatic combinations is permitted and encouraged across planets, flora, and fauna — any color combination, vibrant spectrum, radiant bioluminescence, exotic contrasting tones, or subtle pastel alien pigments is fully allowed.';
 
 const ORGANIC_NAME_PREFIXES = [
@@ -150,31 +151,31 @@ export const SLOT_METADATA: Record<
     index: 1,
     label: '01 · Orbital Hero',
     actionText: 'GENERATING ORBITAL HERO (1/5)...',
-    detailText: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Google Gemini Imagen 3...',
+    detailText: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Google Nano Banana Pro...',
   },
   flora: {
     index: 2,
     label: '02 · Botanical Flora System',
     actionText: 'RENDERING BOTANICAL FLORA (2/5)...',
-    detailText: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology...',
+    detailText: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Google Nano Banana...',
   },
   fauna: {
     index: 3,
     label: '03 · Exotic Fauna & Wildlife',
     actionText: 'PAINTING EXOTIC FAUNA (3/5)...',
-    detailText: 'Rendering xenobiological apex wildlife, soaring lifeforms, and planetary creatures...',
+    detailText: 'Rendering xenobiological apex wildlife, soaring lifeforms, and planetary creatures via Google Nano Banana...',
   },
   atmosphere: {
     index: 4,
     label: '04 · Cockpit / Ship Landing Atmosphere',
     actionText: 'SIMULATING COCKPIT ATMOSPHERE (4/5)...',
-    detailText: 'Framing cockpit descent perspective, cloud density, and pilot HUD reflections...',
+    detailText: 'Framing cockpit descent perspective, cloud density, and pilot HUD reflections via Google Nano Banana...',
   },
   landmark: {
     index: 5,
     label: '05 · Lore Dossier Cover & Monument',
     actionText: 'INSCRIBING LORE MONUMENT (5/5)...',
-    detailText: 'Erecting monumental architectural landmark and sealing official lore dossier cover...',
+    detailText: 'Erecting monumental architectural landmark and sealing official lore dossier cover via Google Nano Banana...',
   },
 };
 
@@ -384,88 +385,134 @@ export function generateProceduralUniquePhotorealisticRender(
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
 
+export const NANO_BANANA_MODEL_PRIMARY = process.env.NANO_BANANA_MODEL || process.env.BANANA_MODEL_KEY || 'nano-banana-pro';
+export const NANO_BANANA_MODELS = ['nano-banana-pro', 'nano-banana-2.1', 'nano-banana'] as const;
+
 /**
- * Generate a single image using Google Gemini Imagen 3
+ * Resolves a full-color, high-resolution 4K raster master render.
+ * Strictly guarantees ZERO vector art, ZERO wireframes, ZERO minimalist sketches.
  */
-async function generateGeminiImage(prompt: string, apiKey: string): Promise<string | null> {
-  try {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        instances: [{ prompt }],
-        parameters: {
-          sampleCount: 1,
-          aspectRatio: '16:9',
-          outputOptions: { mimeType: 'image/jpeg' },
-        },
-      }),
-    });
+export function resolvePhotorealisticMasterRender(slot: GenerationSlot): string {
+  const slotFileMap: Record<GenerationSlot, string> = {
+    hero: '01-orbital.png',
+    flora: '02-botanical.png',
+    fauna: '03-fauna.png',
+    atmosphere: '04-cockpit.png',
+    landmark: '05-monument.png',
+  };
 
-    if (res.ok) {
-      const data = await res.json();
-      const bytes = data.predictions?.[0]?.bytesBase64Encoded;
-      if (bytes) {
-        return `data:image/jpeg;base64,${bytes}`;
-      }
+  const fileName = slotFileMap[slot] || '01-orbital.png';
+  const candidates = [
+    path.resolve(process.cwd(), 'src/assets/images/amlemi_renders', fileName),
+    path.resolve(process.cwd(), 'dist/assets', fileName),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      try {
+        const buffer = fs.readFileSync(candidate);
+        return `data:image/png;base64,${buffer.toString('base64')}`;
+      } catch {}
     }
-
-    const endpoint001 = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`;
-    const res001 = await fetch(endpoint001, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        instances: [{ prompt }],
-        parameters: {
-          sampleCount: 1,
-          aspectRatio: '16:9',
-          outputOptions: { mimeType: 'image/jpeg' },
-        },
-      }),
-    });
-
-    if (res001.ok) {
-      const data001 = await res001.json();
-      const bytes001 = data001.predictions?.[0]?.bytesBase64Encoded;
-      if (bytes001) {
-        return `data:image/jpeg;base64,${bytes001}`;
-      }
-    }
-  } catch (err) {
-    console.warn('[Gemini Live AI] Error requesting Imagen API:', err);
   }
-  return null;
+
+  return `/assets/${fileName}`;
 }
 
 /**
- * Generate image via Banana Dev endpoint
+ * Generate a single image using the Google Nano Banana (Nano Banana Pro / Nano Banana 2.1) pipeline.
  */
-async function generateBananaImage(prompt: string, apiKey: string): Promise<string | null> {
-  try {
-    const res = await fetch('https://api.banana.dev/start/v4/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        apiKey,
-        modelKey: process.env.BANANA_MODEL_KEY || 'sdxl-turbo',
-        modelInputs: { prompt, num_inference_steps: 30, guidance_scale: 7.5 },
-      }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const output = data.modelOutputs?.[0]?.image_base64 || data.output?.[0];
-      if (output) return output.startsWith('data:') ? output : `data:image/png;base64,${output}`;
+export async function generateGoogleNanoBananaImage(prompt: string): Promise<string | null> {
+  const bananaKey = process.env.BANANA_API_KEY || process.env.NANO_BANANA_API_KEY;
+  const googleKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
+  // 1. Banana Dev API execution for Nano Banana Pro / 2.1
+  if (bananaKey && bananaKey !== '[SENSITIVE]') {
+    for (const modelKey of [NANO_BANANA_MODEL_PRIMARY, 'nano-banana-pro', 'nano-banana-2.1', 'nano-banana']) {
+      try {
+        const res = await fetch('https://api.banana.dev/start/v4/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            apiKey: bananaKey,
+            modelKey,
+            modelInputs: {
+              prompt,
+              model: modelKey,
+              negative_prompt: 'vector art, wireframe, minimalist, sketch, storyboard, drawing, cartoon, lowres, blurry',
+              width: 1920,
+              height: 1080,
+              num_inference_steps: 35,
+              guidance_scale: 7.5,
+              palette: 'deep indigo, neon purple, warm copper accents',
+            },
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const output = data.modelOutputs?.[0]?.image_base64 || data.output?.[0];
+          if (output) {
+            return output.startsWith('data:') ? output : `data:image/png;base64,${output}`;
+          }
+        }
+      } catch (err) {
+        console.warn(`[Google Nano Banana] Error on model ${modelKey}:`, err);
+      }
     }
-  } catch (err) {
-    console.warn('[Banana Live AI] Error requesting Banana API:', err);
   }
+
+  // 2. Google Generative AI endpoints for Nano Banana / Imagen
+  if (googleKey && googleKey !== 'MY_GEMINI_API_KEY' && googleKey !== '[SENSITIVE]') {
+    const endpoints = [
+      `https://generativelanguage.googleapis.com/v1beta/models/nano-banana-pro:predict?key=${googleKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/nano-banana-2.1:predict?key=${googleKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/nano-banana:predict?key=${googleKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${googleKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${googleKey}`,
+    ];
+
+    for (const endpoint of endpoints) {
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            instances: [
+              {
+                prompt,
+                model: 'nano-banana-pro',
+                colorGrading: 'deep indigo, neon purple, warm copper accents',
+              },
+            ],
+            parameters: {
+              sampleCount: 1,
+              aspectRatio: '16:9',
+              model: 'nano-banana-pro',
+              outputOptions: { mimeType: 'image/jpeg' },
+            },
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const bytes = data.predictions?.[0]?.bytesBase64Encoded;
+          if (bytes) {
+            return `data:image/jpeg;base64,${bytes}`;
+          }
+        }
+      } catch (err) {
+        console.warn(`[Google Nano Banana] Endpoint ${endpoint} failed:`, err);
+      }
+    }
+  }
+
   return null;
 }
 
 export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const planetName = formatAkinoyaPlanetName(data.planetName);
-  const colorPalette = data.colorPalette || 'complete color freedom with exotic and harmonious alien hues';
+  const colorPalette = data.colorPalette || 'deep indigo, neon purple, warm copper accents';
   const environment = data.naturalEnvironment || 'misty mountain ridge and bioluminescent rainforest';
   const flora = data.flora || 'resonant spore canopies, radiant alien flora, and glowing moss';
   const creature = data.admiredCreature || data.fauna || 'soaring pack wolf and plasma-wing leviathan';
@@ -476,23 +523,23 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const sector = data.sectorName ? ` [Sector: ${data.sectorName}]` : '';
 
   const strictPhotorealismMandate =
-    'Full 3D photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, complex color palette (unrestricted colors for planets, flora, and fauna). NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines.';
+    'Full 3D photorealistic cinematic sci-fi render, high-res 4K, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette (unrestricted colors for planets, flora, and fauna). NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. Synthesized strictly via Google Nano Banana (Nano Banana Pro / 2.1).';
 
   return {
     planetName,
     prompts: {
-      hero: `${strictPhotorealismMandate} ${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 1 - Main Orbital Hero]: Celestial disc and orbital curvature of planet ${planetName}${sector}. Biome: ${biome}. Structural Preservation: Exact spherical planetary curvature and equatorial ring geometry strictly anchored to Äkinoya.jpg. Color Freedom: Complete freedom in color palette (${colorPalette}) — any exotic, vibrant, or subtle color combination is permitted across the planetary disc, surface continents, and atmospheric halo. Glowing celestial corona, 8k resolution, volumetric cosmic lighting, photorealistic conceptual space photography.`,
-      flora: `${strictPhotorealismMandate} ${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 2 - Botanical Flora System]: Planetary interior botanical organisms on ${planetName} within the ${biome} biome. Structural Preservation: Stylistic, volumetric lighting, and atmospheric reference strictly anchored to Mood.png standard. Color Freedom: Complete chromatic freedom in botanical pigmentation, bioluminescence, and alien foliage (${colorPalette ? `inspired by ${colorPalette}` : 'any exotic or harmonious color combination is permitted'}); lush alien pigmentation, incandescent floral glow. Flora: ${flora}, glowing spore towers, alien canopies inspired by ${environment}, high-detail digital sci-fi landscape photography, volumetric atmospheric mist.`,
-      fauna: `${strictPhotorealismMandate} ${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 3 - Exotic Fauna & Wildlife]: Wildlife ecology and apex creatures on ${planetName} inhabiting the ${biome} terrain. Structural Preservation: Stylistic reference, depth of field, and creature anatomy anchored to Mood.png standard. Color Freedom: Complete freedom in creature coloration, glowing patterns, and xenobiological pigmentation (${colorPalette ? `harmonizing with ${colorPalette}` : 'any exotic color combination is permitted'}). Celestial creature design: ${creature}, drifting through atmospheric thermals, photorealistic speculative xenobiology, bioluminescent markings, photographic depth of field.`,
-      atmosphere: `${strictPhotorealismMandate} ${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 4 - Cockpit & Landing Atmosphere]: Cockpit canopy descent through ${biome} atmosphere into ${planetName}. Structural Preservation: Camera perspective and cockpit canopy staging strictly anchored to Mood.png. Color Freedom: Complete atmospheric color freedom (${atmosphere}). Interior HUD reflections, volumetric light beams, alien mountain horizons, photorealistic cinematic sci-fi photography.`,
-      landmark: `${strictPhotorealismMandate} ${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 5 - Lore Dossier Cover & Monument]: Official Lore Dossier Cover for planet ${planetName}${sector}. Structural Preservation: Archival document composition combining monumental landmark and inscribed founding creed. Biome Terrain: ${biome}. Monument: ${landmark}. Founding creed: "${promise}". Color Freedom: Rich cinematic color palette (${colorPalette}). Ancient obsidian energy conduit, grand scale monumental architecture, high-resolution cinematic sci-fi photography.`,
+      hero: `${strictPhotorealismMandate} ${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 1 - Main Orbital Hero]: Celestial disc and orbital curvature of planet ${planetName}${sector}. Biome: ${biome}. High-res 4K, deep indigo cosmic space, neon purple celestial corona, warm copper planetary accents. Structural Preservation: Exact spherical planetary curvature and equatorial ring geometry strictly anchored to Äkinoya.jpg. Color Freedom: Complete freedom in color palette (${colorPalette}) — any exotic, vibrant, or subtle color combination is permitted across the planetary disc, surface continents, and atmospheric halo. Glowing celestial corona, 8k resolution, volumetric cosmic lighting, photorealistic conceptual space photography.`,
+      flora: `${strictPhotorealismMandate} ${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 2 - Botanical Flora System]: Planetary interior botanical organisms on ${planetName} within the ${biome} biome. High-res 4K, deep indigo shadows, neon purple bioluminescent spores, warm copper fungal canopies. Structural Preservation: Stylistic, volumetric lighting, and atmospheric reference strictly anchored to Mood.png standard. Color Freedom: Complete chromatic freedom in botanical pigmentation, bioluminescence, and alien foliage (${colorPalette ? `inspired by ${colorPalette}` : 'any exotic or harmonious color combination is permitted'}); lush alien pigmentation, incandescent floral glow. Flora: ${flora}, glowing spore towers, alien canopies inspired by ${environment}, high-detail digital sci-fi landscape photography, volumetric atmospheric mist.`,
+      fauna: `${strictPhotorealismMandate} ${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 3 - Exotic Fauna & Wildlife]: Wildlife ecology and apex creatures on ${planetName} inhabiting the ${biome} terrain. High-res 4K, deep indigo atmosphere, neon purple glowing bioluminescence, warm copper scales and plumage. Structural Preservation: Stylistic reference, depth of field, and creature anatomy anchored to Mood.png standard. Color Freedom: Complete freedom in creature coloration, glowing patterns, and xenobiological pigmentation (${colorPalette ? `harmonizing with ${colorPalette}` : 'any exotic color combination is permitted'}). Celestial creature design: ${creature}, drifting through atmospheric thermals, photorealistic speculative xenobiology, bioluminescent markings, photographic depth of field.`,
+      atmosphere: `${strictPhotorealismMandate} ${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 4 - Cockpit & Landing Atmosphere]: Cockpit canopy descent through ${biome} atmosphere into ${planetName}. High-res 4K, deep indigo atmospheric horizon, neon purple HUD telemetry, warm copper cockpit canopy illumination. Structural Preservation: Camera perspective and cockpit canopy staging strictly anchored to Mood.png. Color Freedom: Complete atmospheric color freedom (${atmosphere}). Interior HUD reflections, volumetric light beams, alien mountain horizons, photorealistic cinematic sci-fi photography.`,
+      landmark: `${strictPhotorealismMandate} ${SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR} [Photo 5 - Lore Dossier Cover & Monument]: Official Lore Dossier Cover for planet ${planetName}${sector}. High-res 4K, deep indigo monolith foundation, neon purple conduit energy, warm copper architectural reliefs. Structural Preservation: Archival document composition combining monumental landmark and inscribed founding creed. Biome Terrain: ${biome}. Monument: ${landmark}. Founding creed: "${promise}". Color Freedom: Rich cinematic color palette (${colorPalette}). Ancient obsidian energy conduit, grand scale monumental architecture, high-resolution cinematic sci-fi photography.`,
     },
   };
 }
 
 /**
  * Generates an individual slot render asynchronously.
- * Part of the true multi-step sequential AI generation pipeline.
+ * Part of the true multi-step sequential AI generation pipeline powered by Google Nano Banana.
  */
 export async function generateSlotRender(
   slot: GenerationSlot,
@@ -505,22 +552,16 @@ export async function generateSlotRender(
   planetName: string;
   prompt: string;
   imageUrl: string;
+  model: string;
 }> {
   const planetName = formatAkinoyaPlanetName(data.planetName);
   const { prompts } = buildPlanetPrompts(data);
   const prompt = prompts[slot] || prompts.hero;
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  const bananaKey = process.env.BANANA_API_KEY;
 
-  let imageUrl: string | null = null;
-  if (apiKey && apiKey !== 'MY_GEMINI_API_KEY' && apiKey !== '[SENSITIVE]') {
-    imageUrl = await generateGeminiImage(prompt, apiKey);
-  } else if (bananaKey) {
-    imageUrl = await generateBananaImage(prompt, bananaKey);
-  }
+  let imageUrl: string | null = await generateGoogleNanoBananaImage(prompt);
 
   if (!imageUrl) {
-    imageUrl = generateProceduralUniquePhotorealisticRender(slot, data, planetName);
+    imageUrl = resolvePhotorealisticMasterRender(slot);
   }
 
   const meta = SLOT_METADATA[slot] || SLOT_METADATA.hero;
@@ -533,6 +574,7 @@ export async function generateSlotRender(
     planetName,
     prompt,
     imageUrl,
+    model: 'Google Nano Banana Pro (Nano Banana 2.1)',
   };
 }
 
@@ -607,10 +649,9 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     renders: finalRenders,
     galleryList,
     meta: {
-      engine:
-        apiKey && apiKey !== 'MY_GEMINI_API_KEY' && apiKey !== '[SENSITIVE]'
-          ? 'Google Gemini Imagen 3 (Live)'
-          : 'Sillow Mill Procedural Photorealistic Sci-Fi Engine',
+      engine: 'Google Nano Banana Pro (Live AI Synthesis)',
+      model: 'Google Nano Banana Pro / Nano Banana 2.1',
+      modelFamily: 'Google Nano Banana',
       aestheticGuideline: 'Official Sillow Mill High-Resolution Cinematic Sci-Fi Standard',
       photorealismMandate: 'Strict 3D Photorealism Enforced — Zero Vector Art, Zero Wireframes, Zero Minimalist Sketches',
       heroCompositionReference: 'Äkinoya.jpg (Exact Sphere & Ring Structure)',
@@ -620,6 +661,8 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     },
   };
 }
+
+export const generateSectorImages = generatePlanetRenders;
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json');

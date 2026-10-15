@@ -156,7 +156,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     openClaimWorldModal();
   };
 
-  // Called when Mill completes the 8 questions (Live Gemini AI Synthesis)
+  // Called when Mill completes the 8 questions (Live Google Nano Banana AI Synthesis)
   const handleWizardComplete = async (answers: WizardAnswers) => {
     const planetName = formatAkinoyaPlanetName(answers.planetName, false) || answers.planetName || 'Äkinoya Frontier Sector';
     const answersWithFormattedName = { ...answers, planetName };
@@ -164,8 +164,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     setIsChatOpen(false);
     setIsGeneratingRenders(true);
     setGenerationProgress(5);
-    setGenerationStageName('INITIALIZING GEMINI AI PIPELINE...');
-    setGenerationStageDetails(`Configuring 5-photo photorealistic prompts for ${planetName}...`);
+    setGenerationStageName('INITIALIZING GOOGLE NANO BANANA AI PIPELINE...');
+    setGenerationStageDetails(`Configuring 5-photo 4K photorealistic prompt matrix for ${planetName}...`);
     soundManager.playTone(660, 0.08);
 
     try {
@@ -180,23 +180,23 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       const slotLabels = {
         hero: {
           name: 'GENERATING ORBITAL HERO (1/5)...',
-          details: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Google Gemini Imagen 3...',
+          details: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Google Nano Banana Pro...',
         },
         flora: {
           name: 'RENDERING BOTANICAL FLORA (2/5)...',
-          details: 'Synthesizing bioluminescent alien vegetation, spore towers, and botanical ecology...',
+          details: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Google Nano Banana...',
         },
         fauna: {
           name: 'PAINTING EXOTIC FAUNA (3/5)...',
-          details: 'Synthesizing xenobiological wildlife, soaring pack lifeforms, and planetary creatures...',
+          details: 'Synthesizing xenobiological wildlife, soaring pack lifeforms, and apex creatures via Google Nano Banana...',
         },
         atmosphere: {
           name: 'SIMULATING COCKPIT ATMOSPHERE (4/5)...',
-          details: 'Framing cockpit descent canopy, pilot HUD vector reflections, and atmospheric cloud density...',
+          details: 'Framing cockpit descent canopy, pilot HUD reflections, and atmospheric cloud density via Google Nano Banana...',
         },
         landmark: {
           name: 'INSCRIBING LORE MONUMENT (5/5)...',
-          details: 'Erecting monumental architectural landmark and sealing official lore dossier cover...',
+          details: 'Erecting monumental architectural landmark and sealing official lore dossier cover via Google Nano Banana...',
         },
       };
 
@@ -235,6 +235,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             biome: answers.biome,
             sectorName: answers.sectorName,
             slot,
+            model: 'nano-banana-pro',
+            modelPipeline: 'Google Nano Banana Pro / Nano Banana 2.1',
           }),
         });
 
@@ -259,7 +261,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
       setGenerationProgress(100);
       setGenerationStageName('SYNTHESIS COMPLETE!');
-      setGenerationStageDetails('All 5 high-resolution cinematic sci-fi images successfully generated.');
+      setGenerationStageDetails('All 5 high-resolution cinematic sci-fi images successfully synthesized via Google Nano Banana.');
       soundManager.playUnlockChime();
 
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -619,7 +621,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-400/40 font-bold uppercase">
-                  Dossier Preview · Approval Required
+                  Dossier Preview · Google Nano Banana Pro 4K
                 </span>
                 <div className="flex flex-wrap items-center gap-2 mt-1">
                   <h2 className="text-xl sm:text-2xl font-display font-bold text-white">
@@ -719,7 +721,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             {/* Generated Lore story */}
             <div className="p-5 rounded-2xl bg-[#070b16] border border-white/10 space-y-2">
               <span className="text-[10.5px] font-mono text-amber-300 font-bold uppercase">
-                AI-SYNTHESIZED SECTOR LORE
+                AI-SYNTHESIZED SECTOR LORE · GOOGLE NANO BANANA PRO
               </span>
               <p className="text-xs sm:text-sm text-white/85 font-sans leading-relaxed whitespace-pre-line">
                 {previewDossier.generatedLore}

@@ -15,7 +15,7 @@ import {
   isValidPassId,
 } from './nfcDnaService';
 import { handleCertificateAction } from '../../api/nfc/_certificateService.js';
-import { generatePlanetRenders, generateSlotRender, checkAndLockUserGeneration } from '../../api/generate-planet';
+import { generatePlanetRenders, generateSectorImages, generateSlotRender, checkAndLockUserGeneration } from '../../api/generate-planet';
 import { checkVipTokenStatus, claimVipTokenForUser } from '../lib/vipTokens';
 
 export const apiApp = express();
@@ -333,8 +333,8 @@ apiRouter.get('/nfc/generate-test-cipher', (req: Request, res: Response): void =
   });
 });
 
-// ─── 10. Generate Planet Prompts & Visuals (Sillow Mill High-Resolution Cinematic Sci-Fi Standard) ───
-apiRouter.all(['/generate-planet', '/planet/generate'], async (req: Request, res: Response): Promise<void> => {
+// ─── 10. Generate Planet Prompts & Visuals (Google Nano Banana Pro 4K Sci-Fi Pipeline) ───
+apiRouter.all(['/generate-planet', '/planet/generate', '/generate-sector-images', '/sector/generate'], async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body || {};
     if (body.userId && !body.slot) {

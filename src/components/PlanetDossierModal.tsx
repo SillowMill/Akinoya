@@ -107,7 +107,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                     {planet.planetName}
                   </h2>
                   <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 shrink-0">
-                    5-PHOTO DOSSIER
+                    5-PHOTO DOSSIER · NANO BANANA PRO
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-mono text-white/50 truncate">

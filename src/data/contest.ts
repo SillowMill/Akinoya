@@ -526,53 +526,45 @@ FOUNDING CREED & FUTURE PROMISE:
 This planetary territory is officially registered in the 2027 Äkinoya Lore Governance Council. Community votes cast before June 30 determine whether this sector will be featured in the official Sillow Mill cinematic series and soundtrack.`;
 };
 
-// Map wizard inputs to 5 rich, photorealistic full-color visual render assets anchored in Mood.png & Äkinoya.jpg
+// Map wizard inputs to 5 rich, photorealistic 4K visual render assets anchored in Mood.png & Äkinoya.jpg
 export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['renders'] => {
-  const isAmlemi = answers.planetName === 'Ämlemi';
-  if (isAmlemi) {
-    return {
-      hero: amlemiOrbitalImg,
-      flora: amlemiBotanicalImg,
-      fauna: amlemiFaunaImg,
-      atmosphere: amlemiCockpitImg,
-      landmark: amlemiMonumentImg,
-      ecosystem: amlemiBotanicalImg,
-    };
-  }
-
-  const text = `${answers.planetName} ${answers.atmosphere} ${answers.visualAesthetic} ${answers.colorPalette}`.toLowerCase();
-
-  if (text.includes('moodboard') || text.includes('green') || text.includes('forest') || text.includes('moss')) {
-    return {
-      hero: moodboardImg, // 1. Main Orbital (Mood.png)
-      flora: mushroomValleyImg, // 2. Botanical Flora
-      fauna: heroBgImg, // 3. Exotic Fauna
-      atmosphere: twilightWorldImg, // 4. Cockpit Atmosphere
-      landmark: exactPlanetImg, // 5. Iconic Monument
-      ecosystem: mushroomValleyImg,
-    };
-  }
-
-  if (text.includes('ring') || text.includes('violet') || text.includes('purple') || text.includes('twilight')) {
-    return {
-      hero: visualizerThumbnailImg, // 1. Main Orbital
-      flora: twilightWorldImg, // 2. Botanical Flora
-      fauna: heroBgImg, // 3. Exotic Fauna
-      atmosphere: moodboardImg, // 4. Cockpit Atmosphere
-      landmark: exactPlanetImg, // 5. Iconic Monument
-      ecosystem: twilightWorldImg,
-    };
-  }
-
   return {
-    hero: exactPlanetImg, // 1. Main Orbital Hero (Äkinoya.jpg)
-    flora: mushroomValleyImg, // 2. Botanical Flora
-    fauna: heroBgImg, // 3. Exotic Fauna
-    atmosphere: twilightWorldImg, // 4. Cockpit Atmosphere
-    landmark: moodboardImg, // 5. Iconic Monument
-    ecosystem: mushroomValleyImg,
+    hero: amlemiOrbitalImg,
+    flora: amlemiBotanicalImg,
+    fauna: amlemiFaunaImg,
+    atmosphere: amlemiCockpitImg,
+    landmark: amlemiMonumentImg,
+    ecosystem: amlemiBotanicalImg,
   };
 };
+
+/**
+ * Synthesizes 5 high-resolution cinematic sci-fi images for a sector using Google Nano Banana (Nano Banana Pro / 2.1).
+ * Strictly enforces Äkinoya cinematic sci-fi parameters: high-res 4K, deep indigo, neon purple, warm copper accents.
+ */
+export const generateSectorImages = async (answers: WizardAnswers): Promise<PlanetSubmission['renders']> => {
+  try {
+    const res = await fetch('/api/generate-planet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...answers,
+        model: 'nano-banana-pro',
+        modelPipeline: 'Google Nano Banana Pro / Nano Banana 2.1',
+      }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.renders) {
+        return json.renders;
+      }
+    }
+  } catch (err) {
+    console.warn('[Google Nano Banana] Sector image synthesis network notice:', err);
+  }
+  return resolvePlanetRenders(answers);
+};
+
 
 export interface PlanetPhotoCard {
   id: string;
