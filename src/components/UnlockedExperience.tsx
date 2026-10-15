@@ -62,6 +62,7 @@ import {
   addPlanetComment,
   PlanetComment,
 } from '../data/contest';
+import { getUserStatusConfig } from '../utils/statusPill';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import {
   BINGAA_PDF_URL,
@@ -186,7 +187,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   onNavigateToContest,
 }) => {
   const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'my-world' | 'assets'>('pass');
-  const { user, isVip: authIsVip, profile, role } = useAuth();
+  const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
   const [userDossier, setUserDossier] = useState<PlanetSubmission | null>(null);
   const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);
   const [planetComments, setPlanetComments] = useState<PlanetComment[]>([]);
@@ -265,6 +266,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
          localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
          localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
     )
+  );
+
+  const statusConfig = getUserStatusConfig(
+    isAuthenticated,
+    user,
+    profile,
+    role,
+    isVipMode || isVip || authIsVip
   );
 
   // Fallback to 'pass' tab if user loses VIP status
@@ -750,25 +759,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-          {/* Top badges: In VIP mode show Member # and Access Granted in a safe responsive flex header. In Guest mode show ONLY ONE clean badge at top-right to prevent any mobile collision */}
+          {/* Top badges: Dynamic status pill + ACCESS GRANTED indicator box */}
           <div className="absolute top-3 inset-x-3 flex items-center justify-between gap-2 pointer-events-none z-10">
-            {isVipMode ? (
-              <>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/75 backdrop-blur-md border border-cyan-400/30 rounded-full text-[9.5px] xs:text-[10px] font-mono text-cyan-300 max-w-[58%] truncate">
-                  <Sparkles className="w-3 h-3 text-cyan-400 shrink-0" />
-                  <span className="truncate">{isFoundersPass ? '• FOUNDERS PASS (#0)' : `• FOUNDING MEMBER #${editionDisplay} OF 100`}</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-emerald-500/50 rounded-full text-[9.5px] xs:text-[10px] font-mono font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)] shrink-0 whitespace-nowrap">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.9)]" />
-                  <span>• ACCESS GRANTED</span>
-                </div>
-              </>
-            ) : (
-              <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 bg-black/85 backdrop-blur-md border border-amber-500/50 rounded-full text-[10px] font-mono font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)] shrink-0 whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.9)]" />
-                <span>• VIP ACCESS 100 / 100 CLAIMED</span>
-              </div>
-            )}
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 backdrop-blur-md rounded-full text-[9.5px] xs:text-[10px] font-mono max-w-[58%] truncate ${statusConfig.pillClassName}`}>
+              <Sparkles className="w-3 h-3 shrink-0" />
+              <span className="truncate">
+                {isVipMode
+                  ? (isFoundersPass ? '• FOUNDERS PASS (#0)' : `• FOUNDING MEMBER #${editionDisplay} OF 100`)
+                  : `• ${statusConfig.pillLabel}`}
+              </span>
+            </div>
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 backdrop-blur-md rounded-full text-[9.5px] xs:text-[10px] font-mono font-bold shrink-0 whitespace-nowrap ${statusConfig.indicatorClassName}`}>
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusConfig.dotColorClassName}`} />
+              <span>• {statusConfig.indicatorLabel}</span>
+            </div>
           </div>
         </div>
 
@@ -776,28 +780,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         <div className="p-4 sm:p-5 bg-gradient-to-b from-[#060c14] to-[#03060a] border-t border-cyan-500/20">
           <div className="flex items-center justify-between mb-2 sm:mb-3 gap-2">
             <span className="text-[11px] sm:text-xs font-mono text-white/50 tracking-wider truncate">
-              {isVipMode ? 'ÄKINOYA VIP PASS' : 'GUEST ÄKINOYA PASS'}
+              {isVipMode ? 'ÄKINOYA VIP PASS' : 'ÄKINOYA DIGITAL PASS'}
             </span>
-            {isVipMode ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-[10px] font-mono font-semibold text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.25)] shrink-0 whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                <span>• ACCESS GRANTED</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/50 text-[10px] font-mono font-semibold text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)] shrink-0 whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                <span>VIP ACCESS 100 / 100 CLAIMED</span>
-              </span>
-            )}
+            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold shrink-0 whitespace-nowrap ${statusConfig.indicatorClassName}`}>
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusConfig.dotColorClassName}`} />
+              <span>• {statusConfig.indicatorLabel}</span>
+            </span>
           </div>
 
           <div className="space-y-1 mb-4">
-            <div className="text-xs sm:text-sm font-display font-bold text-white tracking-wider">
-              {isVipMode ? 'SILLOW MILL ARCHIVE HOLDER' : 'SILLOW MILL GUEST HOLDER'}
+            <div className="text-xs sm:text-sm font-display font-bold text-white tracking-wider flex items-center gap-2">
+              <span>{isVipMode ? 'SILLOW MILL ARCHIVE HOLDER' : 'SILLOW MILL DIGITAL HOLDER'}</span>
+              <span className={`text-[8.5px] font-mono px-2 py-0.2 rounded-full uppercase ${statusConfig.pillClassName}`}>
+                {statusConfig.pillLabel}
+              </span>
             </div>
             <div className="text-[11px] sm:text-xs font-mono text-cyan-400/80 flex items-center justify-between">
-              <span>{isVipMode ? `ID: #${activePassId}` : 'ACCESS: PUBLIC GUEST'}</span>
-              <span>{isVipMode ? 'FOUNDING BATCH' : 'PUBLIC ACCESS'}</span>
+              <span>{isVipMode ? `ID: #${activePassId}` : `TIER: ${statusConfig.pillLabel}`}</span>
+              <span>{statusConfig.indicatorLabel}</span>
             </div>
           </div>
 
@@ -1704,7 +1704,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         <span>Strict Sillow Mill Aesthetic</span>
                       </div>
                       <p className="text-[11px] text-white/60 font-sans">
-                        Composed from akinoya_hero_bg.jpg and atmospheric panels from Mood.png.
+                        Synthesized using custom Äkinoya neural lighting &amp; 4K cinematic atmosphere anchors.
                       </p>
                     </div>
 

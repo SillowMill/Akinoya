@@ -9,9 +9,12 @@ import {
   ChevronDown,
   ExternalLink,
   Crown,
+  Globe2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
+import { getUserStatusConfig } from '../utils/statusPill';
+import { openClaimWorldModal } from '../utils/pioneer';
 
 export const AuthHeaderButton: React.FC = () => {
   const { user, profile, role, isAuthenticated, isVip, hasVipPass, isSubscriber, openAuthModal, signOut } = useAuth();
@@ -42,44 +45,19 @@ export const AuthHeaderButton: React.FC = () => {
     )
   );
 
-  const getRoleBadge = () => {
-    if (role === 'CREATOR') {
-      return {
-        label: 'CREATOR',
-        className: 'bg-amber-500 text-black font-black border border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.4)]',
-      };
-    }
-    if (isUserVip && (isSubscriber || role === 'ANNUAL_PASS' || role === 'SUBSCRIBER')) {
-      return {
-        label: 'VIP + SUBSCRIBER',
-        className: 'bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 text-black font-black border border-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.35)]',
-      };
-    }
-    if (role === 'ANNUAL_PASS' || role === 'SUBSCRIBER' || isSubscriber) {
-      return {
-        label: 'ANNUAL PASS',
-        className: 'bg-amber-500/25 text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
-      };
-    }
-    if (isUserVip) {
-      return {
-        label: 'VIP',
-        className: 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 shadow-[0_0_10px_rgba(16,185,129,0.25)]',
-      };
-    }
-    if (role === 'GUEST') {
-      return {
-        label: 'GUEST',
-        className: 'bg-cyan-900/60 text-cyan-200 border border-cyan-400/30',
-      };
-    }
-    return {
-      label: 'FREE',
-      className: 'bg-cyan-950/80 text-cyan-300 border border-cyan-400/30',
-    };
+  const statusConfig = getUserStatusConfig(
+    isAuthenticated,
+    user,
+    profile,
+    role,
+    isUserVip
+  );
+
+  const roleBadge = {
+    label: statusConfig.pillLabel,
+    className: statusConfig.pillClassName,
   };
 
-  const roleBadge = getRoleBadge();
   const displayName = profile?.first_name || user?.email?.split('@')[0] || 'Pilot';
 
   if (!isAuthenticated || !user) {
@@ -202,12 +180,30 @@ export const AuthHeaderButton: React.FC = () => {
               )}
             </div>
 
+            {/* Direct Claim Your Free World Modal Trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsDropdownOpen(false);
+                openClaimWorldModal();
+              }}
+              className="w-full p-2.5 rounded-xl bg-amber-950/40 hover:bg-amber-950/60 border border-amber-500/30 text-amber-300 font-mono text-[11px] font-semibold transition-colors cursor-pointer flex items-center justify-between min-h-[48px]"
+            >
+              <span className="flex items-center gap-2">
+                <Globe2 className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                <span>Claim Your Free World</span>
+              </span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-400 text-black font-extrabold uppercase shrink-0">
+                [PIONEER-2027]
+              </span>
+            </button>
+
             {/* Verify & Redeem VIP Pass Portal action if user does not have a VIP pass */}
             {!isUserVip && (
               <a
                 href="/verify"
                 onClick={() => setIsDropdownOpen(false)}
-                className="w-full p-2.5 rounded-xl bg-amber-950/40 hover:bg-amber-950/60 border border-amber-500/30 text-amber-300 font-mono text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-2 text-left min-h-[48px]"
+                className="w-full p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-white/80 hover:text-white font-mono text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-2 text-left min-h-[48px]"
               >
                 <KeyRound className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span>Verify &amp; Redeem VIP Pass</span>

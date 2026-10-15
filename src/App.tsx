@@ -221,6 +221,15 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Listen for global Claim World modal open requests
+  useEffect(() => {
+    const handleOpenClaim = () => {
+      setIsClaimWorldOpen(true);
+    };
+    window.addEventListener('akinoya-open-claim-world', handleOpenClaim);
+    return () => window.removeEventListener('akinoya-open-claim-world', handleOpenClaim);
+  }, []);
+
   const navigateTo = (newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest', path: string) => {
     try {
       window.history.pushState({}, '', path);

@@ -3,6 +3,7 @@ import { SoundtrackButton } from './SoundtrackButton';
 import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
 import { openClaimWorldModal } from '../utils/pioneer';
+import { getUserStatusConfig } from '../utils/statusPill';
 
 interface TopBarProps {
   isUnlocked: boolean;
@@ -12,12 +13,12 @@ interface TopBarProps {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
-  isUnlocked,
+  isUnlocked: _isUnlocked,
   isVip = false,
   onNavigateHome,
   onNavigateToVerify,
 }) => {
-  const { user, isVip: authIsVip, profile, role } = useAuth();
+  const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
   const effectiveIsVip = Boolean(
     Boolean(user || profile) && (
       isVip ||
@@ -36,6 +37,14 @@ export const TopBar: React.FC<TopBarProps> = ({
          localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
          localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
     )
+  );
+
+  const statusConfig = getUserStatusConfig(
+    isAuthenticated,
+    user,
+    profile,
+    role,
+    effectiveIsVip
   );
 
   return (
@@ -103,47 +112,24 @@ export const TopBar: React.FC<TopBarProps> = ({
           <SoundtrackButton />
           <AuthHeaderButton />
 
-          {isUnlocked ? (
-            effectiveIsVip ? (
-              <div
-                title="VIP Verified"
-                className="flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] xs:text-[10.5px] sm:text-[11px] font-mono text-emerald-300 bg-emerald-950/60 border border-emerald-400/30 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="hidden sm:inline tracking-wide">VIP VERIFIED</span>
-                <span className="sm:hidden text-[9px] font-bold tracking-wider">VIP</span>
-              </div>
-            ) : (
-              <div
-                title="Access Granted"
-                className="flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] xs:text-[10.5px] sm:text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-400/30 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                <span className="hidden sm:inline tracking-wide">ACCESS GRANTED</span>
-              </div>
-            )
-          ) : (
-            effectiveIsVip && (
-              onNavigateToVerify ? (
-                <button
-                  type="button"
-                  onClick={onNavigateToVerify}
-                  className="md:hidden flex items-center gap-1 px-2 py-1 text-[10px] xs:text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg sm:rounded-xl cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  <ShieldCheck className="w-3 h-3 text-cyan-400" />
-                  <span>Passport</span>
-                </button>
-              ) : (
-                <a
-                  href="/verify"
-                  className="md:hidden flex items-center gap-1 px-2 py-1 text-[10px] xs:text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 rounded-lg sm:rounded-xl cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  <ShieldCheck className="w-3 h-3 text-cyan-400" />
-                  <span>Passport</span>
-                </a>
-              )
-            )
-          )}
+          {/* User Status Pill Matrix & ACCESS GRANTED / PUBLIC ACCESS Indicator Box */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Dynamic Status Pill */}
+            <span
+              className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono tracking-wider whitespace-nowrap flex items-center gap-1 ${statusConfig.pillClassName}`}
+            >
+              {statusConfig.pillLabel}
+            </span>
+
+            {/* Indicator Box (Preserve "ACCESS GRANTED") */}
+            <div
+              title={statusConfig.indicatorLabel}
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] sm:text-[10.5px] rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 ${statusConfig.indicatorClassName}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusConfig.dotColorClassName}`} />
+              <span className="hidden sm:inline tracking-wide font-bold">{statusConfig.indicatorLabel}</span>
+            </div>
+          </div>
         </div>
       </div>
     </header>

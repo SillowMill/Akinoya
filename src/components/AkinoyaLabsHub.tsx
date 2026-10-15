@@ -268,7 +268,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       title: 'Pre-Production & Storyboards',
       subtitle: 'Translating narrative scripts into 2.39:1 anamorphic storyboards',
       vaultFolderMapping: '01 · Storyboards',
-      isAdvancedLocked: false,
+      isAdvancedLocked: true,
       heroImage: stage01Img,
       heroImageAlt: 'Sci-fi cinematic storyboard blueprint under a cosmic teal sky',
       themeDescription: 'Sci-fi cinematic storyboard blueprint under a cosmic teal sky (Gemini/Imagen 3)',
@@ -316,13 +316,11 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         fileFormat: 'PDF Document (Vector + 300 DPI)',
         vaultPath: 'Drive / 01_PreProduction_Storyboards / Bingaa_Comic_Script_Breakdown',
         description: 'Official 18-panel director breakdown with scene annotations, camera focal notes, and timing charts.',
-        downloadUrl: BINGAA_PDF_URL,
-        downloadFileName: BINGAA_PDF_FILENAME,
         specs: [
           { key: 'Framing Ratio', val: '2.39:1 CinemaScope Anamorphic' },
           { key: 'Panel Count', val: '18 Director Plates' },
           { key: 'Format', val: 'Print-Ready Vector PDF + 300 DPI' },
-          { key: 'Access Tier', val: 'Paid Monthly Subscriber / VIP' },
+          { key: 'Access Tier', val: 'Locked · Jan 9, 2027 (Annual Pass)' },
         ],
       },
       technicalSpecs: [
@@ -342,7 +340,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       title: 'Art Direction & Character Locking',
       subtitle: 'Multi-modal conditioning and character turnaround sheets',
       vaultFolderMapping: '02 · Art Direction',
-      isAdvancedLocked: false,
+      isAdvancedLocked: true,
       heroImage: millLockingImg,
       heroImageAlt: 'Character locking hero visual featuring Mill in biological exploration suit (MiLLLL.PNG)',
       themeDescription: 'Master character locking turnaround plate (MiLLLL.PNG)',
@@ -390,7 +388,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
           size: '6.7 MB',
           format: '4K UHD Lossless PNG',
           img: millLockingImg,
-          downloadUrl: '/assets/character_locking/MilLLL.PNG',
+          downloadUrl: '',
           description: 'Master lossless character turnaround and visual anchor plate for Mill with environmental bio-analyst suit and cyan visor.',
         },
         {
@@ -399,7 +397,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
           size: '275 KB',
           format: 'High-Res JPG · 300 DPI',
           img: odiLockingImg,
-          downloadUrl: '/assets/character_locking/Odi.JPG',
+          downloadUrl: '',
           description: 'Armored reconnaissance suit model plate detailing tactical harness, tool holsters, and terrain equipment.',
         },
         {
@@ -408,7 +406,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
           size: '280 KB',
           format: 'High-Res JPG · 300 DPI',
           img: sillowLockingImg,
-          downloadUrl: '/assets/character_locking/Sillow.JPG',
+          downloadUrl: '',
           description: 'Master 4-angle turnaround character sheet for Sillow with cybernetic visor annotations and exploration suit Mark IV specs.',
         },
       ],
@@ -419,8 +417,6 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         fileFormat: 'PNG + JPG Master Set',
         vaultPath: 'Drive / 02 · Art Direction & Character Anchors / Character_Sheets_Sillow_Odi_Mill',
         description: 'Complete 3-character high-resolution reference locking plates: MiLLLL.PNG (Mill), Odi.JPG (Odi), and Sillow.JPG (Sillow).',
-        downloadUrl: '/assets/character_locking/MilLLL.PNG',
-        downloadFileName: 'MilLLL.PNG',
         specs: [
           { key: 'Resolution', val: '4096 x 2160 (4K UHD)' },
           { key: 'Lead Character', val: 'Mill (MiLLLL.PNG)' },
@@ -445,7 +441,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       title: 'Studio Audio Masters & DAW Templates',
       subtitle: 'Uncompressed 24-bit 96kHz audio masters and Ableton Live .als projects',
       vaultFolderMapping: '03 · Audio Masters',
-      isAdvancedLocked: false,
+      isAdvancedLocked: true,
       heroImage: stage05Img,
       heroImageAlt: 'Studio audio master visualizer and Ableton modular synthesis chain',
       themeDescription: 'Studio audio masters & Ableton modular synthesis DAW templates (Sillow Mill Audio)',
@@ -799,6 +795,19 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
             </div>
           </div>
         </motion.div>
+
+        {/* Strict 100% Asset Vault Locking Notice Banner */}
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-950/60 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs font-mono text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="font-bold tracking-wide">
+              🔒 ANNUAL PASS REQUIRED — Downloads unlock for Paid Annual Members on January 9, 2027 (€60/year).
+            </span>
+          </div>
+          <span className="text-[10px] text-amber-400/90 font-bold tracking-wider shrink-0 uppercase">
+            STAGES 01–05 LOCKED PRIOR TO LAUNCH
+          </span>
+        </div>
 
         {/* ======================================================== */}
         {/* MOBILE STICKY STAGE FAST-JUMP BAR (< 768px)              */}
@@ -1453,25 +1462,14 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           </div>
                         </div>
 
-                        {isMember ? (
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadCustomFile(char.downloadUrl, char.fileName)}
-                            className="w-full py-2 px-3 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-                          >
-                            <FolderOpen className="w-3.5 h-3.5" />
-                            <span>VIEW ASSET VAULT →</span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadCustomFile(char.downloadUrl, char.fileName)}
-                            className="w-full py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                          >
-                            <Lock className="w-3 h-3 text-amber-400" />
-                            <span>Locked · Subscribers</span>
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadCustomFile(char.downloadUrl, char.fileName)}
+                          className="w-full py-2 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                        >
+                          <FolderOpen className="w-3.5 h-3.5" />
+                          <span>VIEW ASSET VAULT →</span>
+                        </button>
                       </div>
                     ))}
                   </div>

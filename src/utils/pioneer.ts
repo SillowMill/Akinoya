@@ -67,17 +67,24 @@ export const hasPaidMembership = (
   user?: any,
   profile?: any,
   role?: string,
-  isVip?: boolean
+  _isVip?: boolean
 ): boolean => {
-  if (isVip) return true;
   const normalizedRole = (role || '').toUpperCase();
-  if (['PATRON', 'PRO', 'VIP_GUEST', 'ADMIN', 'ANNUAL_PASS', 'SUBSCRIBER', 'CREATOR'].includes(normalizedRole)) {
+  // VIP_GUEST is strictly confined to VIP Lounge chat and does NOT grant paid membership
+  if (['ANNUAL_PASS', 'SUBSCRIBER', 'CREATOR', 'ADMIN'].includes(normalizedRole)) {
     return true;
   }
   if (profile?.has_paid_membership === true || user?.has_paid_membership === true) {
     return true;
   }
-  if (profile?.membership_status === 'ACTIVE' || profile?.membership_status === 'PAID') {
+  if (profile?.is_annual_member === true || profile?.is_subscriber === true) {
+    return true;
+  }
+  if (
+    profile?.membership_status === 'ACTIVE' ||
+    profile?.membership_status === 'PAID' ||
+    profile?.subscription_status === 'active'
+  ) {
     return true;
   }
   return false;

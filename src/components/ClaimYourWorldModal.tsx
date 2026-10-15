@@ -58,7 +58,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
 }) => {
   const { user, profile, isAuthenticated, openAuthModal, role, isVip } = useAuth();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
-  const isModalOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const isModalOpen = (controlledIsOpen ?? false) || internalIsOpen;
 
   const [countdown, setCountdown] = useState<CountdownTime>(calculateLaunchCountdown);
   const [sectorName, setSectorName] = useState('');
@@ -96,10 +96,9 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
   }, [user]);
 
   const handleClose = () => {
+    setInternalIsOpen(false);
     if (controlledOnClose) {
       controlledOnClose();
-    } else {
-      setInternalIsOpen(false);
     }
     setErrorMessage('');
   };

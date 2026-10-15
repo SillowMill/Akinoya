@@ -222,8 +222,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   );
 
   const userHasAnnual = Boolean(
-    userHasVip ||
-    hasPaidMembership(user, profile, role, isVip) ||
+    hasPaidMembership(user, profile, role) ||
     isAnnualOrCreator
   );
 
@@ -1358,7 +1357,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     className="space-y-6"
                   >
                     <WelcomeVisionPortal
-                      isMember={isVipOrAbove}
+                      isMember={userHasAnnual}
                       onNavigateToWorkflows={() => handleSwitchSection('workflows')}
                       onNavigateToVault={() => handleNavigateToVault('root')}
                       onNavigateToDiscussion={() => handleSwitchSection('discussion')}
@@ -1380,7 +1379,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     className="space-y-6"
                   >
                     <AkinoyaLabsHub
-                      isMember={isVipOrAbove}
+                      isMember={userHasAnnual}
                       onOpenAuthModal={() => openAuthModal('signin')}
                       onNavigateVerify={() => {
                         window.location.href = '/verify';
@@ -1402,7 +1401,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     className="space-y-6"
                   >
                     <DriveFolderVault
-                      isMember={isVipOrAbove}
+                      isMember={userHasAnnual}
                       initialFolderId={targetVaultFolderId}
                       onOpenAuthModal={() => openAuthModal('signin')}
                     />
