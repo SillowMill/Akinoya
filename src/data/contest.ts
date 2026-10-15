@@ -26,17 +26,17 @@ const LOCAL_CONTEST_VOTES_KEY = 'akinoya_contest_votes';
  * Ensures only rich, full-color photorealistic raster renders are permitted.
  * Strictly purges any wireframe sketches, minimalist outlines, or SVG data URIs.
  */
-export const isCleanPhotorealistic = (url?: string): boolean =>
-  Boolean(
-    url &&
-      typeof url === 'string' &&
-      url.length > 20 &&
-      (url.startsWith('data:image/') ||
-        url.startsWith('http://') ||
-        url.startsWith('https://') ||
-        url.startsWith('/assets/') ||
-        url.startsWith('/'))
+export const isCleanPhotorealistic = (url?: string): boolean => {
+  if (!url || typeof url !== 'string' || url.length < 20) return false;
+  if (url.includes('svg') || url.includes('svg+xml')) return false;
+  return (
+    url.startsWith('data:image/') ||
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('/assets/') ||
+    url.startsWith('/')
   );
+};
 
 /**
  * Checks if a render string points to static Ämlemi master renders.
@@ -542,214 +542,9 @@ function toBase64(str: string): string {
   return encodeURIComponent(str);
 }
 
-/**
- * Procedural Photorealistic Sci-Fi Canvas Synthesis Engine.
- * Generates an authentic, high-resolution 16:9 cinematic render unique to every planet and slot.
- * STRICT DIRECTIVE:
- * - Completely purges static image pools and template arrays so no two planets ever share pictures.
- * - Dynamic color palettes, custom stellar coordinates, and bespoke astronomical scene geometry.
- * - ZERO wireframes, ZERO minimalist sketches, ZERO storyboard lines.
- */
-export function generateProceduralUniquePhotorealisticRender(
-  slot: GenerationSlot,
-  data: Partial<WizardAnswers>,
-  planetName: string
-): string {
-  const seedString = `${planetName}_${slot}_${data.colorPalette || ''}_${data.biome || ''}_${data.landmark || ''}`;
-  let hash = 0;
-  for (let i = 0; i < seedString.length; i++) {
-    hash = (hash << 5) - hash + seedString.charCodeAt(i);
-    hash |= 0;
-  }
-  const posHash = Math.abs(hash);
-
-  const paletteWords = (data.colorPalette || '').toLowerCase();
-  let baseHue = posHash % 360;
-  if (paletteWords.includes('gold') || paletteWords.includes('amber') || paletteWords.includes('yellow')) baseHue = 42;
-  else if (paletteWords.includes('cyan') || paletteWords.includes('sky') || paletteWords.includes('blue')) baseHue = 195;
-  else if (paletteWords.includes('violet') || paletteWords.includes('purple')) baseHue = 275;
-  else if (paletteWords.includes('green') || paletteWords.includes('emerald') || paletteWords.includes('forest')) baseHue = 150;
-  else if (paletteWords.includes('red') || paletteWords.includes('crimson') || paletteWords.includes('ruby')) baseHue = 350;
-
-  const colorPrimary = `hsl(${baseHue}, 85%, 55%)`;
-  const colorSecondary = `hsl(${(baseHue + 50) % 360}, 80%, 45%)`;
-  const colorAtmosphere = `hsl(${(baseHue + 25) % 360}, 90%, 65%)`;
-  const colorDark = `hsl(${baseHue}, 40%, 6%)`;
-
-  const starCount = 85;
-  let starsSvg = '';
-  for (let i = 0; i < starCount; i++) {
-    const sx = ((posHash * (i + 1) * 31) % 1920);
-    const sy = ((posHash * (i + 1) * 17) % 1080);
-    const sr = (i % 3 === 0 ? 2 : 1) + (i % 7 === 0 ? 1.5 : 0);
-    const so = (0.3 + ((i % 5) * 0.14)).toFixed(2);
-    starsSvg += `<circle cx="${sx}" cy="${sy}" r="${sr}" fill="#ffffff" opacity="${so}" />`;
-  }
-
-  let sceneVisual = '';
-
-  if (slot === 'hero') {
-    const cx = 960;
-    const cy = 540;
-    const r = 360;
-    sceneVisual = `
-      <radialGradient id="nebulaGlow" cx="60%" cy="40%" r="70%">
-        <stop offset="0%" stop-color="${colorPrimary}" stop-opacity="0.32" />
-        <stop offset="45%" stop-color="${colorSecondary}" stop-opacity="0.18" />
-        <stop offset="100%" stop-color="#000000" stop-opacity="0" />
-      </radialGradient>
-      <circle cx="${cx}" cy="${cy}" r="750" fill="url(#nebulaGlow)" filter="blur(60px)" />
-
-      <radialGradient id="planetLight" cx="35%" cy="30%" r="75%">
-        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
-        <stop offset="15%" stop-color="${colorAtmosphere}" stop-opacity="0.95" />
-        <stop offset="45%" stop-color="${colorPrimary}" />
-        <stop offset="70%" stop-color="${colorSecondary}" />
-        <stop offset="90%" stop-color="${colorDark}" />
-        <stop offset="100%" stop-color="#020307" />
-      </radialGradient>
-
-      <filter id="coronaBlur">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="28" />
-      </filter>
-      <circle cx="${cx}" cy="${cy}" r="${r + 14}" fill="${colorAtmosphere}" opacity="0.45" filter="url(#coronaBlur)" />
-      <circle cx="${cx}" cy="${cy}" r="${r + 4}" fill="${colorPrimary}" opacity="0.3" filter="url(#coronaBlur)" />
-
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#planetLight)" />
-
-      <path d="M ${cx - 240} ${cy - 120} Q ${cx - 60} ${cy - 200} ${cx + 180} ${cy - 140} Q ${cx + 260} ${cy + 60} ${cx + 100} ${cy + 160} Q ${cx - 100} ${cy + 190} ${cx - 240} ${cy - 120} Z" fill="${colorSecondary}" opacity="0.35" filter="blur(8px)" />
-      <path d="M ${cx - 160} ${cy + 40} Q ${cx + 40} ${cy - 40} ${cx + 220} ${cy + 80} Q ${cx + 140} ${cy + 220} ${cx - 40} ${cy + 240} Z" fill="${colorAtmosphere}" opacity="0.25" filter="blur(12px)" />
-
-      <g transform="translate(${cx}, ${cy}) rotate(-26)">
-        <ellipse cx="0" cy="0" rx="680" ry="95" fill="none" stroke="${colorAtmosphere}" stroke-width="18" opacity="0.75" filter="blur(2px)" />
-        <ellipse cx="0" cy="0" rx="720" ry="105" fill="none" stroke="${colorPrimary}" stroke-width="8" opacity="0.6" />
-        <path d="M -720 0 A 720 105 0 0 0 720 0" fill="none" stroke="${colorAtmosphere}" stroke-width="20" opacity="0.85" filter="blur(1px)" />
-      </g>
-    `;
-  } else if (slot === 'flora') {
-    sceneVisual = `
-      <radialGradient id="skyGlow" cx="50%" cy="30%" r="80%">
-        <stop offset="0%" stop-color="${colorAtmosphere}" stop-opacity="0.35" />
-        <stop offset="60%" stop-color="${colorSecondary}" stop-opacity="0.15" />
-        <stop offset="100%" stop-color="#02040a" />
-      </radialGradient>
-      <rect width="1920" height="1080" fill="url(#skyGlow)" />
-
-      <path d="M 0 680 Q 320 540 680 620 T 1340 580 T 1920 660 L 1920 1080 L 0 1080 Z" fill="${colorDark}" opacity="0.7" />
-      <path d="M 0 760 Q 480 640 960 710 T 1920 740 L 1920 1080 L 0 1080 Z" fill="#030611" />
-
-      <g filter="drop-shadow(0 0 25px ${colorAtmosphere})">
-        <path d="M 380 920 C 370 740 460 620 540 520 C 620 620 710 740 700 920 Z" fill="${colorPrimary}" opacity="0.85" />
-        <circle cx="540" cy="480" r="140" fill="${colorAtmosphere}" opacity="0.9" />
-        <ellipse cx="540" cy="460" rx="190" ry="60" fill="${colorSecondary}" opacity="0.7" />
-      </g>
-      <g filter="drop-shadow(0 0 35px ${colorSecondary})">
-        <path d="M 1240 980 C 1230 790 1340 660 1420 560 C 1500 660 1610 790 1600 980 Z" fill="${colorSecondary}" opacity="0.85" />
-        <circle cx="1420" cy="520" r="160" fill="${colorAtmosphere}" opacity="0.85" />
-      </g>
-
-      <circle cx="480" cy="420" r="14" fill="#ffffff" opacity="0.9" filter="blur(2px)" />
-      <circle cx="620" cy="380" r="9" fill="${colorAtmosphere}" opacity="0.8" />
-      <circle cx="880" cy="540" r="12" fill="${colorPrimary}" opacity="0.85" filter="blur(3px)" />
-      <circle cx="1320" cy="460" r="16" fill="#ffffff" opacity="0.9" filter="blur(2px)" />
-      <circle cx="1540" cy="480" r="11" fill="${colorAtmosphere}" opacity="0.8" />
-    `;
-  } else if (slot === 'fauna') {
-    sceneVisual = `
-      <radialGradient id="faunaSky" cx="60%" cy="25%" r="85%">
-        <stop offset="0%" stop-color="${colorPrimary}" stop-opacity="0.3" />
-        <stop offset="50%" stop-color="${colorDark}" />
-        <stop offset="100%" stop-color="#010206" />
-      </radialGradient>
-      <rect width="1920" height="1080" fill="url(#faunaSky)" />
-
-      <path d="M 0 820 L 340 620 L 680 780 L 1140 580 L 1580 740 L 1920 620 L 1920 1080 L 0 1080 Z" fill="#030612" />
-
-      <g transform="translate(860, 420) scale(1.4)" filter="drop-shadow(0 0 25px ${colorAtmosphere})">
-        <ellipse cx="0" cy="0" rx="90" ry="24" fill="#080e1c" />
-        <path d="M -40 -6 Q 60 -160 220 -140 Q 140 -40 20 -8 Z" fill="${colorPrimary}" opacity="0.9" />
-        <path d="M -40 6 Q 60 160 220 140 Q 140 40 20 8 Z" fill="${colorPrimary}" opacity="0.9" />
-        <path d="M 0 0 Q 80 -120 190 -120" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.85" />
-        <path d="M 0 0 Q 80 120 190 120" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.85" />
-        <path d="M -90 0 Q -180 -20 -240 0" stroke="${colorAtmosphere}" stroke-width="4" fill="none" />
-        <circle cx="200" cy="-130" r="6" fill="#ffffff" />
-        <circle cx="200" cy="130" r="6" fill="#ffffff" />
-      </g>
-    `;
-  } else if (slot === 'atmosphere') {
-    sceneVisual = `
-      <linearGradient id="atmoHorizon" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#020308" />
-        <stop offset="40%" stop-color="${colorSecondary}" stop-opacity="0.8" />
-        <stop offset="58%" stop-color="${colorAtmosphere}" />
-        <stop offset="75%" stop-color="${colorPrimary}" />
-        <stop offset="100%" stop-color="#020307" />
-      </linearGradient>
-      <rect width="1920" height="1080" fill="url(#atmoHorizon)" />
-
-      <polygon points="0,0 480,0 360,340 0,440" fill="#080c18" stroke="#1f2937" stroke-width="4" />
-      <polygon points="1920,0 1440,0 1560,340 1920,440" fill="#080c18" stroke="#1f2937" stroke-width="4" />
-      <polygon points="0,1080 520,1080 720,780 0,860" fill="#080c18" stroke="#1f2937" stroke-width="4" />
-      <polygon points="1920,1080 1400,1080 1200,780 1920,860" fill="#080c18" stroke="#1f2937" stroke-width="4" />
-
-      <g stroke="${colorAtmosphere}" stroke-width="1.8" opacity="0.8" fill="none" font-family="monospace">
-        <circle cx="960" cy="540" r="160" stroke-dasharray="8 6" />
-        <line x1="800" y1="540" x2="1120" y2="540" />
-        <line x1="960" y1="380" x2="960" y2="700" />
-        <path d="M 920 480 L 960 460 L 1000 480" stroke-width="2.5" />
-        <text x="760" y="420" fill="${colorAtmosphere}" font-size="14" stroke="none">ALT: 18,420M // DESCENT ACTIVE</text>
-        <text x="760" y="660" fill="${colorAtmosphere}" font-size="14" stroke="none">SECTOR: ${planetName.toUpperCase()} // ATMO LOCKED</text>
-      </g>
-    `;
-  } else {
-    const monumentName = data.landmark || 'The Ancient Obsidian Spire';
-    sceneVisual = `
-      <radialGradient id="monumentSky" cx="50%" cy="20%" r="90%">
-        <stop offset="0%" stop-color="${colorAtmosphere}" stop-opacity="0.4" />
-        <stop offset="50%" stop-color="${colorDark}" />
-        <stop offset="100%" stop-color="#020308" />
-      </radialGradient>
-      <rect width="1920" height="1080" fill="url(#monumentSky)" />
-
-      <polygon points="280,1080 540,780 1380,780 1640,1080" fill="#090d18" stroke="#1e293b" stroke-width="3" />
-      <polygon points="960,180 840,780 1080,780" fill="#04060d" stroke="${colorPrimary}" stroke-width="3" />
-      <polygon points="960,180 920,780 1000,780" fill="${colorDark}" />
-
-      <line x1="960" y1="180" x2="960" y2="0" stroke="#ffffff" stroke-width="12" opacity="0.95" filter="drop-shadow(0 0 35px ${colorAtmosphere})" />
-      <line x1="960" y1="180" x2="960" y2="0" stroke="${colorPrimary}" stroke-width="32" opacity="0.4" filter="blur(16px)" />
-
-      <g text-anchor="middle" font-family="sans-serif">
-        <text x="960" y="860" fill="#ffffff" font-size="28" font-weight="900" letter-spacing="4">${monumentName.toUpperCase()}</text>
-        <text x="960" y="910" fill="${colorAtmosphere}" font-size="16" font-family="monospace" letter-spacing="2">FOUNDING ARCHITECT CREED:</text>
-        <text x="960" y="945" fill="#e2e8f0" font-size="18" font-style="italic" opacity="0.9">"${data.futurePromise || 'Never forget that true beauty lies in curiosity and persistence.'}"</text>
-      </g>
-    `;
-  }
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" style="background:#02040a;">
-    <defs>
-      <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#02040a" />
-        <stop offset="100%" stop-color="#080e1c" />
-      </linearGradient>
-    </defs>
-    <rect width="1920" height="1080" fill="url(#bgGrad)" />
-    <g>${starsSvg}</g>
-    ${sceneVisual}
-    <rect width="1920" height="1080" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
-    <g font-family="monospace" font-size="14" fill="rgba(255,255,255,0.65)" letter-spacing="1.5">
-      <text x="48" y="56" fill="${colorAtmosphere}" font-weight="bold">SILLOW MILL · PLANETARY LORE ARCHIVE</text>
-      <text x="1872" y="56" text-anchor="end">SLOT: ${slot.toUpperCase()} // PHOTOREALISTIC SCI-FI</text>
-      <text x="48" y="1036">WORLD: ${planetName.toUpperCase()} · [${(data.biome || 'TERRAIN').toUpperCase()}]</text>
-      <text x="1872" y="1036" text-anchor="end">COORDINATES: RA 04h 35m / +16° 30' · 2027</text>
-    </g>
-  </svg>`;
-
-  return `data:image/svg+xml;base64,${toBase64(svg)}`;
-}
-
-// Map wizard inputs to 5 rich, photorealistic 4K visual render assets anchored in Mood.png & Äkinoya.jpg
-// STRICT MANDATE: Only canonical Ämlemi uses static amlemi_renders. All other sectors generate unique visuals.
+// Map wizard inputs to 5 rich, photorealistic 4K visual render assets
+// Strictly returns canonical assets for Ämlemi. For custom sectors, renders are synthesized live via Google Nano Banana.
+// ZERO VECTOR / SVG PLACEHOLDERS: Returns empty strings if not yet synthesized.
 export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['renders'] => {
   const isAmlemi = answers.planetName === 'Ämlemi' || answers.planetName?.toLowerCase() === 'ämlemi';
   if (isAmlemi) {
@@ -763,20 +558,13 @@ export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['
     };
   }
 
-  const pName = formatAkinoyaPlanetName(answers.planetName || answers.sectorName, false) || answers.sectorName || 'Frontier';
-  const hero = generateProceduralUniquePhotorealisticRender('hero', answers, pName);
-  const flora = generateProceduralUniquePhotorealisticRender('flora', answers, pName);
-  const fauna = generateProceduralUniquePhotorealisticRender('fauna', answers, pName);
-  const atmosphere = generateProceduralUniquePhotorealisticRender('atmosphere', answers, pName);
-  const landmark = generateProceduralUniquePhotorealisticRender('landmark', answers, pName);
-
   return {
-    hero,
-    flora,
-    fauna,
-    atmosphere,
-    landmark,
-    ecosystem: flora,
+    hero: '',
+    flora: '',
+    fauna: '',
+    atmosphere: '',
+    landmark: '',
+    ecosystem: '',
   };
 };
 

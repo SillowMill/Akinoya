@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, Globe2, Layers, Trees, Compass, ShieldCheck, Cpu, Terminal } from 'lucide-react';
 import { soundManager } from '../utils/audio';
@@ -55,41 +55,13 @@ const TELEMETRY_STAGES: TelemetryStage[] = [
 
 export const AkinoyaSciFiLoader: React.FC<AkinoyaSciFiLoaderProps> = ({
   planetName = 'Äkinoya Frontier Sector',
-  progress: externalProgress,
+  progress = 0,
   stageName: externalStageName,
   stageDetails: externalStageDetails,
   slotIndex: externalSlotIndex,
   totalSlots = 5,
   onComplete,
 }) => {
-  const [internalProgress, setInternalProgress] = useState<number>(0);
-  const isControlled = externalProgress !== undefined;
-  const progress = isControlled ? externalProgress : internalProgress;
-
-  useEffect(() => {
-    if (isControlled) return;
-    soundManager.playTone(550, 0.08);
-
-    const interval = setInterval(() => {
-      setInternalProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          if (onComplete) onComplete();
-          return 100;
-        }
-        const increment = prev < 30 ? 2.5 : prev < 70 ? 1.8 : prev < 90 ? 1.2 : 0.8;
-        const next = Math.min(100, Math.round((prev + increment) * 10) / 10);
-
-        if (Math.floor(next) % 20 === 0 && Math.floor(prev) !== Math.floor(next)) {
-          soundManager.playTone(600 + (next * 2), 0.03);
-        }
-
-        return next;
-      });
-    }, 120);
-
-    return () => clearInterval(interval);
-  }, [isControlled, onComplete]);
 
   // Determine current active telemetry stage
   const defaultStage =

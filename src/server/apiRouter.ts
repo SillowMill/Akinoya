@@ -350,7 +350,7 @@ apiRouter.all(['/generate-planet', '/planet/generate', '/generate-sector-images'
     }
     if (body.slot) {
       const slotResult = await generateSlotRender(body.slot, body);
-      res.status(200).json(slotResult);
+      res.status(slotResult.success ? 200 : 502).json(slotResult);
       return;
     }
     const result = await generatePlanetRenders(body);
