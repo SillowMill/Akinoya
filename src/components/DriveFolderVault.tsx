@@ -51,6 +51,11 @@ import odiCharacterImg from '../assets/images/character_locking/Odi.JPG';
 import sillowCharacterImg from '../assets/images/character_locking/Sillow.JPG';
 
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME } from '../utils/certificate';
+import {
+  SILLOW_MILL_DRIVE_VAULT_URL,
+  SILLOW_MILL_STAGE_DRIVE_URLS,
+  openDriveVault,
+} from '../utils/drive';
 
 export interface DriveFolderVaultProps {
   isMember?: boolean;
@@ -561,7 +566,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     if (!isMember) {
       soundManager.playTone(330, 0.08);
       alert(
-        `🔒 Download Restricted\n\nDirect file downloads from the Sillow Mill Vault require an active Paid Monthly Subscription or VIP Pass.\n\nFile: ${file.name} (${file.size})\nOfficial Public Release: January 9, 2027.`
+        `🔒 Vault Access Restricted\n\nDirect access to master files in the Sillow Mill Vault requires an active Paid Monthly Subscription or VIP Pass.\n\nFile: ${file.name} (${file.size})\nOfficial Public Release: January 9, 2027.`
       );
       if (onOpenAuthModal) onOpenAuthModal();
       return;
@@ -579,16 +584,12 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       // Confetti fallback
     }
 
-    if (file.downloadUrl) {
-      const link = document.createElement('a');
-      link.href = file.downloadUrl;
-      link.download = file.downloadFileName || file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      alert(`[VIP Access Granted] Initiating master file download for: ${file.name}`);
-    }
+    // Redirect to official Google Drive Asset Vault
+    const folderDriveUrl =
+      (currentFolderId.startsWith('stage-')
+        ? SILLOW_MILL_STAGE_DRIVE_URLS[currentFolderId.replace('stage-', '')]
+        : null) || SILLOW_MILL_DRIVE_VAULT_URL;
+    openDriveVault(folderDriveUrl);
   };
 
   const handleToggleAudio = (fileId: string) => {
@@ -652,8 +653,16 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
             </div>
           </div>
 
-          {/* Access Status Pill */}
+          {/* Access Status & Action */}
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => openDriveVault(SILLOW_MILL_DRIVE_VAULT_URL)}
+              className="px-3 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_12px_rgba(0,242,254,0.3)] flex items-center gap-1.5"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>VIEW ASSET VAULT →</span>
+            </button>
             {isMember ? (
               <span className="text-[9.5px] sm:text-[10px] font-mono px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold flex items-center gap-1 shadow-sm whitespace-nowrap">
                 <Crown className="w-3 h-3 text-emerald-400 shrink-0" />
@@ -668,6 +677,12 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               </span>
             )}
           </div>
+        </div>
+
+        {/* Drive Vault Context Note Banner */}
+        <div className="px-4 py-2 bg-cyan-950/30 border-b border-cyan-500/20 flex items-center gap-2 text-[11px] font-mono text-cyan-300/80">
+          <FolderOpen className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+          <span>📁 Master project files, Blender 3D rigs, DAW stems, and PDFs are hosted and organized inside the official Google Drive directory.</span>
         </div>
 
         {/* macOS Toolbar (Search, Breadcrumbs & View Toggle) */}
@@ -964,8 +979,8 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                             </>
                           ) : (
                             <>
-                              <Download className="w-3 h-3" />
-                              <span>Download</span>
+                              <ExternalLink className="w-3 h-3" />
+                              <span>VIEW ASSET VAULT →</span>
                             </>
                           )}
                         </button>
@@ -1057,8 +1072,8 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                     </>
                   ) : (
                     <>
-                      <Download className="w-3.5 h-3.5" />
-                      <span>DOWNLOAD ASSET</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>VIEW ASSET VAULT →</span>
                     </>
                   )}
                 </button>

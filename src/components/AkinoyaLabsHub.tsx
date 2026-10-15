@@ -38,6 +38,11 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
+import {
+  SILLOW_MILL_DRIVE_VAULT_URL,
+  SILLOW_MILL_STAGE_DRIVE_URLS,
+  openDriveVault,
+} from '../utils/drive';
 
 import millAvatar from '../assets/images/mill_photo.jpg';
 import moodboardImg from '../assets/images/Mood.png';
@@ -661,12 +666,12 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     setSelectedStageForModal(stage);
   };
 
-  // Download Handler (Strictly Restricted to Paid Subscribers / VIP Pass Holders)
+  // Asset Vault Action Handler (Redirects to official Google Drive Directory in new tab)
   const handleDownloadAsset = (stage: StageDetail) => {
     if (!isMember) {
       soundManager.playTone(330, 0.08);
       alert(
-        '🔒 Master Asset Downloads Restricted\n\nFull master files, 3D rigs, and prompt vaults are reserved exclusively for active Paid Monthly Subscribers and VIP Pass Holders.\n\nPublic Release Date: January 9, 2027.\nClaim your VIP Invitation or authenticate your Pass to unlock immediate downloads.'
+        '🔒 Master Asset Vault Restricted\n\nFull master files, 3D rigs, and prompt vaults are reserved exclusively for active Paid Monthly Subscribers and VIP Pass Holders.\n\nPublic Release Date: January 9, 2027.\nClaim your VIP Invitation or authenticate your Pass to unlock immediate vault access.'
       );
       if (onOpenAuthModal) onOpenAuthModal();
       return;
@@ -685,23 +690,16 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       // Confetti fallback
     }
 
-    if (stage.masterAsset.downloadUrl) {
-      const link = document.createElement('a');
-      link.href = stage.masterAsset.downloadUrl;
-      link.download = stage.masterAsset.downloadFileName || stage.masterAsset.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      alert(`[VIP Access Granted] Initiating master archive download: ${stage.masterAsset.title}`);
-    }
+    const stageDriveUrl =
+      SILLOW_MILL_STAGE_DRIVE_URLS[stage.stageNumber] || SILLOW_MILL_DRIVE_VAULT_URL;
+    openDriveVault(stageDriveUrl);
   };
 
-  const handleDownloadCustomFile = (url: string, fileName: string) => {
+  const handleDownloadCustomFile = (_url: string, fileName: string) => {
     if (!isMember) {
       soundManager.playTone(330, 0.08);
       alert(
-        `🔒 Character Sheet Download Restricted\n\nDirect file downloads from the Äkinoya Vault require an active Paid Monthly Subscription or VIP Pass.\n\nFile: ${fileName}\nOfficial Public Release: January 9, 2027.`
+        `🔒 Character Sheet Vault Restricted\n\nDirect asset access from the Äkinoya Vault requires an active Paid Monthly Subscription or VIP Pass.\n\nFile: ${fileName}\nOfficial Public Release: January 9, 2027.`
       );
       if (onOpenAuthModal) onOpenAuthModal();
       return;
@@ -719,12 +717,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       // Fallback
     }
 
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const stageDriveUrl = SILLOW_MILL_STAGE_DRIVE_URLS['02'] || SILLOW_MILL_DRIVE_VAULT_URL;
+    openDriveVault(stageDriveUrl);
   };
 
   return (
@@ -798,21 +792,31 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
             </div>
           </div>
 
-          {onNavigateToVault && (
-            <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-3">
-              <span className="text-[11px] font-mono text-white/50">
-                Direct production deliverables available in the Drive Asset Vault.
-              </span>
+          <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <span className="text-[11px] font-mono text-white/60">
+              High-resolution master project files, Blender 3D rigs, DAW stems, and PDFs are hosted and organized inside the official Google Drive directory.
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
-                onClick={onNavigateToVault}
-                className="text-cyan-400 hover:text-white text-xs font-mono font-bold transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
+                onClick={() => openDriveVault(SILLOW_MILL_DRIVE_VAULT_URL)}
+                className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_15px_rgba(0,242,254,0.3)] flex items-center justify-center gap-1.5"
               >
-                <FolderDown className="w-3.5 h-3.5" />
-                <span>Open Drive Vault ➔</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>VIEW ASSET VAULT →</span>
               </button>
+              {onNavigateToVault && (
+                <button
+                  type="button"
+                  onClick={onNavigateToVault}
+                  className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <FolderDown className="w-3.5 h-3.5" />
+                  <span>In-App Vault</span>
+                </button>
+              )}
             </div>
-          )}
+          </div>
         </motion.div>
 
         {/* ======================================================== */}
@@ -1454,8 +1458,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             onClick={() => handleDownloadCustomFile(char.downloadUrl, char.fileName)}
                             className="w-full py-2 px-3 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                           >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>Download {char.fileName}</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>VIEW ASSET VAULT →</span>
                           </button>
                         ) : (
                           <button
@@ -1492,6 +1496,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                       <HardDrive className="w-3 h-3" />
                       <span>{selectedStageForModal.masterAsset.vaultPath}</span>
                     </div>
+                    <div className="text-[10.5px] font-mono text-cyan-300/80 flex items-center gap-1.5 pt-0.5">
+                      <FolderDown className="w-3 h-3 text-cyan-400" />
+                      <span>Master archives, 3D rigs, stems &amp; PDFs are hosted on Google Drive</span>
+                    </div>
                   </div>
 
                   {/* Download Action Button */}
@@ -1502,8 +1510,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         onClick={() => handleDownloadAsset(selectedStageForModal)}
                         className="w-full sm:w-auto px-6 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(0,242,254,0.4)] flex items-center justify-center gap-2"
                       >
-                        <Download className="w-4 h-4" />
-                        <span>DOWNLOAD MASTER ASSET</span>
+                        <ExternalLink className="w-4 h-4" />
+                        <span>VIEW ASSET VAULT →</span>
                       </button>
                     ) : (
                       <button
@@ -1512,7 +1520,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300 font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
                       >
                         <Lock className="w-3.5 h-3.5 text-amber-400" />
-                        <span>DOWNLOAD LOCKED · PAID SUBSCRIBERS</span>
+                        <span>VAULT LOCKED · PAID SUBSCRIBERS</span>
                       </button>
                     )}
                   </div>
