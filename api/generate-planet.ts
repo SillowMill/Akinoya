@@ -17,12 +17,15 @@
 import path from 'path';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import { GoogleGenAI } from '@google/genai';
 
 try {
   dotenv.config();
   dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
   dotenv.config({ path: path.resolve(process.cwd(), '.env.production.local') });
 } catch {}
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export const SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR =
   'Full 3D photorealistic cinematic sci-fi render, high-res 4K, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette (unrestricted colors for planets, flora, and fauna). NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. ' +
@@ -249,40 +252,77 @@ export async function generateGoogleNanoBananaImage(prompt: string): Promise<str
       throw new Error('GEMINI_API_KEY is set to placeholder "[SENSITIVE]". Please replace with a valid Google Gemini API Key.');
     }
 
-    // Attempt 1: @google/genai SDK
+    // Client strictly configured for Developer API (generativelanguage.googleapis.com)
+    const activeAi =
+      googleKey === process.env.GEMINI_API_KEY
+        ? ai
+        : new GoogleGenAI({ apiKey: googleKey });
+
+    // Attempt 1: @google/genai SDK (Vertex AI if configured, or Developer API predict)
     try {
-      const { GoogleGenAI } = await import('@google/genai');
-      const ai = new GoogleGenAI({ apiKey: googleKey });
-      const response = await ai.models.generateImages({
-        model: 'imagen-3.0-generate-002',
-        prompt,
-        config: {
-          numberOfImages: 1,
-          aspectRatio: '16:9',
-          outputMimeType: 'image/jpeg',
-        },
-      });
-      const b64 = response?.generatedImages?.[0]?.image?.imageBytes;
-      if (b64) {
-        return `data:image/jpeg;base64,${b64}`;
+      if (activeAi.vertexai) {
+        const response = await activeAi.models.generateImages({
+          model: 'imagen-3.0-generate-002',
+          prompt,
+          config: {
+            numberOfImages: 1,
+            aspectRatio: '16:9',
+            outputMimeType: 'image/jpeg',
+          },
+        });
+        const b64 = response?.generatedImages?.[0]?.image?.imageBytes;
+        if (b64) {
+          return `data:image/jpeg;base64,${b64}`;
+        }
+      } else {
+        // Gemini Developer API predict call via client
+        const sdkRes = await (activeAi as any).apiClient.request({
+          path: 'models/imagen-3.0-generate-002:predict',
+          httpMethod: 'POST',
+          body: JSON.stringify({
+            instances: [{ prompt }],
+            parameters: {
+              sampleCount: 1,
+              aspectRatio: '16:9',
+              outputOptions: { mimeType: 'image/jpeg' },
+            },
+          }),
+        });
+        const data: any = await sdkRes.json();
+        const bytes = data?.predictions?.[0]?.bytesBase64Encoded;
+        if (bytes) {
+          return `data:image/jpeg;base64,${bytes}`;
+        }
       }
     } catch (sdkErr: any) {
       const msg = sdkErr?.message || String(sdkErr);
-      console.warn('[Google Nano Banana SDK] generateImages error:', msg);
-      errorMessages.push(`SDK: ${msg}`);
+      if (!msg.includes('Gemini Enterprise Agent Platform') && !msg.includes('Vertex AI')) {
+        let cleanMsg = msg;
+        try {
+          const parsed = JSON.parse(msg);
+          if (parsed?.error?.message) {
+            cleanMsg = `Google API (${parsed.error?.code || 'Error'}): ${parsed.error.message}`;
+          }
+        } catch {}
+        console.warn('[Google Nano Banana SDK] generate error:', cleanMsg);
+        errorMessages.push(`SDK: ${cleanMsg}`);
+      }
     }
 
     // Attempt 2: Direct Google Generative Language REST endpoints
     const googleEndpoints = [
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${googleKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${googleKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict`,
     ];
 
     for (const endpoint of googleEndpoints) {
       try {
-        const res = await fetch(endpoint, {
+        const res = await fetch(`${endpoint}?key=${googleKey}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': googleKey,
+          },
           body: JSON.stringify({
             instances: [{ prompt }],
             parameters: {
