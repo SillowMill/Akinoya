@@ -101,14 +101,16 @@ async function runDryRunTest() {
     const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
     const isAbove500Kb = stats.size > 500 * 1024;
 
-    // Check PNG magic bytes: 0x89 0x50 0x4E 0x47
+    // Check magic bytes for PNG (0x89 0x50 0x4E 0x47) or JPEG (0xFF 0xD8 0xFF)
     const buf = fs.readFileSync(targetPath);
     const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+    const isJpg = buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+    const isValidImage = isAbove500Kb && (isPng || isJpg);
 
-    if (isAbove500Kb && isPng) {
-      console.log(`    ✓ ${item.file} [${item.title}]: ${sizeMb} MB (${sizeKb} KB) — Valid High-Res Binary PNG`);
+    if (isValidImage) {
+      console.log(`    ✓ ${item.file} [${item.title}]: ${sizeMb} MB (${sizeKb} KB) — Valid High-Res Binary ${isPng ? 'PNG' : 'JPEG'}`);
     } else {
-      console.error(`    ❌ ${item.file}: Failed verification check! Size: ${sizeKb} KB, isPng: ${isPng}`);
+      console.error(`    ❌ ${item.file}: Failed verification check! Size: ${sizeKb} KB, isPng: ${isPng}, isJpg: ${isJpg}`);
       allValid = false;
     }
   }

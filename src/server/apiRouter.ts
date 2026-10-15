@@ -21,7 +21,6 @@ import {
   generateSlotRender,
   checkAndLockUserGeneration,
   resetGenerationLocks,
-  generateGuaranteedSlotFallback,
   normalizeSlot,
   SLOT_METADATA,
 } from '../../api/generate-planet';
@@ -360,7 +359,7 @@ apiRouter.all(['/generate-planet', '/planet/generate', '/generate-sector-images'
     }
     if (body.slot) {
       const slotResult = await generateSlotRender(body.slot, body);
-      res.status(200).json(slotResult);
+      res.status(slotResult.success ? 200 : 500).json(slotResult);
       return;
     }
     const result = await generatePlanetRenders(body);
@@ -372,15 +371,14 @@ apiRouter.all(['/generate-planet', '/planet/generate', '/generate-sector-images'
     console.error('[API] generate-planet error:', err);
     if (req.body?.slot) {
       const normSlot = normalizeSlot(req.body.slot);
-      const safeFallback = generateGuaranteedSlotFallback(normSlot, req.body.planetName || req.body.sectorName, '', req.body.colorPalette);
-      res.status(200).json({
-        success: true,
+      res.status(500).json({
+        success: false,
         slot: normSlot,
         slotIndex: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).index,
         slotLabel: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).label,
         planetName: req.body.planetName || req.body.sectorName || 'Äkinoya Frontier',
-        imageUrl: safeFallback,
-        model: 'Google Nano Banana Pro (4K Guaranteed Fallback)',
+        error: err?.message || 'Failed to synthesize slot render via Google Imagen 3',
+        model: 'Google Imagen 3 (Error)',
       });
       return;
     }
