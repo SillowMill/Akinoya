@@ -1,22 +1,29 @@
 /**
- * Official Sillow Mill Google Drive Asset Vault Configuration & Helpers
- * All master deliverables, project files, DAW stems, and Blender rigs redirect to Google Drive.
+ * Internal Sillow Mill Production Asset Vault Configuration & Mappings
+ * Maps workflow stages (01-05) to internal folder modules in the Drive Asset Vault.
  */
 
-export const SILLOW_MILL_DRIVE_VAULT_URL =
-  (import.meta as any).env?.VITE_GOOGLE_DRIVE_VAULT_URL ||
-  'https://drive.google.com/drive/folders/1sillowmill-akinoya-production-vault';
-
-export const SILLOW_MILL_STAGE_DRIVE_URLS: Record<string, string> = {
-  '01': `${SILLOW_MILL_DRIVE_VAULT_URL}#01_Storyboards`,
-  '02': `${SILLOW_MILL_DRIVE_VAULT_URL}#02_ArtDirection`,
-  '03': `${SILLOW_MILL_DRIVE_VAULT_URL}#03_AudioMasters`,
-  '04': `${SILLOW_MILL_DRIVE_VAULT_URL}#04_Blender3DRigs`,
-  '05': `${SILLOW_MILL_DRIVE_VAULT_URL}#05_PromptBibles`,
+export const VAULT_STAGE_FOLDER_IDS: Record<string, string> = {
+  '01': 'folder-01',
+  '02': 'folder-02',
+  '03': 'folder-03',
+  '04': 'folder-04',
+  '05': 'folder-05',
 };
 
-export const openDriveVault = (url: string = SILLOW_MILL_DRIVE_VAULT_URL): void => {
-  if (typeof window !== 'undefined') {
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
+export const VAULT_STAGE_NAMES: Record<string, string> = {
+  '01': '01 Storyboards',
+  '02': '02 Art Direction',
+  '03': '03 Audio Masters',
+  '04': '04 Blender 3D',
+  '05': '05 Prompt Engineering',
+};
+
+/**
+ * Returns the matching internal folder ID for any stage key or label.
+ */
+export const getVaultFolderIdForStage = (stageNumOrKey: string | number): string => {
+  const normalized = String(stageNumOrKey).trim().replace(/^stage-?/i, '');
+  const padded = normalized.padStart(2, '0');
+  return VAULT_STAGE_FOLDER_IDS[padded] || 'folder-01';
 };

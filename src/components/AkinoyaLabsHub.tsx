@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   RefreshCw,
   FolderDown,
+  FolderOpen,
   Volume2,
   Clock,
   Compass,
@@ -39,9 +40,9 @@ import {
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
 import {
-  SILLOW_MILL_DRIVE_VAULT_URL,
-  SILLOW_MILL_STAGE_DRIVE_URLS,
-  openDriveVault,
+  VAULT_STAGE_FOLDER_IDS,
+  VAULT_STAGE_NAMES,
+  getVaultFolderIdForStage,
 } from '../utils/drive';
 
 import millAvatar from '../assets/images/mill_photo.jpg';
@@ -71,7 +72,7 @@ export interface AkinoyaLabsHubProps {
   isMember?: boolean; // active paid monthly subscriber or VIP pass holder
   onOpenAuthModal?: () => void;
   onNavigateVerify?: () => void;
-  onNavigateToVault?: () => void;
+  onNavigateToVault?: (folderId?: string) => void;
 }
 
 interface StageDetail {
@@ -666,18 +667,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     setSelectedStageForModal(stage);
   };
 
-  // Asset Vault Action Handler (Redirects to official Google Drive Directory in new tab)
+  // Asset Vault Action Handler (Navigates internally to Drive Asset Vault)
   const handleDownloadAsset = (stage: StageDetail) => {
-    if (!isMember) {
-      soundManager.playTone(330, 0.08);
-      alert(
-        '🔒 Master Asset Vault Restricted\n\nFull master files, 3D rigs, and prompt vaults are reserved exclusively for active Paid Monthly Subscribers and VIP Pass Holders.\n\nPublic Release Date: January 9, 2027.\nClaim your VIP Invitation or authenticate your Pass to unlock immediate vault access.'
-      );
-      if (onOpenAuthModal) onOpenAuthModal();
-      return;
-    }
-
-    // Member is authenticated & paid
     soundManager.playTone(720, 0.09);
     try {
       confetti({
@@ -690,21 +681,16 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       // Confetti fallback
     }
 
-    const stageDriveUrl =
-      SILLOW_MILL_STAGE_DRIVE_URLS[stage.stageNumber] || SILLOW_MILL_DRIVE_VAULT_URL;
-    openDriveVault(stageDriveUrl);
+    // Close deep-dive modal to smoothly transition to vault
+    setSelectedStageForModal(null);
+
+    const folderId = VAULT_STAGE_FOLDER_IDS[stage.stageNumber] || 'folder-01';
+    if (onNavigateToVault) {
+      onNavigateToVault(folderId);
+    }
   };
 
-  const handleDownloadCustomFile = (_url: string, fileName: string) => {
-    if (!isMember) {
-      soundManager.playTone(330, 0.08);
-      alert(
-        `🔒 Character Sheet Vault Restricted\n\nDirect asset access from the Äkinoya Vault requires an active Paid Monthly Subscription or VIP Pass.\n\nFile: ${fileName}\nOfficial Public Release: January 9, 2027.`
-      );
-      if (onOpenAuthModal) onOpenAuthModal();
-      return;
-    }
-
+  const handleDownloadCustomFile = (_url: string, _fileName: string) => {
     soundManager.playTone(720, 0.09);
     try {
       confetti({
@@ -717,8 +703,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       // Fallback
     }
 
-    const stageDriveUrl = SILLOW_MILL_STAGE_DRIVE_URLS['02'] || SILLOW_MILL_DRIVE_VAULT_URL;
-    openDriveVault(stageDriveUrl);
+    setSelectedStageForModal(null);
+    if (onNavigateToVault) {
+      onNavigateToVault('folder-02');
+    }
   };
 
   return (
@@ -794,27 +782,20 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
           <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-[11px] font-mono text-white/60">
-              High-resolution master project files, Blender 3D rigs, DAW stems, and PDFs are hosted and organized inside the official Google Drive directory.
+              Master project files, Blender 3D rigs, DAW stems, and PDFs are organized inside the Sillow Mill Production Vault.
             </span>
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
-                onClick={() => openDriveVault(SILLOW_MILL_DRIVE_VAULT_URL)}
+                onClick={() => {
+                  soundManager.playTone(580, 0.05);
+                  if (onNavigateToVault) onNavigateToVault('folder-01');
+                }}
                 className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_15px_rgba(0,242,254,0.3)] flex items-center justify-center gap-1.5"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <FolderOpen className="w-3.5 h-3.5" />
                 <span>VIEW ASSET VAULT →</span>
               </button>
-              {onNavigateToVault && (
-                <button
-                  type="button"
-                  onClick={onNavigateToVault}
-                  className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <FolderDown className="w-3.5 h-3.5" />
-                  <span>In-App Vault</span>
-                </button>
-              )}
             </div>
           </div>
         </motion.div>
@@ -1027,12 +1008,22 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             {stage.subtitle}
                           </p>
 
-                          <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs font-mono">
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              soundManager.playTone(720, 0.08);
+                              const folderId = VAULT_STAGE_FOLDER_IDS[stage.stageNumber] || 'folder-01';
+                              if (onNavigateToVault) onNavigateToVault(folderId);
+                            }}
+                            className="pt-2 border-t border-white/10 flex items-center justify-between text-xs font-mono cursor-pointer hover:text-cyan-300 transition-colors"
+                          >
                             <span className="text-cyan-300 font-semibold flex items-center gap-1.5 truncate mr-2">
                               <Sparkles className="w-3.5 h-3.5 shrink-0" />
                               📁 Vault Folder: {stage.vaultFolderMapping}
                             </span>
-                            <span className="text-white/50 underline shrink-0">Open Portal →</span>
+                            <span className="text-white/70 hover:text-cyan-400 underline shrink-0 font-bold">
+                              VIEW ASSET VAULT →
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -1076,28 +1067,38 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           </p>
                         </div>
 
-                        {/* Portal Launch Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenStageModal(stage)}
-                          className={`w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                            isStageLocked
-                              ? 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300'
-                              : 'bg-cyan-400/10 hover:bg-cyan-400/20 border border-cyan-400/40 text-cyan-300 hover:shadow-[0_0_15px_rgba(0,242,254,0.2)]'
-                          }`}
-                        >
-                          {isStageLocked ? (
-                            <>
-                              <Lock className="w-3.5 h-3.5" />
-                              <span>Unlock with Paid Subscription</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>Inspect Stage &amp; Master Asset</span>
-                              <ChevronRight className="w-3.5 h-3.5" />
-                            </>
-                          )}
-                        </button>
+                        {/* Milestone Card Action Buttons */}
+                        <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              soundManager.playTone(720, 0.08);
+                              const folderId = VAULT_STAGE_FOLDER_IDS[stage.stageNumber] || 'folder-01';
+                              if (onNavigateToVault) onNavigateToVault(folderId);
+                            }}
+                            className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(0,242,254,0.3)]"
+                          >
+                            <FolderOpen className="w-3.5 h-3.5" />
+                            <span>VIEW ASSET VAULT →</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenStageModal(stage)}
+                            className="w-full sm:w-auto py-2.5 px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            {isStageLocked ? (
+                              <>
+                                <Lock className="w-3.5 h-3.5 text-amber-400" />
+                                <span>Inspect Stage</span>
+                              </>
+                            ) : (
+                              <>
+                                <span>Inspect Stage</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1458,7 +1459,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             onClick={() => handleDownloadCustomFile(char.downloadUrl, char.fileName)}
                             className="w-full py-2 px-3 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
+                            <FolderOpen className="w-3.5 h-3.5" />
                             <span>VIEW ASSET VAULT →</span>
                           </button>
                         ) : (
@@ -1498,7 +1499,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     </div>
                     <div className="text-[10.5px] font-mono text-cyan-300/80 flex items-center gap-1.5 pt-0.5">
                       <FolderDown className="w-3 h-3 text-cyan-400" />
-                      <span>Master archives, 3D rigs, stems &amp; PDFs are hosted on Google Drive</span>
+                      <span>Master archives, 3D rigs, stems &amp; PDFs are organized inside the Sillow Mill Production Vault</span>
                     </div>
                   </div>
 
@@ -1510,7 +1511,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         onClick={() => handleDownloadAsset(selectedStageForModal)}
                         className="w-full sm:w-auto px-6 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(0,242,254,0.4)] flex items-center justify-center gap-2"
                       >
-                        <ExternalLink className="w-4 h-4" />
+                        <FolderOpen className="w-4 h-4" />
                         <span>VIEW ASSET VAULT →</span>
                       </button>
                     ) : (

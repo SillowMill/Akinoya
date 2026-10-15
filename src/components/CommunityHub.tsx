@@ -58,12 +58,12 @@ import { DriveFolderVault } from './DriveFolderVault';
 import { WelcomeVisionPortal } from './WelcomeVisionPortal';
 import { getStoredCreators } from '../data/creators';
 import { openClaimWorldModal, isPostLaunch, openMembershipGateModal, hasPaidMembership } from '../utils/pioneer';
-import { SILLOW_MILL_DRIVE_VAULT_URL, openDriveVault } from '../utils/drive';
+import { VAULT_STAGE_FOLDER_IDS, VAULT_STAGE_NAMES, getVaultFolderIdForStage } from '../utils/drive';
 
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
 export const isMembershipLaunchLocked = !isPostLaunch();
 
-export type CreativeHubSection = 'welcome' | 'workflows' | 'downloads' | 'discussion' | 'creators' | 'governance';
+export type CreativeHubSection = 'welcome' | 'workflows' | 'downloads' | 'drive-vault' | 'discussion' | 'creators' | 'governance';
 
 interface AssetVaultItem {
   id: string;
@@ -232,6 +232,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   // Active Hub Section (00 · Welcome & Vision Portal as primary landing page)
   const [activeSection, setActiveSection] = useState<CreativeHubSection>('welcome');
   const [activeStageId, setActiveStageId] = useState<number>(1);
+  const [targetVaultFolderId, setTargetVaultFolderId] = useState<string>('root');
 
   // Workflow Pipeline Stages for Left Sidebar Sub-Menu
   const WORKFLOW_STAGES = [
@@ -243,13 +244,42 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   ];
 
   const handleSwitchSection = (section: CreativeHubSection) => {
-    setActiveSection(section);
+    const normalized = section === 'drive-vault' ? 'downloads' : section;
+    setActiveSection(normalized);
     soundManager.playTone(580, 0.05);
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  const handleNavigateToVault = (folderId: string = 'root') => {
+    setTargetVaultFolderId(folderId);
+    setActiveSection('downloads');
+    soundManager.playTone(580, 0.05);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // URL query parameter & hash detection (e.g. ?tab=drive-vault or ?folder=folder-01)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab') || urlParams.get('section');
+      const folderParam = urlParams.get('folder');
+      if (tabParam === 'drive-vault' || tabParam === 'downloads') {
+        setActiveSection('downloads');
+        if (folderParam) {
+          setTargetVaultFolderId(folderParam);
+        }
+      }
+      if (window.location.hash === '#drive-vault' || window.location.hash === '#downloads') {
+        setActiveSection('downloads');
+      }
+    }
+  }, []);
 
   // Instant top-scroll on tab switch or section reset
   useEffect(() => {
@@ -656,7 +686,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     }
   };
 
-  // Asset Vault Action Handler (Redirects to official Google Drive Vault in new tab)
+  // Asset Vault Action Handler (Navigates internally to Drive Asset Vault)
   const handleDownloadAsset = (_asset: AssetVaultItem, _index: number) => {
     if (!isAnnualOrCreator) {
       soundManager.playTone(330, 0.08);
@@ -668,7 +698,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     }
 
     soundManager.playUnlockChime();
-    openDriveVault(SILLOW_MILL_DRIVE_VAULT_URL);
+    handleNavigateToVault('root');
   };
 
   // Toggle Audio Play in Vault
@@ -1330,7 +1360,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     <WelcomeVisionPortal
                       isMember={isVipOrAbove}
                       onNavigateToWorkflows={() => handleSwitchSection('workflows')}
-                      onNavigateToVault={() => handleSwitchSection('downloads')}
+                      onNavigateToVault={() => handleNavigateToVault('root')}
                       onNavigateToDiscussion={() => handleSwitchSection('discussion')}
                       onNavigateToLeaderboard={() => handleSwitchSection('creators')}
                       onOpenAuthModal={() => openAuthModal('signin')}
@@ -1355,7 +1385,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       onNavigateVerify={() => {
                         window.location.href = '/verify';
                       }}
-                      onNavigateToVault={() => handleSwitchSection('downloads')}
+                      onNavigateToVault={handleNavigateToVault}
                     />
                   </motion.div>
                 )}
@@ -1373,6 +1403,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   >
                     <DriveFolderVault
                       isMember={isVipOrAbove}
+                      initialFolderId={targetVaultFolderId}
                       onOpenAuthModal={() => openAuthModal('signin')}
                     />
                   </motion.div>
