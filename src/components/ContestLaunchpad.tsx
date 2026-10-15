@@ -44,6 +44,7 @@ import {
   togglePlanetSubmissionVote,
   subscribeToPlanetSubmissions,
   isCleanPhotorealistic,
+  isForbiddenSubmission,
 } from '../data/contest';
 import { attachContestSubmissionToCreator } from '../data/creators';
 import { isPostLaunch, hasPaidMembership, openMembershipGateModal, openClaimWorldModal } from '../utils/pioneer';
@@ -188,24 +189,25 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
   // Load submissions, check user's ticket status, and subscribe to realtime updates
   useEffect(() => {
-    const list = getStoredPlanetSubmissions();
+    const list = getStoredPlanetSubmissions().filter((s) => !isForbiddenSubmission(s));
     setAllSubmissions(list);
 
     if (isAuthenticated && (user?.id || profile?.id || user?.email)) {
       const userSub = getUserContestSubmission(user?.id || profile?.id, user?.email);
-      if (userSub) {
+      if (userSub && !isForbiddenSubmission(userSub)) {
         setActiveSubmission(userSub);
       } else if (profile?.contest_submission_id) {
-        const found = list.find((s) => s.id === profile.contest_submission_id);
+        const found = list.find((s) => s.id === profile.contest_submission_id && !isForbiddenSubmission(s));
         if (found) setActiveSubmission(found);
       }
     }
 
     const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
-      setAllSubmissions(fresh);
+      const valid = fresh.filter((s) => !isForbiddenSubmission(s));
+      setAllSubmissions(valid);
       if (isAuthenticated && (user?.id || profile?.id || user?.email)) {
         const userSub = getUserContestSubmission(user?.id || profile?.id, user?.email);
-        if (userSub) setActiveSubmission(userSub);
+        if (userSub && !isForbiddenSubmission(userSub)) setActiveSubmission(userSub);
       }
     });
 

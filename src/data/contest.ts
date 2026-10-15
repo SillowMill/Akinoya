@@ -167,7 +167,29 @@ export const MOCK_PLANET_IDS = new Set([
   'planet-arbitron-genesis-01',
   'planet-lucina-genesis-02',
   'planet-elysia-genesis-03',
+  'planet-felix-genesis',
+  'felix',
+  'planet-felix',
 ]);
+
+/**
+ * Filter against test submissions, mock worlds, or removed entries (e.g. Felix by Kaat Jansen).
+ * Enforces that only canonical benchmark sectors like Ämlemi and valid participant worlds appear.
+ */
+export const isForbiddenSubmission = (sub: any): boolean => {
+  if (!sub) return true;
+  const id = String(sub.id || '').trim();
+  const name = String(sub.planetName || sub.planet_name || '').toLowerCase().trim();
+  const author = String(sub.authorName || sub.author_name || '').toLowerCase().trim();
+  const email = String(sub.authorEmail || sub.author_email || '').toLowerCase().trim();
+
+  if (MOCK_PLANET_IDS.has(id)) return true;
+  if (name === 'arbitron' || name === 'lucina' || name === 'elysia' || name === 'felix') return true;
+  if (author.includes('kaat') || author.includes('jansen')) return true;
+  if (email.includes('kaat.jansen') || email.includes('hannah.jansen')) return true;
+  if (id.toLowerCase().includes('felix') || id.toLowerCase().includes('kaat')) return true;
+  return false;
+};
 
 /**
  * Single Canonical Community Benchmark Planet:
@@ -236,15 +258,7 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
       const parsed: PlanetSubmission[] = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
         const cleaned: PlanetSubmission[] = parsed
-          .filter(
-            (p) =>
-              p &&
-              p.id &&
-              !MOCK_PLANET_IDS.has(p.id) &&
-              p.planetName !== 'Arbitron' &&
-              p.planetName !== 'Lucina' &&
-              p.planetName !== 'Elysia'
-          )
+          .filter((p) => p && p.id && !isForbiddenSubmission(p))
           .map((sub): PlanetSubmission => {
             const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
             const userVoted = hasUserVotedOnSubmission(sub.id);
@@ -289,6 +303,12 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
           cleaned.unshift(INITIAL_SUBMISSIONS[0]);
         }
 
+        if (cleaned.length !== parsed.length) {
+          try {
+            localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(cleaned));
+          } catch {}
+        }
+
         if (cleaned.length > 0) return cleaned;
       }
     }
@@ -314,15 +334,7 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
 
       if (!error && Array.isArray(data) && data.length > 0) {
         const live: PlanetSubmission[] = data
-          .filter((d: any) => {
-            const name = (d.planet_name || '').toLowerCase();
-            return (
-              name !== 'arbitron' &&
-              name !== 'lucina' &&
-              name !== 'elysia' &&
-              !MOCK_PLANET_IDS.has(d.id)
-            );
-          })
+          .filter((d: any) => d && !isForbiddenSubmission(d))
           .map((d: any) => {
             const isAmlemi = d.id === 'planet-amlemi-genesis-01' || d.planet_name === 'Ämlemi';
             const userVoted = hasUserVotedOnSubmission(d.id);
@@ -405,8 +417,9 @@ export const getUserContestSubmission = (userId?: string, email?: string): Plane
   const submissions = getStoredPlanetSubmissions();
   const match = submissions.find(
     (s) =>
-      (userId && s.userId === userId) ||
-      (email && s.authorEmail && s.authorEmail.toLowerCase() === email.toLowerCase())
+      !isForbiddenSubmission(s) &&
+      ((userId && s.userId === userId) ||
+        (email && s.authorEmail && s.authorEmail.toLowerCase() === email.toLowerCase()))
   );
   return match || null;
 };
@@ -425,6 +438,7 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
       }
       const { data, error } = await query.maybeSingle();
       if (!error && data) {
+        if (isForbiddenSubmission(data)) return null;
         const isAmlemi = data.id === 'planet-amlemi-genesis-01' || data.planet_name === 'Ämlemi';
         const userVoted = hasUserVotedOnSubmission(data.id);
         let votesCount = Math.max(1, data.votes_count || 1);

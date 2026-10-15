@@ -17,6 +17,7 @@ import {
   fetchPlanetSubmissions,
   togglePlanetSubmissionVote,
   subscribeToPlanetSubmissions,
+  isForbiddenSubmission,
 } from '../data/contest';
 import { PlanetDossierModal } from './PlanetDossierModal';
 
@@ -38,17 +39,19 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
 
   useEffect(() => {
     // Initial load from local store
-    const initial = getStoredPlanetSubmissions();
+    const initial = getStoredPlanetSubmissions().filter((s) => !isForbiddenSubmission(s));
     setContestSubmissions([...initial].sort((a, b) => b.votesCount - a.votesCount));
 
     // Live cloud load from Supabase user_dossiers
     fetchPlanetSubmissions().then((fresh) => {
-      setContestSubmissions([...fresh].sort((a, b) => b.votesCount - a.votesCount));
+      const valid = fresh.filter((s) => !isForbiddenSubmission(s));
+      setContestSubmissions([...valid].sort((a, b) => b.votesCount - a.votesCount));
     });
 
     // Supabase Realtime Subscription
     const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
-      setContestSubmissions([...fresh].sort((a, b) => b.votesCount - a.votesCount));
+      const valid = fresh.filter((s) => !isForbiddenSubmission(s));
+      setContestSubmissions([...valid].sort((a, b) => b.votesCount - a.votesCount));
     });
 
     return () => unsubscribe();

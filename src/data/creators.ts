@@ -234,7 +234,23 @@ export const getStoredCreators = (): CreatorProfile[] => {
       return INITIAL_CREATORS;
     }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const filtered = parsed.filter(
+        (c: CreatorProfile) =>
+          c &&
+          c.username?.toLowerCase() !== 'kaat' &&
+          c.username?.toLowerCase() !== 'kaat-jansen' &&
+          c.username?.toLowerCase() !== 'felix' &&
+          !c.fullName?.toLowerCase().includes('kaat') &&
+          !c.fullName?.toLowerCase().includes('jansen')
+      );
+      if (filtered.length !== parsed.length) {
+        try {
+          localStorage.setItem(LOCAL_CREATORS_KEY, JSON.stringify(filtered));
+        } catch {}
+      }
+      return filtered;
+    }
   } catch (err) {
     console.warn('[Creators] Error reading cached creators:', err);
   }
@@ -377,6 +393,16 @@ export const attachContestSubmissionToCreator = (
 ): void => {
   try {
     const clean = (username || 'user').trim().toLowerCase().replace(/^@/, '');
+    if (
+      clean === 'kaat' ||
+      clean === 'kaat-jansen' ||
+      clean === 'felix' ||
+      fullName.toLowerCase().includes('kaat') ||
+      fullName.toLowerCase().includes('jansen') ||
+      submission.planetName?.toLowerCase() === 'felix'
+    ) {
+      return;
+    }
     const creators = getStoredCreators();
     const existingIndex = creators.findIndex((c) => c.username.toLowerCase() === clean);
 
