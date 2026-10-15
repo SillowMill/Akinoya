@@ -261,37 +261,62 @@ export async function generateGoogleNanoBananaImage(prompt: string): Promise<str
     // Attempt 1: @google/genai SDK (Vertex AI if configured, or Developer API predict)
     try {
       if (activeAi.vertexai) {
-        const response = await activeAi.models.generateImages({
-          model: 'imagen-3.0-generate-002',
-          prompt,
-          config: {
-            numberOfImages: 1,
-            aspectRatio: '16:9',
-            outputMimeType: 'image/jpeg',
-          },
-        });
-        const b64 = response?.generatedImages?.[0]?.image?.imageBytes;
-        if (b64) {
-          return `data:image/jpeg;base64,${b64}`;
+        for (const model of ['imagen-3.0-generate-001', 'imagen-3.0-generate-002']) {
+          try {
+            const response = await activeAi.models.generateImages({
+              model,
+              prompt,
+              config: {
+                numberOfImages: 1,
+                aspectRatio: '16:9',
+                outputMimeType: 'image/jpeg',
+              },
+            });
+            const b64 = response?.generatedImages?.[0]?.image?.imageBytes;
+            if (b64) {
+              return `data:image/jpeg;base64,${b64}`;
+            }
+          } catch (modelErr: any) {
+            console.warn(`[Google Nano Banana SDK] generateImages notice (${model}):`, modelErr?.message || modelErr);
+          }
         }
       } else {
-        // Gemini Developer API predict call via client
-        const sdkRes = await (activeAi as any).apiClient.request({
-          path: 'models/imagen-3.0-generate-002:predict',
-          httpMethod: 'POST',
-          body: JSON.stringify({
-            instances: [{ prompt }],
-            parameters: {
-              sampleCount: 1,
-              aspectRatio: '16:9',
-              outputOptions: { mimeType: 'image/jpeg' },
-            },
-          }),
-        });
-        const data: any = await sdkRes.json();
-        const bytes = data?.predictions?.[0]?.bytesBase64Encoded;
-        if (bytes) {
-          return `data:image/jpeg;base64,${bytes}`;
+        // Gemini Developer API predict call via client (primary: imagen-3.0-generate-001)
+        for (const model of ['imagen-3.0-generate-001', 'imagen-3.0-generate-002']) {
+          try {
+            const sdkRes = await (activeAi as any).apiClient.request({
+              path: `models/${model}:predict`,
+              httpMethod: 'POST',
+              body: JSON.stringify({
+                instances: [{ prompt }],
+                parameters: {
+                  sampleCount: 1,
+                  aspectRatio: '16:9',
+                  outputOptions: { mimeType: 'image/jpeg' },
+                },
+              }),
+            });
+            const data: any = await sdkRes.json();
+            const bytes = data?.predictions?.[0]?.bytesBase64Encoded;
+            if (bytes) {
+              return `data:image/jpeg;base64,${bytes}`;
+            }
+          } catch (modelErr: any) {
+            const msg = modelErr?.message || String(modelErr);
+            if (!msg.includes('Gemini Enterprise Agent Platform') && !msg.includes('Vertex AI')) {
+              let cleanMsg = msg;
+              try {
+                const parsed = JSON.parse(msg);
+                if (parsed?.error?.message) {
+                  cleanMsg = `Google API (${parsed.error?.code || 'Error'}): ${parsed.error.message}`;
+                }
+              } catch {}
+              console.warn(`[Google Nano Banana SDK] Developer API predict notice (${model}):`, cleanMsg);
+              if (!cleanMsg.includes('not found for API version') || errorMessages.length === 0) {
+                errorMessages.push(`SDK: ${cleanMsg}`);
+              }
+            }
+          }
         }
       }
     } catch (sdkErr: any) {
@@ -311,8 +336,8 @@ export async function generateGoogleNanoBananaImage(prompt: string): Promise<str
 
     // Attempt 2: Direct Google Generative Language REST endpoints
     const googleEndpoints = [
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict`,
       `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict`,
     ];
 
     for (const endpoint of googleEndpoints) {
