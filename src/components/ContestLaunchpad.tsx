@@ -518,7 +518,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                   <Camera className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                   <div>
                     <div className="font-bold text-white">5-Photo Cinematic Dossier</div>
-                    <div className="text-[11px] text-white/50">Mood.png &amp; Äkinoya.jpg</div>
+                    <div className="text-[11px] text-white/50">Custom Äkinoya Lighting &amp; 4K Atmosphere</div>
                   </div>
                 </div>
 

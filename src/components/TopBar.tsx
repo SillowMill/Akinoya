@@ -112,23 +112,13 @@ export const TopBar: React.FC<TopBarProps> = ({
           <SoundtrackButton />
           <AuthHeaderButton />
 
-          {/* User Status Pill Matrix & ACCESS GRANTED / PUBLIC ACCESS Indicator Box */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Dynamic Status Pill */}
-            <span
-              className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono tracking-wider whitespace-nowrap flex items-center gap-1 ${statusConfig.pillClassName}`}
-            >
-              {statusConfig.pillLabel}
-            </span>
-
-            {/* Indicator Box (Preserve "ACCESS GRANTED") */}
-            <div
-              title={statusConfig.indicatorLabel}
-              className={`flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] sm:text-[10.5px] rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 ${statusConfig.indicatorClassName}`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusConfig.dotColorClassName}`} />
-              <span className="hidden sm:inline tracking-wide font-bold">{statusConfig.indicatorLabel}</span>
-            </div>
+          {/* ACCESS GRANTED / PUBLIC ACCESS Indicator Box */}
+          <div
+            title={statusConfig.indicatorLabel}
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] sm:text-[10.5px] rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 ${statusConfig.indicatorClassName}`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusConfig.dotColorClassName}`} />
+            <span className="hidden sm:inline tracking-wide font-bold">{statusConfig.indicatorLabel}</span>
           </div>
         </div>
       </div>

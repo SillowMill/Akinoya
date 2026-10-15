@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   User,
   LogOut,
-  KeyRound,
   ShieldCheck,
   Sparkles,
   ChevronDown,
@@ -198,17 +197,7 @@ export const AuthHeaderButton: React.FC = () => {
               </span>
             </button>
 
-            {/* Verify & Redeem VIP Pass Portal action if user does not have a VIP pass */}
-            {!isUserVip && (
-              <a
-                href="/verify"
-                onClick={() => setIsDropdownOpen(false)}
-                className="w-full p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-white/80 hover:text-white font-mono text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-2 text-left min-h-[48px]"
-              >
-                <KeyRound className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>Verify &amp; Redeem VIP Pass</span>
-              </a>
-            )}
+
 
             {/* Quick Link to Community Hub */}
             <a

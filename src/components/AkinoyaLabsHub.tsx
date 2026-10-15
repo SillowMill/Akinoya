@@ -29,7 +29,6 @@ import {
   Volume2,
   Clock,
   Compass,
-  Key,
   X,
   ExternalLink,
   Crown,
@@ -183,7 +182,7 @@ const FootstepIcon: React.FC<{
 export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
   isMember = false,
   onOpenAuthModal,
-  onNavigateVerify,
+  onNavigateVerify: _onNavigateVerify,
   onNavigateToVault,
 }) => {
   // Deep-Dive Modal State
@@ -1163,42 +1162,6 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           ))}
                         </div>
 
-                        {/* Dynamic CTA depending on Member Status */}
-                        {isMember ? (
-                          <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-400/50 max-w-md mx-auto flex items-center justify-center gap-2.5 text-emerald-300 font-mono font-bold text-xs">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                            <span>PAID SUBSCRIBER ACCESS ACTIVE — ALL 5 STAGES UNSEALED</span>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                soundManager.playTone(660, 0.08);
-                                if (onOpenAuthModal) onOpenAuthModal();
-                              }}
-                              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_25px_rgba(251,191,36,0.5)] flex items-center justify-center gap-2"
-                            >
-                              <span>CLAIM VIP INVITATION →</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                soundManager.playTone(520, 0.06);
-                                if (onNavigateVerify) {
-                                  onNavigateVerify();
-                                } else {
-                                  window.location.href = '/verify';
-                                }
-                              }}
-                              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
-                            >
-                              <Key className="w-4 h-4 text-cyan-300" />
-                              <span>VERIFY NFC PASS KEY</span>
-                            </button>
-                          </div>
-                        )}
                       </motion.div>
                     </div>
                   )}
