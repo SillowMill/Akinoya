@@ -93,25 +93,6 @@ const checkAndCaptureReferral = (): boolean => {
     const searchParams = new URLSearchParams(window.location.search);
     const ref = (searchParams.get('ref') || searchParams.get('referral') || '').trim();
     const claim = (searchParams.get('claim') || searchParams.get('tier') || '').trim();
-    const tokenParam = (
-      searchParams.get('vip_token') ||
-      searchParams.get('token') ||
-      searchParams.get('pass') ||
-      searchParams.get('code') ||
-      ''
-    ).trim().toUpperCase();
-
-    // Check pathname: e.g. /verify/AKN-VIP-2027-X001
-    const verifyMatch = window.location.pathname.match(/\/verify\/([A-Za-z0-9\-_]+)/);
-    const pathToken = verifyMatch ? verifyMatch[1].toUpperCase() : '';
-    const activeToken = tokenParam || pathToken;
-
-    if (activeToken) {
-      const clean = normalizeVipToken(activeToken);
-      localStorage.setItem(PENDING_VIP_PASS_KEY, clean);
-      sessionStorage.setItem('pending_vip_code', clean);
-      return true;
-    }
 
     const isVipRef =
       ref.toUpperCase() === 'VIP_GUEST' ||
@@ -134,32 +115,12 @@ const checkAndCaptureReferral = (): boolean => {
 const getStoredVipPass = (): string | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const p1 = sessionStorage.getItem('pending_vip_code');
-    const p2 = sessionStorage.getItem(PATRON_TOKEN_KEY);
-    const p3 = localStorage.getItem(PENDING_VIP_PASS_KEY);
-    const p4 = localStorage.getItem(PATRON_TOKEN_KEY);
-    const p5 = localStorage.getItem('sillow_vip_bound_token');
-    const p6 = sessionStorage.getItem('sillow_vip_bound_token');
+    const p1 = sessionStorage.getItem(PATRON_TOKEN_KEY);
+    const p2 = localStorage.getItem(PATRON_TOKEN_KEY);
+    const p3 = localStorage.getItem('sillow_vip_bound_token');
+    const p4 = sessionStorage.getItem('sillow_vip_bound_token');
 
-    let pUrl: string | null = null;
-    const searchParams = new URLSearchParams(window.location.search);
-    const urlToken = (
-      searchParams.get('vip_token') ||
-      searchParams.get('token') ||
-      searchParams.get('pass') ||
-      searchParams.get('code') ||
-      ''
-    ).trim();
-    if (urlToken) {
-      pUrl = urlToken;
-    } else {
-      const match = window.location.pathname.match(/\/verify\/([A-Za-z0-9\-_]+)/);
-      if (match && match[1]) {
-        pUrl = match[1];
-      }
-    }
-
-    const candidates = [p1, p2, p3, p4, p5, p6, pUrl];
+    const candidates = [p1, p2, p3, p4];
     for (const c of candidates) {
       if (!c) continue;
       const code = c.trim().toUpperCase().replace(/^#/, '');
@@ -197,7 +158,7 @@ const enrichProfile = (
   passCode?: string | null,
   grantVipOverride?: boolean
 ): Profile => {
-  const code = passCode || raw.vip_code_redeemed || getStoredVipPass();
+  const code = passCode || raw.vip_code_redeemed || null;
   const rawSubStatus =
     raw.subscription_status ||
     (raw.role === 'ANNUAL_PASS' || raw.role === 'SUBSCRIBER' ? 'active' : 'inactive');
@@ -396,13 +357,16 @@ const resolveAndLinkVipProfile = async (
 
   const currentSubStatus = rawProfData?.subscription_status || 'inactive';
   let targetRole: UserRole = isFounder ? 'CREATOR' : (rawProfData?.role || 'FREE');
-  let targetHasVip = Boolean(isFounder || boundVipToken || userHasProfileVip);
-  let targetPassCode: string | null = isFounder ? 'AKN-VIP-2027-X0914' : (boundVipToken?.token_code || rawProfData?.vip_code_redeemed || metaPass || null);
+  let targetHasVip = Boolean(boundVipToken || userHasProfileVip);
+  let targetPassCode: string | null = boundVipToken?.token_code || rawProfData?.vip_code_redeemed || metaPass || null;
 
   if (isFounder) {
-    targetHasVip = true;
     targetRole = 'CREATOR';
-    targetPassCode = 'AKN-VIP-2027-X0914';
+    // If the founder has already explicitly claimed the master pass in database or profile, retain it
+    if (boundVipToken?.token_code === 'AKN-VIP-2027-X0914' || rawProfData?.vip_code_redeemed === 'AKN-VIP-2027-X0914') {
+      targetHasVip = true;
+      targetPassCode = 'AKN-VIP-2027-X0914';
+    }
   } else if (boundVipToken) {
     targetHasVip = true;
     const boundRole: UserRole = boundVipToken.token_code === 'AKN-VIP-2027-X0914' ? 'CREATOR' : 'VIP_GUEST';
@@ -415,58 +379,17 @@ const resolveAndLinkVipProfile = async (
     }
   }
 
-  // 3. Strict owner validation on candidate/pending VIP token
-  const candidatePass = isFounder
-    ? 'AKN-VIP-2027-X0914'
-    : (pendingPass || (typeof window !== 'undefined' ? localStorage.getItem('sillow_vip_bound_token') : null));
-
-  if (candidatePass) {
-    if (isFounder) {
+  // 3. Strict owner validation on already-bound session VIP token (if active in local storage)
+  const existingBoundSession = typeof window !== 'undefined' ? localStorage.getItem('sillow_vip_bound_token') : null;
+  if (existingBoundSession && !boundVipToken && !targetPassCode) {
+    const tokenCheck = await checkVipTokenStatus(existingBoundSession, authUser.id, authUserEmail);
+    if (tokenCheck.isAlreadyClaimed && tokenCheck.isClaimedByMe) {
       targetHasVip = true;
-      targetRole = 'CREATOR';
-      targetPassCode = 'AKN-VIP-2027-X0914';
-      if (authUser?.id) {
-        await claimVipTokenForUser('AKN-VIP-2027-X0914', authUser.id, authUser.user_metadata?.full_name || 'Odi Selis', authUserEmail);
-      }
+      const vipRole = resolveRoleForCode(existingBoundSession);
+      targetRole = pickHigherRole(targetRole, vipRole);
+      targetPassCode = existingBoundSession;
     } else {
-      const tokenCheck = await checkVipTokenStatus(candidatePass, authUser.id, authUserEmail);
-      if (tokenCheck.isAlreadyClaimed) {
-        if (tokenCheck.isClaimedByMe) {
-          // MATCHES ORIGINAL OWNER: seamlessly grant/maintain VIP access!
-          targetHasVip = true;
-          const vipRole = resolveRoleForCode(candidatePass);
-          targetRole = pickHigherRole(targetRole, vipRole);
-          targetPassCode = candidatePass;
-        } else {
-          // DOES NOT MATCH: strictly block VIP elevation!
-          clearPendingVipStorage();
-          if (!boundVipToken && !userHasProfileVip) {
-            targetHasVip = false;
-            targetPassCode = null;
-            if (targetRole === 'VIP_GUEST') {
-              targetRole = 'FREE';
-            }
-          }
-        }
-      } else if (tokenCheck.allowed) {
-        // Unclaimed token: claim for this user
-        const vipRole = resolveRoleForCode(candidatePass);
-        targetRole = pickHigherRole(targetRole, vipRole);
-        targetPassCode = candidatePass;
-        targetHasVip = true;
-        if (authUser?.id) {
-          const m = authUser.user_metadata || {};
-          const fName = (
-            rawProfData?.full_name ||
-            m.full_name ||
-            m.name ||
-            (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : null) ||
-            authUser.email?.split('@')[0] ||
-            'Founding VIP Member'
-          ).trim();
-          await claimVipTokenForUser(candidatePass, authUser.id, fName, authUser.email);
-        }
-      }
+      clearPendingVipStorage();
     }
   }
 
@@ -523,21 +446,8 @@ const resolveAndLinkVipProfile = async (
     await persistProfileToSupabase(enriched);
   }
 
-  // Real-time sync to Google Sheets
+  // Real-time sync to Google Sheets (Subscribers tab)
   syncToGoogleSheets(enriched, targetPassCode || undefined);
-
-  // If tied to an NFC physical pass, bind owner in server-side registry
-  if (targetPassCode && isValidPassId(targetPassCode)) {
-    fetch('/api/nfc/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token: targetPassCode,
-        ownerName: enriched.full_name || `${enriched.first_name || ''} ${enriched.last_name || ''}`.trim() || enriched.email?.split('@')[0],
-        ownerEmail: enriched.email,
-      }),
-    }).catch(() => {});
-  }
 
   // Persist session tokens for automatic instant device recognition
   if (typeof window !== 'undefined') {

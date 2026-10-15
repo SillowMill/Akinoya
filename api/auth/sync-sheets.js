@@ -1,7 +1,6 @@
 import {
   getAccessToken,
   SPREADSHEET_ID,
-  syncPassClaimToGoogleSheets,
 } from '../nfc/_googleSheetsSync.js';
 
 /**
@@ -100,9 +99,7 @@ export default async function handler(req, res) {
     const email = String(record.email || '').trim().toLowerCase();
     const isFounder = email === 'odi@sillowmill.com' || email === 'odi.selis3@gmail.com';
     let role = isFounder ? 'CREATOR' : String(record.role || 'FREE').trim().toUpperCase();
-    let vipCode = isFounder
-      ? 'AKN-VIP-2027-X0914'
-      : String(record.vip_code_redeemed || record.vipCode || '').trim();
+    let vipCode = String(record.vip_code_redeemed || record.vipCode || '').trim() || 'N/A';
     const registrationDate = record.created_at || new Date().toISOString();
     const isPioneer = new Date(registrationDate).getTime() < new Date('2027-01-09T00:00:00+01:00').getTime();
     const pioneerBadge = isPioneer ? '[PIONEER-2027]' : '';
@@ -295,35 +292,6 @@ export default async function handler(req, res) {
       console.warn('[Google Sheets Sync] Sync write failed:', putRes.status, errText);
     }
 
-    // Real-Time Dual Tab Sync: If a VIP pass is attached or redeemed, also update the VIP GUESTS tab
-    let targetVipPassId = isFounder
-      ? 'AKN-VIP-2027-X0914'
-      : String(record.vip_code_redeemed || record.vipCode || '').trim();
-
-    if (!targetVipPassId || targetVipPassId === 'N/A' || targetVipPassId.startsWith('SECTOR:')) {
-      if (isFounder) {
-        targetVipPassId = 'AKN-VIP-2027-X0914';
-      } else if (
-        email === 'estherphilippen@msn.com' ||
-        `${firstName} ${lastName}`.toLowerCase().includes('esther')
-      ) {
-        targetVipPassId = 'AKN-VIP-2027-X001';
-      } else {
-        targetVipPassId = null;
-      }
-    }
-
-    let vipSyncResult = null;
-    if (targetVipPassId && targetVipPassId !== 'N/A') {
-      try {
-        const holderFullName =
-          `${firstName} ${lastName}`.trim() || firstName || (isFounder ? 'Odi Selis' : email);
-        vipSyncResult = await syncPassClaimToGoogleSheets(targetVipPassId, holderFullName, email);
-      } catch (err) {
-        console.warn('[Google Sheets Sync] VIP GUESTS parallel sync notice:', err);
-      }
-    }
-
     return res.status(200).json({
       success: true,
       action,
@@ -333,8 +301,6 @@ export default async function handler(req, res) {
       is_pioneer: isPioneer,
       pioneer_badge: pioneerBadge,
       claimed_sector: claimedSector || null,
-      vipSynced: Boolean(vipSyncResult && vipSyncResult.success),
-      vipSyncDetails: vipSyncResult,
     });
   } catch (error) {
     console.error('[Google Sheets Sync] Unhandled exception:', error);

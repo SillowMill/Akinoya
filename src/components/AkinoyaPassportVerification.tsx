@@ -51,7 +51,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 }) => {
   const { unlockVip } = useVipAccess();
   const { user, profile, openAuthModal, redeemVipCode, isVip, hasVipPass, role } = useAuth();
-  const autoClaimAttemptedRef = useRef(false);
 
   const isUserVip = Boolean(
     role !== 'FREE' &&
@@ -575,33 +574,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       setIsClaiming(false);
     }
   };
-
-  // Auto-execute claim ONLY if user has initiated an explicit claim action and then completed login/registration
-  useEffect(() => {
-    const hasExplicitClaimIntent =
-      typeof window !== 'undefined' &&
-      (localStorage.getItem('akinoya_pending_vip_pass') === activeToken ||
-        sessionStorage.getItem('pending_vip_code') === activeToken);
-
-    if (
-      !isValidating &&
-      !isClaimedByUser &&
-      (user || profile) &&
-      !autoClaimAttemptedRef.current &&
-      !isClaiming &&
-      !dnaError &&
-      hasExplicitClaimIntent
-    ) {
-      if (isMaster) {
-        const email = (user?.email || profile?.email || '').trim().toLowerCase();
-        if (!isFounderEmail(email) && profile?.role !== 'CREATOR') {
-          return;
-        }
-      }
-      autoClaimAttemptedRef.current = true;
-      executeClaimForUser(user, profile);
-    }
-  }, [user, profile, isClaimedByUser, isValidating, isMaster, dnaError, isClaiming, activeToken]);
 
   return (
     <div className="relative z-20 w-full max-w-2xl mx-auto px-3 sm:px-6 py-6 sm:py-12 text-white font-sans">
