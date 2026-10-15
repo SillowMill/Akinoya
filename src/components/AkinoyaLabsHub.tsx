@@ -181,7 +181,7 @@ const FootstepIcon: React.FC<{
 
 export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
   isMember = false,
-  onOpenAuthModal,
+  onOpenAuthModal: _onOpenAuthModal,
   onNavigateVerify: _onNavigateVerify,
   onNavigateToVault,
 }) => {
@@ -649,15 +649,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     },
   ];
 
-  // Stage Selection Handler
+  // Stage Selection Handler (Directly opens Stage Deep-Dive Modal for all users)
   const handleOpenStageModal = (stage: StageDetail) => {
-    // Stage 4, 5 are locked for non-paid guests
-    if (stage.isAdvancedLocked && !isMember) {
-      soundManager.playTone(330, 0.08);
-      if (onOpenAuthModal) onOpenAuthModal();
-      return;
-    }
-
     soundManager.playTone(580, 0.05);
     setSelectedStageForModal(stage);
   };
@@ -901,9 +894,14 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     </div>
 
                     {isStageLocked ? (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold shrink-0">
-                        LOCKED
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenStageModal(stage)}
+                        className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 text-white/90 text-[10.5px] font-mono font-bold cursor-pointer shrink-0 flex items-center gap-1"
+                      >
+                        <Lock className="w-2.5 h-2.5 text-amber-400" />
+                        <span>Inspect Stage</span>
+                      </button>
                     ) : (
                       <button
                         type="button"
