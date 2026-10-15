@@ -762,7 +762,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               <div className="text-[11px] leading-snug font-sans">
                 <span className="font-mono font-bold text-cyan-300 block">Mill (Pipeline Guide):</span>
                 <span className="text-white/80">
-                  &ldquo;Inspect stages 01 &amp; 02 freely. Master archives in the vault unlock with a Paid Subscription.&rdquo;
+                  &ldquo;Inspect timeline specifications freely. All full asset downloads &amp; master archives unlock on January 9, 2027.&rdquo;
                 </span>
               </div>
             </div>
@@ -1131,10 +1131,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             </span>
                           </h2>
                           <p className="text-xs sm:text-base text-white/75 font-sans leading-relaxed">
-                            Free guests have view-only access to inspect the professional theory and
-                            visual specifications for Stages 01 and 02. Advanced Stages 04 and 05,
-                            raw 3D Blender camera rigs, master prompt databases, and DaVinci color LUTs
-                            are strictly restricted to active <strong>paid monthly subscribers and VIP members</strong>.
+                            All users have view-only access to inspect the professional theory and
+                            visual specifications across all 5 workflow stages. Master 3D Blender camera rigs,
+                            master prompt databases, and DaVinci color LUTs unlock on{' '}
+                            <strong>January 9, 2027</strong>.
                           </p>
                         </div>
 
