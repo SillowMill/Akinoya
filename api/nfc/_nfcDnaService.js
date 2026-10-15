@@ -198,7 +198,7 @@ export function getPassRecord(tokenId) {
   if (normalized === 'AKN-VIP-2027-X0914') {
     pass.editionNumber = 0;
     pass.edition = 'Founders Pass (#0)';
-    if (!pass.isClaimed && !pass.registeredAt) {
+    if (!pass.isClaimed || !pass.ownerName || pass.ownerName.trim().length === 0 || !pass.registeredAt) {
       pass.ownerName = '';
       pass.ownerEmail = null;
       pass.isClaimed = false;
@@ -212,7 +212,7 @@ export function getPassRecord(tokenId) {
           title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
           passId: 'AKN-VIP-2027-X0914',
           holderName: pass.ownerName || 'Odi Selis',
-          holderEmail: pass.ownerEmail || undefined,
+          holderEmail: pass.ownerEmail || 'odi.selis3@gmail.com',
           editionNumber: 0,
           editionTotal: 100,
           status: 'MASTER FOUNDER ORIGINAL',
@@ -358,7 +358,7 @@ export async function registerPassHolder(tokenId, ownerName, ownerEmail, deviceI
 
   const isMaster = pass.normalizedId === 'AKN-VIP-2027-X0914';
   pass.ownerName = cleanName;
-  pass.ownerEmail = cleanEmail;
+  pass.ownerEmail = cleanEmail || (isMaster ? 'odi.selis3@gmail.com' : null);
   pass.isClaimed = true;
   pass.status = isMaster ? 'MASTER FOUNDER ORIGINAL' : 'CLAIMED / OFFICIALLY VERIFIED';
   pass.registeredAt = new Date().toISOString();
@@ -369,7 +369,7 @@ export async function registerPassHolder(tokenId, ownerName, ownerEmail, deviceI
   // Issue unique, personalized VIP Certificate
   try {
     const { issueCertificate } = await import('./_certificateService.js');
-    pass.certificate = issueCertificate(pass.normalizedId, cleanName, Boolean(cleanEmail));
+    pass.certificate = issueCertificate(pass.normalizedId, cleanName, Boolean(cleanEmail), cleanEmail || (isMaster ? 'odi.selis3@gmail.com' : undefined));
   } catch (err) {
     console.warn('[Register] Error issuing certificate:', err);
   }

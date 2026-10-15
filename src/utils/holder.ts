@@ -96,3 +96,19 @@ export const useHolderName = (passId?: string): string => {
 
   return name;
 };
+
+export const clearHolderName = (passId?: string): void => {
+  if (typeof window === 'undefined') return;
+  const cleanId = (passId || '').trim().toUpperCase().replace(/^#/, '');
+  try {
+    if (cleanId) {
+      localStorage.removeItem(`akinoya_holder_name_${cleanId}`);
+      sessionStorage.removeItem(`akinoya_holder_name_${cleanId}`);
+      localStorage.removeItem(`akinoya_holder_name_#${cleanId}`);
+      sessionStorage.removeItem(`akinoya_holder_name_#${cleanId}`);
+    }
+    localStorage.removeItem(HOLDER_NAME_KEY);
+    sessionStorage.removeItem(HOLDER_NAME_KEY);
+  } catch {}
+  window.dispatchEvent(new CustomEvent(HOLDER_EVENT, { detail: '' }));
+};

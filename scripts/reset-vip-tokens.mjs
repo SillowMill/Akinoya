@@ -11,7 +11,7 @@ if (fs.existsSync(migrationFile)) {
 }
 
 console.log('\n[2] Master Pass Key:');
-console.log('    AKN-VIP-2027-X0914 remains permanently bound to Odi Selis (Odi@sillowmill.com) as the active primary key.');
+console.log('    AKN-VIP-2027-X0914 remains permanently bound to Odi Selis (odi.selis3@gmail.com) as the active primary key.');
 console.log('\n[3] 100 Public Editions:');
 console.log('    All 100 editions (AKN-VIP-2027-X001 through X100) are set to unclaimed (is_claimed = false).');
 console.log('    All prior assignments, holder names, and holder emails cleared.');

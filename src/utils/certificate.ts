@@ -79,7 +79,7 @@ export const getMasterCertificate = (
   title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
   passId: 'AKN-VIP-2027-X0914',
   holderName: customHolder || 'Unclaimed / Pending Registration',
-  holderEmail: customEmail || (customHolder ? 'Odi@sillowmill.com' : undefined),
+  holderEmail: customEmail || (customHolder ? 'odi.selis3@gmail.com' : undefined),
   editionNumber: 0,
   editionTotal: TOTAL_EDITION_LIMIT,
   status: customHolder ? 'MASTER FOUNDER ORIGINAL' : 'Unclaimed VIP Pass — Ready for Registration',
@@ -106,6 +106,27 @@ export const saveCertificate = (cert: BingaaCertificate): void => {
   } catch {
     /* storage unavailable — certificate stays in memory for this session */
   }
+  window.dispatchEvent(new CustomEvent(CERT_EVENT));
+};
+
+export const deleteCertificate = (passId: string): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    const all = readAll();
+    const clean = normalizePassId(passId);
+    let changed = false;
+    if (all[clean]) {
+      delete all[clean];
+      changed = true;
+    }
+    if (all[passId]) {
+      delete all[passId];
+      changed = true;
+    }
+    if (changed) {
+      localStorage.setItem(CERT_STORAGE_KEY, JSON.stringify(all));
+    }
+  } catch {}
   window.dispatchEvent(new CustomEvent(CERT_EVENT));
 };
 

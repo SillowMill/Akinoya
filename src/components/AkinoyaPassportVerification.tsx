@@ -19,6 +19,7 @@ import {
   useHolderName,
   getHolderName,
   saveHolderName,
+  clearHolderName,
   sanitizeHolderName,
   setExplicitVipRouteActive,
   isValidPassId,
@@ -29,6 +30,7 @@ import {
   BingaaCertificate,
   useCertificate,
   saveCertificate,
+  deleteCertificate,
   getMasterCertificate,
   downloadCertificatePng,
   deriveEditionNumber,
@@ -108,9 +110,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const [isValidating, setIsValidating] = useState<boolean>(true);
   const [isDnaAuthentic, setIsDnaAuthentic] = useState<boolean>(false);
   const [dnaError, setDnaError] = useState<string | null>(null);
-  const [statusText, setStatusText] = useState<string>(
-    isMaster ? 'MASTER FOUNDER ORIGINAL' : 'VERIFIED ORIGINAL'
-  );
+  const [statusText, setStatusText] = useState<string>('VERIFYING AUTHENTICITY');
 
   // Pass details
   const [passData, setPassData] = useState<{
@@ -133,14 +133,12 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     origin: 'Genesis Archive (Leuven Origin)',
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
-    status: isMaster
-      ? (localStoredName || localStoredCert ? 'MASTER FOUNDER ORIGINAL' : 'Unclaimed VIP Pass — Ready for Registration')
-      : (localStoredName || localStoredCert ? 'OFFICIALLY VERIFIED' : 'Unclaimed VIP Pass — Ready for Registration'),
-    ownerName: localStoredName || '',
+    status: 'Unclaimed VIP Pass — Ready for Registration',
+    ownerName: '',
     ownerEmail: null,
-    isClaimed: Boolean(localStoredName || localStoredCert),
-    registeredAt: localStoredCert?.claimedAt || null,
-    certificate: localStoredCert || null,
+    isClaimed: false,
+    registeredAt: null,
+    certificate: null,
   });
 
   // UI helpers
@@ -162,29 +160,31 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   );
 
   const isClaimedByUser = Boolean(
-    isUserLoggedIn && (
+    isUserLoggedIn &&
+    isPassClaimedInRecord && (
       (isMaster && isFounderAccount && (
         profile?.vip_code_redeemed === activeToken ||
-        (isPassClaimedInRecord && passData.ownerEmail && isFounderEmail(passData.ownerEmail)) ||
-        Boolean(localStoredCert)
+        (passData.ownerEmail && isFounderEmail(passData.ownerEmail))
       )) ||
       (!isMaster && (
         profile?.vip_code_redeemed === activeToken ||
-        (isPassClaimedInRecord && passData.ownerEmail && currentUserEmail === passData.ownerEmail.toLowerCase()) ||
-        Boolean(localStoredCert && localStoredCert.passId === activeToken)
+        (passData.ownerEmail && currentUserEmail === passData.ownerEmail.toLowerCase())
       ))
     )
   );
 
   const hasClaimedPass = Boolean(
-    isClaimedByUser ||
-    (isUserLoggedIn && isPassClaimedInRecord && passData.ownerEmail && (currentUserEmail === passData.ownerEmail.toLowerCase()))
+    isPassClaimedInRecord && (
+      isClaimedByUser ||
+      (isUserLoggedIn && passData.ownerEmail && (currentUserEmail === passData.ownerEmail.toLowerCase()))
+    )
   );
 
   const isClaimed = Boolean(
-    hasClaimedPass ||
-    isPassClaimedInRecord ||
-    Boolean(localStoredCert && localStoredCert.holderName && localStoredCert.holderName.trim().length > 0)
+    isPassClaimedInRecord && (
+      hasClaimedPass ||
+      Boolean(localStoredCert && localStoredCert.holderName && localStoredCert.holderName.trim().length > 0)
+    )
   );
 
   const activeHolderName = isClaimed
@@ -245,18 +245,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     setIsResettingPass(true);
     soundManager.playTone(480, 0.05);
     try {
-      localStorage.removeItem(`akinoya_holder_name_${activeToken}`);
-      localStorage.removeItem(`akinoya_holder_name_#${activeToken}`);
-      const rawCerts = localStorage.getItem('akinoya_bingaa_certificates');
-      if (rawCerts) {
-        try {
-          const parsed = JSON.parse(rawCerts);
-          if (Array.isArray(parsed)) {
-            const filtered = parsed.filter((c: any) => c.passId !== activeToken && c.passId !== `#${activeToken}`);
-            localStorage.setItem('akinoya_bingaa_certificates', JSON.stringify(filtered));
-          }
-        } catch {}
-      }
+      clearHolderName(activeToken);
+      deleteCertificate(activeToken);
       localStorage.removeItem('akinoya_pending_vip_pass');
       sessionStorage.removeItem('pending_vip_code');
 
@@ -345,11 +335,22 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
       if (res.ok && data.valid) {
         setIsDnaAuthentic(Boolean(data.isAuthentic));
-        setStatusText(data.isAuthentic ? 'AUTHENTIC' : (isMaster ? 'MASTER FOUNDER ORIGINAL' : 'VERIFIED'));
 
         if (data.pass) {
           const pass = data.pass;
-          const isPassClaimed = Boolean(pass.isClaimed && pass.ownerName && pass.ownerName.trim().length > 0);
+          const isPassClaimed = Boolean(
+            pass.isClaimed &&
+            pass.ownerName &&
+            pass.ownerName.trim().length > 0 &&
+            pass.status !== 'Unclaimed VIP Pass — Ready for Registration'
+          );
+          setStatusText(
+            data.isAuthentic
+              ? 'AUTHENTIC'
+              : (isMaster
+                  ? (isPassClaimed ? 'MASTER FOUNDER ORIGINAL' : 'READY TO CLAIM')
+                  : (isPassClaimed ? 'VERIFIED ORIGINAL' : 'READY TO CLAIM'))
+          );
           setPassData((prev) => ({
             ...prev,
             ...pass,
@@ -369,11 +370,9 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
               saveHolderName(pass.ownerName, token);
             }
           } else {
-            // Clean up stale local storage for unclaimed/reset token
-            try {
-              localStorage.removeItem(`akinoya_holder_name_${token}`);
-              localStorage.removeItem(`akinoya_holder_name_#${token}`);
-            } catch {}
+            // Clean up stale local storage and certificate for unclaimed/reset token
+            clearHolderName(token);
+            deleteCertificate(token);
           }
         }
 
@@ -516,11 +515,11 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
             passId: activeToken,
             holderName: cleanName || 'Odi Selis',
-            holderEmail: cleanEmail || undefined,
+            holderEmail: cleanEmail || 'odi.selis3@gmail.com',
             editionNumber: 0,
             editionTotal: TOTAL_EDITION_LIMIT,
             status: (data && data.certificate?.status) || 'MASTER FOUNDER ORIGINAL',
-            emailVerified: Boolean(cleanEmail),
+            emailVerified: Boolean(cleanEmail || true),
             claimedAt: (data && data.certificate?.claimedAt) || new Date().toISOString(),
             signatureAlgorithm: (data && data.certificate?.signatureAlgorithm) || 'HMAC-SHA256',
             signature: (data && data.certificate?.signature) || 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637',
@@ -618,7 +617,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           <span>Back to Home</span>
         </button>
         <div className="flex items-center gap-2">
-          {activeToken === 'AKN-VIP-2027-X001' && (
+          {(activeToken === 'AKN-VIP-2027-X001' || activeToken === 'AKN-VIP-2027-X0914') && (
             <button
               type="button"
               onClick={handleResetPass}
