@@ -267,13 +267,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       await new Promise((resolve) => setTimeout(resolve, 500));
       setIsGeneratingRenders(false);
 
+      const fallbackRenders = resolvePlanetRenders(answersWithFormattedName);
       const finalRenders = {
-        hero: collectedRenders.hero || '',
-        flora: collectedRenders.flora || '',
-        fauna: collectedRenders.fauna || '',
-        atmosphere: collectedRenders.atmosphere || '',
-        landmark: collectedRenders.landmark || '',
-        ecosystem: collectedRenders.flora || '',
+        hero: collectedRenders.hero || fallbackRenders.hero,
+        flora: collectedRenders.flora || fallbackRenders.flora,
+        fauna: collectedRenders.fauna || fallbackRenders.fauna,
+        atmosphere: collectedRenders.atmosphere || fallbackRenders.atmosphere,
+        landmark: collectedRenders.landmark || fallbackRenders.landmark,
+        ecosystem: collectedRenders.flora || fallbackRenders.flora,
       };
 
       // 2. Synthesize official sector lore incorporating founding creed
