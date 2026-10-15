@@ -456,10 +456,20 @@ export const resetAllVipTokens = async (): Promise<{ success: boolean; count?: n
       localStorage.removeItem('pending_vip_pass');
       localStorage.removeItem('akinoya_pending_vip_pass');
       sessionStorage.removeItem('pending_vip_code');
+      sessionStorage.removeItem('pending_role');
+      localStorage.removeItem('pending_role');
       localStorage.removeItem('akinoya_bingaa_certificates');
       localStorage.removeItem('akinoya_holder_name');
+      localStorage.removeItem('user_generation_claimed');
+      localStorage.removeItem('akinoya_guest_generations');
+      localStorage.removeItem('akinoya_contest_votes');
       Object.keys(localStorage).forEach((k) => {
-        if (k.startsWith('akinoya_holder_name_') || k.startsWith('akinoya_pending_')) {
+        if (
+          k.startsWith('akinoya_holder_name_') ||
+          k.startsWith('akinoya_pending_') ||
+          k.startsWith('user_dossier_') ||
+          k.startsWith('akinoya_gen_')
+        ) {
           localStorage.removeItem(k);
         }
       });
@@ -482,24 +492,26 @@ export const resetAllVipTokens = async (): Promise<{ success: boolean; count?: n
         })
         .select();
 
-      // Clear redeemed pass bindings from profiles
+      // Clear redeemed pass bindings and reset generation attempt flags on all profiles
       await supabase
         .from('profiles')
         .update({
           vip_code_redeemed: null,
           has_vip_pass: false,
           is_vip: false,
+          has_submitted_contest: false,
+          contest_submission_id: null,
           updated_at: nowIso,
         })
-        .neq('role', 'CREATOR');
+        .neq('id', '00000000-0000-0000-0000-000000000000');
 
-      await supabase
-        .from('profiles')
-        .update({
-          vip_code_redeemed: null,
-          updated_at: nowIso,
-        })
-        .eq('role', 'CREATOR');
+      // Clear user dossiers (except canonical benchmark if any)
+      try {
+        await supabase
+          .from('user_dossiers')
+          .delete()
+          .neq('id', 'planet-amlemi-genesis-01');
+      } catch {}
 
       if (error) {
         console.warn('[VipTokens] Supabase reset error:', error.message);

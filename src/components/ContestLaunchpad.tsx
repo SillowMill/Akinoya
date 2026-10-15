@@ -152,11 +152,20 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   const [modalPlanet, setModalPlanet] = useState<PlanetSubmission | null>(null);
   const [slotStream, setSlotStream] = useState<SlotStreamItem[]>(DEFAULT_SLOT_STREAM);
 
-  // Strict Token-Protection Lock Pre-Check
+  // Strict Universal 1-Attempt Lock Pre-Check
+  const isDeviceGenerationClaimed = () => {
+    if (typeof window === 'undefined') return false;
+    return (
+      localStorage.getItem('user_generation_claimed') === 'true' ||
+      localStorage.getItem('akinoya_guest_generations') === 'true'
+    );
+  };
+
   const hasSubmittedContest = Boolean(
     profile?.has_submitted_contest ||
     profile?.contest_submission_id ||
-    activeSubmission
+    activeSubmission ||
+    isDeviceGenerationClaimed()
   );
 
   // Auto-start Mill if coming from Claim modal (Question 2 flow)
@@ -218,6 +227,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     }
     if (hasSubmittedContest) {
       soundManager.playTone(330, 0.08);
+      alert('You have already claimed your 1 generation attempt.');
       if (activeSubmission) {
         setModalPlanet(activeSubmission);
       }
@@ -230,6 +240,11 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
   // Called when Mill completes the 8 questions (Live Google Nano Banana AI Synthesis)
   const handleWizardComplete = async (answers: WizardAnswers) => {
+    if (hasSubmittedContest) {
+      soundManager.playError();
+      alert('You have already claimed your 1 generation attempt.');
+      return;
+    }
     const planetName = formatAkinoyaPlanetName(answers.planetName, false) || answers.planetName || 'Äkinoya Frontier Sector';
     const answersWithFormattedName = { ...answers, planetName };
     setPendingAnswers(answersWithFormattedName);
@@ -324,6 +339,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           body: JSON.stringify({
             userId: user?.id || profile?.id,
             email: user?.email,
+            deviceId: typeof window !== 'undefined' ? (localStorage.getItem('sillow_device_id') || undefined) : undefined,
             relaxation: answers.relaxation,
             creativeExpression: answers.creativeExpression,
             naturalEnvironment: answers.naturalEnvironment,
@@ -350,7 +366,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           const json = await res.json().catch(() => ({}));
           setIsGeneratingRenders(false);
           soundManager.playError();
-          alert(json.message || 'SUBMISSION_LOCKED: Account has already utilized its single Golden Ticket planet synthesis.');
+          alert(json.message || 'You have already claimed your 1 generation attempt.');
           return;
         }
 
@@ -487,7 +503,25 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         has_submitted_contest: true,
       });
 
-      // 3. Attach renders & lore to creator's public portfolio (/creators/[username])
+      // 3. Universal Device & Guest Session Lock
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user_generation_claimed', 'true');
+        localStorage.setItem('akinoya_guest_generations', 'true');
+      }
+
+      // Notify backend to register permanent in-memory lock
+      fetch('/api/generate-planet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id || profile?.id,
+          email: user?.email,
+          deviceId: typeof window !== 'undefined' ? (localStorage.getItem('sillow_device_id') || undefined) : undefined,
+          markCompleted: true,
+        }),
+      }).catch(() => {});
+
+      // 4. Attach renders & lore to creator's public portfolio (/creators/[username])
       attachContestSubmissionToCreator(username, userDisplayName, previewDossier);
 
       // 4. Update local state
@@ -680,7 +714,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                       {activeSubmission?.planetName || 'Territory Submitted'}
                     </div>
                     <p className="text-[10.5px] text-white/60 font-mono">
-                      Single submission hard lock active. Your world is registered in the Lore Governance Council.
+                      You have already claimed your 1 generation attempt.
                     </p>
                   </div>
 

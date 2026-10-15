@@ -8,85 +8,100 @@ interface CertificateOfAuthenticityProps {
 }
 
 /** Official Bingäa Issue #1 Certificate of Authenticity (100% English copy). */
-export const CertificateOfAuthenticity: React.FC<CertificateOfAuthenticityProps> = ({ certificate, compact }) => (
-  <div className="relative overflow-hidden rounded-xl border border-cyan-400/30 bg-[#07090f] p-4 sm:p-6 font-mono">
-    <div className="absolute inset-1.5 sm:inset-2 rounded-lg border border-white/10 pointer-events-none" />
+export const CertificateOfAuthenticity: React.FC<CertificateOfAuthenticityProps> = ({ certificate, compact }) => {
+  const isUnclaimed = Boolean(
+    !certificate?.holderName ||
+    certificate.holderName === 'Unclaimed / Pending Registration' ||
+    certificate?.status?.includes('Unclaimed') ||
+    certificate?.status?.includes('UNASSIGNED') ||
+    certificate?.status?.includes('READY') ||
+    certificate?.status === 'UNCLAIMED' ||
+    !certificate?.claimedAt ||
+    certificate.claimedAt === 'UNCLAIMED'
+  );
 
-    <div className="relative text-center space-y-1">
-      <div className="text-[9px] sm:text-[10px] tracking-[0.2em] text-cyan-300">SILLOW MILL · ÄKINOYA</div>
-      <h4 className="text-[13px] sm:text-lg font-display font-bold text-white leading-snug tracking-wide">
-        CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1
-      </h4>
-    </div>
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-cyan-400/30 bg-[#07090f] p-4 sm:p-6 font-mono">
+      <div className="absolute inset-1.5 sm:inset-2 rounded-lg border border-white/10 pointer-events-none" />
 
-    <dl className={`relative mt-4 grid grid-cols-1 ${compact ? '' : 'sm:grid-cols-2'} gap-x-6 gap-y-3 text-center sm:text-left`}>
-      <div className="min-w-0">
-        <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">OWNER</dt>
-        <dd className="text-[11px] sm:text-xs text-white font-semibold break-words">
-          REGISTERED HOLDER: {certificate?.holderName ? certificate.holderName.toUpperCase() : 'UNCLAIMED / PENDING'}
-          {certificate?.holderEmail && (
-            <span className="block text-[10px] text-cyan-300/90 font-normal lowercase tracking-normal font-mono">
-              {certificate.holderEmail}
-            </span>
-          )}
-        </dd>
+      <div className="relative text-center space-y-1">
+        <div className="text-[9px] sm:text-[10px] tracking-[0.2em] text-cyan-300">SILLOW MILL · ÄKINOYA</div>
+        <h4 className="text-[13px] sm:text-lg font-display font-bold text-white leading-snug tracking-wide">
+          CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1
+        </h4>
       </div>
-      <div className="min-w-0">
-        <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">EDITION</dt>
-        <dd className="text-[11px] sm:text-xs text-white font-semibold">
-          {certificate?.passId?.replace(/^#/, '') === 'AKN-VIP-2027-X0914' || certificate?.editionNumber === 0
-            ? 'FOUNDERS PASS (#0)'
-            : `FOUNDING MEMBER COPY #${certificate?.editionNumber !== undefined ? certificate.editionNumber : 1} OF ${certificate?.editionTotal || 100}`}
-        </dd>
-      </div>
-      <div className="min-w-0">
-        <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">STATUS</dt>
-        <dd className={`text-[11px] sm:text-xs font-semibold ${
-          certificate?.status?.includes('READY') || certificate?.status?.includes('UNASSIGNED') || certificate?.status === 'UNCLAIMED'
-            ? 'text-amber-300'
-            : 'text-emerald-300'
-        }`}>
-          {certificate?.status || 'OFFICIALLY VERIFIED'}
-        </dd>
-      </div>
-      <div className="min-w-0">
-        <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">CERTIFICATE ID</dt>
-        <dd className="text-[11px] sm:text-xs text-white/85 break-all">{certificate?.certificateId || 'N/A'}</dd>
-      </div>
-    </dl>
 
-    <div className="relative mt-4 pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-3">
-      <div className="min-w-0 text-center sm:text-left">
-        <div className="text-[9px] sm:text-[10px] tracking-wider text-white/40">
-          CRYPTOGRAPHIC SIGNATURE ({certificate?.signatureAlgorithm || 'HMAC-SHA256'})
+      <dl className={`relative mt-4 grid grid-cols-1 ${compact ? '' : 'sm:grid-cols-2'} gap-x-6 gap-y-3 text-center sm:text-left`}>
+        <div className="min-w-0">
+          <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">OWNER</dt>
+          <dd className="text-[11px] sm:text-xs text-white font-semibold break-words">
+            REGISTERED HOLDER: {!isUnclaimed && certificate?.holderName ? certificate.holderName.toUpperCase() : 'UNCLAIMED / PENDING REGISTRATION'}
+            {!isUnclaimed && certificate?.holderEmail && (
+              <span className="block text-[10px] text-cyan-300/90 font-normal lowercase tracking-normal font-mono">
+                {certificate.holderEmail}
+              </span>
+            )}
+          </dd>
         </div>
-        <div className="text-[10px] sm:text-[11px] text-cyan-200/90 break-all leading-relaxed">
-          {formatSignature(certificate?.signature || '', 8)}
-        </div>
-        <div className="text-[9px] sm:text-[10px] text-white/40 mt-1">
-          {certificate?.claimedAt && certificate.claimedAt !== 'UNCLAIMED'
-            ? `Claimed ${formatClaimDate(certificate.claimedAt)}`
-            : 'Pending Claim'} · Pass #{certificate?.passId || 'AKN-VIP-2027'}
-          {certificate?.emailVerified ? ' · Email verified' : ''}
-        </div>
-      </div>
-
-      {/* Official stamp */}
-      <div
-        className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[3px] border-emerald-400/80 flex items-center justify-center -rotate-12"
-        aria-label="Official authenticity stamp"
-      >
-        <div className="w-[86%] h-[86%] rounded-full border border-emerald-400/70 flex flex-col items-center justify-center text-emerald-300 leading-none">
-          <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 mb-0.5" />
-          <span className="text-[8px] sm:text-[9px] font-bold tracking-wider">OFFICIAL</span>
-          <span className="text-[9px] sm:text-[10px] font-extrabold tracking-wider">AUTHENTIC</span>
-          <span className="text-[7px] sm:text-[8px] mt-0.5">
+        <div className="min-w-0">
+          <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">EDITION</dt>
+          <dd className="text-[11px] sm:text-xs text-white font-semibold">
             {certificate?.passId?.replace(/^#/, '') === 'AKN-VIP-2027-X0914' || certificate?.editionNumber === 0
-              ? 'FOUNDERS (#0)'
-              : `COPY #${certificate?.editionNumber !== undefined ? certificate.editionNumber : 1}/${certificate?.editionTotal || 100}`}
-          </span>
+              ? 'FOUNDERS PASS (#0)'
+              : `FOUNDING MEMBER COPY #${certificate?.editionNumber !== undefined ? certificate.editionNumber : 1} OF ${certificate?.editionTotal || 100}`}
+          </dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">STATUS</dt>
+          <dd className={`text-[11px] sm:text-xs font-semibold ${isUnclaimed ? 'text-amber-300' : 'text-emerald-300'}`}>
+            {certificate?.status || 'Unclaimed VIP Pass — Ready for Registration'}
+          </dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-[9px] sm:text-[10px] tracking-wider text-white/40">CERTIFICATE ID</dt>
+          <dd className="text-[11px] sm:text-xs text-white/85 break-all">{certificate?.certificateId || 'N/A'}</dd>
+        </div>
+      </dl>
+
+      <div className="relative mt-4 pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-3">
+        <div className="min-w-0 text-center sm:text-left">
+          <div className="text-[9px] sm:text-[10px] tracking-wider text-white/40">
+            CRYPTOGRAPHIC SIGNATURE ({certificate?.signatureAlgorithm || 'HMAC-SHA256'})
+          </div>
+          <div className="text-[10px] sm:text-[11px] text-cyan-200/90 break-all leading-relaxed">
+            {isUnclaimed ? 'PENDING REGISTRATION' : formatSignature(certificate?.signature || '', 8)}
+          </div>
+          <div className="text-[9px] sm:text-[10px] text-white/40 mt-1">
+            {!isUnclaimed && certificate?.claimedAt && certificate.claimedAt !== 'UNCLAIMED'
+              ? `Claimed ${formatClaimDate(certificate.claimedAt)}`
+              : 'Unclaimed VIP Pass — Ready for Registration'} · Pass #{certificate?.passId?.replace(/^#/, '') || 'AKN-VIP-2027'}
+            {!isUnclaimed && certificate?.emailVerified ? ' · Email verified' : ''}
+          </div>
+        </div>
+
+        {/* Official stamp */}
+        <div
+          className={`shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[3px] flex items-center justify-center -rotate-12 ${
+            isUnclaimed ? 'border-amber-400/80' : 'border-emerald-400/80'
+          }`}
+          aria-label="Official authenticity stamp"
+        >
+          <div className={`w-[86%] h-[86%] rounded-full border flex flex-col items-center justify-center leading-none ${
+            isUnclaimed ? 'border-amber-400/70 text-amber-300' : 'border-emerald-400/70 text-emerald-300'
+          }`}>
+            <ShieldCheck className={`w-4 h-4 sm:w-5 sm:h-5 mb-0.5 ${isUnclaimed ? 'text-amber-400' : 'text-emerald-400'}`} />
+            <span className="text-[8px] sm:text-[9px] font-bold tracking-wider">OFFICIAL</span>
+            <span className="text-[9px] sm:text-[10px] font-extrabold tracking-wider">
+              {isUnclaimed ? 'UNCLAIMED' : 'AUTHENTIC'}
+            </span>
+            <span className="text-[7px] sm:text-[8px] mt-0.5">
+              {certificate?.passId?.replace(/^#/, '') === 'AKN-VIP-2027-X0914' || certificate?.editionNumber === 0
+                ? 'FOUNDERS (#0)'
+                : `COPY #${certificate?.editionNumber !== undefined ? certificate.editionNumber : 1}/${certificate?.editionTotal || 100}`}
+            </span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};

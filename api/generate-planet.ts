@@ -98,41 +98,71 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL ||
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_uQ928ayPw4vS7msW2_oZSQ_vTi22idX';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export async function checkAndLockUserGeneration(userId?: string, email?: string): Promise<{ allowed: boolean; reason?: string }> {
+export function resetGenerationLocks(): void {
+  _userGenerations.clear();
+}
+
+export function lockUserGeneration(userId?: string, email?: string, deviceId?: string): void {
+  const keys = [userId, email, deviceId].filter(Boolean);
+  keys.forEach((k) => _userGenerations.add(String(k).trim().toLowerCase()));
+}
+
+export async function checkAndLockUserGeneration(
+  userId?: string,
+  email?: string,
+  deviceId?: string,
+  isSlotCheck = false
+): Promise<{ allowed: boolean; reason?: string }> {
+  const cleanUserId = (userId || '').trim().toLowerCase();
   const cleanEmail = (email || '').trim().toLowerCase();
-  if (cleanEmail === 'odi.selis3@gmail.com' || cleanEmail === 'odi@sillowmill.com') {
-    if (userId) _userGenerations.delete(userId);
-    return { allowed: true };
-  }
+  const cleanDeviceId = (deviceId || '').trim().toLowerCase();
 
-  if (!userId) return { allowed: true };
+  const keysToCheck = [cleanUserId, cleanEmail, cleanDeviceId].filter(Boolean);
 
-  if (_userGenerations.has(userId)) {
-    return {
-      allowed: false,
-      reason: 'SUBMISSION_LOCKED: Account has already utilized its single Golden Ticket planet synthesis. Hard lock enforced to preserve token budget.',
-    };
-  }
-
-  try {
-    const { data } = await supabase
-      .from('user_dossiers')
-      .select('id, planet_name')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (data && data.id) {
-      _userGenerations.add(userId);
+  // 1. Universal in-memory lock check (no hardcoded bypass for any account)
+  for (const k of keysToCheck) {
+    if (_userGenerations.has(k)) {
       return {
         allowed: false,
-        reason: `SUBMISSION_LOCKED: Account already has registered planet "${data.planet_name}". Exactly one world generation permitted per account.`,
+        reason: 'You have already claimed your 1 generation attempt.',
       };
     }
-  } catch (dbErr) {
-    console.warn('[GeneratePlanet] Supabase user_dossiers check notice:', dbErr);
   }
 
-  _userGenerations.add(userId);
+  // 2. Check Supabase user_dossiers for prior registered sector
+  if (cleanUserId || cleanEmail) {
+    try {
+      let query = supabase.from('user_dossiers').select('id, planet_name, user_id, author_email');
+      if (cleanUserId && cleanEmail) {
+        query = query.or(`user_id.eq.${cleanUserId},author_email.ilike.${cleanEmail}`);
+      } else if (cleanUserId) {
+        query = query.eq('user_id', cleanUserId);
+      } else if (cleanEmail) {
+        query = query.ilike('author_email', cleanEmail);
+      }
+
+      const { data } = await query.maybeSingle();
+
+      if (data && data.id) {
+        if (cleanUserId) _userGenerations.add(cleanUserId);
+        if (cleanEmail) _userGenerations.add(cleanEmail);
+        return {
+          allowed: false,
+          reason: 'You have already claimed your 1 generation attempt.',
+        };
+      }
+    } catch (dbErr) {
+      console.warn('[GeneratePlanet] Supabase user_dossiers check notice:', dbErr);
+    }
+  }
+
+  // For batch synthesis or final submission, immediately lock the keys
+  if (!isSlotCheck) {
+    for (const k of keysToCheck) {
+      _userGenerations.add(k);
+    }
+  }
+
   return { allowed: true };
 }
 
@@ -503,18 +533,31 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const body: GeneratePlanetRequest & { slot?: string } = req.body || {};
+    const body: GeneratePlanetRequest & { slot?: string; deviceId?: string; markCompleted?: boolean } = req.body || {};
 
-    // 1. Strict One-Shot Enforcement: Check database and memory lock (only on batch or first slot)
-    if (body.userId || body.email) {
-      const lockCheck = await checkAndLockUserGeneration(body.userId, body.email);
-      if (!lockCheck.allowed && !body.slot) {
+    if (body.markCompleted) {
+      lockUserGeneration(body.userId, body.email, body.deviceId);
+      res.statusCode = 200;
+      res.end(JSON.stringify({ success: true, message: 'Generation locked.' }));
+      return;
+    }
+
+    // 1. Strict One-Shot Enforcement: Check database and memory lock
+    const isSlot = Boolean(body.slot);
+    if (body.userId || body.email || body.deviceId) {
+      const lockCheck = await checkAndLockUserGeneration(
+        body.userId,
+        body.email,
+        body.deviceId,
+        isSlot
+      );
+      if (!lockCheck.allowed) {
         res.statusCode = 403;
         res.end(
           JSON.stringify({
             success: false,
             error: 'SUBMISSION_LOCKED',
-            message: lockCheck.reason,
+            message: lockCheck.reason || 'You have already claimed your 1 generation attempt.',
           })
         );
         return;

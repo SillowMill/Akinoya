@@ -96,14 +96,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const isMaster = activeToken === 'AKN-VIP-2027-X0914';
   const derivedEdition = deriveEditionNumber(activeToken);
 
-  // Auto-record pending VIP pass token in storage for seamless auth claim binding
-  useEffect(() => {
-    if (typeof window !== 'undefined' && activeToken && !isMaster && isValidPassId(activeToken)) {
-      localStorage.setItem('akinoya_pending_vip_pass', activeToken);
-      sessionStorage.setItem('pending_vip_code', activeToken);
-    }
-  }, [activeToken, isMaster]);
-
   // Per-pass stored holder name and certificate (isolated per Pass ID)
   const localStoredName = useHolderName(activeToken);
   const localStoredCert = useCertificate(activeToken);
@@ -142,8 +134,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
     status: isMaster
-      ? (localStoredName || localStoredCert ? 'MASTER FOUNDER ORIGINAL' : 'FOUNDERS PASS (#0) / READY TO CLAIM')
-      : (localStoredName || localStoredCert ? 'OFFICIALLY VERIFIED' : 'UNASSIGNED / READY TO CLAIM'),
+      ? (localStoredName || localStoredCert ? 'MASTER FOUNDER ORIGINAL' : 'Unclaimed VIP Pass — Ready for Registration')
+      : (localStoredName || localStoredCert ? 'OFFICIALLY VERIFIED' : 'Unclaimed VIP Pass — Ready for Registration'),
     ownerName: localStoredName || '',
     ownerEmail: null,
     isClaimed: Boolean(localStoredName || localStoredCert),
@@ -164,6 +156,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     passData.isClaimed &&
     passData.ownerName &&
     passData.ownerName.trim().length > 0 &&
+    passData.status !== 'Unclaimed VIP Pass — Ready for Registration' &&
     passData.status !== 'UNASSIGNED / READY TO CLAIM' &&
     passData.status !== 'FOUNDERS PASS (#0) / READY TO CLAIM'
   );
@@ -219,28 +212,31 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           certificateId: 'COA-BNG1-001-FOUNDER',
           title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
           passId: activeToken,
-          holderName: activeHolderName || 'Odi Selis',
-          holderEmail: activeHolderEmail || undefined,
+          holderName: hasClaimedPass ? (activeHolderName || 'Odi Selis') : 'Unclaimed / Pending Registration',
+          holderEmail: hasClaimedPass ? (activeHolderEmail || undefined) : undefined,
           editionNumber: 0,
           editionTotal: TOTAL_EDITION_LIMIT,
-          status: hasClaimedPass ? 'MASTER FOUNDER ORIGINAL' : 'FOUNDERS PASS (#0) / READY TO CLAIM',
-          emailVerified: Boolean(activeHolderEmail),
+          status: hasClaimedPass ? 'MASTER FOUNDER ORIGINAL' : 'Unclaimed VIP Pass — Ready for Registration',
+          emailVerified: Boolean(hasClaimedPass && activeHolderEmail),
           claimedAt: passData.registeredAt || (hasClaimedPass ? new Date().toISOString() : 'UNCLAIMED'),
           signatureAlgorithm: 'HMAC-SHA256',
-          signature: 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637',
+          signature: hasClaimedPass
+            ? 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637'
+            : 'PENDING REGISTRATION',
         }
       : {
           certificateId: `COA-BNG1-${String(passData.editionNumber).padStart(3, '0')}-VERIFIED`,
           title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
           passId: activeToken,
-          holderName: activeHolderName || 'Founding VIP Member',
+          holderName: hasClaimedPass ? (activeHolderName || 'Founding VIP Member') : 'Unclaimed / Pending Registration',
+          holderEmail: hasClaimedPass ? (activeHolderEmail || undefined) : undefined,
           editionNumber: passData.editionNumber,
           editionTotal: TOTAL_EDITION_LIMIT,
-          status: hasClaimedPass ? 'OFFICIALLY VERIFIED' : 'UNASSIGNED / READY TO CLAIM',
-          emailVerified: Boolean(activeHolderEmail),
+          status: hasClaimedPass ? 'OFFICIALLY VERIFIED' : 'Unclaimed VIP Pass — Ready for Registration',
+          emailVerified: Boolean(hasClaimedPass && activeHolderEmail),
           claimedAt: passData.registeredAt || (hasClaimedPass ? new Date().toISOString() : 'UNCLAIMED'),
           signatureAlgorithm: 'HMAC-SHA256',
-          signature: 'Sillow Mill · Creative Syndicate',
+          signature: hasClaimedPass ? 'Sillow Mill · Creative Syndicate' : 'PENDING REGISTRATION',
         });
 
   const [isResettingPass, setIsResettingPass] = useState(false);
@@ -273,7 +269,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       setDnaError(null);
       setPassData((prev) => ({
         ...prev,
-        status: isMaster ? 'FOUNDERS PASS (#0) / READY TO CLAIM' : 'UNASSIGNED / READY TO CLAIM',
+        status: 'Unclaimed VIP Pass — Ready for Registration',
         ownerName: '',
         ownerEmail: null,
         isClaimed: false,
@@ -361,8 +357,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             ownerEmail: isPassClaimed ? (pass.ownerEmail || prev.ownerEmail) : null,
             isClaimed: isPassClaimed,
             status: isMaster
-              ? (isPassClaimed ? 'MASTER FOUNDER ORIGINAL' : 'FOUNDERS PASS (#0) / READY TO CLAIM')
-              : (pass.status || (isPassClaimed ? 'OFFICIALLY VERIFIED' : 'UNASSIGNED / READY TO CLAIM')),
+              ? (isPassClaimed ? 'MASTER FOUNDER ORIGINAL' : 'Unclaimed VIP Pass — Ready for Registration')
+              : (pass.status || (isPassClaimed ? 'OFFICIALLY VERIFIED' : 'Unclaimed VIP Pass — Ready for Registration')),
           }));
 
           if (isPassClaimed) {
@@ -581,15 +577,21 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     }
   };
 
-  // Auto-execute claim as soon as an unassigned pass is authenticated via login or registration
+  // Auto-execute claim ONLY if user has initiated an explicit claim action and then completed login/registration
   useEffect(() => {
+    const hasExplicitClaimIntent =
+      typeof window !== 'undefined' &&
+      (localStorage.getItem('akinoya_pending_vip_pass') === activeToken ||
+        sessionStorage.getItem('pending_vip_code') === activeToken);
+
     if (
       !isValidating &&
       !isClaimedByUser &&
       (user || profile) &&
       !autoClaimAttemptedRef.current &&
       !isClaiming &&
-      !dnaError
+      !dnaError &&
+      hasExplicitClaimIntent
     ) {
       if (isMaster) {
         const email = (user?.email || profile?.email || '').trim().toLowerCase();
@@ -600,7 +602,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       autoClaimAttemptedRef.current = true;
       executeClaimForUser(user, profile);
     }
-  }, [user, profile, isClaimedByUser, isValidating, isMaster, dnaError, isClaiming]);
+  }, [user, profile, isClaimedByUser, isValidating, isMaster, dnaError, isClaiming, activeToken]);
 
   return (
     <div className="relative z-20 w-full max-w-2xl mx-auto px-3 sm:px-6 py-6 sm:py-12 text-white font-sans">
@@ -750,7 +752,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                 <span>• AUTHENTIC PHYSICAL NFC PASS DETECTED</span>
               </span>
               <span className="text-[10px] font-mono text-amber-300/90 font-bold tracking-wider">
-                UNASSIGNED
+                Unclaimed VIP Pass — Ready for Registration
               </span>
             </div>
 
@@ -879,7 +881,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             </div>
             <div className="py-2.5 flex items-center justify-between gap-3">
               <span className="text-white/40">STATUS</span>
-              <span className="text-amber-400 font-semibold">UNCLAIMED / READY TO ONBOARD</span>
+              <span className="text-amber-400 font-semibold">Unclaimed VIP Pass — Ready for Registration</span>
             </div>
           </div>
 
@@ -928,7 +930,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                     </span>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold text-amber-300 bg-amber-950/70 border border-amber-500/40">
                       <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
-                      <span>UNCLAIMED — BIND TO YOUR ACCOUNT</span>
+                      <span>Unclaimed VIP Pass — Ready for Registration</span>
                     </span>
                   </>
                 )}

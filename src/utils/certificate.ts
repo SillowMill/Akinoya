@@ -78,15 +78,17 @@ export const getMasterCertificate = (
   certificateId: 'COA-BNG1-001-FOUNDER',
   title: 'CERTIFICATE OF AUTHENTICITY — BINGÄA ISSUE #1',
   passId: 'AKN-VIP-2027-X0914',
-  holderName: customHolder || 'Odi Selis',
-  holderEmail: customEmail || 'Odi@sillowmill.com',
+  holderName: customHolder || 'Unclaimed / Pending Registration',
+  holderEmail: customEmail || (customHolder ? 'Odi@sillowmill.com' : undefined),
   editionNumber: 0,
   editionTotal: TOTAL_EDITION_LIMIT,
-  status: 'MASTER FOUNDER ORIGINAL',
-  emailVerified: true,
-  claimedAt: customClaimedAt || new Date().toISOString(),
+  status: customHolder ? 'MASTER FOUNDER ORIGINAL' : 'Unclaimed VIP Pass — Ready for Registration',
+  emailVerified: Boolean(customEmail || (customHolder && true)),
+  claimedAt: customClaimedAt || (customHolder ? new Date().toISOString() : 'UNCLAIMED'),
   signatureAlgorithm: 'HMAC-SHA256',
-  signature: 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637',
+  signature: customHolder
+    ? 'A0B9C8D7E6F50413241516171819202122232425262728293031323334353637'
+    : 'PENDING REGISTRATION',
 });
 
 export const getCertificate = (passId: string): BingaaCertificate | null => {

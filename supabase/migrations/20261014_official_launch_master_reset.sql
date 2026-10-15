@@ -114,19 +114,16 @@ begin
   end loop;
 end $$;
 
--- 5. RESET PROFILE VIP BINDINGS
--- Clear redeemed pass bindings from all user accounts so everyone starts fresh
+-- 5. RESET PROFILE VIP BINDINGS & GENERATION ATTEMPTS
+-- Clear redeemed pass bindings and contest submissions from all user accounts so everyone gets 1 fresh generation attempt
 update public.profiles
 set
   vip_code_redeemed = null,
   has_vip_pass = false,
   is_vip = false,
-  updated_at = now()
-where role != 'CREATOR';
+  has_submitted_contest = false,
+  contest_submission_id = null,
+  updated_at = now();
 
--- For Creator (Odi), reset vip_code_redeemed so Founder Pass (#0) can be claimed fresh
-update public.profiles
-set
-  vip_code_redeemed = null,
-  updated_at = now()
-where role = 'CREATOR';
+-- 6. RESET USER DOSSIERS (CLEAR PAST TEST SUBMISSIONS)
+delete from public.user_dossiers where id != 'planet-amlemi-genesis-01';

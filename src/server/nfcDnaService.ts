@@ -128,7 +128,7 @@ function createDefaultPassRecord(tokenId: string): PassRecord {
     origin: 'Genesis Archive (Leuven Origin)',
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
-    status: isMaster ? 'FOUNDERS PASS (#0) / READY TO CLAIM' : 'UNASSIGNED / READY TO CLAIM',
+    status: 'Unclaimed VIP Pass — Ready for Registration',
     ownerName: '',
     ownerEmail: null,
     isClaimed: false,
@@ -213,6 +213,14 @@ export function resetPassRecord(tokenId: string): PassRecord {
   return _store.passes[normalized];
 }
 
+export function resetAllPassRecords(): void {
+  loadStore();
+  _store.passes = {};
+  _store.transferKeys = {};
+  _store.claimedKeys = [];
+  saveStore();
+}
+
 export function getPassRecord(tokenId: string): PassRecord {
   loadStore();
   const normalized = normalizeTokenId(tokenId);
@@ -228,7 +236,7 @@ export function getPassRecord(tokenId: string): PassRecord {
       pass.ownerName = '';
       pass.ownerEmail = null;
       pass.isClaimed = false;
-      pass.status = 'FOUNDERS PASS (#0) / READY TO CLAIM';
+      pass.status = 'Unclaimed VIP Pass — Ready for Registration';
       pass.certificate = null;
     } else {
       pass.status = 'MASTER FOUNDER ORIGINAL';
@@ -253,7 +261,8 @@ export function getPassRecord(tokenId: string): PassRecord {
     pass.ownerName = pass.isClaimed ? pass.ownerName : '';
     pass.isClaimed = Boolean(pass.isClaimed && pass.ownerName);
     if (!pass.isClaimed) {
-      pass.status = 'UNASSIGNED / READY TO CLAIM';
+      pass.status = 'Unclaimed VIP Pass — Ready for Registration';
+      pass.certificate = null;
     }
   }
   return pass;

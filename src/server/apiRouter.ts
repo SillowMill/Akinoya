@@ -15,7 +15,7 @@ import {
   isValidPassId,
 } from './nfcDnaService';
 import { handleCertificateAction } from '../../api/nfc/_certificateService.js';
-import { generatePlanetRenders, generateSectorImages, generateSlotRender, checkAndLockUserGeneration } from '../../api/generate-planet';
+import { generatePlanetRenders, generateSectorImages, generateSlotRender, checkAndLockUserGeneration, resetGenerationLocks } from '../../api/generate-planet';
 import { checkVipTokenStatus, claimVipTokenForUser } from '../lib/vipTokens';
 
 export const apiApp = express();
@@ -337,13 +337,14 @@ apiRouter.get('/nfc/generate-test-cipher', (req: Request, res: Response): void =
 apiRouter.all(['/generate-planet', '/planet/generate', '/generate-sector-images', '/sector/generate'], async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body || {};
-    if (body.userId && !body.slot) {
-      const lockCheck = await checkAndLockUserGeneration(body.userId);
+    const isSlot = Boolean(body.slot);
+    if (body.userId || body.email || body.deviceId) {
+      const lockCheck = await checkAndLockUserGeneration(body.userId, body.email, body.deviceId, isSlot);
       if (!lockCheck.allowed) {
         res.status(403).json({
           success: false,
           error: 'SUBMISSION_LOCKED',
-          message: lockCheck.reason,
+          message: lockCheck.reason || 'You have already claimed your 1 generation attempt.',
         });
         return;
       }

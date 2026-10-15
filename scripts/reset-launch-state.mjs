@@ -61,22 +61,25 @@ async function runSupabaseReset() {
         vip_code_redeemed: null,
         has_vip_pass: false,
         is_vip: false,
+        has_submitted_contest: false,
+        contest_submission_id: null,
         updated_at: nowIso,
       })
-      .neq('role', 'CREATOR');
+      .neq('id', '00000000-0000-0000-0000-000000000000');
 
-    const { error: creatorErr } = await supabase
-      .from('profiles')
-      .update({
-        vip_code_redeemed: null,
-        updated_at: nowIso,
-      })
-      .eq('role', 'CREATOR');
+    // Reset user_dossiers
+    try {
+      await supabase
+        .from('user_dossiers')
+        .delete()
+        .neq('id', 'planet-amlemi-genesis-01');
+      console.log('    ✓ User Dossiers reset: all past submissions cleared.');
+    } catch {}
 
-    if (!profErr && !creatorErr) {
-      console.log('    ✓ Profiles reset: all accounts cleared of redeemed pass bindings.');
+    if (!profErr) {
+      console.log('    ✓ Profiles reset: all accounts cleared of redeemed pass bindings and generation counts.');
     } else {
-      console.warn('    ! Profiles update notice:', profErr?.message || creatorErr?.message);
+      console.warn('    ! Profiles update notice:', profErr?.message);
     }
   } catch (err) {
     console.warn('    ! Profiles reset exception:', err.message);
