@@ -34,7 +34,7 @@ import {
   hasPaidMembership,
   openMembershipGateModal,
 } from '../utils/pioneer';
-import { generateOrganicPlanetName, formatAkinoyaPlanetName } from '../data/contest';
+import { formatAkinoyaPlanetName } from '../data/contest';
 import { useAuth } from '../context/AuthContext';
 
 export interface ClaimYourWorldModalProps {
@@ -108,15 +108,29 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
     sectorName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 104)
   ) % 9000 + 1000}-A`;
 
-  const handleStartWorldbuilding = () => {
+  const handleStartWorldbuilding = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (isSubmitting) return;
+
     if (isPostLaunch() && !hasPaidMembership(user, profile, role, isVip)) {
       handleClose();
       openMembershipGateModal();
       return;
     }
 
+    const trimmedSectorName = sectorName.trim();
+    if (!trimmedSectorName) {
+      setErrorMessage('Please enter the name of your planet to begin worldbuilding.');
+      soundManager.playError();
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage('');
+
     const emailToUse = (user?.email || visitorEmail || '').trim().toLowerCase();
-    const cleanPlanetName = formatAkinoyaPlanetName(sectorName.trim() || generateOrganicPlanetName());
+    const cleanPlanetName = formatAkinoyaPlanetName(trimmedSectorName, false) || trimmedSectorName;
+
     const claimRecord: SectorClaimRecord = {
       sectorName: cleanPlanetName,
       biome: selectedBiome.label,
@@ -126,8 +140,29 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
       holderEmail: emailToUse,
     };
     saveSectorClaim(claimRecord);
+    setConfirmedClaim(claimRecord);
 
-    // Auto-advance Mill to Question 2
+    // Direct Sync to Google Sheets if email is present
+    if (emailToUse) {
+      const syncPayload = {
+        first_name: profile?.first_name || user?.user_metadata?.first_name || emailToUse.split('@')[0],
+        last_name: profile?.last_name || user?.user_metadata?.last_name || '',
+        email: emailToUse,
+        role: role || (isVip ? 'VIP_GUEST' : 'FREE'),
+        claimed_sector: `${cleanPlanetName} (${selectedBiome.label})`,
+        is_pioneer: true,
+        pioneer_badge: PIONEER_BADGE_TAG,
+        created_at: profile?.created_at || new Date().toISOString(),
+      };
+
+      fetch('/api/auth/sync-sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(syncPayload),
+      }).catch((err) => console.warn('[Pioneer Modal] Sheets sync notice:', err));
+    }
+
+    // Auto-advance Mill directly to Question 2 with user's planet inputs
     sessionStorage.setItem('akinoya_start_mill', 'true');
     sessionStorage.setItem('akinoya_mill_start_step', '2');
     window.dispatchEvent(
@@ -141,6 +176,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
     );
 
     soundManager.playTone(660, 0.08);
+    setIsSubmitting(false);
     handleClose();
     if (onNavigateToContest) {
       onNavigateToContest();
@@ -153,98 +189,6 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
       }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleClaimSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSubmitting) return;
-
-    if (isPostLaunch() && !hasPaidMembership(user, profile, role, isVip)) {
-      openMembershipGateModal();
-      return;
-    }
-
-    const emailToUse = (user?.email || visitorEmail || '').trim().toLowerCase();
-
-    if (!emailToUse || !emailToUse.includes('@')) {
-      setErrorMessage('Please enter a valid email address to reserve your sector & pioneer status.');
-      soundManager.playError();
-      return;
-    }
-
-    if (!sectorName.trim()) {
-      setErrorMessage('Please enter the name of your planet.');
-      soundManager.playError();
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMessage('');
-
-    try {
-      const cleanPlanetName = formatAkinoyaPlanetName(sectorName.trim());
-      const claimRecord: SectorClaimRecord = {
-        sectorName: cleanPlanetName,
-        biome: selectedBiome.label,
-        coordinates,
-        claimedAt: new Date().toISOString(),
-        pioneerBadge: PIONEER_BADGE_TAG,
-        holderEmail: emailToUse,
-      };
-
-      // 1. Save locally
-      saveSectorClaim(claimRecord);
-      setConfirmedClaim(claimRecord);
-
-      // 2. Direct Sync to Google Sheets and backend subscriber registry
-      const syncPayload = {
-        first_name: profile?.first_name || user?.user_metadata?.first_name || emailToUse.split('@')[0],
-        last_name: profile?.last_name || user?.user_metadata?.last_name || '',
-        email: emailToUse,
-        role: role || (isVip ? 'VIP_GUEST' : 'FREE'),
-        claimed_sector: `${cleanPlanetName} (${selectedBiome.label})`,
-        is_pioneer: true,
-        pioneer_badge: PIONEER_BADGE_TAG,
-        created_at: profile?.created_at || new Date().toISOString(),
-      };
-
-      await fetch('/api/auth/sync-sheets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(syncPayload),
-      }).catch((err) => console.warn('[Pioneer Modal] Sheets sync notice:', err));
-
-      soundManager.playUnlockChime();
-
-      // Confetti celebratory celestial particles
-      confetti({
-        particleCount: 85,
-        spread: 80,
-        origin: { y: 0.6 },
-        colors: ['#fbbf24', '#f59e0b', '#38bdf8', '#67e8f9', '#ffffff'],
-        disableForReducedMotion: true,
-      });
-
-      // Prepare Mill to seamlessly auto-advance to Question 2
-      sessionStorage.setItem('akinoya_start_mill', 'true');
-      sessionStorage.setItem('akinoya_mill_start_step', '2');
-      window.dispatchEvent(
-        new CustomEvent('akinoya-start-mill', {
-          detail: {
-            planetName: cleanPlanetName,
-            biome: selectedBiome.label,
-            initialStep: 2,
-          },
-        })
-      );
-
-      setClaimSuccess(true);
-    } catch (err: any) {
-      console.warn('[Pioneer Modal] Claim error:', err);
-      setErrorMessage('Failed to register planet. Please check connection and try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleOpenAuth = () => {
@@ -342,7 +286,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
               </div>
 
               {/* Interactive Sector Claim Generator Form */}
-              <form onSubmit={handleClaimSubmit} className="space-y-4">
+              <form onSubmit={handleStartWorldbuilding} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {/* Planet Name Designation */}
                   <div className="space-y-1.5 text-left">
@@ -418,28 +362,17 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   </div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                {/* Single Clear Action Button: Worldbuild with Mill */}
+                <div className="pt-2">
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs tracking-wider uppercase transition-all duration-200 cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-950/90 via-[#0a1b2a] to-amber-950/80 hover:from-cyan-900 hover:to-amber-900 border-2 border-cyan-400/60 hover:border-amber-400 text-cyan-300 hover:text-white font-mono font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer shadow-[0_0_25px_rgba(6,182,212,0.35)] hover:shadow-[0_0_35px_rgba(245,158,11,0.45)] active:scale-[0.99] disabled:opacity-50"
                   >
-                    <Globe2 className="w-4 h-4" />
+                    <Sparkles className="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
                     <span>
-                      {isSubmitting
-                        ? 'REGISTERING PIONEER SECTOR...'
-                        : 'CLAIM SECTOR & LOCK PIONEER STATUS'}
+                      {isSubmitting ? 'INITIALIZING MILL (QUESTION 02)...' : 'WORLDBUILD WITH MILL →'}
                     </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleStartWorldbuilding}
-                    className="w-full sm:w-auto py-3 px-4 rounded-xl bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-400/50 text-cyan-300 hover:text-cyan-100 font-mono font-bold text-xs tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.25)]"
-                  >
-                    <Sparkles className="w-4 h-4 text-cyan-400" />
-                    <span>Worldbuild with Mill →</span>
                   </button>
                 </div>
               </form>

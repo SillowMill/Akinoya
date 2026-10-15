@@ -19,7 +19,7 @@ import {
 import millAvatar from '../assets/images/mill_photo.jpg';
 import { WizardAnswers, ChatMessage } from '../types/contest';
 import { soundManager } from '../utils/audio';
-import { formatAkinoyaPlanetName, generateOrganicPlanetName, derivePlanetAttributesFromHumanAnswers } from '../data/contest';
+import { formatAkinoyaPlanetName, derivePlanetAttributesFromHumanAnswers } from '../data/contest';
 import { getStoredSectorClaim } from '../utils/pioneer';
 
 interface PlanetGeneratorChatProps {
@@ -141,8 +141,8 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   onClose,
 }) => {
   const initialClaim = getStoredSectorClaim();
-  const initialPlanetName = formatAkinoyaPlanetName(initialClaim?.sectorName || '');
-  const hasPreAnsweredPlanetName = Boolean(initialPlanetName && initialPlanetName.length > 1);
+  const initialPlanetName = formatAkinoyaPlanetName(initialClaim?.sectorName || '', false);
+  const hasPreAnsweredPlanetName = Boolean(initialPlanetName && initialPlanetName.trim().length > 1);
 
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(() => {
     return hasPreAnsweredPlanetName ? 1 : 0;
@@ -150,7 +150,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
 
   const [answers, setAnswers] = useState<WizardAnswers>(() => {
     const claim = getStoredSectorClaim();
-    const pName = formatAkinoyaPlanetName(claim?.sectorName || '');
+    const pName = formatAkinoyaPlanetName(claim?.sectorName || '', false);
     return {
       relaxation: '',
       creativeExpression: '',
@@ -197,9 +197,9 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
     }
 
     const claim = getStoredSectorClaim();
-    const pName = formatAkinoyaPlanetName(claim?.sectorName || initialPlanetName);
+    const pName = formatAkinoyaPlanetName(claim?.sectorName || initialPlanetName, false);
 
-    if (pName && pName.length > 1) {
+    if (pName && pName.trim().length > 1) {
       // Question 1 satisfied via Claim Your World form -> Advance directly to Question 2
       const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\n[QUESTION 01 SATISFIED]: Your world designation "${pName}" and terrain (${claim?.biome || 'Bioluminescent Canopy'}) have been confirmed and locked into active telemetry.\n\nWe now proceed directly to Question 02 of 08 (${WIZARD_STEPS[1].title}).`;
 
@@ -343,11 +343,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   const handleAdoptExample = () => {
     if (!currentStep) return;
     soundManager.playTone(600, 0.04);
-    if (currentStep.field === 'planetName') {
-      setInputVal(generateOrganicPlanetName());
-    } else {
-      setInputVal(currentStep.helperExample);
-    }
+    setInputVal(currentStep.helperExample);
   };
 
   const handleReset = () => {

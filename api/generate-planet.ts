@@ -44,9 +44,9 @@ export const generateOrganicPlanetName = (): string => {
   return `${p}${s}`;
 };
 
-export const formatAkinoyaPlanetName = (rawName?: string): string => {
+export const formatAkinoyaPlanetName = (rawName?: string, allowFallback = false): string => {
   if (!rawName || !rawName.trim()) {
-    return generateOrganicPlanetName();
+    return allowFallback ? generateOrganicPlanetName() : 'Äkinoya Frontier Sector';
   }
   let clean = rawName.trim();
   // Strip tech prefixes: Planet, Sector, World, Sector_01, AKN-, etc.
@@ -57,7 +57,7 @@ export const formatAkinoyaPlanetName = (rawName?: string): string => {
   clean = clean.replace(/\b[A-Z]{1,3}\d+\b/gi, '').trim();
 
   if (!clean || clean.length < 2) {
-    return generateOrganicPlanetName();
+    return allowFallback ? generateOrganicPlanetName() : rawName.trim();
   }
 
   // Capitalize properly as a natural proper name

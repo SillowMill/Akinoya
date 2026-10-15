@@ -42,7 +42,7 @@ import {
   isCleanPhotorealistic,
 } from '../data/contest';
 import { attachContestSubmissionToCreator } from '../data/creators';
-import { isPostLaunch, hasPaidMembership, openMembershipGateModal } from '../utils/pioneer';
+import { isPostLaunch, hasPaidMembership, openMembershipGateModal, openClaimWorldModal } from '../utils/pioneer';
 
 interface ContestLaunchpadProps {
   onBackToHome: () => void;
@@ -131,7 +131,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     return () => unsubscribe();
   }, [isAuthenticated, user?.id, user?.email, profile?.id, profile?.contest_submission_id]);
 
-  // Handle launch button
+  // Handle launch button: ALWAYS mandate "Create Your Free World" modal first
   const handleStartWorldbuilding = () => {
     if (isPostLaunch() && !hasPaidMembership(user, profile, role, isVip)) {
       soundManager.playTone(330, 0.08);
@@ -152,12 +152,13 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       return;
     }
     soundManager.playTone(660, 0.08);
-    setIsChatOpen(true);
+    // Explicitly mandate the "Create Your Free World" modal first before launching Mill
+    openClaimWorldModal();
   };
 
   // Called when Mill completes the 8 questions (Live Gemini AI Synthesis)
   const handleWizardComplete = async (answers: WizardAnswers) => {
-    const planetName = formatAkinoyaPlanetName(answers.planetName);
+    const planetName = formatAkinoyaPlanetName(answers.planetName, false) || answers.planetName || 'Äkinoya Frontier Sector';
     const answersWithFormattedName = { ...answers, planetName };
     setPendingAnswers(answersWithFormattedName);
     setIsChatOpen(false);
