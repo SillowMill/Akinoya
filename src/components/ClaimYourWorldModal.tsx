@@ -214,14 +214,18 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
           <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Close Button */}
+          {/* Close Button: Enhanced touch target and zero-lag responsiveness */}
           <button
             type="button"
             onClick={handleClose}
-            className="absolute top-4 right-4 text-white/50 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer z-20"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              handleClose();
+            }}
+            className="absolute top-3 right-3 sm:top-5 sm:right-5 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer z-30 touch-manipulation select-none border border-white/10 shadow-lg active:scale-95"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 pointer-events-none" />
           </button>
 
           {!claimSuccess ? (

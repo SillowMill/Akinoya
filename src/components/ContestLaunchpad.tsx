@@ -758,44 +758,46 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   return (
     <div className="relative min-h-[100dvh] w-full max-w-full box-border bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
       {/* Universal Sticky Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/90 backdrop-blur-xl px-2.5 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-1.5 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1">
           <button
             type="button"
             onClick={onBackToHome}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer min-h-[44px] shrink-0"
+            className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer min-h-[38px] sm:min-h-[40px] shrink-0"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Home</span>
+            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden xs:inline">Home</span>
           </button>
 
           <div className="h-4 w-px bg-white/10 hidden sm:block shrink-0" />
 
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <span className="p-1 rounded-md bg-amber-400 text-black shrink-0">
-              <Trophy className="w-3.5 h-3.5 fill-black" />
+              <Trophy className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-black" />
             </span>
             <div className="min-w-0">
               <span className="text-xs sm:text-sm font-display font-bold tracking-wide text-white truncate block">
-                Äkinoya Worldbuilding Contest
+                <span className="sm:hidden">Contest</span>
+                <span className="hidden sm:inline">Äkinoya Worldbuilding Contest</span>
               </span>
-              <span className="text-[10px] font-mono text-amber-400/90 hidden sm:block">
+              <span className="text-[10px] font-mono text-amber-400/90 hidden md:block">
                 1 Golden Ticket · Closes June 30, 2027
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {onNavigateToGalaxy && (
             <button
               type="button"
               onClick={() => onNavigateToGalaxy()}
-              className="px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 min-h-[44px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px] sm:min-h-[40px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+              title="Galaxy Navigator"
             >
-              <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '24s' }} />
+              <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin shrink-0" style={{ animationDuration: '24s' }} />
               <span className="hidden sm:inline">🌌 Galaxy Navigator</span>
-              <span className="sm:hidden">Galaxy</span>
+              <span className="sm:hidden text-[11px] font-bold">Galaxy</span>
             </button>
           )}
 
@@ -803,21 +805,22 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             <button
               type="button"
               onClick={onNavigateToCommunity}
-              className="px-3 py-1.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px] sm:min-h-[40px]"
+              title="Lore Hub & Governance"
             >
-              <Globe2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Lore Hub &amp; Governance</span>
-              <span className="sm:hidden">Lore Hub</span>
+              <Globe2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden md:inline">Lore Hub &amp; Governance</span>
+              <span className="md:hidden text-[11px] font-bold">Lore Hub</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={handleCopyShare}
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 min-h-[44px]"
+            className="px-2 sm:px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px] sm:min-h-[40px]"
             title="Share Contest"
           >
-            <Share2 className="w-3.5 h-3.5 text-amber-400" />
+            <Share2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span className="hidden sm:inline">{copiedLink ? 'Copied!' : 'Share'}</span>
           </button>
         </div>

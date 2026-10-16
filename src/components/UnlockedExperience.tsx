@@ -37,7 +37,6 @@ import {
   ShoppingBag,
   CheckCircle2,
   Gem,
-  User,
   Download,
   Trophy,
   Camera,
@@ -2010,17 +2009,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
                     </span>
                   </div>
-                </div>
-
-                <div className="mt-3">
-                  <button
-                    type="button"
-                    onClick={() => (onNavigateToPassport ? onNavigateToPassport() : onNavigateToVerify?.(activePassId))}
-                    className="w-full py-2.5 px-3 rounded-xl font-mono text-[11px] sm:text-xs font-semibold text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/30 hover:border-cyan-400 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
-                  >
-                    <User className="w-3.5 h-3.5" />
-                    <span>View Digital Passport</span>
-                  </button>
                 </div>
               </div>
 
