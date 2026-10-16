@@ -998,13 +998,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 authorName: 'Sillow Mill Core',
                 authorUsername: 'akinoya',
                 authorEmail: 'contact@sillowmill.com',
-                planetName: 'Äkinoya Capital Core',
+                planetName: 'Äkinoya Core',
                 coordX: 0,
                 coordY: 0,
                 sectorId: 'SECTOR AKN-00 (CORE)',
                 votesCount: 999,
                 status: 'PUBLISHED',
-                atmosphere: 'Genesis Capital of the Sillow Mill universe.',
+                atmosphere: 'Capital of Sillow Mill',
                 flora: 'Bioluminescent fungal canopies and resonant crystal spires.',
                 fauna: 'High-altitude celestial gliders.',
                 sonicVibe: '432Hz ambient harmonic drone.',
@@ -1033,18 +1033,18 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.8)] group-hover:scale-115 transition-transform duration-300 bg-black flex items-center justify-center shrink-0">
               <img
                 src={akinoyaHeroBg}
-                alt="Äkinoya Capital Core"
+                alt="Äkinoya Core"
                 className="w-full h-full object-cover scale-110 group-hover:rotate-12 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/40 via-transparent to-yellow-300/40" />
             </div>
 
-            {/* Capital Core Badge Label - positioned below orb without affecting container coordinates */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 flex flex-col items-center pointer-events-none whitespace-nowrap">
-              <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] items-center gap-1">
-                <span>👑 ÄKINOYA CORE (0, 0)</span>
+            {/* Capital Core Node Label - positioned cleanly below orb */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 flex flex-col items-center pointer-events-none whitespace-nowrap text-center">
+              <span className="text-xs sm:text-[13px] font-display font-extrabold text-amber-400 tracking-wide drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] group-hover:text-yellow-300 transition-colors">
+                Äkinoya Core
               </span>
-              <span className="text-[11px] font-display font-extrabold text-white tracking-wider mt-0.5 group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+              <span className="text-[9.5px] sm:text-[10.5px] font-mono text-white/80 tracking-wide mt-0.5 drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
                 Capital of Sillow Mill
               </span>
             </div>
@@ -1402,11 +1402,11 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                     <Compass className="w-4 h-4" />
                   </span>
                   <div>
-                    <h2 className="text-base font-display font-extrabold text-white">
-                      Äkinoya · Capital Core
+                    <h2 className="text-base font-display font-extrabold text-amber-400">
+                      Äkinoya Core
                     </h2>
-                    <span className="text-[10px] font-mono text-amber-300">
-                      Anchor Coordinates: (0, 0) AU · Capital of Sillow Mill
+                    <span className="text-[10px] font-mono text-white/75">
+                      Capital of Sillow Mill
                     </span>
                   </div>
                 </div>
