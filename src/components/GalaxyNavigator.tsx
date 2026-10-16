@@ -39,8 +39,7 @@ import {
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
 import { PlanetDossierModal } from './PlanetDossierModal';
-import akinoyaOrbitalImg from '../assets/images/akinoya_exact_planet_1790853678690.jpg';
-import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
+import akinoyaHeroBg from '../assets/images/akinoya_hero_bg.jpg';
 
 interface GalaxyNavigatorProps {
   onBackToHome: () => void;
@@ -851,7 +850,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 visualAesthetic: 'Cinematic golden twilight sci-fi vista.',
                 landmark: 'The Core Citadel of Äkinoya.',
                 generatedLore: 'The central gravitational anchor of the Sillow Mill universe.',
-                renders: { hero: akinoyaOrbitalImg },
+                renders: { hero: akinoyaHeroBg },
               } as PlanetSubmission);
             }}
             onPointerLeave={() => setHoveredPlanet(null)}
@@ -872,7 +871,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             {/* Core Orb */}
             <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.8)] group-hover:scale-115 transition-transform duration-300 bg-black flex items-center justify-center">
               <img
-                src={akinoyaOrbitalImg}
+                src={akinoyaHeroBg}
                 alt="Äkinoya Capital Core"
                 className="w-full h-full object-cover scale-110 group-hover:rotate-12 transition-transform duration-700"
               />
@@ -1073,7 +1072,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               ) : (
                 <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10">
                   <img
-                    src={selectedPlanet.renders?.hero || akinoyaVistaImg}
+                    src={selectedPlanet.renders?.hero || akinoyaHeroBg}
                     alt={selectedPlanet.planetName}
                     className="w-full h-full object-cover"
                   />
@@ -1202,10 +1201,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 </button>
               </div>
 
-              <div className="relative aspect-video rounded-xl overflow-hidden border border-white/10">
+              <div className="relative aspect-video rounded-xl overflow-hidden border border-amber-400/30 shadow-[0_0_30px_rgba(245,158,11,0.25)]">
                 <img
-                  src={akinoyaVistaImg}
-                  alt="Äkinoya Capital Vista"
+                  src={akinoyaHeroBg}
+                  alt="Äkinoya Capital Core · Bingäa Visualizer"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
