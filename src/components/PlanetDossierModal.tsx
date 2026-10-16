@@ -175,9 +175,6 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                   <h2 className="text-base sm:text-lg font-display font-extrabold text-white tracking-wide truncate max-w-full">
                     {planet.planetName}
                   </h2>
-                  <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 max-w-full truncate">
-                    {planet.sectorId || 'SECTOR ALPHA-01'} · ({planet.coordX ?? 0}, {planet.coordY ?? 0}) AU
-                  </span>
                 </div>
                 <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-xs font-mono text-white/50 min-w-0">
                   <span>By {planet.authorName}</span>
@@ -202,10 +199,10 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 type="button"
                 onClick={handleCopyGalaxyLink}
                 className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer"
-                title="Copy Shareable Sector Link"
+                title="Copy Shareable Planet Link"
               >
                 <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Sector Link'}</span>
+                <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Planet Link'}</span>
               </button>
 
               {onNavigateToGalaxy && (
@@ -571,7 +568,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 type="button"
                 onClick={handleCopyGalaxyLink}
                 className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-xs transition-colors cursor-pointer flex items-center gap-1.5"
-                title="Copy Shareable Sector Link"
+                title="Copy Shareable Planet Link"
               >
                 <MapPin className="w-3.5 h-3.5 text-amber-400" />
                 <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Link'}</span>

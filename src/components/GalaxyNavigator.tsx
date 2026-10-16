@@ -856,7 +856,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               onBlur={() => {
                 setTimeout(() => window.scrollTo(0, 0), 100);
               }}
-              placeholder="Search planet, sector code (e.g. ALPHA-07), architect..."
+              placeholder="Search planet or architect..."
               className="w-full py-2.5 px-3 bg-transparent text-xs text-white placeholder-white/40 font-mono focus:outline-none"
             />
             {searchQuery && (
@@ -883,9 +883,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-display font-bold text-white group-hover:text-amber-300 transition-colors">
                         {p.planetName}
-                      </span>
-                      <span className="hidden sm:inline-block text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-950/80 text-amber-300 border border-amber-400/30">
-                        {p.sectorId || 'SECTOR ALPHA-01'}
                       </span>
                     </div>
                     <span className="text-[10px] font-mono text-white/50 block truncate">
@@ -922,7 +919,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           <span>OPTICAL ZOOM:</span>
           <span className="text-white font-bold text-right">{(zoom * 100).toFixed(0)}%</span>
           <span>CHARTED WORLDS:</span>
-          <span className="text-cyan-300 font-bold text-right">{planets.length} SECTORS</span>
+          <span className="text-cyan-300 font-bold text-right">{planets.length} WORLDS</span>
         </div>
       </div>
 
@@ -1112,23 +1109,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
                 </div>
 
-                {/* Planet Label Pill */}
-                <div className="mt-2 flex flex-col items-center pointer-events-none">
-                  <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-white/10 group-hover:border-amber-400/60 shadow-md">
-                    <span className="hidden sm:inline-block text-[8.5px] font-mono text-amber-300 font-bold tracking-wider uppercase">
-                      {planet.sectorId || 'SECTOR'}
-                    </span>
-                    <span className="hidden sm:inline-block text-white/20 text-[8px]">·</span>
-                    <span className="text-[8.5px] font-mono text-amber-300 font-bold">
-                      {planet.votesCount}★
-                    </span>
-                  </div>
-
-                  <span className="text-xs font-display font-bold text-white tracking-wide mt-0.5 group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] whitespace-nowrap">
+                {/* Planet Label: Clean planet name and creator handle */}
+                <div className="mt-1.5 flex flex-col items-center pointer-events-none">
+                  <span className="text-xs font-display font-bold text-white tracking-wide group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] whitespace-nowrap">
                     {planet.planetName}
                   </span>
 
-                  <span className="text-[9px] font-mono text-white/50 tracking-wider">
+                  <span className="text-[9.5px] font-mono text-white/50 tracking-wider">
                     @{planet.authorUsername}
                   </span>
                 </div>

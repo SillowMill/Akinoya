@@ -107,9 +107,6 @@ export const MyWorld: React.FC<MyWorldProps> = ({
           <h3 className="text-[11px] sm:text-sm font-mono font-bold uppercase tracking-wider text-white min-w-0 break-words">
             Synthesized 5-Photo Visual Archive &amp; 9:16 Viral Trailer
           </h3>
-          <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 max-w-full truncate">
-            {dossier.sectorId || 'SECTOR ALPHA-01'} · ({dossier.coordX ?? 0}, {dossier.coordY ?? 0}) AU
-          </span>
         </div>
 
         <div className="hidden sm:flex items-center gap-2 flex-wrap shrink-0">
@@ -117,10 +114,10 @@ export const MyWorld: React.FC<MyWorldProps> = ({
             type="button"
             onClick={handleCopyGalaxyLink}
             className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
-            title="Copy Shareable Sector Link"
+            title="Copy Shareable Planet Link"
           >
             <MapPin className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Sector Link'}</span>
+            <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Planet Link'}</span>
           </button>
 
           {onNavigateToGalaxy && (
@@ -258,7 +255,7 @@ export const MyWorld: React.FC<MyWorldProps> = ({
               }`}
             >
               <MapPin className="w-3.5 h-3.5 text-amber-400" />
-              <span>{isCopiedGalaxyLink ? 'Copied!' : 'Sector Link'}</span>
+              <span>{isCopiedGalaxyLink ? 'Copied!' : 'Planet Link'}</span>
             </button>
           </div>
 

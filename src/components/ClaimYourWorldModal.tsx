@@ -411,10 +411,10 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
               <div className="space-y-2">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/90 border border-amber-400 text-amber-300 font-mono text-xs font-bold tracking-wider">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>[PIONEER-2027] SECTOR RESERVED &amp; WHITELISTED</span>
+                  <span>[PIONEER-2027] WORLD RESERVED &amp; WHITELISTED</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-display font-black text-white">
-                  Sector Claim Confirmed
+                  World Claim Confirmed
                 </h3>
                 <p className="text-xs sm:text-sm text-white/70 font-sans max-w-md mx-auto">
                   Your coordinates have been registered to the Äkinoya master registry and synced to Google Sheets.

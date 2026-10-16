@@ -141,7 +141,7 @@ export const AuthHeaderButton: React.FC = () => {
               </div>
               {profile?.claimed_sector && (
                 <div className="text-[9.5px] font-mono text-cyan-300 pt-0.5 truncate">
-                  🪐 SECTOR: {profile.claimed_sector}
+                  🪐 WORLD: {profile.claimed_sector}
                 </div>
               )}
 

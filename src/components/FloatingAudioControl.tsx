@@ -20,7 +20,7 @@ export const FloatingAudioControl: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 select-none pointer-events-auto">
+    <div className="fixed bottom-20 right-4 sm:bottom-20 sm:right-6 z-40 flex items-center gap-2 select-none pointer-events-auto">
       <motion.button
         type="button"
         onClick={handleToggle}

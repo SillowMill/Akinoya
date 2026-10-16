@@ -1238,7 +1238,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             {previewDossier?.generatedLore && (
               <div className="p-5 rounded-2xl bg-[#070b16] border border-white/10 space-y-2">
                 <span className="text-[10.5px] font-mono text-amber-300 font-bold uppercase">
-                  AI-SYNTHESIZED SECTOR LORE · FAL.AI FLUX SCHNELL &amp; 9:16 TRAILER
+                  AI-SYNTHESIZED PLANETARY LORE · FAL.AI FLUX SCHNELL &amp; 9:16 TRAILER
                 </span>
                 <p className="text-xs sm:text-sm text-white/85 font-sans leading-relaxed whitespace-pre-line">
                   {previewDossier.generatedLore}
@@ -1317,7 +1317,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 p-5 rounded-2xl bg-[#070b16] border border-white/10 space-y-2">
                 <span className="text-[10.5px] font-mono text-amber-300 font-bold uppercase">
-                  REGISTERED SECTOR LORE
+                  REGISTERED PLANETARY LORE
                 </span>
                 <p className="text-xs sm:text-sm text-white/85 font-sans leading-relaxed whitespace-pre-line">
                   {activeSubmission.generatedLore}

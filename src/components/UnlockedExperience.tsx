@@ -1702,10 +1702,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   <div className="space-y-2 max-w-xl mx-auto">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-widest uppercase bg-amber-400/15 text-amber-300 border border-amber-400/30">
                       <Sparkles className="w-3 h-3 fill-amber-300" />
-                      SECTOR SYNTHESIS · 1 GOLDEN TICKET READY
+                      WORLD SYNTHESIS · 1 GOLDEN TICKET READY
                     </span>
                     <h3 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
-                      You Haven't Synthesized Your Planetary Sector Yet
+                      You Haven't Synthesized Your Planetary World Yet
                     </h3>
                     <p className="text-xs sm:text-sm text-white/60 font-sans leading-relaxed">
                       Answer Mill's 8 human-centric questions to calibrate your sector's atmospheric chemistry, bioluminescent flora, apex fauna, and sonic signature. Your 5-photo high-resolution cinematic sci-fi dossier will be minted in real-time and entered into the 2027 Lore Governance Council.
@@ -1798,9 +1798,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-wide truncate">
                             {userDossier.planetName}
                           </h2>
-                          <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 shrink-0">
-                            SECTOR ID: {userDossier.id}
-                          </span>
                         </div>
                         <p className="text-xs font-mono text-white/60 mt-1">
                           Synthesized by {userDossier.authorName} ({userDossier.authorEmail || user?.email || 'Verified Account'})
