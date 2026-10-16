@@ -25,27 +25,30 @@ import { ClaimYourWorldModal } from './components/ClaimYourWorldModal';
 import { MembershipGateModal } from './components/MembershipGateModal';
 import { useAuth } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { hasAnyStoredCertificate } from './utils/certificate';
 
 export default function App() {
   const { user, profile, role, isAuthenticated, isVip, hasPendingVipInvitation, openAuthModal, isLoading } = useAuth();
 
   const isUserVip = Boolean(
-    Boolean(user || profile) && (
+    (Boolean(user || profile) && (
       isVip ||
       profile?.has_vip_pass === true ||
       profile?.is_vip === true ||
       role === 'VIP_GUEST' ||
       role === 'CREATOR' ||
-      Boolean(profile?.vip_code_redeemed) ||
-      (typeof window !== 'undefined' &&
-        (Boolean(localStorage.getItem('akinoya_patron_token')) ||
-         Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
-         Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
-         Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
-         Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
-         localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
-         localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
-    )
+      Boolean(profile?.vip_code_redeemed)
+    )) ||
+    hasAnyStoredCertificate() ||
+    (typeof window !== 'undefined' &&
+      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+       Boolean(localStorage.getItem('akinoya_bingaa_certificates')) ||
+       Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+       Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+       Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+       localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+       localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
   );
 
   // Persistent Public & Account Unlock:
@@ -265,7 +268,12 @@ export default function App() {
          Boolean(searchParams.get('enc')) ||
          hasValidQueryPass)
       ) {
-        setRoute('verify');
+        if (isUserVip && !searchParams.get('claim')) {
+          handlePublicUnlockSuccess();
+          navigateTo('home', '/?tab=assets#assets');
+        } else {
+          setRoute('verify');
+        }
       } else {
         setRoute('home');
       }
@@ -273,7 +281,20 @@ export default function App() {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [isUserVip]);
+
+  // Guard on verify route: if logged-in user already holds a verified pass, prevent claim loop and redirect to assets
+  useEffect(() => {
+    if (route === 'verify' && isUserVip) {
+      if (typeof window !== 'undefined') {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (!searchParams.get('claim')) {
+          handlePublicUnlockSuccess();
+          navigateTo('home', '/?tab=assets#assets');
+        }
+      }
+    }
+  }, [route, isUserVip]);
 
   // Listen for global Claim World modal open requests
   useEffect(() => {

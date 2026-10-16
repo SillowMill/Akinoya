@@ -185,7 +185,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   onNavigateToContest,
   onNavigateToGalaxy,
 }) => {
-  const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'my-world' | 'assets'>('pass');
+  const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'my-world' | 'assets'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const hash = window.location.hash.toLowerCase();
+      if (params.get('tab') === 'assets' || hash === '#assets') return 'assets';
+      if (params.get('tab') === 'my-world' || hash === '#my-world') return 'my-world';
+      if (params.get('tab') === 'edition' || hash === '#edition') return 'edition';
+    }
+    return 'pass';
+  });
   const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
   const [userDossier, setUserDossier] = useState<PlanetSubmission | null>(null);
   const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);
@@ -284,7 +293,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     const checkUrlParams = () => {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
-        if (params.get('tab') === 'pass' && params.get('subview') === 'hub') {
+        const hash = window.location.hash.toLowerCase();
+        if (params.get('tab') === 'assets' || hash === '#assets') {
+          setActiveTab('assets');
+        } else if (params.get('tab') === 'my-world' || hash === '#my-world') {
+          setActiveTab('my-world');
+        } else if (params.get('tab') === 'edition' || hash === '#edition') {
+          setActiveTab('edition');
+        } else if (params.get('tab') === 'pass' && params.get('subview') === 'hub') {
           setActiveTab('pass');
           setPassSubView('hub');
         } else if (params.get('tab') === 'visualizers') {

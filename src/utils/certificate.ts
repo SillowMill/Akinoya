@@ -97,6 +97,16 @@ export const getCertificate = (passId: string): BingaaCertificate | null => {
   return cert && cert.signature && cert.passId ? cert : null;
 };
 
+export const hasAnyStoredCertificate = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const all = readAll();
+    return Object.values(all).some((c) => Boolean(c && c.signature && c.passId));
+  } catch {
+    return false;
+  }
+};
+
 export const saveCertificate = (cert: BingaaCertificate): void => {
   if (typeof window === 'undefined') return;
   try {

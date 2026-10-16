@@ -4,6 +4,7 @@ import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
 import { openClaimWorldModal } from '../utils/pioneer';
 import { getUserStatusConfig } from '../utils/statusPill';
+import { hasAnyStoredCertificate } from '../utils/certificate';
 
 interface TopBarProps {
   isUnlocked: boolean;
@@ -47,6 +48,25 @@ export const TopBar: React.FC<TopBarProps> = ({
     profile,
     role,
     effectiveIsVip
+  );
+
+  const hasClaimedPass = Boolean(
+    effectiveIsVip ||
+    isVip ||
+    authIsVip ||
+    profile?.has_vip_pass === true ||
+    profile?.is_vip === true ||
+    role === 'VIP_GUEST' ||
+    role === 'CREATOR' ||
+    Boolean(profile?.vip_code_redeemed) ||
+    hasAnyStoredCertificate() ||
+    (typeof window !== 'undefined' && (
+      Boolean(localStorage.getItem('akinoya_patron_token')) ||
+      Boolean(localStorage.getItem('akinoya_bingaa_certificates')) ||
+      Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+      Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+      Boolean(localStorage.getItem('sillow_vip_bound_token'))
+    ))
   );
 
   return (
@@ -103,7 +123,8 @@ export const TopBar: React.FC<TopBarProps> = ({
             Community Hub
           </a>
 
-          {effectiveIsVip && (
+          {/* Digital Passport: Only visible for guests / unverified users who still need to claim */}
+          {!hasClaimedPass && (
             onNavigateToVerify ? (
               <button
                 type="button"

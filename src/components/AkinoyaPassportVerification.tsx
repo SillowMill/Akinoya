@@ -35,6 +35,7 @@ import {
   downloadCertificatePng,
   deriveEditionNumber,
   TOTAL_EDITION_LIMIT,
+  hasAnyStoredCertificate,
 } from '../utils/certificate';
 import { checkVipTokenStatus, OTHER_ACCOUNT_VIP_ERROR, isFounderEmail } from '../lib/vipTokens';
 
@@ -186,6 +187,28 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     )
   );
 
+  const userAlreadyHoldsPass = Boolean(
+    (isUserLoggedIn && (
+      isUserVip ||
+      profile?.has_vip_pass === true ||
+      profile?.is_vip === true ||
+      role === 'VIP_GUEST' ||
+      role === 'CREATOR' ||
+      Boolean(profile?.vip_code_redeemed)
+    )) ||
+    hasAnyStoredCertificate() ||
+    Boolean(localStoredCert) ||
+    (typeof window !== 'undefined' && (
+      Boolean(localStorage.getItem('akinoya_patron_token')) ||
+      Boolean(localStorage.getItem('akinoya_bingaa_certificates')) ||
+      Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+      Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+      Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+      localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+      localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'
+    ))
+  );
+
   const activeHolderName = isClaimed
     ? (passData.ownerName ||
        localStoredCert?.holderName ||
@@ -277,6 +300,14 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
   // Execute verification against server-side NTAG engine
   const executeVerification = async (token: string, enc: string | null, cmac: string | null) => {
+    // If the logged-in user already holds a verified pass / Certificate of Authenticity and didn't provide a claim key,
+    // do not trigger error loops against unowned/master passes
+    if (userAlreadyHoldsPass && !queryParams.claim) {
+      setIsValidating(false);
+      setDnaError(null);
+      return;
+    }
+
     setIsValidating(true);
     setDnaError(null);
 
@@ -416,6 +447,19 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   useEffect(() => {
     executeVerification(activeToken, queryParams.enc, queryParams.cmac);
   }, [activeToken, queryParams.enc, queryParams.cmac]);
+
+  // Guard on verify route: auto-redirect verified pass holders to their assets dossier
+  useEffect(() => {
+    if (userAlreadyHoldsPass && !queryParams.claim) {
+      const timer = setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({}, '', '/?tab=assets#assets');
+        }
+        onNavigateHome();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [userAlreadyHoldsPass, queryParams.claim, onNavigateHome]);
 
   // Copy token ID
   const handleCopyToken = () => {
@@ -619,7 +663,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       </div>
 
       {/* Security Warning if Cloned/Invalid */}
-      {dnaError && dnaError !== 'ALREADY CLAIMED VIP LINK' && dnaError !== OTHER_ACCOUNT_VIP_ERROR && (
+      {!userAlreadyHoldsPass && dnaError && dnaError !== 'ALREADY CLAIMED VIP LINK' && dnaError !== OTHER_ACCOUNT_VIP_ERROR && (
         <div className="mb-5 p-4 rounded-xl bg-rose-950/50 border border-rose-500/40 text-rose-200 text-xs font-mono space-y-1">
           <div className="font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -631,8 +675,69 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         </div>
       )}
 
-      {/* VIEW: ALREADY CLAIMED / OTHER ACCOUNT VIP LINK SCREEN */}
-      {dnaError && (dnaError === 'ALREADY CLAIMED VIP LINK' || dnaError === OTHER_ACCOUNT_VIP_ERROR) ? (
+      {/* VIEW: LOGGED-IN VERIFIED PASS HOLDER NOTICE */}
+      {userAlreadyHoldsPass && !queryParams.claim ? (
+        <motion.div
+          key="already-verified-holder-card"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="rounded-2xl bg-[#090d16] border border-emerald-500/40 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(16,185,129,0.15)]"
+        >
+          {/* Header */}
+          <div className="border-b border-white/10 pb-4 sm:pb-5 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>VIP PASS ACTIVE &amp; REGISTERED</span>
+              </span>
+              <span className="text-[10px] font-mono text-emerald-400 font-bold tracking-wider">
+                OFFICIALLY VERIFIED
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
+              VIP Pass Successfully Registered
+            </h1>
+            <p className="text-xs font-mono text-emerald-200/90 leading-relaxed">
+              Your account already holds a verified Founding VIP Pass and active Certificate of Authenticity. You do not need to register again.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/60 to-teal-950/50 border border-emerald-500/30 text-emerald-200 text-xs font-mono space-y-1">
+            <div className="font-semibold text-emerald-300 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Redirecting to Your Assets Dossier</span>
+            </div>
+            <p className="text-[11px] text-emerald-300/80">
+              Taking you to your dashboard to view your unlocked visualizers, high-res certificate, and world...
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.history.replaceState({}, '', '/?tab=assets#assets');
+                }
+                onNavigateHome();
+              }}
+              className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+            >
+              <span>VIEW YOUR VERIFIED ASSETS</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onNavigateHome}
+              className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-white/10 hover:bg-white/15 border border-white/20 text-white flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <span>RETURN TO HOME</span>
+            </button>
+          </div>
+        </motion.div>
+      ) : dnaError && (dnaError === 'ALREADY CLAIMED VIP LINK' || dnaError === OTHER_ACCOUNT_VIP_ERROR) ? (
         <motion.div
           key="already-claimed-card"
           initial={{ opacity: 0, y: 12 }}
