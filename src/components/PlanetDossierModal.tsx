@@ -107,6 +107,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
     planet.videoUrl ||
     planet.renders?.videoUrl ||
     planet.renders?.video_url ||
+    (planet.humanAnswers as any)?.video_url ||
     '';
   const heroPhotoUrl = photoCards[0]?.url || planet.renders?.hero || '';
 
@@ -174,7 +175,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                   <h2 className="text-base sm:text-lg font-display font-extrabold text-white tracking-wide truncate max-w-full">
                     {planet.planetName}
                   </h2>
-                  <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 max-w-full truncate">
+                  <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 max-w-full truncate">
                     {planet.sectorId || 'SECTOR ALPHA-01'} · ({planet.coordX ?? 0}, {planet.coordY ?? 0}) AU
                   </span>
                 </div>
@@ -263,7 +264,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
               {isTrailerTab ? (
                 <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#070d1e] via-[#050813] to-black border border-amber-400/40 shadow-[0_0_40px_rgba(245,158,11,0.18)] p-4 sm:p-6 flex flex-col items-center space-y-4">
                   {/* Strict 9:16 Vertical Video Player */}
-                  <div className="relative w-full max-w-[270px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center">
+                  <div className="relative w-full max-w-[240px] xs:max-w-[270px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center">
                     {videoUrl ? (
                       <video
                         src={videoUrl}
@@ -408,20 +409,20 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                         soundManager.playTone(540 + idx * 40, 0.04);
                         setActivePhotoIdx(idx);
                       }}
-                      className={`relative aspect-[16/10] rounded-xl overflow-hidden border transition-all cursor-pointer text-left ${
+                      className={`relative aspect-[16/10] rounded-xl overflow-hidden border transition-all cursor-pointer text-left touch-manipulation select-none ${
                         isActive
                           ? 'border-cyan-400 ring-2 ring-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.4)]'
                           : 'border-white/10 hover:border-white/30 opacity-70 hover:opacity-100'
                       }`}
                     >
                       {card.url ? (
-                        <img src={card.url} alt={card.title} className="w-full h-full object-cover" />
+                        <img src={card.url} alt={card.title} className="w-full h-full object-cover pointer-events-none select-none" />
                       ) : (
-                        <div className="w-full h-full bg-[#070d1e] flex items-center justify-center">
+                        <div className="w-full h-full bg-[#070d1e] flex items-center justify-center pointer-events-none select-none">
                           <Sparkles className="w-4 h-4 text-amber-300/60" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-1 sm:p-1.5">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-1 sm:p-1.5 pointer-events-none select-none">
                         <span className="text-[9px] font-mono font-bold text-white truncate leading-tight">
                           0{idx + 1} · {card.title.split(' ')[0]}
                         </span>
@@ -437,7 +438,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                     soundManager.playTone(760, 0.05);
                     setActivePhotoIdx(photoCards.length);
                   }}
-                  className={`relative aspect-[16/10] rounded-xl overflow-hidden border transition-all cursor-pointer text-left flex flex-col items-center justify-center p-1.5 ${
+                  className={`relative aspect-[16/10] rounded-xl overflow-hidden border transition-all cursor-pointer text-left flex flex-col items-center justify-center p-1.5 touch-manipulation select-none ${
                     isTrailerTab
                       ? 'border-amber-400 ring-2 ring-amber-400/50 bg-gradient-to-br from-amber-950/80 via-[#070d1e] to-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
                       : 'border-amber-500/30 hover:border-amber-400/60 bg-gradient-to-br from-[#0a1228] to-black opacity-90 hover:opacity-100'
@@ -447,10 +448,10 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                     <img
                       src={heroPhotoUrl}
                       alt="9:16 Trailer"
-                      className="absolute inset-0 w-full h-full object-cover opacity-30"
+                      className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none select-none"
                     />
                   )}
-                  <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-0.5">
+                  <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-0.5 pointer-events-none select-none">
                     <Video className="w-4 h-4 text-amber-300" />
                     <span className="text-[9.5px] font-mono font-extrabold text-amber-300 leading-tight">
                       🎥 9:16 Trailer

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Orbit, Sparkles, Users } from 'lucide-react';
 import { SoundtrackButton } from './SoundtrackButton';
 import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
@@ -96,18 +97,10 @@ export const TopBar: React.FC<TopBarProps> = ({
                 onNavigateToGalaxy();
               }
             }}
-            className="text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
           >
-            Galaxy Navigator
-          </a>
-
-          <span className="text-white/20 select-none text-[11px]" aria-hidden="true">|</span>
-
-          <a
-            href="/contest"
-            className="text-[#f59e0b] hover:text-[#fbbf24] font-semibold whitespace-nowrap transition-colors cursor-pointer"
-          >
-            Contest
+            <Orbit className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <span>Galaxy Navigator</span>
           </a>
 
           <span className="text-white/20 select-none text-[11px]" aria-hidden="true">|</span>
@@ -115,18 +108,20 @@ export const TopBar: React.FC<TopBarProps> = ({
           <button
             type="button"
             onClick={() => openClaimWorldModal()}
-            className="text-[#f59e0b] hover:text-[#fbbf24] font-semibold whitespace-nowrap transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-[#f59e0b] hover:text-[#fbbf24] font-semibold whitespace-nowrap transition-colors cursor-pointer"
           >
-            Claim World
+            <Sparkles className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <span>Claim World</span>
           </button>
 
           <span className="text-white/20 select-none text-[11px]" aria-hidden="true">|</span>
 
           <a
             href="/community"
-            className="text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
           >
-            Community Hub
+            <Users className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <span>Community Hub</span>
           </a>
 
           {/* Digital Passport: Only visible for guests / unverified users who still need to claim */}

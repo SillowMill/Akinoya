@@ -107,7 +107,7 @@ export const MyWorld: React.FC<MyWorldProps> = ({
           <h3 className="text-[11px] sm:text-sm font-mono font-bold uppercase tracking-wider text-white min-w-0 break-words">
             Synthesized 5-Photo Visual Archive &amp; 9:16 Viral Trailer
           </h3>
-          <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 max-w-full truncate">
+          <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 max-w-full truncate">
             {dossier.sectorId || 'SECTOR ALPHA-01'} · ({dossier.coordX ?? 0}, {dossier.coordY ?? 0}) AU
           </span>
         </div>

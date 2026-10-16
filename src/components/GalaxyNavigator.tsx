@@ -35,6 +35,7 @@ import {
   getPlanetPhotoCards,
   PlanetPhotoCard,
   COMMUNITY_SHARE_VIDEO_MESSAGE,
+  UI_RECALIBRATING_STATUS_TEXT,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
@@ -639,6 +640,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     setSearchQuery('');
     setIsSearchFocused(false);
     setSelectedPlanet(planet);
+    setMobilePhotoIdx(0);
     panTo(planet.coordX ?? 0, planet.coordY ?? 0, 1.1, 850);
   };
 
@@ -684,7 +686,11 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
   // Mobile Trailer Download
   const handleMobileDownloadTrailer = async (planet: PlanetSubmission) => {
-    const videoUrl = planet.videoUrl || planet.renders?.video_url;
+    const videoUrl =
+      planet.videoUrl ||
+      planet.renders?.video_url ||
+      planet.renders?.videoUrl ||
+      (planet.humanAnswers as any)?.video_url;
     if (!videoUrl) return;
     soundManager.playTone(740, 0.06);
     setMobileIsDownloading(true);
@@ -821,7 +827,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                       <span className="text-xs font-display font-bold text-white group-hover:text-amber-300 transition-colors">
                         {p.planetName}
                       </span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-950/80 text-amber-300 border border-amber-400/30">
+                      <span className="hidden sm:inline-block text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-950/80 text-amber-300 border border-amber-400/30">
                         {p.sectorId || 'SECTOR ALPHA-01'}
                       </span>
                     </div>
@@ -1052,10 +1058,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 {/* Planet Label Pill */}
                 <div className="mt-2 flex flex-col items-center pointer-events-none">
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-white/10 group-hover:border-amber-400/60 shadow-md">
-                    <span className="text-[8.5px] font-mono text-amber-300 font-bold tracking-wider uppercase">
+                    <span className="hidden sm:inline-block text-[8.5px] font-mono text-amber-300 font-bold tracking-wider uppercase">
                       {planet.sectorId || 'SECTOR'}
                     </span>
-                    <span className="text-white/20 text-[8px]">·</span>
+                    <span className="hidden sm:inline-block text-white/20 text-[8px]">·</span>
                     <span className="text-[8.5px] font-mono text-amber-300 font-bold">
                       {planet.votesCount}★
                     </span>
@@ -1091,9 +1097,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             <div className="p-3 bg-[#080d1d] border-b border-white/10 flex items-center justify-between gap-3 shrink-0">
               <div className="w-12 h-1.5 rounded-full bg-white/25 mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
               <div className="flex items-center gap-2 mt-1 min-w-0">
-                <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 shrink-0">
-                  {selectedPlanet.sectorId || 'SECTOR'}
-                </span>
                 <h3 className="text-sm font-display font-bold text-white truncate">
                   {selectedPlanet.planetName}
                 </h3>
@@ -1121,74 +1124,152 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
             {/* Scrollable Mobile Sheet Content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* 9:16 Video Player or Hero Visual */}
-              {selectedPlanet.videoUrl ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300">
-                    <span className="flex items-center gap-1">
-                      <Video className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>🎥 9:16 VIRAL TRAILER · 5S LOOP</span>
-                    </span>
-                    <span className="text-emerald-400 font-bold">READY</span>
-                  </div>
+              {(() => {
+                const photoCards = getPlanetPhotoCards(selectedPlanet);
+                const videoUrl =
+                  selectedPlanet.videoUrl ||
+                  selectedPlanet.renders?.video_url ||
+                  selectedPlanet.renders?.videoUrl ||
+                  (selectedPlanet.humanAnswers as any)?.video_url ||
+                  '';
+                const isTrailerTab = mobilePhotoIdx === photoCards.length;
+                const activePhoto = photoCards[mobilePhotoIdx] || photoCards[0];
 
-                  <div className="relative w-full max-w-[220px] aspect-[9/16] mx-auto rounded-2xl overflow-hidden bg-black border border-cyan-400/40 shadow-xl">
-                    <video
-                      src={selectedPlanet.videoUrl}
-                      poster={selectedPlanet.renders?.hero || undefined}
-                      controls
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                return (
+                  <>
+                    {/* Main Viewport: Either 9:16 Vertical Trailer or Active Photo */}
+                    {isTrailerTab ? (
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300">
+                          <span className="flex items-center gap-1.5 font-bold">
+                            <Video className="w-3.5 h-3.5 text-amber-400" />
+                            <span>🎥 9:16 VIRAL TRAILER · 5S LOOP</span>
+                          </span>
+                          <span className={`font-bold ${videoUrl ? 'text-emerald-400' : 'text-amber-400'}`}>
+                            {videoUrl ? 'READY · 9:16' : 'QUEUED_PENDING'}
+                          </span>
+                        </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleMobileDownloadTrailer(selectedPlanet)}
-                    disabled={mobileIsDownloading}
-                    className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>{mobileIsDownloading ? 'Saving MP4...' : '⬇ Download 9:16 MP4 Trailer'}</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10">
-                  <img
-                    src={selectedPlanet.renders?.hero || akinoyaHeroBg}
-                    alt={selectedPlanet.planetName}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
-                    <span className="text-xs font-mono text-cyan-300">
-                      Coordinates: ({selectedPlanet.coordX ?? 0}, {selectedPlanet.coordY ?? 0}) AU
-                    </span>
-                  </div>
-                </div>
-              )}
+                        <div className="relative w-full max-w-[220px] aspect-[9/16] mx-auto rounded-2xl overflow-hidden bg-black border border-cyan-400/40 shadow-xl flex items-center justify-center">
+                          {videoUrl ? (
+                            <video
+                              src={videoUrl}
+                              poster={photoCards[0]?.url || selectedPlanet.renders?.hero || undefined}
+                              controls
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="relative w-full h-full flex flex-col items-center justify-center p-4 text-center overflow-hidden">
+                              {photoCards[0]?.url && (
+                                <img
+                                  src={photoCards[0].url}
+                                  alt={selectedPlanet.planetName}
+                                  className="absolute inset-0 w-full h-full object-cover opacity-35 scale-110 pointer-events-none select-none"
+                                />
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-b from-[#070d1e]/90 via-[#050813]/85 to-black/95 pointer-events-none" />
+                              <div className="relative z-10 flex flex-col items-center space-y-2 px-2 pointer-events-none select-none">
+                                <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                                <span className="text-[10px] font-mono font-bold text-cyan-200 uppercase tracking-wider">
+                                  STATUS: QUEUED_PENDING
+                                </span>
+                                <p className="text-[11px] font-sans text-white/80 leading-relaxed">
+                                  {UI_RECALIBRATING_STATUS_TEXT}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
 
-              {/* 5-Photo Carousel Preview */}
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-mono text-white/50 uppercase tracking-wider block">
-                  5-Photo Visual Archive (01_main – 05_lore)
-                </span>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {getPlanetPhotoCards(selectedPlanet).map((photo, i) => (
-                    <div
-                      key={photo.id}
-                      onClick={() => setMobilePhotoIdx(i)}
-                      className={`relative aspect-square rounded-lg overflow-hidden border cursor-pointer ${
-                        mobilePhotoIdx === i ? 'border-amber-400 scale-105' : 'border-white/10 opacity-70'
-                      }`}
-                    >
-                      <img src={photo.url} alt={photo.title} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handleMobileDownloadTrailer(selectedPlanet)}
+                          disabled={!videoUrl || mobileIsDownloading}
+                          className={`w-full py-2 px-3 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
+                            videoUrl
+                              ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black hover:from-amber-300 hover:to-yellow-300'
+                              : 'bg-white/5 border border-white/10 text-white/40 cursor-not-allowed'
+                          }`}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>{mobileIsDownloading ? 'Saving MP4...' : '⬇ Download 9:16 MP4 Trailer'}</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10 shadow-lg">
+                        <img
+                          src={activePhoto?.url || selectedPlanet.renders?.hero || akinoyaHeroBg}
+                          alt={activePhoto?.title || selectedPlanet.planetName}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end justify-between p-3">
+                          <span className="text-xs font-mono font-bold text-white">
+                            0{mobilePhotoIdx + 1} · {activePhoto?.title || 'Orbit'}
+                          </span>
+                          <span className="text-[10px] font-mono text-cyan-300">
+                            Coordinates: ({selectedPlanet.coordX ?? 0}, {selectedPlanet.coordY ?? 0}) AU
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 5-Photo Visual Archive + 🎥 9:16 Trailer Tab */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-white/50 uppercase tracking-wider">
+                        <span>Visual Archive (Tap to View)</span>
+                        <span className="text-cyan-400 font-bold">
+                          {isTrailerTab ? '🎥 9:16 Trailer' : `Photo 0${mobilePhotoIdx + 1} of 05`}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1.5">
+                        {photoCards.map((photo, i) => (
+                          <button
+                            key={photo.id}
+                            type="button"
+                            onClick={() => {
+                              soundManager.playTone(540 + i * 40, 0.04);
+                              setMobilePhotoIdx(i);
+                            }}
+                            className={`relative aspect-square rounded-lg overflow-hidden border cursor-pointer transition-all touch-manipulation select-none ${
+                              mobilePhotoIdx === i
+                                ? 'border-amber-400 ring-2 ring-amber-400/50 scale-105 z-10'
+                                : 'border-white/10 opacity-70 hover:opacity-100'
+                            }`}
+                          >
+                            <img src={photo.url} alt={photo.title} className="w-full h-full object-cover pointer-events-none select-none" />
+                            <div className="absolute bottom-0 inset-x-0 bg-black/70 py-0.5 text-center pointer-events-none select-none">
+                              <span className="text-[8px] font-mono font-bold text-white">0{i + 1}</span>
+                            </div>
+                          </button>
+                        ))}
+
+                        {/* Dedicated 🎥 9:16 Trailer Tab */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundManager.playTone(760, 0.05);
+                            setMobilePhotoIdx(photoCards.length);
+                          }}
+                          className={`relative aspect-square rounded-lg overflow-hidden border cursor-pointer transition-all touch-manipulation select-none flex flex-col items-center justify-center p-1 ${
+                            isTrailerTab
+                              ? 'border-amber-400 ring-2 ring-amber-400/50 scale-105 z-10 bg-gradient-to-br from-amber-950/80 to-black'
+                              : 'border-amber-500/30 bg-gradient-to-br from-[#0a1228] to-black opacity-80 hover:opacity-100'
+                          }`}
+                        >
+                          <Video className="w-3.5 h-3.5 text-amber-300 pointer-events-none" />
+                          <span className="text-[7.5px] font-mono font-bold text-amber-300 mt-0.5 leading-none pointer-events-none">
+                            9:16
+                          </span>
+                        </button>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </>
+                );
+              })()}
 
               {/* World Lore & Creed */}
               <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-2">

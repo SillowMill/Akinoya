@@ -912,6 +912,7 @@ export const savePlanetSubmission = async (
 
     const enrichedSubmission: PlanetSubmission = {
       ...submission,
+      votesCount: Math.max(1, submission.votesCount || 1),
       videoUrl,
       videoStatus: videoUrl ? 'READY' : submission.videoStatus || 'QUEUED_PENDING',
       coordX: coords.x,
