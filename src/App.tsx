@@ -419,7 +419,7 @@ export default function App() {
       {/* Route-Based Dynamic Content */}
       <ErrorBoundary>
         {route === 'galaxy' ? (
-          <div className="relative z-20 flex-1 w-full flex flex-col">
+          <div className="fixed inset-0 z-30 w-full h-full flex flex-col overflow-hidden">
             <GalaxyNavigator
               onBackToHome={() => navigateTo('home', '/')}
               onNavigateToContest={() => navigateTo('contest', '/contest')}

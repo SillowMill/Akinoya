@@ -940,12 +940,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             {currentViewMode === 'orbit' ? (
               <>
                 <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="truncate">Surface Vista</span>
+                <span className="truncate">Service View</span>
               </>
             ) : (
               <>
                 <Eye className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="truncate">Orbital View</span>
+                <span className="truncate">Planet View</span>
               </>
             )}
           </button>

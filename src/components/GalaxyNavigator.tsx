@@ -149,6 +149,49 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Viewport scroll stabilization: Prevent virtual keyboard from shifting the screen or leaving persistent black bars
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const prevOverflow = document.body.style.overflow;
+    const prevPosition = document.body.style.position;
+    const prevWidth = document.body.style.width;
+    const prevHeight = document.body.style.height;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.height = '100dvh';
+
+    const handleScrollLock = () => {
+      if (window.scrollY !== 0 || window.scrollX !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+
+    window.addEventListener('scroll', handleScrollLock, { passive: true });
+
+    const visualViewport = window.visualViewport;
+    const handleViewportResize = () => {
+      window.scrollTo(0, 0);
+    };
+
+    if (visualViewport) {
+      visualViewport.addEventListener('resize', handleViewportResize);
+      visualViewport.addEventListener('scroll', handleViewportResize);
+    }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.position = prevPosition;
+      document.body.style.width = prevWidth;
+      document.body.style.height = prevHeight;
+      window.removeEventListener('scroll', handleScrollLock);
+      if (visualViewport) {
+        visualViewport.removeEventListener('resize', handleViewportResize);
+        visualViewport.removeEventListener('scroll', handleViewportResize);
+      }
+    };
+  }, []);
+
   // Fetch Supabase and local planets & setup realtime subscription
   useEffect(() => {
     let isMounted = true;
@@ -725,7 +768,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       onPointerCancel={handlePointerUp}
       onWheel={handleWheel}
       style={{ touchAction: 'none' }}
-      className="relative w-full h-[100dvh] bg-[#020308] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans"
+      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#020308] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30"
     >
       {/* Background Starfield & Orbit Rings Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0" />
@@ -789,16 +832,30 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       {/* FLOATING TOP SEARCH BAR */}
       <div
         className="interactive-hud-element absolute left-1/2 -translate-x-1/2 z-30 w-[92%] max-w-md"
-        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 5.25rem)' }}
+        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 5rem)' }}
       >
         <div className="relative">
-          <div className="relative flex items-center bg-[#070c1a]/90 backdrop-blur-xl border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.18)] transition-all overflow-hidden">
+          {/* Backdrop to dismiss search on tap outside */}
+          {isSearchFocused && (
+            <div
+              className="fixed inset-0 z-10 pointer-events-auto"
+              onClick={() => setIsSearchFocused(false)}
+            />
+          )}
+
+          <div className="relative z-20 flex items-center bg-[#070c1a]/90 backdrop-blur-xl border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.18)] transition-all overflow-hidden">
             <Search className="w-4 h-4 text-cyan-400 ml-3.5 shrink-0" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
+              onFocus={() => {
+                setIsSearchFocused(true);
+                window.scrollTo(0, 0);
+              }}
+              onBlur={() => {
+                setTimeout(() => window.scrollTo(0, 0), 100);
+              }}
               placeholder="Search planet, sector code (e.g. ALPHA-07), architect..."
               className="w-full py-2.5 px-3 bg-transparent text-xs text-white placeholder-white/40 font-mono focus:outline-none"
             />
@@ -815,7 +872,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
           {/* Search Autocomplete Dropdown */}
           {isSearchFocused && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-[#060914]/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl max-h-64 overflow-y-auto divide-y divide-white/5 z-50">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#060914]/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl max-h-48 sm:max-h-64 overflow-y-auto divide-y divide-white/5 z-50">
               {searchResults.map((p) => (
                 <div
                   key={p.id}
@@ -980,7 +1037,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
             {/* Capital Core Badge Label - positioned below orb without affecting container coordinates */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 flex flex-col items-center pointer-events-none whitespace-nowrap">
-              <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] flex items-center gap-1">
+              <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] items-center gap-1">
                 <span>👑 ÄKINOYA CORE (0, 0)</span>
               </span>
               <span className="text-[11px] font-display font-extrabold text-white tracking-wider mt-0.5 group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
@@ -1057,7 +1114,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
                 {/* Planet Label Pill */}
                 <div className="mt-2 flex flex-col items-center pointer-events-none">
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-white/10 group-hover:border-amber-400/60 shadow-md">
+                  <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-white/10 group-hover:border-amber-400/60 shadow-md">
                     <span className="hidden sm:inline-block text-[8.5px] font-mono text-amber-300 font-bold tracking-wider uppercase">
                       {planet.sectorId || 'SECTOR'}
                     </span>
