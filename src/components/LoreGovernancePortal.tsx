@@ -31,7 +31,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
   onNavigateToContest,
   onOpenCreator,
 }) => {
-  const { user, isAuthenticated, openAuthModal } = useAuth();
+  const { user, profile, isAuthenticated, openAuthModal } = useAuth();
 
   // Planet Contest Submissions competing for June 30 voting
   const [contestSubmissions, setContestSubmissions] = useState<PlanetSubmission[]>([]);
@@ -43,7 +43,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
     setContestSubmissions([...initial].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
 
     // Live cloud load from Supabase user_dossiers
-    fetchPlanetSubmissions().then((fresh) => {
+    fetchPlanetSubmissions(user?.id, user?.email).then((fresh) => {
       const valid = fresh.filter((s) => !isForbiddenSubmission(s));
       setContestSubmissions([...valid].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
     });
@@ -55,7 +55,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user?.id, user?.email]);
 
   // Safe dynamic vote-based sorting
   const sortedSubmissions = useMemo(() => {
@@ -69,7 +69,14 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
       return;
     }
     soundManager.playTone(740, 0.06);
-    const res = await togglePlanetSubmissionVote(submissionId, user?.id);
+    const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+    const userUsername = profile?.username || user?.user_metadata?.username || user?.user_metadata?.full_name || '';
+    const res = await togglePlanetSubmissionVote(submissionId, user?.id, userEmail, userUsername);
+    if (!res.success && res.error) {
+      soundManager.playError();
+      alert(res.error);
+      return;
+    }
     if (res.success) {
       setContestSubmissions((prev) => {
         const updated = prev.map((s) =>

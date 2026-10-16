@@ -86,7 +86,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   onOpenCreator,
   onNavigateToVisualizerHub,
 }) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -195,7 +195,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   // Fetch Supabase and local planets & setup realtime subscription
   useEffect(() => {
     let isMounted = true;
-    fetchPlanetSubmissions().then((subs) => {
+    fetchPlanetSubmissions(user?.id, user?.email).then((subs) => {
       if (isMounted && subs.length > 0) {
         setPlanets(subs);
       }
@@ -716,7 +716,14 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   // Mobile Bottom Sheet Vote Action
   const handleMobileVote = async (planetId: string) => {
     soundManager.playTone(740, 0.06);
-    const res = await togglePlanetSubmissionVote(planetId, user?.id);
+    const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+    const userUsername = profile?.username || user?.user_metadata?.username || user?.user_metadata?.full_name || '';
+    const res = await togglePlanetSubmissionVote(planetId, user?.id, userEmail, userUsername);
+    if (!res.success && res.error) {
+      soundManager.playError();
+      alert(res.error);
+      return;
+    }
     setPlanets((prev) =>
       prev.map((p) => (p.id === planetId ? { ...p, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : p))
     );

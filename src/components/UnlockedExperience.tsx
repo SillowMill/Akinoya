@@ -218,7 +218,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   );
 
   useEffect(() => {
-    fetchPlanetSubmissions().then((fresh) => {
+    fetchPlanetSubmissions(user?.id, user?.email).then((fresh) => {
       if (fresh && fresh.length > 0) {
         setAllCommunityPlanets([...fresh].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
       }
@@ -231,12 +231,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user?.id, user?.email]);
 
   const handleVoteUserDossier = async () => {
     if (!userDossier) return;
     soundManager.playTone(740, 0.06);
-    const res = await togglePlanetSubmissionVote(userDossier.id, user?.id);
+    const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+    const userUsername = profile?.username || user?.user_metadata?.username || user?.user_metadata?.full_name || '';
+    const res = await togglePlanetSubmissionVote(userDossier.id, user?.id, userEmail, userUsername);
+    if (!res.success && res.error) {
+      soundManager.playError();
+      alert(res.error);
+      return;
+    }
     if (res.success) {
       setUserDossier((prev) => (prev ? { ...prev, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : null));
       setAllCommunityPlanets((prev) =>
@@ -438,7 +445,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   };
   const [showComicReader, setShowComicReader] = useState(false);
   const [showCoverPreview, setShowCoverPreview] = useState(false);
-  const [isCopied, setIsCopied] = useState(false);
   const [isReserved, setIsReserved] = useState(false);
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [showWaitlistForm, setShowWaitlistForm] = useState(false);
@@ -671,13 +677,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
-  const handleCopyPassId = () => {
-    navigator.clipboard?.writeText?.(activePassId || FOUNDING_PASS_ID);
-    setIsCopied(true);
-    soundManager.playTone(880, 0.08);
-    setTimeout(() => setIsCopied(false), 2000);
-  };
-
   // Comic Pre-Order Checkout States (Streamlined Stripe Checkout)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutName, setCheckoutName] = useState("");
@@ -865,45 +864,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="pt-3 border-t border-white/10 space-y-2">
-            {isVipMode ? (
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={handleCopyPassId}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 text-xs font-mono text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/30 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.15)] group"
-                >
-                  {isCopied ? (
-                    <>
-                      <Check className="w-4 h-4 text-emerald-400" />
-                      <span className="text-emerald-300 font-semibold tracking-wider text-[11px] truncate">COPIED</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform shrink-0" />
-                      <span className="tracking-wider text-[11px] truncate">COPY PASS ID</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (onNavigateToPassport) {
-                      onNavigateToPassport();
-                    } else if (onNavigateToVerify) {
-                      onNavigateToVerify(activePassId);
-                    } else if (typeof window !== 'undefined') {
-                      window.location.href = `/verify/${activePassId}`;
-                    }
-                  }}
-                  className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/30 hover:border-cyan-400 rounded-xl transition-all cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.1)] min-h-[44px]"
-                  title="View Digital Passport HUD & Verification"
-                >
-                  <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span className="tracking-wider text-[11px] truncate">DIGITAL PASSPORT</span>
-                </button>
-              </div>
-            ) : (
+          {/* Action buttons (Guest only; redundant VIP buttons removed for sleek layout) */}
+          {!isVipMode && (
+            <div className="pt-3 border-t border-white/10 space-y-2">
               <button
                 onClick={handleDirectGuestUnlockHub}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 text-xs font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 rounded-xl transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
@@ -911,8 +874,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 <Unlock className="w-4 h-4 text-black shrink-0" />
                 <span className="tracking-wider">UNLOCK VISUALIZER HUB</span>
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 

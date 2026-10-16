@@ -442,9 +442,45 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
 };
 
 /**
- * Asynchronously fetches live submissions from Supabase user_dossiers
+ * Asynchronously fetches live submissions and synchronizes persisted votes from server
  */
-export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
+export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: string): Promise<PlanetSubmission[]> => {
+  let serverCounts: Record<string, number> = {};
+  let userVotedIds: string[] = [];
+
+  const effectiveVoterId = voterId || getPersistentVoterId();
+
+  // 1. Fetch live persisted votes from server votes API
+  try {
+    const query = new URLSearchParams();
+    if (effectiveVoterId) query.set('voterId', effectiveVoterId);
+    if (voterEmail) query.set('voterEmail', voterEmail);
+    const voteRes = await fetch(`/api/dossier/votes?${query.toString()}`);
+    if (voteRes.ok) {
+      const voteData = await voteRes.json();
+      if (voteData?.success && voteData.votesCountByDossier) {
+        serverCounts = voteData.votesCountByDossier;
+        userVotedIds = voteData.userVotedIds || [];
+      }
+    }
+  } catch (voteErr) {
+    console.warn('[Contest] Server vote sync notice:', voteErr);
+  }
+
+  // Update local votes map with confirmed server voted IDs
+  if (userVotedIds.length > 0 && typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(LOCAL_CONTEST_VOTES_KEY);
+      const map = raw ? JSON.parse(raw) : {};
+      for (const id of userVotedIds) {
+        map[`vote_${id}_${effectiveVoterId}`] = true;
+        map[`vote_${id}`] = true;
+      }
+      localStorage.setItem(LOCAL_CONTEST_VOTES_KEY, JSON.stringify(map));
+    } catch {}
+  }
+
+  // 2. Fetch from Supabase if configured
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase
@@ -457,10 +493,9 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
           .filter((d: any) => d && !isForbiddenSubmission(d))
           .map((d: any) => {
             const isAmlemi = d.id === 'planet-amlemi-genesis-01' || d.planet_name === 'Ämlemi';
-            const userVoted = hasUserVotedOnSubmission(d.id);
-            // Minimum vote baseline: 1 vote minimum. Ämlemi initial baseline: 3 votes.
-            let votesCount = Math.max(1, d.votes_count || 1);
-            if (isAmlemi) {
+            const userVoted = userVotedIds.includes(d.id) || hasUserVotedOnSubmission(d.id, effectiveVoterId, voterEmail);
+            let votesCount = serverCounts[d.id] !== undefined ? serverCounts[d.id] : Math.max(1, d.votes_count || 1);
+            if (isAmlemi && serverCounts[d.id] === undefined) {
               votesCount = userVoted ? 4 : 3;
             }
             const resolvedVideoUrl =
@@ -563,7 +598,28 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
     }
   }
 
-  return getStoredPlanetSubmissions();
+  // 3. Fallback: Merge server vote counts into locally stored submissions
+  const stored = getStoredPlanetSubmissions();
+  const merged = stored.map((sub) => {
+    const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
+    const userVoted = userVotedIds.includes(sub.id) || hasUserVotedOnSubmission(sub.id, effectiveVoterId, voterEmail);
+    let votesCount = serverCounts[sub.id] !== undefined ? serverCounts[sub.id] : Math.max(1, sub.votesCount || 1);
+    if (isAmlemi && serverCounts[sub.id] === undefined) {
+      votesCount = userVoted ? 4 : 3;
+    }
+    return {
+      ...sub,
+      votesCount,
+      hasVoted: userVoted,
+    };
+  });
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(merged));
+    } catch {}
+  }
+  return merged;
 };
 
 // Check if a specific user already has a golden ticket submission
@@ -993,54 +1049,186 @@ export const savePlanetSubmission = async (
   }
 };
 
+// Persistent voter identity helper
+export const getPersistentVoterId = (): string => {
+  if (typeof window === 'undefined') return 'server_voter';
+  try {
+    let voterId = localStorage.getItem('sillow_voter_id');
+    if (!voterId) {
+      voterId = 'vtr_' + Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+      localStorage.setItem('sillow_voter_id', voterId);
+    }
+    return voterId;
+  } catch {
+    return 'local_voter';
+  }
+};
+
 // Check if user has voted on a submission
-export const hasUserVotedOnSubmission = (submissionId: string, userId?: string): boolean => {
+export const hasUserVotedOnSubmission = (
+  submissionId: string,
+  userId?: string,
+  userEmail?: string
+): boolean => {
   if (typeof window === 'undefined') return false;
   try {
-    const key = userId ? `vote_${submissionId}_${userId}` : `vote_${submissionId}_anon`;
     const raw = localStorage.getItem(LOCAL_CONTEST_VOTES_KEY);
-    if (raw) {
-      const map = JSON.parse(raw);
-      return Boolean(map[key]);
+    if (!raw) return false;
+    const map = JSON.parse(raw);
+    if (!map || typeof map !== 'object') return false;
+
+    let effectiveUserId = userId;
+    let effectiveUserEmail = userEmail;
+    if (!effectiveUserId) {
+      try {
+        const cachedUser = JSON.parse(localStorage.getItem('akinoya_session_user') || '{}');
+        if (cachedUser?.id) effectiveUserId = cachedUser.id;
+        if (cachedUser?.email) effectiveUserEmail = cachedUser.email;
+      } catch {}
+    }
+
+    const persistentId = getPersistentVoterId();
+    const candidateKeys = [
+      effectiveUserId ? `vote_${submissionId}_${effectiveUserId}` : null,
+      effectiveUserEmail ? `vote_${submissionId}_${effectiveUserEmail.toLowerCase()}` : null,
+      `vote_${submissionId}_${persistentId}`,
+      `vote_${submissionId}_anon`,
+      `vote_${submissionId}`,
+    ].filter(Boolean) as string[];
+
+    for (const k of candidateKeys) {
+      if (map[k] === true) return true;
+    }
+
+    // Check if any key for this submission was marked true
+    for (const [k, v] of Object.entries(map)) {
+      if (k.startsWith(`vote_${submissionId}`) && v === true) {
+        return true;
+      }
     }
   } catch {}
   return false;
 };
 
-// Toggle community vote on a planet submission
+// Toggle community vote on a planet submission with strict self-vote prevention
 export const togglePlanetSubmissionVote = async (
   submissionId: string,
-  userId?: string
-): Promise<{ success: boolean; newVotesCount: number; hasVoted: boolean }> => {
-  const currentVoted = hasUserVotedOnSubmission(submissionId, userId);
-  const nextVoted = !currentVoted;
-  const key = userId ? `vote_${submissionId}_${userId}` : `vote_${submissionId}_anon`;
+  userId?: string,
+  userEmail?: string,
+  userUsername?: string
+): Promise<{ success: boolean; newVotesCount: number; hasVoted: boolean; error?: string }> => {
+  const submissions = getStoredPlanetSubmissions();
+  const targetSub = submissions.find((s) => s.id === submissionId);
 
+  // 1. Strict Self-Vote Prevention Check
+  const cleanVoterEmail = userEmail?.trim().toLowerCase();
+  const cleanAuthorEmail = targetSub?.authorEmail?.trim().toLowerCase() || (targetSub?.humanAnswers as any)?.email?.trim().toLowerCase();
+  const cleanVoterUser = userUsername?.trim().toLowerCase().replace(/^@/, '');
+  const cleanAuthorUser = targetSub?.authorUsername?.trim().toLowerCase().replace(/^@/, '');
+
+  const isSelfById = Boolean(userId && targetSub?.userId && targetSub.userId === userId);
+  const isSelfByEmail = Boolean(cleanVoterEmail && cleanAuthorEmail && cleanVoterEmail === cleanAuthorEmail);
+  const isSelfByUsername = Boolean(cleanVoterUser && cleanAuthorUser && cleanVoterUser === cleanAuthorUser);
+
+  if (isSelfById || isSelfByEmail || isSelfByUsername) {
+    return {
+      success: false,
+      newVotesCount: targetSub?.votesCount || 1,
+      hasVoted: false,
+      error: 'Self-voting blocked: You cannot vote for your own world submission.',
+    };
+  }
+
+  const persistentVoterId = getPersistentVoterId();
+  const effectiveVoterId = userId || persistentVoterId;
+  const currentVoted = hasUserVotedOnSubmission(submissionId, effectiveVoterId, userEmail);
+  const nextVoted = !currentVoted;
+
+  // Optimistic local update
   try {
     const mapRaw = localStorage.getItem(LOCAL_CONTEST_VOTES_KEY);
     const map = mapRaw ? JSON.parse(mapRaw) : {};
+    const keys = [
+      `vote_${submissionId}_${effectiveVoterId}`,
+      cleanVoterEmail ? `vote_${submissionId}_${cleanVoterEmail}` : null,
+      `vote_${submissionId}_${persistentVoterId}`,
+      `vote_${submissionId}_anon`,
+      `vote_${submissionId}`,
+    ].filter(Boolean) as string[];
+
     if (nextVoted) {
-      map[key] = true;
+      for (const k of keys) {
+        map[k] = true;
+      }
     } else {
-      delete map[key];
+      for (const k of Object.keys(map)) {
+        if (k.startsWith(`vote_${submissionId}`)) {
+          delete map[k];
+        }
+      }
     }
     localStorage.setItem(LOCAL_CONTEST_VOTES_KEY, JSON.stringify(map));
   } catch {}
 
-  const submissions = getStoredPlanetSubmissions();
-  const targetSub = submissions.find((s) => s.id === submissionId);
   const isAmlemi = submissionId === 'planet-amlemi-genesis-01' || targetSub?.planetName === 'Ämlemi';
   const minBaseline = isAmlemi ? 3 : 1;
+  let updatedCount = isAmlemi
+    ? (nextVoted ? 4 : 3)
+    : Math.max(minBaseline, (targetSub?.votesCount || 1) + (nextVoted ? 1 : -1));
 
-  let updatedCount = minBaseline;
+  // 2. Immediate permanent write to server voting API
+  try {
+    const res = await fetch('/api/dossier/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        submissionId,
+        voterId: effectiveVoterId,
+        voterEmail: userEmail,
+        voterUsername: userUsername,
+        submissionAuthorId: targetSub?.userId,
+        submissionAuthorEmail: cleanAuthorEmail,
+        submissionAuthorUsername: cleanAuthorUser,
+        baseVotes: targetSub?.votesCount,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && typeof data.newVotesCount === 'number') {
+        updatedCount = data.newVotesCount;
+      }
+    } else if (res.status === 403 || res.status === 400) {
+      const data = await res.json().catch(() => null);
+      if (data?.error?.includes('Self-voting')) {
+        // Revert local optimistic vote
+        try {
+          const mapRaw = localStorage.getItem(LOCAL_CONTEST_VOTES_KEY);
+          const map = mapRaw ? JSON.parse(mapRaw) : {};
+          for (const k of Object.keys(map)) {
+            if (k.startsWith(`vote_${submissionId}`)) {
+              delete map[k];
+            }
+          }
+          localStorage.setItem(LOCAL_CONTEST_VOTES_KEY, JSON.stringify(map));
+        } catch {}
+        return {
+          success: false,
+          newVotesCount: targetSub?.votesCount || minBaseline,
+          hasVoted: false,
+          error: data.error,
+        };
+      }
+    }
+  } catch (apiErr) {
+    console.warn('[Contest] Server vote endpoint call notice:', apiErr);
+  }
+
+  // Update stored submissions
   const updatedSubmissions = submissions.map((sub) => {
     const isThisSubAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
     if (sub.id === submissionId || (isAmlemi && isThisSubAmlemi)) {
-      const nextCount = isThisSubAmlemi
-        ? (nextVoted ? 4 : 3)
-        : Math.max(minBaseline, (sub.votesCount || 1) + (nextVoted ? 1 : -1));
-      updatedCount = nextCount;
-      return { ...sub, votesCount: nextCount, hasVoted: nextVoted };
+      return { ...sub, votesCount: updatedCount, hasVoted: nextVoted };
     }
     return sub;
   });
@@ -1049,24 +1237,13 @@ export const togglePlanetSubmissionVote = async (
     localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(updatedSubmissions));
   } catch {}
 
-  // Sync with Supabase Realtime & DB
-  if (isSupabaseConfigured) {
-    try {
-      if (userId) {
-        if (nextVoted) {
-          await supabase.from('dossier_votes').insert({ dossier_id: submissionId, user_id: userId });
-        } else {
-          await supabase.from('dossier_votes').delete().match({ dossier_id: submissionId, user_id: userId });
-        }
-      }
-      // Update votes_count on user_dossiers
-      await supabase
-        .from('user_dossiers')
-        .update({ votes_count: updatedCount })
-        .eq('id', submissionId);
-    } catch (voteCloudErr) {
-      console.warn('[Contest] Vote sync notice:', voteCloudErr);
-    }
+  // Dispatch custom event for immediate reactivity across all views
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('akinoya-vote-updated', {
+        detail: { submissionId, votesCount: updatedCount, hasVoted: nextVoted },
+      })
+    );
   }
 
   return {

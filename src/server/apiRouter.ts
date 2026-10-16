@@ -27,6 +27,13 @@ import {
   SLOT_METADATA,
 } from '../../api/_generatePlanet';
 import { checkVipTokenStatus, claimVipTokenForUser } from '../lib/vipTokens';
+import {
+  registerUserCredentials,
+  loginUserCredentials,
+  getUserFromSessionToken,
+  castSubmissionVote,
+  getVotesSummary,
+} from './authVoteService';
 
 export const apiApp = express();
 export const apiRouter = express.Router();
@@ -518,6 +525,87 @@ apiRouter.all(['/sync-sheets', '/auth/sync-sheets'], async (req: Request, res: R
   } catch (err: any) {
     console.error('[API] sync-sheets error:', err);
     res.status(500).json({ error: err?.message || 'Internal server error syncing to Google Sheets' });
+  }
+});
+
+// ─── 13. Standard Email/Password Authentication ────────────────────────────────
+apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, password, firstName, lastName, role, passCode } = req.body || {};
+    const result = await registerUserCredentials({
+      email,
+      password,
+      firstName,
+      lastName,
+      role,
+      passCode,
+    });
+    res.status(result.success ? 200 : 400).json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Registration failed' });
+  }
+});
+
+apiRouter.post('/auth/login', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, password } = req.body || {};
+    const result = await loginUserCredentials(email, password);
+    res.status(result.success ? 200 : 401).json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Login failed' });
+  }
+});
+
+apiRouter.get('/auth/session', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = (authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : (req.query.token as string)) || '';
+    const result = await getUserFromSessionToken(token);
+    res.status(result.success ? 200 : 401).json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Session validation failed' });
+  }
+});
+
+// ─── 14. Persistent Voting & Self-Vote Prevention ─────────────────────────────
+apiRouter.post(['/dossier/vote', '/vote'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const {
+      submissionId,
+      voterId,
+      voterEmail,
+      voterUsername,
+      submissionAuthorId,
+      submissionAuthorEmail,
+      submissionAuthorUsername,
+      baseVotes,
+    } = req.body || {};
+
+    const result = castSubmissionVote({
+      submissionId,
+      voterId: voterId || voterEmail || 'anon_voter',
+      voterEmail,
+      voterUsername,
+      submissionAuthorId,
+      submissionAuthorEmail,
+      submissionAuthorUsername,
+      baseVotes: Number(baseVotes) || undefined,
+    });
+
+    res.status(result.success ? 200 : result.error?.includes('Self-voting') ? 403 : 400).json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Voting failed' });
+  }
+});
+
+apiRouter.get(['/dossier/votes', '/votes'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const voterId = (req.query.voterId as string) || '';
+    const voterEmail = (req.query.voterEmail as string) || '';
+    const summary = getVotesSummary(voterId, voterEmail);
+    res.status(200).json({ success: true, ...summary });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Fetch votes failed' });
   }
 });
 

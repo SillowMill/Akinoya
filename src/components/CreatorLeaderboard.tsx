@@ -12,6 +12,7 @@ import { PlanetSubmission } from '../types/contest';
 import { getStoredPlanetSubmissions, togglePlanetSubmissionVote, fetchPlanetSubmissions, subscribeToPlanetSubmissions } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { PlanetDossierModal } from './PlanetDossierModal';
+import { useAuth } from '../context/AuthContext';
 
 export interface CreatorLeaderboardProps {
   onSelectCreator?: (username: string) => void;
@@ -22,11 +23,12 @@ export interface CreatorLeaderboardProps {
 export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
   onSelectPlanet,
 }) => {
+  const { user, profile } = useAuth();
   const [selectedModalPlanet, setSelectedModalPlanet] = useState<PlanetSubmission | null>(null);
   const [planetSubmissions, setPlanetSubmissions] = useState<PlanetSubmission[]>(() => getStoredPlanetSubmissions());
 
   useEffect(() => {
-    fetchPlanetSubmissions().then((subs) => {
+    fetchPlanetSubmissions(user?.id, user?.email).then((subs) => {
       if (subs && subs.length > 0) {
         setPlanetSubmissions(subs);
       }
@@ -39,7 +41,7 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user?.id, user?.email]);
 
   // Planets data dynamically sorted descending by total votesCount
   const rankedPlanets = [...planetSubmissions].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
@@ -56,7 +58,14 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
 
   const handleVotePlanet = async (submissionId: string) => {
     soundManager.playTone(740, 0.06);
-    const res = await togglePlanetSubmissionVote(submissionId);
+    const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+    const userUsername = profile?.username || user?.user_metadata?.username || user?.user_metadata?.full_name || '';
+    const res = await togglePlanetSubmissionVote(submissionId, user?.id, userEmail, userUsername);
+    if (!res.success && res.error) {
+      soundManager.playError();
+      alert(res.error);
+      return;
+    }
     if (res.success) {
       setPlanetSubmissions((prev) =>
         prev

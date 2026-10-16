@@ -515,6 +515,7 @@ const clearAllAuthSessionStorage = () => {
   try {
     localStorage.removeItem(LOCAL_PROFILE_KEY);
     localStorage.removeItem(LOCAL_SESSION_USER_KEY);
+    localStorage.removeItem('akinoya_session_token');
     localStorage.removeItem(PATRON_TOKEN_KEY);
     localStorage.removeItem(PATRON_ROLE_KEY);
     localStorage.removeItem(PENDING_ROLE_KEY);
@@ -698,6 +699,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(cachedProf);
           setRole(cachedRole);
           if (cachedUser) setUser(cachedUser);
+        }
+
+        // Step 1.5: Validate and hydrate server session token if present
+        const sessionToken =
+          typeof window !== 'undefined' ? localStorage.getItem('akinoya_session_token') : null;
+        if (sessionToken) {
+          try {
+            const sessRes = await fetch(`/api/auth/session?token=${encodeURIComponent(sessionToken)}`, {
+              headers: { Authorization: `Bearer ${sessionToken}` },
+            });
+            if (sessRes.ok) {
+              const sessData = await sessRes.json();
+              if (sessData?.success && sessData?.user && sessData?.profile) {
+                if (mounted) {
+                  setUser(sessData.user);
+                  setProfile(sessData.profile);
+                  setRole(sessData.profile.role);
+                  localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(sessData.profile));
+                  localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(sessData.user));
+                  setHasPendingVipInvitation(false);
+                }
+              }
+            } else if (sessRes.status === 401) {
+              localStorage.removeItem('akinoya_session_token');
+            }
+          } catch (sessionErr) {
+            console.warn('[AuthContext] Session verification notice:', sessionErr);
+          }
         }
 
         // Step 2: Unblocked Supabase session retrieval & OTP/Magic Link exchange
@@ -910,73 +939,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? resolveRoleForCode(pendingPass)
         : 'FREE';
 
-      if (isSupabaseConfigured) {
-        const { data, error } = await supabase.auth.signUp({
+      // 1. Register with our secure server credentials API
+      const serverRes = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           email: cleanEmail,
           password,
-          options: {
-            emailRedirectTo:
-              typeof window !== 'undefined' && window.location.origin
-                ? `${window.location.origin}/`
-                : 'https://www.sillowmill.com/',
-            data: {
-              first_name: cleanFirst,
-              last_name: cleanLast,
-              full_name: `${cleanFirst} ${cleanLast}`.trim(),
-            },
-          },
-        });
+          firstName: cleanFirst,
+          lastName: cleanLast,
+          role: initialRole,
+          passCode: pendingPass || undefined,
+        }),
+      });
 
-        if (error) {
-          return { success: false, error: error.message };
+      const serverData = await serverRes.json().catch(() => null);
+
+      if (serverRes.ok && serverData?.success) {
+        if (serverData.sessionToken) {
+          localStorage.setItem('akinoya_session_token', serverData.sessionToken);
         }
-
-        if (data?.user) {
-          const authUser = data.user;
-          setUser(authUser);
-          const newProf = await resolveAndLinkVipProfile(
-            authUser,
-            {
-              id: authUser.id,
-              first_name: cleanFirst,
-              last_name: cleanLast,
-              full_name: `${cleanFirst} ${cleanLast}`.trim(),
-              email: cleanEmail,
-            },
-            null
-          );
-
-          setProfile(newProf);
-          setRole(newProf.role);
-          localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(newProf));
-          localStorage.setItem(
-            LOCAL_SESSION_USER_KEY,
-            JSON.stringify({ id: authUser.id, email: authUser.email })
-          );
-          setHasPendingVipInvitation(false);
-        }
-      } else {
-        const simId = `usr-${Date.now()}`;
-        const simUser = { id: simId, email: cleanEmail };
-        const newProf = await resolveAndLinkVipProfile(
-          simUser,
-          {
-            id: simId,
-            first_name: cleanFirst,
-            last_name: cleanLast,
-            full_name: `${cleanFirst} ${cleanLast}`.trim(),
-            email: cleanEmail,
-          },
-          null
-        );
-
-        setUser(simUser);
-        setProfile(newProf);
-        setRole(newProf.role);
-        localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(simUser));
-        localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(newProf));
+        setUser(serverData.user);
+        setProfile(serverData.profile);
+        setRole(serverData.profile.role);
+        localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(serverData.profile));
+        localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(serverData.user));
         setHasPendingVipInvitation(false);
+
+        // Also gracefully register with Supabase in background without blocking the user
+        if (isSupabaseConfigured) {
+          try {
+            await supabase.auth.signUp({
+              email: cleanEmail,
+              password,
+              options: {
+                data: {
+                  first_name: cleanFirst,
+                  last_name: cleanLast,
+                  full_name: `${cleanFirst} ${cleanLast}`.trim(),
+                },
+              },
+            });
+          } catch {}
+        }
+
+        soundManager.playUnlockChime();
+        closeAuthModal();
+        return { success: true };
+      } else if (serverData?.error) {
+        return { success: false, error: serverData.error };
       }
+
+      // Fallback if server returned no structured response
+      const fallbackId = `usr-${Date.now()}`;
+      const fallbackUser = { id: fallbackId, email: cleanEmail };
+      const fallbackProf = await resolveAndLinkVipProfile(
+        fallbackUser,
+        {
+          id: fallbackId,
+          first_name: cleanFirst,
+          last_name: cleanLast,
+          full_name: `${cleanFirst} ${cleanLast}`.trim(),
+          email: cleanEmail,
+        },
+        null
+      );
+
+      setUser(fallbackUser);
+      setProfile(fallbackProf);
+      setRole(fallbackProf.role);
+      localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(fallbackUser));
+      localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(fallbackProf));
+      setHasPendingVipInvitation(false);
 
       soundManager.playUnlockChime();
       closeAuthModal();
@@ -996,54 +1030,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      // 1. Authenticate with server credentials API
+      const serverRes = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password }),
+      });
+
+      const serverData = await serverRes.json().catch(() => null);
+
+      if (serverRes.ok && serverData?.success) {
+        if (serverData.sessionToken) {
+          localStorage.setItem('akinoya_session_token', serverData.sessionToken);
+        }
+        setUser(serverData.user);
+        setProfile(serverData.profile);
+        setRole(serverData.profile.role);
+        localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(serverData.profile));
+        localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(serverData.user));
+        setHasPendingVipInvitation(false);
+
+        soundManager.playUnlockChime();
+        closeAuthModal();
+        return { success: true };
+      }
+
+      // 2. Fallback to Supabase if server did not find user in local store
       if (isSupabaseConfigured) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data: supaData, error: supaErr } = await supabase.auth.signInWithPassword({
           email: cleanEmail,
           password,
         });
 
-        if (error) {
-          return { success: false, error: error.message };
-        }
-
-        if (data?.user) {
-          const authUser = data.user;
+        if (!supaErr && supaData?.user) {
+          const authUser = supaData.user;
           setUser(authUser);
-
-          const { data: profData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', authUser.id)
-            .maybeSingle();
-
           const currentCached = getCachedProfile();
-          const resolvedProf = await resolveAndLinkVipProfile(authUser, profData, currentCached);
-
+          const resolvedProf = await resolveAndLinkVipProfile(authUser, null, currentCached);
           setProfile(resolvedProf);
           setRole(resolvedProf.role);
           localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(resolvedProf));
-          localStorage.setItem(
-            LOCAL_SESSION_USER_KEY,
-            JSON.stringify({ id: authUser.id, email: authUser.email })
-          );
+          localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify({ id: authUser.id, email: authUser.email }));
           setHasPendingVipInvitation(false);
-        }
-      } else {
-        const currentCached = getCachedProfile();
-        const simUser = { id: currentCached?.id || `usr-${Date.now()}`, email: cleanEmail };
-        const resolvedProf = await resolveAndLinkVipProfile(simUser, currentCached, currentCached);
 
-        setUser(simUser);
-        setProfile(resolvedProf);
-        setRole(resolvedProf.role);
-        localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(simUser));
-        localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(resolvedProf));
-        setHasPendingVipInvitation(false);
+          soundManager.playUnlockChime();
+          closeAuthModal();
+          return { success: true };
+        }
       }
 
-      soundManager.playUnlockChime();
-      closeAuthModal();
-      return { success: true };
+      return {
+        success: false,
+        error: serverData?.error || 'Invalid email or password.',
+      };
     } catch (err: any) {
       return { success: false, error: err?.message || 'Sign in failed.' };
     }

@@ -37,6 +37,7 @@ import { AkinoyaSciFiLoader } from './AkinoyaSciFiLoader';
 import { WizardAnswers, PlanetSubmission } from '../types/contest';
 import {
   getStoredPlanetSubmissions,
+  fetchPlanetSubmissions,
   getUserContestSubmission,
   formatAkinoyaPlanetName,
   generatePlanetLore,
@@ -276,6 +277,21 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       .filter((s) => !isForbiddenSubmission(s))
       .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
     setAllSubmissions(list);
+
+    fetchPlanetSubmissions(user?.id, user?.email).then((fresh) => {
+      if (fresh && fresh.length > 0) {
+        const valid = fresh
+          .filter((s) => !isForbiddenSubmission(s))
+          .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+        setAllSubmissions(valid);
+        if (isAuthenticated && (user?.id || profile?.id || user?.email)) {
+          const userSub = getUserContestSubmission(user?.id || profile?.id, user?.email);
+          if (userSub && !isForbiddenSubmission(userSub)) {
+            setActiveSubmission(userSub);
+          }
+        }
+      }
+    });
 
     if (isAuthenticated && (user?.id || profile?.id || user?.email)) {
       const userSub = getUserContestSubmission(user?.id || profile?.id, user?.email);
@@ -742,7 +758,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       return;
     }
     soundManager.playTone(740, 0.06);
-    const res = await togglePlanetSubmissionVote(submissionId, user?.id);
+    const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+    const userUsername = profile?.username || user?.user_metadata?.username || user?.user_metadata?.full_name || '';
+    const res = await togglePlanetSubmissionVote(submissionId, user?.id, userEmail, userUsername);
+    if (!res.success && res.error) {
+      soundManager.playError();
+      alert(res.error);
+      return;
+    }
     if (res.success) {
       setAllSubmissions((prev) =>
         prev
