@@ -5,15 +5,15 @@
   "rewrites": [
     {
       "source": "/api/nfc/send-pin",
-      "destination": "/api/nfc/register"
+      "destination": "/api?__path=nfc/register"
     },
     {
       "source": "/api/nfc/verify",
-      "destination": "/api/nfc/redeem"
+      "destination": "/api?__path=nfc/redeem"
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "/api?__path=$1"
     },
     {
       "source": "/assets/Bing:rest(.*)\\.pdf",

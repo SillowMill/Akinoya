@@ -2,7 +2,7 @@ import {
   getAccessToken,
   SPREADSHEET_ID,
   appendVipGuestRecordToSheets,
-} from '../nfc/_googleSheetsSync.js';
+} from './nfc/_googleSheetsSync.js';
 
 /**
  * Ensures the "Subscribers" sheet tab exists with the standard 6-column header:

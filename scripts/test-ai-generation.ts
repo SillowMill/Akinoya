@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { generatePlanetRenders, buildPlanetPrompts, GeneratePlanetRequest } from '../api/generate-planet';
+import { generatePlanetRenders, buildPlanetPrompts, GeneratePlanetRequest } from '../api/_generatePlanet';
 
 // 1. Load active environment variables
 dotenv.config();

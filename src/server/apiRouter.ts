@@ -15,19 +15,30 @@ import {
   isValidPassId,
 } from './nfcDnaService';
 import { handleCertificateAction } from '../../api/nfc/_certificateService.js';
+import { resetPassInGoogleSheets } from '../../api/nfc/_googleSheetsSync.js';
 import {
   generatePlanetRenders,
   generateSectorImages,
   generateSlotRender,
   checkAndLockUserGeneration,
+  lockUserGeneration,
   resetGenerationLocks,
   normalizeSlot,
   SLOT_METADATA,
-} from '../../api/generate-planet';
+} from '../../api/_generatePlanet';
 import { checkVipTokenStatus, claimVipTokenForUser } from '../lib/vipTokens';
 
 export const apiApp = express();
 export const apiRouter = express.Router();
+
+// ─── Gateway Health Check ─────────────────────────────────────────────────────
+apiRouter.get('/', (_req: Request, res: Response): void => {
+  res.status(200).json({
+    status: 'online',
+    protocol: 'Akinoya VIP Protocol Gateway',
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // ─── Middleware: always set JSON content-type for all /api responses ──────────
 apiApp.use('/api', (_req: Request, res: Response, next: NextFunction) => {
@@ -273,17 +284,66 @@ apiRouter.post('/nfc/send-pin', async (req: Request, res: Response): Promise<voi
 
 // ─── 6. Holder Pass Registration ──────────────────────────────────────────────
 apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<void> => {
+  const body = req.body || {};
+
+  // Magic Link dispatch via Resend
+  if (body.action === 'magic-link') {
+    const email = ((body.email as string) || '').trim().toLowerCase();
+    const token = (body.token as string) || 'AKN-VIP-2027-X0914';
+    if (!email || !email.includes('@')) {
+      res.status(400).json({ success: false, error: 'INVALID_EMAIL', message: 'Please enter a valid email address.' });
+      return;
+    }
+
+    const resendApiKey = process.env.RESEND_API_KEY || '';
+    const host = req.headers['x-forwarded-host'] || req.headers?.host;
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const baseUrl = req.headers?.origin || (host ? `${proto}://${host}` : 'https://www.sillowmill.com');
+    const magicUrl = `${baseUrl}/verify/${token}?auth=magic&email=${encodeURIComponent(email)}`;
+
+    if (!resendApiKey) {
+      res.status(200).json({ success: true, message: `Magic link dispatched to ${email}.`, magicUrl, devMode: true });
+      return;
+    }
+
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Sillow Mill <onboarding@resend.dev>',
+          to: [email],
+          subject: 'Your Äkinoya VIP Magic Sign-In Link',
+          html: `<div style="background-color: #05080e; color: #ffffff; padding: 32px; font-family: sans-serif; text-align: center; border-radius: 12px;">
+            <h2 style="color: #38bdf8; margin-bottom: 12px;">Äkinoya Community Access</h2>
+            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 24px;">Click the button below to sign in instantly with your verified pass session.</p>
+            <a href="${magicUrl}" style="background-color: #06b6d4; color: #000000; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block;">SIGN IN TO ÄKINOYA →</a>
+            <p style="color: #64748b; font-size: 11px; margin-top: 24px;">If you did not request this email, you can safely ignore it.</p>
+          </div>`,
+        }),
+      });
+    } catch (err) {
+      console.warn('[Register/MagicLink] Dispatch failed:', err);
+    }
+
+    res.status(200).json({ success: true, message: `Magic link dispatched to ${email}. Check your inbox!` });
+    return;
+  }
+
   // Bingäa Certificate of Authenticity actions (Card PIN + optional email OTP)
-  if (req.body?.action === 'send-pin' || req.body?.action === 'send-otp' || req.body?.action === 'certify') {
-    const result = await handleCertificateAction(req.body);
+  if (body.action === 'send-pin' || body.action === 'send-otp' || body.action === 'certify') {
+    const result = await handleCertificateAction(body);
     res.status(result.status).json(result.body);
     return;
   }
 
-  const token = (req.body?.token || req.body?.id) as string;
-  const ownerName = (req.body?.ownerName || req.body?.displayName) as string;
-  const ownerEmail = (req.body?.ownerEmail || req.body?.email) as string | undefined;
-  const deviceId = req.body?.deviceId as string | undefined;
+  const token = (body.token || body.id) as string;
+  const ownerName = (body.ownerName || body.displayName) as string;
+  const ownerEmail = (body.ownerEmail || body.email) as string | undefined;
+  const deviceId = body.deviceId as string | undefined;
 
   if (!token) {
     res.status(400).json({ success: false, error: 'MISSING_TOKEN', message: 'Token is required' });
@@ -301,13 +361,29 @@ apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<voi
 
 // ─── 6.5. Reset VIP Pass (Development / Test Reset) ──────────────────────────
 apiRouter.all('/nfc/reset-pass', async (req: Request, res: Response): Promise<void> => {
-  const token = ((req.body?.token || req.body?.id || req.query?.token || req.query?.id || 'AKN-VIP-2027-X001') as string).trim().toUpperCase();
+  const token = ((req.body?.token || req.body?.id || req.query?.token || req.query?.id || 'AKN-VIP-2027-X001') as string)
+    .trim()
+    .toUpperCase();
+  if (!isValidPassId(token)) {
+    res.status(400).json({
+      success: false,
+      error: 'INVALID_PASS_ID',
+      message: 'Pass ID not recognized.',
+    });
+    return;
+  }
+
   const passRecord = resetPassRecord(token);
+  _nfcRedemptions.delete(token);
+  const sheetResult = await resetPassInGoogleSheets(token).catch(() => ({ synced: false }));
+
   res.status(200).json({
     success: true,
     token,
     message: `Digital VIP Pass ${token} has been reset to active / unclaimed status.`,
     pass: passRecord,
+    sheetResult,
+    resetAt: new Date().toISOString(),
   });
 });
 
@@ -341,53 +417,71 @@ apiRouter.get('/nfc/generate-test-cipher', (req: Request, res: Response): void =
   });
 });
 
-// ─── 10. Generate Planet Prompts & Visuals (Google Nano Banana Pro 4K Sci-Fi Pipeline) ───
-apiRouter.all(['/generate-planet', '/planet/generate', '/generate-sector-images', '/sector/generate'], async (req: Request, res: Response): Promise<void> => {
-  try {
-    const body = req.body || {};
-    const isSlot = Boolean(body.slot);
-    if (body.userId || body.email || body.deviceId) {
-      const lockCheck = await checkAndLockUserGeneration(body.userId, body.email, body.deviceId, isSlot);
-      if (!lockCheck.allowed) {
-        res.status(403).json({
+// ─── 10. Generate Planet Prompts & Visuals (Fal.ai Flux Schnell / Google Imagen 3) ───
+apiRouter.all(
+  ['/generate-planet', '/planet/generate', '/generate-sector-images', '/sector/generate'],
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const body = req.body || {};
+
+      if (body.resetLocks) {
+        resetGenerationLocks(body.userId, body.email);
+        res.status(200).json({ success: true, message: 'Generation lock reset for Founder testing.' });
+        return;
+      }
+
+      if (body.markCompleted) {
+        lockUserGeneration(body.userId, body.email, body.deviceId);
+        res.status(200).json({ success: true, message: 'Generation locked.' });
+        return;
+      }
+
+      const isSlot = Boolean(body.slot);
+      if (body.userId || body.email || body.deviceId) {
+        const lockCheck = await checkAndLockUserGeneration(body.userId, body.email, body.deviceId, isSlot);
+        if (!lockCheck.allowed) {
+          res.status(403).json({
+            success: false,
+            error: 'SUBMISSION_LOCKED',
+            message: lockCheck.reason || 'You have already claimed your 1 generation attempt.',
+          });
+          return;
+        }
+      }
+
+      if (body.slot) {
+        const slotResult = await generateSlotRender(body.slot, body);
+        res.status(slotResult.success ? 200 : 500).json(slotResult);
+        return;
+      }
+
+      const result = await generatePlanetRenders(body);
+      res.status(200).json({
+        success: true,
+        ...result,
+      });
+    } catch (err: any) {
+      console.error('[API] generate-planet error:', err);
+      if (req.body?.slot) {
+        const normSlot = normalizeSlot(req.body.slot);
+        res.status(500).json({
           success: false,
-          error: 'SUBMISSION_LOCKED',
-          message: lockCheck.reason || 'You have already claimed your 1 generation attempt.',
+          slot: normSlot,
+          slotIndex: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).index,
+          slotLabel: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).label,
+          planetName: req.body.planetName || req.body.worldName || req.body.sectorName || 'Äkinoya Frontier',
+          error: err?.message || 'Failed to synthesize slot render via Fal.ai / Imagen 3',
+          model: 'Live AI Synthesis (Error)',
         });
         return;
       }
-    }
-    if (body.slot) {
-      const slotResult = await generateSlotRender(body.slot, body);
-      res.status(slotResult.success ? 200 : 500).json(slotResult);
-      return;
-    }
-    const result = await generatePlanetRenders(body);
-    res.status(200).json({
-      success: true,
-      ...result,
-    });
-  } catch (err: any) {
-    console.error('[API] generate-planet error:', err);
-    if (req.body?.slot) {
-      const normSlot = normalizeSlot(req.body.slot);
       res.status(500).json({
         success: false,
-        slot: normSlot,
-        slotIndex: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).index,
-        slotLabel: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).label,
-        planetName: req.body.planetName || req.body.sectorName || 'Äkinoya Frontier',
-        error: err?.message || 'Failed to synthesize slot render via Google Imagen 3',
-        model: 'Google Imagen 3 (Error)',
+        error: err?.message || 'Failed to generate planet visuals',
       });
-      return;
     }
-    res.status(500).json({
-      success: false,
-      error: err?.message || 'Failed to generate planet visuals',
-    });
   }
-});
+);
 
 // ─── 11. VIP Token Verification & Single-Claim ────────────────────────────────
 apiRouter.all(['/vip/verify'], async (req: Request, res: Response): Promise<void> => {
@@ -396,7 +490,7 @@ apiRouter.all(['/vip/verify'], async (req: Request, res: Response): Promise<void
     const userId = ((req.query?.userId || req.body?.userId) as string) || '';
     const email = ((req.query?.email || req.body?.email) as string) || '';
     const result = await checkVipTokenStatus(token, userId, email);
-    res.status(result.allowed ? 200 : (result.isAlreadyClaimed ? 403 : 400)).json(result);
+    res.status(result.allowed ? 200 : result.isAlreadyClaimed ? 403 : 400).json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'VIP verify failed' });
   }
@@ -409,7 +503,7 @@ apiRouter.all(['/vip/claim'], async (req: Request, res: Response): Promise<void>
     const holderName = ((req.body?.holderName || req.body?.ownerName || req.query?.holderName) as string) || '';
     const holderEmail = ((req.body?.holderEmail || req.body?.email || req.query?.email) as string) || '';
     const result = await claimVipTokenForUser(token, userId, holderName, holderEmail);
-    res.status(result.success ? 200 : (result.error?.includes('claimed') ? 403 : 400)).json(result);
+    res.status(result.success ? 200 : result.error?.includes('claimed') ? 403 : 400).json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'VIP claim failed' });
   }
@@ -418,7 +512,7 @@ apiRouter.all(['/vip/claim'], async (req: Request, res: Response): Promise<void>
 // ─── 12. Direct Google Sheets Sync (VIP GUESTS & Subscribers) ─────────────────
 apiRouter.all(['/sync-sheets', '/auth/sync-sheets'], async (req: Request, res: Response): Promise<void> => {
   try {
-    const { default: syncSheetsHandler } = await import('../../api/auth/sync-sheets.js');
+    const { default: syncSheetsHandler } = await import('../../api/_syncSheets.js');
     await syncSheetsHandler(req, res);
   } catch (err: any) {
     console.error('[API] sync-sheets error:', err);
@@ -426,8 +520,9 @@ apiRouter.all(['/sync-sheets', '/auth/sync-sheets'], async (req: Request, res: R
   }
 });
 
-// ─── Mount router ─────────────────────────────────────────────────────────────
+// ─── Mount router at both /api and / for Express & Vercel Serverless ──────────
 apiApp.use('/api', apiRouter);
+apiApp.use('/', apiRouter);
 
 // ─── Global error handler (always JSON, never plain text) ─────────────────────
 apiApp.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

@@ -572,19 +572,19 @@ export async function generateGoogleNanoBananaImage(
 }
 
 export function buildPlanetPrompts(data: GeneratePlanetRequest) {
-  const sectorName = (data.sectorName || data.planetName || 'Frontier Sector').trim();
-  const planetName = formatAkinoyaPlanetName(data.planetName || data.sectorName, false) || sectorName;
-  const biome = data.biome || 'Bioluminescent Canopy';
-  const colorPalette = data.colorPalette || 'deep indigo, neon purple, warm copper accents';
-  const environment = data.naturalEnvironment || `${biome} terrain with majestic mountain ridges`;
-  const flora = data.flora || `resonant spore canopies and glowing botanical life unique to ${biome}`;
-  const creature = data.admiredCreature || data.fauna || `apex wildlife roaming the skies of ${sectorName}`;
-  const landmark = data.landmark || data.resilienceStory || `The Monument of ${sectorName}`;
-  const promise = data.futurePromise || 'Never forget that true beauty lies in curiosity and persistence.';
-  const atmosphere = data.atmosphere || `ionized celestial atmosphere above ${biome}`;
+  const sectorName = (data.sectorName || data.planetName || data.worldName || 'Frontier Sector').trim();
+  const planetName = formatAkinoyaPlanetName(data.planetName || data.worldName || data.sectorName, false) || sectorName;
+  const biome = data.biome || data.terrainType || 'Bioluminescent Canopy';
+  const colorPalette = data.colorPalette || data.paletteDescription || 'deep indigo, neon purple, warm copper accents';
+  const environment = data.naturalEnvironment || data.terrainType || `${biome} terrain with majestic mountain ridges`;
+  const flora = data.flora || data.floraType || `resonant spore canopies and glowing botanical life unique to ${biome}`;
+  const creature = data.admiredCreature || data.fauna || data.faunaType || `apex wildlife roaming the skies of ${sectorName}`;
+  const landmark = data.landmark || data.monumentType || data.resilienceStory || `The Monument of ${sectorName}`;
+  const promise = data.futurePromise || data.foundingCreed || 'Never forget that true beauty lies in curiosity and persistence.';
+  const atmosphere = data.atmosphere || data.troposphereType || `ionized celestial atmosphere above ${biome}`;
 
   const promptAnchor =
-    'Full 3D high-res 4K photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette. NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. Synthesized strictly via Google Nano Banana (Nano Banana Pro / Imagen 3).';
+    'Full 3D high-res 4K photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette. NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. Synthesized strictly via Fal.ai Flux Schnell / Google Imagen 3.';
 
   return {
     planetName,
@@ -601,7 +601,7 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
 
 /**
  * Generates an individual slot render asynchronously.
- * Part of the true multi-step sequential AI generation pipeline powered by Google Nano Banana.
+ * Part of the true multi-step sequential AI generation pipeline powered by Fal.ai Flux Schnell / Google Imagen 3.
  * MANDATE: Strictly guarantees unique per-planet visual output and ZERO hardcoded Ämlemi or vector fallbacks.
  */
 export async function generateSlotRender(
@@ -619,8 +619,8 @@ export async function generateSlotRender(
   model: string;
 }> {
   const normSlot = normalizeSlot(slot);
-  const sectorName = (data.sectorName || data.planetName || 'Frontier Sector').trim();
-  const planetName = formatAkinoyaPlanetName(data.planetName || data.sectorName, false) || sectorName;
+  const sectorName = (data.sectorName || data.planetName || data.worldName || 'Frontier Sector').trim();
+  const planetName = formatAkinoyaPlanetName(data.planetName || data.worldName || data.sectorName, false) || sectorName;
   const { prompts } = buildPlanetPrompts(data);
   const prompt = prompts[normSlot] || prompts.hero;
   const meta = SLOT_METADATA[normSlot] || SLOT_METADATA.hero;
@@ -635,7 +635,7 @@ export async function generateSlotRender(
       planetName,
       prompt,
       imageUrl,
-      model: 'Google Nano Banana Pro (4K Photorealistic)',
+      model: process.env.FAL_KEY ? 'Fal.ai Flux Schnell (4K Photorealistic)' : 'Google Nano Banana Pro (4K Photorealistic)',
     };
   } catch (err: any) {
     const errorMessage = err?.message || 'Live AI synthesis failed';
@@ -648,7 +648,7 @@ export async function generateSlotRender(
       planetName,
       prompt,
       error: errorMessage,
-      model: 'Google Imagen 3 (Error)',
+      model: 'Live AI Synthesis (Error)',
     };
   }
 }
@@ -658,6 +658,9 @@ export async function generateSlotRender(
  */
 export async function generatePlanetRenders(data: GeneratePlanetRequest): Promise<{
   planetName: string;
+  worldName: string;
+  architectName: string;
+  slots: SlotRenderResult[];
   renders: {
     hero: string;
     flora: string;
@@ -668,13 +671,30 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   };
   galleryList: Array<{ id: string; label: string; reference: string; url: string }>;
   meta: Record<string, any>;
+  generatedAt: string;
 }> {
-  const sectorName = (data.sectorName || data.planetName || 'Frontier Sector').trim();
-  const planetName = formatAkinoyaPlanetName(data.planetName || data.sectorName, false) || sectorName;
+  const sectorName = (data.sectorName || data.planetName || data.worldName || 'Frontier Sector').trim();
+  const planetName = formatAkinoyaPlanetName(data.planetName || data.worldName || data.sectorName, false) || sectorName;
+  const architectName = (data.architectName || 'Frontier Architect').trim();
   const slots: GenerationSlot[] = ['hero', 'flora', 'fauna', 'atmosphere', 'landmark'];
 
   // Asynchronous multi-step execution across all 5 slots
   const results = await Promise.all(slots.map((s) => generateSlotRender(s, data)));
+
+  const slotIdMap: Record<GenerationSlot, { id: string; name: string }> = {
+    hero: { id: 'slot-01-orbital', name: '01 · ORBITAL HERO' },
+    flora: { id: 'slot-02-flora', name: '02 · BOTANICAL FLORA' },
+    fauna: { id: 'slot-03-fauna', name: '03 · EXOTIC FAUNA' },
+    atmosphere: { id: 'slot-04-cockpit', name: '04 · COCKPIT ATMOSPHERE' },
+    landmark: { id: 'slot-05-monument', name: '05 · ICONIC MONUMENT' },
+  };
+
+  const slotResults: SlotRenderResult[] = results.map((r) => ({
+    slotId: slotIdMap[r.slot].id,
+    slotName: slotIdMap[r.slot].name,
+    status: r.success && r.imageUrl ? 'ready' : 'error',
+    ...(r.imageUrl ? { imageUrl: r.imageUrl } : { error: r.error || 'Synthesis failed' }),
+  }));
 
   const finalRenders = {
     hero: results[0].imageUrl || '',
@@ -718,20 +738,26 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     },
   ];
 
+  const generatedAt = new Date().toISOString();
+
   return {
     planetName,
+    worldName: planetName,
+    architectName,
+    slots: slotResults,
     renders: finalRenders,
     galleryList,
+    generatedAt,
     meta: {
-      engine: 'Google Nano Banana Pro (Live AI Synthesis)',
-      model: 'Google Nano Banana Pro / Nano Banana 2.1',
-      modelFamily: 'Google Nano Banana',
+      engine: process.env.FAL_KEY ? 'Fal.ai Flux Schnell (Live AI Synthesis)' : 'Google Nano Banana Pro (Live AI Synthesis)',
+      model: process.env.FAL_KEY ? 'fal-ai/flux/schnell' : 'Google Nano Banana Pro / Nano Banana 2.1',
+      modelFamily: process.env.FAL_KEY ? 'Fal.ai Flux' : 'Google Nano Banana',
       aestheticGuideline: 'Official Sillow Mill High-Resolution Cinematic Sci-Fi Standard',
       photorealismMandate: 'Strict 3D Photorealism Enforced — Zero Vector Art, Zero Wireframes, Zero Minimalist Sketches',
       heroCompositionReference: 'Äkinoya.jpg (Exact Sphere & Ring Structure)',
       interiorStylisticReference: 'Mood.png (Environments, Lighting & Volumetric Atmosphere)',
       namingRule: 'Organic planet naming enforced',
-      generatedAt: new Date().toISOString(),
+      generatedAt,
     },
   };
 }
