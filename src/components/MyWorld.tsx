@@ -8,6 +8,8 @@ import {
   CheckCircle2,
   Play,
   Heart,
+  MapPin,
+  Globe2,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
 import {
@@ -15,6 +17,7 @@ import {
   UI_RECALIBRATING_STATUS_TEXT,
   COMMUNITY_SHARE_VIDEO_MESSAGE,
   VIRAL_VIDEO_MOTION_PROMPT,
+  copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 
@@ -23,6 +26,7 @@ interface MyWorldProps {
   onInspectModal?: (dossier: PlanetSubmission) => void;
   onRetryVideoSynthesis?: () => void;
   isSynthesizingVideo?: boolean;
+  onNavigateToGalaxy?: (planetId?: string) => void;
 }
 
 export const MyWorld: React.FC<MyWorldProps> = ({
@@ -30,9 +34,20 @@ export const MyWorld: React.FC<MyWorldProps> = ({
   onInspectModal,
   onRetryVideoSynthesis,
   isSynthesizingVideo = false,
+  onNavigateToGalaxy,
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isCopiedGalaxyLink, setIsCopiedGalaxyLink] = useState(false);
   const photoCards = getPlanetPhotoCards(dossier);
+
+  const handleCopyGalaxyLink = async () => {
+    soundManager.playTone(720, 0.05);
+    const success = await copyPlanetGalaxyLink(dossier.id);
+    if (success) {
+      setIsCopiedGalaxyLink(true);
+      setTimeout(() => setIsCopiedGalaxyLink(false), 2200);
+    }
+  };
   const videoUrl =
     dossier.videoUrl ||
     dossier.renders?.videoUrl ||
@@ -68,16 +83,43 @@ export const MyWorld: React.FC<MyWorldProps> = ({
 
   return (
     <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-6 shadow-xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+        <div className="flex items-center gap-2 flex-wrap">
           <Camera className="w-4 h-4 text-amber-400" />
           <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
             Synthesized 5-Photo Visual Archive &amp; 9:16 Viral Trailer
           </h3>
+          <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40">
+            {dossier.sectorId || 'SECTOR ALPHA-01'} · ({dossier.coordX ?? 0}, {dossier.coordY ?? 0}) AU
+          </span>
         </div>
-        <span className="text-[10px] font-mono text-cyan-400">
-          5-Photo 4K Archive (01_main – 05_lore) · 9:16 Vertical Trailer (5s)
-        </span>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleCopyGalaxyLink}
+            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5"
+            title="Copy Shareable Sector Link"
+          >
+            <MapPin className="w-3.5 h-3.5 text-amber-400" />
+            <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Sector Link'}</span>
+          </button>
+
+          {onNavigateToGalaxy && (
+            <button
+              type="button"
+              onClick={() => onNavigateToGalaxy(dossier.id)}
+              className="px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+            >
+              <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+              <span>View in Galaxy</span>
+            </button>
+          )}
+
+          <span className="text-[10px] font-mono text-cyan-400 hidden xl:inline">
+            5-Photo 4K Archive · 9:16 Trailer (5s)
+          </span>
+        </div>
       </div>
 
       {/* Main Layout: 9:16 Vertical Video Trailer + 5 Photo Cards */}
@@ -176,6 +218,31 @@ export const MyWorld: React.FC<MyWorldProps> = ({
               {isDownloading ? 'Preparing MP4...' : '⬇ Download 9:16 MP4 Trailer'}
             </span>
           </button>
+
+          {/* Galaxy Navigator & Sector Link Quick Actions */}
+          <div className="w-full grid grid-cols-2 gap-2">
+            {onNavigateToGalaxy && (
+              <button
+                type="button"
+                onClick={() => onNavigateToGalaxy(dossier.id)}
+                className="py-2 px-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
+              >
+                <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+                <span>View in Galaxy</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleCopyGalaxyLink}
+              className={`py-2 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white font-mono text-[11px] transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                !onNavigateToGalaxy ? 'col-span-2' : ''
+              }`}
+            >
+              <MapPin className="w-3.5 h-3.5 text-amber-400" />
+              <span>{isCopiedGalaxyLink ? 'Copied!' : 'Sector Link'}</span>
+            </button>
+          </div>
 
           {/* Genuine Community Message Directly Beneath the Video Player */}
           <p className="text-xs font-sans text-cyan-100/85 text-center leading-relaxed italic px-2 flex items-center justify-center gap-1.5">

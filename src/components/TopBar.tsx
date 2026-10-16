@@ -1,4 +1,4 @@
-import { ShieldCheck, Sparkles, Trophy, Globe2 } from 'lucide-react';
+import { ShieldCheck, Sparkles, Trophy, Globe2, Compass } from 'lucide-react';
 import { SoundtrackButton } from './SoundtrackButton';
 import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ interface TopBarProps {
   isVip?: boolean;
   onNavigateHome?: () => void;
   onNavigateToVerify?: () => void;
+  onNavigateToGalaxy?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -17,6 +18,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   isVip = false,
   onNavigateHome,
   onNavigateToVerify,
+  onNavigateToGalaxy,
 }) => {
   const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
   const effectiveIsVip = Boolean(
@@ -66,6 +68,19 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Zone 2: Clean, simplified navigation links */}
         <nav className="hidden md:flex items-center gap-6 text-xs font-mono text-white/60">
+          <a
+            href="/galaxy"
+            onClick={(e) => {
+              if (onNavigateToGalaxy) {
+                e.preventDefault();
+                onNavigateToGalaxy();
+              }
+            }}
+            className="hover:text-cyan-300 transition-colors flex items-center gap-1.5 text-cyan-300/90 font-semibold cursor-pointer"
+          >
+            <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '30s' }} />
+            <span>🌌 Galaxy Navigator</span>
+          </a>
           <a href="#archives" className="hover:text-white transition-colors">
             Archive
           </a>

@@ -123,12 +123,14 @@ interface ContestLaunchpadProps {
   onBackToHome: () => void;
   onNavigateToCommunity?: () => void;
   onNavigateToCreator?: (username: string) => void;
+  onNavigateToGalaxy?: (planetId?: string) => void;
 }
 
 export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   onBackToHome,
   onNavigateToCommunity,
   onNavigateToCreator,
+  onNavigateToGalaxy,
 }) => {
   const { user, profile, isAuthenticated, openAuthModal, updateProfile, role, isVip } = useAuth();
 
@@ -785,6 +787,18 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {onNavigateToGalaxy && (
+            <button
+              type="button"
+              onClick={() => onNavigateToGalaxy()}
+              className="px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 min-h-[44px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+            >
+              <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '24s' }} />
+              <span className="hidden sm:inline">🌌 Galaxy Navigator</span>
+              <span className="sm:hidden">Galaxy</span>
+            </button>
+          )}
+
           {onNavigateToCommunity && (
             <button
               type="button"
@@ -1213,6 +1227,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 dossier={previewDossier}
                 onInspectModal={(d) => setModalPlanet(d)}
                 isSynthesizingVideo={isGeneratingRenders}
+                onNavigateToGalaxy={onNavigateToGalaxy}
               />
             )}
 
@@ -1292,6 +1307,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             <MyWorld
               dossier={activeSubmission}
               onInspectModal={(d) => setModalPlanet(d)}
+              onNavigateToGalaxy={onNavigateToGalaxy}
             />
 
             {/* Lore and Specs */}
@@ -1473,6 +1489,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         onClose={() => setModalPlanet(null)}
         onVote={handleVoteSubmission}
         onOpenCreator={onNavigateToCreator}
+        onNavigateToGalaxy={onNavigateToGalaxy}
       />
     </div>
   );

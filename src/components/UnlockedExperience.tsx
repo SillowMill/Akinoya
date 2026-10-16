@@ -176,6 +176,7 @@ interface UnlockedExperienceProps {
   isVip?: boolean;
   onNavigateToPassport?: () => void;
   onNavigateToContest?: () => void;
+  onNavigateToGalaxy?: (planetId?: string) => void;
 }
 
 export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
@@ -186,6 +187,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   isVip = false,
   onNavigateToPassport,
   onNavigateToContest,
+  onNavigateToGalaxy,
 }) => {
   const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'my-world' | 'assets'>('pass');
   const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
@@ -888,7 +890,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         </div>
 
         {/* Action buttons (Touch targets >= 44px) */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+          {onNavigateToGalaxy && (
+            <button
+              type="button"
+              onClick={() => onNavigateToGalaxy()}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2 text-xs font-mono text-cyan-200 hover:text-white bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+            >
+              <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '24s' }} />
+              <span className="truncate">🌌 Galaxy Navigator</span>
+            </button>
+          )}
+
           <button
             onClick={() => onToggleViewMode(currentViewMode === 'orbit' ? 'surface' : 'orbit')}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2 text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/60 border border-cyan-800/40 rounded-xl transition-all cursor-pointer min-h-[44px]"
@@ -1882,6 +1895,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       soundManager.playTone(660, 0.05);
                       setSelectedDossierModal(d);
                     }}
+                    onNavigateToGalaxy={onNavigateToGalaxy}
                   />
 
                   {/* Story & Philosophy Creed */}
@@ -2768,6 +2782,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         planet={selectedDossierModal}
         isOpen={Boolean(selectedDossierModal)}
         onClose={() => setSelectedDossierModal(null)}
+        onNavigateToGalaxy={onNavigateToGalaxy}
       />
     </motion.div>
   );

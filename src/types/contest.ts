@@ -62,6 +62,11 @@ export interface PlanetSubmission {
   renders: PlanetSubmissionRenders;
   videoUrl?: string;
   videoStatus?: 'READY' | 'QUEUED_PENDING';
+  coordX?: number;
+  coordY?: number;
+  coord_x?: number;
+  coord_y?: number;
+  sectorId?: string;
   votesCount: number;
   hasVoted?: boolean;
   status: 'SUBMITTED' | 'PUBLISHED' | 'FINALIST';

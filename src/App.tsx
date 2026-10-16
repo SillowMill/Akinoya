@@ -19,6 +19,7 @@ import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerific
 import { CommunityHub } from './components/CommunityHub';
 import { CreatorPortfolioView } from './components/CreatorPortfolioView';
 import { ContestLaunchpad } from './components/ContestLaunchpad';
+import { GalaxyNavigator } from './components/GalaxyNavigator';
 import { PioneerCampaignBanner } from './components/PioneerCampaignBanner';
 import { ClaimYourWorldModal } from './components/ClaimYourWorldModal';
 import { MembershipGateModal } from './components/MembershipGateModal';
@@ -122,7 +123,7 @@ export default function App() {
     return 'odi';
   });
 
-  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest'>(() => {
+  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest' | 'galaxy'>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
       const searchParams = new URLSearchParams(window.location.search);
@@ -132,6 +133,7 @@ export default function App() {
         searchParams.get('code') ||
         window.location.hash.includes('access_token')
       );
+      if (path === '/galaxy' || path.startsWith('/galaxy')) return 'galaxy';
       if (path === '/contest' || path.startsWith('/contest/')) return 'contest';
       if (path === '/creators' || path.startsWith('/creators/')) return 'creators';
       if (path === '/community' || path.startsWith('/community/')) return 'community';
@@ -219,7 +221,9 @@ export default function App() {
       ).trim().toUpperCase().replace(/^#/, '');
       const hasValidQueryPass = !isSupabaseAuth && /^AKN-VIP-\d{4}-[A-Z]\d{3,4}$|^AKN-\d{4}$|^SM\d{3}-[A-Z0-9]{4}$/.test(queryPassCandidate);
 
-      if (path === '/contest' || path.startsWith('/contest/')) {
+      if (path === '/galaxy' || path.startsWith('/galaxy')) {
+        setRoute('galaxy');
+      } else if (path === '/contest' || path.startsWith('/contest/')) {
         setRoute('contest');
       } else if (path === '/creators' || path.startsWith('/creators/')) {
         const u = window.location.pathname.replace(/^\/creators\/?/, '').split('/')[0].trim() || 'odi';
@@ -263,7 +267,10 @@ export default function App() {
     return () => window.removeEventListener('akinoya-open-claim-world', handleOpenClaim);
   }, []);
 
-  const navigateTo = (newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest', path: string) => {
+  const navigateTo = (
+    newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest' | 'galaxy',
+    path: string
+  ) => {
     try {
       window.history.pushState({}, '', path);
     } catch {
@@ -271,6 +278,11 @@ export default function App() {
     }
     setRoute(newRoute);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToGalaxy = (planetId?: string) => {
+    const targetPath = planetId ? `/galaxy?planet=${encodeURIComponent(planetId)}` : '/galaxy';
+    navigateTo('galaxy', targetPath);
   };
 
   const handlePublicUnlockSuccess = () => {
@@ -334,15 +346,18 @@ export default function App() {
       {/* Global NFC Magic Link Verification HUD Toast (Strictly restricted to explicit VIP access route) */}
       {isVipRoute && <NfcHudToast />}
 
-      {/* Immersive Planet Äkinoya Canvas */}
-      <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isCanvasUnlocked} />
+      {/* Immersive Planet Äkinoya Canvas (hidden on Galaxy Navigator route) */}
+      {route !== 'galaxy' && (
+        <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isCanvasUnlocked} />
+      )}
 
       {/* Top Bar Navigation (Zone 1, 2, 3) */}
-      {!backdropOnly && route !== 'community' && route !== 'creators' && route !== 'contest' && (
+      {!backdropOnly && route !== 'community' && route !== 'creators' && route !== 'contest' && route !== 'galaxy' && (
         <TopBar
           isUnlocked={isVipRoute || isUserVip ? true : isSiteUnlocked}
           isVip={isVipRoute || isUserVip}
           onNavigateHome={() => navigateTo('home', '/')}
+          onNavigateToGalaxy={() => navigateToGalaxy()}
           onNavigateToVerify={
             isVipRoute
               ? () => setVipSubView('passport')
@@ -353,11 +368,24 @@ export default function App() {
 
       {/* Route-Based Dynamic Content */}
       <ErrorBoundary>
-        {route === 'contest' ? (
+        {route === 'galaxy' ? (
+          <div className="relative z-20 flex-1 w-full flex flex-col">
+            <GalaxyNavigator
+              onBackToHome={() => navigateTo('home', '/')}
+              onNavigateToContest={() => navigateTo('contest', '/contest')}
+              onNavigateToCommunity={() => navigateTo('community', '/community')}
+              onOpenCreator={(u) => {
+                setCreatorUsername(u);
+                navigateTo('creators', `/creators/${u}`);
+              }}
+            />
+          </div>
+        ) : route === 'contest' ? (
           <div className="relative z-20 flex-1 w-full flex flex-col">
             <ContestLaunchpad
               onBackToHome={() => navigateTo('home', '/')}
               onNavigateToCommunity={() => navigateTo('community', '/community')}
+              onNavigateToGalaxy={(id) => navigateToGalaxy(id)}
               onNavigateToCreator={(u) => {
                 setCreatorUsername(u);
                 navigateTo('creators', `/creators/${u}`);
@@ -427,6 +455,7 @@ export default function App() {
                   currentViewMode={viewMode}
                   onNavigateToVerify={() => setVipSubView('passport')}
                   onNavigateToContest={() => navigateTo('contest', '/contest')}
+                  onNavigateToGalaxy={(id) => navigateToGalaxy(id)}
                 />
               </div>
             )}
@@ -483,6 +512,7 @@ export default function App() {
                     onNavigateToPassport={() => navigateTo('verify', '/verify')}
                     onNavigateToVerify={() => navigateTo('verify', '/verify')}
                     onNavigateToContest={() => navigateTo('contest', '/contest')}
+                    onNavigateToGalaxy={(id) => navigateToGalaxy(id)}
                   />
                 </motion.div>
               )}
@@ -492,7 +522,7 @@ export default function App() {
       </ErrorBoundary>
 
       {/* Luxury Minimalist Footer */}
-      {!backdropOnly && route !== 'community' && route !== 'creators' && route !== 'contest' && (
+      {!backdropOnly && route !== 'community' && route !== 'creators' && route !== 'contest' && route !== 'galaxy' && (
         <footer className="relative z-10 w-full border-t border-white/5 bg-black/60 backdrop-blur-md py-4 px-4 sm:px-6 text-center space-y-2.5">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-white/40">
             <div>

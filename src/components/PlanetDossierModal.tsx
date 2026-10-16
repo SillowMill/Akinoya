@@ -18,6 +18,7 @@ import {
   Video,
   Download,
   Heart,
+  MapPin,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
 import {
@@ -26,6 +27,7 @@ import {
   UI_RECALIBRATING_STATUS_TEXT,
   COMMUNITY_SHARE_VIDEO_MESSAGE,
   VIRAL_VIDEO_MOTION_PROMPT,
+  copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 
@@ -35,6 +37,7 @@ export interface PlanetDossierModalProps {
   onClose: () => void;
   onVote?: (planetId: string) => void;
   onOpenCreator?: (username: string) => void;
+  onNavigateToGalaxy?: (planetId?: string) => void;
 }
 
 export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
@@ -43,11 +46,23 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
   onClose,
   onVote,
   onOpenCreator,
+  onNavigateToGalaxy,
 }) => {
   // activePhotoIdx: 0..4 for the 5 photos, or 5 for the "🎥 9:16 Trailer" tab
   const [activePhotoIdx, setActivePhotoIdx] = useState<number>(0);
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [isCopiedGalaxyLink, setIsCopiedGalaxyLink] = useState<boolean>(false);
+
+  const handleCopyGalaxyLink = async () => {
+    if (!planet) return;
+    soundManager.playTone(720, 0.05);
+    const success = await copyPlanetGalaxyLink(planet.id);
+    if (success) {
+      setIsCopiedGalaxyLink(true);
+      setTimeout(() => setIsCopiedGalaxyLink(false), 2200);
+    }
+  };
 
   // Reset active photo on planet change
   useEffect(() => {
@@ -150,7 +165,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                     {planet.planetName}
                   </h2>
                   <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 shrink-0">
-                    5-PHOTO ARCHIVE + 🎥 9:16 TRAILER
+                    {planet.sectorId || 'SECTOR ALPHA-01'} · ({planet.coordX ?? 0}, {planet.coordY ?? 0}) AU
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-mono text-white/50 truncate">
@@ -172,6 +187,30 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleCopyGalaxyLink}
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer"
+                title="Copy Shareable Sector Link"
+              >
+                <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Sector Link'}</span>
+              </button>
+
+              {onNavigateToGalaxy && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onNavigateToGalaxy(planet.id);
+                  }}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono transition-all cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+                >
+                  <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>View in Galaxy</span>
+                </button>
+              )}
+
               <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/60 border border-white/10 text-xs font-mono text-amber-300 font-bold">
                 <Trophy className="w-3.5 h-3.5 text-amber-400" />
                 <span>{planet.votesCount} Votes</span>
@@ -516,7 +555,31 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+              <button
+                type="button"
+                onClick={handleCopyGalaxyLink}
+                className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                title="Copy Shareable Sector Link"
+              >
+                <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Link'}</span>
+              </button>
+
+              {onNavigateToGalaxy && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onNavigateToGalaxy(planet.id);
+                  }}
+                  className="min-h-[42px] px-4 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+                >
+                  <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>View in Galaxy</span>
+                </button>
+              )}
+
               {onVote && (
                 <button
                   type="button"

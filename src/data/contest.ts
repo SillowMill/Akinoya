@@ -30,6 +30,77 @@ export const COMMUNITY_SHARE_VIDEO_MESSAGE =
 export const VIRAL_VIDEO_MOTION_PROMPT =
   'High-speed dynamic orbital zoom-in, cinematic volumetric lighting, photorealistic sci-fi aesthetics, immersive depth, seamless loop transition, sharp focus on planetary core and rings.';
 
+const SECTOR_PREFIXES = [
+  'ALPHA', 'BETA', 'CYGNUS', 'ORION', 'VEGA', 'DRACO', 'LYRA',
+  'SOLARIS', 'AURELIA', 'HYDRA', 'PHOENIX', 'CENTAURI', 'ANDROMEDA', 'CELESTIA'
+];
+
+/**
+ * Deterministically derives 2D celestial coordinates and sector ID relative to Äkinoya (0,0)
+ */
+export function getDeterministicPlanetCoordinates(
+  planetId: string,
+  planetName?: string
+): { x: number; y: number; sectorId: string } {
+  const isCapitalCore =
+    planetName === 'Äkinoya Prime' ||
+    planetName === 'Äkinoya';
+  if (isCapitalCore) {
+    return { x: 0, y: 0, sectorId: 'SECTOR AKN-00 (CORE)' };
+  }
+
+  const isAmlemi =
+    planetId === 'planet-amlemi-genesis-01' ||
+    planetName === 'Ämlemi';
+  if (isAmlemi) {
+    return { x: 280, y: -260, sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)' };
+  }
+
+  const str = `${planetId}_${planetName || ''}`;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const absHash = Math.abs(hash);
+
+  // Concentric orbital dispersal: Ring 1 (450px), Ring 2 (950px), Ring 3 (1550px), Ring 4 (2200px)
+  const baseRadii = [480, 980, 1580, 2250];
+  const ringIndex = absHash % baseRadii.length;
+  const radiusJitter = (absHash % 160) - 80;
+  const radius = baseRadii[ringIndex] + radiusJitter;
+
+  // Golden angle distribution ensures optimal aesthetic dispersion without clustering
+  const goldenAngle = 137.50776405003785;
+  const angleDeg = (absHash * goldenAngle) % 360;
+  const angleRad = (angleDeg * Math.PI) / 180;
+
+  const x = Math.round(radius * Math.cos(angleRad));
+  const y = Math.round(radius * Math.sin(angleRad));
+
+  const prefix = SECTOR_PREFIXES[absHash % SECTOR_PREFIXES.length];
+  const sectorNum = String((absHash % 89) + 10).padStart(2, '0');
+  const sectorId = `SECTOR ${prefix}-${sectorNum}`;
+
+  return { x, y, sectorId };
+}
+
+export const getPlanetGalaxyLink = (planetId: string): string => {
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sillowmill.com';
+  return `${origin}/galaxy?planet=${encodeURIComponent(planetId)}`;
+};
+
+export const copyPlanetGalaxyLink = async (planetId: string): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const link = getPlanetGalaxyLink(planetId);
+    await navigator.clipboard.writeText(link);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Strict Photorealism Validator:
  * Ensures only rich, full-color photorealistic raster renders are permitted.
@@ -253,6 +324,11 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     votesCount: 3,
     hasVoted: false,
     status: 'PUBLISHED',
+    coordX: 280,
+    coordY: -260,
+    coord_x: 280,
+    coord_y: -260,
+    sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)',
     createdAt: '2026-10-14T12:00:00.000Z',
     votingDeadline: 'June 30, 2027',
   },
@@ -282,6 +358,11 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
               sub.renders?.video_url ||
               (sub.humanAnswers as any)?.video_url ||
               '';
+            const coords = (sub.coordX !== undefined && sub.coordY !== undefined)
+              ? { x: sub.coordX, y: sub.coordY, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+              : (sub.coord_x !== undefined && sub.coord_y !== undefined)
+              ? { x: sub.coord_x, y: sub.coord_y, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+              : getDeterministicPlanetCoordinates(sub.id, sub.planetName);
             return {
               ...sub,
               planetName: isAmlemi ? 'Ämlemi' : formatAkinoyaPlanetName(sub.planetName),
@@ -289,6 +370,11 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
               hasVoted: userVoted,
               videoUrl: resolvedVideoUrl,
               videoStatus: resolvedVideoUrl ? 'READY' : sub.videoStatus || 'QUEUED_PENDING',
+              coordX: coords.x,
+              coordY: coords.y,
+              coord_x: coords.x,
+              coord_y: coords.y,
+              sectorId: coords.sectorId,
               renders: (() => {
                 if (isAmlemi) {
                   return {
@@ -383,6 +469,11 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
               d.renders?.video_url ||
               d.human_answers?.video_url ||
               '';
+            const coords = (d.coord_x !== undefined && d.coord_y !== undefined)
+              ? { x: d.coord_x, y: d.coord_y, sectorId: d.sector_id || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+              : (d.coordX !== undefined && d.coordY !== undefined)
+              ? { x: d.coordX, y: d.coordY, sectorId: d.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+              : getDeterministicPlanetCoordinates(d.id, d.planet_name);
             return {
               id: d.id,
               userId: d.user_id,
@@ -402,6 +493,11 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
               generatedLore: d.generated_lore || '',
               videoUrl: resolvedVideoUrl,
               videoStatus: resolvedVideoUrl ? 'READY' : 'QUEUED_PENDING',
+              coordX: coords.x,
+              coordY: coords.y,
+              coord_x: coords.x,
+              coord_y: coords.y,
+              sectorId: coords.sectorId,
               renders: (() => {
                 if (isAmlemi) {
                   return {
@@ -511,6 +607,12 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           data.human_answers?.video_url ||
           '';
 
+        const coords = (data.coord_x !== undefined && data.coord_y !== undefined)
+          ? { x: data.coord_x, y: data.coord_y, sectorId: data.sector_id || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+          : (data.coordX !== undefined && data.coordY !== undefined)
+          ? { x: data.coordX, y: data.coordY, sectorId: data.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+          : getDeterministicPlanetCoordinates(data.id, data.planet_name);
+
         const sub: PlanetSubmission = {
           id: data.id,
           userId: data.user_id,
@@ -530,6 +632,11 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           generatedLore: data.generated_lore || '',
           videoUrl: resolvedVideoUrl,
           videoStatus: resolvedVideoUrl ? 'READY' : 'QUEUED_PENDING',
+          coordX: coords.x,
+          coordY: coords.y,
+          coord_x: coords.x,
+          coord_y: coords.y,
+          sectorId: coords.sectorId,
           renders: (() => {
             if (isAmlemi) {
               return {
@@ -797,10 +904,21 @@ export const savePlanetSubmission = async (
       submission.renders?.video_url ||
       '';
 
+    const coords = (submission.coordX !== undefined && submission.coordY !== undefined)
+      ? { x: submission.coordX, y: submission.coordY, sectorId: submission.sectorId || 'SECTOR ALPHA-01' }
+      : (submission.coord_x !== undefined && submission.coord_y !== undefined)
+      ? { x: submission.coord_x, y: submission.coord_y, sectorId: submission.sectorId || 'SECTOR ALPHA-01' }
+      : getDeterministicPlanetCoordinates(submission.id, submission.planetName);
+
     const enrichedSubmission: PlanetSubmission = {
       ...submission,
       videoUrl,
       videoStatus: videoUrl ? 'READY' : submission.videoStatus || 'QUEUED_PENDING',
+      coordX: coords.x,
+      coordY: coords.y,
+      coord_x: coords.x,
+      coord_y: coords.y,
+      sectorId: coords.sectorId,
       renders: {
         ...submission.renders,
         '01_main': submission.renders.hero,
@@ -818,7 +936,7 @@ export const savePlanetSubmission = async (
     const updated = [enrichedSubmission, ...existing.filter((s) => s.id !== enrichedSubmission.id)];
     localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(updated));
 
-    // Step 3: Atomic Supabase cloud persistence (user_dossiers table: 5 photos + lore + 9:16 video_url)
+    // Step 3: Atomic Supabase cloud persistence (user_dossiers table: 5 photos + lore + 9:16 video_url + coordinates)
     if (isSupabaseConfigured) {
       try {
         const basePayload: Record<string, any> = {
@@ -841,17 +959,23 @@ export const savePlanetSubmission = async (
             biome: enrichedSubmission.biome,
             sectorName: enrichedSubmission.sectorName,
             video_url: videoUrl,
+            coord_x: coords.x,
+            coord_y: coords.y,
+            sector_id: coords.sectorId,
           },
           generated_lore: enrichedSubmission.generatedLore,
           renders: enrichedSubmission.renders,
           votes_count: enrichedSubmission.votesCount,
           status: enrichedSubmission.status,
+          coord_x: coords.x,
+          coord_y: coords.y,
+          sector_id: coords.sectorId,
           created_at: enrichedSubmission.createdAt,
         };
 
         const { error: firstErr } = await supabase
           .from('user_dossiers')
-          .upsert({ ...basePayload, video_url: videoUrl });
+          .upsert({ ...basePayload, video_url: videoUrl, coord_x: coords.x, coord_y: coords.y, sector_id: coords.sectorId });
 
         if (firstErr) {
           await supabase.from('user_dossiers').upsert(basePayload);
