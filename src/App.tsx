@@ -143,6 +143,15 @@ export default function App() {
       if (path === '/privacy' || path.startsWith('/privacy/')) return 'privacy';
       if (path === '/kyc' || path.startsWith('/kyc/')) return 'kyc';
       if (path === '/success' || path.startsWith('/success/')) return 'success';
+      if (path === '/unlocked' || path.startsWith('/unlocked')) {
+        try {
+          localStorage.setItem('akinoya_public_unlocked', 'true');
+          sessionStorage.setItem('akinoya_public_unlocked', 'true');
+        } catch {
+          // ignore
+        }
+        return 'home';
+      }
       const queryPassCandidate = (
         searchParams.get('nfc_token') ||
         searchParams.get('nfc') ||
@@ -240,6 +249,14 @@ export default function App() {
         setRoute('kyc');
       } else if (path === '/success' || path.startsWith('/success/')) {
         setRoute('success');
+      } else if (path === '/unlocked' || path.startsWith('/unlocked')) {
+        handlePublicUnlockSuccess();
+        setRoute('home');
+        if (typeof window !== 'undefined') {
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('akinoya-open-visualizer-hub'));
+          }, 50);
+        }
       } else if (
         !isSupabaseAuth &&
         (path === '/verify' ||
@@ -293,6 +310,16 @@ export default function App() {
       // Fallback
     }
     setPublicUnlocked(true);
+  };
+
+  const handleOpenVisualizerHub = () => {
+    handlePublicUnlockSuccess();
+    navigateTo('home', '/?tab=pass&subview=hub');
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('akinoya-open-visualizer-hub'));
+      }, 50);
+    }
   };
 
   const handlePublicLock = () => {
@@ -374,6 +401,7 @@ export default function App() {
               onBackToHome={() => navigateTo('home', '/')}
               onNavigateToContest={() => navigateTo('contest', '/contest')}
               onNavigateToCommunity={() => navigateTo('community', '/community')}
+              onNavigateToVisualizerHub={handleOpenVisualizerHub}
               onOpenCreator={(u) => {
                 setCreatorUsername(u);
                 navigateTo('creators', `/creators/${u}`);
@@ -443,7 +471,7 @@ export default function App() {
                     : undefined
                 }
                 onNavigateHome={() => navigateTo('home', '/')}
-                onOpenVisualizerHub={() => navigateTo('home', '/')}
+                onOpenVisualizerHub={handleOpenVisualizerHub}
               />
             ) : (
               <div className="flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">

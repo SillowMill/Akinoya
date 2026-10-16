@@ -46,6 +46,7 @@ interface GalaxyNavigatorProps {
   onNavigateToContest?: () => void;
   onNavigateToCommunity?: () => void;
   onOpenCreator?: (username: string) => void;
+  onNavigateToVisualizerHub?: () => void;
 }
 
 interface Star {
@@ -82,6 +83,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   onNavigateToContest,
   onNavigateToCommunity,
   onOpenCreator,
+  onNavigateToVisualizerHub,
 }) => {
   const { user } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -316,6 +318,34 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       ctx.beginPath();
       ctx.arc(coreScreenX, coreScreenY, 380 * curZoom, 0, Math.PI * 2);
       ctx.fill();
+
+      // Concentric revolving golden orbital rings centered exactly at Äkinoya Core (0, 0)
+      ctx.save();
+      ctx.translate(coreScreenX, coreScreenY);
+
+      // Inner revolving dashed golden orbital ring
+      ctx.save();
+      ctx.rotate((time * 0.0006) % (Math.PI * 2));
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([8 * curZoom, 6 * curZoom]);
+      ctx.beginPath();
+      ctx.arc(0, 0, 36 * curZoom, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Outer counter-revolving dashed golden orbital ring
+      ctx.save();
+      ctx.rotate((-time * 0.00035) % (Math.PI * 2));
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([5 * curZoom, 8 * curZoom]);
+      ctx.beginPath();
+      ctx.arc(0, 0, 48 * curZoom, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.restore();
 
       // 4. Parallax Starfield
       const stars = starsRef.current;
@@ -564,11 +594,14 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     panTo(planet.coordX ?? 0, planet.coordY ?? 0, Math.max(1.0, zoomRef.current), 700);
   };
 
-  // Äkinoya Hub Click
+  // Äkinoya Hub Click -> Direct Visualizer Hub Shortcut
   const handleAkinoyaClick = () => {
     soundManager.playTone(880, 0.07);
-    setIsAkinoyaModalOpen(true);
-    panTo(0, 0, Math.max(1.1, zoomRef.current), 700);
+    if (onNavigateToVisualizerHub) {
+      onNavigateToVisualizerHub();
+    } else {
+      onBackToHome();
+    }
   };
 
   // Copy Sector Link Handler
@@ -813,7 +846,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          transform: `translate3d(${window.innerWidth / 2}px, ${window.innerHeight / 2}px, 0)`,
+          left: '50%',
+          top: '50%',
         }}
       >
         <div
@@ -854,22 +888,22 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               } as PlanetSubmission);
             }}
             onPointerLeave={() => setHoveredPlanet(null)}
-            className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex flex-col items-center select-none"
-            style={{ left: 0, top: 0 }}
+            className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none"
+            style={{ left: 0, top: 0, width: 56, height: 56 }}
           >
-            {/* Multi-layered Pulsing Golden Aura */}
-            <div className="absolute w-28 h-28 -top-7 -left-7 rounded-full bg-amber-400/20 blur-xl animate-pulse pointer-events-none" />
+            {/* Multi-layered Pulsing Golden Aura centered symmetrically on (0, 0) */}
+            <div className="absolute -inset-7 rounded-full bg-amber-400/20 blur-xl animate-pulse pointer-events-none" />
             <div
-              className="absolute w-20 h-20 -top-3 -left-3 rounded-full border border-amber-400/40 animate-spin pointer-events-none"
+              className="absolute -inset-3 rounded-full border border-amber-400/50 animate-spin pointer-events-none"
               style={{ animationDuration: '14s' }}
             />
             <div
-              className="absolute w-24 h-24 -top-5 -left-5 rounded-full border border-dashed border-amber-300/30 animate-spin pointer-events-none"
+              className="absolute -inset-5 rounded-full border border-dashed border-amber-300/40 animate-spin pointer-events-none"
               style={{ animationDuration: '28s', animationDirection: 'reverse' }}
             />
 
             {/* Core Orb */}
-            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.8)] group-hover:scale-115 transition-transform duration-300 bg-black flex items-center justify-center">
+            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.8)] group-hover:scale-115 transition-transform duration-300 bg-black flex items-center justify-center shrink-0">
               <img
                 src={akinoyaHeroBg}
                 alt="Äkinoya Capital Core"
@@ -878,12 +912,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/40 via-transparent to-yellow-300/40" />
             </div>
 
-            {/* Capital Core Badge Label */}
-            <div className="mt-3 flex flex-col items-center pointer-events-none">
-              <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] flex items-center gap-1 whitespace-nowrap">
+            {/* Capital Core Badge Label - positioned below orb without affecting container coordinates */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 flex flex-col items-center pointer-events-none whitespace-nowrap">
+              <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] flex items-center gap-1">
                 <span>👑 ÄKINOYA CORE (0, 0)</span>
               </span>
-              <span className="text-[11px] font-display font-extrabold text-white tracking-wider mt-0.5 group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] whitespace-nowrap">
+              <span className="text-[11px] font-display font-extrabold text-white tracking-wider mt-0.5 group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                 Capital of Sillow Mill
               </span>
             </div>
@@ -1225,11 +1259,15 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   type="button"
                   onClick={() => {
                     setIsAkinoyaModalOpen(false);
-                    onBackToHome();
+                    if (onNavigateToVisualizerHub) {
+                      onNavigateToVisualizerHub();
+                    } else {
+                      onBackToHome();
+                    }
                   }}
                   className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-md"
                 >
-                  Explore 3D Planetary Orbit
+                  Enter Visualizer Hub
                 </button>
                 <button
                   type="button"

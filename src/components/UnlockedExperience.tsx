@@ -41,7 +41,6 @@ import {
   Download,
   Trophy,
   Camera,
-  MessageSquare,
   ThumbsUp,
   Flame,
   Share2,
@@ -58,9 +57,6 @@ import {
   getPlanetPhotoCards,
   getStoredPlanetSubmissions,
   togglePlanetSubmissionVote,
-  getPlanetComments,
-  addPlanetComment,
-  PlanetComment,
 } from '../data/contest';
 import { getUserStatusConfig } from '../utils/statusPill';
 import { PlanetDossierModal } from './PlanetDossierModal';
@@ -193,8 +189,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
   const [userDossier, setUserDossier] = useState<PlanetSubmission | null>(null);
   const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);
-  const [planetComments, setPlanetComments] = useState<PlanetComment[]>([]);
-  const [commentInput, setCommentInput] = useState('');
   const [isCopiedDossierLink, setIsCopiedDossierLink] = useState(false);
 
   useEffect(() => {
@@ -204,7 +198,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       fetchUserContestSubmission(userId, email).then((sub) => {
         if (sub) {
           setUserDossier(sub);
-          setPlanetComments(getPlanetComments(sub.id));
         }
       });
     }
@@ -215,22 +208,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     soundManager.playTone(740, 0.06);
     const res = await togglePlanetSubmissionVote(userDossier.id, user?.id);
     setUserDossier((prev) => (prev ? { ...prev, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : null));
-  };
-
-  const handleAddComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userDossier || !commentInput.trim()) return;
-    soundManager.playTone(680, 0.05);
-    const authorName = (profile?.first_name ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}` : profile?.full_name) || user?.email?.split('@')[0] || 'Community Scout';
-    const authorUsername = authorName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const updated = addPlanetComment(userDossier.id, {
-      planetId: userDossier.id,
-      authorName,
-      authorUsername,
-      text: commentInput.trim(),
-    });
-    setPlanetComments(updated);
-    setCommentInput('');
   };
 
   const handleShareDossier = () => {
@@ -286,7 +263,45 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   }, [isVipMode, activeTab]);
 
-  const [passSubView, setPassSubView] = useState<'overview' | 'hub'>('overview');
+  const [passSubView, setPassSubView] = useState<'overview' | 'hub'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('subview') === 'hub' || params.get('tab') === 'visualizers') {
+        return 'hub';
+      }
+    }
+    return 'overview';
+  });
+
+  // Listen for direct navigation to Visualizer Hub
+  useEffect(() => {
+    const handleOpenHub = () => {
+      setActiveTab('pass');
+      setPassSubView('hub');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const checkUrlParams = () => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('tab') === 'pass' && params.get('subview') === 'hub') {
+          setActiveTab('pass');
+          setPassSubView('hub');
+        } else if (params.get('tab') === 'visualizers') {
+          setActiveTab('pass');
+          setPassSubView('hub');
+        }
+      }
+    };
+
+    checkUrlParams();
+    window.addEventListener('akinoya-open-visualizer-hub', handleOpenHub);
+    window.addEventListener('popstate', checkUrlParams);
+    return () => {
+      window.removeEventListener('akinoya-open-visualizer-hub', handleOpenHub);
+      window.removeEventListener('popstate', checkUrlParams);
+    };
+  }, []);
 
   // Verified holder assets: active pass is the NFC-bound token for this device session
   const { nfcToken } = useVipAccess();
@@ -1916,74 +1931,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <p className="text-xs sm:text-sm text-white/70 font-sans leading-relaxed whitespace-pre-line">
                       {userDossier.generatedLore}
                     </p>
-                  </div>
-
-                  {/* Community Feedback & Live Comments */}
-                  <div className="p-5 sm:p-6 rounded-2xl bg-[#080d19] border border-cyan-500/30 space-y-4 shadow-xl">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/10">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-cyan-400" />
-                        <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
-                          Community Feedback & Lore Discussions
-                        </h3>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 border border-cyan-400/30">
-                          {planetComments.length} {planetComments.length === 1 ? 'Comment' : 'Comments'}
-                        </span>
-                      </div>
-
-                      <a
-                        href="/community"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-semibold transition-all cursor-pointer"
-                      >
-                        <span>View &amp; Reply in Community Hub</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
-
-                    {/* Comments list */}
-                    <div className="space-y-2.5">
-                      {planetComments.map((comm) => (
-                        <div
-                          key={comm.id}
-                          className="p-3 sm:p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-1"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono font-bold text-cyan-300">
-                                {comm.authorName}
-                              </span>
-                              <span className="text-[10px] font-mono text-white/40">
-                                @{comm.authorUsername}
-                              </span>
-                            </div>
-                            <span className="text-[10px] font-mono text-white/40">
-                              {comm.createdAt}
-                            </span>
-                          </div>
-                          <p className="text-xs text-white/80 font-sans leading-relaxed">
-                            {comm.text}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Add comment input */}
-                    <form onSubmit={handleAddComment} className="pt-2 flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={commentInput}
-                        onChange={(e) => setCommentInput(e.target.value)}
-                        placeholder="Leave feedback on this sector's lore..."
-                        className="flex-1 px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs font-mono text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-colors"
-                      />
-                      <button
-                        type="submit"
-                        disabled={!commentInput.trim()}
-                        className="px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed text-black font-mono font-bold text-xs transition-all cursor-pointer shrink-0"
-                      >
-                        Post
-                      </button>
-                    </form>
                   </div>
                 </div>
               )}
