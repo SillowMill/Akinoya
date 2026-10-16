@@ -285,20 +285,34 @@ const persistProfileToSupabase = async (prof: Profile) => {
   }
 };
 
-// Sync profile data to Google Sheets via backend endpoint
+// Sync profile data to Google Sheets via backend endpoint (VIP GUESTS & Subscribers tabs)
 const syncToGoogleSheets = async (prof: Partial<Profile>, codeUsed?: string) => {
   try {
-    await fetch('/api/auth/sync-sheets', {
+    const cleanEmail = (prof.email || '').trim().toLowerCase();
+    const isFounder = isFounderEmail(cleanEmail);
+    const activeCode = codeUsed || prof.vip_code_redeemed || 'N/A';
+    const founderPassStatus = isFounder
+      ? 'Founder Pass (#0) - Active'
+      : activeCode && activeCode !== 'N/A'
+      ? `Claimed (${activeCode})`
+      : prof.has_vip_pass || prof.role === 'VIP_GUEST'
+      ? 'VIP Pass Active'
+      : 'Standard / Unclaimed';
+
+    await fetch('/api/sync-sheets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        timestamp: prof.created_at || new Date().toISOString(),
         first_name: prof.first_name,
         last_name: prof.last_name,
         email: prof.email,
+        founderPassStatus,
+        worldName: prof.claimed_sector || (isFounder ? 'Ämlemi' : 'Unclaimed'),
         role: prof.role || 'FREE',
         has_vip_pass: prof.has_vip_pass ?? false,
         subscription_status: prof.subscription_status || 'inactive',
-        vip_code_redeemed: codeUsed || prof.vip_code_redeemed || 'N/A',
+        vip_code_redeemed: activeCode,
         created_at: prof.created_at || new Date().toISOString(),
         is_pioneer: prof.is_pioneer ?? true,
         pioneer_badge: prof.pioneer_badge || '[PIONEER-2027]',
@@ -310,91 +324,56 @@ const syncToGoogleSheets = async (prof: Partial<Profile>, codeUsed?: string) => 
   }
 };
 
-// Automate VIP pass recognition and redemption upon login/signup
+// Resolve profile and validate only explicitly claimed VIP passes (strict 1-to-1 email binding)
 const resolveAndLinkVipProfile = async (
   authUser: { id: string; email?: string; user_metadata?: any },
   rawProfData: Partial<Profile> | null,
-  cachedProf: Profile | null
+  cachedProf: Profile | null,
+  explicitlyClaimedCode?: string | null
 ): Promise<Profile> => {
-  const pendingPass = getStoredVipPass();
-  const pendingRole =
-    typeof window !== 'undefined'
-      ? (localStorage.getItem(PENDING_ROLE_KEY) || sessionStorage.getItem(PENDING_ROLE_KEY))
-      : null;
-  const hasReferralClaim = pendingRole === 'VIP_GUEST';
-  const hasDeviceVip =
-    typeof window !== 'undefined' &&
-    (localStorage.getItem('sillow_vip_device_access') === 'true' ||
-     sessionStorage.getItem('akinoya_vip_unlocked') === 'true' ||
-     Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
-     Boolean(sessionStorage.getItem('sillow_vip_bound_token')) ||
-     localStorage.getItem(PATRON_ROLE_KEY) === 'VIP_GUEST' ||
-     localStorage.getItem(PATRON_ROLE_KEY) === 'CREATOR');
-
-  const metaHasVip = Boolean(
-    authUser.user_metadata?.has_vip_pass ||
-    authUser.user_metadata?.vip_pass_id ||
-    authUser.user_metadata?.role === 'VIP_GUEST' ||
-    authUser.user_metadata?.role === 'CREATOR'
-  );
-  const metaPass = authUser.user_metadata?.vip_pass_id || authUser.user_metadata?.vip_code || null;
-
   const authUserEmail = (authUser.email || rawProfData?.email || '').trim().toLowerCase();
   const isFounder = isFounderEmail(authUserEmail);
 
-  // 1. Check if an active VIP token entry in vip_tokens is already bound to this user ID
-  const boundVipToken = authUser?.id ? await getUserBoundVipToken(authUser.id) : null;
-
-  // 2. Check if user already has verified VIP profile in Supabase public.profiles
-  const userHasProfileVip = Boolean(
-    isFounder ||
-    rawProfData?.has_vip_pass ||
-    rawProfData?.is_vip ||
-    rawProfData?.role === 'VIP_GUEST' ||
-    rawProfData?.role === 'CREATOR' ||
-    metaHasVip
-  );
+  // 1. Check if an active VIP token entry in vip_tokens is already permanently bound to this user ID / email
+  const boundVipToken =
+    authUser?.id || authUserEmail
+      ? await getUserBoundVipToken(authUser?.id || '', authUserEmail)
+      : null;
 
   const currentSubStatus = rawProfData?.subscription_status || 'inactive';
   let targetRole: UserRole = isFounder ? 'CREATOR' : (rawProfData?.role || 'FREE');
-  let targetHasVip = Boolean(boundVipToken || userHasProfileVip);
-  let targetPassCode: string | null = boundVipToken?.token_code || rawProfData?.vip_code_redeemed || metaPass || null;
+  let targetHasVip = Boolean(isFounder || boundVipToken);
+  let targetPassCode: string | null = isFounder
+    ? 'AKN-VIP-2027-X0914'
+    : boundVipToken?.token_code || explicitlyClaimedCode || null;
+
+  // Verify any previously saved vip_code_redeemed on profile against strict 1-to-1 email registry
+  if (!isFounder && !boundVipToken && rawProfData?.vip_code_redeemed) {
+    const check = await checkVipTokenStatus(
+      rawProfData.vip_code_redeemed,
+      authUser.id,
+      authUserEmail
+    );
+    if (check.isAlreadyClaimed && check.isClaimedByMe) {
+      targetHasVip = true;
+      targetPassCode = rawProfData.vip_code_redeemed;
+    }
+  }
 
   if (isFounder) {
     targetRole = 'CREATOR';
-    // If the founder has already explicitly claimed the master pass in database or profile, retain it
-    if (boundVipToken?.token_code === 'AKN-VIP-2027-X0914' || rawProfData?.vip_code_redeemed === 'AKN-VIP-2027-X0914') {
-      targetHasVip = true;
-      targetPassCode = 'AKN-VIP-2027-X0914';
-    }
-  } else if (boundVipToken) {
     targetHasVip = true;
-    const boundRole: UserRole = boundVipToken.token_code === 'AKN-VIP-2027-X0914' ? 'CREATOR' : 'VIP_GUEST';
+    targetPassCode = 'AKN-VIP-2027-X0914';
+  } else if (boundVipToken || explicitlyClaimedCode || targetHasVip) {
+    targetHasVip = true;
+    const activeTokenCode = boundVipToken?.token_code || explicitlyClaimedCode || targetPassCode || '';
+    const boundRole: UserRole = activeTokenCode === 'AKN-VIP-2027-X0914' ? 'CREATOR' : 'VIP_GUEST';
     targetRole = pickHigherRole(targetRole, boundRole);
-    targetPassCode = boundVipToken.token_code;
-  } else if (userHasProfileVip) {
-    targetHasVip = true;
-    if (targetRole === 'FREE' || targetRole === 'GUEST') {
-      targetRole = rawProfData?.role === 'CREATOR' ? 'CREATOR' : 'VIP_GUEST';
-    }
-  }
-
-  // 3. Strict owner validation on already-bound session VIP token (if active in local storage)
-  const existingBoundSession = typeof window !== 'undefined' ? localStorage.getItem('sillow_vip_bound_token') : null;
-  if (existingBoundSession && !boundVipToken && !targetPassCode) {
-    const tokenCheck = await checkVipTokenStatus(existingBoundSession, authUser.id, authUserEmail);
-    if (tokenCheck.isAlreadyClaimed && tokenCheck.isClaimedByMe) {
-      targetHasVip = true;
-      const vipRole = resolveRoleForCode(existingBoundSession);
-      targetRole = pickHigherRole(targetRole, vipRole);
-      targetPassCode = existingBoundSession;
-    } else {
-      clearPendingVipStorage();
-    }
+    targetPassCode = activeTokenCode || null;
   }
 
   // Force standard Free user if not verified VIP, Subscriber, or Creator
-  if (!isFounder && !targetHasVip && targetRole !== 'ANNUAL_PASS' && targetRole !== 'SUBSCRIBER' && targetRole !== 'CREATOR') {
+  if (!isFounder && !targetHasVip && targetRole !== 'ANNUAL_PASS' && targetRole !== 'SUBSCRIBER') {
     targetRole = 'FREE';
     targetHasVip = false;
     targetPassCode = null;
@@ -436,17 +415,22 @@ const resolveAndLinkVipProfile = async (
     has_vip_pass: targetHasVip,
     subscription_status: currentSubStatus,
     vip_code_redeemed: targetPassCode,
+    has_submitted_contest: rawProfData?.has_submitted_contest ?? false,
+    contest_submission_id: rawProfData?.contest_submission_id ?? null,
+    claimed_sector: rawProfData?.claimed_sector ?? null,
     created_at: rawProfData?.created_at || new Date().toISOString(),
   };
 
   const enriched = enrichProfile(baseData, targetPassCode, targetHasVip);
+  enriched.has_submitted_contest = Boolean(rawProfData?.has_submitted_contest);
+  enriched.contest_submission_id = rawProfData?.contest_submission_id || null;
 
   // Permanently upsert into Supabase public.profiles
   if (isSupabaseConfigured) {
     await persistProfileToSupabase(enriched);
   }
 
-  // Real-time sync to Google Sheets (Subscribers tab)
+  // Real-time sync to Google Sheets (VIP GUESTS & Subscribers tabs)
   syncToGoogleSheets(enriched, targetPassCode || undefined);
 
   // Persist session tokens for automatic instant device recognition
@@ -465,11 +449,8 @@ const resolveAndLinkVipProfile = async (
     } else {
       clearPendingVipStorage();
     }
-    // Clean up temporary pending invitation flags now that pass is permanently claimed
     localStorage.removeItem(PENDING_ROLE_KEY);
     sessionStorage.removeItem(PENDING_ROLE_KEY);
-    localStorage.removeItem(PENDING_VIP_PASS_KEY);
-    sessionStorage.removeItem('pending_vip_code');
   }
 
   return enriched;
@@ -657,21 +638,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     async function initAuth() {
       try {
-        // Pre-check candidate VIP token for single-claim enforcement
-        const incomingParam = typeof window !== 'undefined'
-          ? (new URLSearchParams(window.location.search).get('vip_token') ||
-             new URLSearchParams(window.location.search).get('token') ||
-             new URLSearchParams(window.location.search).get('pass') ||
-             new URLSearchParams(window.location.search).get('code'))
-          : null;
-        const candidateToken = incomingParam ? normalizeVipToken(incomingParam) : getStoredVipPass();
+        const searchParams =
+          typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const isSupabaseAuth = Boolean(
+          searchParams &&
+            (searchParams.get('type') ||
+              searchParams.get('token_hash') ||
+              searchParams.get('code') ||
+              window.location.hash.includes('access_token'))
+        );
+
+        // Pre-check candidate VIP token for single-claim enforcement (only if valid VIP pass ID, never Supabase auth token)
+        const rawIncomingPass =
+          searchParams && !isSupabaseAuth
+            ? searchParams.get('vip_token') ||
+              searchParams.get('pass') ||
+              searchParams.get('nfc_token') ||
+              searchParams.get('token')
+            : null;
+        const cleanIncomingPass = rawIncomingPass ? normalizeVipToken(rawIncomingPass) : null;
+        const candidateToken =
+          cleanIncomingPass && isValidPassId(cleanIncomingPass)
+            ? cleanIncomingPass
+            : getStoredVipPass();
 
         // Step 1: Guarantee immediate persistent fallback recovery
         const cachedUser = getCachedUser();
         let cachedProf = getCachedProfile();
         let cachedRole = getCachedRole();
 
-        if (candidateToken) {
+        if (candidateToken && isValidPassId(candidateToken)) {
           const userEmail = (cachedUser?.email || cachedProf?.email || '').trim().toLowerCase();
           const tokenStatus = await checkVipTokenStatus(candidateToken, cachedUser?.id, userEmail);
           if (tokenStatus.isAlreadyClaimed) {
@@ -682,7 +678,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else {
               clearPendingVipStorage();
               if (mounted) {
-                setVipLinkError(OTHER_ACCOUNT_VIP_ERROR);
+                setVipLinkError('Pass already claimed');
                 setHasPendingVipInvitation(false);
                 soundManager.playError();
               }
@@ -704,8 +700,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (cachedUser) setUser(cachedUser);
         }
 
-        // Step 2: Unblocked Supabase session retrieval
+        // Step 2: Unblocked Supabase session retrieval & OTP/Magic Link exchange
         if (isSupabaseConfigured) {
+          // If returning from Email Magic Link / Signup OTP with token_hash & type
+          const tokenHash = searchParams?.get('token_hash');
+          const otpType = searchParams?.get('type') as any;
+          if (tokenHash && otpType) {
+            try {
+              await supabase.auth.verifyOtp({
+                token_hash: tokenHash,
+                type: otpType,
+              });
+            } catch (otpErr) {
+              console.warn('[AuthContext] verifyOtp notice:', otpErr);
+            }
+          }
+
           const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
           if (!sessionErr && sessionData?.session?.user) {
             const authUser = sessionData.session.user;
@@ -1110,15 +1120,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, message: 'Please sign in or create an account to claim your VIP invitation.' };
     }
 
-    const pendingPass = getStoredVipPass();
+    const pendingPass =
+      getStoredVipPass() ||
+      (typeof window !== 'undefined'
+        ? localStorage.getItem(PENDING_VIP_PASS_KEY) || sessionStorage.getItem('pending_vip_code')
+        : null);
+
+    const userEmail = (user.email || profile?.email || '').trim().toLowerCase();
+    const holderName =
+      profile?.full_name ||
+      (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : '') ||
+      user?.user_metadata?.full_name ||
+      userEmail.split('@')[0] ||
+      'Founding VIP Member';
+
     if (pendingPass) {
-      const userEmail = (user.email || profile?.email || '').trim().toLowerCase();
       const tokenStatus = await checkVipTokenStatus(pendingPass, user.id, userEmail);
       if (tokenStatus.isAlreadyClaimed && !tokenStatus.isClaimedByMe) {
         clearPendingVipStorage();
-        setVipLinkError(ALREADY_CLAIMED_VIP_ERROR);
+        setVipLinkError('Pass already claimed');
         soundManager.playError();
-        return { success: false, message: ALREADY_CLAIMED_VIP_ERROR };
+        return { success: false, message: 'Pass already claimed' };
+      }
+
+      const claimRes = await claimVipTokenForUser(pendingPass, user.id, holderName, userEmail);
+      if (!claimRes.success) {
+        clearPendingVipStorage();
+        setVipLinkError('Pass already claimed');
+        soundManager.playError();
+        return { success: false, message: claimRes.error || 'Pass already claimed' };
       }
     }
 
@@ -1126,9 +1156,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const resolved = await resolveAndLinkVipProfile(
       user,
       profile
-        ? { ...profile, has_vip_pass: true, role: profile.role === 'FREE' || profile.role === 'GUEST' ? 'VIP_GUEST' : profile.role }
-        : { has_vip_pass: true, role: 'VIP_GUEST' },
-      profile
+        ? {
+            ...profile,
+            has_vip_pass: true,
+            role: profile.role === 'FREE' || profile.role === 'GUEST' ? 'VIP_GUEST' : profile.role,
+            vip_code_redeemed: pendingPass || profile.vip_code_redeemed,
+          }
+        : { has_vip_pass: true, role: 'VIP_GUEST', vip_code_redeemed: pendingPass },
+      profile,
+      pendingPass
     );
 
     setProfile(resolved);
@@ -1150,7 +1186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
-    // Strict ownership verification
+    // Strict 1-to-1 email ownership verification
     const tokenCheck = await checkVipTokenStatus(clean, user?.id, userEmail);
     if (tokenCheck.isAlreadyClaimed) {
       if (tokenCheck.isClaimedByMe) {
@@ -1161,24 +1197,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
       soundManager.playError();
-      setVipLinkError(OTHER_ACCOUNT_VIP_ERROR);
+      setVipLinkError('Pass already claimed');
       return {
         success: false,
-        message: OTHER_ACCOUNT_VIP_ERROR,
+        message: 'Pass already claimed',
       };
     }
-
-    const isPatronTest =
-      clean === 'PATRON-TEST-ACCESS' ||
-      clean === 'PATRONTESTACCESS' ||
-      clean === 'PATRON' ||
-      clean === 'TEST-ACCESS' ||
-      clean === 'SILLOWMILL2027';
 
     const isMasterFounder = clean === FOUNDING_PASS_ID || clean === 'AKN-VIP-2027-X0914';
     const isValidGuestPass = isValidPassId(clean);
 
-    if (isPatronTest || isMasterFounder || isValidGuestPass || tokenCheck.allowed) {
+    if (isMasterFounder || isValidGuestPass || tokenCheck.allowed) {
+      const targetUser = user || { id: profile?.id || `usr-${Date.now()}`, email: userEmail || 'guest@sillowmill.com' };
+      const holderName =
+        profile?.full_name ||
+        (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : '') ||
+        user?.user_metadata?.full_name ||
+        userEmail.split('@')[0] ||
+        'Founding VIP Member';
+
+      // Permanently bind VIP pass to the claiming email/user
+      const claimRes = await claimVipTokenForUser(clean, targetUser.id, holderName, userEmail);
+      if (!claimRes.success) {
+        soundManager.playError();
+        setVipLinkError('Pass already claimed');
+        return {
+          success: false,
+          message: claimRes.error || 'Pass already claimed',
+        };
+      }
+
       soundManager.playUnlockChime();
       const targetRole: UserRole = isMasterFounder ? 'CREATOR' : 'VIP_GUEST';
 
@@ -1192,13 +1240,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('sillow_vip_bound_token', clean);
       sessionStorage.setItem('sillow_vip_bound_token', clean);
 
-      const targetUser = user || { id: `usr-${Date.now()}`, email: 'guest@sillowmill.com' };
       const resolved = await resolveAndLinkVipProfile(
         targetUser,
         profile
           ? { ...profile, has_vip_pass: true, role: pickHigherRole(profile.role, targetRole), vip_code_redeemed: clean }
           : { has_vip_pass: true, role: targetRole, vip_code_redeemed: clean },
-        profile
+        profile,
+        clean
       );
 
       setProfile(resolved);
@@ -1217,7 +1265,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return {
       success: false,
       message:
-        'Unrecognized pass code. Enter a valid 1-of-100 Guest Pass (AKN-VIP-2027-X001 to X100) or test passkey PATRON-TEST-ACCESS.',
+        'Unrecognized pass code. Enter a valid 1-of-100 Guest Pass (AKN-VIP-2027-X001 to X100).',
     };
   };
 

@@ -125,25 +125,36 @@ export default function App() {
   const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest'>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
-      const search = window.location.search.toLowerCase();
+      const searchParams = new URLSearchParams(window.location.search);
+      const isSupabaseAuth = Boolean(
+        searchParams.get('type') ||
+        searchParams.get('token_hash') ||
+        searchParams.get('code') ||
+        window.location.hash.includes('access_token')
+      );
       if (path === '/contest' || path.startsWith('/contest/')) return 'contest';
       if (path === '/creators' || path.startsWith('/creators/')) return 'creators';
       if (path === '/community' || path.startsWith('/community/')) return 'community';
-      if (path === '/auth/callback' || path.startsWith('/auth/callback')) {
+      if (path === '/auth/callback' || path.startsWith('/auth/callback') || isSupabaseAuth) {
         return 'home';
       }
       if (path === '/privacy' || path.startsWith('/privacy/')) return 'privacy';
       if (path === '/kyc' || path.startsWith('/kyc/')) return 'kyc';
       if (path === '/success' || path.startsWith('/success/')) return 'success';
+      const queryPassCandidate = (
+        searchParams.get('nfc_token') ||
+        searchParams.get('nfc') ||
+        searchParams.get('pass') ||
+        searchParams.get('token') ||
+        ''
+      ).trim().toUpperCase().replace(/^#/, '');
+      const hasValidQueryPass = /^AKN-VIP-\d{4}-[A-Z]\d{3,4}$|^AKN-\d{4}$|^SM\d{3}-[A-Z0-9]{4}$/.test(queryPassCandidate);
       if (
         path === '/verify' ||
         path.startsWith('/verify/') ||
         path === '/vip' ||
-        search.includes('enc=') ||
-        search.includes('claim=') ||
-        search.includes('token=') ||
-        search.includes('nfc=') ||
-        search.includes('pass=')
+        Boolean(searchParams.get('enc')) ||
+        hasValidQueryPass
       ) {
         return 'verify';
       }
@@ -151,22 +162,28 @@ export default function App() {
     return 'home';
   });
 
-  // Redirect incoming token parameters from root domain directly to /verify/[id]
+  // Redirect incoming valid NFC token parameters from root domain directly to /verify/[id]
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const path = window.location.pathname.toLowerCase();
-    if (path === '/auth/callback' || path.startsWith('/auth/callback')) {
-      window.history.replaceState({}, '', '/');
+    const searchParams = new URLSearchParams(window.location.search);
+    const isSupabaseAuth = Boolean(
+      searchParams.get('type') ||
+      searchParams.get('token_hash') ||
+      searchParams.get('code') ||
+      window.location.hash.includes('access_token')
+    );
+
+    if (path === '/auth/callback' || path.startsWith('/auth/callback') || isSupabaseAuth) {
       setRoute('home');
       return;
     }
 
-    const searchParams = new URLSearchParams(window.location.search);
     const token =
-      searchParams.get('token') ||
       searchParams.get('nfc_token') ||
       searchParams.get('nfc') ||
-      searchParams.get('pass');
+      searchParams.get('pass') ||
+      searchParams.get('token');
     if (token) {
       const cleanToken = token.trim().toUpperCase().replace(/^#/, '');
       if (cleanToken === 'PATRON-TEST-ACCESS' || cleanToken === 'PATRON') {
@@ -174,8 +191,11 @@ export default function App() {
         setRoute('home');
         return;
       }
-      window.history.replaceState({}, '', `/verify/${cleanToken}`);
-      setRoute('verify');
+      const isPassId = /^AKN-VIP-\d{4}-[A-Z]\d{3,4}$|^AKN-\d{4}$|^SM\d{3}-[A-Z0-9]{4}$/.test(cleanToken);
+      if (isPassId) {
+        window.history.replaceState({}, '', `/verify/${cleanToken}`);
+        setRoute('verify');
+      }
     }
   }, []);
 
@@ -183,7 +203,22 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
-      const search = window.location.search.toLowerCase();
+      const searchParams = new URLSearchParams(window.location.search);
+      const isSupabaseAuth = Boolean(
+        searchParams.get('type') ||
+        searchParams.get('token_hash') ||
+        searchParams.get('code') ||
+        window.location.hash.includes('access_token')
+      );
+      const queryPassCandidate = (
+        searchParams.get('nfc_token') ||
+        searchParams.get('nfc') ||
+        searchParams.get('pass') ||
+        searchParams.get('token') ||
+        ''
+      ).trim().toUpperCase().replace(/^#/, '');
+      const hasValidQueryPass = !isSupabaseAuth && /^AKN-VIP-\d{4}-[A-Z]\d{3,4}$|^AKN-\d{4}$|^SM\d{3}-[A-Z0-9]{4}$/.test(queryPassCandidate);
+
       if (path === '/contest' || path.startsWith('/contest/')) {
         setRoute('contest');
       } else if (path === '/creators' || path.startsWith('/creators/')) {
@@ -202,14 +237,12 @@ export default function App() {
       } else if (path === '/success' || path.startsWith('/success/')) {
         setRoute('success');
       } else if (
-        path === '/verify' ||
-        path.startsWith('/verify/') ||
-        path === '/vip' ||
-        search.includes('enc=') ||
-        search.includes('claim=') ||
-        search.includes('token=') ||
-        search.includes('nfc=') ||
-        search.includes('pass=')
+        !isSupabaseAuth &&
+        (path === '/verify' ||
+         path.startsWith('/verify/') ||
+         path === '/vip' ||
+         Boolean(searchParams.get('enc')) ||
+         hasValidQueryPass)
       ) {
         setRoute('verify');
       } else {

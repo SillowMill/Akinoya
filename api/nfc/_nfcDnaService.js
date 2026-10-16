@@ -357,11 +357,35 @@ export async function registerPassHolder(tokenId, ownerName, ownerEmail, deviceI
   const cleanEmail = ownerEmail ? ownerEmail.trim().toLowerCase() : null;
 
   const isMaster = pass.normalizedId === 'AKN-VIP-2027-X0914';
-  pass.ownerName = cleanName;
-  pass.ownerEmail = cleanEmail || (isMaster ? 'odi.selis3@gmail.com' : null);
+
+  // Enforce Founder Pass (#0) primary owner: odi.selis3@gmail.com
+  if (isMaster && cleanEmail && cleanEmail !== 'odi.selis3@gmail.com') {
+    return {
+      success: false,
+      error: 'Pass already claimed',
+      message: 'Pass already claimed',
+    };
+  }
+
+  // Enforce strict 1-to-1 email binding: if already bound to a different email, reject with "Pass already claimed"
+  if (
+    pass.isClaimed &&
+    pass.ownerEmail &&
+    cleanEmail &&
+    pass.ownerEmail.trim().toLowerCase() !== cleanEmail
+  ) {
+    return {
+      success: false,
+      error: 'Pass already claimed',
+      message: 'Pass already claimed',
+    };
+  }
+
+  pass.ownerName = cleanName || (isMaster ? 'Odi Selis' : 'Founding VIP Member');
+  pass.ownerEmail = cleanEmail || (isMaster ? 'odi.selis3@gmail.com' : pass.ownerEmail);
   pass.isClaimed = true;
   pass.status = isMaster ? 'MASTER FOUNDER ORIGINAL' : 'CLAIMED / OFFICIALLY VERIFIED';
-  pass.registeredAt = new Date().toISOString();
+  pass.registeredAt = pass.registeredAt || new Date().toISOString();
   if (deviceId) {
     pass.boundDeviceId = deviceId;
   }
@@ -369,17 +393,31 @@ export async function registerPassHolder(tokenId, ownerName, ownerEmail, deviceI
   // Issue unique, personalized VIP Certificate
   try {
     const { issueCertificate } = await import('./_certificateService.js');
-    pass.certificate = issueCertificate(pass.normalizedId, cleanName, Boolean(cleanEmail), cleanEmail || (isMaster ? 'odi.selis3@gmail.com' : undefined));
+    pass.certificate = issueCertificate(
+      pass.normalizedId,
+      pass.ownerName,
+      Boolean(pass.ownerEmail),
+      pass.ownerEmail || (isMaster ? 'odi.selis3@gmail.com' : undefined)
+    );
   } catch (err) {
     console.warn('[Register] Error issuing certificate:', err);
   }
 
   saveStore();
 
-  // Dynamically sync to Google Sheets (Column C = Holder Name, Column D = Holder Email, Column F = "Claimed")
+  // Dynamically sync to Google Sheets (Column C = Holder Name, Column D = Holder Email, Column F = "Claimed", and append to VIP GUESTS)
   try {
-    const { syncPassClaimToGoogleSheets } = await import('./_googleSheetsSync.js');
-    await syncPassClaimToGoogleSheets(pass.normalizedId, cleanName, cleanEmail || '');
+    const { syncPassClaimToGoogleSheets, appendVipGuestRecordToSheets } = await import('./_googleSheetsSync.js');
+    await syncPassClaimToGoogleSheets(pass.normalizedId, pass.ownerName, pass.ownerEmail || '');
+    if (typeof appendVipGuestRecordToSheets === 'function' && pass.ownerEmail) {
+      await appendVipGuestRecordToSheets({
+        timestamp: pass.registeredAt,
+        email: pass.ownerEmail,
+        founderPassStatus: isMaster ? 'Founder Pass (#0) - Active' : `Claimed (${pass.normalizedId})`,
+        worldName: 'Unclaimed',
+        role: isMaster ? 'CREATOR' : 'VIP_GUEST',
+      });
+    }
   } catch (err) {
     console.warn('[Register] Google Sheets auto-sync notice:', err);
   }

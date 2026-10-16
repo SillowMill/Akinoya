@@ -1,6 +1,7 @@
 import {
   getAccessToken,
   SPREADSHEET_ID,
+  appendVipGuestRecordToSheets,
 } from '../nfc/_googleSheetsSync.js';
 
 /**
@@ -81,12 +82,27 @@ async function ensureSubscribersSheet(token) {
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    if (typeof res.status === 'function') return res.status(200).end();
+    res.statusCode = 200;
+    return res.end();
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    if (typeof res.status === 'function') return res.status(405).json({ error: 'Method not allowed' });
+    res.statusCode = 405;
+    return res.end(JSON.stringify({ error: 'Method not allowed' }));
   }
+
+  const sendJson = (status, data) => {
+    if (typeof res.status === 'function' && typeof res.json === 'function') {
+      return res.status(status).json(data);
+    }
+    res.statusCode = status;
+    if (typeof res.setHeader === 'function') {
+      res.setHeader('Content-Type', 'application/json');
+    }
+    return res.end(JSON.stringify(data));
+  };
 
   try {
     const payload = req.body || {};
@@ -97,15 +113,32 @@ export default async function handler(req, res) {
     const firstName = String(record.first_name || record.firstName || '').trim();
     const lastName = String(record.last_name || record.lastName || '').trim();
     const email = String(record.email || '').trim().toLowerCase();
-    const isFounder = email === 'odi@sillowmill.com' || email === 'odi.selis3@gmail.com';
+    const isFounder = email === 'odi.selis3@gmail.com';
     let role = isFounder ? 'CREATOR' : String(record.role || 'FREE').trim().toUpperCase();
     let vipCode = String(record.vip_code_redeemed || record.vipCode || '').trim() || 'N/A';
-    const registrationDate = record.created_at || new Date().toISOString();
+    const registrationDate = record.timestamp || record.created_at || new Date().toISOString();
     const isPioneer = new Date(registrationDate).getTime() < new Date('2027-01-09T00:00:00+01:00').getTime();
     const pioneerBadge = isPioneer ? '[PIONEER-2027]' : '';
-    const claimedSector = String(record.claimed_sector || record.sector || '').trim();
+    const claimedSector = String(
+      record.worldName ||
+      record.planetName ||
+      record.claimed_sector ||
+      record.sector ||
+      ''
+    ).trim();
 
-    // Tag role with [PIONEER-2027] for tracking in Google Sheets Subscribers tab
+    const founderPassStatus =
+      record.founderPassStatus ||
+      record.founder_pass_status ||
+      (isFounder
+        ? 'Founder Pass (#0) - Active'
+        : vipCode && vipCode !== 'N/A'
+        ? `Claimed (${vipCode})`
+        : record.has_vip_pass || role === 'VIP_GUEST'
+        ? 'VIP Pass Active'
+        : 'Standard / Unclaimed');
+
+    // Tag role with [PIONEER-2027] for tracking in Google Sheets
     let roleDisplay = role;
     if (isPioneer && !roleDisplay.includes('PIONEER')) {
       roleDisplay = `${role} [PIONEER-2027]`;
@@ -120,7 +153,7 @@ export default async function handler(req, res) {
     }
 
     if (!email || !email.includes('@')) {
-      return res.status(400).json({ error: 'Valid email is required for subscriber sync' });
+      return sendJson(400, { error: 'Valid email is required for subscriber sync' });
     }
 
     // Strict privacy: strip any passwords or hashes
@@ -132,16 +165,24 @@ export default async function handler(req, res) {
     const token = await getAccessToken();
     if (!token) {
       console.warn('[Google Sheets Sync] Access token unavailable; queued request.');
-      return res.status(200).json({
+      return sendJson(200, {
         success: true,
         queued: true,
         message: 'Subscriber recorded (Google Sheets sync credentials in setup)',
       });
     }
 
-    const tabName = await ensureSubscribersSheet(token);
+    // 1. Append directly to VIP GUESTS tab with columns: [Timestamp, Email, Founder Pass Status, World Name, Role]
+    const vipGuestsResult = await appendVipGuestRecordToSheets({
+      timestamp: registrationDate,
+      email,
+      founderPassStatus,
+      worldName: claimedSector || (isFounder ? 'Ämlemi' : 'Unclaimed'),
+      role: roleDisplay,
+    });
 
-    // Retrieve existing rows from Subscribers tab
+    // 2. Sync to Subscribers tab
+    const tabName = await ensureSubscribersSheet(token);
     const range = `${tabName}!A:F`;
     const getRes = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
@@ -194,7 +235,6 @@ export default async function handler(req, res) {
       ];
     }
 
-    // Map existing rows by normalized email address to consolidate any duplicate rows
     const subscriberMap = new Map();
 
     for (let i = 1; i < rows.length; i++) {
@@ -213,7 +253,6 @@ export default async function handler(req, res) {
           registrationDate: row[5] || new Date().toISOString(),
         });
       } else {
-        // Consolidate into existing unique record
         const existing = subscriberMap.get(rEmail);
         if (row[0] && !existing.firstName) existing.firstName = String(row[0]).trim();
         if (row[1] && !existing.lastName) existing.lastName = String(row[1]).trim();
@@ -223,7 +262,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Process the incoming subscriber record
     let action = 'appended';
     if (subscriberMap.has(email)) {
       action = 'updated';
@@ -248,7 +286,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Build unique rows
     const consolidatedRows = Array.from(subscriberMap.values()).map((s) => [
       s.firstName,
       s.lastName,
@@ -258,7 +295,6 @@ export default async function handler(req, res) {
       s.registrationDate,
     ]);
 
-    // Clear existing data rows starting from row 2 to eliminate lingering rows
     await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
         `${tabName}!A2:F`
@@ -272,7 +308,6 @@ export default async function handler(req, res) {
       }
     );
 
-    // Write consolidated rows cleanly
     const putRes = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
         `${tabName}!A2:F${consolidatedRows.length + 1}`
@@ -292,18 +327,21 @@ export default async function handler(req, res) {
       console.warn('[Google Sheets Sync] Sync write failed:', putRes.status, errText);
     }
 
-    return res.status(200).json({
+    return sendJson(200, {
       success: true,
       action,
+      vipGuestsAppend: vipGuestsResult,
       totalSubscribers: consolidatedRows.length,
       email,
       role: roleDisplay,
+      founderPassStatus,
+      worldName: claimedSector || null,
       is_pioneer: isPioneer,
       pioneer_badge: pioneerBadge,
       claimed_sector: claimedSector || null,
     });
   } catch (error) {
     console.error('[Google Sheets Sync] Unhandled exception:', error);
-    return res.status(500).json({ error: 'Internal server error syncing to Google Sheets' });
+    return sendJson(500, { error: 'Internal server error syncing to Google Sheets' });
   }
 }

@@ -296,7 +296,7 @@ apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<voi
   }
 
   const result = await registerPassHolder(token, ownerName, ownerEmail, deviceId);
-  res.status(200).json(result);
+  res.status(result.success === false ? 403 : 200).json(result);
 });
 
 // ─── 6.5. Reset VIP Pass (Development / Test Reset) ──────────────────────────
@@ -394,7 +394,8 @@ apiRouter.all(['/vip/verify'], async (req: Request, res: Response): Promise<void
   try {
     const token = ((req.query?.token || req.query?.vip_token || req.body?.token || req.body?.vip_token) as string) || '';
     const userId = ((req.query?.userId || req.body?.userId) as string) || '';
-    const result = await checkVipTokenStatus(token, userId);
+    const email = ((req.query?.email || req.body?.email) as string) || '';
+    const result = await checkVipTokenStatus(token, userId, email);
     res.status(result.allowed ? 200 : (result.isAlreadyClaimed ? 403 : 400)).json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'VIP verify failed' });
@@ -405,10 +406,23 @@ apiRouter.all(['/vip/claim'], async (req: Request, res: Response): Promise<void>
   try {
     const token = ((req.body?.token || req.body?.vip_token || req.query?.token) as string) || '';
     const userId = ((req.body?.userId || req.query?.userId) as string) || '';
-    const result = await claimVipTokenForUser(token, userId);
-    res.status(result.success ? 200 : (result.error?.includes('ALREADY') ? 403 : 400)).json(result);
+    const holderName = ((req.body?.holderName || req.body?.ownerName || req.query?.holderName) as string) || '';
+    const holderEmail = ((req.body?.holderEmail || req.body?.email || req.query?.email) as string) || '';
+    const result = await claimVipTokenForUser(token, userId, holderName, holderEmail);
+    res.status(result.success ? 200 : (result.error?.includes('claimed') ? 403 : 400)).json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'VIP claim failed' });
+  }
+});
+
+// ─── 12. Direct Google Sheets Sync (VIP GUESTS & Subscribers) ─────────────────
+apiRouter.all(['/sync-sheets', '/auth/sync-sheets'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { default: syncSheetsHandler } = await import('../../api/auth/sync-sheets.js');
+    await syncSheetsHandler(req, res);
+  } catch (err: any) {
+    console.error('[API] sync-sheets error:', err);
+    res.status(500).json({ error: err?.message || 'Internal server error syncing to Google Sheets' });
   }
 });
 

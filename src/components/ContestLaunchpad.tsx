@@ -48,6 +48,7 @@ import {
 } from '../data/contest';
 import { attachContestSubmissionToCreator } from '../data/creators';
 import { isPostLaunch, hasPaidMembership, openMembershipGateModal, openClaimWorldModal } from '../utils/pioneer';
+import { isFounderEmail, PRIMARY_FOUNDER_EMAIL } from '../data/vipTokens';
 
 export type SlotStreamStatus = 'PENDING' | 'SYNTHESIZING_4K' | 'DONE' | 'ERROR';
 
@@ -137,6 +138,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     profile?.username ||
     (user?.email ? user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-') : 'creator');
 
+  const isFounderAdmin = isFounderEmail(user?.email || profile?.email);
+
   // State
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [pendingAnswers, setPendingAnswers] = useState<WizardAnswers | null>(null);
@@ -152,22 +155,93 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [modalPlanet, setModalPlanet] = useState<PlanetSubmission | null>(null);
   const [slotStream, setSlotStream] = useState<SlotStreamItem[]>(DEFAULT_SLOT_STREAM);
+  const [founderTestBypass, setFounderTestBypass] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('akinoya_founder_test_bypass') !== 'false';
+  });
+  const [adminResetNotice, setAdminResetNotice] = useState<string | null>(null);
 
-  // Strict Universal 1-Attempt Lock Pre-Check
-  const isDeviceGenerationClaimed = () => {
-    if (typeof window === 'undefined') return false;
-    return (
-      localStorage.getItem('user_generation_claimed') === 'true' ||
-      localStorage.getItem('akinoya_guest_generations') === 'true'
-    );
+  // Purge legacy browser-wide lock keys so new accounts never falsely inherit ONE-SHOT CLAIMED
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user_generation_claimed');
+      localStorage.removeItem('akinoya_guest_generations');
+    }
+  }, []);
+
+  const getAccountLockKey = () => {
+    const accountId = (user?.email || user?.id || profile?.id || '').toLowerCase().trim();
+    if (!accountId) return null;
+    return `user_generation_claimed_${accountId}`;
   };
 
-  const hasSubmittedContest = Boolean(
-    profile?.has_submitted_contest ||
-    profile?.contest_submission_id ||
-    activeSubmission ||
-    isDeviceGenerationClaimed()
+  // Strict 1-Attempt Lock Pre-Check (Scoped per unique account)
+  const isAccountGenerationClaimed = () => {
+    if (typeof window === 'undefined' || !isAuthenticated) return false;
+    const key = getAccountLockKey();
+    if (!key) return false;
+    return localStorage.getItem(key) === 'true';
+  };
+
+  const rawHasSubmittedContest = Boolean(
+    isAuthenticated &&
+      (profile?.has_submitted_contest ||
+        profile?.contest_submission_id ||
+        activeSubmission ||
+        isAccountGenerationClaimed())
   );
+
+  // Founder Test Bypass: allows odi.selis3@gmail.com to continuously test planet generation
+  const hasSubmittedContest = isFounderAdmin && founderTestBypass ? false : rawHasSubmittedContest;
+
+  const handleFounderAdminReset = async () => {
+    if (!isFounderAdmin) return;
+    soundManager.playTone(780, 0.08);
+    if (typeof window !== 'undefined') {
+      const key = getAccountLockKey();
+      if (key) localStorage.removeItem(key);
+      localStorage.removeItem('user_generation_claimed');
+      localStorage.removeItem('akinoya_guest_generations');
+      localStorage.setItem('akinoya_founder_test_bypass', 'true');
+    }
+    setFounderTestBypass(true);
+    setActiveSubmission(null);
+    setPreviewDossier(null);
+    setPendingAnswers(null);
+
+    try {
+      await updateProfile({
+        has_submitted_contest: false,
+        contest_submission_id: '',
+      });
+    } catch {
+      // Ignore profile sync warning
+    }
+
+    fetch('/api/generate-planet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: user?.id || profile?.id,
+        email: user?.email || PRIMARY_FOUNDER_EMAIL,
+        deviceId: typeof window !== 'undefined' ? localStorage.getItem('sillow_device_id') || undefined : undefined,
+        resetLocks: true,
+      }),
+    }).catch(() => {});
+
+    setAdminResetNotice('1-Shot Lock Reset — Ready for Fresh Planet Synthesis');
+    setTimeout(() => setAdminResetNotice(null), 3500);
+  };
+
+  const handleToggleFounderBypass = () => {
+    if (!isFounderAdmin) return;
+    const next = !founderTestBypass;
+    setFounderTestBypass(next);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('akinoya_founder_test_bypass', next ? 'true' : 'false');
+    }
+    soundManager.playTone(next ? 740 : 440, 0.06);
+  };
 
   // Auto-start Mill if coming from Claim modal (Question 2 flow)
   useEffect(() => {
@@ -198,8 +272,12 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         setActiveSubmission(userSub);
       } else if (profile?.contest_submission_id) {
         const found = list.find((s) => s.id === profile.contest_submission_id && !isForbiddenSubmission(s));
-        if (found) setActiveSubmission(found);
+        setActiveSubmission(found || null);
+      } else {
+        setActiveSubmission(null);
       }
+    } else {
+      setActiveSubmission(null);
     }
 
     const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
@@ -207,7 +285,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       setAllSubmissions(valid);
       if (isAuthenticated && (user?.id || profile?.id || user?.email)) {
         const userSub = getUserContestSubmission(user?.id || profile?.id, user?.email);
-        if (userSub && !isForbiddenSubmission(userSub)) setActiveSubmission(userSub);
+        if (userSub && !isForbiddenSubmission(userSub)) {
+          setActiveSubmission(userSub);
+        }
       }
     });
 
@@ -342,6 +422,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             userId: user?.id || profile?.id,
             email: user?.email,
             deviceId: typeof window !== 'undefined' ? (localStorage.getItem('sillow_device_id') || undefined) : undefined,
+            bypassLock: isFounderAdmin && founderTestBypass,
             relaxation: answers.relaxation,
             creativeExpression: answers.creativeExpression,
             naturalEnvironment: answers.naturalEnvironment,
@@ -445,6 +526,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         body: JSON.stringify({
           userId: user?.id || profile?.id,
           email: user?.email,
+          bypassLock: isFounderAdmin && founderTestBypass,
           ...pendingAnswers,
           slot: slotItem.alias,
         }),
@@ -500,39 +582,64 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       await savePlanetSubmission(previewDossier);
 
       // 2. Lock golden ticket on profile (Strict Token Protection Lock)
-      await updateProfile({
-        contest_submission_id: previewDossier.id,
-        has_submitted_contest: true,
-      });
+      if (!(isFounderAdmin && founderTestBypass)) {
+        await updateProfile({
+          contest_submission_id: previewDossier.id,
+          has_submitted_contest: true,
+        });
 
-      // 3. Universal Device & Guest Session Lock
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user_generation_claimed', 'true');
-        localStorage.setItem('akinoya_guest_generations', 'true');
+        // 3. Per-Account Session Lock
+        if (typeof window !== 'undefined') {
+          const key = getAccountLockKey();
+          if (key) localStorage.setItem(key, 'true');
+        }
+
+        // Notify backend to register permanent in-memory lock for this account
+        fetch('/api/generate-planet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user?.id || profile?.id,
+            email: user?.email,
+            deviceId: typeof window !== 'undefined' ? (localStorage.getItem('sillow_device_id') || undefined) : undefined,
+            markCompleted: true,
+          }),
+        }).catch(() => {});
       }
 
-      // Notify backend to register permanent in-memory lock
-      fetch('/api/generate-planet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id || profile?.id,
-          email: user?.email,
-          deviceId: typeof window !== 'undefined' ? (localStorage.getItem('sillow_device_id') || undefined) : undefined,
-          markCompleted: true,
-        }),
-      }).catch(() => {});
+      // 4. Sync World Name & Architect record to Google Sheets (`VIP GUESTS` tab)
+      if (user?.email) {
+        fetch('/api/sync-sheets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: user.email,
+            fullName: userDisplayName,
+            worldName: previewDossier.planetName,
+            founderPassStatus: isFounderAdmin
+              ? 'MASTER FOUNDER ORIGINAL (AKN-VIP-2027-X0914)'
+              : isVip
+              ? 'VIP PASS CLAIMED'
+              : 'STANDARD ARCHITECT',
+            role: isFounderAdmin
+              ? 'MASTER FOUNDER'
+              : isVip
+              ? 'VIP ARCHITECT'
+              : 'PIONEER ARCHITECT',
+          }),
+        }).catch(() => {});
+      }
 
-      // 4. Attach renders & lore to creator's public portfolio (/creators/[username])
+      // 5. Attach renders & lore to creator's public portfolio (/creators/[username])
       attachContestSubmissionToCreator(username, userDisplayName, previewDossier);
 
-      // 4. Update local state
+      // 6. Update local state
       setActiveSubmission(previewDossier);
       setPreviewDossier(null);
       setPendingAnswers(null);
       setAllSubmissions((prev) => [previewDossier, ...prev.filter((p) => p.id !== previewDossier.id)]);
 
-      // 5. Celebration
+      // 7. Celebration
       soundManager.playUnlockChime();
       confetti({
         particleCount: 100,
@@ -758,12 +865,50 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                   </button>
                 </div>
               )}
+
+              {/* Dedicated Founder Test Bypass & Admin Reset Panel (Strictly for odi.selis3@gmail.com) */}
+              {isFounderAdmin && (
+                <div className="pt-3 mt-3 border-t border-cyan-500/30 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-mono font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+                      Founder Dev Bypass ({PRIMARY_FOUNDER_EMAIL})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleToggleFounderBypass}
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
+                        founderTestBypass
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                          : 'bg-white/10 text-white/60 border-white/20'
+                      }`}
+                    >
+                      {founderTestBypass ? 'BYPASS: ON' : 'BYPASS: OFF'}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleFounderAdminReset}
+                    className="w-full py-2 px-3 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-500/40 text-cyan-200 font-mono text-[11px] font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>Admin Reset 1-Shot Lock &amp; Test Fresh</span>
+                  </button>
+
+                  {adminResetNotice && (
+                    <div className="text-[10px] font-mono text-emerald-300 text-center bg-emerald-950/50 border border-emerald-500/30 rounded-md py-1 px-2">
+                      {adminResetNotice}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </section>
 
         {/* REAL-TIME SEQUENTIAL 4K DOSSIER PREVIEW & SYNTHESIS STREAM */}
-        {(previewDossier || isGeneratingRenders) && !activeSubmission && (
+        {(previewDossier || isGeneratingRenders) && (!activeSubmission || (isFounderAdmin && founderTestBypass)) && (
           <section
             id="live-dossier-preview"
             className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-cyan-950/40 via-black to-black border-2 border-cyan-400/60 shadow-[0_0_50px_rgba(6,182,212,0.25)] space-y-6"

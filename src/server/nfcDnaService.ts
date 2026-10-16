@@ -417,7 +417,7 @@ export async function registerPassHolder(
   ownerName: string,
   ownerEmail?: string,
   deviceId?: string
-): Promise<{ success: boolean; pass: PassRecord; certificate?: any; message: string }> {
+): Promise<{ success: boolean; pass?: PassRecord; certificate?: any; error?: string; message: string }> {
   loadStore();
   const pass = getPassRecord(tokenId);
   const cleanName = ownerName ? ownerName.trim() : '';
@@ -425,18 +425,46 @@ export async function registerPassHolder(
 
   const isMaster = pass.normalizedId === 'AKN-VIP-2027-X0914';
 
-  pass.ownerName = cleanName;
-  pass.ownerEmail = cleanEmail || (isMaster ? 'odi.selis3@gmail.com' : null);
+  // Enforce Founder Pass (#0) primary owner: odi.selis3@gmail.com
+  if (isMaster && cleanEmail && cleanEmail !== 'odi.selis3@gmail.com') {
+    return {
+      success: false,
+      error: 'Pass already claimed',
+      message: 'Pass already claimed',
+    };
+  }
+
+  // Enforce strict 1-to-1 email binding: if already bound to a different email, reject with "Pass already claimed"
+  if (
+    pass.isClaimed &&
+    pass.ownerEmail &&
+    cleanEmail &&
+    pass.ownerEmail.trim().toLowerCase() !== cleanEmail
+  ) {
+    return {
+      success: false,
+      error: 'Pass already claimed',
+      message: 'Pass already claimed',
+    };
+  }
+
+  pass.ownerName = cleanName || (isMaster ? 'Odi Selis' : 'Founding VIP Member');
+  pass.ownerEmail = cleanEmail || (isMaster ? 'odi.selis3@gmail.com' : pass.ownerEmail);
   pass.isClaimed = true;
   pass.status = isMaster ? 'MASTER FOUNDER ORIGINAL' : 'CLAIMED / OFFICIALLY VERIFIED';
-  pass.registeredAt = new Date().toISOString();
+  pass.registeredAt = pass.registeredAt || new Date().toISOString();
   if (deviceId) {
     pass.boundDeviceId = deviceId;
   }
 
   try {
     const { issueCertificate } = await import('../../api/nfc/_certificateService.js');
-    pass.certificate = issueCertificate(pass.normalizedId, cleanName, Boolean(cleanEmail), cleanEmail || (isMaster ? 'odi.selis3@gmail.com' : undefined));
+    pass.certificate = issueCertificate(
+      pass.normalizedId,
+      pass.ownerName,
+      Boolean(pass.ownerEmail),
+      pass.ownerEmail || (isMaster ? 'odi.selis3@gmail.com' : undefined)
+    );
   } catch (err) {
     console.warn('[Register] Error issuing certificate:', err);
   }
@@ -444,8 +472,17 @@ export async function registerPassHolder(
   saveStore();
 
   try {
-    const { syncPassClaimToGoogleSheets } = await import('../../api/nfc/_googleSheetsSync.js');
-    await syncPassClaimToGoogleSheets(pass.normalizedId, cleanName, cleanEmail || '');
+    const { syncPassClaimToGoogleSheets, appendVipGuestRecordToSheets } = await import('../../api/nfc/_googleSheetsSync.js');
+    await syncPassClaimToGoogleSheets(pass.normalizedId, pass.ownerName, pass.ownerEmail || '');
+    if (typeof appendVipGuestRecordToSheets === 'function' && pass.ownerEmail) {
+      await appendVipGuestRecordToSheets({
+        timestamp: pass.registeredAt,
+        email: pass.ownerEmail,
+        founderPassStatus: isMaster ? 'Founder Pass (#0) - Active' : `Claimed (${pass.normalizedId})`,
+        worldName: 'Unclaimed',
+        role: isMaster ? 'CREATOR' : 'VIP_GUEST',
+      });
+    }
   } catch (err) {
     console.warn('[Register] Google Sheets auto-sync notice:', err);
   }

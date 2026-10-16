@@ -83,8 +83,23 @@ export const formatAkinoyaPlanetName = (rawName?: string, allowFallback = false)
 };
 
 export interface GeneratePlanetRequest {
+  worldName?: string;
+  architectName?: string;
+  terrainType?: string;
+  floraType?: string;
+  faunaType?: string;
+  troposphereType?: string;
+  monumentType?: string;
+  paletteDescription?: string;
+  foundingCreed?: string;
+
   userId?: string;
   email?: string;
+  deviceId?: string;
+  slot?: string;
+  markCompleted?: boolean;
+  resetLocks?: boolean;
+  adminTestBypass?: boolean;
   relaxation?: string;
   creativeExpression?: string;
   naturalEnvironment?: string;
@@ -107,18 +122,66 @@ export interface GeneratePlanetRequest {
   sectorName?: string;
 }
 
+export interface SlotRenderResult {
+  slotId: string;
+  slotName: string;
+  status: 'ready' | 'error';
+  imageUrl?: string;
+  error?: string;
+}
+
+export const FAL_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
+
+export async function generateSlotImageWithFal(prompt: string, apiKey: string): Promise<string> {
+  const response = await fetch(FAL_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      Authorization: `Key ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prompt: prompt,
+      image_size: 'landscape_16_9',
+      num_images: 1,
+      enable_safety_checker: false,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Fal.ai HTTP ${response.status}: ${errorText}`);
+  }
+
+  const data = await response.json();
+  const imageUrl = data?.images?.[0]?.url;
+
+  if (!imageUrl) {
+    throw new Error('No image URL returned from Fal.ai response payload.');
+  }
+
+  return imageUrl;
+}
+
 const _userGenerations = new Set<string>();
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://qcfpnoerksbgunekoame.supabase.co';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_uQ928ayPw4vS7msW2_oZSQ_vTi22idX';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export function resetGenerationLocks(): void {
-  _userGenerations.clear();
+export function resetGenerationLocks(userId?: string, email?: string): void {
+  if (!userId && !email) {
+    _userGenerations.clear();
+    return;
+  }
+  if (userId) _userGenerations.delete(userId.trim().toLowerCase());
+  if (email) _userGenerations.delete(email.trim().toLowerCase());
 }
 
 export function lockUserGeneration(userId?: string, email?: string, deviceId?: string): void {
-  const keys = [userId, email, deviceId].filter(Boolean);
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (cleanEmail === 'odi.selis3@gmail.com') return;
+  const accountKeys = [userId, email].filter(Boolean);
+  const keys = accountKeys.length > 0 ? accountKeys : [deviceId].filter(Boolean);
   keys.forEach((k) => _userGenerations.add(String(k).trim().toLowerCase()));
 }
 
@@ -132,9 +195,18 @@ export async function checkAndLockUserGeneration(
   const cleanEmail = (email || '').trim().toLowerCase();
   const cleanDeviceId = (deviceId || '').trim().toLowerCase();
 
-  const keysToCheck = [cleanUserId, cleanEmail, cleanDeviceId].filter(Boolean);
+  // Founder Test Bypass for odi.selis3@gmail.com during development & testing
+  if (cleanEmail === 'odi.selis3@gmail.com') {
+    return { allowed: true };
+  }
 
-  // 1. Universal in-memory lock check (no hardcoded bypass for any account)
+  // Enforce strict 1-shot per unique account (only use deviceId when unauthenticated)
+  const keysToCheck =
+    cleanUserId || cleanEmail
+      ? [cleanUserId, cleanEmail].filter(Boolean)
+      : [cleanDeviceId].filter(Boolean);
+
+  // 1. In-memory per-account lock check
   for (const k of keysToCheck) {
     if (_userGenerations.has(k)) {
       return {
@@ -144,7 +216,7 @@ export async function checkAndLockUserGeneration(
     }
   }
 
-  // 2. Check Supabase user_dossiers for prior registered sector
+  // 2. Check Supabase user_dossiers for prior registered sector by this unique account
   if (cleanUserId || cleanEmail) {
     try {
       let query = supabase.from('user_dossiers').select('id, planet_name, user_id, author_email');
@@ -171,7 +243,7 @@ export async function checkAndLockUserGeneration(
     }
   }
 
-  // For batch synthesis or final submission, immediately lock the keys
+  // For batch synthesis, lock the account keys
   if (!isSlotCheck) {
     for (const k of keysToCheck) {
       _userGenerations.add(k);
@@ -262,6 +334,7 @@ export async function generateGoogleNanoBananaImage(
   const normSlot = normalizeSlot(slot);
   const planetName = formatAkinoyaPlanetName(contextData?.planetName || contextData?.sectorName, false) || 'Äkinoya Frontier';
 
+  const falKey = (process.env.FAL_KEY || process.env.VITE_FAL_KEY || '').trim();
   const googleKey = getGoogleApiKey();
   const bananaKey = (process.env.BANANA_API_KEY || process.env.NANO_BANANA_API_KEY || '').trim();
   const cloudProject = (
@@ -279,13 +352,25 @@ export async function generateGoogleNanoBananaImage(
     ''
   ).trim();
 
-  if (!googleKey && !bearerToken && !bananaKey) {
+  if (!falKey && !googleKey && !bearerToken && !bananaKey) {
     throw new Error(
-      `No active Google AI API key detected in environment. Please set GEMINI_API_KEY or GOOGLE_AI_KEY in Vercel to enable live 4K photorealistic Imagen 3 rendering for slot "${normSlot}".`
+      `No active AI API key detected in environment. Please set FAL_KEY, GEMINI_API_KEY, or GOOGLE_AI_KEY in Vercel to enable live 4K photorealistic rendering for slot "${normSlot}".`
     );
   }
 
   let lastError = '';
+
+  // 0. Fal.ai Flux Schnell (if FAL_KEY or VITE_FAL_KEY is configured)
+  if (falKey && falKey !== '[SENSITIVE]') {
+    try {
+      console.warn(`[Fal.ai Flux] Attempting live synthesis for slot "${normSlot}"...`);
+      const falUrl = await generateSlotImageWithFal(prompt, falKey);
+      if (falUrl) return falUrl;
+    } catch (falErr: any) {
+      lastError = falErr?.message || String(falErr);
+      console.warn(`[Fal.ai Flux] Notice for slot "${normSlot}":`, lastError);
+    }
+  }
 
   // 1. Primary Google AI Studio REST Endpoint (imagen-3.0-generate-002:predict)
   if (googleKey && googleKey !== '[SENSITIVE]' && googleKey !== 'MY_GEMINI_API_KEY') {
@@ -666,7 +751,20 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const body: GeneratePlanetRequest & { slot?: string; deviceId?: string; markCompleted?: boolean } = req.body || {};
+    const body: GeneratePlanetRequest & {
+      slot?: string;
+      deviceId?: string;
+      markCompleted?: boolean;
+      resetLocks?: boolean;
+      bypassLock?: boolean;
+    } = req.body || {};
+
+    if (body.resetLocks) {
+      resetGenerationLocks(body.userId, body.email);
+      res.statusCode = 200;
+      res.end(JSON.stringify({ success: true, message: 'Generation lock reset for Founder testing.' }));
+      return;
+    }
 
     if (body.markCompleted) {
       lockUserGeneration(body.userId, body.email, body.deviceId);

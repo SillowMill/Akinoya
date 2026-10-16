@@ -214,10 +214,10 @@ export const AuthModal: React.FC = () => {
               </div>
               <div className="text-left flex-1 min-w-0">
                 <div className="text-xs font-mono font-bold tracking-wider uppercase text-red-400">
-                  THIS VIP LINK BELONGS TO ANOTHER ACCOUNT
+                  Pass already claimed
                 </div>
                 <p className="text-xs text-red-200 font-sans mt-1 leading-relaxed font-semibold">
-                  THIS VIP LINK BELONGS TO ANOTHER ACCOUNT. Logging in here will create a standard Free account.
+                  {vipLinkError}
                 </p>
               </div>
             </div>

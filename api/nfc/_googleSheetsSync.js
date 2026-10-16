@@ -455,3 +455,73 @@ export async function resetPassInGoogleSheets(passId) {
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Appends a new record directly to the `VIP GUESTS` tab in Google Spreadsheet
+ * 1gCYEDFNCZ2QlStvE2IuJiq4gUxrAJ08spaOvZM6Ke_0 with columns:
+ * [Timestamp, Email, Founder Pass Status, World Name, Role]
+ */
+export async function appendVipGuestRecordToSheets({
+  timestamp,
+  email,
+  founderPassStatus,
+  worldName,
+  role,
+}) {
+  try {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return { success: false, reason: 'INVALID_EMAIL' };
+    }
+
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.warn('[Google Sheets] Skipped VIP GUESTS append: No access token available.');
+      return { success: false, reason: 'NO_TOKEN' };
+    }
+
+    const vipTab = await resolveVipTabName(accessToken);
+    const isFounder = cleanEmail === 'odi.selis3@gmail.com';
+
+    const rowValues = [
+      timestamp || new Date().toISOString(),
+      cleanEmail,
+      founderPassStatus || (isFounder ? 'Founder Pass (#0) - Active' : 'Standard / Unclaimed'),
+      worldName || (isFounder ? 'Ämlemi' : 'Unclaimed'),
+      role || (isFounder ? 'CREATOR' : 'FREE'),
+    ];
+
+    const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
+      `'${vipTab}'!A:E`
+    )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+
+    const res = await fetch(appendUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        values: [rowValues],
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn('[Google Sheets] VIP GUESTS append failed:', res.status, errText);
+      return { success: false, reason: 'API_ERROR', details: errText };
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      tab: vipTab,
+      updatedRange: data?.updates?.updatedRange,
+      row: rowValues,
+    };
+  } catch (err) {
+    console.warn('[Google Sheets] Exception appending to VIP GUESTS:', err);
+    return { success: false, error: err.message };
+  }
+}
+

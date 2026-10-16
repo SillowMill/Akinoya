@@ -140,28 +140,38 @@ export const VipAccessProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     const hadExistingAccess = hasActiveDeviceSession();
     const searchParams = new URLSearchParams(window.location.search);
+    const isSupabaseAuthCallback = Boolean(
+      searchParams.get('type') ||
+      searchParams.get('token_hash') ||
+      searchParams.get('code') ||
+      window.location.hash.includes('access_token') ||
+      window.location.pathname.startsWith('/auth/callback')
+    );
+
     const rawToken =
-      searchParams.get('token') ||
       searchParams.get('nfc_token') ||
       searchParams.get('nfc') ||
-      searchParams.get('pass');
+      searchParams.get('pass') ||
+      (!isSupabaseAuthCallback ? searchParams.get('token') : null);
 
     const isVerifyRoute = window.location.pathname.startsWith('/verify');
     const hasEnc = Boolean(searchParams.get('enc'));
 
-    if (rawToken && rawToken.trim() && !isVerifyRoute && !hasEnc) {
+    if (rawToken && rawToken.trim() && !isVerifyRoute && !hasEnc && !isSupabaseAuthCallback) {
       const cleanToken = rawToken.trim().toUpperCase().replace(/^#/, '');
-      try {
-        window.location.replace(`/verify/${cleanToken}`);
-      } catch {
-        window.location.href = `/verify/${cleanToken}`;
+      const isPassId = /^AKN-VIP-\d{4}-[A-Z]\d{3,4}$|^AKN-\d{4}$|^SM\d{3}-[A-Z0-9]{4}$/.test(cleanToken);
+      if (isPassId) {
+        try {
+          window.location.replace(`/verify/${cleanToken}`);
+        } catch {
+          window.location.href = `/verify/${cleanToken}`;
+        }
+        return;
       }
-      return;
-    } else {
-      // Direct visits or non-token page loads
-      if (hadExistingAccess) {
-        setIsVipUnlocked(true);
-      }
+    }
+
+    if (hadExistingAccess) {
+      setIsVipUnlocked(true);
     }
   }, [triggerToast]);
 

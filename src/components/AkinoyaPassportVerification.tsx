@@ -290,32 +290,30 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       return;
     }
 
-    // Strict ownership validation in Supabase
+    // Strict 1-to-1 email ownership validation in Supabase
     if (!isMaster) {
       const tokenStatus = await checkVipTokenStatus(token, user?.id, currentUserEmail);
       if (tokenStatus.isAlreadyClaimed) {
         if (tokenStatus.isClaimedByMe) {
-          // If it matches the original owner: seamlessly grant/maintain VIP access!
+          // Matches original owner
         } else {
           setIsDnaAuthentic(false);
-          setStatusText('ALREADY CLAIMED');
-          setDnaError(OTHER_ACCOUNT_VIP_ERROR);
+          setStatusText('Pass already claimed');
+          setDnaError('Pass already claimed');
           soundManager.playError();
           setIsValidating(false);
           return;
         }
       }
     } else {
-      // It is the Master Founder Pass (AKN-VIP-2027-X0914)
-      if (currentUserEmail) {
-        if (!isFounderEmail(currentUserEmail) && profile?.role !== 'CREATOR') {
-          setIsDnaAuthentic(false);
-          setStatusText('RESTRICTED');
-          setDnaError(OTHER_ACCOUNT_VIP_ERROR);
-          soundManager.playError();
-          setIsValidating(false);
-          return;
-        }
+      // Master Founder Pass (AKN-VIP-2027-X0914) strictly bound to odi.selis3@gmail.com
+      if (currentUserEmail && !isFounderEmail(currentUserEmail)) {
+        setIsDnaAuthentic(false);
+        setStatusText('Pass already claimed');
+        setDnaError('Pass already claimed');
+        soundManager.playError();
+        setIsValidating(false);
+        return;
       }
     }
 
@@ -343,6 +341,22 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             pass.ownerName.trim().length > 0 &&
             pass.status !== 'Unclaimed VIP Pass — Ready for Registration'
           );
+
+          // If pass is already claimed by another email in server store
+          if (
+            isPassClaimed &&
+            pass.ownerEmail &&
+            currentUserEmail &&
+            pass.ownerEmail.trim().toLowerCase() !== currentUserEmail
+          ) {
+            setIsDnaAuthentic(false);
+            setStatusText('Pass already claimed');
+            setDnaError('Pass already claimed');
+            soundManager.playError();
+            setIsValidating(false);
+            return;
+          }
+
           setStatusText(
             data.isAuthentic
               ? 'AUTHENTIC'
@@ -461,11 +475,9 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
     try {
       if (isMaster) {
-        const isFounder = isFounderEmail(cleanEmail) || currentProfile?.role === 'CREATOR';
+        const isFounder = isFounderEmail(cleanEmail);
         if (!isFounder) {
-          setClaimError(
-            'The Founders Pass (#0) is reserved for the creator (Odi Selis). Please sign in with odi.selis3@gmail.com or Odi@sillowmill.com.'
-          );
+          setClaimError('Pass already claimed');
           soundManager.playError();
           setIsClaiming(false);
           return;
@@ -474,11 +486,11 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         const tokenStatus = await checkVipTokenStatus(activeToken, currentUser?.id, cleanEmail);
         if (tokenStatus.isAlreadyClaimed) {
           if (tokenStatus.isClaimedByMe) {
-            // Already claimed by this user!
             soundManager.playUnlockChime();
+            setIsClaiming(false);
             return;
           }
-          setClaimError(OTHER_ACCOUNT_VIP_ERROR);
+          setClaimError('Pass already claimed');
           soundManager.playError();
           setIsClaiming(false);
           return;
