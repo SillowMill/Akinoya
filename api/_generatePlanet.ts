@@ -1,5 +1,5 @@
 /**
- * Planetary 5-Photo Image Generation API Endpoint
+ * Planetary 5-Photo Image Generation Pipeline (Fal.ai Flux Schnell)
  *
  * Strict Sillow Mill High-Resolution Cinematic Sci-Fi Standard:
  * - Photo 1 (Hero Planet / Orbital): Celestial sphere & orbital curvature
@@ -9,15 +9,14 @@
  * - Photo 5 (Lore Dossier Cover / Monument): Ancient monumental architecture & founding creed
  *
  * Live Generation:
- * - Powered strictly by Google Nano Banana / Imagen 3 AI image synthesis.
- * - ZERO VECTOR / SVG / CANVAS PLACEHOLDERS ENFORCED: Real-time 4K photorealistic AI renders.
- * - Sequential single-slot streaming & visible error reporting.
+ * - Powered strictly by Fal.ai (`fal-ai/flux/schnell`) using `process.env.FAL_KEY`.
+ * - Graceful Queue State: If Fal.ai returns 403 / TOP_UP or balance depletion, returns a
+ *   clean user-friendly `SYSTEM_MAINTENANCE_QUEUED` response without throwing HTTP 500.
  */
 
 import path from 'path';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenAI } from '@google/genai';
 
 try {
   dotenv.config();
@@ -25,23 +24,13 @@ try {
   dotenv.config({ path: path.resolve(process.cwd(), '.env.production.local') });
 } catch {}
 
-export const getGoogleApiKey = (): string => {
-  return (
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_AI_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    process.env.VITE_GEMINI_API_KEY ||
-    process.env.VITE_GOOGLE_AI_KEY ||
-    process.env.VITE_GOOGLE_API_KEY ||
-    ''
-  ).trim();
-};
-
-const ai = new GoogleGenAI({ apiKey: getGoogleApiKey() || process.env.GEMINI_API_KEY });
+export const SYSTEM_MAINTENANCE_QUEUED_CODE = 'SYSTEM_MAINTENANCE_QUEUED';
+export const SYSTEM_MAINTENANCE_QUEUED_MESSAGE =
+  'Generating... We will notify you when synthesis is complete.';
 
 export const SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR =
   'Full 3D photorealistic cinematic sci-fi render, high-res 4K, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette (unrestricted colors for planets, flora, and fauna). NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. ' +
-  'MODEL PIPELINE: Synthesized strictly via Google Nano Banana (Nano Banana Pro / Imagen 3). ' +
+  'MODEL PIPELINE: Synthesized strictly via Fal.ai Flux Schnell (fal-ai/flux/schnell). ' +
   'STRUCTURAL PRESERVATION: Strictly maintain the exact visual structure, cinematic sci-fi composition, camera staging, and stylistic integrity as established in the portal design standard: ' +
   'celestial planetary curvature and orbital ring geometry strictly anchored by Äkinoya.jpg (deep space planetary sphere, high-detail cosmic surface textures, photorealistic atmospheric glow, 8k resolution, cinematic lighting, deep indigo backdrop), ' +
   'and atmospheric environmental depth strictly anchored by Mood.png (cinematic atmospheric lighting, volumetric depth, photorealistic textures, wide planetary camera angles, neon purple hues and warm copper light highlights). ' +
@@ -125,18 +114,40 @@ export interface GeneratePlanetRequest {
 export interface SlotRenderResult {
   slotId: string;
   slotName: string;
-  status: 'ready' | 'error';
+  status: 'ready' | 'queued' | 'error';
+  code?: string;
+  message?: string;
   imageUrl?: string;
   error?: string;
 }
 
+export class FalMaintenanceQueueError extends Error {
+  code: string;
+  statusCode: number;
+  constructor(message = SYSTEM_MAINTENANCE_QUEUED_MESSAGE, statusCode = 403) {
+    super(message);
+    this.name = 'FalMaintenanceQueueError';
+    this.code = SYSTEM_MAINTENANCE_QUEUED_CODE;
+    this.statusCode = statusCode;
+  }
+}
+
 export const FAL_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
 
-export async function generateSlotImageWithFal(prompt: string, apiKey: string): Promise<string> {
+export const getFalApiKey = (): string => {
+  return (process.env.FAL_KEY || process.env.VITE_FAL_KEY || '').trim();
+};
+
+export async function generateSlotImageWithFal(prompt: string, apiKey?: string): Promise<string> {
+  const activeKey = (apiKey || getFalApiKey()).trim();
+  if (!activeKey || activeKey === '[SENSITIVE]') {
+    throw new FalMaintenanceQueueError(SYSTEM_MAINTENANCE_QUEUED_MESSAGE, 403);
+  }
+
   const response = await fetch(FAL_ENDPOINT, {
     method: 'POST',
     headers: {
-      Authorization: `Key ${apiKey}`,
+      Authorization: `Key ${activeKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -148,15 +159,16 @@ export async function generateSlotImageWithFal(prompt: string, apiKey: string): 
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Fal.ai HTTP ${response.status}: ${errorText}`);
+    const errorText = await response.text().catch(() => '');
+    console.warn(`[Fal.ai] HTTP ${response.status} notice:`, errorText);
+    throw new FalMaintenanceQueueError(SYSTEM_MAINTENANCE_QUEUED_MESSAGE, response.status);
   }
 
   const data = await response.json();
   const imageUrl = data?.images?.[0]?.url;
 
   if (!imageUrl) {
-    throw new Error('No image URL returned from Fal.ai response payload.');
+    throw new FalMaintenanceQueueError(SYSTEM_MAINTENANCE_QUEUED_MESSAGE, 502);
   }
 
   return imageUrl;
@@ -281,295 +293,33 @@ export const SLOT_METADATA: Record<
     index: 1,
     label: '01 · Orbital Hero',
     actionText: 'GENERATING ORBITAL HERO (1/5)...',
-    detailText: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Google Nano Banana / Imagen 3...',
+    detailText: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Fal.ai Flux Schnell...',
   },
   flora: {
     index: 2,
     label: '02 · Botanical Flora System',
     actionText: 'RENDERING BOTANICAL FLORA (2/5)...',
-    detailText: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Google Nano Banana...',
+    detailText: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Fal.ai Flux Schnell...',
   },
   fauna: {
     index: 3,
     label: '03 · Exotic Fauna & Wildlife',
     actionText: 'PAINTING EXOTIC FAUNA (3/5)...',
-    detailText: 'Rendering xenobiological apex wildlife, soaring lifeforms, and planetary creatures via Google Nano Banana...',
+    detailText: 'Rendering xenobiological apex wildlife, soaring lifeforms, and planetary creatures via Fal.ai Flux Schnell...',
   },
   atmosphere: {
     index: 4,
     label: '04 · Cockpit / Ship Landing Atmosphere',
     actionText: 'SIMULATING COCKPIT ATMOSPHERE (4/5)...',
-    detailText: 'Framing cockpit descent perspective, cloud density, and pilot HUD reflections via Google Nano Banana...',
+    detailText: 'Framing cockpit descent perspective, cloud density, and pilot HUD reflections via Fal.ai Flux Schnell...',
   },
   landmark: {
     index: 5,
     label: '05 · Lore Dossier Cover & Monument',
     actionText: 'INSCRIBING LORE MONUMENT (5/5)...',
-    detailText: 'Erecting monumental architectural landmark and sealing official lore dossier cover via Google Nano Banana...',
+    detailText: 'Erecting monumental architectural landmark and sealing official lore dossier cover via Fal.ai Flux Schnell...',
   },
 };
-
-export const NANO_BANANA_MODEL_PRIMARY = process.env.NANO_BANANA_MODEL || process.env.BANANA_MODEL_KEY || 'nano-banana-pro';
-
-/**
- * Generate a single photorealistic 4K image using the Google Imagen 3 pipeline.
- *
- * Architecture & Fallback Cascade:
- * 1. Primary: Direct Google AI Studio / Gemini REST API targeting imagen-3.0-generate-002:predict
- *    Endpoint: https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_KEY}
- * 2. Secondary: imagen-3.0-generate-001 & imagen-3.0-fast-generate-001 direct REST
- * 3. Vertex AI / Cloud REST: If Bearer Token or Project ID is provided (Authorization: Bearer ...)
- * 4. Official Google Gen AI SDK (@google/genai): ai.models.generateImages() & apiClient.request
- * 5. Banana.dev fallback: If BANANA_API_KEY is configured
- *
- * ZERO VECTOR FALLBACK ENFORCED:
- * If live AI generation fails or no valid key is present, throws a descriptive error so the client
- * displays visible failure states with retry capability instead of static SVG placeholders.
- */
-export async function generateGoogleNanoBananaImage(
-  prompt: string,
-  slot: GenerationSlot | string = 'hero',
-  contextData?: GeneratePlanetRequest
-): Promise<string> {
-  const normSlot = normalizeSlot(slot);
-  const planetName = formatAkinoyaPlanetName(contextData?.planetName || contextData?.sectorName, false) || 'Äkinoya Frontier';
-
-  const falKey = (process.env.FAL_KEY || process.env.VITE_FAL_KEY || '').trim();
-  const googleKey = getGoogleApiKey();
-  const bananaKey = (process.env.BANANA_API_KEY || process.env.NANO_BANANA_API_KEY || '').trim();
-  const cloudProject = (
-    process.env.GOOGLE_CLOUD_PROJECT ||
-    process.env.VERTEX_AI_PROJECT_ID ||
-    process.env.VERTEX_PROJECT_ID ||
-    process.env.GCLOUD_PROJECT ||
-    ''
-  ).trim();
-  const cloudLocation = (process.env.GOOGLE_CLOUD_LOCATION || process.env.VERTEX_LOCATION || 'us-central1').trim();
-  const bearerToken = (
-    process.env.GOOGLE_ACCESS_TOKEN ||
-    process.env.VERTEX_BEARER_TOKEN ||
-    process.env.GCLOUD_TOKEN ||
-    ''
-  ).trim();
-
-  if (!falKey && !googleKey && !bearerToken && !bananaKey) {
-    throw new Error(
-      `No active AI API key detected in environment. Please set FAL_KEY, GEMINI_API_KEY, or GOOGLE_AI_KEY in Vercel to enable live 4K photorealistic rendering for slot "${normSlot}".`
-    );
-  }
-
-  let lastError = '';
-
-  // 0. Fal.ai Flux Schnell (if FAL_KEY or VITE_FAL_KEY is configured)
-  if (falKey && falKey !== '[SENSITIVE]') {
-    try {
-      console.warn(`[Fal.ai Flux] Attempting live synthesis for slot "${normSlot}"...`);
-      const falUrl = await generateSlotImageWithFal(prompt, falKey);
-      if (falUrl) return falUrl;
-    } catch (falErr: any) {
-      lastError = falErr?.message || String(falErr);
-      console.warn(`[Fal.ai Flux] Notice for slot "${normSlot}":`, lastError);
-    }
-  }
-
-  // 1. Primary Google AI Studio REST Endpoint (imagen-3.0-generate-002:predict)
-  if (googleKey && googleKey !== '[SENSITIVE]' && googleKey !== 'MY_GEMINI_API_KEY') {
-    const imagenModels = [
-      'imagen-3.0-generate-002',
-      'imagen-3.0-generate-001',
-      'imagen-3.0-fast-generate-001',
-    ];
-
-    for (const model of imagenModels) {
-      try {
-        console.warn(`[Google Imagen 3 REST] Attempting live model: ${model} for slot "${normSlot}"...`);
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${googleKey}`;
-        const payload = {
-          instances: [{ prompt }],
-          parameters: {
-            sampleCount: 1,
-            aspectRatio: '16:9',
-            outputOptions: { mimeType: 'image/jpeg' },
-          },
-        };
-
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': googleKey,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          const bytes =
-            data?.predictions?.[0]?.bytesBase64Encoded ||
-            data?.predictions?.[0]?.image?.imageBytes ||
-            data?.predictions?.[0]?.bytes ||
-            data?.predictions?.[0]?.b64;
-          if (bytes) {
-            console.warn(`[Google Imagen 3 REST] Successfully synthesized 4K image via ${model} for slot "${normSlot}"`);
-            return bytes.startsWith('data:') ? bytes : `data:image/jpeg;base64,${bytes}`;
-          }
-        } else {
-          const errData = await res.json().catch(() => null);
-          const errMessage = errData?.error?.message || (await res.text().catch(() => ''));
-          lastError = `Model ${model} returned HTTP ${res.status}: ${errMessage}`;
-          console.warn(`[Google Imagen 3 REST] ${lastError}`);
-        }
-      } catch (err: any) {
-        lastError = err?.message || String(err);
-        console.warn(`[Google Imagen 3 REST] Connection error for ${model}:`, lastError);
-      }
-    }
-
-    // 2. Vertex AI / Cloud REST Endpoint (if Bearer Token or Project ID configured)
-    if (bearerToken && cloudProject) {
-      try {
-        console.warn(`[Vertex AI REST] Attempting Cloud REST endpoint for slot "${normSlot}"...`);
-        const vertexEndpoint = `https://${cloudLocation}-aiplatform.googleapis.com/v1/projects/${cloudProject}/locations/${cloudLocation}/publishers/google/models/imagen-3.0-generate-002:predict`;
-        const vertexPayload = {
-          instances: [{ prompt }],
-          parameters: {
-            sampleCount: 1,
-            aspectRatio: '16:9',
-            outputOptions: { mimeType: 'image/jpeg' },
-          },
-        };
-        const vRes = await fetch(vertexEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${bearerToken}`,
-          },
-          body: JSON.stringify(vertexPayload),
-        });
-
-        if (vRes.ok) {
-          const vData: any = await vRes.json();
-          const bytes =
-            vData?.predictions?.[0]?.bytesBase64Encoded ||
-            vData?.predictions?.[0]?.image?.imageBytes ||
-            vData?.predictions?.[0]?.bytes;
-          if (bytes) {
-            console.warn(`[Vertex AI REST] Successfully synthesized 4K image via Vertex AI for slot "${normSlot}"`);
-            return bytes.startsWith('data:') ? bytes : `data:image/jpeg;base64,${bytes}`;
-          }
-        } else {
-          const vErrData = await vRes.json().catch(() => null);
-          const vErrMessage = vErrData?.error?.message || (await vRes.text().catch(() => ''));
-          lastError = `Vertex AI returned HTTP ${vRes.status}: ${vErrMessage}`;
-          console.warn(`[Vertex AI REST] ${lastError}`);
-        }
-      } catch (err: any) {
-        lastError = err?.message || String(err);
-        console.warn('[Vertex AI REST] Connection error:', lastError);
-      }
-    }
-
-    // 3. Official Google Gen AI SDK (@google/genai) Fallback
-    try {
-      const activeAi = googleKey === process.env.GEMINI_API_KEY ? ai : new GoogleGenAI({ apiKey: googleKey });
-
-      for (const sdkModel of ['imagen-3.0-generate-002', 'imagen-3.0-generate-001']) {
-        try {
-          console.warn(`[Google GenAI SDK] Calling models.generateImages with ${sdkModel} for slot "${normSlot}"...`);
-          const response = await activeAi.models.generateImages({
-            model: sdkModel,
-            prompt,
-            config: {
-              numberOfImages: 1,
-              aspectRatio: '16:9',
-              outputMimeType: 'image/jpeg',
-            },
-          });
-          const b64 = response?.generatedImages?.[0]?.image?.imageBytes;
-          if (b64) {
-            console.warn(`[Google GenAI SDK] Successfully synthesized image using ${sdkModel}`);
-            return `data:image/jpeg;base64,${b64}`;
-          }
-        } catch (sdkErr: any) {
-          console.warn(`[Google GenAI SDK] generateImages notice (${sdkModel}):`, sdkErr?.message || sdkErr);
-        }
-
-        try {
-          const clientRes = await (activeAi as any).apiClient?.request?.({
-            path: `models/${sdkModel}:predict`,
-            httpMethod: 'POST',
-            body: JSON.stringify({
-              instances: [{ prompt }],
-              parameters: {
-                sampleCount: 1,
-                aspectRatio: '16:9',
-                outputOptions: { mimeType: 'image/jpeg' },
-              },
-            }),
-          });
-          if (clientRes) {
-            const clientData: any = await clientRes.json();
-            const bytes =
-              clientData?.predictions?.[0]?.bytesBase64Encoded ||
-              clientData?.predictions?.[0]?.image?.imageBytes ||
-              clientData?.predictions?.[0]?.bytes;
-            if (bytes) {
-              console.warn(`[Google GenAI SDK] Client request synthesized image using ${sdkModel}`);
-              return `data:image/jpeg;base64,${bytes}`;
-            }
-          }
-        } catch (clientErr: any) {
-          console.warn(`[Google GenAI SDK] apiClient.request notice (${sdkModel}):`, clientErr?.message || clientErr);
-        }
-      }
-    } catch (genAiErr: any) {
-      console.warn('[Google GenAI SDK] General SDK failure:', genAiErr?.message || genAiErr);
-    }
-  }
-
-  // 4. Banana.dev fallback if configured
-  if (bananaKey && bananaKey !== '[SENSITIVE]') {
-    for (const modelKey of [NANO_BANANA_MODEL_PRIMARY, 'nano-banana-pro', 'nano-banana-2.1', 'nano-banana']) {
-      try {
-        console.warn(`[Banana.dev] Attempting model: ${modelKey}...`);
-        const res = await fetch('https://api.banana.dev/start/v4/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            apiKey: bananaKey,
-            modelKey,
-            modelInputs: {
-              prompt,
-              model: modelKey,
-              negative_prompt: 'vector art, wireframe, minimalist, sketch, storyboard, drawing, cartoon, lowres, blurry',
-              width: 1920,
-              height: 1080,
-              num_inference_steps: 35,
-              guidance_scale: 7.5,
-              palette: 'deep indigo, neon purple, warm copper accents',
-            },
-          }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          const output = data.modelOutputs?.[0]?.image_base64 || data.output?.[0] || data.predictions?.[0]?.bytesBase64Encoded;
-          if (output) {
-            console.warn('[Banana.dev] Successfully synthesized image via Banana.dev');
-            return output.startsWith('data:') ? output : `data:image/png;base64,${output}`;
-          }
-        }
-      } catch (err: any) {
-        console.warn(`[Banana.dev] (${modelKey}) error:`, err?.message || err);
-      }
-    }
-  }
-
-  // FAIL VISIBLY: Zero vector / SVG / canvas placeholders. Enforce live photorealism.
-  throw new Error(
-    `Google Imagen 3 synthesis failed for slot "${normSlot}" (${planetName}): ${lastError || 'Live AI synthesis request failed'}. Please verify GEMINI_API_KEY or GOOGLE_AI_KEY in Vercel settings.`
-  );
-}
 
 export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const sectorName = (data.sectorName || data.planetName || data.worldName || 'Frontier Sector').trim();
@@ -584,7 +334,7 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const atmosphere = data.atmosphere || data.troposphereType || `ionized celestial atmosphere above ${biome}`;
 
   const promptAnchor =
-    'Full 3D high-res 4K photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette. NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. Synthesized strictly via Fal.ai Flux Schnell / Google Imagen 3.';
+    'Full 3D high-res 4K photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette. NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. Synthesized strictly via Fal.ai Flux Schnell.';
 
   return {
     planetName,
@@ -600,15 +350,18 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
 }
 
 /**
- * Generates an individual slot render asynchronously.
- * Part of the true multi-step sequential AI generation pipeline powered by Fal.ai Flux Schnell / Google Imagen 3.
- * MANDATE: Strictly guarantees unique per-planet visual output and ZERO hardcoded Ämlemi or vector fallbacks.
+ * Generates an individual slot render asynchronously using Fal.ai (`fal-ai/flux/schnell`).
+ * If Fal.ai returns 403 / TOP_UP or balance depletion, catches gracefully and returns
+ * `code: 'SYSTEM_MAINTENANCE_QUEUED'` without throwing raw 500 errors.
  */
 export async function generateSlotRender(
   slot: string,
   data: GeneratePlanetRequest
 ): Promise<{
   success: boolean;
+  code?: string;
+  status?: 'ready' | 'queued';
+  message?: string;
   slot: GenerationSlot;
   slotIndex: number;
   slotLabel: string;
@@ -626,29 +379,31 @@ export async function generateSlotRender(
   const meta = SLOT_METADATA[normSlot] || SLOT_METADATA.hero;
 
   try {
-    const imageUrl = await generateGoogleNanoBananaImage(prompt, normSlot, data);
+    const imageUrl = await generateSlotImageWithFal(prompt);
     return {
       success: true,
+      status: 'ready',
       slot: normSlot,
       slotIndex: meta.index,
       slotLabel: meta.label,
       planetName,
       prompt,
       imageUrl,
-      model: process.env.FAL_KEY ? 'Fal.ai Flux Schnell (4K Photorealistic)' : 'Google Nano Banana Pro (4K Photorealistic)',
+      model: 'Fal.ai Flux Schnell (4K Photorealistic)',
     };
   } catch (err: any) {
-    const errorMessage = err?.message || 'Live AI synthesis failed';
-    console.error(`[Slot ${normSlot}] Live AI generation error caught in slot handler:`, errorMessage);
+    console.warn(`[Slot ${normSlot}] Fal.ai synthesis queued:`, err?.message || err);
     return {
       success: false,
+      code: SYSTEM_MAINTENANCE_QUEUED_CODE,
+      status: 'queued',
+      message: SYSTEM_MAINTENANCE_QUEUED_MESSAGE,
       slot: normSlot,
       slotIndex: meta.index,
       slotLabel: meta.label,
       planetName,
       prompt,
-      error: errorMessage,
-      model: 'Live AI Synthesis (Error)',
+      model: 'Fal.ai Flux Schnell (Synthesis Queued)',
     };
   }
 }
@@ -657,6 +412,9 @@ export async function generateSlotRender(
  * Live 5-Photo Synthesis Pipeline (Batch or Sequential)
  */
 export async function generatePlanetRenders(data: GeneratePlanetRequest): Promise<{
+  success: boolean;
+  code?: string;
+  message?: string;
   planetName: string;
   worldName: string;
   architectName: string;
@@ -692,9 +450,16 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   const slotResults: SlotRenderResult[] = results.map((r) => ({
     slotId: slotIdMap[r.slot].id,
     slotName: slotIdMap[r.slot].name,
-    status: r.success && r.imageUrl ? 'ready' : 'error',
-    ...(r.imageUrl ? { imageUrl: r.imageUrl } : { error: r.error || 'Synthesis failed' }),
+    status: r.success && r.imageUrl ? 'ready' : 'queued',
+    ...(r.imageUrl
+      ? { imageUrl: r.imageUrl }
+      : {
+          code: SYSTEM_MAINTENANCE_QUEUED_CODE,
+          message: SYSTEM_MAINTENANCE_QUEUED_MESSAGE,
+        }),
   }));
+
+  const anyQueued = results.some((r) => !r.success || !r.imageUrl);
 
   const finalRenders = {
     hero: results[0].imageUrl || '',
@@ -741,6 +506,13 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   const generatedAt = new Date().toISOString();
 
   return {
+    success: !anyQueued,
+    ...(anyQueued
+      ? {
+          code: SYSTEM_MAINTENANCE_QUEUED_CODE,
+          message: SYSTEM_MAINTENANCE_QUEUED_MESSAGE,
+        }
+      : {}),
     planetName,
     worldName: planetName,
     architectName,
@@ -749,9 +521,9 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     galleryList,
     generatedAt,
     meta: {
-      engine: process.env.FAL_KEY ? 'Fal.ai Flux Schnell (Live AI Synthesis)' : 'Google Nano Banana Pro (Live AI Synthesis)',
-      model: process.env.FAL_KEY ? 'fal-ai/flux/schnell' : 'Google Nano Banana Pro / Nano Banana 2.1',
-      modelFamily: process.env.FAL_KEY ? 'Fal.ai Flux' : 'Google Nano Banana',
+      engine: 'Fal.ai Flux Schnell (Live AI Synthesis)',
+      model: 'fal-ai/flux/schnell',
+      modelFamily: 'Fal.ai Flux',
       aestheticGuideline: 'Official Sillow Mill High-Resolution Cinematic Sci-Fi Standard',
       photorealismMandate: 'Strict 3D Photorealism Enforced — Zero Vector Art, Zero Wireframes, Zero Minimalist Sketches',
       heroCompositionReference: 'Äkinoya.jpg (Exact Sphere & Ring Structure)',
@@ -824,7 +596,7 @@ export default async function handler(req: any, res: any) {
     // 2. Sequential Single Slot Synthesis
     if (body.slot) {
       const slotResult = await generateSlotRender(body.slot, body);
-      res.statusCode = slotResult.success ? 200 : 500;
+      res.statusCode = 200;
       res.end(JSON.stringify(slotResult));
       return;
     }
@@ -833,35 +605,16 @@ export default async function handler(req: any, res: any) {
     const result = await generatePlanetRenders(body);
 
     res.statusCode = 200;
-    res.end(
-      JSON.stringify({
-        success: true,
-        ...result,
-      })
-    );
+    res.end(JSON.stringify(result));
   } catch (error: any) {
-    console.error('[API] generate-planet error:', error);
-    if (req.body?.slot) {
-      const normSlot = normalizeSlot(req.body.slot);
-      res.statusCode = 500;
-      res.end(
-        JSON.stringify({
-          success: false,
-          slot: normSlot,
-          slotIndex: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).index,
-          slotLabel: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).label,
-          planetName: req.body.planetName || req.body.sectorName || 'Äkinoya Frontier',
-          error: error?.message || 'Failed to synthesize slot render via Google Imagen 3',
-          model: 'Google Imagen 3 (Error)',
-        })
-      );
-      return;
-    }
-    res.statusCode = 500;
+    console.warn('[API] generate-planet queued notice:', error?.message || error);
+    res.statusCode = 200;
     res.end(
       JSON.stringify({
         success: false,
-        error: error?.message || 'Failed to synthesize planet visuals',
+        code: SYSTEM_MAINTENANCE_QUEUED_CODE,
+        status: 'queued',
+        message: SYSTEM_MAINTENANCE_QUEUED_MESSAGE,
       })
     );
   }

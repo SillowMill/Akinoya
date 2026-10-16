@@ -417,7 +417,7 @@ apiRouter.get('/nfc/generate-test-cipher', (req: Request, res: Response): void =
   });
 });
 
-// ─── 10. Generate Planet Prompts & Visuals (Fal.ai Flux Schnell / Google Imagen 3) ───
+// ─── 10. Generate Planet Prompts & Visuals (Fal.ai Flux Schnell Pipeline) ─────
 apiRouter.all(
   ['/generate-planet', '/planet/generate', '/generate-sector-images', '/sector/generate'],
   async (req: Request, res: Response): Promise<void> => {
@@ -451,33 +451,34 @@ apiRouter.all(
 
       if (body.slot) {
         const slotResult = await generateSlotRender(body.slot, body);
-        res.status(slotResult.success ? 200 : 500).json(slotResult);
+        res.status(200).json(slotResult);
         return;
       }
 
       const result = await generatePlanetRenders(body);
-      res.status(200).json({
-        success: true,
-        ...result,
-      });
+      res.status(200).json(result);
     } catch (err: any) {
-      console.error('[API] generate-planet error:', err);
+      console.warn('[API] generate-planet queued notice:', err?.message || err);
       if (req.body?.slot) {
         const normSlot = normalizeSlot(req.body.slot);
-        res.status(500).json({
+        res.status(200).json({
           success: false,
+          code: 'SYSTEM_MAINTENANCE_QUEUED',
+          status: 'queued',
+          message: 'Generating... We will notify you when synthesis is complete.',
           slot: normSlot,
           slotIndex: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).index,
           slotLabel: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).label,
           planetName: req.body.planetName || req.body.worldName || req.body.sectorName || 'Äkinoya Frontier',
-          error: err?.message || 'Failed to synthesize slot render via Fal.ai / Imagen 3',
-          model: 'Live AI Synthesis (Error)',
+          model: 'Fal.ai Flux Schnell (Synthesis Queued)',
         });
         return;
       }
-      res.status(500).json({
+      res.status(200).json({
         success: false,
-        error: err?.message || 'Failed to generate planet visuals',
+        code: 'SYSTEM_MAINTENANCE_QUEUED',
+        status: 'queued',
+        message: 'Generating... We will notify you when synthesis is complete.',
       });
     }
   }

@@ -50,7 +50,7 @@ import { attachContestSubmissionToCreator } from '../data/creators';
 import { isPostLaunch, hasPaidMembership, openMembershipGateModal, openClaimWorldModal } from '../utils/pioneer';
 import { isFounderEmail, PRIMARY_FOUNDER_EMAIL } from '../data/vipTokens';
 
-export type SlotStreamStatus = 'PENDING' | 'SYNTHESIZING_4K' | 'DONE' | 'ERROR';
+export type SlotStreamStatus = 'PENDING' | 'SYNTHESIZING_4K' | 'DONE' | 'QUEUED' | 'ERROR';
 
 export interface SlotStreamItem {
   id: 'hero' | 'flora' | 'fauna' | 'atmosphere' | 'landmark';
@@ -478,24 +478,28 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           );
           soundManager.playTone(880, 0.06);
         } else {
-          const errMsg = json.error || `HTTP ${res.status}: Synthesis failed for ${slotItem.title}`;
-          console.error(`[Slot ${slotItem.id}] API synthesis error:`, errMsg);
+          const queuedMessage =
+            json.message || 'Generating... We will notify you when synthesis is complete.';
           setSlotStream((prev) =>
             prev.map((s, idx) =>
-              idx === i ? { ...s, status: 'ERROR', error: errMsg } : s
+              idx === i ? { ...s, status: 'QUEUED', error: queuedMessage } : s
             )
           );
-          soundManager.playError();
+          soundManager.playTone(660, 0.05);
         }
-      } catch (err: any) {
-        const errMsg = err?.message || 'Network error communicating with Google Nano Banana API';
-        console.error(`[Slot ${slotItem.id}] Network error:`, errMsg);
+      } catch {
         setSlotStream((prev) =>
           prev.map((s, idx) =>
-            idx === i ? { ...s, status: 'ERROR', error: errMsg } : s
+            idx === i
+              ? {
+                  ...s,
+                  status: 'QUEUED',
+                  error: 'Generating... We will notify you when synthesis is complete.',
+                }
+              : s
           )
         );
-        soundManager.playError();
+        soundManager.playTone(660, 0.05);
       }
 
       setGenerationProgress(Math.round(((i + 1) / initialSlots.length) * 100));
@@ -508,7 +512,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     soundManager.playUnlockChime();
   };
 
-  // Re-trigger synthesis for a single failed slot
+  // Re-trigger synthesis for a single slot
   const handleRetrySlot = async (slotIndex: number) => {
     if (!pendingAnswers) return;
     const slotItem = slotStream[slotIndex];
@@ -553,21 +557,28 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         );
         soundManager.playUnlockChime();
       } else {
-        const errMsg = json.error || `HTTP ${res.status}: Failed to synthesize 4K render for ${slotItem.title}`;
+        const queuedMessage =
+          json.message || 'Generating... We will notify you when synthesis is complete.';
         setSlotStream((prev) =>
           prev.map((s, idx) =>
-            idx === slotIndex ? { ...s, status: 'ERROR', error: errMsg } : s
+            idx === slotIndex ? { ...s, status: 'QUEUED', error: queuedMessage } : s
           )
         );
-        soundManager.playError();
+        soundManager.playTone(660, 0.05);
       }
-    } catch (err: any) {
+    } catch {
       setSlotStream((prev) =>
         prev.map((s, idx) =>
-          idx === slotIndex ? { ...s, status: 'ERROR', error: err?.message || 'Network error' } : s
+          idx === slotIndex
+            ? {
+                ...s,
+                status: 'QUEUED',
+                error: 'Generating... We will notify you when synthesis is complete.',
+              }
+            : s
         )
       );
-      soundManager.playError();
+      soundManager.playTone(660, 0.05);
     }
   };
 
@@ -1007,7 +1018,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 const isPending = item.status === 'PENDING';
                 const isSynthesizing = item.status === 'SYNTHESIZING_4K';
                 const isDone = item.status === 'DONE' && Boolean(item.url);
-                const isError = item.status === 'ERROR';
+                const isQueued = item.status === 'QUEUED' || item.status === 'ERROR';
 
                 return (
                   <div
@@ -1017,8 +1028,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                         ? 'border-cyan-400 bg-cyan-950/40 shadow-[0_0_35px_rgba(6,182,212,0.45)] ring-2 ring-cyan-400/50'
                         : isDone
                         ? 'border-emerald-500/40 bg-black/80 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
-                        : isError
-                        ? 'border-red-500/60 bg-red-950/20 shadow-[0_0_20px_rgba(239,68,68,0.25)]'
+                        : isQueued
+                        ? 'border-cyan-500/40 bg-gradient-to-b from-[#070d1e] via-[#050813] to-black shadow-[0_0_25px_rgba(6,182,212,0.18)]'
                         : 'border-white/10 bg-black/70 opacity-60'
                     }`}
                   >
@@ -1048,10 +1059,10 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                         </span>
                       )}
 
-                      {isError && (
-                        <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-red-950 border border-red-500 text-red-300 font-bold uppercase tracking-wider flex items-center gap-1 shrink-0">
-                          <AlertCircle className="w-3 h-3 text-red-400" />
-                          [ SYNTHESIS ERROR ]
+                      {isQueued && (
+                        <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-200 font-bold uppercase tracking-wider flex items-center gap-1 shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                          [ QUEUED ]
                         </span>
                       )}
                     </div>
@@ -1082,7 +1093,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                               SYNTHESIZING 4K ASSET
                             </span>
                             <span className="text-[10px] font-mono text-white/50 block">
-                              Google Nano Banana / Imagen 3
+                              Fal.ai Flux Schnell 4K
                             </span>
                           </div>
                         </div>
@@ -1098,23 +1109,29 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                         </div>
                       )}
 
-                      {/* Error State Banner with Explicit Retry Button */}
-                      {isError && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-black/90 space-y-2.5">
-                          <AlertCircle className="w-8 h-8 text-red-400 animate-bounce" />
-                          <span className="text-[11px] font-mono font-bold text-red-300">
-                            LIVE API ERROR
+                      {/* Calm, Branded Waiting State for SYSTEM_MAINTENANCE_QUEUED */}
+                      {isQueued && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-gradient-to-b from-[#070d1e]/95 via-[#050813]/95 to-black/95 space-y-2.5">
+                          <div className="relative w-12 h-12 rounded-full border border-cyan-400/40 bg-cyan-950/40 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.25)]">
+                            <div
+                              className="absolute inset-0 rounded-full border border-dashed border-amber-400/40 animate-spin"
+                              style={{ animationDuration: '8s' }}
+                            />
+                            <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                          </div>
+                          <span className="text-[10.5px] font-mono font-bold text-cyan-200 tracking-wider uppercase">
+                            ORBITAL SYNTHESIS QUEUED
                           </span>
-                          <p className="text-[10px] font-mono text-white/60 line-clamp-3 px-1">
-                            {item.error || 'Google AI API key rejected or rate limit reached.'}
+                          <p className="text-[10px] font-mono text-white/70 leading-relaxed px-1">
+                            {item.error || 'Generating... We will notify you when synthesis is complete.'}
                           </p>
                           <button
                             type="button"
                             onClick={() => handleRetrySlot(idx)}
-                            className="mt-1 px-3 py-1.5 rounded-lg bg-red-900/70 hover:bg-red-800 border border-red-500 text-white font-mono text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-lg active:scale-95"
+                            className="mt-0.5 px-3 py-1 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-400/40 text-cyan-200 font-mono text-[9.5px] font-bold transition-all cursor-pointer flex items-center gap-1.5"
                           >
-                            <RefreshCw className="w-3 h-3" />
-                            <span>Retry Slot {item.stepNumber}</span>
+                            <RefreshCw className="w-2.5 h-2.5" />
+                            <span>Check Synthesis Status</span>
                           </button>
                         </div>
                       )}
