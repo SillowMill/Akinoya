@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import {
@@ -165,6 +165,11 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   });
   const [adminResetNotice, setAdminResetNotice] = useState<string | null>(null);
 
+  // Dynamic vote-based ranking: highest votes at the top
+  const sortedSubmissions = useMemo(() => {
+    return [...allSubmissions].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+  }, [allSubmissions]);
+
   // Purge legacy browser-wide lock keys so new accounts never falsely inherit ONE-SHOT CLAIMED
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -267,7 +272,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
   // Load submissions, check user's ticket status, and subscribe to realtime updates
   useEffect(() => {
-    const list = getStoredPlanetSubmissions().filter((s) => !isForbiddenSubmission(s));
+    const list = getStoredPlanetSubmissions()
+      .filter((s) => !isForbiddenSubmission(s))
+      .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
     setAllSubmissions(list);
 
     if (isAuthenticated && (user?.id || profile?.id || user?.email)) {
@@ -285,7 +292,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     }
 
     const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
-      const valid = fresh.filter((s) => !isForbiddenSubmission(s));
+      const valid = fresh
+        .filter((s) => !isForbiddenSubmission(s))
+        .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
       setAllSubmissions(valid);
       if (isAuthenticated && (user?.id || profile?.id || user?.email)) {
         const userSub = getUserContestSubmission(user?.id || profile?.id, user?.email);
@@ -736,7 +745,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     const res = await togglePlanetSubmissionVote(submissionId, user?.id);
     if (res.success) {
       setAllSubmissions((prev) =>
-        prev.map((s) => (s.id === submissionId ? { ...s, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : s))
+        prev
+          .map((s) => (s.id === submissionId ? { ...s, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : s))
+          .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0))
       );
       if (activeSubmission && activeSubmission.id === submissionId) {
         setActiveSubmission((prev) => (prev ? { ...prev, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : null));
@@ -1368,7 +1379,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allSubmissions.map((sub, idx) => (
+            {sortedSubmissions.map((sub, idx) => (
               <div
                 key={sub.id}
                 className="rounded-2xl overflow-hidden bg-black/60 border border-white/10 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"

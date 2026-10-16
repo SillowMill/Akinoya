@@ -155,19 +155,19 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
-          className="relative rounded-3xl overflow-hidden border-2 border-cyan-500/40 bg-black shadow-[0_0_50px_rgba(0,242,254,0.2)] group/video"
+          className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-cyan-500/30 sm:border-2 sm:border-cyan-500/40 bg-black shadow-[0_0_50px_rgba(0,242,254,0.15)] group/video my-2 sm:my-4"
         >
           {/* Top Video Header Chrome */}
-          <div className="p-3 sm:p-4 bg-[#070b16]/95 border-b border-amber-500/20 flex flex-wrap items-center justify-between gap-3">
+          <div className="px-4 py-3 sm:px-5 sm:py-3.5 bg-[#070b16]/95 border-b border-amber-500/20 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
               <span className="text-xs font-mono font-bold text-amber-300 uppercase tracking-wider truncate">
-                TRANSMISSION LOCKED · [Odi&apos;s Personal Welcome &amp; Vision Transmission - Video Placeholder]
+                TRANSMISSION LOCKED · WELCOME &amp; VISION
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-[10.5px] font-mono text-white/60">
-              <span className="px-2.5 py-0.5 rounded bg-amber-950/80 border border-amber-400/40 text-amber-300 font-bold whitespace-nowrap">
+            <div className="flex items-center gap-2 text-[10px] sm:text-[10.5px] font-mono text-white/60 shrink-0">
+              <span className="px-2.5 py-1 rounded-lg bg-amber-950/80 border border-amber-400/40 text-amber-300 font-bold whitespace-nowrap shadow-sm">
                 🔒 RELEASE: JANUARY 9, 2027
               </span>
               <span className="hidden sm:inline px-2 py-0.5 rounded bg-black/60 border border-white/10 text-white/80">
@@ -176,8 +176,8 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
             </div>
           </div>
 
-          {/* 16:9 Video Canvas Container */}
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#04060c] flex items-center justify-center">
+          {/* Video Canvas Container: Generous min-height on mobile to eliminate edge-crowding */}
+          <div className="relative min-h-[380px] sm:min-h-[420px] md:min-h-0 md:aspect-[16/9] w-full overflow-hidden bg-[#04060c] flex items-center justify-center">
             {/* Visual Poster & Ambient Scanlines */}
             <img
               src={akinoyaVistaImg}
@@ -199,8 +199,8 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
               }}
             />
 
-            {/* Gold Lock Overlay (Release Day: January 9, 2027) */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-3 sm:p-6 text-center space-y-2 sm:space-y-4 z-20">
+            {/* Gold Lock Overlay (Spacious, beautifully padded & centered) */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-8 md:p-10 text-center space-y-3.5 sm:space-y-4 z-20">
               {/* Prominent Gold Lock Icon */}
               <div
                 onClick={() => {
@@ -213,27 +213,29 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
                 title="Personal Studio Transmission will be available on release day: January 9, 2027"
               >
                 <div className="absolute -inset-4 rounded-full bg-amber-400/25 blur-2xl group-hover/lock:bg-amber-400/40 transition-all duration-300" />
-                <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-300 text-black flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.6)] group-hover/lock:scale-110 transition-transform border-2 border-amber-200">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-300 text-black flex items-center justify-center shadow-[0_0_40px_rgba(245,158,11,0.6)] group-hover/lock:scale-110 transition-transform border-2 border-amber-200">
                   <Lock className="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 text-black fill-black/20" />
                 </div>
               </div>
 
               {/* Gold Lock Overlay Badge & Text */}
-              <div className="space-y-1.5 sm:space-y-2 max-w-xl px-2">
-                <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-amber-950/80 border border-amber-400/50 text-amber-300 font-mono text-[9px] sm:text-[10.5px] font-bold tracking-wider uppercase shadow-md">
-                  <Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0" />
-                  <span>TRANSMISSION LOCKED · RELEASES JANUARY 9, 2027</span>
+              <div className="space-y-2 sm:space-y-2.5 max-w-xl px-2">
+                <div>
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full bg-amber-950/90 border border-amber-400/60 text-amber-300 font-mono text-[9.5px] sm:text-xs font-bold tracking-widest uppercase shadow-md">
+                    <Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0" />
+                    <span>TRANSMISSION LOCKED · RELEASES JANUARY 9, 2027</span>
+                  </span>
                 </div>
 
-                <h3 className="text-sm xs:text-base sm:text-xl md:text-2xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 drop-shadow-md leading-tight">
+                <h3 className="text-base xs:text-lg sm:text-xl md:text-2xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-300 to-amber-400 drop-shadow-md leading-snug px-2">
                   Personal Studio Transmission will be available on release day: January 9, 2027
                 </h3>
 
-                <p className="text-[11px] sm:text-xs md:text-sm text-amber-100/90 font-sans drop-shadow-sm max-w-md mx-auto leading-relaxed line-clamp-2 sm:line-clamp-none">
+                <p className="text-xs sm:text-sm text-amber-100/90 font-sans drop-shadow-sm max-w-md mx-auto leading-relaxed px-2">
                   Odi&apos;s personal welcome &amp; system breakdown recorded live from the home studio.
                 </p>
 
-                <div className="pt-0.5 sm:pt-1 hidden xs:flex items-center justify-center gap-2 text-[9.5px] sm:text-[10.5px] font-mono text-white/50">
+                <div className="pt-1 flex items-center justify-center gap-2 text-[10px] sm:text-xs font-mono text-white/50 tracking-wider">
                   <span>STUDIO 4K RAW MASTER</span>
                   <span>·</span>
                   <span>RECORDED FROM HOME STUDIO</span>

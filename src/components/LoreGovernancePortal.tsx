@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import {
   Trophy,
@@ -40,22 +40,27 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
   useEffect(() => {
     // Initial load from local store
     const initial = getStoredPlanetSubmissions().filter((s) => !isForbiddenSubmission(s));
-    setContestSubmissions([...initial].sort((a, b) => b.votesCount - a.votesCount));
+    setContestSubmissions([...initial].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
 
     // Live cloud load from Supabase user_dossiers
     fetchPlanetSubmissions().then((fresh) => {
       const valid = fresh.filter((s) => !isForbiddenSubmission(s));
-      setContestSubmissions([...valid].sort((a, b) => b.votesCount - a.votesCount));
+      setContestSubmissions([...valid].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
     });
 
     // Supabase Realtime Subscription
     const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
       const valid = fresh.filter((s) => !isForbiddenSubmission(s));
-      setContestSubmissions([...valid].sort((a, b) => b.votesCount - a.votesCount));
+      setContestSubmissions([...valid].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
     });
 
     return () => unsubscribe();
   }, []);
+
+  // Safe dynamic vote-based sorting
+  const sortedSubmissions = useMemo(() => {
+    return [...contestSubmissions].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+  }, [contestSubmissions]);
 
   const handleVoteContest = async (submissionId: string) => {
     if (!isAuthenticated) {
@@ -70,7 +75,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
         const updated = prev.map((s) =>
           s.id === submissionId ? { ...s, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : s
         );
-        return [...updated].sort((a, b) => b.votesCount - a.votesCount);
+        return [...updated].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
       });
       if (selectedPlanet && selectedPlanet.id === submissionId) {
         setSelectedPlanet((prev) =>
@@ -133,7 +138,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
             </h2>
           </div>
           <span className="text-[10.5px] font-mono text-white/40">
-            {contestSubmissions.length} Official Sectors · 5-Photo Visual Galleries
+            {contestSubmissions.length} Official Worlds · 5-Photo Visual Galleries
           </span>
         </div>
 
@@ -144,10 +149,10 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
             </div>
             <div className="space-y-1.5 max-w-md mx-auto">
               <h3 className="text-base sm:text-lg font-display font-bold text-white">
-                No sectors synthesized yet
+                No worlds synthesized yet
               </h3>
               <p className="text-xs sm:text-sm font-sans text-white/60 leading-relaxed">
-                No sectors synthesized yet. Be the first creator to claim a world! Answer the 8 human-centric questions in the Mill Wizard to forge your 5-photo high-resolution cinematic sci-fi dossier.
+                No worlds synthesized yet. Be the first creator to claim a world! Answer the 8 human-centric questions in the Mill Wizard to forge your 5-photo high-resolution cinematic sci-fi dossier.
               </p>
             </div>
             <a
@@ -160,7 +165,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {contestSubmissions.map((sub, idx) => (
+            {sortedSubmissions.map((sub, idx) => (
               <div
                 key={sub.id}
                 className="rounded-2xl overflow-hidden bg-black/60 border border-white/10 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"

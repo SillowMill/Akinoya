@@ -9,7 +9,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
-import { getStoredPlanetSubmissions, togglePlanetSubmissionVote, fetchPlanetSubmissions } from '../data/contest';
+import { getStoredPlanetSubmissions, togglePlanetSubmissionVote, fetchPlanetSubmissions, subscribeToPlanetSubmissions } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { PlanetDossierModal } from './PlanetDossierModal';
 
@@ -27,12 +27,22 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
 
   useEffect(() => {
     fetchPlanetSubmissions().then((subs) => {
-      setPlanetSubmissions(subs);
+      if (subs && subs.length > 0) {
+        setPlanetSubmissions(subs);
+      }
     });
+
+    const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
+      if (fresh && fresh.length > 0) {
+        setPlanetSubmissions(fresh);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  // Planets data (sorted descending by votesCount)
-  const rankedPlanets = [...planetSubmissions].sort((a, b) => b.votesCount - a.votesCount);
+  // Planets data dynamically sorted descending by total votesCount
+  const rankedPlanets = [...planetSubmissions].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
   const topFavoritePlanet = rankedPlanets[0];
 
   const handleOpenPlanetModal = (planet: PlanetSubmission) => {
@@ -46,8 +56,16 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
 
   const handleVotePlanet = async (submissionId: string) => {
     soundManager.playTone(740, 0.06);
-    await togglePlanetSubmissionVote(submissionId);
-    setPlanetSubmissions(getStoredPlanetSubmissions());
+    const res = await togglePlanetSubmissionVote(submissionId);
+    if (res.success) {
+      setPlanetSubmissions((prev) =>
+        prev
+          .map((p) => (p.id === submissionId ? { ...p, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : p))
+          .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0))
+      );
+    } else {
+      setPlanetSubmissions(getStoredPlanetSubmissions());
+    }
   };
 
   return (
@@ -60,10 +78,10 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
           </div>
           <div className="space-y-1">
             <h4 className="text-base font-display font-bold text-white tracking-wide">
-              No Sectors Synthesized Yet
+              No Worlds Synthesized Yet
             </h4>
             <p className="text-xs text-white/50 font-mono max-w-md mx-auto">
-              Be the first creator to synthesize a planetary sector and lead the community leaderboard.
+              Be the first creator to synthesize a planetary world and lead the community leaderboard.
             </p>
           </div>
           <a

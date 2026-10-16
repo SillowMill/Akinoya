@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import passCardImg from '../assets/images/akinoya_pass_card_1790852652003.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
@@ -56,6 +56,8 @@ import {
   getPlanetPhotoCards,
   getStoredPlanetSubmissions,
   togglePlanetSubmissionVote,
+  fetchPlanetSubmissions,
+  subscribeToPlanetSubmissions,
 } from '../data/contest';
 import { getUserStatusConfig } from '../utils/statusPill';
 import { PlanetDossierModal } from './PlanetDossierModal';
@@ -211,11 +213,38 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   }, [user?.id, profile?.id, user?.email]);
 
+  const [allCommunityPlanets, setAllCommunityPlanets] = useState<PlanetSubmission[]>(() =>
+    getStoredPlanetSubmissions().sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0))
+  );
+
+  useEffect(() => {
+    fetchPlanetSubmissions().then((fresh) => {
+      if (fresh && fresh.length > 0) {
+        setAllCommunityPlanets([...fresh].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
+      }
+    });
+
+    const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
+      if (fresh && fresh.length > 0) {
+        setAllCommunityPlanets([...fresh].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const handleVoteUserDossier = async () => {
     if (!userDossier) return;
     soundManager.playTone(740, 0.06);
     const res = await togglePlanetSubmissionVote(userDossier.id, user?.id);
-    setUserDossier((prev) => (prev ? { ...prev, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : null));
+    if (res.success) {
+      setUserDossier((prev) => (prev ? { ...prev, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : null));
+      setAllCommunityPlanets((prev) =>
+        prev
+          .map((p) => (p.id === userDossier.id ? { ...p, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : p))
+          .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0))
+      );
+    }
   };
 
   const handleShareDossier = () => {
@@ -233,8 +262,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const isOdiUser = isFounderEmail(userEmail);
   const isEstherUser = userEmail === 'estherphilippen@msn.com' || Boolean(authHolderName && authHolderName.toLowerCase().includes('esther'));
 
-  const storedPlanets = getStoredPlanetSubmissions().sort((a, b) => b.votesCount - a.votesCount);
-  const planetRank = userDossier ? storedPlanets.findIndex((p) => p.id === userDossier.id) + 1 : 0;
+  const sortedCommunityPlanets = useMemo(() => {
+    return [...allCommunityPlanets].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+  }, [allCommunityPlanets]);
+  const planetRank = userDossier ? sortedCommunityPlanets.findIndex((p) => p.id === userDossier.id) + 1 : 0;
   const isVipMode = Boolean(
     Boolean(user || profile) && (
       isVip ||
