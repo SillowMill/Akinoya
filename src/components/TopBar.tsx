@@ -82,7 +82,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               onNavigateHome();
             }
           }}
-          className="text-xs xs:text-sm sm:text-base lg:text-lg font-display font-bold tracking-[0.16em] sm:tracking-[0.2em] text-white hover:text-white/80 transition-colors uppercase whitespace-nowrap shrink-0 cursor-pointer"
+          className="text-[14.5px] xs:text-[15.5px] sm:text-base lg:text-lg font-display font-bold tracking-[0.18em] sm:tracking-[0.2em] text-white hover:text-white/80 transition-colors uppercase whitespace-nowrap shrink-0 cursor-pointer"
         >
           SILLOW MILL
         </a>
