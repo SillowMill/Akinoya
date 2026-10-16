@@ -620,7 +620,9 @@ export default function App() {
       )}
 
       {/* Floating Audio Stop/Play Control (Always accessible while scrolling) */}
-      {!backdropOnly && route !== 'community' && route !== 'creators' && <FloatingAudioControl />}
+      {!backdropOnly && route !== 'community' && route !== 'creators' && (
+        <FloatingAudioControl isGalaxy={route === 'galaxy'} />
+      )}
 
       {/* Claim Your World / Pioneer 2027 Early Access Interactive Modal */}
       <ClaimYourWorldModal

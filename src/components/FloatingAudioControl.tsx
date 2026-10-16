@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Volume2, VolumeX, Pause, Play, Music, Square } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Pause, Play } from 'lucide-react';
 import { planetSoundtrack } from '../utils/soundtrack';
 
-export const FloatingAudioControl: React.FC = () => {
+export interface FloatingAudioControlProps {
+  isGalaxy?: boolean;
+}
+
+export const FloatingAudioControl: React.FC<FloatingAudioControlProps> = ({ isGalaxy: isGalaxyProp }) => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isHovered, setIsHovered] = useState<boolean>(false);
+
+  // Determine if active view is galaxy navigator or standard/home view
+  const isGalaxy = typeof isGalaxyProp === 'boolean'
+    ? isGalaxyProp
+    : typeof window !== 'undefined' && window.location.pathname.startsWith('/galaxy');
 
   useEffect(() => {
     const unsubscribe = planetSoundtrack.subscribe((playing) => {
@@ -20,7 +29,17 @@ export const FloatingAudioControl: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-20 right-4 sm:bottom-20 sm:right-6 z-40 flex items-center gap-2 select-none pointer-events-auto">
+    <div
+      className={`fixed ${
+        isGalaxy
+          ? 'bottom-20 right-4 sm:bottom-20 sm:right-6'
+          : 'bottom-[calc(env(safe-area-inset-bottom,0px)+0.875rem)] right-3.5 sm:bottom-5 sm:right-6'
+      } z-40 flex items-center gap-2 select-none pointer-events-auto transform-gpu will-change-transform transition-[bottom,right] duration-300`}
+      style={{
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+      }}
+    >
       <motion.button
         type="button"
         onClick={handleToggle}
