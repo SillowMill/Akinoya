@@ -21,6 +21,15 @@ import amlemiMonumentImg from '../assets/images/amlemi_renders/05-monument.png';
 const LOCAL_SUBMISSIONS_KEY = 'akinoya_planet_submissions_v5';
 const LOCAL_CONTEST_VOTES_KEY = 'akinoya_contest_votes';
 
+export const UI_RECALIBRATING_STATUS_TEXT =
+  'Äkinoya Core is currently recalibrating generator nodes. Your slot is safely reserved.';
+
+export const COMMUNITY_SHARE_VIDEO_MESSAGE =
+  'If you like it, share it on your socials. It would mean the world to us.';
+
+export const VIRAL_VIDEO_MOTION_PROMPT =
+  'High-speed dynamic orbital zoom-in, cinematic volumetric lighting, photorealistic sci-fi aesthetics, immersive depth, seamless loop transition, sharp focus on planetary core and rings.';
+
 /**
  * Strict Photorealism Validator:
  * Ensures only rich, full-color photorealistic raster renders are permitted.
@@ -267,11 +276,19 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
             if (isAmlemi) {
               votesCount = userVoted ? 4 : 3;
             }
+            const resolvedVideoUrl =
+              sub.videoUrl ||
+              sub.renders?.videoUrl ||
+              sub.renders?.video_url ||
+              (sub.humanAnswers as any)?.video_url ||
+              '';
             return {
               ...sub,
               planetName: isAmlemi ? 'Ämlemi' : formatAkinoyaPlanetName(sub.planetName),
               votesCount,
               hasVoted: userVoted,
+              videoUrl: resolvedVideoUrl,
+              videoStatus: resolvedVideoUrl ? 'READY' : sub.videoStatus || 'QUEUED_PENDING',
               renders: (() => {
                 if (isAmlemi) {
                   return {
@@ -281,6 +298,12 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
                     atmosphere: amlemiCockpitImg,
                     landmark: amlemiMonumentImg,
                     ecosystem: amlemiBotanicalImg,
+                    videoUrl: resolvedVideoUrl,
+                    '01_main': amlemiOrbitalImg,
+                    '02_flora': amlemiBotanicalImg,
+                    '03_fauna': amlemiFaunaImg,
+                    '04_atmo': amlemiCockpitImg,
+                    '05_lore': amlemiMonumentImg,
                   };
                 }
                 const current = sub.renders;
@@ -291,9 +314,20 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
                   isAmlemiAsset(current.hero) ||
                   isAmlemiAsset(current.flora);
                 if (hasLeak) {
-                  return resolvePlanetRenders(sub.humanAnswers || (sub as any));
+                  return {
+                    ...resolvePlanetRenders(sub.humanAnswers || (sub as any)),
+                    videoUrl: resolvedVideoUrl,
+                  };
                 }
-                return current;
+                return {
+                  ...current,
+                  videoUrl: resolvedVideoUrl,
+                  '01_main': current.hero,
+                  '02_flora': current.flora,
+                  '03_fauna': current.fauna,
+                  '04_atmo': current.atmosphere,
+                  '05_lore': current.landmark,
+                };
               })(),
             };
           });
@@ -343,6 +377,12 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
             if (isAmlemi) {
               votesCount = userVoted ? 4 : 3;
             }
+            const resolvedVideoUrl =
+              d.video_url ||
+              d.renders?.videoUrl ||
+              d.renders?.video_url ||
+              d.human_answers?.video_url ||
+              '';
             return {
               id: d.id,
               userId: d.user_id,
@@ -360,6 +400,8 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
               additionalNotes: d.additional_notes || '',
               humanAnswers: d.human_answers || {},
               generatedLore: d.generated_lore || '',
+              videoUrl: resolvedVideoUrl,
+              videoStatus: resolvedVideoUrl ? 'READY' : 'QUEUED_PENDING',
               renders: (() => {
                 if (isAmlemi) {
                   return {
@@ -369,6 +411,12 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
                     atmosphere: amlemiCockpitImg,
                     landmark: amlemiMonumentImg,
                     ecosystem: amlemiBotanicalImg,
+                    videoUrl: resolvedVideoUrl,
+                    '01_main': amlemiOrbitalImg,
+                    '02_flora': amlemiBotanicalImg,
+                    '03_fauna': amlemiFaunaImg,
+                    '04_atmo': amlemiCockpitImg,
+                    '05_lore': amlemiMonumentImg,
                   };
                 }
                 const current = d.renders;
@@ -379,9 +427,20 @@ export const fetchPlanetSubmissions = async (): Promise<PlanetSubmission[]> => {
                   isAmlemiAsset(current.hero) ||
                   isAmlemiAsset(current.flora);
                 if (hasLeak) {
-                  return resolvePlanetRenders(d.human_answers || (d as any));
+                  return {
+                    ...resolvePlanetRenders(d.human_answers || (d as any)),
+                    videoUrl: resolvedVideoUrl,
+                  };
                 }
-                return current;
+                return {
+                  ...current,
+                  videoUrl: resolvedVideoUrl,
+                  '01_main': current.hero,
+                  '02_flora': current.flora,
+                  '03_fauna': current.fauna,
+                  '04_atmo': current.atmosphere,
+                  '05_lore': current.landmark,
+                };
               })(),
               votesCount,
               hasVoted: userVoted,
@@ -445,6 +504,12 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
         if (isAmlemi) {
           votesCount = userVoted ? 4 : 3;
         }
+        const resolvedVideoUrl =
+          data.video_url ||
+          data.renders?.videoUrl ||
+          data.renders?.video_url ||
+          data.human_answers?.video_url ||
+          '';
 
         const sub: PlanetSubmission = {
           id: data.id,
@@ -463,6 +528,8 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           additionalNotes: data.additional_notes || '',
           humanAnswers: data.human_answers || {},
           generatedLore: data.generated_lore || '',
+          videoUrl: resolvedVideoUrl,
+          videoStatus: resolvedVideoUrl ? 'READY' : 'QUEUED_PENDING',
           renders: (() => {
             if (isAmlemi) {
               return {
@@ -472,6 +539,12 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
                 atmosphere: amlemiCockpitImg,
                 landmark: amlemiMonumentImg,
                 ecosystem: amlemiBotanicalImg,
+                videoUrl: resolvedVideoUrl,
+                '01_main': amlemiOrbitalImg,
+                '02_flora': amlemiBotanicalImg,
+                '03_fauna': amlemiFaunaImg,
+                '04_atmo': amlemiCockpitImg,
+                '05_lore': amlemiMonumentImg,
               };
             }
             const current = data.renders;
@@ -482,9 +555,20 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
               isAmlemiAsset(current.hero) ||
               isAmlemiAsset(current.flora);
             if (hasLeak) {
-              return resolvePlanetRenders(data.human_answers || (data as any));
+              return {
+                ...resolvePlanetRenders(data.human_answers || (data as any)),
+                videoUrl: resolvedVideoUrl,
+              };
             }
-            return current;
+            return {
+              ...current,
+              videoUrl: resolvedVideoUrl,
+              '01_main': current.hero,
+              '02_flora': current.flora,
+              '03_fauna': current.fauna,
+              '04_atmo': current.atmosphere,
+              '05_lore': current.landmark,
+            };
           })(),
           votesCount,
           hasVoted: userVoted,
@@ -583,7 +667,7 @@ export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['
 };
 
 /**
- * Synthesizes 5 high-resolution cinematic sci-fi images for a sector using Google Nano Banana (Nano Banana Pro / 2.1).
+ * Synthesizes 5 high-resolution cinematic sci-fi images + 9:16 viral video trailer for a sector using Fal.ai.
  * Strictly enforces Äkinoya cinematic sci-fi parameters: high-res 4K, deep indigo, neon purple, warm copper accents.
  */
 export const generateSectorImages = async (answers: WizardAnswers): Promise<PlanetSubmission['renders']> => {
@@ -596,6 +680,11 @@ export const generateSectorImages = async (answers: WizardAnswers): Promise<Plan
       atmosphere: amlemiCockpitImg,
       landmark: amlemiMonumentImg,
       ecosystem: amlemiBotanicalImg,
+      '01_main': amlemiOrbitalImg,
+      '02_flora': amlemiBotanicalImg,
+      '03_fauna': amlemiFaunaImg,
+      '04_atmo': amlemiCockpitImg,
+      '05_lore': amlemiMonumentImg,
     };
   }
 
@@ -608,8 +697,6 @@ export const generateSectorImages = async (answers: WizardAnswers): Promise<Plan
         planetName: answers.planetName,
         sectorName: answers.sectorName || answers.planetName,
         biome: answers.biome,
-        model: 'nano-banana-pro',
-        modelPipeline: 'Google Nano Banana Pro / Nano Banana 2.1',
       }),
     });
     if (res.ok) {
@@ -619,7 +706,7 @@ export const generateSectorImages = async (answers: WizardAnswers): Promise<Plan
       }
     }
   } catch (err) {
-    console.warn('[Google Nano Banana] Sector image synthesis network notice:', err);
+    console.warn('[Fal.ai] Sector image synthesis network notice:', err);
   }
   return resolvePlanetRenders(answers);
 };
@@ -699,50 +786,82 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
   ];
 };
 
-// Save a new contest entry permanently to Supabase user_dossiers & localStorage
+// Save a new contest entry permanently to Supabase user_dossiers & localStorage in a single atomic operation
 export const savePlanetSubmission = async (
   submission: PlanetSubmission
 ): Promise<{ success: boolean; submission: PlanetSubmission; error?: string }> => {
   try {
+    const videoUrl =
+      submission.videoUrl ||
+      submission.renders?.videoUrl ||
+      submission.renders?.video_url ||
+      '';
+
+    const enrichedSubmission: PlanetSubmission = {
+      ...submission,
+      videoUrl,
+      videoStatus: videoUrl ? 'READY' : submission.videoStatus || 'QUEUED_PENDING',
+      renders: {
+        ...submission.renders,
+        '01_main': submission.renders.hero,
+        '02_flora': submission.renders.flora,
+        '03_fauna': submission.renders.fauna,
+        '04_atmo': submission.renders.atmosphere,
+        '05_lore': submission.renders.landmark,
+        videoUrl,
+        video_url: videoUrl,
+        videoStatus: videoUrl ? 'READY' : submission.videoStatus || 'QUEUED_PENDING',
+      },
+    };
+
     const existing = getStoredPlanetSubmissions();
-    const updated = [submission, ...existing.filter((s) => s.id !== submission.id)];
+    const updated = [enrichedSubmission, ...existing.filter((s) => s.id !== enrichedSubmission.id)];
     localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(updated));
 
-    // Supabase cloud persistence (user_dossiers table)
+    // Step 3: Atomic Supabase cloud persistence (user_dossiers table: 5 photos + lore + 9:16 video_url)
     if (isSupabaseConfigured) {
       try {
-        await supabase.from('user_dossiers').upsert({
-          id: submission.id,
-          user_id: submission.userId,
-          author_name: submission.authorName,
-          author_username: submission.authorUsername,
-          author_email: submission.authorEmail,
-          author_avatar_gradient: submission.authorAvatarGradient,
-          planet_name: submission.planetName,
-          atmosphere: submission.atmosphere,
-          flora: submission.flora,
-          fauna: submission.fauna,
-          sonic_vibe: submission.sonicVibe,
-          visual_aesthetic: submission.visualAesthetic,
-          landmark: submission.landmark,
-          additional_notes: submission.additionalNotes,
+        const basePayload: Record<string, any> = {
+          id: enrichedSubmission.id,
+          user_id: enrichedSubmission.userId,
+          author_name: enrichedSubmission.authorName,
+          author_username: enrichedSubmission.authorUsername,
+          author_email: enrichedSubmission.authorEmail,
+          author_avatar_gradient: enrichedSubmission.authorAvatarGradient,
+          planet_name: enrichedSubmission.planetName,
+          atmosphere: enrichedSubmission.atmosphere,
+          flora: enrichedSubmission.flora,
+          fauna: enrichedSubmission.fauna,
+          sonic_vibe: enrichedSubmission.sonicVibe,
+          visual_aesthetic: enrichedSubmission.visualAesthetic,
+          landmark: enrichedSubmission.landmark,
+          additional_notes: enrichedSubmission.additionalNotes,
           human_answers: {
-            ...(submission.humanAnswers || {}),
-            biome: submission.biome,
-            sectorName: submission.sectorName,
+            ...(enrichedSubmission.humanAnswers || {}),
+            biome: enrichedSubmission.biome,
+            sectorName: enrichedSubmission.sectorName,
+            video_url: videoUrl,
           },
-          generated_lore: submission.generatedLore,
-          renders: submission.renders,
-          votes_count: submission.votesCount,
-          status: submission.status,
-          created_at: submission.createdAt,
-        });
+          generated_lore: enrichedSubmission.generatedLore,
+          renders: enrichedSubmission.renders,
+          votes_count: enrichedSubmission.votesCount,
+          status: enrichedSubmission.status,
+          created_at: enrichedSubmission.createdAt,
+        };
+
+        const { error: firstErr } = await supabase
+          .from('user_dossiers')
+          .upsert({ ...basePayload, video_url: videoUrl });
+
+        if (firstErr) {
+          await supabase.from('user_dossiers').upsert(basePayload);
+        }
       } catch (cloudErr) {
         console.warn('[Contest] user_dossiers cloud sync notice:', cloudErr);
       }
     }
 
-    return { success: true, submission };
+    return { success: true, submission: enrichedSubmission };
   } catch (err: any) {
     console.error('[Contest] Failed to save submission:', err);
     return { success: false, submission, error: err?.message || 'Save error' };

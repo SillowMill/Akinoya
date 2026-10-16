@@ -463,22 +463,22 @@ apiRouter.all(
         const normSlot = normalizeSlot(req.body.slot);
         res.status(200).json({
           success: false,
-          code: 'SYSTEM_MAINTENANCE_QUEUED',
-          status: 'queued',
-          message: 'Generating... We will notify you when synthesis is complete.',
+          code: 'QUEUED_PENDING',
+          status: 'QUEUED_PENDING',
+          message: 'Synthesizer recalibrating.',
           slot: normSlot,
           slotIndex: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).index,
           slotLabel: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).label,
           planetName: req.body.planetName || req.body.worldName || req.body.sectorName || 'Äkinoya Frontier',
-          model: 'Fal.ai Flux Schnell (Synthesis Queued)',
+          model: 'Fal.ai Flux Schnell (QUEUED_PENDING)',
         });
         return;
       }
       res.status(200).json({
         success: false,
-        code: 'SYSTEM_MAINTENANCE_QUEUED',
-        status: 'queued',
-        message: 'Generating... We will notify you when synthesis is complete.',
+        code: 'QUEUED_PENDING',
+        status: 'QUEUED_PENDING',
+        message: 'Synthesizer recalibrating.',
       });
     }
   }

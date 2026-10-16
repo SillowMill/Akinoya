@@ -64,6 +64,7 @@ import {
 } from '../data/contest';
 import { getUserStatusConfig } from '../utils/statusPill';
 import { PlanetDossierModal } from './PlanetDossierModal';
+import { MyWorld } from './MyWorld';
 import {
   BINGAA_PDF_URL,
   BINGAA_PDF_FILENAME,
@@ -1874,49 +1875,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
 
-                  {/* 5-Photo Cinematic Sci-Fi Gallery Section */}
-                  <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-4 shadow-xl">
-                    <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                      <div className="flex items-center gap-2">
-                        <Camera className="w-4 h-4 text-amber-400" />
-                        <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
-                          Synthesized 5-Photo Visual Archive
-                        </h3>
-                      </div>
-                      <span className="text-[10px] font-mono text-cyan-400">
-                        Click any render to open full 4K view
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                      {getPlanetPhotoCards(userDossier).map((photo) => (
-                        <div
-                          key={photo.id}
-                          onClick={() => {
-                            soundManager.playTone(660, 0.05);
-                            setSelectedDossierModal(userDossier);
-                          }}
-                          className="group relative rounded-xl overflow-hidden bg-black/80 border border-white/10 hover:border-amber-400/50 transition-all cursor-pointer aspect-square flex flex-col justify-end p-2.5 shadow-md"
-                        >
-                          <img
-                            src={photo.url}
-                            alt={photo.title}
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
-
-                          <div className="relative z-10 space-y-0.5">
-                            <span className="text-[8.5px] font-mono font-bold tracking-wider text-amber-300 uppercase block truncate">
-                              {photo.category}
-                            </span>
-                            <h4 className="text-[11px] font-sans font-semibold text-white truncate group-hover:text-amber-200">
-                              {photo.title}
-                            </h4>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  {/* 5-Photo Cinematic Sci-Fi Gallery & 9:16 Viral Video Trailer */}
+                  <MyWorld
+                    dossier={userDossier}
+                    onInspectModal={(d) => {
+                      soundManager.playTone(660, 0.05);
+                      setSelectedDossierModal(d);
+                    }}
+                  />
 
                   {/* Story & Philosophy Creed */}
                   <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-3 shadow-xl">

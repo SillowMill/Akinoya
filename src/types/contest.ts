@@ -1,10 +1,18 @@
 export interface PlanetSubmissionRenders {
-  hero: string; // 1. Main Orbital Planet Render (Äkinoya.jpg style)
-  flora: string; // 2. Botanical Flora System (Mood.png panel style)
-  fauna: string; // 3. Exotic Fauna & Wildlife System
-  atmosphere: string; // 4. Cockpit / Ship Landing Atmosphere Detail
-  landmark: string; // 5. Lore Dossier Cover / Iconic Landmark Detail
+  hero: string; // 1. Main Orbital Planet Render (01_main)
+  flora: string; // 2. Botanical Flora System (02_flora)
+  fauna: string; // 3. Exotic Fauna & Wildlife System (03_fauna)
+  atmosphere: string; // 4. Cockpit / Ship Landing Atmosphere Detail (04_atmo)
+  landmark: string; // 5. Lore Dossier Cover / Iconic Landmark Detail (05_lore)
   ecosystem?: string; // backwards compatibility alias
+  videoUrl?: string; // 9:16 Vertical Viral Video Trailer (5s)
+  video_url?: string;
+  videoStatus?: 'READY' | 'QUEUED_PENDING';
+  '01_main'?: string;
+  '02_flora'?: string;
+  '03_fauna'?: string;
+  '04_atmo'?: string;
+  '05_lore'?: string;
 }
 
 export interface WizardAnswers {
@@ -52,6 +60,8 @@ export interface PlanetSubmission {
   futurePromise?: string;
   generatedLore: string;
   renders: PlanetSubmissionRenders;
+  videoUrl?: string;
+  videoStatus?: 'READY' | 'QUEUED_PENDING';
   votesCount: number;
   hasVoted?: boolean;
   status: 'SUBMITTED' | 'PUBLISHED' | 'FINALIST';

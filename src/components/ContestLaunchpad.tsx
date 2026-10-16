@@ -32,6 +32,7 @@ import { soundManager } from '../utils/audio';
 import millAvatar from '../assets/images/mill_photo.jpg';
 import { PlanetGeneratorChat } from './PlanetGeneratorChat';
 import { PlanetDossierModal } from './PlanetDossierModal';
+import { MyWorld } from './MyWorld';
 import { AkinoyaSciFiLoader } from './AkinoyaSciFiLoader';
 import { WizardAnswers, PlanetSubmission } from '../types/contest';
 import {
@@ -45,6 +46,7 @@ import {
   subscribeToPlanetSubmissions,
   isCleanPhotorealistic,
   isForbiddenSubmission,
+  UI_RECALIBRATING_STATUS_TEXT,
 } from '../data/contest';
 import { attachContestSubmissionToCreator } from '../data/creators';
 import { isPostLaunch, hasPaidMembership, openMembershipGateModal, openClaimWorldModal } from '../utils/pioneer';
@@ -320,7 +322,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     openClaimWorldModal();
   };
 
-  // Called when Mill completes the 8 questions (Live Google Nano Banana AI Synthesis)
+  // Called when Mill completes the 8 questions (Step 1: 5 Photos -> Step 2: 9:16 Viral Video Trailer -> Step 3: Atomic Supabase Sync)
   const handleWizardComplete = async (answers: WizardAnswers) => {
     if (hasSubmittedContest) {
       soundManager.playError();
@@ -334,7 +336,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     setIsGeneratingRenders(true);
     setGenerationProgress(0);
     setGenerationStageName('INITIALIZING REAL-TIME 4K SYNTHESIS...');
-    setGenerationStageDetails(`Connecting to Google Nano Banana / Imagen 3 for ${planetName}...`);
+    setGenerationStageDetails(`Connecting to Fal.ai Flux Schnell & 9:16 Video Engine for ${planetName}...`);
     soundManager.playTone(660, 0.08);
 
     // Initialize all 5 slots as PENDING in queue with no placeholder images
@@ -370,6 +372,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       humanAnswers: answersWithFormattedName,
       futurePromise: answers.futurePromise,
       generatedLore: lore,
+      videoUrl: '',
+      videoStatus: 'QUEUED_PENDING',
       renders: {
         hero: '',
         flora: '',
@@ -377,6 +381,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         atmosphere: '',
         landmark: '',
         ecosystem: '',
+        videoUrl: '',
       },
       votesCount: 1,
       hasVoted: true,
@@ -398,21 +403,21 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       atmosphere: '',
       landmark: '',
       ecosystem: '',
+      videoUrl: '',
     };
 
-    // Sequential Live Processing: Loop through the 5 slots one-by-one
+    // Step 1: Sequential Live Processing across all 5 photos (01_main through 05_lore)
     for (let i = 0; i < initialSlots.length; i++) {
       const slotItem = initialSlots[i];
       setGenerationSlotIndex(i + 1);
       setGenerationStageName(`SYNTHESIZING 4K: ${slotItem.title} (${i + 1}/5)...`);
       setGenerationStageDetails(slotItem.subtitle);
-      setGenerationProgress(Math.round((i / initialSlots.length) * 100));
+      setGenerationProgress(Math.round((i / (initialSlots.length + 1)) * 100));
 
-      // Set active status with glowing laser spinner overlay
       setSlotStream((prev) =>
         prev.map((s, idx) => (idx === i ? { ...s, status: 'SYNTHESIZING_4K', error: null } : s))
       );
-      soundManager.playTone(600 + (i * 70), 0.05);
+      soundManager.playTone(600 + i * 70, 0.05);
 
       try {
         const res = await fetch('/api/generate-planet', {
@@ -478,11 +483,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           );
           soundManager.playTone(880, 0.06);
         } else {
-          const queuedMessage =
-            json.message || 'Generating... We will notify you when synthesis is complete.';
           setSlotStream((prev) =>
             prev.map((s, idx) =>
-              idx === i ? { ...s, status: 'QUEUED', error: queuedMessage } : s
+              idx === i ? { ...s, status: 'QUEUED', error: UI_RECALIBRATING_STATUS_TEXT } : s
             )
           );
           soundManager.playTone(660, 0.05);
@@ -494,7 +497,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               ? {
                   ...s,
                   status: 'QUEUED',
-                  error: 'Generating... We will notify you when synthesis is complete.',
+                  error: UI_RECALIBRATING_STATUS_TEXT,
                 }
               : s
           )
@@ -502,12 +505,67 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         soundManager.playTone(660, 0.05);
       }
 
-      setGenerationProgress(Math.round(((i + 1) / initialSlots.length) * 100));
+      setGenerationProgress(Math.round(((i + 1) / (initialSlots.length + 1)) * 100));
     }
+
+    // Step 2: Viral 9:16 Video Trailer Synthesis (from 01_main Orbital Render)
+    setGenerationStageName('SYNTHESIZING 9:16 VIRAL VIDEO TRAILER (5S)...');
+    setGenerationStageDetails('Animating 01_main orbital render into 9:16 vertical trailer via Fal.ai...');
+    let synthesizedVideoUrl = '';
+
+    if (collectedRenders.hero) {
+      try {
+        const videoRes = await fetch('/api/generate-planet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user?.id || profile?.id,
+            email: user?.email,
+            bypassLock: isFounderAdmin && founderTestBypass,
+            planetName,
+            heroImageUrl: collectedRenders.hero,
+            slot: 'video',
+          }),
+        });
+        const videoJson = await videoRes.json().catch(() => ({}));
+        if (videoRes.ok && videoJson.success && videoJson.videoUrl) {
+          synthesizedVideoUrl = videoJson.videoUrl;
+          collectedRenders.videoUrl = synthesizedVideoUrl;
+        }
+      } catch (vidErr) {
+        console.warn('[Video Trailer] Queued pending:', vidErr);
+      }
+    }
+
+    // Step 3: Atomic Database Sync (5 image URLs + lore + 9:16 video_url)
+    const synchronizedDraft: PlanetSubmission = {
+      ...initialDraft,
+      videoUrl: synthesizedVideoUrl,
+      videoStatus: synthesizedVideoUrl ? 'READY' : 'QUEUED_PENDING',
+      renders: {
+        hero: collectedRenders.hero,
+        flora: collectedRenders.flora,
+        fauna: collectedRenders.fauna,
+        atmosphere: collectedRenders.atmosphere,
+        landmark: collectedRenders.landmark,
+        ecosystem: collectedRenders.ecosystem,
+        videoUrl: synthesizedVideoUrl,
+        video_url: synthesizedVideoUrl,
+        videoStatus: synthesizedVideoUrl ? 'READY' : 'QUEUED_PENDING',
+        '01_main': collectedRenders.hero,
+        '02_flora': collectedRenders.flora,
+        '03_fauna': collectedRenders.fauna,
+        '04_atmo': collectedRenders.atmosphere,
+        '05_lore': collectedRenders.landmark,
+      },
+    };
+
+    setPreviewDossier(synchronizedDraft);
+    await savePlanetSubmission(synchronizedDraft);
 
     setGenerationProgress(100);
     setGenerationStageName('SYNTHESIS SEQUENCE COMPLETE');
-    setGenerationStageDetails('5-Photo sequential 4K photorealistic generation sequence finished.');
+    setGenerationStageDetails('5-Photo archive and 9:16 viral video trailer pipeline completed.');
     setIsGeneratingRenders(false);
     soundManager.playUnlockChime();
   };
@@ -557,11 +615,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         );
         soundManager.playUnlockChime();
       } else {
-        const queuedMessage =
-          json.message || 'Generating... We will notify you when synthesis is complete.';
         setSlotStream((prev) =>
           prev.map((s, idx) =>
-            idx === slotIndex ? { ...s, status: 'QUEUED', error: queuedMessage } : s
+            idx === slotIndex ? { ...s, status: 'QUEUED', error: UI_RECALIBRATING_STATUS_TEXT } : s
           )
         );
         soundManager.playTone(660, 0.05);
@@ -573,7 +629,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             ? {
                 ...s,
                 status: 'QUEUED',
-                error: 'Generating... We will notify you when synthesis is complete.',
+                error: UI_RECALIBRATING_STATUS_TEXT,
               }
             : s
         )
@@ -1109,7 +1165,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                         </div>
                       )}
 
-                      {/* Calm, Branded Waiting State for SYSTEM_MAINTENANCE_QUEUED */}
+                      {/* Calm, Branded Waiting State for QUEUED_PENDING */}
                       {isQueued && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-gradient-to-b from-[#070d1e]/95 via-[#050813]/95 to-black/95 space-y-2.5">
                           <div className="relative w-12 h-12 rounded-full border border-cyan-400/40 bg-cyan-950/40 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.25)]">
@@ -1120,10 +1176,10 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                             <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
                           </div>
                           <span className="text-[10.5px] font-mono font-bold text-cyan-200 tracking-wider uppercase">
-                            ORBITAL SYNTHESIS QUEUED
+                            STATUS: QUEUED_PENDING
                           </span>
-                          <p className="text-[10px] font-mono text-white/70 leading-relaxed px-1">
-                            {item.error || 'Generating... We will notify you when synthesis is complete.'}
+                          <p className="text-[10px] font-mono text-white/75 leading-relaxed px-1">
+                            {item.error || UI_RECALIBRATING_STATUS_TEXT}
                           </p>
                           <button
                             type="button"
@@ -1151,11 +1207,20 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               })}
             </div>
 
+            {/* 9:16 Viral Video Trailer & 5-Photo Archive Portal (when previewDossier is active) */}
+            {previewDossier && (
+              <MyWorld
+                dossier={previewDossier}
+                onInspectModal={(d) => setModalPlanet(d)}
+                isSynthesizingVideo={isGeneratingRenders}
+              />
+            )}
+
             {/* Generated Lore story */}
             {previewDossier?.generatedLore && (
               <div className="p-5 rounded-2xl bg-[#070b16] border border-white/10 space-y-2">
                 <span className="text-[10.5px] font-mono text-amber-300 font-bold uppercase">
-                  AI-SYNTHESIZED SECTOR LORE · GOOGLE NANO BANANA PRO
+                  AI-SYNTHESIZED SECTOR LORE · FAL.AI FLUX SCHNELL &amp; 9:16 TRAILER
                 </span>
                 <p className="text-xs sm:text-sm text-white/85 font-sans leading-relaxed whitespace-pre-line">
                   {previewDossier.generatedLore}
@@ -1198,7 +1263,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                   className="min-h-[44px] px-3.5 py-2 rounded-xl bg-amber-400 text-black hover:bg-amber-300 font-mono font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
                 >
                   <Camera className="w-3.5 h-3.5" />
-                  <span>View 5-Photo Dossier</span>
+                  <span>View 5-Photo &amp; 9:16 Dossier</span>
                 </button>
 
                 <button
@@ -1223,73 +1288,11 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               </div>
             </div>
 
-            {/* 5 Sillow Mill 2D Visual Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              <div
-                onClick={() => setModalPlanet(activeSubmission)}
-                className="cursor-pointer group rounded-2xl overflow-hidden border border-white/10 hover:border-amber-400/50 bg-black/60 space-y-2 transition-all"
-              >
-                <div className="h-36 w-full overflow-hidden bg-black/80">
-                  <img src={activeSubmission.renders.hero} alt="Hero View" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                </div>
-                <div className="p-2.5">
-                  <div className="text-[9.5px] font-mono text-cyan-400 font-bold uppercase">01 · ORBITAL HERO</div>
-                  <div className="text-xs font-bold text-white truncate">{activeSubmission.planetName}</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => setModalPlanet(activeSubmission)}
-                className="cursor-pointer group rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 bg-black/60 space-y-2 transition-all"
-              >
-                <div className="h-36 w-full overflow-hidden bg-black/80">
-                  <img src={activeSubmission.renders.flora || activeSubmission.renders.ecosystem} alt="Flora" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                </div>
-                <div className="p-2.5">
-                  <div className="text-[9.5px] font-mono text-emerald-400 font-bold uppercase">02 · BOTANICAL FLORA</div>
-                  <div className="text-xs font-bold text-white truncate">{activeSubmission.flora}</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => setModalPlanet(activeSubmission)}
-                className="cursor-pointer group rounded-2xl overflow-hidden border border-white/10 hover:border-purple-400/50 bg-black/60 space-y-2 transition-all"
-              >
-                <div className="h-36 w-full overflow-hidden bg-black/80">
-                  <img src={activeSubmission.renders.fauna} alt="Fauna" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                </div>
-                <div className="p-2.5">
-                  <div className="text-[9.5px] font-mono text-purple-400 font-bold uppercase">03 · EXOTIC FAUNA</div>
-                  <div className="text-xs font-bold text-white truncate">{activeSubmission.fauna}</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => setModalPlanet(activeSubmission)}
-                className="cursor-pointer group rounded-2xl overflow-hidden border border-white/10 hover:border-cyan-400/50 bg-black/60 space-y-2 transition-all"
-              >
-                <div className="h-36 w-full overflow-hidden bg-black/80">
-                  <img src={activeSubmission.renders.atmosphere} alt="Atmosphere" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                </div>
-                <div className="p-2.5">
-                  <div className="text-[9.5px] font-mono text-cyan-400 font-bold uppercase">04 · COCKPIT ATMOSPHERE</div>
-                  <div className="text-xs font-bold text-white truncate">{activeSubmission.atmosphere}</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => setModalPlanet(activeSubmission)}
-                className="cursor-pointer group rounded-2xl overflow-hidden border border-white/10 hover:border-amber-400/50 bg-black/60 space-y-2 transition-all"
-              >
-                <div className="h-36 w-full overflow-hidden bg-black/80">
-                  <img src={activeSubmission.renders.landmark} alt="Landmark" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                </div>
-                <div className="p-2.5">
-                  <div className="text-[9.5px] font-mono text-amber-400 font-bold uppercase">05 · ICONIC MONUMENT</div>
-                  <div className="text-xs font-bold text-white truncate">{activeSubmission.landmark}</div>
-                </div>
-              </div>
-            </div>
+            {/* 5-Photo Visual Archive + 9:16 Viral Video Trailer */}
+            <MyWorld
+              dossier={activeSubmission}
+              onInspectModal={(d) => setModalPlanet(d)}
+            />
 
             {/* Lore and Specs */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -15,13 +15,21 @@ import {
   ChevronRight,
   Layers,
   ShieldCheck,
-  CheckCircle2,
+  Video,
+  Download,
+  Heart,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
-import { getPlanetPhotoCards, PlanetPhotoCard } from '../data/contest';
+import {
+  getPlanetPhotoCards,
+  PlanetPhotoCard,
+  UI_RECALIBRATING_STATUS_TEXT,
+  COMMUNITY_SHARE_VIDEO_MESSAGE,
+  VIRAL_VIDEO_MOTION_PROMPT,
+} from '../data/contest';
 import { soundManager } from '../utils/audio';
 
-interface PlanetDossierModalProps {
+export interface PlanetDossierModalProps {
   planet: PlanetSubmission | null;
   isOpen: boolean;
   onClose: () => void;
@@ -36,8 +44,10 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
   onVote,
   onOpenCreator,
 }) => {
+  // activePhotoIdx: 0..4 for the 5 photos, or 5 for the "🎥 9:16 Trailer" tab
   const [activePhotoIdx, setActivePhotoIdx] = useState<number>(0);
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
   // Reset active photo on planet change
   useEffect(() => {
@@ -65,16 +75,49 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
   if (!isOpen || !planet) return null;
 
   const photoCards: PlanetPhotoCard[] = getPlanetPhotoCards(planet);
+  const totalTabs = photoCards.length + 1; // 5 photos + 1 "🎥 9:16 Trailer" tab
+  const isTrailerTab = activePhotoIdx === photoCards.length;
   const currentPhoto = photoCards[activePhotoIdx] || photoCards[0];
+  const videoUrl =
+    planet.videoUrl ||
+    planet.renders?.videoUrl ||
+    planet.renders?.video_url ||
+    '';
+  const heroPhotoUrl = photoCards[0]?.url || planet.renders?.hero || '';
 
   const handleNextPhoto = () => {
     soundManager.playTone(600, 0.04);
-    setActivePhotoIdx((prev) => (prev + 1) % photoCards.length);
+    setActivePhotoIdx((prev) => (prev + 1) % totalTabs);
   };
 
   const handlePrevPhoto = () => {
     soundManager.playTone(550, 0.04);
-    setActivePhotoIdx((prev) => (prev - 1 + photoCards.length) % photoCards.length);
+    setActivePhotoIdx((prev) => (prev - 1 + totalTabs) % totalTabs);
+  };
+
+  const handleDownloadTrailer = async () => {
+    soundManager.playTone(740, 0.06);
+    if (!videoUrl) return;
+    setIsDownloading(true);
+    try {
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const safeName = (planet.planetName || 'akinoya-sector')
+        .toLowerCase()
+        .replace(/[^a-z0-9-_]/g, '-');
+      link.href = blobUrl;
+      link.download = `${safeName}-9x16-trailer.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(videoUrl, '_blank', 'noopener,noreferrer');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -102,12 +145,12 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
               </div>
 
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-base sm:text-lg font-display font-extrabold text-white tracking-wide truncate">
                     {planet.planetName}
                   </h2>
                   <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 shrink-0">
-                    5-PHOTO DOSSIER · NANO BANANA PRO
+                    5-PHOTO ARCHIVE + 🎥 9:16 TRAILER
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-mono text-white/50 truncate">
@@ -147,52 +190,165 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
 
           {/* Modal Scrollable Body */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-            {/* 1. 5-PHOTO INTERACTIVE VISUAL GALLERY */}
+            {/* 1. 5-PHOTO ARCHIVE + 🎥 9:16 TRAILER INTERACTIVE GALLERY */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-cyan-400" />
+                  {isTrailerTab ? (
+                    <Video className="w-4 h-4 text-amber-400" />
+                  ) : (
+                    <Camera className="w-4 h-4 text-cyan-400" />
+                  )}
                   <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-                    {currentPhoto.title} · Photo 0{activePhotoIdx + 1} of 05
+                    {isTrailerTab
+                      ? `🎥 9:16 Viral Video Trailer · ${planet.planetName} (5s Vertical Loop)`
+                      : `${currentPhoto.title} · Photo 0${activePhotoIdx + 1} of 05`}
                   </h3>
                 </div>
                 <span className="text-[10px] font-mono text-cyan-400/80">
-                  {currentPhoto.category}
+                  {isTrailerTab ? '06 · VIRAL 9:16 TRAILER (5.0S)' : currentPhoto.category}
                 </span>
               </div>
 
-              {/* Main Photo Viewport */}
-              <div className="relative aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden bg-black/95 border border-cyan-500/40 shadow-[0_0_40px_rgba(56,189,248,0.15)] group">
-                <img
-                  src={currentPhoto.url}
-                  alt={currentPhoto.title}
-                  className={`w-full h-full object-cover transition-all duration-300 ${
-                    isZoomed ? 'scale-125 cursor-zoom-out' : 'group-hover:scale-102 cursor-zoom-in'
-                  }`}
-                  onClick={() => setIsZoomed(!isZoomed)}
-                />
+              {/* Main Viewport: Either 9:16 Vertical Trailer or 16:9 Photo */}
+              {isTrailerTab ? (
+                <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#070d1e] via-[#050813] to-black border border-amber-400/40 shadow-[0_0_40px_rgba(245,158,11,0.18)] p-4 sm:p-6 flex flex-col items-center space-y-4">
+                  {/* Strict 9:16 Vertical Video Player */}
+                  <div className="relative w-full max-w-[270px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center">
+                    {videoUrl ? (
+                      <video
+                        src={videoUrl}
+                        poster={heroPhotoUrl || undefined}
+                        controls
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="relative w-full h-full flex flex-col items-center justify-center p-4 text-center overflow-hidden">
+                        {heroPhotoUrl && (
+                          <img
+                            src={heroPhotoUrl}
+                            alt={planet.planetName}
+                            className="absolute inset-0 w-full h-full object-cover opacity-35 scale-110"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#070d1e]/90 via-[#050813]/85 to-black/95" />
+                        <div className="relative z-10 flex flex-col items-center space-y-3 px-2">
+                          <div className="relative w-12 h-12 rounded-full border border-cyan-400/50 bg-cyan-950/60 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                            <div
+                              className="absolute inset-0 rounded-full border border-dashed border-amber-400/50 animate-spin"
+                              style={{ animationDuration: '8s' }}
+                            />
+                            <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-cyan-200 uppercase tracking-wider">
+                            STATUS: QUEUED_PENDING
+                          </span>
+                          <p className="text-[11px] font-sans text-white/85 leading-relaxed">
+                            {UI_RECALIBRATING_STATUS_TEXT}
+                          </p>
+                          <span className="text-[9.5px] font-mono text-white/45">
+                            9:16 Vertical · 5s Orbital Loop
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Left/Right Navigation Arrows */}
-                <button
-                  type="button"
-                  onClick={handlePrevPhoto}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 flex items-center justify-center transition-transform hover:scale-110 cursor-pointer shadow-lg"
-                  title="Previous Photo"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNextPhoto}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 flex items-center justify-center transition-transform hover:scale-110 cursor-pointer shadow-lg"
-                  title="Next Photo"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              </div>
+                  {/* Download Button + Genuine Community Message */}
+                  <div className="w-full max-w-md flex flex-col items-center space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={handleDownloadTrailer}
+                      disabled={!videoUrl || isDownloading}
+                      className={`w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                        videoUrl
+                          ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer'
+                          : 'bg-white/5 border border-white/15 text-white/50 cursor-not-allowed'
+                      }`}
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>
+                        {isDownloading ? 'Preparing MP4...' : '⬇ Download 9:16 MP4 Trailer'}
+                      </span>
+                    </button>
 
-              {/* 5-Photo Thumbnail Filmstrip */}
-              <div className="grid grid-cols-5 gap-2 sm:gap-3">
+                    <p className="text-xs font-sans text-cyan-100/85 text-center leading-relaxed italic flex items-center justify-center gap-1.5">
+                      <Heart className="w-3.5 h-3.5 text-amber-400 shrink-0 fill-amber-400/30" />
+                      <span>{COMMUNITY_SHARE_VIDEO_MESSAGE}</span>
+                    </p>
+
+                    <p className="text-[10px] font-mono text-white/45 text-center">
+                      Motion Prompt: "{VIRAL_VIDEO_MOTION_PROMPT}"
+                    </p>
+                  </div>
+
+                  {/* Left/Right Navigation Arrows */}
+                  <button
+                    type="button"
+                    onClick={handlePrevPhoto}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 flex items-center justify-center transition-transform hover:scale-110 cursor-pointer shadow-lg"
+                    title="Previous"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextPhoto}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 flex items-center justify-center transition-transform hover:scale-110 cursor-pointer shadow-lg"
+                    title="Next"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden bg-black/95 border border-cyan-500/40 shadow-[0_0_40px_rgba(56,189,248,0.15)] group">
+                  {currentPhoto.url ? (
+                    <img
+                      src={currentPhoto.url}
+                      alt={currentPhoto.title}
+                      className={`w-full h-full object-cover transition-all duration-300 ${
+                        isZoomed ? 'scale-125 cursor-zoom-out' : 'group-hover:scale-102 cursor-zoom-in'
+                      }`}
+                      onClick={() => setIsZoomed(!isZoomed)}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-[#070d1e] via-[#050813] to-black space-y-2.5">
+                      <Sparkles className="w-6 h-6 text-amber-300 animate-pulse" />
+                      <span className="text-xs font-mono font-bold text-cyan-200 uppercase tracking-wider">
+                        STATUS: QUEUED_PENDING
+                      </span>
+                      <p className="text-xs font-sans text-white/80 max-w-md leading-relaxed">
+                        {UI_RECALIBRATING_STATUS_TEXT}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Left/Right Navigation Arrows */}
+                  <button
+                    type="button"
+                    onClick={handlePrevPhoto}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 flex items-center justify-center transition-transform hover:scale-110 cursor-pointer shadow-lg"
+                    title="Previous Photo"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextPhoto}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white border border-white/20 flex items-center justify-center transition-transform hover:scale-110 cursor-pointer shadow-lg"
+                    title="Next Photo"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </div>
+              )}
+
+              {/* 5-Photo Thumbnail Filmstrip + 🎥 9:16 Trailer Tab */}
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
                 {photoCards.map((card, idx) => {
                   const isActive = activePhotoIdx === idx;
                   return (
@@ -209,7 +365,13 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                           : 'border-white/10 hover:border-white/30 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img src={card.url} alt={card.title} className="w-full h-full object-cover" />
+                      {card.url ? (
+                        <img src={card.url} alt={card.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-[#070d1e] flex items-center justify-center">
+                          <Sparkles className="w-4 h-4 text-amber-300/60" />
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-1 sm:p-1.5">
                         <span className="text-[9px] font-mono font-bold text-white truncate leading-tight">
                           0{idx + 1} · {card.title.split(' ')[0]}
@@ -218,6 +380,37 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                     </button>
                   );
                 })}
+
+                {/* Dedicated 🎥 9:16 Trailer Tab */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundManager.playTone(760, 0.05);
+                    setActivePhotoIdx(photoCards.length);
+                  }}
+                  className={`relative aspect-[16/10] rounded-xl overflow-hidden border transition-all cursor-pointer text-left flex flex-col items-center justify-center p-1.5 ${
+                    isTrailerTab
+                      ? 'border-amber-400 ring-2 ring-amber-400/50 bg-gradient-to-br from-amber-950/80 via-[#070d1e] to-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                      : 'border-amber-500/30 hover:border-amber-400/60 bg-gradient-to-br from-[#0a1228] to-black opacity-90 hover:opacity-100'
+                  }`}
+                >
+                  {heroPhotoUrl && (
+                    <img
+                      src={heroPhotoUrl}
+                      alt="9:16 Trailer"
+                      className="absolute inset-0 w-full h-full object-cover opacity-30"
+                    />
+                  )}
+                  <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-0.5">
+                    <Video className="w-4 h-4 text-amber-300" />
+                    <span className="text-[9.5px] font-mono font-extrabold text-amber-300 leading-tight">
+                      🎥 9:16 Trailer
+                    </span>
+                    <span className="text-[8px] font-mono text-cyan-300/90 uppercase">
+                      5s Vertical
+                    </span>
+                  </div>
+                </button>
               </div>
             </div>
 
