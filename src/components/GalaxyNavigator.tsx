@@ -319,29 +319,34 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       ctx.arc(coreScreenX, coreScreenY, 380 * curZoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // Concentric revolving golden orbital rings centered exactly at Äkinoya Core (0, 0)
+      // Concentric revolving and pulsing golden orbital rings centered symmetrically at Äkinoya Core (0, 0)
+      const ringPulse = Math.sin(time * 0.0025);
+      const innerRadius = (36 + ringPulse * 1.5) * curZoom;
+      const outerRadius = (50 + Math.cos(time * 0.002) * 2) * curZoom;
+      const ringAlpha = 0.55 + ringPulse * 0.15;
+
       ctx.save();
       ctx.translate(coreScreenX, coreScreenY);
 
       // Inner revolving dashed golden orbital ring
       ctx.save();
       ctx.rotate((time * 0.0006) % (Math.PI * 2));
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
+      ctx.strokeStyle = `rgba(245, 158, 11, ${ringAlpha})`;
       ctx.lineWidth = 1.5;
       ctx.setLineDash([8 * curZoom, 6 * curZoom]);
       ctx.beginPath();
-      ctx.arc(0, 0, 36 * curZoom, 0, Math.PI * 2);
+      ctx.arc(0, 0, innerRadius, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
 
       // Outer counter-revolving dashed golden orbital ring
       ctx.save();
       ctx.rotate((-time * 0.00035) % (Math.PI * 2));
-      ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+      ctx.strokeStyle = `rgba(251, 191, 36, ${ringAlpha * 0.75})`;
       ctx.lineWidth = 1.2;
       ctx.setLineDash([5 * curZoom, 8 * curZoom]);
       ctx.beginPath();
-      ctx.arc(0, 0, 48 * curZoom, 0, Math.PI * 2);
+      ctx.arc(0, 0, outerRadius, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
 
@@ -594,14 +599,11 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     panTo(planet.coordX ?? 0, planet.coordY ?? 0, Math.max(1.0, zoomRef.current), 700);
   };
 
-  // Äkinoya Hub Click -> Direct Visualizer Hub Shortcut
+  // Äkinoya Hub Click -> Open Planet Preview / Dossier Widget
   const handleAkinoyaClick = () => {
     soundManager.playTone(880, 0.07);
-    if (onNavigateToVisualizerHub) {
-      onNavigateToVisualizerHub();
-    } else {
-      onBackToHome();
-    }
+    setIsAkinoyaModalOpen(true);
+    panTo(0, 0, Math.max(1.1, zoomRef.current), 700);
   };
 
   // Copy Sector Link Handler
@@ -844,10 +846,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       {/* Container is translated and scaled with pan and zoom                      */}
       {/* ========================================================================= */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute pointer-events-none"
         style={{
           left: '50%',
           top: '50%',
+          width: 0,
+          height: 0,
         }}
       >
         <div
@@ -1222,7 +1226,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                       Äkinoya · Capital Core
                     </h2>
                     <span className="text-[10px] font-mono text-amber-300">
-                      Anchor Coordinates: (0, 0) AU · RA 04h 35m / +16° 30'
+                      Anchor Coordinates: (0, 0) AU · Capital of Sillow Mill
                     </span>
                   </div>
                 </div>
@@ -1239,11 +1243,14 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 <img
                   src={akinoyaHeroBg}
                   alt="Äkinoya Capital Core · Bingäa Visualizer"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
-                  <span className="text-xs font-mono text-cyan-300">
-                    Sillow Mill Universe Genesis Anchor · Protocol Release 2027
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex items-end justify-between p-3.5">
+                  <span className="text-xs font-mono text-cyan-300 font-semibold">
+                    Bingäa Visualizer · Protocol Release 2027
+                  </span>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-400 text-black">
+                    CAPITAL CORE
                   </span>
                 </div>
               </div>
@@ -1254,7 +1261,14 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 concentric astronomical harmonic rings calibrated to the golden angle (137.5°).
               </p>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAkinoyaModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-mono text-xs transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -1265,16 +1279,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                       onBackToHome();
                     }
                   }}
-                  className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-md"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.35)] flex items-center gap-2"
                 >
-                  Enter Visualizer Hub
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsAkinoyaModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-mono text-xs transition-colors cursor-pointer"
-                >
-                  Close
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Go To Visualizer Hub</span>
                 </button>
               </div>
             </motion.div>

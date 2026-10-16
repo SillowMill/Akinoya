@@ -1,4 +1,4 @@
-import { ShieldCheck, Sparkles, Trophy, Globe2, Compass } from 'lucide-react';
+import React from 'react';
 import { SoundtrackButton } from './SoundtrackButton';
 import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
@@ -52,7 +52,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/85 backdrop-blur-xl px-4 sm:px-8 lg:px-12 py-3 sm:py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 sm:gap-6 lg:gap-8">
-        {/* Zone 1: Clean wordmark */}
+        {/* Zone 1: Clean wordmark - Pure White */}
         <a
           href="/"
           onClick={(e) => {
@@ -61,13 +61,13 @@ export const TopBar: React.FC<TopBarProps> = ({
               onNavigateHome();
             }
           }}
-          className="text-xs xs:text-sm sm:text-base lg:text-lg font-display font-bold tracking-[0.16em] sm:tracking-[0.2em] text-white hover:text-cyan-300 transition-colors uppercase whitespace-nowrap shrink-0 cursor-pointer"
+          className="text-xs xs:text-sm sm:text-base lg:text-lg font-display font-bold tracking-[0.16em] sm:tracking-[0.2em] text-white hover:text-white/80 transition-colors uppercase whitespace-nowrap shrink-0 cursor-pointer"
         >
           SILLOW MILL
         </a>
 
-        {/* Zone 2: Clean, simplified navigation links */}
-        <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-xs font-mono text-white/70">
+        {/* Zone 2: Single-line typography navigation links with dedicated brand colors */}
+        <nav className="hidden md:flex items-center gap-7 lg:gap-8 font-mono text-xs uppercase tracking-wide whitespace-nowrap">
           <a
             href="/galaxy"
             onClick={(e) => {
@@ -76,29 +76,31 @@ export const TopBar: React.FC<TopBarProps> = ({
                 onNavigateToGalaxy();
               }
             }}
-            className="hover:text-cyan-300 transition-colors flex items-center gap-1.5 text-cyan-300/95 font-semibold cursor-pointer"
+            className="text-[#38bdf8] hover:text-[#22d3ee] font-semibold whitespace-nowrap transition-colors cursor-pointer"
           >
-            <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '30s' }} />
-            <span>🌌 Galaxy Navigator</span>
+            Galaxy Navigator
           </a>
 
-          <a href="/contest" className="hover:text-amber-300 transition-colors flex items-center gap-1.5 text-amber-300/90 font-semibold">
-            <Trophy className="w-3.5 h-3.5 text-amber-400" />
-            <span>🏆 Contest</span>
+          <a
+            href="/contest"
+            className="text-[#f59e0b] hover:text-[#fbbf24] font-semibold whitespace-nowrap transition-colors cursor-pointer"
+          >
+            Contest
           </a>
 
           <button
             type="button"
             onClick={() => openClaimWorldModal()}
-            className="hover:text-amber-300 transition-colors flex items-center gap-1.5 text-amber-300/90 font-semibold cursor-pointer"
+            className="text-[#f59e0b] hover:text-[#fbbf24] font-semibold whitespace-nowrap transition-colors cursor-pointer"
           >
-            <Globe2 className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-            <span>🪐 Claim World</span>
+            Claim World
           </button>
 
-          <a href="/community" className="hover:text-cyan-300 transition-colors flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>✨ Community Hub</span>
+          <a
+            href="/community"
+            className="text-[#7dd3fc] hover:text-[#bae6fd] whitespace-nowrap transition-colors cursor-pointer"
+          >
+            Community Hub
           </a>
 
           {effectiveIsVip && (
@@ -106,18 +108,16 @@ export const TopBar: React.FC<TopBarProps> = ({
               <button
                 type="button"
                 onClick={onNavigateToVerify}
-                className="hover:text-cyan-300 transition-colors cursor-pointer flex items-center gap-1.5 font-semibold"
+                className="text-slate-300 hover:text-white font-semibold whitespace-nowrap transition-colors cursor-pointer"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-                <span>🛡️ Digital Passport</span>
+                Digital Passport
               </button>
             ) : (
               <a
                 href="/verify"
-                className="hover:text-cyan-300 transition-colors cursor-pointer flex items-center gap-1.5 font-semibold"
+                className="text-slate-300 hover:text-white font-semibold whitespace-nowrap transition-colors cursor-pointer"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-                <span>🛡️ Digital Passport</span>
+                Digital Passport
               </a>
             )
           )}
