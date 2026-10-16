@@ -1039,12 +1039,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/40 via-transparent to-yellow-300/40" />
             </div>
 
-            {/* Capital Core Node Label - positioned cleanly below orb */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 flex flex-col items-center pointer-events-none whitespace-nowrap text-center">
-              <span className="text-xs sm:text-[13px] font-display font-extrabold text-amber-400 tracking-wide drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] group-hover:text-yellow-300 transition-colors">
-                Äkinoya Core
+            {/* Capital Core Badge Label - positioned below orb with exact desktop parity & without coordinates */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 flex flex-col items-center pointer-events-none whitespace-nowrap text-center">
+              <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] items-center gap-1">
+                <span>👑 ÄKINOYA CORE</span>
               </span>
-              <span className="text-[9.5px] sm:text-[10.5px] font-mono text-white/80 tracking-wide mt-0.5 drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+              <span className="text-[11px] font-display font-extrabold text-white tracking-wider mt-0.5 group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                 Capital of Sillow Mill
               </span>
             </div>
