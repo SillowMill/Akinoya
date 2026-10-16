@@ -1795,7 +1795,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap min-w-0">
                           <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-wide truncate">
                             {userDossier.planetName}
                           </h2>
@@ -1808,7 +1808,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap md:flex-nowrap md:shrink-0">
                         <button
                           type="button"
                           onClick={handleShareDossier}
@@ -1846,9 +1846,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   {/* 3 Live Social Engagement Metric Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
                     {/* Metric 1: Likes / Votes Count */}
-                    <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 flex items-center justify-between gap-3 shadow-lg">
+                    <div className="p-4 sm:p-5 rounded-2xl bg-[#0a0e1a]/90 backdrop-blur-md border border-white/15 flex items-center justify-between gap-3 shadow-lg">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 block">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/75 block">
                           Community Votes
                         </span>
                         <div className="flex items-baseline gap-2 mt-1">
@@ -1875,9 +1875,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
 
                     {/* Metric 2: Leaderboard Position */}
-                    <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 flex items-center justify-between gap-3 shadow-lg">
+                    <div className="p-4 sm:p-5 rounded-2xl bg-[#0a0e1a]/90 backdrop-blur-md border border-white/15 flex items-center justify-between gap-3 shadow-lg">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 block">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/75 block">
                           Leaderboard Position
                         </span>
                         <div className="flex items-baseline gap-2 mt-1">
@@ -1898,9 +1898,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
 
                     {/* Metric 3: Lore Governance Status */}
-                    <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 flex items-center justify-between gap-3 shadow-lg">
+                    <div className="p-4 sm:p-5 rounded-2xl bg-[#0a0e1a]/90 backdrop-blur-md border border-white/15 flex items-center justify-between gap-3 shadow-lg">
                       <div>
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 block">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/75 block">
                           Lore Governance Council
                         </span>
                         <div className="flex items-baseline gap-1 mt-1">
@@ -1930,7 +1930,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   />
 
                   {/* Story & Philosophy Creed */}
-                  <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-3 shadow-xl">
+                  <div className="p-5 sm:p-6 rounded-2xl bg-[#0a0e1a]/95 backdrop-blur-md border border-white/15 space-y-3 shadow-xl">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-cyan-400" />
                       <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
@@ -1939,12 +1939,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
 
                     {userDossier.futurePromise && (
-                      <blockquote className="p-3.5 rounded-xl bg-amber-400/10 border-l-4 border-amber-400 text-xs sm:text-sm text-amber-200 font-sans italic leading-relaxed">
+                      <blockquote className="p-3.5 rounded-xl bg-slate-950/90 border border-amber-400/30 border-l-4 border-l-amber-400 text-xs sm:text-sm text-amber-100 font-sans italic leading-relaxed">
                         "{userDossier.futurePromise}"
                       </blockquote>
                     )}
 
-                    <p className="text-xs sm:text-sm text-white/70 font-sans leading-relaxed whitespace-pre-line">
+                    <p className="text-xs sm:text-sm text-white/90 font-sans leading-relaxed whitespace-pre-line">
                       {userDossier.generatedLore}
                     </p>
                   </div>

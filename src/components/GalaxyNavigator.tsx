@@ -273,7 +273,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         }
       }
 
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
 
@@ -414,10 +414,11 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       ctx.stroke();
 
       // 7. Hovered Connection Vector Line (from Core to hovered node)
-      if (hoveredPlanet && (hoveredPlanet.coordX !== 0 || hoveredPlanet.coordY !== 0)) {
-        const px = centerX + (curPan.x + (hoveredPlanet.coordX ?? 0)) * curZoom;
-        const py = centerY + (curPan.y + (hoveredPlanet.coordY ?? 0)) * curZoom;
-        const distanceAU = Math.round(Math.hypot(hoveredPlanet.coordX ?? 0, hoveredPlanet.coordY ?? 0));
+      const hoveredNode = hoveredPlanetRef.current;
+      if (hoveredNode && (hoveredNode.coordX !== 0 || hoveredNode.coordY !== 0)) {
+        const px = centerX + (curPan.x + (hoveredNode.coordX ?? 0)) * curZoom;
+        const py = centerY + (curPan.y + (hoveredNode.coordY ?? 0)) * curZoom;
+        const distanceAU = Math.round(Math.hypot(hoveredNode.coordX ?? 0, hoveredNode.coordY ?? 0));
 
         ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
         ctx.lineWidth = 1.5;
@@ -487,7 +488,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [hoveredPlanet]);
+  }, []);
 
   // Pointer Interaction Handlers (Inertia Drag & Gestures)
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -742,7 +743,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             <div className="min-w-0">
               <h1 className="text-xs sm:text-sm font-display font-bold tracking-wider text-white truncate flex items-center gap-2">
                 <span>GALAXY NAVIGATOR</span>
-                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-cyan-950 border border-cyan-400/40 text-cyan-300">
+                <span className="hidden sm:inline px-1.5 py-0.2 rounded text-[9px] font-mono bg-cyan-950 border border-cyan-400/40 text-cyan-300">
                   LIVE 2D/3D MAP
                 </span>
               </h1>
@@ -780,7 +781,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       </header>
 
       {/* FLOATING TOP SEARCH BAR */}
-      <div className="interactive-hud-element absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-30 w-[92%] max-w-md">
+      <div
+        className="interactive-hud-element absolute left-1/2 -translate-x-1/2 z-30 w-[92%] max-w-md"
+        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 5.25rem)' }}
+      >
         <div className="relative">
           <div className="relative flex items-center bg-[#070c1a]/90 backdrop-blur-xl border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.18)] transition-all overflow-hidden">
             <Search className="w-4 h-4 text-cyan-400 ml-3.5 shrink-0" />
@@ -910,7 +914,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           style={{
             transform: `translate3d(${pan.x * zoom}px, ${pan.y * zoom}px, 0) scale(${zoom})`,
             transformOrigin: '0 0',
-            transition: isDraggingRef.current ? 'none' : 'transform 0.05s ease-out',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
           }}
         >
           {/* ===================================================================== */}
@@ -1251,7 +1256,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       {/* ========================================================================= */}
       <AnimatePresence>
         {isAkinoyaModalOpen && (
-          <div className="interactive-hud-element fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl">
+          <div className="interactive-hud-element fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl transform-gpu" style={{ willChange: 'opacity' }}>
             <div className="fixed inset-0" onClick={() => setIsAkinoyaModalOpen(false)} />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}

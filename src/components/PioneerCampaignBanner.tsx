@@ -62,61 +62,56 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ on
   }
 
   return (
-    <div className="relative z-[55] w-full bg-[#050812]/95 border-b border-white/10 px-3 sm:px-6 py-3 sm:py-2.5 backdrop-blur-xl shadow-2xl transition-all duration-300">
+    <div className="relative z-[55] w-full bg-[#050812]/95 border-b border-white/10 px-3 sm:px-6 py-1.5 md:py-2.5 backdrop-blur-xl shadow-2xl">
       {/* Ambient background gold glow lines */}
       <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-transparent to-amber-500/10 pointer-events-none" />
 
-      {/* Mobile Top-Right Dismiss Button */}
-      <button
-        type="button"
-        onClick={handleDismiss}
-        className="absolute top-2 right-2 md:hidden text-white/40 hover:text-white/80 p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer z-10"
-        title="Dismiss announcement"
-        aria-label="Dismiss announcement"
-      >
-        <X className="w-4 h-4" />
-      </button>
-
-      <div className="relative max-w-7xl mx-auto flex flex-col gap-2 p-3 text-center md:flex-row md:items-center md:justify-between md:text-left sm:gap-3 md:gap-4">
-        {/* Left: Gold beacon, badge, and official launch headline */}
-        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-xs w-full md:w-auto flex-1 justify-center md:justify-start px-6 md:px-0">
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="relative shrink-0 flex items-center justify-center">
-              <span className="absolute w-3 h-3 rounded-full bg-amber-400/40 animate-ping" />
-              <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,1)]" />
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-950/80 border border-amber-500/40 text-amber-300 font-mono text-[10px] sm:text-[10.5px] font-bold tracking-wider uppercase shrink-0 shadow-sm">
-              <Globe2 className="w-3 h-3 text-amber-400" />
-              <span>[PIONEER-2027]</span>
-            </div>
+      <div className="relative max-w-7xl mx-auto flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-4">
+        {/* Row 1 (mobile) / Left (desktop): beacon, badge, headline + mobile dismiss */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 md:justify-start">
+          <div className="relative shrink-0 flex items-center justify-center">
+            <span className="absolute w-2.5 h-2.5 rounded-full bg-amber-400/40 animate-ping" />
+            <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,1)]" />
           </div>
 
-          <p className="text-[11px] sm:text-xs text-white/90 font-sans leading-snug text-center md:text-left">
+          <div className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-950/80 border border-amber-500/40 text-amber-300 font-mono text-[10.5px] font-bold tracking-wider uppercase shrink-0 shadow-sm">
+            <Globe2 className="w-3 h-3 text-amber-400" />
+            <span>[PIONEER-2027]</span>
+          </div>
+
+          <p className="text-[11px] md:text-xs text-white/90 font-sans leading-tight min-w-0 flex-1 truncate md:whitespace-normal md:overflow-visible">
             <span className="font-semibold text-amber-300 font-mono tracking-wide">
               Create your free world before 09/01/2027.
             </span>{' '}
-            <span className="text-white/75">
+            <span className="hidden md:inline text-white/75">
               After launch, planetary claims and full community access require a paid membership (€60/year)!
             </span>
           </p>
+
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="md:hidden shrink-0 text-white/50 hover:text-white/80 p-1 -mr-1 rounded cursor-pointer"
+            title="Dismiss announcement"
+            aria-label="Dismiss announcement"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        {/* Right: Live Countdown ticker & Interactive CTA button */}
-        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full md:w-auto shrink-0 justify-center md:justify-end">
-          {/* Live countdown ticker */}
-          <div className="flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-black/60 border border-white/10 text-white font-mono text-[10px] xs:text-[10.5px] sm:text-[11px] tracking-wider text-amber-200/90 whitespace-nowrap shadow-inner w-full sm:w-auto">
-            <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="font-bold text-amber-300">
-              [ T- {countdown.days}D : {countdown.hours}H : {countdown.minutes}M : {countdown.seconds}S ]
+        {/* Row 2 (mobile) / Right (desktop): countdown ticker & CTA */}
+        <div className="flex items-center gap-2 md:gap-3 shrink-0 justify-between md:justify-end">
+          <div className="flex items-center gap-1 px-2 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg bg-black/60 border border-white/10 font-mono text-[10px] md:text-[11px] tracking-wide md:tracking-wider whitespace-nowrap shadow-inner min-w-0">
+            <Clock className="w-3 h-3 md:w-3.5 md:h-3.5 text-amber-400 shrink-0" />
+            <span className="font-bold text-amber-300 truncate">
+              T-{countdown.days}D:{countdown.hours}H:{countdown.minutes}M:{countdown.seconds}S
             </span>
           </div>
 
-          {/* CTA Action button scaled for mobile tap targets without overflow */}
           <button
             type="button"
             onClick={handleOpen}
-            className="w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs tracking-wider transition-all duration-200 cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5 shrink-0 min-h-[40px] sm:min-h-0"
+            className="px-3 py-1 md:px-4 md:py-1.5 rounded-md md:rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-[10.5px] md:text-xs tracking-wide md:tracking-wider transition-colors cursor-pointer shadow-[0_0_14px_rgba(245,158,11,0.4)] active:scale-[0.98] flex items-center justify-center shrink-0 whitespace-nowrap min-h-[28px] md:min-h-0"
           >
             <span>Create Your Free World →</span>
           </button>

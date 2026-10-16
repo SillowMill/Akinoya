@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Camera,
   Video,
@@ -10,6 +10,8 @@ import {
   Heart,
   MapPin,
   Globe2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
 import {
@@ -20,6 +22,9 @@ import {
   copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
+
+const SLOT_CODES = ['01_main', '02_flora', '03_fauna', '04_atmo', '05_lore'];
+const SLOT_LABELS = ['01 Main', '02 Botanical', '03 Exotic', '04 Atmo', '05 Lore'];
 
 interface MyWorldProps {
   dossier: PlanetSubmission;
@@ -39,6 +44,19 @@ export const MyWorld: React.FC<MyWorldProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [isCopiedGalaxyLink, setIsCopiedGalaxyLink] = useState(false);
   const photoCards = getPlanetPhotoCards(dossier);
+
+  // Mobile carousel (opens on 01 Main by default)
+  const [activeSlide, setActiveSlide] = useState(0);
+  const touchStartXRef = useRef<number | null>(null);
+  const safeIdx = Math.min(activeSlide, Math.max(0, photoCards.length - 1));
+  const activeCard = photoCards[safeIdx];
+  const goToSlide = (delta: number) => {
+    soundManager.playTone(600, 0.03);
+    setActiveSlide((prev) => {
+      const total = photoCards.length || 1;
+      return (prev + delta + total) % total;
+    });
+  };
 
   const handleCopyGalaxyLink = async () => {
     soundManager.playTone(720, 0.05);
@@ -83,22 +101,22 @@ export const MyWorld: React.FC<MyWorldProps> = ({
 
   return (
     <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-6 shadow-xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Camera className="w-4 h-4 text-amber-400" />
-          <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-3 border-b border-white/10">
+        <div className="flex items-center gap-x-2 gap-y-1.5 flex-wrap min-w-0">
+          <Camera className="w-4 h-4 text-amber-400 shrink-0" />
+          <h3 className="text-[11px] sm:text-sm font-mono font-bold uppercase tracking-wider text-white min-w-0 break-words">
             Synthesized 5-Photo Visual Archive &amp; 9:16 Viral Trailer
           </h3>
-          <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40">
+          <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 max-w-full truncate">
             {dossier.sectorId || 'SECTOR ALPHA-01'} · ({dossier.coordX ?? 0}, {dossier.coordY ?? 0}) AU
           </span>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="hidden sm:flex items-center gap-2 flex-wrap shrink-0">
           <button
             type="button"
             onClick={handleCopyGalaxyLink}
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
             title="Copy Shareable Sector Link"
           >
             <MapPin className="w-3.5 h-3.5 text-amber-400" />
@@ -109,7 +127,7 @@ export const MyWorld: React.FC<MyWorldProps> = ({
             <button
               type="button"
               onClick={() => onNavigateToGalaxy(dossier.id)}
-              className="px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+              className="px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)] whitespace-nowrap"
             >
               <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
               <span>View in Galaxy</span>
@@ -123,7 +141,7 @@ export const MyWorld: React.FC<MyWorldProps> = ({
       </div>
 
       {/* Main Layout: 9:16 Vertical Video Trailer + 5 Photo Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* LEFT COLUMN: 9:16 Viral Vertical Video Trailer */}
         <div className="lg:col-span-4 flex flex-col items-center space-y-3.5 bg-gradient-to-b from-[#070d1e]/90 via-[#050813]/90 to-black/95 border border-cyan-500/30 rounded-2xl p-4 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
           <div className="w-full flex items-center justify-between gap-2">
@@ -252,20 +270,115 @@ export const MyWorld: React.FC<MyWorldProps> = ({
         </div>
 
         {/* RIGHT COLUMN: 5 Photo Cards (01_main through 05_lore) */}
-        <div className="lg:col-span-8 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+        <div className="lg:col-span-8 flex flex-col gap-4 min-w-0">
+          {/* MOBILE (< 768px): compact interactive carousel */}
+          <div className="md:hidden space-y-2.5">
+            <div
+              className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black border border-white/10 shadow-lg touch-pan-y"
+              onTouchStart={(e) => {
+                touchStartXRef.current = e.touches[0].clientX;
+              }}
+              onTouchEnd={(e) => {
+                if (touchStartXRef.current === null) return;
+                const dx = e.changedTouches[0].clientX - touchStartXRef.current;
+                touchStartXRef.current = null;
+                if (Math.abs(dx) > 40) goToSlide(dx < 0 ? 1 : -1);
+              }}
+            >
+              {activeCard?.url ? (
+                <img
+                  key={activeCard.id}
+                  src={activeCard.url}
+                  alt={activeCard.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onClick={() => {
+                    if (onInspectModal) {
+                      soundManager.playTone(660, 0.05);
+                      onInspectModal(dossier);
+                    }
+                  }}
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-b from-[#070d1e] via-[#050813] to-black flex flex-col items-center justify-center p-4 text-center space-y-1.5">
+                  <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                  <span className="text-[10px] font-mono font-bold text-cyan-200 uppercase">QUEUED_PENDING</span>
+                  <p className="text-[10px] font-sans text-white/75 leading-snug">{UI_RECALIBRATING_STATUS_TEXT}</p>
+                </div>
+              )}
+              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 to-transparent pointer-events-none" />
+
+              <button
+                type="button"
+                onClick={() => goToSlide(-1)}
+                aria-label="Previous photo"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 border border-white/20 text-white flex items-center justify-center cursor-pointer active:scale-95"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => goToSlide(1)}
+                aria-label="Next photo"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 border border-white/20 text-white flex items-center justify-center cursor-pointer active:scale-95"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              <div className="absolute left-3 right-3 bottom-2.5 flex items-end justify-between gap-2 pointer-events-none">
+                <div className="min-w-0">
+                  <span className="text-[9px] font-mono font-bold tracking-wider text-amber-300 uppercase block truncate">
+                    {SLOT_CODES[safeIdx]} · {activeCard?.category}
+                  </span>
+                  <h4 className="text-xs font-sans font-semibold text-white truncate">{activeCard?.title}</h4>
+                </div>
+                <span className="text-[10px] font-mono text-white/70 shrink-0">
+                  {safeIdx + 1}/{photoCards.length}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {photoCards.map((photo, index) => (
+                <button
+                  key={photo.id}
+                  type="button"
+                  onClick={() => {
+                    soundManager.playTone(600, 0.03);
+                    setActiveSlide(index);
+                  }}
+                  className={`relative shrink-0 snap-start w-[72px] rounded-lg overflow-hidden border transition-all cursor-pointer ${
+                    index === safeIdx
+                      ? 'border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.45)]'
+                      : 'border-white/10 opacity-70'
+                  }`}
+                >
+                  <div className="aspect-square bg-black">
+                    {photo.url ? (
+                      <img src={photo.url} alt={photo.title} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-[#070d1e]">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300/70" />
+                      </div>
+                    )}
+                  </div>
+                  <span className="block py-0.5 text-[8.5px] font-mono font-bold text-white bg-black/80 truncate px-1 text-center">
+                    {SLOT_LABELS[index]}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* DESKTOP (>= 768px): bento grid filling the full container */}
+          <div className="hidden md:grid grid-cols-6 grid-rows-[repeat(3,minmax(0,1fr))] gap-3.5 aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-[520px]">
             {photoCards.map((photo, index) => {
-              const slotCode =
-                index === 0
-                  ? '01_main'
-                  : index === 1
-                  ? '02_flora'
-                  : index === 2
-                  ? '03_fauna'
-                  : index === 3
-                  ? '04_atmo'
-                  : '05_lore';
               const hasPhoto = Boolean(photo.url);
+              const spanClass =
+                index === 0
+                  ? 'col-span-4 row-span-2'
+                  : index === 1 || index === 2
+                  ? 'col-span-2 row-span-1'
+                  : 'col-span-3 row-span-1';
 
               return (
                 <div
@@ -276,41 +389,35 @@ export const MyWorld: React.FC<MyWorldProps> = ({
                       onInspectModal(dossier);
                     }
                   }}
-                  className="group relative rounded-xl overflow-hidden bg-black/80 border border-white/10 hover:border-amber-400/50 transition-all cursor-pointer aspect-[16/10] flex flex-col justify-end p-3 shadow-md"
+                  className={`${spanClass} group relative rounded-xl overflow-hidden bg-black/80 border border-white/10 hover:border-amber-400/50 transition-colors cursor-pointer flex flex-col justify-end p-3.5 shadow-md min-h-0`}
                 >
                   {hasPhoto ? (
                     <>
                       <img
                         src={photo.url}
                         alt={photo.title}
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 will-change-transform"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
                     </>
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-b from-[#070d1e] via-[#050813] to-black flex flex-col items-center justify-center p-3 text-center space-y-1.5">
                       <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                      <span className="text-[9.5px] font-mono font-bold text-cyan-200 uppercase">
-                        QUEUED_PENDING
-                      </span>
-                      <p className="text-[9.5px] font-sans text-white/75 leading-snug">
-                        {UI_RECALIBRATING_STATUS_TEXT}
-                      </p>
+                      <span className="text-[9.5px] font-mono font-bold text-cyan-200 uppercase">QUEUED_PENDING</span>
+                      <p className="text-[9.5px] font-sans text-white/75 leading-snug">{UI_RECALIBRATING_STATUS_TEXT}</p>
                     </div>
                   )}
 
                   <div className="relative z-10 flex items-center justify-between gap-1">
                     <div className="min-w-0">
-                      <span className="text-[8.5px] font-mono font-bold tracking-wider text-amber-300 uppercase block truncate">
-                        {slotCode} · {photo.category}
+                      <span className="text-[9px] font-mono font-bold tracking-wider text-amber-300 uppercase block truncate">
+                        {SLOT_CODES[index]} · {photo.category}
                       </span>
-                      <h4 className="text-[11px] font-sans font-semibold text-white truncate group-hover:text-amber-200">
+                      <h4 className="text-xs font-sans font-semibold text-white truncate group-hover:text-amber-200">
                         {photo.title}
                       </h4>
                     </div>
-                    {hasPhoto && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    )}
+                    {hasPhoto && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
                   </div>
                 </div>
               );

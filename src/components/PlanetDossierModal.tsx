@@ -87,6 +87,16 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isZoomed, onClose]);
 
+  // Scroll lock with guaranteed cleanup (no orphaned locks on close/unmount)
+  useEffect(() => {
+    if (!isOpen || typeof document === 'undefined') return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
   if (!isOpen || !planet) return null;
 
   const photoCards: PlanetPhotoCard[] = getPlanetPhotoCards(planet);
@@ -137,7 +147,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-y-auto bg-black/90 backdrop-blur-2xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-y-auto bg-black/90 backdrop-blur-2xl transform-gpu" style={{ willChange: 'opacity' }}>
         {/* Backdrop click to close */}
         <div className="fixed inset-0" onClick={onClose} />
 
@@ -149,8 +159,8 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
           className="relative z-10 w-full max-w-5xl max-h-[96vh] bg-[#050811] border border-cyan-500/30 rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden my-auto"
         >
           {/* Top Modal Header Bar */}
-          <header className="px-5 py-4 bg-[#070c18] border-b border-white/10 flex items-center justify-between gap-3 shrink-0">
-            <div className="flex items-center gap-3 min-w-0">
+          <header className="px-3 sm:px-5 py-3 sm:py-4 bg-[#070c18] border-b border-white/10 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
               <div
                 className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${
                   planet.authorAvatarGradient || 'from-amber-400 to-yellow-600'
@@ -159,16 +169,16 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 {planet.authorName.slice(0, 1)}
               </div>
 
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base sm:text-lg font-display font-extrabold text-white tracking-wide truncate">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap min-w-0">
+                  <h2 className="text-base sm:text-lg font-display font-extrabold text-white tracking-wide truncate max-w-full">
                     {planet.planetName}
                   </h2>
-                  <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 shrink-0">
+                  <span className="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-400/40 max-w-full truncate">
                     {planet.sectorId || 'SECTOR ALPHA-01'} · ({planet.coordX ?? 0}, {planet.coordY ?? 0}) AU
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs font-mono text-white/50 truncate">
+                <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-xs font-mono text-white/50 min-w-0">
                   <span>By {planet.authorName}</span>
                   <span>·</span>
                   <span className="text-cyan-400">@{planet.authorUsername}</span>
