@@ -39,7 +39,7 @@ import {
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
 import { PlanetDossierModal } from './PlanetDossierModal';
-import akinoyaHeroBg from '../assets/images/akinoya_hero_bg.jpg';
+import akinoyaHeroBg from '../assets/images/akinoya_hero_bg-CiYAZVRx.jpg';
 
 interface GalaxyNavigatorProps {
   onBackToHome: () => void;
@@ -72,10 +72,10 @@ interface CameraTarget {
 
 const ORBITAL_RINGS = [
   { radius: 500, label: '500 AU · INNER CORE RING', color: 'rgba(245, 158, 11, 0.25)' },
-  { radius: 1000, label: '1000 AU · PIONEER ORBIT', color: 'rgba(56, 189, 248, 0.22)' },
-  { radius: 1650, label: '1650 AU · IONIZATION REEF', color: 'rgba(168, 85, 247, 0.2)' },
-  { radius: 2400, label: '2400 AU · OUTER COMMUNITY EXPEDITIONS', color: 'rgba(56, 189, 248, 0.16)' },
-  { radius: 3300, label: '3300 AU · DEEP STELLAR HORIZON', color: 'rgba(255, 255, 255, 0.1)' },
+  { radius: 1000, label: '1000 AU · PIONEER ORBIT', color: 'rgba(251, 191, 36, 0.22)' },
+  { radius: 1650, label: '1650 AU · IONIZATION REEF', color: 'rgba(245, 158, 11, 0.2)' },
+  { radius: 2400, label: '2400 AU · OUTER COMMUNITY EXPEDITIONS', color: 'rgba(251, 191, 36, 0.18)' },
+  { radius: 3300, label: '3300 AU · DEEP STELLAR HORIZON', color: 'rgba(255, 255, 255, 0.12)' },
 ];
 
 export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
@@ -112,6 +112,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const zoomRef = useRef(zoom);
   panRef.current = pan;
   zoomRef.current = zoom;
+
+  const planetsRef = useRef(planets);
+  planetsRef.current = planets;
+  const selectedPlanetRef = useRef(selectedPlanet);
+  selectedPlanetRef.current = selectedPlanet;
+  const hoveredPlanetRef = useRef(hoveredPlanet);
+  hoveredPlanetRef.current = hoveredPlanet;
 
   // Inertia and Drag Tracking
   const isDraggingRef = useRef(false);
@@ -428,6 +435,50 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         ctx.fillStyle = '#fbbf24';
         ctx.textAlign = 'center';
         ctx.fillText(`VECTOR: ${distanceAU} AU`, midX, midY - 6);
+      }
+
+      // 8. Universal Gold Centered Rings for all planet nodes (Exact Canvas Centering)
+      const allPlanets = planetsRef.current;
+      for (let i = 0; i < allPlanets.length; i++) {
+        const p = allPlanets[i];
+        const posX = p.coordX ?? 0;
+        const posY = p.coordY ?? 0;
+        // Avoid duplicate ring at (0, 0) as Äkinoya Core has its own dedicated multi-layered golden core rings
+        if (posX === 0 && posY === 0) continue;
+
+        // Exact canvas centering: screen coordinates calculated directly from planet coordinates with 0 offset
+        const px = centerX + (curPan.x + posX) * curZoom;
+        const py = centerY + (curPan.y + posY) * curZoom;
+
+        // Viewport bounds culling
+        if (px < -120 || px > width + 120 || py < -120 || py > height + 120) continue;
+
+        const isSel = selectedPlanetRef.current?.id === p.id;
+        const isHov = hoveredPlanetRef.current?.id === p.id;
+        const pulse = Math.sin(time * 0.0028 + (posX * 0.05 + posY * 0.05)) * 1.8;
+        const ringRadius = (isSel ? 32 : isHov ? 30 : 27 + pulse) * curZoom;
+        const ringAlpha = isSel ? 0.95 : isHov ? 0.85 : (0.5 + pulse * 0.08);
+
+        ctx.save();
+        ctx.strokeStyle = isSel ? '#fbbf24' : `rgba(245, 158, 11, ${ringAlpha})`;
+        ctx.lineWidth = (isSel ? 2.2 : isHov ? 2.0 : 1.3) * Math.min(1.5, Math.max(0.7, curZoom));
+        if (!isSel && !isHov) {
+          ctx.setLineDash([5 * curZoom, 4 * curZoom]);
+        }
+        ctx.beginPath();
+        ctx.arc(px, py, ringRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Outer soft golden halo when selected or hovered
+        if (isSel || isHov) {
+          ctx.strokeStyle = `rgba(251, 191, 36, ${ringAlpha * 0.4})`;
+          ctx.lineWidth = 1.2 * curZoom;
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.arc(px, py, ringRadius + 4 * curZoom, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
       }
 
       ctx.restore();
@@ -965,24 +1016,16 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   <div className="absolute w-16 h-16 -top-2 -left-2 rounded-full border border-amber-400/50 animate-ping pointer-events-none opacity-40" />
                 )}
 
-                {/* Reticle Focus Rings */}
-                {(isHovered || isSelected) && (
-                  <div
-                    className="absolute w-20 h-20 -top-4 -left-4 rounded-full border border-cyan-400/70 animate-spin pointer-events-none"
-                    style={{ animationDuration: '8s' }}
-                  />
-                )}
-
                 {/* Celestial Planet Orb */}
                 <div
                   className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 transition-all duration-300 bg-[#070c18] flex items-center justify-center shadow-lg ${
                     isAmlemi
                       ? 'border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.6)] group-hover:scale-120'
                       : isSelected
-                      ? 'border-cyan-400 scale-120 shadow-[0_0_25px_rgba(6,182,212,0.7)]'
+                      ? 'border-amber-400 scale-120 shadow-[0_0_25px_rgba(245,158,11,0.7)]'
                       : isHovered
-                      ? 'border-cyan-300 scale-115 shadow-[0_0_20px_rgba(6,182,212,0.5)]'
-                      : 'border-white/40 group-hover:border-cyan-300 group-hover:scale-110'
+                      ? 'border-amber-300 scale-115 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+                      : 'border-white/30 group-hover:border-amber-400 group-hover:scale-110'
                   }`}
                 >
                   {thumbnail ? (
@@ -992,8 +1035,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                       className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-cyan-950 flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 text-cyan-300 animate-pulse" />
+                    <div className="w-full h-full bg-gradient-to-br from-amber-950 via-slate-900 to-black flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
                     </div>
                   )}
 
@@ -1003,8 +1046,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
                 {/* Planet Label Pill */}
                 <div className="mt-2 flex flex-col items-center pointer-events-none">
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-white/10 group-hover:border-cyan-400/60 shadow-md">
-                    <span className="text-[8.5px] font-mono text-cyan-400 font-bold tracking-wider uppercase">
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md border border-white/10 group-hover:border-amber-400/60 shadow-md">
+                    <span className="text-[8.5px] font-mono text-amber-300 font-bold tracking-wider uppercase">
                       {planet.sectorId || 'SECTOR'}
                     </span>
                     <span className="text-white/20 text-[8px]">·</span>
@@ -1013,7 +1056,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                     </span>
                   </div>
 
-                  <span className="text-xs font-display font-bold text-white tracking-wide mt-0.5 group-hover:text-cyan-300 transition-colors drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] whitespace-nowrap">
+                  <span className="text-xs font-display font-bold text-white tracking-wide mt-0.5 group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] whitespace-nowrap">
                     {planet.planetName}
                   </span>
 
@@ -1256,9 +1299,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               </div>
 
               <p className="text-xs font-sans text-white/80 leading-relaxed">
-                Äkinoya represents the celestial capital core of the Sillow Mill universe.
-                All community worlds, pioneer expeditions, and creator sectors orbit outward in
-                concentric astronomical harmonic rings calibrated to the golden angle (137.5°).
+                Äkinoya stands as the cosmic genesis core of Sillow Mill. Here lies the anchor of all 11 immersive visualizers and the central storyline of the Äkinoya Protocol. Experience the core visual saga, from which all surrounding community sectors, pioneer expeditions, and creator worlds expand outward into the uncharted galaxy.
               </p>
 
               <div className="flex items-center justify-end gap-2.5 pt-2">
@@ -1275,6 +1316,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                     setIsAkinoyaModalOpen(false);
                     if (onNavigateToVisualizerHub) {
                       onNavigateToVisualizerHub();
+                    } else if (typeof window !== 'undefined') {
+                      window.location.href = '/unlocked';
                     } else {
                       onBackToHome();
                     }

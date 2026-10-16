@@ -86,8 +86,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           SILLOW MILL
         </a>
 
-        {/* Zone 2: Single-line typography navigation links with dedicated brand colors */}
-        <nav className="hidden md:flex items-center gap-7 lg:gap-8 font-mono text-xs uppercase tracking-wide whitespace-nowrap">
+        {/* Zone 2: Single-line typography navigation links with dedicated brand colors and subtle dividers */}
+        <nav className="hidden md:flex items-center gap-3.5 lg:gap-5 font-mono text-xs uppercase tracking-wide whitespace-nowrap">
           <a
             href="/galaxy"
             onClick={(e) => {
@@ -96,10 +96,12 @@ export const TopBar: React.FC<TopBarProps> = ({
                 onNavigateToGalaxy();
               }
             }}
-            className="text-[#38bdf8] hover:text-[#22d3ee] font-semibold whitespace-nowrap transition-colors cursor-pointer"
+            className="text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
           >
             Galaxy Navigator
           </a>
+
+          <span className="text-white/20 select-none text-[11px]" aria-hidden="true">|</span>
 
           <a
             href="/contest"
@@ -107,6 +109,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           >
             Contest
           </a>
+
+          <span className="text-white/20 select-none text-[11px]" aria-hidden="true">|</span>
 
           <button
             type="button"
@@ -116,31 +120,36 @@ export const TopBar: React.FC<TopBarProps> = ({
             Claim World
           </button>
 
+          <span className="text-white/20 select-none text-[11px]" aria-hidden="true">|</span>
+
           <a
             href="/community"
-            className="text-[#7dd3fc] hover:text-[#bae6fd] whitespace-nowrap transition-colors cursor-pointer"
+            className="text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
           >
             Community Hub
           </a>
 
           {/* Digital Passport: Only visible for guests / unverified users who still need to claim */}
           {!hasClaimedPass && (
-            onNavigateToVerify ? (
-              <button
-                type="button"
-                onClick={onNavigateToVerify}
-                className="text-slate-300 hover:text-white font-semibold whitespace-nowrap transition-colors cursor-pointer"
-              >
-                Digital Passport
-              </button>
-            ) : (
-              <a
-                href="/verify"
-                className="text-slate-300 hover:text-white font-semibold whitespace-nowrap transition-colors cursor-pointer"
-              >
-                Digital Passport
-              </a>
-            )
+            <>
+              <span className="text-white/20 select-none text-[11px]" aria-hidden="true">|</span>
+              {onNavigateToVerify ? (
+                <button
+                  type="button"
+                  onClick={onNavigateToVerify}
+                  className="text-slate-300 hover:text-white font-semibold whitespace-nowrap transition-colors cursor-pointer"
+                >
+                  Digital Passport
+                </button>
+              ) : (
+                <a
+                  href="/verify"
+                  className="text-slate-300 hover:text-white font-semibold whitespace-nowrap transition-colors cursor-pointer"
+                >
+                  Digital Passport
+                </a>
+              )}
+            </>
           )}
         </nav>
 
