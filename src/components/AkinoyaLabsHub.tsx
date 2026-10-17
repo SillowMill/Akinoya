@@ -930,6 +930,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           <img
                             src={stage.heroImage}
                             alt={stage.heroImageAlt}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover/banner:scale-105 opacity-85 group-hover/banner:opacity-100"
                           />
                           <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
@@ -1042,6 +1044,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           <img
                             src={millAvatar}
                             alt="Mill"
+                            loading="lazy"
+                            decoding="async"
                             className="w-9 h-9 rounded-xl object-cover border border-cyan-400 shrink-0"
                           />
                           <div>

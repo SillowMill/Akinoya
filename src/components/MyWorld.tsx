@@ -100,20 +100,20 @@ export const MyWorld: React.FC<MyWorldProps> = ({
   };
 
   return (
-    <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 space-y-6 shadow-xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-3 border-b border-white/10">
-        <div className="flex items-center gap-x-2 gap-y-1.5 flex-wrap min-w-0">
+    <div className="p-5 sm:p-6 md:p-7 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#050a14]/85 to-[#030710]/95 backdrop-blur-xl border border-cyan-500/30 space-y-6 md:space-y-7 shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(6,182,212,0.12)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4 pb-3.5 border-b border-white/10">
+        <div className="flex items-center gap-x-2.5 gap-y-1.5 flex-wrap min-w-0">
           <Camera className="w-4 h-4 text-amber-400 shrink-0" />
-          <h3 className="text-[11px] sm:text-sm font-mono font-bold uppercase tracking-wider text-white min-w-0 break-words">
+          <h3 className="text-xs sm:text-sm md:text-base font-mono font-bold uppercase tracking-wider text-white min-w-0 break-words">
             Synthesized 5-Photo Visual Archive &amp; 9:16 Viral Trailer
           </h3>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 flex-wrap shrink-0">
+        <div className="hidden sm:flex items-center gap-2.5 flex-wrap shrink-0">
           <button
             type="button"
             onClick={handleCopyGalaxyLink}
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+            className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white/85 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap min-h-[40px]"
             title="Copy Shareable Planet Link"
           >
             <MapPin className="w-3.5 h-3.5 text-amber-400" />
@@ -124,7 +124,7 @@ export const MyWorld: React.FC<MyWorldProps> = ({
             <button
               type="button"
               onClick={() => onNavigateToGalaxy(dossier.id)}
-              className="px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)] whitespace-nowrap"
+              className="px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)] whitespace-nowrap min-h-[40px]"
             >
               <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
               <span>View in Galaxy</span>
@@ -138,9 +138,9 @@ export const MyWorld: React.FC<MyWorldProps> = ({
       </div>
 
       {/* Main Layout: 9:16 Vertical Video Trailer + 5 Photo Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-7 items-stretch">
         {/* LEFT COLUMN: 9:16 Viral Vertical Video Trailer */}
-        <div className="lg:col-span-4 flex flex-col items-center space-y-3.5 bg-gradient-to-b from-[#070d1e]/90 via-[#050813]/90 to-black/95 border border-cyan-500/30 rounded-2xl p-4 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
+        <div className="lg:col-span-4 flex flex-col items-center space-y-4 bg-gradient-to-b from-[#070d1e]/90 via-[#050813]/90 to-[#02050c]/95 border border-cyan-500/30 rounded-2xl p-4 sm:p-5 md:p-6 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
           <div className="w-full flex items-center justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300">
               <Video className="w-3.5 h-3.5 text-cyan-400" />
@@ -158,7 +158,7 @@ export const MyWorld: React.FC<MyWorldProps> = ({
           </div>
 
           {/* Strict 9:16 Vertical Viewport */}
-          <div className="relative w-full max-w-[260px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/40 shadow-[0_0_30px_rgba(6,182,212,0.25)] flex items-center justify-center">
+          <div className="relative w-full max-w-[260px] md:max-w-[290px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/40 shadow-[0_0_30px_rgba(6,182,212,0.25)] flex items-center justify-center">
             {isVideoReady ? (
               <video
                 src={videoUrl}

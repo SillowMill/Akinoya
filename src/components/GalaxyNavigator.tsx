@@ -464,39 +464,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       ctx.arc(coreScreenX, coreScreenY, 380 * curZoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // Concentric revolving and pulsing golden orbital rings centered symmetrically at Äkinoya Core (0, 0)
-      const ringPulse = Math.sin(time * 0.0025);
-      const innerRadius = (36 + ringPulse * 1.5) * curZoom;
-      const outerRadius = (50 + Math.cos(time * 0.002) * 2) * curZoom;
-      const ringAlpha = 0.55 + ringPulse * 0.15;
-
-      ctx.save();
-      ctx.translate(coreScreenX, coreScreenY);
-
-      // Inner revolving dashed golden orbital ring
-      ctx.save();
-      ctx.rotate((time * 0.0006) % (Math.PI * 2));
-      ctx.strokeStyle = `rgba(245, 158, 11, ${ringAlpha})`;
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([8 * curZoom, 6 * curZoom]);
-      ctx.beginPath();
-      ctx.arc(0, 0, innerRadius, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-
-      // Outer counter-revolving dashed golden orbital ring
-      ctx.save();
-      ctx.rotate((-time * 0.00035) % (Math.PI * 2));
-      ctx.strokeStyle = `rgba(251, 191, 36, ${ringAlpha * 0.75})`;
-      ctx.lineWidth = 1.2;
-      ctx.setLineDash([5 * curZoom, 8 * curZoom]);
-      ctx.beginPath();
-      ctx.arc(0, 0, outerRadius, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-
-      ctx.restore();
-
       // 4. Parallax Starfield
       const stars = starsRef.current;
       const boundMargin = Math.max(width, height) * 0.45;
@@ -575,46 +542,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         ctx.fillStyle = '#fbbf24';
         ctx.textAlign = 'center';
         ctx.fillText(`VECTOR: ${distAU} AU`, midX, midY - 6);
-      }
-
-      // 8. Universal Gold Centered Rings for all planet nodes (Exact Canvas Centering)
-      const allPlanets = planetsRef.current;
-      for (let i = 0; i < allPlanets.length; i++) {
-        const p = allPlanets[i];
-        const posX = p.coordX ?? 0;
-        const posY = p.coordY ?? 0;
-        if (posX === 0 && posY === 0) continue;
-
-        const px = centerX + (curPan.x + posX) * curZoom;
-        const py = centerY + (curPan.y + posY) * curZoom;
-
-        if (px < -boundMargin || px > width + boundMargin || py < -boundMargin || py > height + boundMargin) continue;
-
-        const isSel = selectedPlanetRef.current?.id === p.id;
-        const isHov = hoveredPlanetRef.current?.id === p.id;
-        const pulse = Math.sin(time * 0.0028 + (posX * 0.05 + posY * 0.05)) * 1.8;
-        const ringRadius = (isSel ? 32 : isHov ? 30 : 27 + pulse) * curZoom;
-        const ringAlpha = isSel ? 0.95 : isHov ? 0.85 : 0.5 + pulse * 0.08;
-
-        ctx.save();
-        ctx.strokeStyle = isSel ? '#fbbf24' : `rgba(245, 158, 11, ${ringAlpha})`;
-        ctx.lineWidth = (isSel ? 2.2 : isHov ? 2.0 : 1.3) * Math.min(1.5, Math.max(0.7, curZoom));
-        if (!isSel && !isHov) {
-          ctx.setLineDash([5 * curZoom, 4 * curZoom]);
-        }
-        ctx.beginPath();
-        ctx.arc(px, py, ringRadius, 0, Math.PI * 2);
-        ctx.stroke();
-
-        if (isSel || isHov) {
-          ctx.strokeStyle = `rgba(251, 191, 36, ${ringAlpha * 0.4})`;
-          ctx.lineWidth = 1.2 * curZoom;
-          ctx.setLineDash([]);
-          ctx.beginPath();
-          ctx.arc(px, py, ringRadius + 4 * curZoom, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-        ctx.restore();
       }
 
       ctx.restore();
@@ -1361,19 +1288,15 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none"
             style={{ left: 0, top: 0, width: 56, height: 56 }}
           >
-            {/* Multi-layered Pulsing Golden Aura centered symmetrically on (0, 0) */}
-            <div className="absolute -inset-7 rounded-full bg-amber-400/20 blur-xl animate-pulse pointer-events-none" />
+            {/* Ambient Golden Aura + Single Delicate Dotted Ring centered symmetrically on (0, 0) */}
+            <div className="absolute -inset-6 rounded-full bg-amber-400/20 blur-xl animate-pulse pointer-events-none" />
             <div
-              className="absolute -inset-3 rounded-full border border-amber-400/50 animate-spin pointer-events-none"
-              style={{ animationDuration: '14s' }}
-            />
-            <div
-              className="absolute -inset-5 rounded-full border border-dashed border-amber-300/40 animate-spin pointer-events-none"
-              style={{ animationDuration: '28s', animationDirection: 'reverse' }}
+              className="absolute -inset-2.5 rounded-full border border-dotted border-amber-300/80 animate-spin pointer-events-none"
+              style={{ animationDuration: '24s' }}
             />
 
-            {/* Core Orb */}
-            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.8)] group-hover:scale-115 transition-transform duration-300 bg-black flex items-center justify-center shrink-0">
+            {/* Core Orb with Glowing Solid Gold Primary Border */}
+            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.85)] group-hover:scale-115 transition-transform duration-300 bg-black flex items-center justify-center shrink-0">
               <img
                 src={akinoyaHeroBg}
                 alt="Äkinoya Core"
@@ -1384,7 +1307,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             </div>
 
             {/* Capital Core Badge Label */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 flex flex-col items-center pointer-events-none whitespace-nowrap text-center">
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 flex flex-col items-center pointer-events-none whitespace-nowrap text-center">
               <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] items-center gap-1">
                 <span>👑 ÄKINOYA CORE</span>
               </span>
@@ -1410,7 +1333,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             const isSelected = selectedPlanet?.id === planet.id;
             const photoCards = getPlanetPhotoCards(planet);
             const thumbnail = photoCards[0]?.url || planet.renders?.hero || '';
-            const isTopVoted = planet.votesCount >= 3;
             const rankNumber = index + 1;
 
             return (
@@ -1425,12 +1347,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   setHoveredPlanet(planet);
                 }}
                 onPointerLeave={() => setHoveredPlanet(null)}
-                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10 flex flex-col items-center select-none"
-                style={{ left: posX, top: posY }}
+                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10 flex items-center justify-center select-none"
+                style={{ left: posX, top: posY, width: 48, height: 48 }}
               >
                 {/* Pioneer Status Floating Marker Above Orb */}
                 {isPioneer && (
-                  <div className="mb-1.5 pointer-events-none whitespace-nowrap">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 pointer-events-none whitespace-nowrap">
                     {isAmlemi ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black font-mono font-extrabold text-[8.5px] tracking-widest uppercase shadow-[0_0_16px_rgba(251,191,36,0.65)]">
                         <span>👑 FOUNDING PIONEER · #01</span>
@@ -1443,55 +1365,50 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   </div>
                 )}
 
-                {/* Active / Pioneer Beacon Ripple */}
-                <div className="relative flex items-center justify-center">
-                  {isTopVoted && (
-                    <div className="absolute -inset-2.5 rounded-full border border-amber-400/50 animate-ping pointer-events-none opacity-40" />
-                  )}
-                  {isPioneer && (
-                    <div
-                      className={`absolute -inset-2 rounded-full border border-dashed pointer-events-none animate-spin ${
-                        isAmlemi ? 'border-amber-300/70' : 'border-amber-400/40'
-                      }`}
-                      style={{ animationDuration: isAmlemi ? '18s' : '26s' }}
+                {/* Single Delicate Dotted Ring Structure */}
+                <div
+                  className={`absolute -inset-2 rounded-full border border-dotted pointer-events-none animate-spin ${
+                    isAmlemi || isSelected || isHovered
+                      ? 'border-amber-300/85'
+                      : 'border-amber-400/65'
+                  }`}
+                  style={{ animationDuration: isAmlemi ? '20s' : '28s' }}
+                />
+
+                {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
+                <div
+                  className={`relative w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400 transition-all duration-300 bg-[#070c18] flex items-center justify-center shrink-0 ${
+                    isAmlemi
+                      ? 'shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-120'
+                      : isSelected
+                      ? 'scale-120 shadow-[0_0_26px_rgba(245,158,11,0.75)]'
+                      : isHovered
+                      ? 'scale-115 shadow-[0_0_22px_rgba(245,158,11,0.65)]'
+                      : 'shadow-[0_0_18px_rgba(245,158,11,0.45)] group-hover:scale-110'
+                  }`}
+                >
+                  {thumbnail ? (
+                    <img
+                      src={thumbnail}
+                      alt={planet.planetName}
+                      className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
+                      draggable={false}
+                      loading="lazy"
+                      decoding="async"
                     />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-amber-950 via-slate-900 to-black flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                    </div>
                   )}
 
-                  {/* Celestial Planet Orb */}
-                  <div
-                    className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 transition-all duration-300 bg-[#070c18] flex items-center justify-center shadow-lg ${
-                      isAmlemi
-                        ? 'border-amber-400 shadow-[0_0_28px_rgba(245,158,11,0.75)] group-hover:scale-120'
-                        : isSelected
-                        ? 'border-amber-400 scale-120 shadow-[0_0_25px_rgba(245,158,11,0.7)]'
-                        : isHovered
-                        ? 'border-amber-300 scale-115 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
-                        : isPioneer
-                        ? 'border-amber-400/60 shadow-[0_0_18px_rgba(245,158,11,0.35)] group-hover:border-amber-300 group-hover:scale-110'
-                        : 'border-white/30 group-hover:border-amber-400 group-hover:scale-110'
-                    }`}
-                  >
-                    {thumbnail ? (
-                      <img
-                        src={thumbnail}
-                        alt={planet.planetName}
-                        className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
-                        draggable={false}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-amber-950 via-slate-900 to-black flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                      </div>
-                    )}
-
-                    {/* Gradient atmospheric shell */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
-                  </div>
+                  {/* Gradient atmospheric shell */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
                 </div>
 
-                {/* Planet Label: Clean planet name, creator handle, and luminous Rank & Votes pill */}
-                <div className="mt-1.5 flex flex-col items-center pointer-events-none">
-                  <span className="text-xs font-display font-bold text-white tracking-wide group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] whitespace-nowrap">
+                {/* Planet Label: Positioned cleanly below orb without shifting orb center */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 flex flex-col items-center pointer-events-none whitespace-nowrap">
+                  <span className="text-xs font-display font-bold text-white tracking-wide group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                     {planet.planetName}
                   </span>
 
@@ -1499,7 +1416,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                     @{planet.authorUsername}
                   </span>
 
-                  <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#060c18]/90 border border-amber-400/45 shadow-[0_0_12px_rgba(251,191,36,0.28)] whitespace-nowrap">
+                  <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#060c18]/90 border border-amber-400/45 shadow-[0_0_12px_rgba(251,191,36,0.28)]">
                     <span className="text-[9px] font-mono font-black text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]">
                       #{rankNumber}
                     </span>

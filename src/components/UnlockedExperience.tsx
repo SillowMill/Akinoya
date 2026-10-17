@@ -63,6 +63,7 @@ import { getUserStatusConfig } from '../utils/statusPill';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isPreLaunch } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { MyWorld } from './MyWorld';
+import { WorldStoryVerificationBadge } from './WorldStoryVerificationBadge';
 import {
   BINGAA_PDF_URL,
   BINGAA_PDF_FILENAME,
@@ -249,22 +250,41 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     return () => unsubscribe();
   }, [user?.id, user?.email]);
 
+  const amlemiBenchmarkDossier = useMemo(() => {
+    return (
+      allCommunityPlanets.find(
+        (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+      ) ||
+      getStoredPlanetSubmissions().find(
+        (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+      ) ||
+      allCommunityPlanets[0] ||
+      null
+    );
+  }, [allCommunityPlanets]);
+
+  const activeWorldDossier = userDossier || amlemiBenchmarkDossier;
+  const isGuestWorldSimulation = !userDossier;
+
   const handleVoteUserDossier = async () => {
-    if (!userDossier) return;
+    const targetDossier = activeWorldDossier;
+    if (!targetDossier) return;
     soundManager.playTone(740, 0.06);
     const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
     const userUsername = profile?.username || user?.user_metadata?.username || user?.user_metadata?.full_name || '';
-    const res = await togglePlanetSubmissionVote(userDossier.id, user?.id, userEmail, userUsername);
+    const res = await togglePlanetSubmissionVote(targetDossier.id, user?.id, userEmail, userUsername);
     if (!res.success && res.error) {
       soundManager.playError();
       alert(res.error);
       return;
     }
     if (res.success) {
-      setUserDossier((prev) => (prev ? { ...prev, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : null));
+      if (userDossier && userDossier.id === targetDossier.id) {
+        setUserDossier((prev) => (prev ? { ...prev, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : null));
+      }
       setAllCommunityPlanets((prev) =>
         prev
-          .map((p) => (p.id === userDossier.id ? { ...p, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : p))
+          .map((p) => (p.id === targetDossier.id ? { ...p, votesCount: res.newVotesCount, hasVoted: res.hasVoted } : p))
           .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0))
       );
     }
@@ -272,8 +292,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   const handleShareDossier = () => {
     soundManager.playTone(600, 0.04);
-    if (typeof window !== 'undefined' && userDossier) {
-      const shareUrl = `${window.location.origin}/contest?planet=${userDossier.id}`;
+    const targetDossier = activeWorldDossier;
+    if (typeof window !== 'undefined' && targetDossier) {
+      const shareUrl = `${window.location.origin}/contest?planet=${targetDossier.id}`;
       navigator.clipboard.writeText(shareUrl);
       setIsCopiedDossierLink(true);
       setTimeout(() => setIsCopiedDossierLink(false), 2500);
@@ -288,7 +309,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const sortedCommunityPlanets = useMemo(() => {
     return [...allCommunityPlanets].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
   }, [allCommunityPlanets]);
-  const planetRank = userDossier ? sortedCommunityPlanets.findIndex((p) => p.id === userDossier.id) + 1 : 0;
+  const planetRank = activeWorldDossier
+    ? sortedCommunityPlanets.findIndex((p) => p.id === activeWorldDossier.id) + 1
+    : 1;
   const isVipMode = Boolean(
     Boolean(user || profile) && (
       isVip ||
@@ -317,13 +340,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     role,
     isVipMode || isVip || authIsVip
   );
-
-  // Fallback to 'pass' tab if user loses VIP status
-  useEffect(() => {
-    if (!isVipMode && activeTab === 'assets') {
-      setActiveTab('pass');
-    }
-  }, [isVipMode, activeTab]);
 
   const [passSubView, setPassSubView] = useState<'overview' | 'hub'>(() => {
     if (typeof window !== 'undefined') {
@@ -912,10 +928,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 py-6 sm:py-8 lg:py-10"
+      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10"
     >
       {/* Top Status & Lock Control — Translucent Glassmorphism matching the Visualizer Hub Showcase Widget */}
-      <div className="relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:px-5 lg:px-8 lg:py-5 shadow-[0_0_30px_rgba(56,189,248,0.15)]">
+      <div className="relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6 md:mb-7 lg:mb-8 bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:px-6 md:px-7 lg:px-8 lg:py-5 shadow-[0_0_30px_rgba(56,189,248,0.15)]">
         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex items-center gap-3 min-w-0 flex-1 max-w-full">
@@ -935,17 +951,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   <span>{isOdiUser || isMaster ? 'FOUNDING PIONEER · #01' : 'PIONEER 2027'}</span>
                 </span>
               )}
-              {(userDossier || isOdiUser || isMaster) && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('my-world')}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-400/45 text-cyan-200 hover:text-white text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase shadow-[0_0_10px_rgba(34,211,238,0.25)] transition-all cursor-pointer shrink-0"
-                  title="Inspect Bound Planetary Profile"
-                >
-                  <Globe2 className="w-2.5 h-2.5 text-amber-400 shrink-0" />
-                  <span>PLANET: {(userDossier?.planetName || 'ÄMLEMI').toUpperCase()}</span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setActiveTab('my-world')}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-400/45 text-cyan-200 hover:text-white text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase shadow-[0_0_10px_rgba(34,211,238,0.25)] transition-all cursor-pointer shrink-0"
+                title="Inspect Bound Planetary Profile"
+              >
+                <Globe2 className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                <span>PLANET: {(userDossier?.planetName || 'ÄMLEMI').toUpperCase()}</span>
+              </button>
             </div>
             <h2 className="text-sm sm:text-base lg:text-lg font-display font-bold text-white tracking-wide break-words drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
               {isVipMode && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
@@ -985,58 +999,55 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         </div>
       </div>
 
-
       {/* Main Tabs and Content Area */}
-      <div className="space-y-4 sm:space-y-6 w-full">
-        {/* Navigation Tabs (Mobile optimized scrollable / grid) */}
-        <div className={`grid ${isVipMode ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-1 xs:gap-1.5 p-1 xs:p-1.5 bg-[#060a14] border border-white/15 rounded-xl lg:rounded-2xl shadow-xl`}>
-            <button
-              onClick={() => setActiveTab('pass')}
-              className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[44px] ${
-                activeTab === 'pass'
-                  ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <Compass className="w-3 h-3 xs:w-3.5 xs:h-3.5 shrink-0" />
-              <span className="truncate">Pass Perks</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('edition')}
-              className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[44px] ${
-                activeTab === 'edition'
-                  ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <BookOpen className="w-3 h-3 xs:w-3.5 xs:h-3.5 shrink-0" />
-              <span className="truncate">Comic</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('my-world')}
-              className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[44px] ${
-                activeTab === 'my-world'
-                  ? 'bg-amber-400 text-black font-bold shadow-[0_0_15px_rgba(245,158,11,0.35)]'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              <Globe2 className={`w-3 h-3 xs:w-3.5 xs:h-3.5 shrink-0 ${activeTab === 'my-world' ? 'text-black' : 'text-amber-400'}`} />
-              <span className="truncate">My World</span>
-            </button>
-            {isVipMode && (
-              <button
-                onClick={() => setActiveTab('assets')}
-                className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[44px] ${
-                  activeTab === 'assets'
-                    ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
-                    : 'text-white/60 hover:text-white'
-                }`}
-              >
-                <Gem className="w-3 h-3 xs:w-3.5 xs:h-3.5 shrink-0" />
-                <span className="truncate">VIP Lounge / Assets</span>
-              </button>
-            )}
-          </div>
+      <div className="space-y-5 sm:space-y-6 md:space-y-7 w-full">
+        {/* Navigation Tabs (All 4 tabs accessible, including My Assets for 9:16 Story Verification Badge) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
+          <button
+            onClick={() => setActiveTab('pass')}
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
+              activeTab === 'pass'
+                ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                : 'text-white/60 hover:text-white'
+            }`}
+          >
+            <Compass className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Pass Perks</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('edition')}
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
+              activeTab === 'edition'
+                ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                : 'text-white/60 hover:text-white'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Comic</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('my-world')}
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
+              activeTab === 'my-world'
+                ? 'bg-amber-400 text-black font-bold shadow-[0_0_15px_rgba(245,158,11,0.35)]'
+                : 'text-white/60 hover:text-white'
+            }`}
+          >
+            <Globe2 className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'my-world' ? 'text-black' : 'text-amber-400'}`} />
+            <span className="truncate">My World</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('assets')}
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
+              activeTab === 'assets'
+                ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                : 'text-white/60 hover:text-white'
+            }`}
+          >
+            <Gem className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
+            <span className="truncate">My Assets</span>
+          </button>
+        </div>
 
           {/* Tab 1: VIP Perks & Visualizer Hub */}
           {activeTab === 'pass' && (
@@ -1893,524 +1904,436 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </div>
           )}
 
-          {/* Tab 3: My World — User's 5-Photo Cinematic Sci-Fi Dossier & Social Metrics */}
-          {activeTab === 'my-world' && (
+          {/* Tab 3: My World — User's 5-Photo Cinematic Sci-Fi Dossier, 9:16 Story Verification Badge & Guest Simulation Mode */}
+          {activeTab === 'my-world' && activeWorldDossier && (
             <motion.div
               key="my-world-view"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.4 }}
-              className="space-y-6"
+              className="space-y-6 md:space-y-7"
             >
-              {!userDossier ? (
-                /* Empty state: No world synthesized yet */
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#090d18] via-[#070a14] to-black border border-white/10 p-6 sm:p-10 text-center space-y-6 shadow-2xl">
-                  <div className="absolute top-0 right-1/2 translate-x-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+              {/* Guest Simulation Mode & Magnetic Conversion Banner (Displayed when visitor hasn't synthesized their own world yet) */}
+              {isGuestWorldSimulation && (
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/75 via-[#071124]/90 to-cyan-950/70 backdrop-blur-xl border-2 border-amber-400/55 p-5 sm:p-6 md:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.65),0_0_35px_rgba(245,158,11,0.22)]">
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/80 to-transparent pointer-events-none" />
+                  <div className="absolute -top-20 -right-20 w-72 h-72 bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-cyan-400/15 rounded-full blur-3xl pointer-events-none" />
 
-                  <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.25)]">
-                    <Globe2 className="w-10 h-10 animate-pulse" />
-                  </div>
-
-                  <div className="space-y-2 max-w-xl mx-auto">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-widest uppercase bg-amber-400/15 text-amber-300 border border-amber-400/30">
-                      <Sparkles className="w-3 h-3 fill-amber-300" />
-                      WORLD SYNTHESIS · 1 GOLDEN TICKET READY
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
-                      You Haven't Synthesized Your Planetary World Yet
-                    </h3>
-                    <p className="text-xs sm:text-sm text-white/60 font-sans leading-relaxed">
-                      Answer Mill's 8 human-centric questions to calibrate your sector's atmospheric chemistry, bioluminescent flora, apex fauna, and sonic signature. Your 5-photo high-resolution cinematic sci-fi dossier will be minted in real-time and entered into the 2027 Lore Governance Council.
-                    </p>
-                  </div>
-
-                  <div className="pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        soundManager.playTone(660, 0.05);
-                        if (onNavigateToContest) {
-                          onNavigateToContest();
-                        } else if (typeof window !== 'undefined') {
-                          window.location.href = '/contest';
-                        }
-                      }}
-                      className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_30px_rgba(245,158,11,0.4)] transition-all cursor-pointer transform hover:scale-[1.02]"
-                    >
-                      <Sparkles className="w-4 h-4 fill-black" />
-                      <span>OPEN MILL WIZARD →</span>
-                    </button>
-                  </div>
-
-                  {/* 3 Value Pillars */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-white/10 text-left">
-                    <div className="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                      <div className="flex items-center gap-2 text-amber-300 font-mono text-xs font-bold mb-1">
-                        <Camera className="w-3.5 h-3.5" />
-                        <span>5 Cinematic Sci-Fi Renders</span>
+                  <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-5">
+                    <div className="space-y-2 max-w-2xl">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]">
+                          <Lock className="w-3 h-3 text-black shrink-0" />
+                          <span>GUEST SIMULATION MODE · BENCHMARK PREVIEW</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-cyan-950/90 text-cyan-200 border border-cyan-400/45">
+                          <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
+                          <span>1 GOLDEN TICKET AVAILABLE</span>
+                        </span>
                       </div>
-                      <p className="text-[11px] text-white/60 font-sans">
-                        Orbital horizon, cockpit canopy, botanical flora, apex fauna, and lore cover.
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-display font-black text-white tracking-wide">
+                        Experiencing Odi&apos;s Verified &ldquo;Ämlemi&rdquo; Planetary Dossier (#1)
+                      </h3>
+                      <p className="text-xs sm:text-sm text-white/80 font-sans leading-relaxed">
+                        You are exploring an interactive live simulation of Odi Selis&apos;s Founding Pioneer world <strong className="text-amber-300">Ämlemi</strong>. Sign in or launch Mill&apos;s 8-step Worldbuilding Protocol to claim your <strong className="text-cyan-300">1 Golden Ticket</strong>, synthesize your own 5-photo 4K sector, and mint your personal <strong className="text-amber-300">9:16 Story Verification Badge</strong>.
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                      <div className="flex items-center gap-2 text-cyan-300 font-mono text-xs font-bold mb-1">
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>Strict Sillow Mill Aesthetic</span>
-                      </div>
-                      <p className="text-[11px] text-white/60 font-sans">
-                        Synthesized using custom Äkinoya neural lighting &amp; 4K cinematic atmosphere anchors.
-                      </p>
-                    </div>
+                    <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundManager.playTone(660, 0.05);
+                          if (onNavigateToContest) {
+                            onNavigateToContest();
+                          } else if (typeof window !== 'undefined') {
+                            window.location.href = '/contest';
+                          }
+                        }}
+                        className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(245,158,11,0.45)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[46px]"
+                      >
+                        <Sparkles className="w-4 h-4 fill-black shrink-0" />
+                        <span>SYNTHESIZE YOUR WORLD →</span>
+                      </button>
 
-                    <div className="p-3.5 rounded-xl bg-white/5 border border-white/5">
-                      <div className="flex items-center gap-2 text-emerald-300 font-mono text-xs font-bold mb-1">
-                        <Trophy className="w-3.5 h-3.5" />
-                        <span>Lore Governance Voting</span>
-                      </div>
-                      <p className="text-[11px] text-white/60 font-sans">
-                        Compete on "Group's Favorite Planets" for canon integration in Sillow Mill series.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* Active state: User's synthesized planet dossier */
-                <div className="space-y-6">
-                  {/* Top Sector Dossier Header Banner — Glassmorphic with Pioneer Badging */}
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/60 via-[#050a14]/80 to-cyan-950/45 backdrop-blur-xl border border-amber-500/45 p-5 sm:p-6 shadow-[0_0_35px_rgba(245,158,11,0.22),inset_0_1px_1px_rgba(255,255,255,0.1)]">
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent pointer-events-none" />
-                    <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/12 rounded-full blur-3xl pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4 relative z-10">
-                      <div className="flex items-center gap-2">
-                        <span className="p-1.5 rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 text-black shrink-0 shadow-[0_0_12px_rgba(251,191,36,0.5)]">
-                          <Globe2 className="w-4 h-4" />
-                        </span>
-                        <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
-                          My Synthesized Sector · Dossier Active
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {isPioneerPlanet(userDossier) && (
-                          <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-gradient-to-r from-amber-500/30 via-yellow-500/25 to-amber-600/30 text-amber-200 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_16px_rgba(251,191,36,0.4)]">
-                            <Sparkles className="w-3 h-3 text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
-                            <span>
-                              {isFoundingPioneerPlanet(userDossier)
-                                ? 'FOUNDING PIONEER · #01 · ODI SELIS'
-                                : userDossier.pioneerBadge || 'PIONEER 2027 · PRE-RELEASE'}
-                            </span>
-                          </span>
-                        )}
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-400/40 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          <span>GOLDEN TICKET EXPENDED · ONE-SHOT LOCKED</span>
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-400/40 flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3 text-cyan-400" />
-                          <span>BOUND TO ACCOUNT</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap min-w-0">
-                          <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-wide truncate drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
-                            {userDossier.planetName}
-                          </h2>
-                          <span className="px-2.5 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-mono text-[10px] font-bold tracking-wider uppercase">
-                            {userDossier.sectorId || 'SECTOR AKN-01'}
-                          </span>
-                        </div>
-                        <p className="text-xs font-mono text-white/70 mt-1">
-                          Synthesized by <strong className="text-amber-300">{userDossier.authorName}</strong> ({userDossier.authorEmail || user?.email || 'Verified Account'})
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-wrap md:flex-nowrap md:shrink-0">
-                        <button
-                          type="button"
-                          onClick={handleShareDossier}
-                          className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/15 font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer min-h-[42px]"
-                        >
-                          {isCopiedDossierLink ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-emerald-400" />
-                              <span className="text-emerald-400">Link Copied!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Share2 className="w-3.5 h-3.5" />
-                              <span>Share Dossier</span>
-                            </>
-                          )}
-                        </button>
-
+                      {!isAuthenticated && (
                         <button
                           type="button"
                           onClick={() => {
-                            soundManager.playTone(660, 0.05);
-                            setSelectedDossierModal(userDossier);
+                            soundManager.playTone(580, 0.05);
+                            if (onNavigateToPassport) {
+                              onNavigateToPassport();
+                            } else if (typeof window !== 'undefined') {
+                              window.location.href = '/passport';
+                            }
                           }}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono text-xs font-bold shadow-[0_0_20px_rgba(245,158,11,0.35)] flex items-center gap-2 transition-all cursor-pointer min-h-[42px]"
+                          className="px-4 py-3.5 rounded-xl bg-cyan-950/85 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[46px]"
                         >
-                          <Camera className="w-3.5 h-3.5" />
-                          <span>Inspect 5-Photo Dossier</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <Key className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span>Sign In / Unlock Pass</span>
                         </button>
-                      </div>
+                      )}
                     </div>
-                  </div>
-
-                  {/* 3 Live Social Engagement Metric Cards — Glassmorphism & Luminous Metallic Numbers */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
-                    {/* Metric 1: Likes / Votes Count */}
-                    <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-950/35 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-amber-400/35 hover:border-amber-300/60 flex items-center justify-between gap-3 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(245,158,11,0.12)] transition-all">
-                      <div className="absolute -top-8 -right-8 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
-                      <div className="relative z-10">
-                        <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-amber-200/80 font-bold block">
-                          Community Votes
-                        </span>
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <span className="text-2xl sm:text-3xl font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(251,191,36,0.6)]">
-                            {userDossier.votesCount}
-                          </span>
-                          <span className="text-[11px] font-mono text-amber-200/60 uppercase tracking-wider">votes</span>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleVoteUserDossier}
-                        className={`relative z-10 p-3 rounded-xl font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer min-h-[42px] ${
-                          userDossier.hasVoted
-                            ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.45)]'
-                            : 'bg-amber-950/50 hover:bg-amber-900/60 text-amber-200 hover:text-white border border-amber-400/40'
-                        }`}
-                        title="Cast Vote"
-                      >
-                        <ThumbsUp className={`w-4 h-4 ${userDossier.hasVoted ? 'fill-black' : ''}`} />
-                        <span>{userDossier.hasVoted ? 'Voted' : 'Vote'}</span>
-                      </button>
-                    </div>
-
-                    {/* Metric 2: Leaderboard Position */}
-                    <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-cyan-950/40 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-cyan-400/35 hover:border-cyan-300/60 flex items-center justify-between gap-3 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(34,211,238,0.12)] transition-all">
-                      <div className="absolute -top-8 -right-8 w-24 h-24 bg-cyan-400/10 rounded-full blur-2xl pointer-events-none" />
-                      <div className="relative z-10">
-                        <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-200/80 font-bold block">
-                          Leaderboard Position
-                        </span>
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <span className="text-2xl sm:text-3xl font-display font-black bg-gradient-to-b from-cyan-100 via-cyan-300 to-sky-400 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.65)]">
-                            #{planetRank > 0 ? planetRank : 1}
-                          </span>
-                          <span className="text-[11px] font-mono text-cyan-200/60">Group&apos;s Favorites</span>
-                        </div>
-                      </div>
-
-                      <a
-                        href="/community"
-                        className="relative z-10 px-3 py-2 rounded-xl bg-cyan-950/70 hover:bg-cyan-900/80 text-cyan-200 border border-cyan-400/40 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-[0_0_12px_rgba(34,211,238,0.2)]"
-                      >
-                        <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Board</span>
-                      </a>
-                    </div>
-
-                    {/* Metric 3: Lore Governance & Pioneer Status */}
-                    <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-950/35 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-emerald-400/35 hover:border-emerald-300/60 flex items-center justify-between gap-3 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(16,185,129,0.12)] transition-all">
-                      <div className="absolute -top-8 -right-8 w-24 h-24 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
-                      <div className="relative z-10">
-                        <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-200/80 font-bold block">
-                          Pioneer &amp; Lore Status
-                        </span>
-                        <div className="flex items-baseline gap-1.5 mt-1">
-                          <span className="text-base sm:text-lg font-display font-extrabold text-emerald-300 drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]">
-                            {isFoundingPioneerPlanet(userDossier) ? 'Founding Benchmark' : 'Pioneer Candidate'}
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-mono text-white/50 block mt-0.5">
-                          Voting Closes: June 30, 2027
-                        </span>
-                      </div>
-
-                      <div className="relative z-10 w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
-                        <Vote className="w-5 h-5" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 5-Photo Cinematic Sci-Fi Gallery & 9:16 Viral Video Trailer */}
-                  <MyWorld
-                    dossier={userDossier}
-                    onInspectModal={(d) => {
-                      soundManager.playTone(660, 0.05);
-                      setSelectedDossierModal(d);
-                    }}
-                    onNavigateToGalaxy={onNavigateToGalaxy}
-                  />
-
-                  {/* Story & Philosophy Creed */}
-                  <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#060c18]/85 to-[#040812]/90 backdrop-blur-xl border border-cyan-500/25 space-y-3 shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
-                      <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
-                        Archival Lore &amp; Philosophical Creed
-                      </h3>
-                    </div>
-
-                    {userDossier.futurePromise && (
-                      <blockquote className="p-3.5 rounded-xl bg-slate-950/90 border border-amber-400/35 border-l-4 border-l-amber-400 text-xs sm:text-sm text-amber-100 font-sans italic leading-relaxed shadow-[0_0_15px_rgba(245,158,11,0.1)]">
-                        &ldquo;{userDossier.futurePromise}&rdquo;
-                      </blockquote>
-                    )}
-
-                    <p className="text-xs sm:text-sm text-white/90 font-sans leading-relaxed whitespace-pre-line">
-                      {userDossier.generatedLore}
-                    </p>
                   </div>
                 </div>
               )}
+
+              {/* Active or Simulated Planet Dossier Experience */}
+              <div className="space-y-6 md:space-y-7">
+                {/* Top Sector Dossier Header Banner — Glassmorphic with Pioneer Badging */}
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/60 via-[#050a14]/80 to-cyan-950/45 backdrop-blur-xl border border-amber-500/45 p-5 sm:p-6 md:p-7 shadow-[0_0_35px_rgba(245,158,11,0.22),inset_0_1px_1px_rgba(255,255,255,0.1)]">
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent pointer-events-none" />
+                  <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/12 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4 relative z-10">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 text-black shrink-0 shadow-[0_0_12px_rgba(251,191,36,0.5)]">
+                        <Globe2 className="w-4 h-4" />
+                      </span>
+                      <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
+                        {isGuestWorldSimulation
+                          ? 'Benchmark World Simulation · Ämlemi (#1)'
+                          : 'My Synthesized Sector · Dossier Active'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {isPioneerPlanet(activeWorldDossier) && (
+                        <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-gradient-to-r from-amber-500/30 via-yellow-500/25 to-amber-600/30 text-amber-200 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_16px_rgba(251,191,36,0.4)]">
+                          <Sparkles className="w-3 h-3 text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
+                          <span>
+                            {isFoundingPioneerPlanet(activeWorldDossier)
+                              ? 'FOUNDING PIONEER · #01 · ODI SELIS'
+                              : activeWorldDossier.pioneerBadge || 'PIONEER 2027 · PRE-RELEASE'}
+                          </span>
+                        </span>
+                      )}
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-400/40 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>
+                          {isGuestWorldSimulation
+                            ? 'INTERACTIVE PREVIEW · 1 GOLDEN TICKET READY'
+                            : 'GOLDEN TICKET EXPENDED · ONE-SHOT LOCKED'}
+                        </span>
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-400/40 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-cyan-400" />
+                        <span>{isGuestWorldSimulation ? 'VERIFIED GENESIS ARCHIVE' : 'BOUND TO ACCOUNT'}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap min-w-0">
+                        <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide truncate drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
+                          {activeWorldDossier.planetName}
+                        </h2>
+                        <span className="px-2.5 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-mono text-[10px] font-bold tracking-wider uppercase">
+                          {activeWorldDossier.sectorId || 'SECTOR AKN-01'}
+                        </span>
+                      </div>
+                      <p className="text-xs font-mono text-white/70 mt-1">
+                        Synthesized by <strong className="text-amber-300">{activeWorldDossier.authorName}</strong> ({activeWorldDossier.authorEmail || user?.email || 'Verified Pioneer Account'})
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 flex-wrap md:flex-nowrap md:shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleShareDossier}
+                        className="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/15 font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer min-h-[44px]"
+                      >
+                        {isCopiedDossierLink ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-400">Link Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="w-3.5 h-3.5" />
+                            <span>Share Dossier</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundManager.playTone(660, 0.05);
+                          setSelectedDossierModal(activeWorldDossier);
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono text-xs font-bold shadow-[0_0_20px_rgba(245,158,11,0.35)] flex items-center gap-2 transition-all cursor-pointer min-h-[44px]"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>Inspect 5-Photo Dossier</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3 Live Social Engagement Metric Cards — Calibrated for iPad Portrait (md:grid-cols-3 md:gap-5 md:p-6) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+                  {/* Metric 1: Likes / Votes Count */}
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-amber-950/35 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-amber-400/35 hover:border-amber-300/60 flex items-center justify-between gap-3.5 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(245,158,11,0.12)] transition-all">
+                    <div className="absolute -top-8 -right-8 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="relative z-10 min-w-0">
+                      <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-amber-200/80 font-bold block">
+                        Community Votes
+                      </span>
+                      <div className="flex items-baseline gap-2 mt-1.5">
+                        <span className="text-2xl sm:text-3xl font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(251,191,36,0.6)]">
+                          {activeWorldDossier.votesCount}
+                        </span>
+                        <span className="text-[11px] font-mono text-amber-200/60 uppercase tracking-wider">votes</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleVoteUserDossier}
+                      className={`relative z-10 px-3.5 py-2.5 rounded-xl font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer min-h-[44px] shrink-0 ${
+                        activeWorldDossier.hasVoted
+                          ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.45)]'
+                          : 'bg-amber-950/50 hover:bg-amber-900/60 text-amber-200 hover:text-white border border-amber-400/40'
+                      }`}
+                      title="Cast Vote"
+                    >
+                      <ThumbsUp className={`w-4 h-4 ${activeWorldDossier.hasVoted ? 'fill-black' : ''}`} />
+                      <span>{activeWorldDossier.hasVoted ? 'Voted' : 'Vote'}</span>
+                    </button>
+                  </div>
+
+                  {/* Metric 2: Leaderboard Position */}
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-cyan-950/40 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-cyan-400/35 hover:border-cyan-300/60 flex items-center justify-between gap-3.5 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(34,211,238,0.12)] transition-all">
+                    <div className="absolute -top-8 -right-8 w-24 h-24 bg-cyan-400/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="relative z-10 min-w-0">
+                      <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-200/80 font-bold block">
+                        Leaderboard Position
+                      </span>
+                      <div className="flex items-baseline gap-2 mt-1.5">
+                        <span className="text-2xl sm:text-3xl font-display font-black bg-gradient-to-b from-cyan-100 via-cyan-300 to-sky-400 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.65)]">
+                          #{planetRank > 0 ? planetRank : 1}
+                        </span>
+                        <span className="text-[11px] font-mono text-cyan-200/60 truncate">Group&apos;s Favorites</span>
+                      </div>
+                    </div>
+
+                    <a
+                      href="/community"
+                      className="relative z-10 px-3.5 py-2.5 rounded-xl bg-cyan-950/70 hover:bg-cyan-900/80 text-cyan-200 border border-cyan-400/40 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-[0_0_12px_rgba(34,211,238,0.2)] min-h-[44px] shrink-0"
+                    >
+                      <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Board</span>
+                    </a>
+                  </div>
+
+                  {/* Metric 3: Lore Governance & Pioneer Status */}
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-emerald-950/35 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-emerald-400/35 hover:border-emerald-300/60 flex items-center justify-between gap-3.5 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(16,185,129,0.12)] transition-all">
+                    <div className="absolute -top-8 -right-8 w-24 h-24 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="relative z-10 min-w-0">
+                      <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-200/80 font-bold block">
+                        Pioneer &amp; Lore Status
+                      </span>
+                      <div className="flex items-baseline gap-1.5 mt-1.5">
+                        <span className="text-base sm:text-lg font-display font-extrabold text-emerald-300 drop-shadow-[0_0_10px_rgba(16,185,129,0.4)] truncate">
+                          {isFoundingPioneerPlanet(activeWorldDossier) ? 'Founding Benchmark' : 'Pioneer Candidate'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-white/50 block mt-0.5">
+                        Voting Closes: June 30, 2027
+                      </span>
+                    </div>
+
+                    <div className="relative z-10 w-11 h-11 rounded-xl bg-emerald-950/80 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                      <Vote className="w-5 h-5" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5-Photo Cinematic Sci-Fi Gallery & 9:16 Viral Video Trailer */}
+                <MyWorld
+                  dossier={activeWorldDossier}
+                  onInspectModal={(d) => {
+                    soundManager.playTone(660, 0.05);
+                    setSelectedDossierModal(d);
+                  }}
+                  onNavigateToGalaxy={onNavigateToGalaxy}
+                />
+
+                {/* 9:16 Story Verification Badge & Shareable Asset */}
+                <WorldStoryVerificationBadge
+                  dossier={activeWorldDossier}
+                  editionRank={planetRank > 0 ? planetRank : 1}
+                  isSimulationMode={isGuestWorldSimulation}
+                  onUnlockSimulation={() => {
+                    soundManager.playTone(660, 0.05);
+                    if (onNavigateToContest) {
+                      onNavigateToContest();
+                    } else if (typeof window !== 'undefined') {
+                      window.location.href = '/contest';
+                    }
+                  }}
+                  onInspectDossier={(d) => {
+                    soundManager.playTone(660, 0.05);
+                    setSelectedDossierModal(d);
+                  }}
+                />
+
+                {/* Story & Philosophy Creed */}
+                <div className="p-5 sm:p-6 md:p-7 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#060c18]/85 to-[#040812]/90 backdrop-blur-xl border border-cyan-500/25 space-y-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
+                    <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
+                      Archival Lore &amp; Philosophical Creed
+                    </h3>
+                  </div>
+
+                  {activeWorldDossier.futurePromise && (
+                    <blockquote className="p-4 rounded-xl bg-slate-950/90 border border-amber-400/35 border-l-4 border-l-amber-400 text-xs sm:text-sm text-amber-100 font-sans italic leading-relaxed shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+                      &ldquo;{activeWorldDossier.futurePromise}&rdquo;
+                    </blockquote>
+                  )}
+
+                  <p className="text-xs sm:text-sm text-white/90 font-sans leading-relaxed whitespace-pre-line">
+                    {activeWorldDossier.generatedLore}
+                  </p>
+                </div>
+
+                {/* Guest Conversion Push Footer Card */}
+                {isGuestWorldSimulation && (
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#090d18] via-[#060c1a] to-black border border-amber-400/45 p-6 sm:p-8 text-center space-y-5 shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(245,158,11,0.18)]">
+                    <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-400/15 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-[0_0_24px_rgba(245,158,11,0.3)]">
+                      <Sparkles className="w-7 h-7" />
+                    </div>
+                    <div className="space-y-2 max-w-xl mx-auto">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-widest uppercase bg-amber-400/15 text-amber-300 border border-amber-400/35">
+                        READY TO MINT YOUR OWN SECTOR?
+                      </span>
+                      <h3 className="text-xl sm:text-2xl font-display font-extrabold text-white tracking-wide">
+                        Claim Your 1 Golden Ticket &amp; Synthesize Your World
+                      </h3>
+                      <p className="text-xs sm:text-sm text-white/65 font-sans leading-relaxed">
+                        Answer Mill&apos;s 8 human-centric questions to generate your personal 5-photo 4K sci-fi archive, claim your unique world edition number, and unlock your downloadable 9:16 Story Verification Badge in <strong className="text-amber-300">My Assets</strong>.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundManager.playTone(660, 0.05);
+                          if (onNavigateToContest) {
+                            onNavigateToContest();
+                          } else if (typeof window !== 'undefined') {
+                            window.location.href = '/contest';
+                          }
+                        }}
+                        className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_30px_rgba(245,158,11,0.4)] transition-all cursor-pointer"
+                      >
+                        <Sparkles className="w-4 h-4 fill-black" />
+                        <span>LAUNCH MILL WIZARD →</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
 
-          {/* Tab 4: My Assets — exclusively the 3 verified holder assets (strictly gated to explicit VIP verification route) */}
-          {isVipMode && activeTab === 'assets' && (
+          {/* Tab 4: My Assets — Permanently accessible for 9:16 Story Verification Badge + VIP Holder Archive */}
+          {activeTab === 'assets' && (
             <motion.div
               key="assets-view"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="space-y-3.5 sm:space-y-4 lg:space-y-5"
+              className="space-y-5 sm:space-y-6 md:space-y-7"
             >
-              {/* Asset 1: Äkinoya Founding Pass — Physical Limited Edition */}
-              <div className="bg-[#060a14] border border-white/15 rounded-2xl p-4 sm:p-6 shadow-xl">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 01 · Physical Pass</span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-emerald-300 whitespace-nowrap">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    CLAIMED &amp; ACTIVE
-                  </span>
-                </div>
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-xl bg-cyan-950/70 border border-cyan-400/30 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-5 h-5 text-cyan-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm sm:text-base font-display font-bold text-white leading-snug">
-                      Äkinoya Founding Pass — Physical Limited Edition
-                    </h3>
-                    <p className="text-[11px] sm:text-xs font-mono text-cyan-300/80">
-                      {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
-                    </p>
-                  </div>
-                </div>
+              {/* Asset 01: 9:16 Story Verification Badge & Shareable World Asset (Accessible for every registered world, even non-VIP) */}
+              {activeWorldDossier && (
+                <WorldStoryVerificationBadge
+                  dossier={activeWorldDossier}
+                  editionRank={planetRank > 0 ? planetRank : 1}
+                  isSimulationMode={isGuestWorldSimulation}
+                  onUnlockSimulation={() => {
+                    soundManager.playTone(660, 0.05);
+                    if (onNavigateToContest) {
+                      onNavigateToContest();
+                    } else if (typeof window !== 'undefined') {
+                      window.location.href = '/contest';
+                    }
+                  }}
+                  onInspectDossier={(d) => {
+                    soundManager.playTone(660, 0.05);
+                    setSelectedDossierModal(d);
+                  }}
+                />
+              )}
 
-                <div className="mt-4 divide-y divide-white/5 rounded-xl bg-black/40 border border-white/5 px-3 sm:px-4 font-mono text-[11px] sm:text-xs">
-                  <div className="py-2.5 flex items-center justify-between gap-3">
-                    <span className="text-white/45 shrink-0">HOLDER</span>
-                    {holderName ? (
-                      <span className="text-white font-medium truncate">{holderName}</span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => (onNavigateToPassport ? onNavigateToPassport() : onNavigateToVerify?.(activePassId))}
-                        className="text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
-                      >
-                        Register holder name
-                      </button>
-                    )}
-                  </div>
-                  <div className="py-2.5 flex items-center justify-between gap-3">
-                    <span className="text-white/45 shrink-0">PASS ID</span>
-                    <span className="text-white/80 truncate">#{activePassId}</span>
-                  </div>
-                  <div className="py-2.5 flex items-center justify-between gap-3">
-                    <span className="text-white/45 shrink-0">EDITION</span>
-                    <span className="text-white/80">
-                      {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Asset 2: Bingäa Official Artwork / Cover Image & Publication Master */}
-              <div className="bg-[#060a14] border border-white/15 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xl">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 02 · Official Artwork &amp; Comicbook Master</span>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-[9.5px] sm:text-[10px] font-mono text-cyan-300">
-                    HI-RES MASTER
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => setShowCoverPreview(true)}
-                    className="shrink-0 w-24 sm:w-28 aspect-[3/4] rounded-lg overflow-hidden border border-white/15 hover:border-cyan-400/60 transition-colors cursor-pointer shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-                    aria-label="Preview Bingäa cover artwork"
-                  >
-                    <img src={BINGAA_COVER_URL} alt="Bingäa official cover artwork" className="w-full h-full object-cover" />
-                  </button>
-                  <div className="min-w-0 flex-1 w-full space-y-3 text-center sm:text-left">
-                    <div>
-                      <h3 className="text-base sm:text-lg font-display font-bold text-white leading-snug">
-                        Bingäa Official Artwork / Cover Image &amp; Digital Publication
-                      </h3>
-                      <p className="text-[11px] sm:text-xs font-mono text-white/60 mt-1 leading-relaxed">
-                        <strong className="text-cyan-300">Cover Graphic:</strong> High-resolution master Retina artwork (PNG format).
-                        <br className="hidden sm:inline" />{' '}
-                        <strong className="text-emerald-300">Comicbook PDF:</strong> Complete Issue #1 digital publication (Print-ready master).
-                      </p>
-                    </div>
-
-                    {/* Consolidated 4 Clear Buttons */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setShowCoverPreview(true)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 transition-all cursor-pointer min-h-[44px]"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>View Cover</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setShowComicReader(true)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-400 bg-emerald-950/40 transition-all cursor-pointer min-h-[44px]"
-                      >
-                        <BookOpen className="w-3.5 h-3.5" />
-                        <span>Read Comic</span>
-                      </button>
-
-                      <a
-                        href={BINGAA_COVER_URL}
-                        download={BINGAA_COVER_FILENAME}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-white/80 hover:text-white border border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all min-h-[44px]"
-                      >
-                        <Download className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>Download Cover</span>
-                      </a>
-
-                      <a
-                        href={BINGAA_PDF_URL}
-                        download={BINGAA_PDF_FILENAME}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 hover:bg-cyan-900/60 transition-all min-h-[44px]"
-                      >
-                        <Download className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>Download Comic PDF</span>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Asset 3: Bingäa Issue #1 Certificate of Authenticity (COA) */}
-              <div className="bg-[#060a14] border border-white/15 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xl">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Certificate of Authenticity</span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10px] font-mono font-semibold tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)] max-w-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                    <span className="truncate sm:whitespace-normal">OFFICIALLY VERIFIED · HUMAN CERTIFICATION PROTOCOL ACTIVE</span>
-                  </span>
-                </div>
-
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm sm:text-base font-display font-bold text-white leading-snug">
-                      Signed Certificate of Authenticity (COA)
-                    </h3>
-                    <p className="text-[10.5px] sm:text-[11px] font-mono text-white/50 mt-0.5">
-                      Deterministic cryptographic provenance bound to pass #{activePassId} ({isFoundersPass ? 'Founders Pass #0' : `Edition #${editionDisplay} of 100`}).
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-3 space-y-3">
-                  <CertificateOfAuthenticity certificate={activeCertificate} />
-
-                  <button
-                    type="button"
-                    onClick={() => downloadCertificatePng(activeCertificate)}
-                    className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-cyan-300 hover:text-white bg-cyan-950/50 hover:bg-cyan-900 border border-cyan-500/40 hover:border-cyan-400 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.2)]"
-                  >
-                    <Download className="w-4 h-4 text-cyan-400" />
-                    <span>Download Certificate</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Asset 4: Synthesized 5-Photo Planetary Sector Dossier */}
-              <div className="relative overflow-hidden rounded-2xl border border-cyan-400/25 bg-[#060a14] p-5 sm:p-7 shadow-[0_0_35px_rgba(6,182,212,0.12)] space-y-5">
+              {/* Asset 02: Synthesized 5-Photo Planetary Sector Dossier */}
+              <div className="relative overflow-hidden rounded-2xl border border-cyan-400/30 bg-gradient-to-br from-cyan-950/35 via-[#060a14]/90 to-[#040710]/95 backdrop-blur-xl p-5 sm:p-6 md:p-7 shadow-[0_0_35px_rgba(6,182,212,0.12)] space-y-5">
                 <div className="absolute -top-24 -right-24 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div className="space-y-1">
                     <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-cyan-400 uppercase">
-                      Asset 04 · Synthesized Planetary Sector Dossier
+                      Asset 02 · Synthesized Planetary Sector Dossier
                     </span>
                     <h3 className="text-base sm:text-lg font-display font-bold text-white tracking-wide">
-                      {userDossier ? userDossier.planetName : 'Personal Planetary Worldbuilding'}
+                      {activeWorldDossier ? activeWorldDossier.planetName : 'Personal Planetary Worldbuilding'}
                     </h3>
                   </div>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/70 border border-cyan-400/40 text-[10px] font-mono font-semibold tracking-wider text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.25)] self-start sm:self-auto">
                     <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
                     <span>
-                      {userDossier ? 'ONE-SHOT REGISTERED · BOUND TO ACCOUNT' : '1 GOLDEN TICKET READY'}
+                      {userDossier ? 'ONE-SHOT REGISTERED · BOUND TO ACCOUNT' : 'BENCHMARK PREVIEW · 1 GOLDEN TICKET READY'}
                     </span>
                   </span>
                 </div>
 
-                {userDossier ? (
+                {activeWorldDossier && (
                   <div className="space-y-5">
-                    {/* Large Widescreen 16:9 Glassmorphism Card */}
                     <div className="relative group rounded-xl overflow-hidden border border-white/15 bg-gradient-to-b from-white/5 to-black/80 p-1 shadow-2xl">
                       <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg bg-black">
                         <img
-                          src={userDossier.renders.hero}
-                          alt={userDossier.planetName}
+                          src={activeWorldDossier.renders.hero}
+                          alt={activeWorldDossier.planetName}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          loading="lazy"
+                          decoding="async"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
-                        
-                        {/* Live Badges Overlay */}
+
                         <div className="absolute top-3 left-3 flex flex-wrap gap-2">
                           <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-black/70 backdrop-blur-md text-cyan-300 border border-cyan-400/40 shadow-lg">
-                            HIGH-RES CINEMATIC RENDER
+                            5-PHOTO 4K ARCHIVE
                           </span>
                           <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-black/70 backdrop-blur-md text-amber-300 border border-amber-400/40 shadow-lg flex items-center gap-1">
                             <Trophy className="w-3 h-3 text-amber-400" />
-                            {userDossier.votesCount} VOTES
+                            {activeWorldDossier.votesCount} VOTES
                           </span>
                         </div>
 
-                        {/* Bottom Information Bar */}
                         <div className="absolute bottom-3 left-3 right-3 space-y-1 text-left">
                           <div className="text-[11px] font-mono text-cyan-300/80 tracking-wider">
-                            COORDINATES: {userDossier.id}
+                            COORDINATES: {activeWorldDossier.id}
                           </div>
                           <p className="text-xs sm:text-sm text-white/95 font-sans italic line-clamp-2 drop-shadow-md">
-                            "{userDossier.futurePromise || userDossier.generatedLore}"
+                            &ldquo;{activeWorldDossier.futurePromise || activeWorldDossier.generatedLore}&rdquo;
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Social & Explorer Action Bar */}
                     <div className="flex flex-wrap items-center gap-2.5 pt-1">
                       <button
                         type="button"
                         onClick={() => {
                           soundManager.playTone(660, 0.05);
-                          setSelectedDossierModal(userDossier);
+                          setSelectedDossierModal(activeWorldDossier);
                         }}
                         className="flex-1 min-h-[46px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(6,182,212,0.35)]"
                       >
@@ -2425,29 +2348,199 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           className="min-h-[46px] px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white text-xs font-mono transition-all cursor-pointer flex items-center gap-2 shadow-lg"
                         >
                           <Trophy className="w-4 h-4 text-amber-400" />
-                          <span>Voting Hub</span>
+                          <span>{userDossier ? 'Voting Hub' : 'Synthesize Your World →'}</span>
                         </button>
                       )}
                     </div>
                   </div>
-                ) : (
-                  <div className="space-y-4 p-5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md">
-                    <p className="text-xs sm:text-sm text-white/80 font-sans leading-relaxed">
-                      Your account holds 1 Golden Ticket. Answer Mill's 8 human-centric questions to synthesize your official 5-photo high-resolution cinematic sci-fi dossier and sector lore.
-                    </p>
-                    {onNavigateToContest && (
-                      <button
-                        type="button"
-                        onClick={onNavigateToContest}
-                        className="w-full sm:w-auto min-h-[46px] px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(245,158,11,0.35)]"
-                      >
-                        <Sparkles className="w-4 h-4 fill-black" />
-                        <span>Launch 8-Step Worldbuilding Protocol</span>
-                      </button>
-                    )}
-                  </div>
                 )}
               </div>
+
+              {isVipMode ? (
+                <>
+                  {/* Asset 03: Äkinoya Founding Pass — Physical Limited Edition */}
+                  <div className="bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-6 md:p-7 shadow-xl">
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Physical Pass</span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-emerald-300 whitespace-nowrap">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        CLAIMED &amp; ACTIVE
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-11 h-11 rounded-xl bg-cyan-950/70 border border-cyan-400/30 flex items-center justify-center shrink-0">
+                        <ShieldCheck className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-sm sm:text-base font-display font-bold text-white leading-snug">
+                          Äkinoya Founding Pass — Physical Limited Edition
+                        </h3>
+                        <p className="text-[11px] sm:text-xs font-mono text-cyan-300/80">
+                          {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 divide-y divide-white/5 rounded-xl bg-black/40 border border-white/5 px-3 sm:px-4 font-mono text-[11px] sm:text-xs">
+                      <div className="py-2.5 flex items-center justify-between gap-3">
+                        <span className="text-white/45 shrink-0">HOLDER</span>
+                        {holderName ? (
+                          <span className="text-white font-medium truncate">{holderName}</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => (onNavigateToPassport ? onNavigateToPassport() : onNavigateToVerify?.(activePassId))}
+                            className="text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                          >
+                            Register holder name
+                          </button>
+                        )}
+                      </div>
+                      <div className="py-2.5 flex items-center justify-between gap-3">
+                        <span className="text-white/45 shrink-0">PASS ID</span>
+                        <span className="text-white/80 truncate">#{activePassId}</span>
+                      </div>
+                      <div className="py-2.5 flex items-center justify-between gap-3">
+                        <span className="text-white/45 shrink-0">EDITION</span>
+                        <span className="text-white/80">
+                          {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Asset 04: Bingäa Official Artwork / Cover Image & Publication Master */}
+                  <div className="bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-6 md:p-7 space-y-4 shadow-xl">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 04 · Official Artwork &amp; Comicbook Master</span>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-[9.5px] sm:text-[10px] font-mono text-cyan-300">
+                        HI-RES MASTER
+                      </span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowCoverPreview(true)}
+                        className="shrink-0 w-24 sm:w-28 aspect-[3/4] rounded-lg overflow-hidden border border-white/15 hover:border-cyan-400/60 transition-colors cursor-pointer shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+                        aria-label="Preview Bingäa cover artwork"
+                      >
+                        <img src={BINGAA_COVER_URL} alt="Bingäa official cover artwork" className="w-full h-full object-cover" />
+                      </button>
+                      <div className="min-w-0 flex-1 w-full space-y-3 text-center sm:text-left">
+                        <div>
+                          <h3 className="text-base sm:text-lg font-display font-bold text-white leading-snug">
+                            Bingäa Official Artwork / Cover Image &amp; Digital Publication
+                          </h3>
+                          <p className="text-[11px] sm:text-xs font-mono text-white/60 mt-1 leading-relaxed">
+                            <strong className="text-cyan-300">Cover Graphic:</strong> High-resolution master Retina artwork (PNG format).
+                            <br className="hidden sm:inline" />{' '}
+                            <strong className="text-emerald-300">Comicbook PDF:</strong> Complete Issue #1 digital publication (Print-ready master).
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setShowCoverPreview(true)}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 transition-all cursor-pointer min-h-[44px]"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>View Cover</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowComicReader(true)}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-400 bg-emerald-950/40 transition-all cursor-pointer min-h-[44px]"
+                          >
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span>Read Comic</span>
+                          </button>
+
+                          <a
+                            href={BINGAA_COVER_URL}
+                            download={BINGAA_COVER_FILENAME}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-white/80 hover:text-white border border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all min-h-[44px]"
+                          >
+                            <Download className="w-3.5 h-3.5 text-cyan-400" />
+                            <span>Download Cover</span>
+                          </a>
+
+                          <a
+                            href={BINGAA_PDF_URL}
+                            download={BINGAA_PDF_FILENAME}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 hover:bg-cyan-900/60 transition-all min-h-[44px]"
+                          >
+                            <Download className="w-3.5 h-3.5 text-cyan-400" />
+                            <span>Download Comic PDF</span>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Asset 05: Bingäa Issue #1 Certificate of Authenticity (COA) */}
+                  <div className="bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-6 md:p-7 space-y-4 shadow-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                      <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 05 · Certificate of Authenticity</span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10px] font-mono font-semibold tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)] max-w-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                        <span className="truncate sm:whitespace-normal">OFFICIALLY VERIFIED · HUMAN CERTIFICATION PROTOCOL ACTIVE</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                        <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm sm:text-base font-display font-bold text-white leading-snug">
+                          Signed Certificate of Authenticity (COA)
+                        </h3>
+                        <p className="text-[10.5px] sm:text-[11px] font-mono text-white/50 mt-0.5">
+                          Deterministic cryptographic provenance bound to pass #{activePassId} ({isFoundersPass ? 'Founders Pass #0' : `Edition #${editionDisplay} of 100`}).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 space-y-3">
+                      <CertificateOfAuthenticity certificate={activeCertificate} />
+
+                      <button
+                        type="button"
+                        onClick={() => downloadCertificatePng(activeCertificate)}
+                        className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-cyan-300 hover:text-white bg-cyan-950/50 hover:bg-cyan-900 border border-cyan-500/40 hover:border-cyan-400 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.2)]"
+                      >
+                        <Download className="w-4 h-4 text-cyan-400" />
+                        <span>Download Certificate</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* Non-VIP notice for physical pass & comic master COA */
+                <div className="p-5 sm:p-6 md:p-7 rounded-2xl bg-[#060a14]/90 border border-amber-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+                  <div className="space-y-1">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-amber-300">
+                      <Lock className="w-3.5 h-3.5 text-amber-400" />
+                      <span>FOUNDING PASS ARCHIVE · VIP COLLECTOR VAULT</span>
+                    </span>
+                    <h4 className="text-sm sm:text-base font-display font-bold text-white">
+                      Have a Physical Äkinoya Founding Pass or Bingäa Edition Code?
+                    </h4>
+                    <p className="text-xs text-white/65 font-sans">
+                      Your 9:16 World Verification Badge above is permanently unlocked. Verify a physical NFC Pass ID to additionally unlock the print-ready Bingäa Issue #1 PDF master and signed COA.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => (onNavigateToPassport ? onNavigateToPassport() : onNavigateToVerify?.())}
+                    className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono text-xs font-extrabold uppercase tracking-wider cursor-pointer shrink-0 min-h-[44px]"
+                  >
+                    Verify VIP Pass →
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
         </div>

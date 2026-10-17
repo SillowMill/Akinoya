@@ -1887,82 +1887,86 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                                   </div>
                                   <div>
                                     <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                                      <span>{post.author}</span>
-                                      <span
-                                        className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                                          post.role === 'CREATOR'
-                                            ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
-                                            : post.role === 'ANNUAL PASS' || post.role === 'ANNUAL PASS MEMBER'
-                                            ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
-                                            : post.role === 'VIP GUEST' || post.role === 'PATRON' || post.role === 'PATRON MEMBER'
-                                            ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
-                                            : 'bg-slate-500/20 text-slate-300 border border-slate-400/40'
-                                        }`}
-                                      >
-                                        {post.role === 'PATRON' || post.role === 'PATRON MEMBER' ? 'VIP GUEST' : post.role}
-                                      </span>
-                                    </div>
-                                    <div className="text-[10px] font-mono text-white/40">{post.timestamp}</div>
-                                  </div>
-                                </div>
-
-                              <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-sans whitespace-pre-line">
-                                {post.content}
-                              </p>
-
-                              {/* Large High-Res Image Post Attachment (Strictly disabled in #general-chat) */}
-                              {post.imageUrl && post.channelId !== 'general-chat' && (
-                                <div className="rounded-xl overflow-hidden border border-white/10 max-h-96 bg-black/80 flex items-center justify-center">
-                                  <img src={post.imageUrl} alt="Attached" className="max-h-96 w-full object-cover" />
-                                </div>
-                              )}
-
-                              {/* Like & Reply Bar */}
-                              <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleDiscussionLike(post.id)}
-                                  className={`min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
-                                    post.hasLiked
-                                      ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold'
-                                      : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
-                                  }`}
-                                >
-                                  <ThumbsUp className={`w-3.5 h-3.5 ${post.hasLiked ? 'text-cyan-400' : ''}`} />
-                                  <span>{post.likes}</span>
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (!isAuthenticated) {
-                                      soundManager.playTone(330, 0.08);
-                                      openAuthModal('signin');
-                                      return;
-                                    }
-                                    setActiveReplyPost(post);
-                                  }}
-                                  className="min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
-                                >
-                                  <MessageCircle className="w-3.5 h-3.5" />
-                                  <span>{post.replies.length} Replies</span>
-                                </button>
-                              </div>
-
-                              {/* Inline replies */}
-                              {post.replies.length > 0 && (
-                                <div className="pt-2 border-t border-white/5 space-y-2">
-                                  {post.replies.map((rep) => (
-                                    <div key={rep.id} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 text-xs">
-                                      <div className="flex items-center justify-between mb-1">
-                                        <span className="font-bold text-cyan-300 text-[11px]">{rep.author}</span>
-                                        <span className="text-[9px] font-mono text-white/40">{rep.timestamp}</span>
+                                        <span>{post.author}</span>
+                                        <span
+                                          className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                                            post.role === 'CREATOR'
+                                              ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
+                                              : post.role === 'ANNUAL PASS' || post.role === 'ANNUAL PASS MEMBER'
+                                              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                                              : post.role === 'VIP GUEST' || post.role === 'PATRON' || post.role === 'PATRON MEMBER'
+                                              ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40'
+                                              : 'bg-slate-500/20 text-slate-300 border border-slate-400/40'
+                                          }`}
+                                        >
+                                          {post.role === 'PATRON' || post.role === 'PATRON MEMBER' ? 'VIP GUEST' : post.role}
+                                        </span>
                                       </div>
-                                      <p className="text-white/80 font-sans">{rep.content}</p>
                                     </div>
-                                  ))}
+                                  </div>
+
+                                <p className="text-xs sm:text-sm text-white/85 leading-relaxed font-sans whitespace-pre-line">
+                                  {post.content}
+                                </p>
+
+                                {/* Large High-Res Image Post Attachment (Strictly disabled in #general-chat) */}
+                                {post.imageUrl && post.channelId !== 'general-chat' && (
+                                  <div className="rounded-xl overflow-hidden border border-white/10 max-h-96 bg-black/80 flex items-center justify-center">
+                                    <img
+                                      src={post.imageUrl}
+                                      alt="Attached"
+                                      loading="lazy"
+                                      decoding="async"
+                                      className="max-h-96 w-full object-cover"
+                                    />
+                                  </div>
+                                )}
+
+                                {/* Like & Reply Bar */}
+                                <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleDiscussionLike(post.id)}
+                                    className={`min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
+                                      post.hasLiked
+                                        ? 'bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold'
+                                        : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
+                                    }`}
+                                  >
+                                    <ThumbsUp className={`w-3.5 h-3.5 ${post.hasLiked ? 'text-cyan-400' : ''}`} />
+                                    <span>{post.likes}</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (!isAuthenticated) {
+                                        soundManager.playTone(330, 0.08);
+                                        openAuthModal('signin');
+                                        return;
+                                      }
+                                      setActiveReplyPost(post);
+                                    }}
+                                    className="min-h-[48px] flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-mono text-white/60 hover:text-cyan-300 transition-colors cursor-pointer"
+                                  >
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                    <span>{post.replies.length} Replies</span>
+                                  </button>
                                 </div>
-                              )}
+
+                                {/* Inline replies */}
+                                {post.replies.length > 0 && (
+                                  <div className="pt-2 border-t border-white/5 space-y-2">
+                                    {post.replies.map((rep) => (
+                                      <div key={rep.id} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 text-xs">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <span className="font-bold text-cyan-300 text-[11px]">{rep.author}</span>
+                                        </div>
+                                        <p className="text-white/80 font-sans">{rep.content}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                             </div>
                           ))
                         )}
@@ -2406,7 +2410,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     <div key={r.id} className="p-2.5 rounded-lg bg-black/60 border border-white/5 text-xs">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-bold text-white">{r.author}</span>
-                        <span className="text-[9px] font-mono text-white/40">{r.timestamp}</span>
                       </div>
                       <p className="text-white/80 font-sans">{r.content}</p>
                     </div>
