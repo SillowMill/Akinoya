@@ -96,3 +96,159 @@
     font-size: 16px !important;
   }
 }
+
+/* ==========================================================================
+   iPAD / TABLET LAYOUT LOCK & GPU HARDWARE ACCELERATION
+   ========================================================================== */
+
+/* App shells: clip horizontal overflow WITHOUT creating a scroll container.
+   `overflow-x: hidden` turns the element into a scroll container on WebKit,
+   which silently breaks every `position: sticky` descendant (they then scroll
+   away / "float" with the page). `clip` keeps sticky working. */
+.app-shell {
+  overflow-x: hidden;
+}
+@supports (overflow: clip) {
+  .app-shell {
+    overflow-x: clip;
+  }
+}
+
+/* Root-level horizontal guard (does not affect sticky) */
+html,
+body {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Fixed background layer sized to the LARGEST viewport so iPad Safari toolbar
+   collapse/expand never exposes a black strip while scrolling. */
+.akinoya-bg-layer {
+  height: 100vh;
+  height: 100lvh;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Sticky headers: own compositor layer -> no jitter/repaint while scrolling */
+.hub-sticky-header {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Community Hub sidebar: docked exactly under the measured header.
+   Uses `svh` (stable small viewport) instead of `dvh` so the panel no longer
+   resizes / bounces when the iPad toolbar shows or hides during scroll. */
+.hub-sidebar {
+  top: var(--hub-header-h, 65px);
+  height: calc(100vh - var(--hub-header-h, 65px));
+  height: calc(100svh - var(--hub-header-h, 65px));
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout paint;
+}
+
+.hub-sidebar-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Short landscape tablets: tighten sidebar so the pinned CTA dock always fits */
+@media (min-width: 768px) and (max-height: 820px) {
+  .hub-sidebar-scroll {
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+  }
+  .hub-sidebar-scroll > * + * {
+    margin-top: 1rem !important;
+  }
+  .hub-sidebar-dock {
+    padding-top: 0.625rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
+/* Generic opt-in GPU layer helper */
+.gpu-layer {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Heavy infinite animations: promote to their own layer */
+.animate-spin,
+.animate-pulse,
+.animate-ping,
+.animate-float,
+.animate-planet-aura {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   LIGHTWEIGHT FALLBACKS FOR OLDER / LOW-POWER DEVICES
+   <html data-perf="lite"> is set at boot (<=4 cores, <=4GB RAM, or
+   reduced-motion). Backdrop blurs, large glows & mix-blend are the most
+   expensive paint operations on older iPads.
+   -------------------------------------------------------------------------- */
+html[data-perf='lite'] [class*='backdrop-blur'] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html[data-perf='lite'] [class*='shadow-['],
+html[data-perf='lite'] .glow-cyan,
+html[data-perf='lite'] .glow-cyan-sm {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45) !important;
+}
+
+html[data-perf='lite'] [class*='blur-3xl'],
+html[data-perf='lite'] [class*='blur-2xl'] {
+  filter: none !important;
+  opacity: 0.35;
+}
+
+html[data-perf='lite'] .mix-blend-screen {
+  mix-blend-mode: normal !important;
+}
+
+html[data-perf='lite'] .text-glow {
+  text-shadow: none;
+}
+
+html[data-perf='lite'] .animate-float,
+html[data-perf='lite'] .animate-planet-aura {
+  animation: none !important;
+}
+
+/* Tablets (incl. older iPads): the backdrop-blur on sticky/fixed elements is
+   the classic WebKit cause of black rectangles while scrolling. Swap for a
+   near-opaque solid fill on touch tablets. */
+@media (hover: none) and (pointer: coarse) and (min-width: 768px) and (max-width: 1366px) {
+  .hub-sticky-header {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: rgba(10, 11, 16, 0.97) !important;
+  }
+}
+
+/* Honour OS reduced-motion everywhere */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

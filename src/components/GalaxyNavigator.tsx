@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { rafThrottle } from '../utils/performance';
 import {
   Compass,
   Search,
@@ -142,11 +143,14 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
   // Mobile detection
   useEffect(() => {
-    const handleResize = () => {
+    const handleResize = rafThrottle(() => {
       setIsMobile(window.innerWidth < 768);
+    });
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => {
+      handleResize.cancel();
+      window.removeEventListener('resize', handleResize);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Viewport scroll stabilization: Prevent virtual keyboard from shifting the screen or leaving persistent black bars

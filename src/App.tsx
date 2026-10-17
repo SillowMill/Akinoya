@@ -362,7 +362,7 @@ export default function App() {
   const isVipRoute = route === 'verify';
 
   return (
-    <main className="relative min-h-[100dvh] w-full bg-[#050505] text-white flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200">
+    <main className="app-shell relative min-h-[100dvh] w-full bg-[#050505] text-white flex flex-col justify-between selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Official Pioneer Launch Countdown Announcement Banner (unmounted on the fullscreen Galaxy view) */}
       {route !== 'galaxy' && (
         <PioneerCampaignBanner onOpenClaimModal={() => setIsClaimWorldOpen(true)} />

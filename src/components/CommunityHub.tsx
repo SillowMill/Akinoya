@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
+import { rafThrottle } from '../utils/performance';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
 import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
@@ -152,6 +153,32 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   onOpenAuthModal,
   onOpenCreator,
 }) => {
+  // Sticky header measurement: docks the sidebar exactly beneath the header on every
+  // viewport (iPad portrait/landscape) so nothing floats or leaves a see-through gap.
+  const hubHeaderRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = hubHeaderRef.current;
+    if (!el || typeof window === 'undefined') return;
+    const root = el.parentElement;
+    const apply = rafThrottle(() => {
+      const h = Math.round(el.getBoundingClientRect().height);
+      if (root) root.style.setProperty('--hub-header-h', `${h}px`);
+    });
+    apply();
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => apply());
+      observer.observe(el);
+    } else {
+      window.addEventListener('resize', apply, { passive: true });
+    }
+    return () => {
+      apply.cancel();
+      observer?.disconnect();
+      window.removeEventListener('resize', apply);
+    };
+  }, []);
+
   // Authentication & RBAC User State
   const {
     user,
@@ -998,9 +1025,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   };
 
   return (
-    <div className="relative min-h-[100dvh] w-full bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden">
+    <div className="app-shell relative min-h-[100dvh] w-full bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Top Universal Header Bar */}
-      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/80 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 w-full max-w-full overflow-visible">
+      <header
+        ref={hubHeaderRef}
+        className="hub-sticky-header sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/80 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 w-full max-w-full overflow-visible"
+      >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"
@@ -1197,7 +1227,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               {/* ======================================================== */}
               {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION (>= 768px)   */}
               {/* ======================================================== */}
-              <aside className="hidden md:flex w-64 lg:w-72 shrink-0 flex-col justify-between bg-[#050812]/90 backdrop-blur-xl border-r border-white/10 p-4 lg:p-5 sticky top-20 h-[calc(100dvh-5rem)] overflow-y-auto z-30 space-y-6">
+              <aside className="hub-sidebar hidden md:flex w-64 lg:w-72 shrink-0 flex-col bg-[#050812] border-r border-white/10 sticky self-start z-40 overflow-hidden">
+                <div className="hub-sidebar-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 space-y-6">
                 <div className="space-y-4">
                   {/* Sidebar Branding Header */}
                   <div className="pb-3 border-b border-white/10 space-y-1">
@@ -1320,7 +1351,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       Paid memberships &amp; VR planet minting launch worldwide.
                     </p>
                   </div>
+                </div>
+                </div>
 
+                {/* Pinned CTA dock: locked to sidebar bottom, never scrolls away or gets overlapped */}
+                <div className="hub-sidebar-dock shrink-0 p-4 lg:p-5 pt-3 border-t border-white/10 bg-[#050812] space-y-2.5">
                   <button
                     type="button"
                     onClick={() => {
@@ -1344,7 +1379,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               </aside>
 
               {/* Main Content Viewport */}
-              <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8">
+              <main className="relative z-0 isolate flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8">
                 {/* ======================================================== */}
                 {/* SECTION 0: 00 · WELCOME & VISION PORTAL (PRIMARY LANDING)*/}
                 {/* ======================================================== */}

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { rafThrottle } from '../utils/performance';
 import exactPlanetDesktop from '../assets/images/akinoya_hero_bg.jpg';
 import exactPlanetMobile from '../assets/images/akinoya_hero_bg.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
@@ -33,21 +34,33 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animationFrameId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let animationFrameId = 0;
+    // Size canvas to the LARGEST viewport so iPad/iOS toolbar collapse never exposes black edges
+    const measure = () => ({
+      w: window.innerWidth,
+      h: Math.max(window.innerHeight, window.screen?.height || 0, document.documentElement.clientHeight),
+    });
+    let { w: width, h: height } = measure();
+    canvas.width = width;
+    canvas.height = height;
 
-    const handleResize = () => {
+    // Only re-allocate the canvas on real layout changes (width / orientation), never on
+    // toolbar show/hide during scroll — resetting canvas.width wipes it to black on WebKit.
+    const handleResize = rafThrottle(() => {
       if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
+      const next = measure();
+      if (next.w === width && next.h <= height) return;
+      width = canvas.width = next.w;
+      height = canvas.height = next.h;
+    });
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('orientationchange', handleResize, { passive: true });
 
     // Subtle twinkling stars & bioluminescent energy motes
     const isMobile = window.innerWidth < 768;
-    const particleCount = isMobile ? 65 : 120; // Optimized for mobile CPU/battery
+    const isLite = document.documentElement.dataset.perf === 'lite';
+    const particleCount = isLite ? 35 : isMobile ? 65 : 120; // Optimized for mobile / older CPUs
     const particles: Particle[] = [];
     const colors = [
       'rgba(103, 232, 249, ', // cyan
@@ -70,8 +83,10 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
     }
 
     let frame = 0;
+    let isRunning = true;
 
     const render = () => {
+      if (!isRunning) return;
       frame++;
       ctx.clearRect(0, 0, width, height);
 
@@ -97,10 +112,26 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
       animationFrameId = requestAnimationFrame(render);
     };
 
+    // Pause the animation loop while the tab is hidden to save CPU/battery
+    const handleVisibility = () => {
+      if (document.hidden) {
+        isRunning = false;
+        cancelAnimationFrame(animationFrameId);
+      } else if (!isRunning) {
+        isRunning = true;
+        render();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     render();
 
     return () => {
+      isRunning = false;
+      handleResize.cancel();
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibility);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
@@ -110,7 +141,10 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
   const currentBgKey = isUnlocked ? (viewMode === 'orbit' ? 'bg2-world' : 'bg1-landing') : 'bg1-landing';
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden bg-[#050505] z-0">
+    <div
+      className="akinoya-bg-layer fixed top-0 left-0 right-0 pointer-events-none overflow-hidden bg-[#050505] z-0"
+      style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)', willChange: 'transform' }}
+    >
       {/* Background exact photograph representation with Framer Motion smooth cross-fade */}
       <div className="absolute inset-0">
         <AnimatePresence mode="sync">

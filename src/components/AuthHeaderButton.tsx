@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
 import { getUserStatusConfig } from '../utils/statusPill';
 import { openClaimWorldModal } from '../utils/pioneer';
+import { useIsBelowWidth } from '../utils/performance';
 
 export const AuthHeaderButton: React.FC = () => {
   const { user, profile, role, isAuthenticated, isVip, hasVipPass, isSubscriber, openAuthModal, signOut } = useAuth();
@@ -61,6 +62,9 @@ export const AuthHeaderButton: React.FC = () => {
 
   const displayName = profile?.first_name || user?.email?.split('@')[0] || 'Pilot';
 
+  // Must be declared before any early return to respect the Rules of Hooks
+  const isMobile = useIsBelowWidth(768);
+
   if (!isAuthenticated || !user) {
     return (
       <button
@@ -73,17 +77,6 @@ export const AuthHeaderButton: React.FC = () => {
       </button>
     );
   }
-
-  const [isMobile, setIsMobile] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < 768;
-  });
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const renderMenuContent = () => (
     <>
