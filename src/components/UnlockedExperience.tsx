@@ -398,11 +398,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     return 'overview';
   });
 
-  // Listen for direct navigation to Visualizer Hub
+  // Listen for direct navigation to Visualizer Hub and Passperks Home
   useEffect(() => {
     const handleOpenHub = () => {
       setActiveTab('pass');
       setPassSubView('hub');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleNavigatePassperksHome = () => {
+      setActiveTab('pass');
+      setPassSubView('overview');
+      try {
+        sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+      } catch {
+        // ignore
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -422,15 +433,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         } else if (params.get('tab') === 'visualizers') {
           setActiveTab('pass');
           setPassSubView('hub');
+        } else if (params.get('tab') === 'pass' || (params.get('tab') === null && !hash && window.location.pathname === '/')) {
+          setActiveTab('pass');
+          setPassSubView('overview');
         }
       }
     };
 
     checkUrlParams();
     window.addEventListener('akinoya-open-visualizer-hub', handleOpenHub);
+    window.addEventListener('akinoya-navigate-passperks-home', handleNavigatePassperksHome);
     window.addEventListener('popstate', checkUrlParams);
     return () => {
       window.removeEventListener('akinoya-open-visualizer-hub', handleOpenHub);
+      window.removeEventListener('akinoya-navigate-passperks-home', handleNavigatePassperksHome);
       window.removeEventListener('popstate', checkUrlParams);
     };
   }, []);

@@ -28,6 +28,7 @@ import { MembershipGateModal } from './components/MembershipGateModal';
 import { useAuth } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { hasAnyStoredCertificate } from './utils/certificate';
+import { soundManager } from './utils/audio';
 
 export default function App() {
   const { user, profile, role, isAuthenticated, isVip, hasPendingVipInvitation, openAuthModal, isLoading } = useAuth();
@@ -320,6 +321,20 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleNavigateToPassperksHome = () => {
+    soundManager.playTone(600, 0.04);
+    try {
+      sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+    } catch {
+      // ignore
+    }
+    navigateTo('home', '/');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('akinoya-navigate-passperks-home'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const navigateToGalaxy = (planetId?: string) => {
     const targetPath = planetId ? `/galaxy?planet=${encodeURIComponent(planetId)}` : '/galaxy';
     navigateTo('galaxy', targetPath);
@@ -408,7 +423,7 @@ export default function App() {
         <TopBar
           isUnlocked={isVipRoute || isUserVip ? true : isSiteUnlocked}
           isVip={isVipRoute || isUserVip}
-          onNavigateHome={() => navigateTo('home', '/')}
+          onNavigateHome={handleNavigateToPassperksHome}
           onNavigateToGalaxy={() => navigateToGalaxy()}
         />
       )}
@@ -418,7 +433,7 @@ export default function App() {
         {route === 'galaxy' ? (
           <div className="fixed inset-0 z-30 w-full h-full flex flex-col overflow-hidden">
             <GalaxyNavigator
-              onBackToHome={() => navigateTo('home', '/')}
+              onBackToHome={handleNavigateToPassperksHome}
               onNavigateToContest={() => navigateTo('contest', '/contest')}
               onNavigateToCommunity={() => navigateTo('community', '/community')}
               onNavigateToVisualizerHub={handleOpenVisualizerHub}
@@ -431,7 +446,7 @@ export default function App() {
         ) : route === 'contest' ? (
           <div className="relative z-20 flex-1 w-full flex flex-col">
             <ContestLaunchpad
-              onBackToHome={() => navigateTo('home', '/')}
+              onBackToHome={handleNavigateToPassperksHome}
               onNavigateToCommunity={() => navigateTo('community', '/community')}
               onNavigateToGalaxy={(id) => navigateToGalaxy(id)}
               onNavigateToCreator={(u) => {
@@ -445,7 +460,7 @@ export default function App() {
             <CreatorPortfolioView
               username={creatorUsername}
               onBackToCommunity={() => navigateTo('community', '/community')}
-              onBackToHome={() => navigateTo('home', '/')}
+              onBackToHome={handleNavigateToPassperksHome}
               onNavigateToCreator={(u) => {
                 setCreatorUsername(u);
                 navigateTo('creators', `/creators/${u}`);
@@ -465,7 +480,7 @@ export default function App() {
               }
             >
               <CommunityHub
-                onBackToHome={() => navigateTo('home', '/')}
+                onBackToHome={handleNavigateToPassperksHome}
                 onOpenCreator={(u) => {
                   setCreatorUsername(u);
                   navigateTo('creators', `/creators/${u}`);
@@ -475,20 +490,20 @@ export default function App() {
           </div>
         ) : route === 'privacy' ? (
           <div className="relative z-20 flex-1 w-full">
-            <PrivacyPolicy onBackToHome={() => navigateTo('home', '/')} />
+            <PrivacyPolicy onBackToHome={handleNavigateToPassperksHome} />
           </div>
         ) : route === 'kyc' ? (
           <div className="relative z-20 flex-1 w-full">
-            <KycVerification onBackToHome={() => navigateTo('home', '/')} />
+            <KycVerification onBackToHome={handleNavigateToPassperksHome} />
           </div>
         ) : route === 'success' ? (
           <div className="relative z-20 flex-1 w-full">
             <CheckoutSuccess
               onEnterPortal={() => {
                 handlePublicUnlockSuccess();
-                navigateTo('home', '/');
+                handleNavigateToPassperksHome();
               }}
-              onBackToComic={() => navigateTo('home', '/')}
+              onBackToComic={handleNavigateToPassperksHome}
             />
           </div>
         ) : route === 'verify' ? (
@@ -501,7 +516,7 @@ export default function App() {
                     ? window.location.pathname.replace(/^\/verify\/?/, '').replace(/\/+$/, '').trim() || undefined
                     : undefined
                 }
-                onNavigateHome={() => navigateTo('home', '/')}
+                onNavigateHome={handleNavigateToPassperksHome}
                 onOpenVisualizerHub={handleOpenVisualizerHub}
               />
             ) : (

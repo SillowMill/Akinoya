@@ -5,6 +5,7 @@ import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
 import { openClaimWorldModal } from '../utils/pioneer';
 import { getUserStatusConfig } from '../utils/statusPill';
+import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
 interface TopBarProps {
@@ -62,13 +63,26 @@ export const TopBar: React.FC<TopBarProps> = ({
         <a
           href="/"
           onClick={(e) => {
+            e.preventDefault();
+            soundManager.playTone(600, 0.04);
+            try {
+              sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+            } catch {
+              // ignore
+            }
             if (onNavigateHome) {
-              e.preventDefault();
               onNavigateHome();
+            } else if (typeof window !== 'undefined') {
+              if (window.location.pathname === '/' || window.location.pathname === '') {
+                window.dispatchEvent(new CustomEvent('akinoya-navigate-passperks-home'));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                window.location.href = '/';
+              }
             }
           }}
           className="group flex items-center gap-2 xs:gap-2.5 sm:gap-3 shrink-0 cursor-pointer min-w-0"
-          title="Sillow Mill — Home"
+          title="Sillow Mill — Pass Perks Home"
         >
           {/* Shimmering Logo with subtle cinematic glow & glass housing */}
           <div className="relative w-6 h-6 xs:w-6.5 xs:h-6.5 sm:w-7 sm:h-7 lg:w-7.5 lg:h-7.5 rounded-lg bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-1 border border-white/20 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(255,255,255,0.18)] group-hover:shadow-[0_0_20px_rgba(251,191,36,0.35)] group-hover:border-amber-400/50 transition-all duration-300">
