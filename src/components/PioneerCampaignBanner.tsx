@@ -65,11 +65,11 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ on
   }
 
   return (
-    <div className="relative z-[55] w-full bg-[#050812]/95 border-b border-white/10 px-3 sm:px-6 py-1.5 md:py-2.5 backdrop-blur-xl shadow-2xl">
+    <div className="relative z-40 w-full bg-[#050812]/95 border-b border-white/10 px-3 sm:px-4 md:px-5 lg:px-6 xl:px-10 py-1.5 md:py-2 backdrop-blur-xl shadow-md overflow-hidden">
       {/* Ambient background gold glow lines */}
       <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-transparent to-amber-500/10 pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-3 lg:gap-4">
+      <div className="relative max-w-7xl mx-auto flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-3 lg:gap-4 min-w-0">
         {/* Row 1 (mobile) / Left (desktop): beacon, badge, headline + mobile dismiss */}
         <div className="flex items-center gap-2 sm:gap-2.5 lg:gap-3 min-w-0 flex-1 md:justify-start">
           <div className="relative shrink-0 flex items-center justify-center">

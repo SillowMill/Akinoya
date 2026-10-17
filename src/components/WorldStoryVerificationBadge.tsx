@@ -160,7 +160,7 @@ function drawCoverImage(
 
 /**
  * Renders the 1080x1920 (9:16) high-res Story Verification Affiche onto a Canvas and returns a Blob.
- * Features top-level SILLOW MILL / CELOMILLE / ÄKINOYA UNIVERSE branding, planet & holder specs,
+ * Features top-level SILLOW MILL / ÄKINOYA UNIVERSE branding, planet & holder specs,
  * 5-photo collage, and streamlined footer with Sillowmilllogo.png in the bottom-left corner (no QR code).
  */
 export async function renderWorldStoryBadgeBlob(
@@ -219,7 +219,7 @@ export async function renderWorldStoryBadgeBlob(
   const contentX = 84;
   const contentW = W - 168; // 912px
 
-  // 2. Top-Level Branding Header: Official "SILLOW MILL" Logo + Brand Name + "CELOMILLE" & "ÄKINOYA UNIVERSE"
+  // 2. Top-Level Branding Header: Official "SILLOW MILL" Logo + Brand Name + "ÄKINOYA UNIVERSE"
   const brandHeaderY = 80;
   const logoFrameSize = 108;
 
@@ -257,7 +257,7 @@ export async function renderWorldStoryBadgeBlob(
 
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 20px "JetBrains Mono", monospace';
-  ctx.fillText('CELOMILLE  ·  ÄKINOYA UNIVERSE', brandTextX, brandHeaderY + 78);
+  ctx.fillText('ÄKINOYA UNIVERSE', brandTextX, brandHeaderY + 78);
 
   ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
   ctx.font = '600 15px "JetBrains Mono", monospace';
@@ -488,7 +488,7 @@ export async function renderWorldStoryBadgeBlob(
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 18px "JetBrains Mono", monospace';
-    ctx.fillText('CELOMILLE · ÄKINOYA UNIVERSE', textStartX, footerY + 80);
+    ctx.fillText('ÄKINOYA UNIVERSE', textStartX, footerY + 80);
 
     ctx.fillStyle = 'rgba(203, 213, 225, 0.78)';
     ctx.font = '500 17px "JetBrains Mono", monospace';
@@ -496,7 +496,7 @@ export async function renderWorldStoryBadgeBlob(
   } else {
     ctx.fillStyle = '#ffffff';
     ctx.font = '900 36px "Inter", sans-serif';
-    ctx.fillText('SILLOW MILL · CELOMILLE', contentX, footerY + 52);
+    ctx.fillText('SILLOW MILL', contentX, footerY + 52);
     ctx.fillStyle = 'rgba(203, 213, 225, 0.8)';
     ctx.font = 'bold 18px "JetBrains Mono", monospace';
     ctx.fillText('ÄKINOYA UNIVERSE · SILLOWMILL.COM', contentX, footerY + 88);
@@ -509,7 +509,7 @@ export async function renderWorldStoryBadgeBlob(
 
 /**
  * Draws a single frame of the 9:16 Orbital Trailer Loop onto a Canvas (used for both live preview and MP4 export).
- * Embeds top-level SILLOW MILL / CELOMILLE / ÄKINOYA UNIVERSE branding and bottom-left Sillowmilllogo.png.
+ * Embeds top-level SILLOW MILL / ÄKINOYA UNIVERSE branding and bottom-left Sillowmilllogo.png.
  */
 function drawTrailerFrame(
   ctx: CanvasRenderingContext2D,
@@ -588,7 +588,7 @@ function drawTrailerFrame(
 
   ctx.fillStyle = '#ffffff';
   ctx.font = `bold ${Math.round(19 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText('CELOMILLE  ·  ÄKINOYA UNIVERSE', contentX, Math.round(146 * s));
+  ctx.fillText('ÄKINOYA UNIVERSE', contentX, Math.round(146 * s));
 
   // Top-right Edition Pill
   const badgeW = Math.round(180 * s);
@@ -694,7 +694,7 @@ function drawTrailerFrame(
 
     ctx.fillStyle = '#ffffff';
     ctx.font = `bold ${Math.round(18 * s)}px "JetBrains Mono", monospace`;
-    ctx.fillText('CELOMILLE · ÄKINOYA UNIVERSE', textStartX, footerY + Math.round(74 * s));
+    ctx.fillText('ÄKINOYA UNIVERSE', textStartX, footerY + Math.round(74 * s));
 
     ctx.fillStyle = 'rgba(203, 213, 225, 0.82)';
     ctx.font = `500 ${Math.round(17 * s)}px "JetBrains Mono", monospace`;
@@ -946,10 +946,13 @@ export const LiveStoryTrailerViewport: React.FC<{
                 SILLOW MILL
               </div>
               <div className="text-[8px] font-mono font-bold text-white tracking-[0.12em] uppercase">
-                CELOMILLE · ÄKINOYA UNIVERSE
+                ÄKINOYA UNIVERSE
               </div>
-              <div className="text-sm font-display font-black text-amber-300 uppercase mt-1">
+              <div className="text-sm font-display font-black text-amber-300 uppercase mt-0.5">
                 {dossier.planetName}
+              </div>
+              <div className="text-[7.5px] font-mono text-cyan-300 mt-0.5">
+                HOLDER: {(dossier.authorName || 'ODI SELIS').toUpperCase()} · {dossier.sectorId || 'SECTOR AKN-01'}
               </div>
             </div>
             <span className="px-2 py-0.5 rounded-lg bg-black/75 border border-amber-400/60 text-[10px] font-mono font-extrabold text-amber-300">
@@ -1257,7 +1260,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               transition={{ duration: 0.2 }}
               className="relative w-full h-full flex flex-col justify-between"
             >
-              {/* 1. TOP-LEVEL BRANDING HEADER: SILLOW MILL + CELOMILLE & ÄKINOYA UNIVERSE */}
+              {/* 1. TOP-LEVEL BRANDING HEADER: SILLOW MILL & ÄKINOYA UNIVERSE */}
               <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-white/15">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/20 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(255,255,255,0.16)]">
@@ -1272,7 +1275,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                       SILLOW MILL
                     </div>
                     <div className="text-[7.5px] sm:text-[8px] font-mono font-extrabold text-white tracking-[0.13em] uppercase mt-1 truncate">
-                      CELOMILLE · ÄKINOYA UNIVERSE
+                      ÄKINOYA UNIVERSE
                     </div>
                   </div>
                 </div>
@@ -1398,7 +1401,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                       className="w-5 h-5 object-contain shrink-0 drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]"
                     />
                     <span className="text-[7.5px] font-display font-black tracking-[0.12em] text-white uppercase truncate">
-                      SILLOW MILL · CELOMILLE
+                      SILLOW MILL
                     </span>
                   </div>
                   <span className="text-[7px] font-mono text-white/60 shrink-0">sillowmill.com</span>
@@ -1627,7 +1630,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                     />
                     <div className="min-w-0">
                       <div className="text-xs font-display font-bold text-white truncate">
-                        Sillow Mill · Celomille · Äkinoya Universe
+                        Sillow Mill · Äkinoya Universe
                       </div>
                       <div className="text-[11px] font-mono text-white/60 truncate">
                         Embedded bottom-left logo on both 9:16 Story Badge &amp; 9:16 MP4 Trailer.

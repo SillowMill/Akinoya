@@ -50,13 +50,13 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <header
-      className="sticky top-0 z-50 w-full max-w-full box-border border-b border-white/10 bg-[#0a0b10]/90 backdrop-blur-xl px-2.5 xs:px-3 sm:px-4 md:px-4 lg:px-10 xl:px-12 py-2 sm:py-2.5 lg:py-3.5 transform-gpu"
+      className="sticky top-0 z-50 isolate w-full max-w-full box-border border-b border-white/10 bg-[#0a0b10]/90 backdrop-blur-xl px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 xl:px-10 py-2 sm:py-2.5 lg:py-3 transform-gpu"
       style={{
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
       }}
     >
-      <div className="max-w-7xl w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-2 md:gap-2.5 lg:gap-6 min-w-0">
+      <div className="max-w-7xl w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-6 min-w-0">
         {/* Zone 1: Clean wordmark - Pure White */}
         <a
           href="/"
@@ -66,13 +66,13 @@ export const TopBar: React.FC<TopBarProps> = ({
               onNavigateHome();
             }
           }}
-          className="text-[13px] xs:text-[14px] sm:text-[15px] md:text-[13.5px] lg:text-lg font-display font-bold tracking-[0.14em] sm:tracking-[0.16em] md:tracking-[0.12em] lg:tracking-[0.2em] text-white hover:text-white/80 transition-colors uppercase whitespace-nowrap shrink-0 cursor-pointer"
+          className="text-[13px] xs:text-[14px] sm:text-[15px] md:text-[14px] lg:text-[15px] xl:text-lg font-display font-bold tracking-[0.14em] sm:tracking-[0.16em] md:tracking-[0.14em] lg:tracking-[0.16em] xl:tracking-[0.2em] text-white hover:text-white/80 transition-colors uppercase whitespace-nowrap shrink-0 cursor-pointer"
         >
           SILLOW MILL
         </a>
 
         {/* Zone 2: Single-line typography navigation links with dedicated brand colors and subtle dividers */}
-        <nav className="hidden md:flex items-center justify-center gap-1.5 lg:gap-4 xl:gap-5 font-mono text-[10px] lg:text-xs uppercase tracking-normal lg:tracking-wide whitespace-nowrap min-w-0 shrink">
+        <nav className="hidden md:flex items-center justify-center gap-1.5 md:gap-2 lg:gap-3 xl:gap-5 font-mono text-[10px] md:text-[10.5px] lg:text-[11px] xl:text-xs uppercase tracking-normal lg:tracking-tight xl:tracking-wide whitespace-nowrap min-w-0 shrink">
           <a
             href="/galaxy"
             onClick={(e) => {
@@ -114,10 +114,10 @@ export const TopBar: React.FC<TopBarProps> = ({
           <SoundtrackButton />
           <AuthHeaderButton />
 
-          {/* ACCESS GRANTED / PUBLIC ACCESS Indicator Box (Desktop/Landscape >=1024px) */}
+          {/* ACCESS GRANTED / PUBLIC ACCESS Indicator Box (Desktop >=1280px to avoid crowding iPad landscape) */}
           <div
             title={statusConfig.indicatorLabel}
-            className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 text-[10.5px] rounded-xl whitespace-nowrap shrink-0 ${statusConfig.indicatorClassName}`}
+            className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1 text-[10.5px] rounded-xl whitespace-nowrap shrink-0 ${statusConfig.indicatorClassName}`}
           >
             <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusConfig.dotColorClassName}`} />
             <span className="tracking-wide font-bold">{statusConfig.indicatorLabel}</span>
