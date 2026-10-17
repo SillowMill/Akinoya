@@ -1037,7 +1037,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
                     {/* Narrative & Master Asset Brief Column */}
                     <div className={`space-y-4 ${isEven ? 'md:order-2' : 'md:order-1'}`}>
-                      <div className="p-6 rounded-3xl bg-[#0a0f1d]/80 border border-cyan-500/20 space-y-4">
+                      <div className="p-6 rounded-3xl bg-[#0a0f1d]/95 border border-cyan-500/25 space-y-4 shadow-xl">
                         <div className="flex items-center gap-2">
                           <img
                             src={millAvatar}

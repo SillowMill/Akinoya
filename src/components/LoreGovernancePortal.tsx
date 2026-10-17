@@ -175,7 +175,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
             {sortedSubmissions.map((sub, idx) => (
               <div
                 key={sub.id}
-                className="rounded-2xl overflow-hidden bg-black/60 border border-white/10 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
+                className="rounded-2xl overflow-hidden bg-[#070b16]/95 border border-white/15 hover:border-amber-400/50 transition-all flex flex-col justify-between shadow-xl group"
               >
                 <div
                   onClick={() => handleOpenDossier(sub)}

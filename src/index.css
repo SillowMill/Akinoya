@@ -252,3 +252,57 @@ html[data-perf='lite'] .animate-planet-aura {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   WIDGET & CARD BACKGROUND OPACITY ENHANCEMENT (HIGH CONTRAST & LEGIBILITY)
+   ========================================================================== */
+
+/* Ensure all widget cards, containers, dialogs, and panels have rich, opaque
+   dark slate / navy fills so text, tags, and icons stand out with maximum clarity
+   against high-luminance canvas stars and nebula backgrounds. */
+.bg-black\/40,
+.bg-black\/45,
+.bg-black\/50 {
+  background-color: rgba(6, 9, 18, 0.90) !important;
+}
+
+.bg-black\/60,
+.bg-black\/70,
+.bg-black\/75 {
+  background-color: rgba(5, 8, 16, 0.94) !important;
+}
+
+.bg-black\/80,
+.bg-black\/85 {
+  background-color: rgba(4, 7, 14, 0.97) !important;
+}
+
+/* Ensure navy & dark slate container fills are richly opaque */
+.bg-cyan-950\/40,
+.bg-cyan-950\/50,
+.bg-cyan-950\/60 {
+  background-color: rgba(6, 20, 34, 0.93) !important;
+}
+
+.bg-cyan-950\/70,
+.bg-cyan-950\/80 {
+  background-color: rgba(5, 17, 30, 0.96) !important;
+}
+
+.bg-amber-950\/40,
+.bg-amber-950\/50,
+.bg-amber-950\/60 {
+  background-color: rgba(28, 14, 4, 0.92) !important;
+}
+
+.bg-purple-950\/40,
+.bg-purple-950\/50,
+.bg-purple-950\/60 {
+  background-color: rgba(20, 7, 34, 0.92) !important;
+}
+
+/* Modal and dialog panel backgrounds */
+div[role="dialog"],
+.modal-surface {
+  background-color: rgba(4, 7, 15, 0.98) !important;
+}

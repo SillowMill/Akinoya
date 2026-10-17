@@ -804,8 +804,8 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                           : 'p-3.5 flex items-center justify-between gap-3'
                       } ${
                         isLockedForUser
-                          ? 'bg-black/40 border-white/10 hover:border-amber-400/40 opacity-70 hover:opacity-85'
-                          : 'bg-[#0a0e1b]/80 border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(0,242,254,0.15)] hover:scale-[1.01]'
+                          ? 'bg-black/60 border-white/10 hover:border-amber-400/40 opacity-70 hover:opacity-85'
+                          : 'bg-[#0a0e1b]/95 border-cyan-500/35 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(0,242,254,0.18)] hover:scale-[1.01]'
                       }`}
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
@@ -869,8 +869,8 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                       key={file.id}
                       className={`group rounded-2xl border transition-all ${
                         viewMode === 'grid'
-                          ? 'p-4 space-y-3 bg-[#0a0f1e]/80 border-white/10 hover:border-cyan-400/40'
-                          : 'p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/60 border-white/10 hover:border-cyan-400/40'
+                          ? 'p-4 space-y-3 bg-[#0a0f1e]/95 border-white/15 hover:border-cyan-400/50 shadow-lg'
+                          : 'p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#060a14]/95 border-white/15 hover:border-cyan-400/50 shadow-md'
                       }`}
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
