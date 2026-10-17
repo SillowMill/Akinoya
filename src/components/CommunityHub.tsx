@@ -1824,7 +1824,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                 {/* RIGHT CHAT AREA */}
                 <div className="flex-1 min-w-0 space-y-4 w-full">
                   {/* Active Channel Header */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-[#060a14]/95 border border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Hash className="w-5 h-5 text-cyan-400 shrink-0" />
@@ -1864,7 +1864,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   {/* Channel Filtered Message Feed */}
                   <div className="space-y-4">
                         {channelPosts.length === 0 ? (
-                          <div className="p-8 rounded-2xl bg-[#060a14]/95 border border-white/15 text-center space-y-2 shadow-lg">
+                          <div className="p-8 rounded-2xl bg-black/40 border border-white/10 text-center space-y-2">
                             <MessageSquare className="w-8 h-8 text-white/30 mx-auto" />
                             <div className="text-sm font-display font-bold text-white">
                               No transmissions in #{activeChannel.name} yet
@@ -1877,7 +1877,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                           channelPosts.map((post) => (
                             <div
                               key={post.id}
-                              className="p-4 sm:p-5 rounded-2xl bg-[#060a14]/95 border border-white/15 hover:border-white/25 transition-all space-y-3 shadow-[0_6px_30px_rgba(0,0,0,0.6)]"
+                              className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 hover:border-white/20 transition-all space-y-3 shadow-[0_4px_25px_rgba(0,0,0,0.5)]"
                             >
                                 <div className="flex items-center gap-2.5 text-left">
                                   <div
@@ -1971,7 +1971,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       {/* Bottom Discord-Style Message Input Box */}
                       <form
                         onSubmit={handleCreateDiscussionPost}
-                        className="p-4 sm:p-5 rounded-2xl bg-[#060a14]/95 border border-white/15 focus-within:border-cyan-400/50 space-y-3 transition-colors shadow-2xl"
+                        className="p-4 sm:p-5 rounded-2xl bg-black/75 border border-white/10 focus-within:border-cyan-400/50 space-y-3 transition-colors shadow-2xl"
                       >
                         <div className="flex items-center gap-2.5">
                           <div

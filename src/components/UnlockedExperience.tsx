@@ -894,7 +894,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 py-6 sm:py-8 lg:py-10"
     >
       {/* Top Status & Lock Control (Mobile friendly wrapping) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 bg-[#060a14]/95 sm:bg-[#060a14]/92 backdrop-blur-xl border border-white/15 rounded-2xl p-4 sm:px-6 lg:px-8 lg:py-5 shadow-2xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:px-6 lg:px-8 lg:py-5">
         <div className="flex items-center gap-3 min-w-0 max-w-full">
           <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
             <ShieldCheck className="w-5 h-5 text-cyan-400" />
@@ -948,7 +948,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       {/* Main Tabs and Content Area */}
       <div className="space-y-4 sm:space-y-6 w-full">
         {/* Navigation Tabs (Mobile optimized scrollable / grid) */}
-        <div className={`grid ${isVipMode ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-1 xs:gap-1.5 p-1 xs:p-1.5 bg-[#060a14]/95 sm:bg-[#060a14]/92 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl`}>
+        <div className={`grid ${isVipMode ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'} gap-1 xs:gap-1.5 p-1 xs:p-1.5 bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl lg:rounded-2xl`}>
             <button
               onClick={() => setActiveTab('pass')}
               className={`py-2 px-1 xs:px-2 text-[10.5px] xs:text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 xs:gap-1.5 min-h-[44px] ${
@@ -1097,7 +1097,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
 
                   {/* Master Widget: COMMUNITY PERKS & HUB */}
-                  <div className="bg-[#060a14]/95 sm:bg-[#060a14]/92 backdrop-blur-2xl border border-cyan-500/35 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_35px_rgba(56,189,248,0.18)] space-y-5 sm:space-y-6">
+                  <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.12)] space-y-5 sm:space-y-6">
                     <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
                     {/* Header & Access / Pricing Bar */}
@@ -1231,7 +1231,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                   className="space-y-4"
                 >
-                  <div className="bg-[#060a14]/95 sm:bg-[#060a14]/92 backdrop-blur-2xl border border-cyan-500/35 rounded-2xl p-5 sm:p-6 lg:p-7 xl:p-8 relative overflow-hidden shadow-[0_0_35px_rgba(56,189,248,0.18)]">
+                  <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-5 sm:p-6 lg:p-7 xl:p-8 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)]">
                     <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
                     {/* Navigation Bar: Back to Pass Overview button & Header */}
@@ -1403,7 +1403,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           {/* Tab 2: Limited Comic Drop Showcase & Pre-Order */}
           {activeTab === 'edition' && (
             <div className="space-y-4 lg:space-y-6">
-              <div className="bg-[#060a14]/95 sm:bg-[#060a14]/92 backdrop-blur-2xl border border-white/15 rounded-2xl p-5 sm:p-7 lg:p-8 xl:p-9 relative overflow-hidden shadow-2xl">
+              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-5 sm:p-7 lg:p-8 xl:p-9 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-center">
@@ -1952,7 +1952,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               className="space-y-3.5 sm:space-y-4 lg:space-y-5"
             >
               {/* Asset 1: Äkinoya Founding Pass — Physical Limited Edition */}
-              <div className="bg-[#060a14]/95 sm:bg-[#060a14]/92 backdrop-blur-2xl border border-white/15 rounded-2xl p-4 sm:p-6 shadow-xl">
+              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6">
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 01 · Physical Pass</span>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-emerald-300 whitespace-nowrap">
@@ -2003,7 +2003,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               </div>
 
               {/* Asset 2: Bingäa Official Artwork / Cover Image & Publication Master */}
-              <div className="bg-[#060a14]/95 sm:bg-[#060a14]/92 backdrop-blur-2xl border border-white/15 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xl">
+              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 02 · Official Artwork &amp; Comicbook Master</span>
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-[9.5px] sm:text-[10px] font-mono text-cyan-300">
@@ -2074,7 +2074,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               </div>
 
               {/* Asset 3: Bingäa Issue #1 Certificate of Authenticity (COA) */}
-              <div className="bg-[#060a14]/95 sm:bg-[#060a14]/92 backdrop-blur-2xl border border-white/15 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xl">
+              <div className="bg-black/60 sm:bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                   <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Certificate of Authenticity</span>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10px] font-mono font-semibold tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.2)] max-w-full">

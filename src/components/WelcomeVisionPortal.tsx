@@ -250,7 +250,7 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
         {/* ======================================================== */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {/* Pillar 1: The Hybrid Production Blueprint */}
-          <div className="p-6 rounded-3xl bg-[#070b16]/95 border border-cyan-500/35 backdrop-blur-2xl space-y-3.5 shadow-[0_0_30px_rgba(0,242,254,0.12)] flex flex-col justify-between">
+          <div className="p-6 rounded-3xl bg-[#090d1a]/80 border border-cyan-500/30 backdrop-blur-xl space-y-3.5 shadow-[0_0_25px_rgba(0,242,254,0.08)] flex flex-col justify-between">
             <div className="space-y-2.5">
               <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(0,242,254,0.3)]">
                 <Sliders className="w-5 h-5 text-cyan-400" />
@@ -279,7 +279,7 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
           </div>
 
           {/* Pillar 2: Drive Asset Vault Deliverables */}
-          <div className="p-6 rounded-3xl bg-[#070b16]/95 border border-purple-500/35 backdrop-blur-2xl space-y-3.5 shadow-[0_0_30px_rgba(177,66,240,0.12)] flex flex-col justify-between">
+          <div className="p-6 rounded-3xl bg-[#090d1a]/80 border border-purple-500/30 backdrop-blur-xl space-y-3.5 shadow-[0_0_25px_rgba(177,66,240,0.08)] flex flex-col justify-between">
             <div className="space-y-2.5">
               <div className="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-400/50 flex items-center justify-center text-purple-300 shadow-[0_0_15px_rgba(177,66,240,0.3)]">
                 <FolderDown className="w-5 h-5 text-purple-400" />
@@ -308,7 +308,7 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
           </div>
 
           {/* Pillar 3: Sovereign Planet Governance & VR Meta-Experience */}
-          <div className="p-6 rounded-3xl bg-[#070b16]/95 border border-amber-500/35 backdrop-blur-2xl space-y-3.5 shadow-[0_0_30px_rgba(245,158,11,0.12)] flex flex-col justify-between">
+          <div className="p-6 rounded-3xl bg-[#090d1a]/80 border border-amber-500/30 backdrop-blur-xl space-y-3.5 shadow-[0_0_25px_rgba(245,158,11,0.08)] flex flex-col justify-between">
             <div className="space-y-2.5">
               <div className="w-10 h-10 rounded-xl bg-amber-950/80 border border-amber-400/50 flex items-center justify-center text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
                 <Globe2 className="w-5 h-5 text-amber-400" />
@@ -340,7 +340,7 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
         {/* ======================================================== */}
         {/* INTERACTIVE CALL-TO-ACTIONS (PRIMARY NAVIGATION CTAS)    */}
         {/* ======================================================== */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-cyan-950/90 via-[#060a14]/98 to-purple-950/90 border border-cyan-500/40 shadow-[0_0_45px_rgba(0,242,254,0.2)] space-y-6">
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-cyan-950/60 via-black/80 to-purple-950/60 border border-cyan-500/40 shadow-[0_0_40px_rgba(0,242,254,0.15)] space-y-6">
           <div className="text-center space-y-2 max-w-2xl mx-auto">
             <span className="text-[10.5px] font-mono text-cyan-300 font-extrabold uppercase tracking-widest">
               COMMENCE YOUR JOURNEY

@@ -159,7 +159,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
               }
             : {}
         }
-        className="relative bg-[#060a14]/95 sm:bg-[#060a14]/92 backdrop-blur-2xl border border-white/20 rounded-2xl p-5 sm:p-7 md:p-8 lg:p-9 max-w-md sm:max-w-xl md:max-w-2xl w-full mx-auto shadow-[0_12px_45px_0_rgba(0,0,0,0.85)] glow-cyan-sm overflow-hidden"
+        className="relative bg-black/60 sm:bg-black/45 backdrop-blur-xl border border-white/15 rounded-2xl p-5 sm:p-7 md:p-8 lg:p-9 max-w-md sm:max-w-xl md:max-w-2xl w-full mx-auto shadow-[0_8px_32px_0_rgba(0,0,0,0.7)] glow-cyan-sm overflow-hidden"
       >
         {/* Subtle decorative celestial grid shimmer inside card */}
         <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-transparent to-blue-500/10 pointer-events-none" />
