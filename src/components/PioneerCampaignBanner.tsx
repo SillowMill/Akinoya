@@ -48,7 +48,10 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ on
 
   if (isDismissed) {
     return (
-      <div className="fixed bottom-4 left-4 z-40 hidden sm:block">
+      <div
+        className="fixed bottom-4 left-4 z-[70] hidden sm:block"
+        style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
+      >
         <button
           type="button"
           onClick={handleOpen}

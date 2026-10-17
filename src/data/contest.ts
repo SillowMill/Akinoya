@@ -452,8 +452,10 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
 
   // 1. Fetch live persisted votes from server votes API
   try {
+    const persistentVoterId = getPersistentVoterId();
     const query = new URLSearchParams();
     if (effectiveVoterId) query.set('voterId', effectiveVoterId);
+    if (persistentVoterId && persistentVoterId !== effectiveVoterId) query.set('persistentVoterId', persistentVoterId);
     if (voterEmail) query.set('voterEmail', voterEmail);
     const voteRes = await fetch(`/api/dossier/votes?${query.toString()}`);
     if (voteRes.ok) {
@@ -467,11 +469,22 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
     console.warn('[Contest] Server vote sync notice:', voteErr);
   }
 
-  // Update local votes map with confirmed server voted IDs
-  if (userVotedIds.length > 0 && typeof window !== 'undefined') {
+  // Synchronize local votes map strictly with confirmed server voted IDs
+  if (typeof window !== 'undefined') {
     try {
       const raw = localStorage.getItem(LOCAL_CONTEST_VOTES_KEY);
       const map = raw ? JSON.parse(raw) : {};
+      if (Object.keys(serverCounts).length > 0) {
+        for (const knownSubId of Object.keys(serverCounts)) {
+          if (!userVotedIds.includes(knownSubId)) {
+            for (const k of Object.keys(map)) {
+              if (k.startsWith(`vote_${knownSubId}`)) {
+                delete map[k];
+              }
+            }
+          }
+        }
+      }
       for (const id of userVotedIds) {
         map[`vote_${id}_${effectiveVoterId}`] = true;
         map[`vote_${id}`] = true;

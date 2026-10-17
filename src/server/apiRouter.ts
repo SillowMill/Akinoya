@@ -604,7 +604,8 @@ apiRouter.get(['/dossier/votes', '/votes'], async (req: Request, res: Response):
   try {
     const voterId = (req.query.voterId as string) || '';
     const voterEmail = (req.query.voterEmail as string) || '';
-    const summary = getVotesSummary(voterId, voterEmail);
+    const persistentVoterId = (req.query.persistentVoterId as string) || '';
+    const summary = getVotesSummary(voterId, voterEmail, persistentVoterId);
     res.status(200).json({ success: true, ...summary });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'Fetch votes failed' });

@@ -49,8 +49,14 @@ export const TopBar: React.FC<TopBarProps> = ({
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/85 backdrop-blur-xl px-3 sm:px-6 lg:px-12 py-3 sm:py-4">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2.5 sm:gap-4 lg:gap-8">
+    <header
+      className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/90 backdrop-blur-xl px-2.5 xs:px-3 sm:px-6 lg:px-12 py-2.5 sm:py-3.5 transform-gpu"
+      style={{
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+      }}
+    >
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-3 lg:gap-8">
         {/* Zone 1: Clean wordmark - Pure White */}
         <a
           href="/"
@@ -60,13 +66,13 @@ export const TopBar: React.FC<TopBarProps> = ({
               onNavigateHome();
             }
           }}
-          className="text-[14.5px] xs:text-[15.5px] sm:text-base lg:text-lg font-display font-bold tracking-[0.18em] sm:tracking-[0.2em] text-white hover:text-white/80 transition-colors uppercase whitespace-nowrap shrink-0 cursor-pointer"
+          className="text-[13.5px] xs:text-[14.5px] sm:text-base lg:text-lg font-display font-bold tracking-[0.16em] sm:tracking-[0.2em] text-white hover:text-white/80 transition-colors uppercase whitespace-nowrap shrink-0 cursor-pointer"
         >
           SILLOW MILL
         </a>
 
         {/* Zone 2: Single-line typography navigation links with dedicated brand colors and subtle dividers */}
-        <nav className="hidden md:flex items-center gap-2.5 lg:gap-5 font-mono text-[11px] lg:text-xs uppercase tracking-wide whitespace-nowrap">
+        <nav className="hidden md:flex items-center gap-2 lg:gap-5 font-mono text-[10.5px] lg:text-xs uppercase tracking-wide whitespace-nowrap">
           <a
             href="/galaxy"
             onClick={(e) => {
@@ -103,7 +109,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           </a>
         </nav>
 
-        {/* Zone 3: Actions (Mobile optimized to prevent clipping) */}
+        {/* Zone 3: Actions (iPad & mobile optimized to prevent clipping) */}
         <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 shrink-0">
           <SoundtrackButton />
           <AuthHeaderButton />
@@ -114,7 +120,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             className={`flex items-center gap-1 sm:gap-1.5 px-2 xs:px-2.5 py-1 text-[10px] sm:text-[10.5px] rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 ${statusConfig.indicatorClassName}`}
           >
             <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusConfig.dotColorClassName}`} />
-            <span className="hidden sm:inline tracking-wide font-bold">{statusConfig.indicatorLabel}</span>
+            <span className="hidden lg:inline tracking-wide font-bold">{statusConfig.indicatorLabel}</span>
           </div>
         </div>
       </div>

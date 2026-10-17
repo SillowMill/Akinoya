@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import type { Profile, UserRole } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, type Profile, type UserRole } from '../lib/supabase';
 import { isFounderEmail } from '../lib/vipTokens';
 const FOUNDING_PASS_ID = 'AKN-VIP-2027-X0914';
 
@@ -74,24 +74,27 @@ const SESSION_SECRET = process.env.AUTH_SECRET || process.env.STRIPE_SECRET_KEY 
 
 // ─── Storage Helpers ──────────────────────────────────────────────────────────
 function loadUsersStore(): AuthStore {
-  const candidates = [LOCAL_USERS_FILE, TMP_USERS_FILE];
-  for (const file of candidates) {
+  const merged: AuthStore = { users: {} };
+  let found = false;
+  // Read local baseline file first, then /tmp file to take precedence on Vercel/serverless
+  for (const file of [LOCAL_USERS_FILE, TMP_USERS_FILE]) {
     if (fs.existsSync(file)) {
       try {
         const raw = fs.readFileSync(file, 'utf8');
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed.users === 'object') {
-          return parsed;
+          Object.assign(merged.users, parsed.users);
+          found = true;
         }
       } catch {}
     }
   }
-  return { users: {} };
+  return found ? merged : { users: {} };
 }
 
 function saveUsersStore(store: AuthStore): void {
   const json = JSON.stringify(store, null, 2);
-  const targets = [LOCAL_USERS_FILE, TMP_USERS_FILE];
+  const targets = [TMP_USERS_FILE, LOCAL_USERS_FILE];
   for (const file of targets) {
     try {
       const dir = path.dirname(file);
@@ -102,24 +105,41 @@ function saveUsersStore(store: AuthStore): void {
 }
 
 function loadVotesStore(): VoteStore {
-  const candidates = [LOCAL_VOTES_FILE, TMP_VOTES_FILE];
-  for (const file of candidates) {
+  const merged: VoteStore = { votes: {} };
+  let found = false;
+  // Read local baseline file first, then overlay /tmp file
+  for (const file of [LOCAL_VOTES_FILE, TMP_VOTES_FILE]) {
     if (fs.existsSync(file)) {
       try {
         const raw = fs.readFileSync(file, 'utf8');
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed.votes === 'object') {
-          return parsed;
+          for (const [key, val] of Object.entries(parsed.votes as Record<string, VoteRecord>)) {
+            if (!merged.votes[key]) {
+              merged.votes[key] = val;
+            } else {
+              const existing = merged.votes[key];
+              const combinedVoters = Array.from(new Set([...(existing.voters || []), ...(val.voters || [])]));
+              merged.votes[key] = {
+                ...existing,
+                ...val,
+                voters: combinedVoters,
+                votesCount: Math.max(val.votesCount || 0, existing.votesCount || 0),
+                updatedAt: val.updatedAt || existing.updatedAt,
+              };
+            }
+          }
+          found = true;
         }
       } catch {}
     }
   }
-  return { votes: {} };
+  return found ? merged : { votes: {} };
 }
 
 function saveVotesStore(store: VoteStore): void {
   const json = JSON.stringify(store, null, 2);
-  const targets = [LOCAL_VOTES_FILE, TMP_VOTES_FILE];
+  const targets = [TMP_VOTES_FILE, LOCAL_VOTES_FILE];
   for (const file of targets) {
     try {
       const dir = path.dirname(file);
@@ -130,24 +150,26 @@ function saveVotesStore(store: VoteStore): void {
 }
 
 function loadSubmissionsStore(): SubmissionStore {
-  const candidates = [LOCAL_SUBMISSIONS_FILE, TMP_SUBMISSIONS_FILE];
-  for (const file of candidates) {
+  const merged: SubmissionStore = { submissions: {} };
+  let found = false;
+  for (const file of [LOCAL_SUBMISSIONS_FILE, TMP_SUBMISSIONS_FILE]) {
     if (fs.existsSync(file)) {
       try {
         const raw = fs.readFileSync(file, 'utf8');
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed.submissions === 'object') {
-          return parsed;
+          Object.assign(merged.submissions, parsed.submissions);
+          found = true;
         }
       } catch {}
     }
   }
-  return { submissions: {} };
+  return found ? merged : { submissions: {} };
 }
 
 function saveSubmissionsStore(store: SubmissionStore): void {
   const json = JSON.stringify(store, null, 2);
-  const targets = [LOCAL_SUBMISSIONS_FILE, TMP_SUBMISSIONS_FILE];
+  const targets = [TMP_SUBMISSIONS_FILE, LOCAL_SUBMISSIONS_FILE];
   for (const file of targets) {
     try {
       const dir = path.dirname(file);
@@ -497,17 +519,20 @@ export function castSubmissionVote(params: {
   ).trim().toLowerCase().replace(/^@/, '');
 
   const effectiveAuthorId = submissionAuthorId || existingVote.authorId || storedSub?.userId;
+  const voterUserRecord = cleanVoterEmail ? _userStore.users[cleanVoterEmail] : null;
 
-  const isSelfById = Boolean(effectiveAuthorId && voterId && effectiveAuthorId === voterId);
+  const isSelfById = Boolean(effectiveAuthorId && voterId && (effectiveAuthorId === voterId || effectiveAuthorId === `id:${voterId}`));
   const isSelfByEmail = Boolean(cleanVoterEmail && cleanAuthorEmail && cleanVoterEmail === cleanAuthorEmail);
   const isSelfByUsername = Boolean(cleanVoterUser && cleanAuthorUser && cleanVoterUser === cleanAuthorUser);
+  const isSelfByRegisteredId = Boolean(voterUserRecord?.id && effectiveAuthorId && voterUserRecord.id === effectiveAuthorId);
+  const isSelfByAuthorUser = Boolean(cleanAuthorEmail && voterUserRecord && voterUserRecord.email === cleanAuthorEmail);
 
-  if (isSelfById || isSelfByEmail || isSelfByUsername) {
+  if (isSelfById || isSelfByEmail || isSelfByUsername || isSelfByRegisteredId || isSelfByAuthorUser) {
     return {
       success: false,
       newVotesCount: existingVote.votesCount || baseVotes || 1,
       hasVoted: false,
-      error: 'Self-voting blocked: You cannot vote for your own world submission.',
+      error: 'Self-voting is not allowed: You cannot vote for your own world submission.',
     };
   }
 
@@ -516,6 +541,7 @@ export function castSubmissionVote(params: {
     if (!entry) return false;
     if (entry === voterId || entry === `id:${voterId}`) return true;
     if (cleanVoterEmail && (entry === cleanVoterEmail || entry === `email:${cleanVoterEmail}`)) return true;
+    if (voterUserRecord?.id && (entry === voterUserRecord.id || entry === `id:${voterUserRecord.id}`)) return true;
     return false;
   };
 
@@ -549,6 +575,16 @@ export function castSubmissionVote(params: {
   _voteStore.votes[submissionId] = existingVote;
   saveVotesStore(_voteStore);
 
+  // Sync vote directly to Supabase if database connection is live
+  if (isSupabaseConfigured) {
+    Promise.resolve(
+      supabase
+        .from('user_dossiers')
+        .update({ votes_count: calculatedVotes })
+        .eq('id', submissionId)
+    ).catch((err: unknown) => console.warn('[Vote] Supabase sync notice:', err));
+  }
+
   return {
     success: true,
     newVotesCount: calculatedVotes,
@@ -556,17 +592,20 @@ export function castSubmissionVote(params: {
   };
 }
 
-export function getVotesSummary(voterId?: string, voterEmail?: string): {
+export function getVotesSummary(voterId?: string, voterEmail?: string, persistentVoterId?: string): {
   votesCountByDossier: Record<string, number>;
   userVotedIds: string[];
 } {
   _voteStore = loadVotesStore();
   const cleanVoterEmail = voterEmail?.trim().toLowerCase();
+  const voterUser = cleanVoterEmail ? _userStore.users[cleanVoterEmail] : null;
 
   const isVoterMatch = (entry: string) => {
     if (!entry) return false;
     if (voterId && (entry === voterId || entry === `id:${voterId}`)) return true;
+    if (persistentVoterId && (entry === persistentVoterId || entry === `id:${persistentVoterId}`)) return true;
     if (cleanVoterEmail && (entry === cleanVoterEmail || entry === `email:${cleanVoterEmail}`)) return true;
+    if (voterUser && (entry === voterUser.id || entry === `id:${voterUser.id}`)) return true;
     return false;
   };
 

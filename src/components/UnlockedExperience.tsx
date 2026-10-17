@@ -919,10 +919,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <button
               type="button"
               onClick={() => onNavigateToGalaxy()}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2 text-xs font-mono text-cyan-200 hover:text-white bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+              className="flex-1 sm:flex-initial flex items-center justify-center px-4 py-2 sm:py-2 text-xs font-mono font-bold text-cyan-200 hover:text-white bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
             >
-              <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '24s' }} />
-              <span className="truncate">🌌 Galaxy Navigator</span>
+              <span className="truncate tracking-wide">Galaxy Navigator</span>
             </button>
           )}
 

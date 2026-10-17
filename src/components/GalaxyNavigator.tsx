@@ -1149,10 +1149,21 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             {/* Drag Handle & Top Action Bar */}
             <div className="p-3 bg-[#080d1d] border-b border-white/10 flex items-center justify-between gap-3 shrink-0">
               <div className="w-12 h-1.5 rounded-full bg-white/25 mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
-              <div className="flex items-center gap-2 mt-1 min-w-0">
-                <h3 className="text-sm font-display font-bold text-white truncate">
-                  {selectedPlanet.planetName}
-                </h3>
+              <div className="flex flex-col items-start mt-1 min-w-0">
+                {selectedPlanet.id === 'akinoya-core' ? (
+                  <>
+                    <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9.5px] tracking-widest uppercase shadow-[0_0_12px_rgba(245,158,11,0.5)] items-center gap-1">
+                      <span>👑 ÄKINOYA CORE</span>
+                    </span>
+                    <span className="text-[11px] font-display font-extrabold text-white tracking-wider mt-0.5">
+                      Capital of Sillow Mill
+                    </span>
+                  </>
+                ) : (
+                  <h3 className="text-sm font-display font-bold text-white truncate">
+                    {selectedPlanet.planetName}
+                  </h3>
+                )}
               </div>
 
               <div className="flex items-center gap-2 shrink-0 mt-1">
@@ -1263,8 +1274,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                           <span className="text-xs font-mono font-bold text-white">
                             0{mobilePhotoIdx + 1} · {activePhoto?.title || 'Orbit'}
                           </span>
-                          <span className="text-[10px] font-mono text-cyan-300">
-                            Coordinates: ({selectedPlanet.coordX ?? 0}, {selectedPlanet.coordY ?? 0}) AU
+                          <span className={`text-[10px] font-mono ${selectedPlanet.id === 'akinoya-core' ? 'text-amber-300 font-bold' : 'text-cyan-300'}`}>
+                            {selectedPlanet.id === 'akinoya-core'
+                              ? 'Capital of Sillow Mill'
+                              : `Coordinates: (${selectedPlanet.coordX ?? 0}, ${selectedPlanet.coordY ?? 0}) AU`}
                           </span>
                         </div>
                       </div>
@@ -1399,18 +1412,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               className="relative z-10 w-full max-w-lg bg-[#070c18] border border-amber-400/50 rounded-2xl p-6 shadow-[0_0_50px_rgba(245,158,11,0.25)] space-y-4"
             >
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="p-1.5 rounded-lg bg-amber-400 text-black">
-                    <Compass className="w-4 h-4" />
+                <div className="flex flex-col items-start gap-1">
+                  <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[10px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] items-center gap-1">
+                    <span>👑 ÄKINOYA CORE</span>
                   </span>
-                  <div>
-                    <h2 className="text-base font-display font-extrabold text-amber-400">
-                      Äkinoya Core
-                    </h2>
-                    <span className="text-[10px] font-mono text-white/75">
-                      Capital of Sillow Mill
-                    </span>
-                  </div>
+                  <span className="text-[11px] font-display font-extrabold text-white tracking-wider">
+                    Capital of Sillow Mill
+                  </span>
                 </div>
                 <button
                   type="button"

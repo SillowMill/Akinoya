@@ -66,10 +66,10 @@ export const AuthHeaderButton: React.FC = () => {
       <button
         type="button"
         onClick={() => openAuthModal('signin')}
-        className="min-h-[48px] px-2.5 xs:px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:scale-[1.02] active:scale-[0.98] shrink-0"
+        className="min-h-[48px] px-2.5 xs:px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:scale-[1.02] active:scale-[0.98] shrink-0"
       >
         <User className="w-3.5 h-3.5 fill-black shrink-0" />
-        <span>SIGN IN<span className="hidden sm:inline"> / JOIN</span></span>
+        <span>SIGN IN<span className="hidden lg:inline"> / JOIN</span></span>
       </button>
     );
   }
@@ -237,7 +237,7 @@ export const AuthHeaderButton: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.18 }}
-            className="absolute right-0 top-full mt-2 w-80 max-w-md origin-top-right rounded-2xl bg-[#0b0f17] border border-white/10 p-3 sm:p-3.5 shadow-2xl z-50 space-y-2 text-xs font-sans backdrop-blur-xl ring-1 ring-white/5 overflow-y-auto max-h-[85vh]"
+            className="absolute right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] origin-top-right rounded-2xl bg-[#0b0f17] border border-white/10 p-3 sm:p-3.5 shadow-2xl z-50 space-y-2 text-xs font-sans backdrop-blur-xl ring-1 ring-white/5 overflow-y-auto max-h-[85vh]"
           >
             {renderMenuContent()}
           </motion.div>

@@ -176,8 +176,8 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
             </div>
           </div>
 
-          {/* Video Canvas Container: Generous min-height on mobile to eliminate edge-crowding */}
-          <div className="relative min-h-[390px] sm:min-h-[430px] md:min-h-0 md:aspect-[16/9] w-full overflow-hidden bg-[#04060c] flex items-center justify-center">
+          {/* Video Canvas Container: Generous min-height on mobile/iPad portrait to eliminate edge-crowding */}
+          <div className="relative min-h-[390px] sm:min-h-[430px] md:min-h-[440px] lg:min-h-0 lg:aspect-[16/9] w-full overflow-hidden bg-[#04060c] flex items-center justify-center">
             {/* Visual Poster & Ambient Scanlines */}
             <img
               src={akinoyaVistaImg}
@@ -248,7 +248,7 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
         {/* ======================================================== */}
         {/* THE NARRATIVE & META-VISION (3 CORE PILLARS)             */}
         {/* ======================================================== */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {/* Pillar 1: The Hybrid Production Blueprint */}
           <div className="p-6 rounded-3xl bg-[#090d1a]/80 border border-cyan-500/30 backdrop-blur-xl space-y-3.5 shadow-[0_0_25px_rgba(0,242,254,0.08)] flex flex-col justify-between">
             <div className="space-y-2.5">

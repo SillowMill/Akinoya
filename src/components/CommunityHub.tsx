@@ -1036,7 +1036,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             type="button"
             onClick={isPostLaunch() ? openMembershipGateModal : undefined}
             disabled={!isPostLaunch()}
-            className={`hidden sm:inline-flex px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold items-center gap-2 max-w-full truncate sm:whitespace-normal break-words leading-snug min-h-[44px] shadow-sm ${
+            className={`hidden xl:inline-flex px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-mono font-semibold items-center gap-2 max-w-full truncate sm:whitespace-normal break-words leading-snug min-h-[44px] shadow-sm ${
               isPostLaunch() ? 'cursor-pointer hover:bg-amber-900/70 hover:border-amber-400' : 'cursor-not-allowed select-none'
             }`}
             title={isPostLaunch() ? 'Upgrade to Annual Membership (€60/year)' : 'Public membership launches on January 9, 2027'}
