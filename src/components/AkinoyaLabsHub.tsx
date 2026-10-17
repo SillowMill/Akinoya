@@ -1182,7 +1182,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedStageForModal(null)}
-              className="fixed inset-0 bg-black/85 backdrop-blur-xl"
+              className="fixed inset-0 bg-black/95"
             />
 
             {/* Modal Dialog Window */}
@@ -1190,7 +1190,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
-              className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl bg-[#070b16]/98 border border-cyan-400/50 shadow-[0_0_80px_rgba(0,242,254,0.25)] z-10 text-white font-sans space-y-6 p-6 sm:p-8"
+              className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl bg-[#070b16] border border-cyan-400/50 shadow-[0_0_80px_rgba(0,242,254,0.25)] z-10 text-white font-sans space-y-6 p-6 sm:p-8"
             >
               {/* Sticky Modal Header Bar */}
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
@@ -1509,7 +1509,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedPreviewImage(null)}
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 cursor-zoom-out"
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 sm:p-8 cursor-zoom-out"
           >
             <div className="relative max-w-5xl max-h-[90vh] rounded-2xl overflow-hidden border border-cyan-500/40 shadow-[0_0_50px_rgba(0,242,254,0.3)]">
               <img

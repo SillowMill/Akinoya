@@ -2256,7 +2256,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       {/* ======================================================== */}
       <AnimatePresence>
         {isUpgradeModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-3 sm:p-4 overflow-y-auto">
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -2371,7 +2371,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       {/* Thread Reply Drawer Modal */}
       <AnimatePresence>
         {activeReplyPost && (
-          <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/70 backdrop-blur-sm p-3">
+          <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/90 p-3">
             <motion.div
               initial={{ x: '100%', opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -2535,7 +2535,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       {/* Mobile Channels Touch Drawer (Bottom-Sheet) */}
       <AnimatePresence>
         {isMobileChannelsOpen && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/95 p-0 sm:p-4">
             <motion.div
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -2773,7 +2773,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       {/* Artist Verification Modal */}
       <AnimatePresence>
         {isArtistModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}

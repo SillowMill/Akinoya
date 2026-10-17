@@ -175,7 +175,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
             {sortedSubmissions.map((sub, idx) => (
               <div
                 key={sub.id}
-                className="rounded-2xl overflow-hidden bg-black/60 border border-white/10 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
+                className="rounded-2xl overflow-hidden bg-[#070b16] border border-white/15 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
               >
                 <div
                   onClick={() => handleOpenDossier(sub)}
@@ -187,10 +187,10 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
                       alt={sub.planetName}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/40">
+                    <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-black/90 text-amber-300 border border-amber-400/40">
                       #{idx + 1} RANK
                     </div>
-                    <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-black/80 backdrop-blur-md text-cyan-300 border border-cyan-400/40 flex items-center gap-1">
+                    <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-black/90 text-cyan-300 border border-cyan-400/40 flex items-center gap-1">
                       <Camera className="w-3 h-3 text-cyan-300" />
                       <span>5 PHOTOS</span>
                     </div>

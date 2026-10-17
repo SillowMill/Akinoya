@@ -172,7 +172,7 @@ export const AuthModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/95 overflow-y-auto">
         {/* Backdrop click */}
         <div className="fixed inset-0" onClick={closeAuthModal} />
 
@@ -249,7 +249,7 @@ export const AuthModal: React.FC = () => {
 
           {/* Mode Switcher Tabs: Strictly 2 Clean Tabs (grid-cols-2) */}
           {(mode === 'signin' || mode === 'signup') && (
-            <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/60 rounded-xl border border-white/10 mt-4">
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#080d1a] rounded-xl border border-white/10 mt-4">
               <button
                 type="button"
                 onClick={() => {
@@ -377,7 +377,7 @@ export const AuthModal: React.FC = () => {
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         placeholder="Voornaam"
-                        className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                        className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
                       />
                     </div>
                   </div>
@@ -392,7 +392,7 @@ export const AuthModal: React.FC = () => {
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
                         placeholder="Achternaam"
-                        className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                        className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
                       />
                     </div>
                   </div>
@@ -413,7 +413,7 @@ export const AuthModal: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="pilot@sillowmill.com"
-                      className="w-full min-h-[48px] pl-10 pr-3.5 py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                      className="w-full min-h-[48px] pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -437,7 +437,7 @@ export const AuthModal: React.FC = () => {
                         if (error) setError(null);
                       }}
                       placeholder="••••••••"
-                      className="w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                      className="w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
                     />
                     <button
                       type="button"
@@ -486,7 +486,7 @@ export const AuthModal: React.FC = () => {
                         if (error) setError(null);
                       }}
                       placeholder="••••••••"
-                      className={`w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-black/60 border ${
+                      className={`w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-[#080d1a] border ${
                         confirmPassword.length > 0 && !passwordsMatch
                           ? 'border-rose-500/60 focus:border-rose-400'
                           : passwordsMatch

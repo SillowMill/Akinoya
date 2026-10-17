@@ -252,3 +252,49 @@ html[data-perf='lite'] .animate-planet-aura {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   SOLID WIDGET & MODAL BACKGROUNDS (ZERO BLENDING BLEED)
+   ========================================================================== */
+
+/* 1. Modal Dialog Panels & Detail Surfaces:
+   Force 100% solid dark navy/slate fill (#060914) with backdrop-filter disabled
+   so canvas graphics, stars, orbit rings, and text underneath NEVER bleed through. */
+div[role="dialog"],
+.modal-surface,
+.planetary-detail-modal,
+[aria-modal="true"],
+.interactive-hud-element.fixed.bottom-0 {
+  background-color: #060914 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  opacity: 1 !important;
+}
+
+/* 2. Modal Backdrops / Screen Dimming:
+   Provide an ultra-deep, solid dark barrier (96% opacity) so bright rotating canvas planets
+   and glowing stars cannot shine or bleed through behind modal windows. */
+.modal-backdrop,
+.fixed.inset-0.bg-black\/80,
+.fixed.inset-0.bg-black\/85,
+.fixed.inset-0.bg-black\/90,
+.fixed.inset-0.bg-black\/95 {
+  background-color: rgba(2, 4, 8, 0.96) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 3. Solidify Semi-Transparent Black Card Containers:
+   Replace translucent black fills on card widgets with solid dark slate (#080d1a / #060a14)
+   to eliminate alpha blending artifacts on mobile and iPad viewports. */
+.bg-black\/40,
+.bg-black\/45,
+.bg-black\/50 {
+  background-color: #080d1a !important;
+}
+
+.bg-black\/60,
+.bg-black\/70,
+.bg-black\/75 {
+  background-color: #060a14 !important;
+}

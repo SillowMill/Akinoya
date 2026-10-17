@@ -987,7 +987,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedFileForPreview(null)}
-              className="fixed inset-0 bg-black/90 backdrop-blur-md"
+              className="fixed inset-0 bg-black/95"
             />
 
             <motion.div

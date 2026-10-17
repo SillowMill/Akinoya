@@ -856,7 +856,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             />
           )}
 
-          <div className="relative z-20 flex items-center bg-[#070c1a]/90 backdrop-blur-xl border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.18)] transition-all overflow-hidden">
+          <div className="relative z-20 flex items-center bg-[#070c1a] border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.18)] transition-all overflow-hidden">
             <Search className="w-4 h-4 text-cyan-400 ml-3.5 shrink-0" />
             <input
               type="text"
@@ -885,7 +885,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
           {/* Search Autocomplete Dropdown */}
           {isSearchFocused && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-[#060914]/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl max-h-48 sm:max-h-64 overflow-y-auto divide-y divide-white/5 z-50">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#060914] border border-white/15 rounded-2xl shadow-2xl max-h-48 sm:max-h-64 overflow-y-auto divide-y divide-white/5 z-50">
               {searchResults.map((p) => (
                 <div
                   key={p.id}
@@ -917,7 +917,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       </div>
 
       {/* ASTROGATION COORDINATES HUD (Bottom Left) */}
-      <div className="interactive-hud-element absolute bottom-4 left-4 z-30 hidden sm:flex flex-col gap-1.5 p-3 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 font-mono text-[10.5px] text-white/70 shadow-lg">
+      <div className="interactive-hud-element absolute bottom-4 left-4 z-30 hidden sm:flex flex-col gap-1.5 p-3 rounded-2xl bg-[#060a14] border border-white/15 font-mono text-[10.5px] text-white/70 shadow-lg">
         <div className="flex items-center gap-2 text-cyan-300 font-bold">
           <Target className="w-3.5 h-3.5 text-cyan-400" />
           <span>ASTROGATION HUD</span>
@@ -948,7 +948,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           <span className="hidden xs:inline">Center Äkinoya</span>
         </button>
 
-        <div className="flex items-center bg-black/70 backdrop-blur-xl border border-white/15 rounded-xl p-0.5 shadow-lg">
+        <div className="flex items-center bg-[#060a14] border border-white/15 rounded-xl p-0.5 shadow-lg">
           <button
             type="button"
             onClick={handleZoomIn}
@@ -1148,7 +1148,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-            className="interactive-hud-element fixed bottom-0 left-0 right-0 z-50 bg-[#060914]/98 border-t border-cyan-500/40 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.9)] max-h-[86vh] flex flex-col overflow-hidden backdrop-blur-2xl"
+            className="interactive-hud-element fixed bottom-0 left-0 right-0 z-50 bg-[#060914] border-t border-cyan-500/40 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.95)] max-h-[86vh] flex flex-col overflow-hidden"
           >
             {/* Drag Handle & Top Action Bar */}
             <div className="p-3 bg-[#080d1d] border-b border-white/10 flex items-center justify-between gap-3 shrink-0">
@@ -1342,7 +1342,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               })()}
 
               {/* World Lore & Creed */}
-              <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-2">
+              <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-2">
                 <div className="flex items-center justify-between text-xs font-mono">
                   <span className="text-white/60">Architect:</span>
                   <span className="text-cyan-300 font-bold">
@@ -1407,7 +1407,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       {/* ========================================================================= */}
       <AnimatePresence>
         {isAkinoyaModalOpen && (
-          <div className="interactive-hud-element fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl transform-gpu" style={{ willChange: 'opacity' }}>
+          <div className="interactive-hud-element fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 transform-gpu" style={{ willChange: 'opacity' }}>
             <div className="fixed inset-0" onClick={() => setIsAkinoyaModalOpen(false)} />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}

@@ -919,7 +919,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             </div>
 
             {/* Launch Action Card */}
-            <div className="lg:col-span-4 p-5 sm:p-6 rounded-2xl bg-black/70 border border-white/15 backdrop-blur-xl shadow-xl space-y-4">
+            <div className="lg:col-span-4 p-5 sm:p-6 rounded-2xl bg-[#060a14] border border-white/15 shadow-xl space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-cyan-400 shadow-[0_0_15px_rgba(56,189,248,0.4)] shrink-0">
                   <img src={millAvatar} alt="Mill" className="w-full h-full object-cover" />
@@ -1405,7 +1405,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             {sortedSubmissions.map((sub, idx) => (
               <div
                 key={sub.id}
-                className="rounded-2xl overflow-hidden bg-black/60 border border-white/10 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
+                className="rounded-2xl overflow-hidden bg-[#070b16] border border-white/15 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
               >
                 <div>
                   <div

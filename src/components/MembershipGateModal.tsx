@@ -79,7 +79,7 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/85 backdrop-blur-md">
+      <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/95">
         <div className="fixed inset-0 pointer-events-auto" onClick={handleClose} />
 
         <motion.div
@@ -87,7 +87,7 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 16 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 max-w-xl w-full bg-[#050812]/95 border border-amber-500/40 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-[0_0_60px_rgba(245,158,11,0.3)] overflow-hidden my-auto space-y-6"
+          className="relative z-10 max-w-xl w-full bg-[#050812] border border-amber-500/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(245,158,11,0.3)] overflow-hidden my-auto space-y-6"
         >
           {/* Subtle Ambient Gold Accents */}
           <div className="absolute top-0 right-0 w-56 h-56 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -125,7 +125,7 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
           </div>
 
           {/* Entitlements Card */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#090e1e]/90 border border-amber-500/30 space-y-3.5 shadow-inner">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#090e1e] border border-amber-500/30 space-y-3.5 shadow-inner">
             <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
               <span className="text-xs font-mono font-bold text-amber-300 uppercase tracking-wider">
                 Full Pioneer Entitlements Included:

@@ -148,7 +148,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-y-auto bg-black/90 backdrop-blur-2xl transform-gpu" style={{ willChange: 'opacity' }}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-y-auto bg-black/95 transform-gpu" style={{ willChange: 'opacity' }}>
         {/* Backdrop click to close */}
         <div className="fixed inset-0" onClick={onClose} />
 
@@ -462,7 +462,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
             </div>
 
             {/* 2. SYNTHESIZED PLANETARY LORE */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 space-y-2.5">
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#080d1a] border border-white/10 space-y-2.5">
               <div className="flex items-center gap-2 text-cyan-400">
                 <Sparkles className="w-4 h-4" />
                 <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
@@ -476,7 +476,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
 
             {/* 3. ENVIRONMENTAL SPECIFICATIONS GRID */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-1">
+              <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-mono text-cyan-300 font-semibold">
                   <Globe2 className="w-3.5 h-3.5" />
                   <span>Atmosphere &amp; Spectra</span>
@@ -484,7 +484,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 <p className="text-xs text-white/70 font-sans">{planet.atmosphere}</p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-1">
+              <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-mono text-emerald-300 font-semibold">
                   <Trees className="w-3.5 h-3.5" />
                   <span>Flora Ecosystem</span>
@@ -492,7 +492,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 <p className="text-xs text-white/70 font-sans">{planet.flora}</p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-1">
+              <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-mono text-purple-300 font-semibold">
                   <Compass className="w-3.5 h-3.5" />
                   <span>Fauna &amp; Wildlife</span>
@@ -500,7 +500,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 <p className="text-xs text-white/70 font-sans">{planet.fauna}</p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-1">
+              <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-mono text-amber-300 font-semibold">
                   <Volume2 className="w-3.5 h-3.5" />
                   <span>Sonic Vibe &amp; Acoustic Style</span>
@@ -508,7 +508,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 <p className="text-xs text-white/70 font-sans">{planet.sonicVibe}</p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-1">
+              <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-mono text-pink-300 font-semibold">
                   <Layers className="w-3.5 h-3.5" />
                   <span>Visual Aesthetic Pipeline</span>
@@ -516,7 +516,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 <p className="text-xs text-white/70 font-sans">{planet.visualAesthetic}</p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-1">
+              <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-mono text-yellow-300 font-semibold">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Iconic Planet Landmark</span>
@@ -527,7 +527,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
 
             {/* 4. FOUNDING CREED & FUTURE PROMISE */}
             {planet.futurePromise && (
-              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/40 via-yellow-950/30 to-black border border-amber-500/30 space-y-1">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/80 via-yellow-950/60 to-[#080d1a] border border-amber-500/30 space-y-1">
                 <div className="text-[11px] font-mono text-amber-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                   <span>Founding Creed &amp; Future Promise</span>
@@ -540,7 +540,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
 
             {/* 5. WORLD ARCHITECT SECRET NOTES (If present) */}
             {planet.additionalNotes && (
-              <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/20 space-y-1">
+              <div className="p-3.5 rounded-xl bg-cyan-950/40 border border-cyan-500/20 space-y-1">
                 <div className="text-[11px] font-mono text-cyan-300 font-bold uppercase tracking-wider">
                   Architect Transmissions &amp; Story Secrets
                 </div>

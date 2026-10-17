@@ -199,7 +199,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/95">
         {/* Backdrop click to dismiss */}
         <div className="fixed inset-0 pointer-events-auto" onClick={handleClose} />
 
@@ -208,7 +208,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 16 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 max-w-2xl w-full bg-[#050812]/95 border border-white/15 rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-7 md:p-8 backdrop-blur-2xl shadow-[0_0_60px_rgba(245,158,11,0.25)] overflow-hidden my-auto max-h-[92dvh] overflow-y-auto"
+          className="relative z-10 max-w-2xl w-full bg-[#050812] border border-white/15 rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-7 md:p-8 shadow-[0_0_60px_rgba(245,158,11,0.25)] overflow-hidden my-auto max-h-[92dvh] overflow-y-auto"
         >
           {/* Subtle Ambient Gold Accents */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -252,7 +252,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
               </div>
 
               {/* Exclusivity & FOMO Explainer Box */}
-              <div className="p-3 sm:p-4.5 rounded-xl sm:rounded-2xl bg-[#090e1e]/90 border border-amber-500/30 space-y-2.5 sm:space-y-3 shadow-inner">
+              <div className="p-3 sm:p-4.5 rounded-xl sm:rounded-2xl bg-[#090e1e] border border-amber-500/30 space-y-2.5 sm:space-y-3 shadow-inner">
                 <div className="flex items-start gap-2.5">
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-950/80 border border-amber-400/50 flex items-center justify-center text-amber-300 shrink-0 mt-0.5">
                     <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
