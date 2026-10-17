@@ -274,10 +274,45 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
   const isPatron = isVipOrAbove;
 
-  // Active Hub Section (00 · Welcome & Vision Portal as primary landing page)
-  const [activeSection, setActiveSection] = useState<CreativeHubSection>('welcome');
-  const [activeStageId, setActiveStageId] = useState<number>(1);
-  const [targetVaultFolderId, setTargetVaultFolderId] = useState<string>('root');
+  // Active Hub Section with sessionStorage & URL hash persistence
+  const [activeSection, setActiveSection] = useState<CreativeHubSection>(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab') || urlParams.get('section');
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      const savedSection = sessionStorage.getItem('akinoya_hub_active_section') as any;
+
+      const candidate = tabParam || hash || savedSection;
+      if (candidate === 'drive-vault' || candidate === 'downloads') return 'downloads';
+      if (candidate === 'workflows' || candidate === 'labs') return 'workflows';
+      if (candidate === 'discussion' || candidate === 'chat') return 'discussion';
+      if (candidate === 'creators' || candidate === 'leaderboard') return 'creators';
+      if (candidate === 'governance' || candidate === 'lore') return 'governance';
+      if (candidate === 'welcome' || candidate === 'vision') return 'welcome';
+    }
+    return 'welcome';
+  });
+
+  const [activeStageId, setActiveStageId] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('akinoya_hub_active_stage');
+      const num = Number(saved);
+      if (num >= 1 && num <= 5) return num;
+    }
+    return 1;
+  });
+
+  const [targetVaultFolderId, setTargetVaultFolderId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const folderParam = urlParams.get('folder');
+      const saved = sessionStorage.getItem('akinoya_hub_vault_folder');
+      return folderParam || saved || 'root';
+    }
+    return 'root';
+  });
+
+  const isInitialMountRef = useRef(true);
 
   // Workflow Pipeline Stages for Left Sidebar Sub-Menu
   const WORKFLOW_STAGES = [
@@ -293,6 +328,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     setActiveSection(normalized);
     soundManager.playTone(580, 0.05);
     if (typeof window !== 'undefined') {
+      sessionStorage.setItem('akinoya_hub_active_section', normalized);
+      sessionStorage.setItem('akinoya_hub_scroll_y', '0');
+      try {
+        window.history.replaceState(null, '', `#${normalized}`);
+      } catch {}
       window.scrollTo({ top: 0, behavior: 'smooth' });
       document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -303,12 +343,34 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     setActiveSection('downloads');
     soundManager.playTone(580, 0.05);
     if (typeof window !== 'undefined') {
+      sessionStorage.setItem('akinoya_hub_active_section', 'downloads');
+      sessionStorage.setItem('akinoya_hub_vault_folder', folderId);
+      sessionStorage.setItem('akinoya_hub_scroll_y', '0');
+      try {
+        window.history.replaceState(null, '', `#downloads`);
+      } catch {}
       window.scrollTo({ top: 0, behavior: 'smooth' });
       document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  // URL query parameter & hash detection (e.g. ?tab=drive-vault or ?folder=folder-01)
+  // Synchronize state persistence to sessionStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    sessionStorage.setItem('akinoya_hub_active_section', activeSection);
+  }, [activeSection]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    sessionStorage.setItem('akinoya_hub_active_stage', String(activeStageId));
+  }, [activeStageId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    sessionStorage.setItem('akinoya_hub_vault_folder', targetVaultFolderId);
+  }, [targetVaultFolderId]);
+
+  // URL query parameter & hash detection on external navigation
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
@@ -326,13 +388,42 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     }
   }, []);
 
-  // Instant top-scroll on tab switch or section reset
+  // Viewport scroll position saving & restoration across reloads
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window === 'undefined') return;
+
+    let timeoutId: any;
+    const saveScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (window.scrollY > 0) {
+          sessionStorage.setItem('akinoya_hub_scroll_y', String(window.scrollY));
+        }
+      }, 80);
+    };
+
+    window.addEventListener('scroll', saveScroll, { passive: true });
+    window.addEventListener('beforeunload', saveScroll);
+
+    // Restore saved scroll position after rendering
+    const savedY = sessionStorage.getItem('akinoya_hub_scroll_y');
+    if (savedY) {
+      const targetY = parseFloat(savedY);
+      if (!isNaN(targetY) && targetY > 50) {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.scrollTo({ top: targetY, behavior: 'smooth' });
+          }, 120);
+        });
+      }
     }
-  }, [activeSection]);
+
+    return () => {
+      window.removeEventListener('scroll', saveScroll);
+      window.removeEventListener('beforeunload', saveScroll);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   // Scroll-spy observer for Stage 01–05 when in Labs & Workflows
   useEffect(() => {

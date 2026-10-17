@@ -185,10 +185,23 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
   onNavigateVerify: _onNavigateVerify,
   onNavigateToVault,
 }) => {
-  // Deep-Dive Modal State
+  // Deep-Dive Modal State & Stage Persistence
   const [selectedStageForModal, setSelectedStageForModal] = useState<StageDetail | null>(null);
   const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null);
-  const [activeStageId, setActiveStageId] = useState<number>(1);
+  const [activeStageId, setActiveStageId] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('akinoya_labs_active_stage');
+      const num = Number(saved);
+      if (num >= 1 && num <= 5) return num;
+    }
+    return 1;
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('akinoya_labs_active_stage', String(activeStageId));
+    }
+  }, [activeStageId]);
 
   // Countdown Timer State pointing to January 9, 2027
   const [timeLeft, setTimeLeft] = useState<{

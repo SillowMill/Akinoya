@@ -878,8 +878,8 @@ function toBase64(str: string): string {
   return encodeURIComponent(str);
 }
 
-// Map wizard inputs to 5 rich, photorealistic 4K visual render assets
-// Strictly returns canonical assets for Ämlemi. For custom sectors, renders are synthesized live via Google Nano Banana.
+// Map wizard inputs to 5 rich, photorealistic 8K visual render assets
+// Strictly returns canonical assets for Ämlemi. For custom sectors, renders are synthesized live exclusively via Najno Banajna.
 // ZERO VECTOR / SVG PLACEHOLDERS: Returns empty strings if not yet synthesized.
 export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['renders'] => {
   const isAmlemi = answers.planetName === 'Ämlemi' || answers.planetName?.toLowerCase() === 'ämlemi';

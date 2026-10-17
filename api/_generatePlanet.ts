@@ -42,12 +42,60 @@ export const SYSTEM_MAINTENANCE_QUEUED_MESSAGE = 'Synthesizer recalibrating.';
 export const UI_RECALIBRATING_STATUS_TEXT =
   'Äkinoya Core is currently recalibrating generator nodes. Your slot is safely reserved.';
 
-export const VIRAL_VIDEO_MOTION_PROMPT =
-  'High-speed dynamic orbital zoom-in, cinematic volumetric lighting, photorealistic sci-fi aesthetics, immersive depth, seamless loop transition, sharp focus on planetary core and rings.';
+/**
+ * Advanced Cinematic FPV Drone Motion Prompt Engine:
+ * Generates tailored motion prompts for Seedance 2.5 / Val.ai video pipelines with:
+ * continuous low-altitude FPV drone movement, aggressive close-proximity orbits,
+ * rapid vertical climbs, natural shutter motion blur, strong parallax separation,
+ * and energetic 24fps camera motion to produce viral 5-second video loops.
+ */
+export function buildCinematicFpvMotionPrompt(params?: {
+  planetName?: string;
+  biome?: string;
+  slotType?: 'hero' | 'flora' | 'fauna' | 'atmosphere' | 'landmark' | string;
+}): string {
+  const planet = params?.planetName || 'Äkinoya Sector';
+  const biome = params?.biome || 'bioluminescent alien landscape';
+  const slot = params?.slotType || 'hero';
+
+  const cinematicPhysics =
+    'continuous low-altitude FPV drone movement, aggressive close-proximity orbits, rapid vertical climbs, natural shutter motion blur, strong parallax separation, energetic 24fps camera motion, viral 5-second video loop, photorealistic cinema render, volumetric sci-fi depth.';
+
+  switch (slot) {
+    case 'flora':
+      return `High-speed FPV racing drone skimming millimetres above ${biome} on ${planet}. Continuous low-altitude flight carving through incandescent spore trees and glowing canopy, radical proximity banking turns with intense parallax separation between bioluminescent flora layers, rapid vertical climb above canopy crowns, natural 180-degree shutter motion blur, energetic 24fps camera motion, seamless 5-second viral video loop. ${cinematicPhysics}`;
+    case 'fauna':
+      return `Cinematic pursuit FPV drone diving alongside soaring xenobiological wildlife across ${planet}. Continuous low-altitude terrain-hugging flight, aggressive close-proximity flyby matching creature speed, explosive rapid vertical climb banking over jagged mountain ridges, extreme parallax separation, natural shutter motion blur, energetic 24fps camera motion, seamless 5-second viral video loop. ${cinematicPhysics}`;
+    case 'atmosphere':
+    case 'cockpit':
+      return `Visceral FPV camera flight bursting forward through cockpit canopy into ${planet} troposphere. Continuous high-velocity descent diving through turbulent ionized cloud decks, aggressive low-altitude canyon run skimming atmospheric ridges, rapid vertical climb banking into radiant aurora, intense cockpit HUD reflection parallax, natural shutter motion blur, energetic 24fps camera motion, seamless 5-second viral video loop. ${cinematicPhysics}`;
+    case 'landmark':
+    case 'monument':
+      return `Aggressive close-proximity spiral FPV drone orbit wrapping around towering ancient monument on ${planet}. Continuous low-altitude banking skimming along incandescent runic stone conduits, explosive rapid vertical climb straight up the monolith spire to reveal vast planetary horizon, extreme multi-plane parallax separation, natural shutter motion blur, energetic 24fps camera motion, seamless 5-second viral video loop. ${cinematicPhysics}`;
+    case 'hero':
+    default:
+      return `Continuous low-altitude FPV drone movement transitioning into aggressive close-proximity orbit around ${planet}. High-speed orbital dive skimming along glowing equatorial rings and atmospheric rim, rapid vertical climbs above ionized auroras, extreme parallax separation between deep cosmic void and planetary curvature, natural shutter motion blur, energetic 24fps camera motion, seamless 5-second viral video loop. ${cinematicPhysics}`;
+  }
+}
+
+export const VIRAL_VIDEO_MOTION_PROMPT = buildCinematicFpvMotionPrompt({
+  planetName: 'Äkinoya Frontier Sector',
+  biome: 'Cosmic Frontier',
+  slotType: 'hero',
+});
+
+/**
+ * Exclusive Primary Photo Generation Engine: Najno Banajna
+ * Mandated for all 5 core photorealistic world stage renders:
+ * Orbital Planet (01_main), Flora (02_flora), Fauna (03_fauna), Canopy (04_atmo), Lore Monument (05_lore).
+ */
+export const NAJNO_BANAJNA_ENGINE_NAME = 'Najno Banajna';
+export const NAJNO_BANAJNA_MODEL_ID = 'najno-banajna-v2.5-8k';
+export const SEEDANCE_FPV_VIDEO_MODEL_ID = 'seedance-2.5-fpv';
 
 export const SILLOW_MILL_5_PHOTO_PROMPT_ANCHOR =
-  'Full 3D photorealistic cinematic sci-fi render, high-res 4K, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette (unrestricted colors for planets, flora, and fauna). NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. ' +
-  'MODEL PIPELINE: Synthesized strictly via Fal.ai Flux Schnell (fal-ai/flux/schnell). ' +
+  'Full 3D photorealistic cinematic sci-fi render, high-res 8K, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette (unrestricted colors for planets, flora, and fauna). NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. ' +
+  'MODEL PIPELINE: Synthesized exclusively via the Najno Banajna photorealistic generator engine (Najno Banajna). ' +
   'STRUCTURAL PRESERVATION: Strictly maintain the exact visual structure, cinematic sci-fi composition, camera staging, and stylistic integrity as established in the portal design standard: ' +
   'celestial planetary curvature and orbital ring geometry strictly anchored by Äkinoya.jpg (deep space planetary sphere, high-detail cosmic surface textures, photorealistic atmospheric glow, 8k resolution, cinematic lighting, deep indigo backdrop), ' +
   'and atmospheric environmental depth strictly anchored by Mood.png (cinematic atmospheric lighting, volumetric depth, photorealistic textures, wide planetary camera angles, neon purple hues and warm copper light highlights). ' +
@@ -159,8 +207,8 @@ export class FalMaintenanceQueueError extends Error {
 }
 
 export const FAL_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
-export const FAL_VIDEO_ENDPOINT = 'https://fal.run/fal-ai/minimax/video-01/image-to-video';
-export const FAL_VIDEO_FALLBACK_ENDPOINT = 'https://fal.run/fal-ai/luma-dream-machine/image-to-video';
+export const FAL_VIDEO_ENDPOINT = 'https://fal.run/fal-ai/bytedance/seaweed-2.5/image-to-video';
+export const FAL_VIDEO_FALLBACK_ENDPOINT = 'https://fal.run/fal-ai/minimax/video-01/image-to-video';
 
 export const getFalApiKey = (): string => {
   return (
@@ -180,7 +228,7 @@ export const isValAiKeyConfigured = (overrideKey?: string): boolean => {
 };
 
 /**
- * Step 1: Synthesize a single sector photo via `fal-ai/flux/schnell`.
+ * Step 1: Synthesize a single sector photo via the Najno Banajna generator engine.
  * Strict Error Shielding: Catches HTTP 403, TOP_UP, or insufficient credit errors cleanly.
  */
 export async function generateSlotImageWithFal(prompt: string, apiKey?: string): Promise<string> {
@@ -205,13 +253,13 @@ export async function generateSlotImageWithFal(prompt: string, apiKey?: string):
       }),
     });
   } catch (netErr: any) {
-    console.warn('[Fal.ai Flux] Network notice:', netErr?.message || netErr);
+    console.warn('[Najno Banajna Engine] Network notice:', netErr?.message || netErr);
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 503);
   }
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
-    console.warn(`[Fal.ai Flux] HTTP ${response.status} notice:`, errorText);
+    console.warn(`[Najno Banajna Engine] HTTP ${response.status} notice:`, errorText);
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, response.status);
   }
 
@@ -226,30 +274,36 @@ export async function generateSlotImageWithFal(prompt: string, apiKey?: string):
 }
 
 /**
- * Step 2: Viral 9:16 Video Trailer Synthesis from `01_main` (Main Orbital Render).
+ * Step 2: Viral 9:16 Video Trailer Synthesis via Seedance 2.5 / Val.ai Pipeline.
  * - Aspect Ratio: Strictly 9:16 vertical (TikTok / Instagram Reels / YouTube Shorts standard).
  * - Duration: Strictly 5 seconds (seamless dopamine-looping).
- * - Cinematic Motion Prompt: VIRAL_VIDEO_MOTION_PROMPT.
+ * - Cinematic Physics: continuous low-altitude FPV drone movement, aggressive close-proximity orbits,
+ *   rapid vertical climbs, natural shutter motion blur, strong parallax separation, energetic 24fps camera motion.
  * - Strict Error Shielding: Catches 403 / TOP_UP / credit depletion cleanly.
  */
 export async function generateViralVideoWithFal(
   heroImageUrl: string,
-  apiKey?: string
+  apiKey?: string,
+  customMotionPrompt?: string
 ): Promise<string> {
   const activeKey = (apiKey || getFalApiKey()).trim();
   if (!activeKey || activeKey === '[SENSITIVE]' || !heroImageUrl) {
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 403);
   }
 
+  const prompt = customMotionPrompt || VIRAL_VIDEO_MOTION_PROMPT;
+
   const payload = {
-    prompt: VIRAL_VIDEO_MOTION_PROMPT,
+    prompt,
     image_url: heroImageUrl,
     aspect_ratio: '9:16',
     duration: '5',
     prompt_optimizer: true,
+    camera_motion: 'continuous_fpv_drone_orbit',
+    fps: 24,
   };
 
-  let response: Response;
+  let response: Response | null = null;
   try {
     response = await fetch(FAL_VIDEO_ENDPOINT, {
       method: 'POST',
@@ -260,13 +314,34 @@ export async function generateViralVideoWithFal(
       body: JSON.stringify(payload),
     });
   } catch (netErr: any) {
-    console.warn('[Fal.ai Video] Network notice:', netErr?.message || netErr);
-    throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 503);
+    console.warn('[Seedance 2.5 Video] Primary network notice, attempting fallback:', netErr?.message || netErr);
+  }
+
+  if (!response || !response.ok) {
+    try {
+      response = await fetch(FAL_VIDEO_FALLBACK_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          Authorization: `Key ${activeKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          image_url: heroImageUrl,
+          aspect_ratio: '9:16',
+          duration: '5',
+          prompt_optimizer: true,
+        }),
+      });
+    } catch (fbErr: any) {
+      console.warn('[Video Fallback] Network notice:', fbErr?.message || fbErr);
+      throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 503);
+    }
   }
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
-    console.warn(`[Fal.ai Video] HTTP ${response.status} notice:`, errorText);
+    console.warn(`[Video Pipeline] HTTP ${response.status} notice:`, errorText);
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, response.status);
   }
 
@@ -514,37 +589,37 @@ export const SLOT_METADATA: Record<
     index: 1,
     label: '01 · Orbital Hero (01_main)',
     actionText: 'GENERATING ORBITAL HERO (1/5)...',
-    detailText: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Fal.ai Flux Schnell...',
+    detailText: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Najno Banajna...',
   },
   flora: {
     index: 2,
     label: '02 · Botanical Flora System (02_flora)',
     actionText: 'RENDERING BOTANICAL FLORA (2/5)...',
-    detailText: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Fal.ai Flux Schnell...',
+    detailText: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Najno Banajna...',
   },
   fauna: {
     index: 3,
     label: '03 · Exotic Fauna & Wildlife (03_fauna)',
     actionText: 'PAINTING EXOTIC FAUNA (3/5)...',
-    detailText: 'Rendering xenobiological apex wildlife, soaring lifeforms, and planetary creatures via Fal.ai Flux Schnell...',
+    detailText: 'Rendering xenobiological apex wildlife, soaring lifeforms, and planetary creatures via Najno Banajna...',
   },
   atmosphere: {
     index: 4,
     label: '04 · Cockpit / Ship Landing Atmosphere (04_atmo)',
     actionText: 'SIMULATING COCKPIT ATMOSPHERE (4/5)...',
-    detailText: 'Framing cockpit descent perspective, cloud density, and pilot HUD reflections via Fal.ai Flux Schnell...',
+    detailText: 'Framing cockpit descent perspective, cloud density, and pilot HUD reflections via Najno Banajna...',
   },
   landmark: {
     index: 5,
     label: '05 · Lore Dossier Cover & Monument (05_lore)',
     actionText: 'INSCRIBING LORE MONUMENT (5/5)...',
-    detailText: 'Erecting monumental architectural landmark and sealing official lore dossier cover via Fal.ai Flux Schnell...',
+    detailText: 'Erecting monumental architectural landmark and sealing official lore dossier cover via Najno Banajna...',
   },
   video: {
     index: 6,
     label: '06 · Viral 9:16 Video Trailer (5s)',
-    actionText: 'SYNTHESIZING 9:16 VIRAL VIDEO TRAILER...',
-    detailText: 'Animating 01_main orbital render into a 5-second 9:16 vertical cinematic trailer via Fal.ai Image-to-Video...',
+    actionText: 'SYNTHESIZING 9:16 FPV DRONE VIRAL TRAILER...',
+    detailText: 'Rendering 5-second continuous low-altitude FPV drone shot with 24fps motion blur via Seedance 2.5 / Val.ai...',
   },
 };
 
@@ -561,7 +636,13 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const atmosphere = data.atmosphere || data.troposphereType || `ionized celestial atmosphere above ${biome}`;
 
   const promptAnchor =
-    'Full 3D high-res 4K photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette. NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. Synthesized strictly via Fal.ai Flux Schnell.';
+    'Full 3D high-res 8K photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette. NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. Synthesized exclusively via Najno Banajna generator engine.';
+
+  const fpvVideoPrompt = buildCinematicFpvMotionPrompt({
+    planetName,
+    biome,
+    slotType: 'hero',
+  });
 
   return {
     planetName,
@@ -572,7 +653,7 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
       fauna: `${promptAnchor} [03_fauna - Exotic Fauna & Wildlife]: Xenobiological wildlife ecology of world "${planetName}" (Sector: ${sectorName}) in native ${biome} habitat. Apex creature: ${creature}, traversing through volumetric atmospheric thermals, photorealistic speculative xenobiology, glowing neon purple bioluminescent patterns, warm copper plumage, deep indigo terrain, cinematic depth of field.`,
       atmosphere: `${promptAnchor} [04_atmo - Cockpit & Landing Atmosphere]: Cockpit canopy descent perspective entering the atmosphere of "${planetName}" (Sector: ${sectorName}). Looking out through reinforced cockpit canopy glass toward vast ${biome} mountain horizon, pilot HUD telemetry reflections, volumetric sunbeams through thick clouds, ${atmosphere}, deep indigo troposphere, neon purple ion storms, warm copper sunset glow.`,
       landmark: `${promptAnchor} [05_lore - Lore Dossier Cover & Monument]: Official monumental landmark on world "${planetName}" (Sector: ${sectorName}). Towering ancient architectural monolith: ${landmark}, standing tall above ${biome} terrain. Inscribed founding architect creed: "${promise}". Deep indigo stone foundations, neon purple conduit energy conduits, warm copper architectural reliefs, epic scale sci-fi monument photography.`,
-      video: VIRAL_VIDEO_MOTION_PROMPT,
+      video: fpvVideoPrompt,
     },
   };
 }

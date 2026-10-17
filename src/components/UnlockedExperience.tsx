@@ -190,13 +190,60 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'my-world' | 'assets'>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      const hash = window.location.hash.toLowerCase();
-      if (params.get('tab') === 'assets' || hash === '#assets') return 'assets';
-      if (params.get('tab') === 'my-world' || hash === '#my-world') return 'my-world';
-      if (params.get('tab') === 'edition' || hash === '#edition') return 'edition';
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      const savedTab = sessionStorage.getItem('akinoya_portal_active_tab') as any;
+
+      const candidate = params.get('tab') || hash || savedTab;
+      if (candidate === 'assets') return 'assets';
+      if (candidate === 'my-world') return 'my-world';
+      if (candidate === 'edition' || candidate === 'comic') return 'edition';
+      if (candidate === 'pass') return 'pass';
     }
     return 'pass';
   });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('akinoya_portal_active_tab', activeTab);
+    }
+  }, [activeTab]);
+
+  // Viewport scroll position saving & restoration across reloads
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let timeoutId: any;
+    const saveScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (window.scrollY > 0) {
+          sessionStorage.setItem('akinoya_portal_scroll_y', String(window.scrollY));
+        }
+      }, 80);
+    };
+
+    window.addEventListener('scroll', saveScroll, { passive: true });
+    window.addEventListener('beforeunload', saveScroll);
+
+    const savedY = sessionStorage.getItem('akinoya_portal_scroll_y');
+    if (savedY) {
+      const targetY = parseFloat(savedY);
+      if (!isNaN(targetY) && targetY > 50) {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.scrollTo({ top: targetY, behavior: 'smooth' });
+          }, 120);
+        });
+      }
+    }
+
+    return () => {
+      window.removeEventListener('scroll', saveScroll);
+      window.removeEventListener('beforeunload', saveScroll);
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
   const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
   const [userDossier, setUserDossier] = useState<PlanetSubmission | null>(null);
   const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);

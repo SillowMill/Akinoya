@@ -24,31 +24,31 @@ const TELEMETRY_STAGES: TelemetryStage[] = [
   {
     threshold: 0,
     stageName: 'GENERATING ORBITAL HERO (1/5)...',
-    details: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Google Nano Banana Pro...',
+    details: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Najno Banajna Pro...',
     icon: Globe2,
   },
   {
     threshold: 20,
     stageName: 'RENDERING BOTANICAL FLORA (2/5)...',
-    details: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Google Nano Banana...',
+    details: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Najno Banajna...',
     icon: Trees,
   },
   {
     threshold: 40,
     stageName: 'PAINTING EXOTIC FAUNA (3/5)...',
-    details: 'Synthesizing xenobiological wildlife, soaring pack lifeforms, and apex creatures via Google Nano Banana...',
+    details: 'Synthesizing xenobiological wildlife, soaring pack lifeforms, and apex creatures via Najno Banajna...',
     icon: Compass,
   },
   {
     threshold: 60,
     stageName: 'SIMULATING COCKPIT ATMOSPHERE (4/5)...',
-    details: 'Framing cockpit descent canopy, pilot HUD reflections, and atmospheric cloud density via Google Nano Banana...',
+    details: 'Framing cockpit descent canopy, pilot HUD reflections, and atmospheric cloud density via Najno Banajna...',
     icon: Layers,
   },
   {
     threshold: 80,
     stageName: 'INSCRIBING LORE MONUMENT (5/5)...',
-    details: 'Erecting monumental architectural landmark and sealing official lore dossier cover via Google Nano Banana...',
+    details: 'Erecting monumental architectural landmark and sealing official lore dossier cover via Najno Banajna...',
     icon: ShieldCheck,
   },
 ];
@@ -92,7 +92,7 @@ export const AkinoyaSciFiLoader: React.FC<AkinoyaSciFiLoaderProps> = ({
             </span>
             <div>
               <span className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase font-bold">
-                GOOGLE NANO BANANA · NANO BANANA PRO LIVE AI SYNTHESIZER
+                NAJNO BANAJNA · NAJNO BANAJNA 4K PHOTOREALISTIC ENGINE
               </span>
               <h2 className="text-base sm:text-lg font-display font-extrabold text-white tracking-wide truncate">
                 {planetName}

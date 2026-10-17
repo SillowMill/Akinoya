@@ -320,7 +320,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         const finalMsg: ChatMessage = {
           id: `mill-done-${Date.now()}`,
           sender: 'mill',
-          text: `Territory protocol complete! All 8 human-centric coordinates recorded.\n\nDesignated World: ${completeAnswers.planetName}\n\nInitializing Google Nano Banana AI live synthesis for your 5-photo high-resolution cinematic sci-fi dossier and registered lore...`,
+          text: `Territory protocol complete! All 8 human-centric coordinates recorded.\n\nDesignated World: ${completeAnswers.planetName}\n\nInitializing Najno Banajna 8K Photorealistic AI live synthesis for your 5-photo high-resolution cinematic sci-fi dossier and registered lore...`,
           timestamp: 'Just now',
         };
         setMessages((prev) => [...prev, finalMsg]);
@@ -500,7 +500,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           {isSynthesizing && (
             <div className="flex items-center gap-3 p-4 rounded-xl bg-cyan-950/40 border border-cyan-400/30 text-cyan-300 text-xs font-mono animate-pulse">
               <Sparkles className="w-4 h-4 animate-spin text-cyan-400 shrink-0" />
-              <span>Mill is aligning your 8 answers with Google Nano Banana AI to synthesize a 5-photo dossier...</span>
+              <span>Mill is aligning your 8 answers with Najno Banajna 8K AI to synthesize a 5-photo dossier...</span>
             </div>
           )}
         </div>

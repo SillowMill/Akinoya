@@ -1052,7 +1052,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-400/40 font-bold uppercase tracking-wider">
-                  Live Dossier Preview · Google Nano Banana 4K
+                  Live Dossier Preview · Najno Banajna 8K Photorealistic Engine
                 </span>
                 <div className="flex flex-wrap items-center gap-2 mt-1">
                   <h2 className="text-xl sm:text-2xl font-display font-bold text-white">
