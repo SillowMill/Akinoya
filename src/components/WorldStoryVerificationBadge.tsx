@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import {
   Download,
   Share2,
@@ -10,9 +9,7 @@ import {
   Camera,
   Film,
   Maximize2,
-  X,
   Play,
-  Eye,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -22,6 +19,7 @@ import { getPlanetPhotoCards } from '../data/contest';
 import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
 import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
+import { PlanetDossierModal } from './PlanetDossierModal';
 
 export type StoryViewMode = 'card' | 'trailer';
 
@@ -30,7 +28,7 @@ interface WorldStoryVerificationBadgeProps {
   editionRank?: number;
   isSimulationMode?: boolean;
   onUnlockSimulation?: () => void;
-  onInspectDossier?: (dossier: PlanetSubmission) => void;
+  onInspectDossier?: (dossier: PlanetSubmission, stageIdx?: number) => void;
 }
 
 /**
@@ -995,13 +993,25 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
   editionRank,
   isSimulationMode = false,
   onUnlockSimulation,
+  onInspectDossier,
 }) => {
   const [activeViewMode, setActiveViewMode] = useState<StoryViewMode>('card');
-  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
+  const [selectedStageIdx, setSelectedStageIdx] = useState(0);
   const [isExportingBadge, setIsExportingBadge] = useState(false);
   const [isExportingTrailer, setIsExportingTrailer] = useState(false);
   const [isCopiedCode, setIsCopiedCode] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const openDossierModal = (stageIdx = 0) => {
+    soundManager.playTone(660, 0.05);
+    setSelectedStageIdx(stageIdx);
+    if (onInspectDossier) {
+      onInspectDossier(dossier, stageIdx);
+    } else {
+      setIsDossierModalOpen(true);
+    }
+  };
 
   // Dynamic Val.ai / Fal.ai Video Pipeline check & automatic promotion
   const dynamicVideo = useDynamicWorldVideo(dossier);
@@ -1011,23 +1021,6 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
     () => deriveWorldVerificationMeta(dossier, editionRank),
     [dossier, editionRank]
   );
-
-  // Close Fullscreen Viewer on Escape key & Left/Right arrow navigation
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreenOpen) {
-        setIsFullscreenOpen(false);
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        if (isFullscreenOpen) {
-          e.preventDefault();
-          soundManager.playTone(640, 0.04);
-          setActiveViewMode((prev) => (prev === 'card' ? 'trailer' : 'card'));
-        }
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isFullscreenOpen]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) {
@@ -1186,16 +1179,17 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
   const subPhotos = photoCards.slice(1, 5);
 
   /**
-   * Reusable 9:16 Story Card & Trailer Viewport content (used both inline and in Fullscreen Viewer Modal).
+   * Reusable 9:16 Story Card & Trailer Viewport content.
+   * Clicking the viewport or any of the 5 stage renders triggers the Galaxy Navigator dossier view modal.
    */
-  const renderStoryAfficheCard = (isInsideModal = false) => (
-    <div className={`relative w-full ${isInsideModal ? 'max-w-[400px] sm:max-w-[430px]' : 'max-w-[350px] sm:max-w-[375px]'} flex items-center justify-center`}>
+  const renderStoryAfficheCard = () => (
+    <div className="relative w-full max-w-[350px] sm:max-w-[375px] flex items-center justify-center">
       {/* Sleek Side Chevron Arrow Navigation (Desktop & Mobile) */}
       <button
         type="button"
         onClick={handleToggleViewMode}
-        className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#050a18]/90 hover:bg-[#081226] border border-amber-400/50 hover:border-amber-300 text-amber-300 flex items-center justify-center transition-all shadow-[0_0_15px_rgba(0,0,0,0.8),0_0_10px_rgba(245,158,11,0.3)] cursor-pointer"
         aria-label="Toggle to Previous / Alternate View"
+        className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#050a18]/90 hover:bg-[#081226] border border-amber-400/50 hover:border-amber-300 text-amber-300 flex items-center justify-center transition-all shadow-[0_0_15px_rgba(0,0,0,0.8),0_0_10px_rgba(245,158,11,0.3)] cursor-pointer"
         title="Toggle between 9:16 Story Card and 9:16 MP4 Trailer"
       >
         <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
@@ -1204,8 +1198,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       <button
         type="button"
         onClick={handleToggleViewMode}
-        className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#050a18]/90 hover:bg-[#081226] border border-cyan-400/50 hover:border-cyan-300 text-cyan-300 flex items-center justify-center transition-all shadow-[0_0_15px_rgba(0,0,0,0.8),0_0_10px_rgba(6,182,212,0.3)] cursor-pointer"
         aria-label="Toggle to Next / Alternate View"
+        className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#050a18]/90 hover:bg-[#081226] border border-cyan-400/50 hover:border-cyan-300 text-cyan-300 flex items-center justify-center transition-all shadow-[0_0_15px_rgba(0,0,0,0.8),0_0_10px_rgba(6,182,212,0.3)] cursor-pointer"
         title="Toggle between 9:16 Story Card and 9:16 MP4 Trailer"
       >
         <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-300" />
@@ -1213,17 +1207,12 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
 
       <div
         onClick={() => {
-          if (!isInsideModal) {
-            soundManager.playTone(680, 0.05);
-            setIsFullscreenOpen(true);
-          }
+          openDossierModal(activeViewMode === 'trailer' ? 5 : 0);
         }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className={`relative w-full aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/60 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none group transition-transform duration-300 ${
-          !isInsideModal ? 'cursor-pointer hover:scale-[1.01] hover:border-amber-300' : ''
-        }`}
-        title={!isInsideModal ? 'Click to open Fullscreen 9:16 Card & Trailer Viewer (Swipe or click arrows to toggle)' : undefined}
+        className="relative w-full aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/60 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none group transition-transform duration-300 cursor-pointer hover:scale-[1.01] hover:border-amber-300"
+        title="Click to inspect in Galaxy Navigator Fullscreen Dossier (or swipe to toggle)"
       >
         {/* Inner Cyan Hairline Frame */}
         <div className="absolute inset-2 rounded-[20px] border border-cyan-400/25 pointer-events-none z-20" />
@@ -1312,10 +1301,17 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 </div>
               </div>
 
-              {/* 3. Slick 5-Photo Vertical Collage */}
+              {/* 3. Slick 5-Photo Vertical Collage — All 5 Stage Renders Clickable into Galaxy Dossier */}
               <div className="relative z-10 flex-1 my-1.5 flex flex-col gap-1.5 min-h-0">
                 {/* Photo 01: Main Orbital Hero */}
-                <div className="relative flex-[1.3] min-h-0 rounded-xl overflow-hidden border border-amber-400/55 bg-slate-950 shadow-md">
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDossierModal(0);
+                  }}
+                  className="relative flex-[1.3] min-h-0 rounded-xl overflow-hidden border border-amber-400/55 hover:border-amber-300 bg-slate-950 shadow-md cursor-pointer transition-colors"
+                  title="View 01 Main Planet in Fullscreen Galaxy Dossier"
+                >
                   {heroPhoto?.url && (
                     <img
                       src={heroPhoto.url}
@@ -1343,10 +1339,16 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 <div className="flex-[1.5] grid grid-cols-2 grid-rows-2 gap-1.5 min-h-0">
                   {subPhotos.map((photo, idx) => {
                     const slotTags = ['02 · FLORA', '03 · FAUNA', '04 · CANOPY', '05 · LORE'];
+                    const stageIdx = idx + 1;
                     return (
                       <div
                         key={photo.id}
-                        className="relative rounded-lg overflow-hidden border border-cyan-400/35 bg-slate-950 min-h-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDossierModal(stageIdx);
+                        }}
+                        className="relative rounded-lg overflow-hidden border border-cyan-400/35 hover:border-cyan-300 bg-slate-950 min-h-0 cursor-pointer transition-colors"
+                        title={`View ${slotTags[idx]} in Fullscreen Galaxy Dossier`}
                       >
                         {photo.url && (
                           <img
@@ -1410,6 +1412,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       </div>
     </div>
   );
+
+
 
   return (
     <>
@@ -1503,20 +1507,19 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               </button>
             </div>
 
-            {/* 9:16 Card / Trailer Viewport (Clicking opens Fullscreen Card Viewer) */}
-            {renderStoryAfficheCard(false)}
+            {/* 9:16 Card / Trailer Viewport (Clicking opens Galaxy Navigator Fullscreen Dossier) */}
+            {renderStoryAfficheCard()}
 
             {/* Fullscreen Viewer Launch Pill */}
             <button
               type="button"
               onClick={() => {
-                soundManager.playTone(680, 0.05);
-                setIsFullscreenOpen(true);
+                openDossierModal(activeViewMode === 'trailer' ? 5 : 0);
               }}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-amber-400/35 text-[11px] font-mono font-bold text-amber-200 hover:text-white transition-all cursor-pointer shadow-md"
             >
               <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
-              <span>Open Fullscreen 9:16 Viewer &amp; Switcher</span>
+              <span>Open Galaxy Dossier Fullscreen Viewer</span>
             </button>
           </div>
 
@@ -1579,7 +1582,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 </div>
               </div>
 
-              {/* 5 Included Planetary Renders Strip (Clicking opens Fullscreen 9:16 Card Viewer) */}
+              {/* 5 Included Planetary Renders Strip (Clicking opens Galaxy Navigator Fullscreen Dossier) */}
               <div className="space-y-2 pt-1">
                 <div className="flex items-center justify-between text-[10.5px] font-mono text-white/65">
                   <span className="flex items-center gap-1.5">
@@ -1593,11 +1596,10 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                     <div
                       key={card.id}
                       onClick={() => {
-                        soundManager.playTone(680, 0.05);
-                        setIsFullscreenOpen(true);
+                        openDossierModal(i);
                       }}
                       className="group/mini relative aspect-square rounded-lg overflow-hidden border border-white/15 hover:border-amber-400/70 cursor-pointer bg-black"
-                      title="Open Fullscreen 9:16 Verification Viewer"
+                      title={`Open 0${i + 1} ${card.title} in Fullscreen Galaxy Dossier`}
                     >
                       {card.url && (
                         <img
@@ -1686,117 +1688,22 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       </div>
 
       {/* ===================================================================== */}
-      {/* FULLSCREEN 9:16 CARD & TRAILER VIEWER MODAL (PORTAL OVERLAY)          */}
+      {/* ADVANCED FULLSCREEN DOSSIER MODAL (GALAXY NAVIGATOR STANDARD)         */}
       {/* ===================================================================== */}
-      {isFullscreenOpen &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[9999] bg-black/92 backdrop-blur-2xl flex flex-col items-center justify-between p-4 sm:p-6 overflow-y-auto"
-            onClick={() => setIsFullscreenOpen(false)}
-          >
-            {/* Top Modal Bar: View Switcher & Close */}
-            <div
-              className="w-full max-w-3xl flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center gap-2.5">
-                <img
-                  src={sillowMillLogoUrl}
-                  alt="Sillow Mill"
-                  className="w-7 h-7 object-contain"
-                />
-                <div>
-                  <span className="text-xs font-display font-black tracking-wider text-white uppercase block">
-                    {dossier.planetName} · 9:16 Verification Viewer
-                  </span>
-                  <span className="text-[10px] font-mono text-cyan-300">
-                    EDITION #{meta.worldNumber} · {meta.verificationCode}
-                  </span>
-                </div>
-              </div>
-
-              {/* Seamless 9:16 View Switcher inside Fullscreen Modal */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#070d1c] border border-white/15">
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundManager.playTone(620, 0.04);
-                    setActiveViewMode('card');
-                  }}
-                  className={`px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeViewMode === 'card'
-                      ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>9:16 Story Card</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundManager.playTone(660, 0.04);
-                    setActiveViewMode('trailer');
-                  }}
-                  className={`px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeViewMode === 'trailer'
-                      ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  <Play className="w-3.5 h-3.5" />
-                  <span>9:16 MP4 Trailer</span>
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsFullscreenOpen(false)}
-                className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white flex items-center justify-center cursor-pointer transition-colors"
-                aria-label="Close Fullscreen Viewer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Center 9:16 Card / Trailer Viewport */}
-            <div
-              className="my-auto py-4 w-full flex items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {renderStoryAfficheCard(true)}
-            </div>
-
-            {/* Bottom Dual Action Bar inside Fullscreen Viewer */}
-            <div
-              className="w-full max-w-2xl pt-3 border-t border-white/10 flex flex-wrap items-center justify-center gap-3"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={handleDownloadStoryBadge}
-                disabled={isExportingBadge}
-                className="flex-1 min-w-[220px] py-3 px-5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(245,158,11,0.4)] min-h-[46px]"
-              >
-                <Download className="w-4 h-4 text-black shrink-0" />
-                <span>{isExportingBadge ? 'Rendering 9:16 PNG...' : 'Download 9:16 Story Badge'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleDownloadTrailerMp4}
-                disabled={isExportingTrailer}
-                className="flex-1 min-w-[220px] py-3 px-5 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-cyan-500 hover:from-cyan-300 hover:to-sky-300 text-black font-mono text-xs font-extrabold tracking-wide cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(6,182,212,0.4)] min-h-[46px]"
-              >
-                <Film className="w-4 h-4 text-black shrink-0" />
-                <span>{isExportingTrailer ? 'Encoding 9:16 MP4...' : 'Download 9:16 MP4 Trailer'}</span>
-              </button>
-            </div>
-          </div>,
-          document.body
-        )}
+      {!onInspectDossier && (
+        <PlanetDossierModal
+          planet={dossier}
+          isOpen={isDossierModalOpen}
+          initialPhotoIdx={selectedStageIdx}
+          onClose={() => setIsDossierModalOpen(false)}
+          onNavigateToGalaxy={() => {
+            setIsDossierModalOpen(false);
+            if (typeof window !== 'undefined') {
+              window.location.href = `/galaxy?planet=${encodeURIComponent(dossier.id)}`;
+            }
+          }}
+        />
+      )}
     </>
   );
 };

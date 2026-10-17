@@ -166,6 +166,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   const [generationSlotIndex, setGenerationSlotIndex] = useState<number>(1);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [modalPlanet, setModalPlanet] = useState<PlanetSubmission | null>(null);
+  const [modalPlanetInitialIdx, setModalPlanetInitialIdx] = useState<number>(0);
   const [slotStream, setSlotStream] = useState<SlotStreamItem[]>(DEFAULT_SLOT_STREAM);
   const [founderTestBypass, setFounderTestBypass] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
@@ -1280,6 +1281,10 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             {previewDossier && (
               <WorldStoryVerificationBadge
                 dossier={previewDossier}
+                onInspectDossier={(d, stageIdx) => {
+                  setModalPlanet(d);
+                  setModalPlanetInitialIdx(stageIdx ?? 0);
+                }}
               />
             )}
 
@@ -1477,6 +1482,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       <PlanetDossierModal
         planet={modalPlanet}
         isOpen={Boolean(modalPlanet)}
+        initialPhotoIdx={modalPlanetInitialIdx}
         onClose={() => setModalPlanet(null)}
         onVote={handleVoteSubmission}
         onOpenCreator={onNavigateToCreator}
