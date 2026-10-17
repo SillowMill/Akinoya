@@ -33,6 +33,8 @@ import {
   getUserFromSessionToken,
   castSubmissionVote,
   getVotesSummary,
+  saveSubmissionRecord,
+  getAllSubmissionRecords,
 } from './authVoteService';
 
 export const apiApp = express();
@@ -606,6 +608,26 @@ apiRouter.get(['/dossier/votes', '/votes'], async (req: Request, res: Response):
     res.status(200).json({ success: true, ...summary });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'Fetch votes failed' });
+  }
+});
+
+// ─── 15. Server-Side Custom Dossier Submissions Persistence ──────────────────
+apiRouter.post(['/dossier/submission', '/submission'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const sub = req.body;
+    const result = saveSubmissionRecord(sub);
+    res.status(result.success ? 200 : 400).json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to save submission' });
+  }
+});
+
+apiRouter.get(['/dossier/submissions', '/submissions'], async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const submissions = getAllSubmissionRecords();
+    res.status(200).json({ success: true, submissions });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to fetch submissions' });
   }
 });
 

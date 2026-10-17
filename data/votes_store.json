@@ -3,6 +3,7 @@
     "planet-amlemi-genesis-01": {
       "submissionId": "planet-amlemi-genesis-01",
       "voters": [],
+      "baselineVotes": 3,
       "votesCount": 3,
       "updatedAt": "2026-10-16T20:00:00.000Z"
     }

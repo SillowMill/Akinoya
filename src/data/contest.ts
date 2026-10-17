@@ -480,6 +480,20 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
     } catch {}
   }
 
+  // 1.5 Fetch live server submissions from data/submissions_store.json
+  let serverSubmissions: PlanetSubmission[] = [];
+  try {
+    const subRes = await fetch('/api/dossier/submissions');
+    if (subRes.ok) {
+      const subData = await subRes.json();
+      if (subData?.success && Array.isArray(subData.submissions)) {
+        serverSubmissions = subData.submissions;
+      }
+    }
+  } catch (subErr) {
+    console.warn('[Contest] Server submissions fetch notice:', subErr);
+  }
+
   // 2. Fetch from Supabase if configured
   if (isSupabaseConfigured) {
     try {
@@ -586,21 +600,45 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
           live.unshift(INITIAL_SUBMISSIONS[0]);
         }
 
+        const sortedLive = [...live].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(live));
+            localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(sortedLive));
           } catch {}
         }
-        return live;
+        return sortedLive;
       }
     } catch (err) {
       console.warn('[Contest] fetchPlanetSubmissions exception:', err);
     }
   }
 
-  // 3. Fallback: Merge server vote counts into locally stored submissions
+  // 3. Fallback: Merge server submissions, local submissions, and canonical Ämlemi
   const stored = getStoredPlanetSubmissions();
-  const merged = stored.map((sub) => {
+  const submissionMap = new Map<string, PlanetSubmission>();
+
+  // Canonical base submissions
+  for (const s of INITIAL_SUBMISSIONS) {
+    submissionMap.set(s.id, s);
+  }
+
+  // Local submissions
+  for (const s of stored) {
+    if (s && s.id && !isForbiddenSubmission(s)) {
+      submissionMap.set(s.id, s);
+    }
+  }
+
+  // Server persisted submissions
+  for (const s of serverSubmissions) {
+    if (s && s.id && !isForbiddenSubmission(s)) {
+      submissionMap.set(s.id, s);
+    }
+  }
+
+  const combined = Array.from(submissionMap.values());
+  const merged = combined.map((sub) => {
     const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
     const userVoted = userVotedIds.includes(sub.id) || hasUserVotedOnSubmission(sub.id, effectiveVoterId, voterEmail);
     let votesCount = serverCounts[sub.id] !== undefined ? serverCounts[sub.id] : Math.max(1, sub.votesCount || 1);
@@ -614,12 +652,14 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
     };
   });
 
+  const sorted = [...merged].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(merged));
+      localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(sorted));
     } catch {}
   }
-  return merged;
+  return sorted;
 };
 
 // Check if a specific user already has a golden ticket submission
@@ -992,6 +1032,17 @@ export const savePlanetSubmission = async (
     const existing = getStoredPlanetSubmissions();
     const updated = [enrichedSubmission, ...existing.filter((s) => s.id !== enrichedSubmission.id)];
     localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(updated));
+
+    // Step 2.5: Dedicated server-side submission persistence to data/submissions_store.json
+    try {
+      await fetch('/api/dossier/submission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(enrichedSubmission),
+      });
+    } catch (serverErr) {
+      console.warn('[Contest] Server submission save notice:', serverErr);
+    }
 
     // Step 3: Atomic Supabase cloud persistence (user_dossiers table: 5 photos + lore + 9:16 video_url + coordinates)
     if (isSupabaseConfigured) {

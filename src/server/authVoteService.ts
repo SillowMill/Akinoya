@@ -15,6 +15,9 @@ const TMP_USERS_FILE = path.join(TMP_DIR, 'sillow_auth_users.json');
 const LOCAL_VOTES_FILE = path.join(DATA_DIR, 'votes_store.json');
 const TMP_VOTES_FILE = path.join(TMP_DIR, 'sillow_votes_store.json');
 
+const LOCAL_SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions_store.json');
+const TMP_SUBMISSIONS_FILE = path.join(TMP_DIR, 'sillow_submissions_store.json');
+
 // Ensure directory exists
 if (!fs.existsSync(DATA_DIR)) {
   try {
@@ -45,6 +48,7 @@ export interface AuthUserRecord {
 export interface VoteRecord {
   submissionId: string;
   voters: string[]; // List of voter identifiers (userId or email or voterId)
+  baselineVotes?: number;
   votesCount: number;
   authorId?: string | null;
   authorEmail?: string | null;
@@ -59,6 +63,10 @@ interface AuthStore {
 
 interface VoteStore {
   votes: Record<string, VoteRecord>; // Keyed by submissionId
+}
+
+export interface SubmissionStore {
+  submissions: Record<string, any>; // Keyed by submissionId
 }
 
 // Secret for HMAC session token signing
@@ -121,8 +129,81 @@ function saveVotesStore(store: VoteStore): void {
   }
 }
 
+function loadSubmissionsStore(): SubmissionStore {
+  const candidates = [LOCAL_SUBMISSIONS_FILE, TMP_SUBMISSIONS_FILE];
+  for (const file of candidates) {
+    if (fs.existsSync(file)) {
+      try {
+        const raw = fs.readFileSync(file, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.submissions === 'object') {
+          return parsed;
+        }
+      } catch {}
+    }
+  }
+  return { submissions: {} };
+}
+
+function saveSubmissionsStore(store: SubmissionStore): void {
+  const json = JSON.stringify(store, null, 2);
+  const targets = [LOCAL_SUBMISSIONS_FILE, TMP_SUBMISSIONS_FILE];
+  for (const file of targets) {
+    try {
+      const dir = path.dirname(file);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(file, json, 'utf8');
+    } catch {}
+  }
+}
+
 let _userStore: AuthStore = loadUsersStore();
 let _voteStore: VoteStore = loadVotesStore();
+let _submissionsStore: SubmissionStore = loadSubmissionsStore();
+
+// ─── Submissions Operations ───────────────────────────────────────────────────
+export function saveSubmissionRecord(sub: any): { success: boolean; submission: any } {
+  if (!sub || !sub.id) {
+    return { success: false, submission: sub };
+  }
+  _submissionsStore = loadSubmissionsStore();
+  _submissionsStore.submissions[sub.id] = sub;
+  saveSubmissionsStore(_submissionsStore);
+
+  // Initialize or anchor author in votes store to enforce self-voting prevention permanently
+  _voteStore = loadVotesStore();
+  const existingVote = _voteStore.votes[sub.id];
+  const authorEmail = (sub.authorEmail || sub.humanAnswers?.email || '').trim().toLowerCase();
+  const authorUsername = (sub.authorUsername || '').trim().toLowerCase().replace(/^@/, '');
+  const authorId = sub.userId || null;
+
+  if (existingVote) {
+    if (authorId) existingVote.authorId = authorId;
+    if (authorEmail) existingVote.authorEmail = authorEmail;
+    if (authorUsername) existingVote.authorUsername = authorUsername;
+    existingVote.updatedAt = new Date().toISOString();
+    _voteStore.votes[sub.id] = existingVote;
+  } else {
+    _voteStore.votes[sub.id] = {
+      submissionId: sub.id,
+      voters: [],
+      baselineVotes: sub.id === 'planet-amlemi-genesis-01' ? 3 : 1,
+      votesCount: sub.id === 'planet-amlemi-genesis-01' ? 3 : Math.max(1, sub.votesCount || 1),
+      authorId,
+      authorEmail: authorEmail || null,
+      authorUsername: authorUsername || null,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+  saveVotesStore(_voteStore);
+
+  return { success: true, submission: sub };
+}
+
+export function getAllSubmissionRecords(): any[] {
+  _submissionsStore = loadSubmissionsStore();
+  return Object.values(_submissionsStore.submissions || {});
+}
 
 // ─── Password Cryptography ───────────────────────────────────────────────────
 export function hashPassword(password: string): { salt: string; hash: string } {
@@ -382,73 +463,88 @@ export function castSubmissionVote(params: {
     return { success: false, newVotesCount: 1, hasVoted: false, error: 'Voter identification required.' };
   }
 
+  _voteStore = loadVotesStore();
+  _submissionsStore = loadSubmissionsStore();
+
+  const storedSub = _submissionsStore.submissions[submissionId];
+  const existingVote = _voteStore.votes[submissionId] || {
+    submissionId,
+    voters: [],
+    baselineVotes: submissionId === 'planet-amlemi-genesis-01' ? 3 : 1,
+    votesCount: submissionId === 'planet-amlemi-genesis-01' ? 3 : Math.max(1, baseVotes || 1),
+    authorId: submissionAuthorId || storedSub?.userId || null,
+    authorEmail: submissionAuthorEmail || storedSub?.authorEmail || storedSub?.humanAnswers?.email || null,
+    authorUsername: submissionAuthorUsername || storedSub?.authorUsername || null,
+    updatedAt: new Date().toISOString(),
+  };
+
   // ─── Strict Self-Vote Prevention ──────────────────────────────────────────
   const cleanVoterEmail = voterEmail?.trim().toLowerCase();
-  const cleanAuthorEmail = submissionAuthorEmail?.trim().toLowerCase();
-  const cleanVoterUser = voterUsername?.trim().toLowerCase().replace(/^@/, '');
-  const cleanAuthorUser = submissionAuthorUsername?.trim().toLowerCase().replace(/^@/, '');
+  const cleanAuthorEmail = (
+    submissionAuthorEmail ||
+    existingVote.authorEmail ||
+    storedSub?.authorEmail ||
+    storedSub?.humanAnswers?.email ||
+    ''
+  ).trim().toLowerCase();
 
-  const isSelfById = Boolean(submissionAuthorId && voterId && submissionAuthorId === voterId);
+  const cleanVoterUser = voterUsername?.trim().toLowerCase().replace(/^@/, '');
+  const cleanAuthorUser = (
+    submissionAuthorUsername ||
+    existingVote.authorUsername ||
+    storedSub?.authorUsername ||
+    ''
+  ).trim().toLowerCase().replace(/^@/, '');
+
+  const effectiveAuthorId = submissionAuthorId || existingVote.authorId || storedSub?.userId;
+
+  const isSelfById = Boolean(effectiveAuthorId && voterId && effectiveAuthorId === voterId);
   const isSelfByEmail = Boolean(cleanVoterEmail && cleanAuthorEmail && cleanVoterEmail === cleanAuthorEmail);
   const isSelfByUsername = Boolean(cleanVoterUser && cleanAuthorUser && cleanVoterUser === cleanAuthorUser);
 
   if (isSelfById || isSelfByEmail || isSelfByUsername) {
     return {
       success: false,
-      newVotesCount: baseVotes || 1,
+      newVotesCount: existingVote.votesCount || baseVotes || 1,
       hasVoted: false,
       error: 'Self-voting blocked: You cannot vote for your own world submission.',
     };
   }
 
-  _voteStore = loadVotesStore();
-  const existingVote = _voteStore.votes[submissionId] || {
-    submissionId,
-    voters: [],
-    votesCount: baseVotes || (submissionId === 'planet-amlemi-genesis-01' ? 3 : 1),
-    authorId: submissionAuthorId,
-    authorEmail: submissionAuthorEmail,
-    authorUsername: submissionAuthorUsername,
-    updatedAt: new Date().toISOString(),
+  // Define voter match predicate
+  const isVoterMatch = (entry: string) => {
+    if (!entry) return false;
+    if (entry === voterId || entry === `id:${voterId}`) return true;
+    if (cleanVoterEmail && (entry === cleanVoterEmail || entry === `email:${cleanVoterEmail}`)) return true;
+    return false;
   };
 
-  const isAmlemi = submissionId === 'planet-amlemi-genesis-01';
-  const minBaseline = isAmlemi ? 3 : Math.max(1, baseVotes || 1);
-
-  // Check if voter already in list (check by ID or Email)
-  const voterKeys = [voterId];
-  if (cleanVoterEmail) voterKeys.push(cleanVoterEmail);
-
-  const existingIndex = existingVote.voters.findIndex((v) => voterKeys.includes(v));
+  const hasAlreadyVoted = existingVote.voters.some(isVoterMatch);
   let hasVoted = false;
 
-  if (existingIndex >= 0) {
-    // Un-vote
-    existingVote.voters.splice(existingIndex, 1);
+  if (hasAlreadyVoted) {
+    // Un-vote: purge all matching keys for this voter
+    existingVote.voters = existingVote.voters.filter((v) => !isVoterMatch(v));
     hasVoted = false;
   } else {
-    // Cast vote
-    existingVote.voters.push(voterId);
-    if (cleanVoterEmail) existingVote.voters.push(cleanVoterEmail);
+    // Cast vote: add single canonical key for this voter
+    const canonicalKey = cleanVoterEmail ? `email:${cleanVoterEmail}` : `id:${voterId}`;
+    existingVote.voters.push(canonicalKey);
     hasVoted = true;
   }
 
-  // Deduplicate unique voters
-  const uniqueVoterSet = new Set(existingVote.voters);
-  const userCount = uniqueVoterSet.size;
+  // Calculate clean, deterministic vote count
+  const isAmlemi = submissionId === 'planet-amlemi-genesis-01';
+  const baseline = isAmlemi ? 3 : (existingVote.baselineVotes || 1);
+  existingVote.baselineVotes = baseline;
 
-  let calculatedVotes: number;
-  if (isAmlemi) {
-    calculatedVotes = hasVoted ? 4 : 3;
-  } else {
-    calculatedVotes = Math.max(minBaseline, (baseVotes || minBaseline) + (hasVoted ? 1 : 0));
-  }
-
+  const calculatedVotes = baseline + existingVote.voters.length;
   existingVote.votesCount = calculatedVotes;
   existingVote.updatedAt = new Date().toISOString();
+
   if (submissionAuthorId) existingVote.authorId = submissionAuthorId;
-  if (submissionAuthorEmail) existingVote.authorEmail = submissionAuthorEmail;
-  if (submissionAuthorUsername) existingVote.authorUsername = submissionAuthorUsername;
+  if (cleanAuthorEmail) existingVote.authorEmail = cleanAuthorEmail;
+  if (cleanAuthorUser) existingVote.authorUsername = cleanAuthorUser;
 
   _voteStore.votes[submissionId] = existingVote;
   saveVotesStore(_voteStore);
@@ -466,20 +562,25 @@ export function getVotesSummary(voterId?: string, voterEmail?: string): {
 } {
   _voteStore = loadVotesStore();
   const cleanVoterEmail = voterEmail?.trim().toLowerCase();
-  const voterKeys = [voterId].filter(Boolean) as string[];
-  if (cleanVoterEmail) voterKeys.push(cleanVoterEmail);
+
+  const isVoterMatch = (entry: string) => {
+    if (!entry) return false;
+    if (voterId && (entry === voterId || entry === `id:${voterId}`)) return true;
+    if (cleanVoterEmail && (entry === cleanVoterEmail || entry === `email:${cleanVoterEmail}`)) return true;
+    return false;
+  };
 
   const votesCountByDossier: Record<string, number> = {};
   const userVotedIds: string[] = [];
 
   for (const [subId, record] of Object.entries(_voteStore.votes)) {
     votesCountByDossier[subId] = record.votesCount;
-    if (record.voters.some((v) => voterKeys.includes(v))) {
+    if (record.voters.some(isVoterMatch)) {
       userVotedIds.push(subId);
     }
   }
 
-  // Ensure Ämlemi default baseline
+  // Ensure Ämlemi default baseline of at least 3
   if (votesCountByDossier['planet-amlemi-genesis-01'] === undefined) {
     votesCountByDossier['planet-amlemi-genesis-01'] = 3;
   }

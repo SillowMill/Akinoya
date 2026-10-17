@@ -966,6 +966,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(serverData.user));
         setHasPendingVipInvitation(false);
 
+        // Store in local auth vault for resilient offline and cold-start fallback
+        try {
+          const vaultRaw = localStorage.getItem('akinoya_auth_vault');
+          const vault = vaultRaw ? JSON.parse(vaultRaw) : {};
+          vault[cleanEmail] = {
+            user: serverData.user,
+            profile: serverData.profile,
+            sessionToken: serverData.sessionToken,
+            savedAt: new Date().toISOString(),
+          };
+          localStorage.setItem('akinoya_auth_vault', JSON.stringify(vault));
+        } catch {}
+
+        // Sync subscriber to Google Sheets
+        fetch('/api/sync-sheets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: cleanEmail,
+            fullName: `${cleanFirst} ${cleanLast}`.trim(),
+            role: serverData.profile.role,
+            isPioneer: true,
+          }),
+        }).catch(() => {});
+
         // Also gracefully register with Supabase in background without blocking the user
         if (isSupabaseConfigured) {
           try {
@@ -1050,6 +1075,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(serverData.user));
         setHasPendingVipInvitation(false);
 
+        // Update local auth vault
+        try {
+          const vaultRaw = localStorage.getItem('akinoya_auth_vault');
+          const vault = vaultRaw ? JSON.parse(vaultRaw) : {};
+          vault[cleanEmail] = {
+            user: serverData.user,
+            profile: serverData.profile,
+            sessionToken: serverData.sessionToken,
+            savedAt: new Date().toISOString(),
+          };
+          localStorage.setItem('akinoya_auth_vault', JSON.stringify(vault));
+        } catch {}
+
         soundManager.playUnlockChime();
         closeAuthModal();
         return { success: true };
@@ -1078,6 +1116,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: true };
         }
       }
+
+      // 3. Fallback to client auth vault if server network notice occurs
+      try {
+        const vaultRaw = localStorage.getItem('akinoya_auth_vault');
+        if (vaultRaw) {
+          const vault = JSON.parse(vaultRaw);
+          const cachedEntry = vault[cleanEmail];
+          if (cachedEntry && cachedEntry.user && cachedEntry.profile) {
+            setUser(cachedEntry.user);
+            setProfile(cachedEntry.profile);
+            setRole(cachedEntry.profile.role);
+            if (cachedEntry.sessionToken) {
+              localStorage.setItem('akinoya_session_token', cachedEntry.sessionToken);
+            }
+            localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(cachedEntry.profile));
+            localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(cachedEntry.user));
+            setHasPendingVipInvitation(false);
+            soundManager.playUnlockChime();
+            closeAuthModal();
+            return { success: true };
+          }
+        }
+      } catch {}
 
       return {
         success: false,

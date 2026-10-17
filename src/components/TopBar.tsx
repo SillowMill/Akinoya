@@ -71,8 +71,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/85 backdrop-blur-xl px-4 sm:px-8 lg:px-12 py-3 sm:py-4">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 sm:gap-6 lg:gap-8">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/85 backdrop-blur-xl px-3 sm:px-6 lg:px-12 py-3 sm:py-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2.5 sm:gap-4 lg:gap-8">
         {/* Zone 1: Clean wordmark - Pure White */}
         <a
           href="/"
@@ -88,7 +88,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </a>
 
         {/* Zone 2: Single-line typography navigation links with dedicated brand colors and subtle dividers */}
-        <nav className="hidden md:flex items-center gap-3.5 lg:gap-5 font-mono text-xs uppercase tracking-wide whitespace-nowrap">
+        <nav className="hidden md:flex items-center gap-2.5 lg:gap-5 font-mono text-[11px] lg:text-xs uppercase tracking-wide whitespace-nowrap">
           <a
             href="/galaxy"
             onClick={(e) => {
@@ -124,9 +124,9 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span>Community Hub</span>
           </a>
 
-          {/* Digital Passport: Only visible for guests / unverified users who still need to claim */}
+          {/* Digital Passport: Only visible on large desktop for guests / unverified users */}
           {!hasClaimedPass && (
-            <>
+            <span className="hidden xl:inline-flex items-center gap-2.5">
               <span className="text-white/20 select-none text-[11px]" aria-hidden="true">|</span>
               {onNavigateToVerify ? (
                 <button
@@ -144,7 +144,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   Digital Passport
                 </a>
               )}
-            </>
+            </span>
           )}
         </nav>
 

@@ -665,17 +665,19 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     panTo(0, 0, isMobile ? 0.68 : 0.9, 800);
   };
 
-  // Search filter
+  // Search filter - ranked dynamically by persistent community votes
   const searchResults = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return [];
-    return planets.filter(
-      (p) =>
-        p.planetName.toLowerCase().includes(q) ||
-        (p.sectorId && p.sectorId.toLowerCase().includes(q)) ||
-        p.authorName.toLowerCase().includes(q) ||
-        p.authorUsername.toLowerCase().includes(q)
-    );
+    return planets
+      .filter(
+        (p) =>
+          p.planetName.toLowerCase().includes(q) ||
+          (p.sectorId && p.sectorId.toLowerCase().includes(q)) ||
+          p.authorName.toLowerCase().includes(q) ||
+          p.authorUsername.toLowerCase().includes(q)
+      )
+      .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
   }, [planets, searchQuery]);
 
   const handleSelectSearchResult = (planet: PlanetSubmission) => {
