@@ -6,7 +6,6 @@ import {
   Sparkles,
   Check,
   Copy,
-  QrCode,
   Globe2,
   Camera,
 } from 'lucide-react';
@@ -22,68 +21,6 @@ interface WorldStoryVerificationBadgeProps {
   isSimulationMode?: boolean;
   onUnlockSimulation?: () => void;
   onInspectDossier?: (dossier: PlanetSubmission) => void;
-}
-
-/**
- * Generates a deterministic 21x21 QR-code matrix with standard 7x7 finder patterns,
- * timing lines, alignment markers, and deterministic payload modules from a URL string.
- */
-function buildDeterministicQrMatrix(url: string): boolean[][] {
-  const size = 21;
-  const matrix: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
-  const reserved: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
-
-  const placeFinderPattern = (rowOffset: number, colOffset: number) => {
-    for (let r = -1; r <= 7; r++) {
-      for (let c = -1; c <= 7; c++) {
-        const rr = rowOffset + r;
-        const cc = colOffset + c;
-        if (rr < 0 || rr >= size || cc < 0 || cc >= size) continue;
-        reserved[rr][cc] = true;
-        if (r >= 0 && r <= 6 && c >= 0 && c <= 6) {
-          const isBorder = r === 0 || r === 6 || c === 0 || c === 6;
-          const isInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
-          matrix[rr][cc] = isBorder || isInner;
-        } else {
-          matrix[rr][cc] = false;
-        }
-      }
-    }
-  };
-
-  placeFinderPattern(0, 0);
-  placeFinderPattern(0, size - 7);
-  placeFinderPattern(size - 7, 0);
-
-  // Timing patterns
-  for (let i = 8; i < size - 8; i++) {
-    reserved[6][i] = true;
-    matrix[6][i] = i % 2 === 0;
-    reserved[i][6] = true;
-    matrix[i][6] = i % 2 === 0;
-  }
-
-  // Deterministic hash stream from URL
-  let h1 = 0x811c9dc5;
-  let h2 = 0x9e3779b9;
-  for (let i = 0; i < url.length; i++) {
-    const ch = url.charCodeAt(i);
-    h1 ^= ch;
-    h1 = Math.imul(h1, 0x01000193);
-    h2 = Math.imul(h2 ^ ch, 0x85ebca6b);
-  }
-
-  let bitIndex = 0;
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      if (reserved[r][c]) continue;
-      const seed = Math.imul(h1 ^ (r * 31 + c * 17), 0x27d4eb2d) ^ Math.imul(h2, bitIndex + 1);
-      matrix[r][c] = ((seed >>> (bitIndex % 16)) & 1) === 1;
-      bitIndex++;
-    }
-  }
-
-  return matrix;
 }
 
 /**
@@ -204,7 +141,7 @@ function drawCoverImage(
 }
 
 /**
- * Renders the 1080x1920 (9:16) high-res Story Verification Badge onto a Canvas and returns a Blob.
+ * Renders the 1080x1920 (9:16) high-res Story Verification Affiche onto a Canvas and returns a Blob.
  */
 export async function renderWorldStoryBadgeBlob(
   dossier: PlanetSubmission,
@@ -220,7 +157,6 @@ export async function renderWorldStoryBadgeBlob(
 
   const meta = deriveWorldVerificationMeta(dossier, editionRank);
   const photoCards = getPlanetPhotoCards(dossier);
-  const qrMatrix = buildDeterministicQrMatrix(meta.shareUrl);
 
   // Load all 5 planetary photos + official Sillowmilllogo.png in parallel
   const [loadedPhotos, logoImg] = await Promise.all([
@@ -237,13 +173,13 @@ export async function renderWorldStoryBadgeBlob(
   ctx.fillRect(0, 0, W, H);
 
   // Ambient Radial Glows
-  const topGlow = ctx.createRadialGradient(W * 0.8, 180, 20, W * 0.8, 180, 520);
+  const topGlow = ctx.createRadialGradient(W * 0.5, 160, 20, W * 0.5, 160, 560);
   topGlow.addColorStop(0, 'rgba(245, 158, 11, 0.22)');
   topGlow.addColorStop(1, 'rgba(245, 158, 11, 0)');
   ctx.fillStyle = topGlow;
   ctx.fillRect(0, 0, W, H);
 
-  const bottomGlow = ctx.createRadialGradient(W * 0.2, H - 240, 20, W * 0.2, H - 240, 560);
+  const bottomGlow = ctx.createRadialGradient(W * 0.5, H - 220, 20, W * 0.5, H - 220, 560);
   bottomGlow.addColorStop(0, 'rgba(6, 182, 212, 0.22)');
   bottomGlow.addColorStop(1, 'rgba(6, 182, 212, 0)');
   ctx.fillStyle = bottomGlow;
@@ -260,29 +196,60 @@ export async function renderWorldStoryBadgeBlob(
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // 2. Top Header: Verification Protocol & Edition Number (#1, #2, etc.)
-  ctx.fillStyle = '#67e8f9';
-  ctx.font = 'bold 20px "JetBrains Mono", monospace';
-  ctx.fillText('ÄKINOYA ARCHIVAL REGISTRY · 9:16 STORY PROOF', 84, 108);
+  const contentX = 84;
+  const contentW = W - 168; // 912px
 
-  ctx.fillStyle = '#fbbf24';
-  ctx.font = 'bold 22px "JetBrains Mono", monospace';
-  ctx.fillText(
-    meta.isAmlemi
-      ? '★ FOUNDING PIONEER · GENESIS BENCHMARK'
-      : meta.isPioneer
-      ? '★ PIONEER 2027 · PRE-RELEASE WORLD'
-      : '★ VERIFIED PLANETARY ARCHIVE',
-    84,
-    144
-  );
+  // 2. Top-Level Branding Header: Official "SILLOW MILL" Logo + Brand Name + "CELOMILLE" & "ÄKINOYA UNIVERSE"
+  const brandHeaderY = 82;
+  const logoFrameSize = 114;
 
-  // Unique Edition Number Badge (Top Right)
-  const badgeW = 210;
-  const badgeH = 88;
+  // Subtle glass crest container for the logo
+  drawRoundedRect(ctx, contentX, brandHeaderY, logoFrameSize, logoFrameSize, 24);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  if (logoImg) {
+    const pad = 12;
+    const maxDim = logoFrameSize - pad * 2;
+    const ratio = logoImg.width / Math.max(1, logoImg.height);
+    let drawW = maxDim;
+    let drawH = maxDim;
+    if (ratio > 1) {
+      drawH = maxDim / ratio;
+    } else {
+      drawW = maxDim * ratio;
+    }
+    const dx = contentX + (logoFrameSize - drawW) / 2;
+    const dy = brandHeaderY + (logoFrameSize - drawH) / 2;
+    ctx.save();
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.45)';
+    ctx.shadowBlur = 16;
+    ctx.drawImage(logoImg, dx, dy, drawW, drawH);
+    ctx.restore();
+  }
+
+  const brandTextX = contentX + logoFrameSize + 28;
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 44px "Inter", sans-serif';
+  ctx.fillText('SILLOW MILL', brandTextX, brandHeaderY + 46);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 21px "JetBrains Mono", monospace';
+  ctx.fillText('CELOMILLE  ·  ÄKINOYA UNIVERSE', brandTextX, brandHeaderY + 82);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+  ctx.font = '600 16px "JetBrains Mono", monospace';
+  ctx.fillText('OFFICIAL PLANETARY VERIFICATION AFFICHE', brandTextX, brandHeaderY + 108);
+
+  // Unique Edition Number Badge (Top Right alongside Branding Header)
+  const badgeW = 200;
+  const badgeH = 104;
   const badgeX = W - 84 - badgeW;
-  const badgeY = 78;
-  drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 20);
+  const badgeY = brandHeaderY + 5;
+  drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 22);
   const numGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH);
   numGrad.addColorStop(0, 'rgba(245, 158, 11, 0.28)');
   numGrad.addColorStop(1, 'rgba(6, 182, 212, 0.22)');
@@ -292,41 +259,59 @@ export async function renderWorldStoryBadgeBlob(
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  ctx.fillStyle = 'rgba(254, 243, 199, 0.75)';
-  ctx.font = 'bold 16px "JetBrains Mono", monospace';
+  ctx.fillStyle = 'rgba(254, 243, 199, 0.85)';
+  ctx.font = 'bold 15px "JetBrains Mono", monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('WORLD EDITION', badgeX + badgeW / 2, badgeY + 30);
+  ctx.fillText('WORLD EDITION', badgeX + badgeW / 2, badgeY + 34);
 
   ctx.fillStyle = '#fde68a';
-  ctx.font = '900 38px "Inter", sans-serif';
-  ctx.fillText(`#${meta.worldNumber}`, badgeX + badgeW / 2, badgeY + 72);
+  ctx.font = '900 42px "Inter", sans-serif';
+  ctx.fillText(`#${meta.worldNumber}`, badgeX + badgeW / 2, badgeY + 82);
   ctx.textAlign = 'left';
 
-  // 3. Planet Title & Holder Identity
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 58px "Inter", sans-serif';
-  ctx.fillText((dossier.planetName || 'ÄMLEMI').toUpperCase(), 84, 224);
-
-  ctx.fillStyle = '#cbd5e1';
-  ctx.font = '600 23px "JetBrains Mono", monospace';
-  const holderLine = `HOLDER: ${(dossier.authorName || 'Odi Selis').toUpperCase()}   ·   ${(
-    dossier.sectorId || 'SECTOR AKN-01'
-  ).toUpperCase()}`;
-  ctx.fillText(holderLine, 84, 266);
-
-  // Divider line
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+  // Divider below Top-Level Branding Header
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(84, 292);
-  ctx.lineTo(W - 84, 292);
+  ctx.moveTo(contentX, 220);
+  ctx.lineTo(W - contentX, 220);
+  ctx.stroke();
+
+  // 3. Planet Title, Holder Info & Sector Specifications (Immediately below Top-Level Branding Header)
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 20px "JetBrains Mono", monospace';
+  ctx.fillText(
+    meta.isAmlemi
+      ? '★ FOUNDING PIONEER · GENESIS BENCHMARK'
+      : meta.isPioneer
+      ? '★ PIONEER 2027 · PRE-RELEASE WORLD'
+      : '★ VERIFIED PLANETARY ARCHIVE',
+    contentX,
+    256
+  );
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 62px "Inter", sans-serif';
+  ctx.fillText((dossier.planetName || 'ÄMLEMI').toUpperCase(), contentX, 322);
+
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = 'bold 23px "JetBrains Mono", monospace';
+  const holderLine = `HOLDER: ${(dossier.authorName || 'ODI SELIS').toUpperCase()}   ·   ${(
+    dossier.sectorId || 'SECTOR AKN-01'
+  ).toUpperCase()}`;
+  ctx.fillText(holderLine, contentX, 362);
+
+  // Subtle divider above 5-Photo Collage
+  ctx.strokeStyle = 'rgba(34, 211, 238, 0.22)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(contentX, 386);
+  ctx.lineTo(W - contentX, 386);
   ctx.stroke();
 
   // 4. Artistic 5-Photo Collage (01 Main Hero + 2x2 Grid for 02, 03, 04, 05)
-  const contentX = 84;
-  const contentW = W - 168; // 912px
-  const heroY = 316;
-  const heroH = 460;
+  const heroY = 410;
+  const heroH = 490;
 
   // 01 Main Hero Frame
   ctx.save();
@@ -358,10 +343,10 @@ export async function renderWorldStoryBadgeBlob(
   ctx.fillText(photoCards[0]?.title || 'Orbital Horizon', contentX + 24, heroY + heroH - 20);
 
   // 2x2 Grid for Photos 02, 03, 04, 05
-  const gridY = heroY + heroH + 22; // 798
+  const gridY = heroY + heroH + 22; // 922
   const gap = 20;
   const cellW = (contentW - gap) / 2; // 446px
-  const cellH = 260;
+  const cellH = 278;
   const slotLabels = [
     '02 · BOTANICAL FLORA',
     '03 · APEX FAUNA',
@@ -408,19 +393,19 @@ export async function renderWorldStoryBadgeBlob(
     ctx.fillText(titleText, cx + 18, cy + cellH - 16);
   }
 
-  // 5. Lore Summary & Verification Code Box
-  const loreBoxY = gridY + cellH * 2 + gap + 24; // 1362
-  const loreBoxH = 220;
-  drawRoundedRect(ctx, contentX, loreBoxY, contentW, loreBoxH, 22);
-  ctx.fillStyle = 'rgba(8, 17, 34, 0.88)';
+  // 5. Streamlined Minimalist Footer: Archival Lore + Verification Code & Authentication Status (No QR)
+  const footerBoxY = gridY + cellH * 2 + gap + 26; // 1524
+  const footerBoxH = 310;
+  drawRoundedRect(ctx, contentX, footerBoxY, contentW, footerBoxH, 24);
+  ctx.fillStyle = 'rgba(8, 17, 34, 0.9)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(245, 158, 11, 0.38)';
+  ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
   ctx.fillStyle = '#fbbf24';
   ctx.font = 'bold 17px "JetBrains Mono", monospace';
-  ctx.fillText('ARCHIVAL LORE SUMMARY & VERIFICATION HASH', contentX + 26, loreBoxY + 38);
+  ctx.fillText('ARCHIVAL LORE SUMMARY & CRYPTOGRAPHIC VERIFICATION', contentX + 28, footerBoxY + 42);
 
   // Wrap Lore Text (max 2 lines)
   const rawLore =
@@ -428,8 +413,8 @@ export async function renderWorldStoryBadgeBlob(
     dossier.generatedLore ||
     'Synthesized planetary ecosystem verified within the official Sillow Mill — Äkinoya galaxy archive.';
   const cleanLore = `"${rawLore.replace(/\s+/g, ' ').trim()}"`;
-  ctx.fillStyle = '#f1f5f9';
-  ctx.font = 'italic 22px "Inter", sans-serif';
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'italic 23px "Inter", sans-serif';
   const words = cleanLore.split(' ');
   let line1 = '';
   let line2 = '';
@@ -443,97 +428,47 @@ export async function renderWorldStoryBadgeBlob(
       break;
     }
   }
-  ctx.fillText(line1.trim(), contentX + 26, loreBoxY + 80);
+  ctx.fillText(line1.trim(), contentX + 28, footerBoxY + 86);
   if (line2) {
-    ctx.fillText(line2.trim(), contentX + 26, loreBoxY + 114);
+    ctx.fillText(line2.trim(), contentX + 28, footerBoxY + 122);
   }
 
-  // Verification Code Pill inside Lore Box
-  drawRoundedRect(ctx, contentX + 26, loreBoxY + 142, contentW - 52, 56, 14);
-  ctx.fillStyle = 'rgba(4, 9, 20, 0.95)';
+  // Minimalist Verification Bar inside Footer Box
+  const verifyBarY = footerBoxY + 154;
+  const verifyBarH = 74;
+  drawRoundedRect(ctx, contentX + 28, verifyBarY, contentW - 56, verifyBarH, 16);
+  ctx.fillStyle = 'rgba(4, 9, 20, 0.96)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(34, 211, 238, 0.45)';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
   ctx.fillStyle = '#67e8f9';
-  ctx.font = 'bold 18px "JetBrains Mono", monospace';
-  ctx.fillText(`VERIFICATION CODE: ${meta.verificationCode}`, contentX + 46, loreBoxY + 177);
+  ctx.font = 'bold 20px "JetBrains Mono", monospace';
+  ctx.fillText(`VERIFICATION CODE: ${meta.verificationCode}`, contentX + 52, verifyBarY + 45);
 
   ctx.fillStyle = '#34d399';
   ctx.textAlign = 'right';
-  ctx.fillText('● AUTHENTICATED', contentX + contentW - 46, loreBoxY + 177);
+  ctx.fillText('● AUTHENTICATED', contentX + contentW - 52, verifyBarY + 45);
   ctx.textAlign = 'left';
 
-  // 6. Bottom-Left Official Sillow Mill Brand & Logo + Bottom-Right Clean QR Code
-  const footerY = 1618;
-  const footerH = 224;
-
-  // Bottom-Left: Sillowmilllogo.png + SILLOW MILL Brand Typography
-  const logoBoxY = footerY + 24;
-  if (logoImg) {
-    const targetH = 112;
-    const targetW = (logoImg.width / Math.max(1, logoImg.height)) * targetH;
-    ctx.save();
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.35)';
-    ctx.shadowBlur = 18;
-    ctx.drawImage(logoImg, contentX, logoBoxY, targetW, targetH);
-    ctx.restore();
-
-    const textStartX = contentX + targetW + 28;
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 40px "Inter", sans-serif';
-    ctx.fillText('SILLOW MILL', textStartX, logoBoxY + 46);
-
-    ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 19px "JetBrains Mono", monospace';
-    ctx.fillText('ÄKINOYA UNIVERSE · OFFICIAL ARCHIVE', textStartX, logoBoxY + 80);
-
-    ctx.fillStyle = 'rgba(203, 213, 225, 0.75)';
-    ctx.font = '500 18px "JetBrains Mono", monospace';
-    ctx.fillText('sillowmill.com · Proof of World Ownership', textStartX, logoBoxY + 110);
-  } else {
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 44px "Inter", sans-serif';
-    ctx.fillText('SILLOW MILL', contentX, logoBoxY + 50);
-    ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 20px "JetBrains Mono", monospace';
-    ctx.fillText('ÄKINOYA UNIVERSE · SILLOWMILL.COM', contentX, logoBoxY + 88);
-  }
-
-  // Bottom-Right: Compact, Clean QR Code linking directly to platform
-  const qrBoxSize = 176;
-  const qrX = contentX + contentW - qrBoxSize;
-  const qrY = footerY + 12;
-
-  drawRoundedRect(ctx, qrX, qrY, qrBoxSize, qrBoxSize, 20);
+  // Clean Bottom Signature Strip
   ctx.fillStyle = '#ffffff';
-  ctx.fill();
-  ctx.strokeStyle = '#fbbf24';
-  ctx.lineWidth = 3;
-  ctx.stroke();
+  ctx.font = 'bold 17px "JetBrains Mono", monospace';
+  ctx.fillText(
+    'SILLOW MILL · CELOMILLE · ÄKINOYA UNIVERSE',
+    contentX + 28,
+    footerBoxY + 272
+  );
 
-  const modules = qrMatrix.length;
-  const pad = 16;
-  const cell = (qrBoxSize - pad * 2) / modules;
-  ctx.fillStyle = '#040915';
-  for (let r = 0; r < modules; r++) {
-    for (let c = 0; c < modules; c++) {
-      if (qrMatrix[r][c]) {
-        ctx.fillRect(
-          qrX + pad + c * cell,
-          qrY + pad + r * cell,
-          Math.ceil(cell),
-          Math.ceil(cell)
-        );
-      }
-    }
-  }
-
-  ctx.fillStyle = '#67e8f9';
-  ctx.font = 'bold 15px "JetBrains Mono", monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('SCAN WORLD QR', qrX + qrBoxSize / 2, qrY + qrBoxSize + 26);
+  ctx.fillStyle = 'rgba(203, 213, 225, 0.75)';
+  ctx.font = '500 17px "JetBrains Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(
+    'sillowmill.com · Proof of World Ownership',
+    contentX + contentW - 28,
+    footerBoxY + 272
+  );
   ctx.textAlign = 'left';
 
   return new Promise((resolve) => {
@@ -556,7 +491,6 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
     () => deriveWorldVerificationMeta(dossier, editionRank),
     [dossier, editionRank]
   );
-  const qrMatrix = useMemo(() => buildDeterministicQrMatrix(meta.shareUrl), [meta.shareUrl]);
 
   const handleCopyCode = () => {
     soundManager.playTone(720, 0.05);
@@ -648,7 +582,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-[10px] font-mono font-extrabold uppercase tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
               <Sparkles className="w-3 h-3 text-amber-300" />
-              <span>9:16 STORY VERIFICATION BADGE</span>
+              <span>9:16 STORY VERIFICATION AFFICHE</span>
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-300">
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
@@ -659,7 +593,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
             {dossier.planetName} — Shareable 9:16 Story Verification Asset
           </h3>
           <p className="text-xs font-sans text-white/70 max-w-2xl leading-relaxed">
-            Official 9:16 vertical collector dossier combining all 5 synthesized planetary renders, holder provenance, cryptographic verification code, QR link, and the Sillow Mill signature crest.
+            Official 9:16 vertical collector affiche featuring top-level Sillow Mill · Celomille · Äkinoya Universe branding, all 5 synthesized planetary renders, holder provenance, and cryptographic verification code.
           </p>
         </div>
 
@@ -687,56 +621,73 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         </div>
       </div>
 
-      {/* Main Layout: Centered/Left 9:16 Interactive Vertical Story Card + Right Provenance Details */}
+      {/* Main Layout: Left 9:16 Interactive Vertical Story Affiche + Right Provenance Details */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-center">
         {/* 9:16 Vertical Story Card Preview */}
         <div className="lg:col-span-5 flex flex-col items-center">
-          <div className="relative w-full max-w-[350px] sm:max-w-[370px] aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/55 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none group">
+          <div className="relative w-full max-w-[350px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/55 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none group">
             {/* Inner Cyan Hairline Frame */}
-            <div className="
-              absolute inset-2 rounded-[20px] border border-cyan-400/25 pointer-events-none
-            " />
+            <div className="absolute inset-2 rounded-[20px] border border-cyan-400/25 pointer-events-none" />
             {/* Ambient Cosmic Glow */}
             <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-cyan-400/15 rounded-full blur-2xl pointer-events-none" />
 
-            {/* 1. Story Card Top Header */}
-            <div className="relative z-10 flex items-start justify-between gap-2 pb-2 border-b border-white/10">
-              <div className="min-w-0">
-                <div className="text-[7.5px] sm:text-[8px] font-mono font-bold tracking-[0.16em] text-cyan-300 uppercase truncate">
-                  ÄKINOYA ARCHIVAL REGISTRY
+            {/* 1. TOP-LEVEL BRANDING HEADER: Official Sillow Mill Logo + Brand Name + CELOMILLE & ÄKINOYA UNIVERSE */}
+            <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-white/15">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/[0.06] border border-white/20 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(255,255,255,0.16)]">
+                  <img
+                    src={sillowMillLogoUrl}
+                    alt="Sillow Mill Official Logo"
+                    className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.55)]"
+                  />
                 </div>
-                <div className="inline-flex items-center gap-1 mt-0.5 text-[8.5px] sm:text-[9px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
-                  <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
-                  <span className="truncate">
-                    {meta.isAmlemi
-                      ? 'FOUNDING PIONEER · GENESIS'
-                      : meta.isPioneer
-                      ? 'PIONEER 2027 · PRE-RELEASE'
-                      : 'VERIFIED WORLD ARCHIVE'}
-                  </span>
-                </div>
-                <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide uppercase truncate mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-                  {dossier.planetName}
-                </h4>
-                <div className="text-[8.5px] sm:text-[9px] font-mono text-white/75 truncate">
-                  HOLDER: <strong className="text-amber-200">{dossier.authorName}</strong> ·{' '}
-                  <span className="text-cyan-300">{dossier.sectorId || 'SECTOR AKN-01'}</span>
+                <div className="min-w-0">
+                  <div className="text-xs sm:text-[13px] font-display font-black tracking-[0.16em] text-white uppercase leading-none truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
+                    SILLOW MILL
+                  </div>
+                  <div className="text-[7.5px] sm:text-[8px] font-mono font-extrabold text-white tracking-[0.14em] uppercase mt-1 truncate">
+                    CELOMILLE · ÄKINOYA UNIVERSE
+                  </div>
                 </div>
               </div>
 
               {/* Unique Numbering Badge (#1, #2, etc.) */}
-              <div className="shrink-0 px-2.5 py-1.5 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
-                <span className="block text-[7px] font-mono font-bold uppercase tracking-widest text-amber-200/85">
+              <div className="shrink-0 px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+                <span className="block text-[6.5px] font-mono font-bold uppercase tracking-widest text-amber-200/90">
                   EDITION
                 </span>
-                <span className="block text-sm sm:text-base font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent leading-tight">
+                <span className="block text-xs sm:text-sm font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent leading-tight">
                   #{meta.worldNumber}
                 </span>
               </div>
             </div>
 
-            {/* 2. Slick 5-Photo Vertical Collage */}
+            {/* 2. PLANET TITLE, HOLDER INFO & SECTOR SPECIFICATIONS (Immediately below Top Branding Header) */}
+            <div className="relative z-10 pt-1.5 pb-1.5 border-b border-cyan-400/20">
+              <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
+                <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
+                <span className="truncate">
+                  {meta.isAmlemi
+                    ? 'FOUNDING PIONEER · GENESIS BENCHMARK'
+                    : meta.isPioneer
+                    ? 'PIONEER 2027 · PRE-RELEASE WORLD'
+                    : 'VERIFIED PLANETARY ARCHIVE'}
+                </span>
+              </div>
+              <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide uppercase truncate mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+                {dossier.planetName}
+              </h4>
+              <div className="text-[8.5px] sm:text-[9px] font-mono text-white/85 truncate mt-0.5">
+                HOLDER:{' '}
+                <strong className="text-white font-bold uppercase">
+                  {dossier.authorName || 'ODI SELIS'}
+                </strong>{' '}
+                · <span className="text-cyan-300 font-bold">{dossier.sectorId || 'SECTOR AKN-01'}</span>
+              </div>
+            </div>
+
+            {/* 3. Slick 5-Photo Vertical Collage */}
             <div
               onClick={() => onInspectDossier?.(dossier)}
               className="relative z-10 flex-1 my-2 flex flex-col gap-1.5 min-h-0 cursor-pointer"
@@ -800,8 +751,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               </div>
             </div>
 
-            {/* 3. Short Lore & Secure Verification Code Strip */}
-            <div className="relative z-10 p-2 rounded-xl bg-[#071022]/90 border border-amber-400/35 space-y-1">
+            {/* 4. Streamlined Minimalist Footer: Short Lore + Verification Code & Authentication Status (No QR) */}
+            <div className="relative z-10 p-2.5 rounded-xl bg-[#071022]/90 border border-amber-400/35 space-y-1.5">
               <p className="text-[8.5px] sm:text-[9px] font-sans italic text-amber-100/95 line-clamp-2 leading-snug">
                 &ldquo;
                 {dossier.futurePromise ||
@@ -809,73 +760,20 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                   'Synthesized planetary archive bound to the Sillow Mill — Äkinoya universe.'}
                 &rdquo;
               </p>
-              <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/10 text-[7.5px] sm:text-[8px] font-mono">
+
+              <div className="px-2 py-1.5 rounded-lg bg-[#040914]/95 border border-cyan-400/35 flex items-center justify-between gap-1.5 text-[7.5px] sm:text-[8px] font-mono">
                 <span className="text-cyan-300 font-bold truncate">
                   CODE: {meta.verificationCode}
                 </span>
-                <span className="text-emerald-400 font-bold shrink-0">● VERIFIED</span>
-              </div>
-            </div>
-
-            {/* 4. Bottom-Left Official Sillow Mill Brand + Logo & Bottom-Right Compact QR Code */}
-            <div className="relative z-10 pt-2 mt-1.5 border-t border-white/15 flex items-end justify-between gap-2">
-              {/* Bottom-Left Corner: Official Sillowmilllogo.png + SILLOW MILL Brand Typography */}
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/5 border border-white/15 p-1 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.12)]">
-                  <img
-                    src={sillowMillLogoUrl}
-                    alt="Sillow Mill Official Logo"
-                    className="w-full h-full object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.45)]"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[11px] sm:text-xs font-display font-black tracking-[0.14em] text-white uppercase leading-none truncate">
-                    SILLOW MILL
-                  </div>
-                  <div className="text-[7.5px] font-mono font-bold text-amber-300 tracking-wider uppercase mt-0.5 truncate">
-                    ÄKINOYA UNIVERSE
-                  </div>
-                  <div className="text-[7px] font-mono text-white/55 truncate">
-                    sillowmill.com
-                  </div>
-                </div>
+                <span className="text-emerald-400 font-bold shrink-0">● AUTHENTICATED</span>
               </div>
 
-              {/* Bottom-Right Corner: Clean Compact QR Code */}
-              <a
-                href={meta.shareUrl}
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                className="shrink-0 flex flex-col items-center group/qr"
-                title="Direct Platform QR Link"
-              >
-                <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-lg bg-white p-1 border-2 border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.35)] group-hover/qr:scale-105 transition-transform">
-                  <svg
-                    viewBox={`0 0 ${qrMatrix.length} ${qrMatrix.length}`}
-                    className="w-full h-full"
-                    shapeRendering="crispEdges"
-                  >
-                    {qrMatrix.map((row, rIdx) =>
-                      row.map((cell, cIdx) =>
-                        cell ? (
-                          <rect
-                            key={`${rIdx}-${cIdx}`}
-                            x={cIdx}
-                            y={rIdx}
-                            width={1}
-                            height={1}
-                            fill="#040915"
-                          />
-                        ) : null
-                      )
-                    )}
-                  </svg>
-                </div>
-                <span className="text-[6.5px] font-mono font-bold text-cyan-300 tracking-wider uppercase mt-0.5">
-                  SCAN WORLD
+              <div className="flex items-center justify-between text-[7px] font-mono text-white/60 pt-0.5">
+                <span className="text-white/80 font-semibold truncate">
+                  SILLOW MILL · CELOMILLE
                 </span>
-              </a>
+                <span className="truncate">sillowmill.com</span>
+              </div>
             </div>
           </div>
         </div>
@@ -885,7 +783,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
           <div className="p-4 sm:p-5 rounded-2xl bg-[#040916]/90 border border-cyan-500/30 space-y-4 shadow-inner">
             <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <QrCode className="w-4 h-4 text-amber-400" />
+                <ShieldCheck className="w-4 h-4 text-amber-400" />
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-white">
                   Cryptographic World Provenance
                 </span>
@@ -972,7 +870,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               </div>
             </div>
 
-            {/* Official Sillow Mill Signature & QR Summary */}
+            {/* Official Sillow Mill Signature Summary */}
             <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/30 via-[#060d1c] to-cyan-950/30 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <img
@@ -982,7 +880,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 />
                 <div>
                   <div className="text-xs font-display font-bold text-white">
-                    Official Sillow Mill Brand Crest &amp; Direct QR Protocol
+                    Sillow Mill · Celomille · Äkinoya Universe
                   </div>
                   <div className="text-[11px] font-mono text-white/60">
                     Formatted at 1080×1920 (9:16) for Instagram Stories, TikTok &amp; X.
