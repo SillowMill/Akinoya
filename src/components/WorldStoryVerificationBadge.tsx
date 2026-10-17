@@ -251,14 +251,13 @@ export async function renderWorldStoryBadgeBlob(
   }
 
   const brandTextX = contentX + logoFrameSize + 26;
-  const planetHeaderTitle = (dossier.planetName || 'ÄMLEMI').toUpperCase();
   ctx.fillStyle = '#ffffff';
   ctx.font = '900 42px "Inter", sans-serif';
-  ctx.fillText(planetHeaderTitle, brandTextX, brandHeaderY + 44);
+  ctx.fillText('SILLOW MILL', brandTextX, brandHeaderY + 44);
 
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 20px "JetBrains Mono", monospace';
-  ctx.fillText('ÄKINOYA UNIVERSE', brandTextX, brandHeaderY + 78);
+  ctx.fillText('CELOMILLE · ÄKINOYA UNIVERSE', brandTextX, brandHeaderY + 78);
 
   ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
   ctx.font = '600 15px "JetBrains Mono", monospace';
@@ -582,15 +581,14 @@ function drawTrailerFrame(
   const contentX = Math.round(78 * s);
   const contentW = W - contentX * 2;
 
-  // TOP-LEVEL BRANDING HEADER (Specific World Identifier)
-  const planetHeaderTitle = (dossier.planetName || 'ÄMLEMI').toUpperCase();
+  // TOP-LEVEL BRANDING HEADER
   ctx.fillStyle = '#ffffff';
   ctx.font = `900 ${Math.round(38 * s)}px "Inter", sans-serif`;
-  ctx.fillText(planetHeaderTitle, contentX, Math.round(112 * s));
+  ctx.fillText('SILLOW MILL', contentX, Math.round(112 * s));
 
   ctx.fillStyle = '#ffffff';
   ctx.font = `bold ${Math.round(19 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText('ÄKINOYA UNIVERSE', contentX, Math.round(146 * s));
+  ctx.fillText('CELOMILLE · ÄKINOYA UNIVERSE', contentX, Math.round(146 * s));
 
   // Top-right Edition Pill
   const badgeW = Math.round(180 * s);
@@ -944,11 +942,11 @@ export const LiveStoryTrailerViewport: React.FC<{
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none" />
           <div className="absolute top-3 left-3.5 right-3.5 flex items-start justify-between gap-2 pointer-events-none">
             <div>
-              <div className="text-sm font-display font-black tracking-[0.15em] text-white uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                {dossier.planetName || 'ÄMLEMI'}
+              <div className="text-[8px] font-display font-black tracking-[0.16em] text-white/80 uppercase">
+                SILLOW MILL · CELOMILLE
               </div>
-              <div className="text-[8px] font-mono font-bold text-white/90 tracking-[0.12em] uppercase">
-                ÄKINOYA UNIVERSE
+              <div className="text-sm font-display font-black tracking-[0.15em] text-white uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mt-0.5">
+                {dossier.planetName || 'ÄMLEMI'}
               </div>
               <div className="text-[7.5px] font-mono text-cyan-300 mt-0.5">
                 HOLDER: {(dossier.authorName || 'ODI SELIS').toUpperCase()} · {dossier.sectorId || 'SECTOR AKN-01'}
@@ -1259,7 +1257,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               transition={{ duration: 0.2 }}
               className="relative w-full h-full flex flex-col justify-between"
             >
-              {/* 1. TOP-LEVEL HEADER: DEDICATED WORLD IDENTIFIER & ÄKINOYA UNIVERSE */}
+              {/* 1. TOP-LEVEL BRANDING HEADER: OFFICIAL SILLOW MILL LOGO + CELOMILLE */}
               <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-white/15">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/20 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(255,255,255,0.16)]">
@@ -1271,10 +1269,10 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs sm:text-[13px] font-display font-black tracking-[0.16em] text-white uppercase leading-none truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
-                      {dossier.planetName || 'ÄMLEMI'}
+                      SILLOW MILL
                     </div>
                     <div className="text-[7.5px] sm:text-[8px] font-mono font-extrabold text-white/90 tracking-[0.13em] uppercase mt-1 truncate">
-                      ÄKINOYA UNIVERSE
+                      CELOMILLE · ÄKINOYA UNIVERSE
                     </div>
                   </div>
                 </div>

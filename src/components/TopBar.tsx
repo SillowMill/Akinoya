@@ -5,6 +5,7 @@ import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
 import { openClaimWorldModal } from '../utils/pioneer';
 import { getUserStatusConfig } from '../utils/statusPill';
+import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
 interface TopBarProps {
   isUnlocked: boolean;
@@ -57,7 +58,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       }}
     >
       <div className="max-w-7xl w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-6 min-w-0">
-        {/* Zone 1: Clean wordmark - Pure White */}
+        {/* Zone 1: High-End Shimmering Header Logo, Reflective Chrome Divider & Brand Wordmark */}
         <a
           href="/"
           onClick={(e) => {
@@ -66,9 +67,30 @@ export const TopBar: React.FC<TopBarProps> = ({
               onNavigateHome();
             }
           }}
-          className="text-[13px] xs:text-[14px] sm:text-[15px] md:text-[14px] lg:text-[15px] xl:text-lg font-display font-bold tracking-[0.14em] sm:tracking-[0.16em] md:tracking-[0.14em] lg:tracking-[0.16em] xl:tracking-[0.2em] text-white hover:text-white/80 transition-colors uppercase whitespace-nowrap shrink-0 cursor-pointer"
+          className="group flex items-center gap-2 xs:gap-2.5 sm:gap-3 shrink-0 cursor-pointer min-w-0"
+          title="Sillow Mill — Home"
         >
-          SILLOW MILL
+          {/* Shimmering Logo with subtle cinematic glow & glass housing */}
+          <div className="relative w-6 h-6 xs:w-6.5 xs:h-6.5 sm:w-7 sm:h-7 lg:w-7.5 lg:h-7.5 rounded-lg bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-1 border border-white/20 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(255,255,255,0.18)] group-hover:shadow-[0_0_20px_rgba(251,191,36,0.35)] group-hover:border-amber-400/50 transition-all duration-300">
+            {/* Cinematic Specular Sheen */}
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-transparent via-white/15 to-transparent pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity" />
+            <img
+              src={sillowMillLogoUrl}
+              alt="Sillow Mill Emblem"
+              className="w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] group-hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+
+          {/* Minimalist Reflective Chrome / Brushed Metal Vertical Divider (Tussenschotje) */}
+          <div
+            className="h-3.5 sm:h-4 lg:h-4.5 w-[1px] bg-gradient-to-b from-white/10 via-white/45 to-white/10 shadow-[0_0_6px_rgba(255,255,255,0.3)] shrink-0"
+            aria-hidden="true"
+          />
+
+          {/* Brand Wordmark */}
+          <span className="text-[12.5px] xs:text-[13.5px] sm:text-[14.5px] md:text-[14px] lg:text-[15px] xl:text-lg font-display font-bold tracking-[0.14em] sm:tracking-[0.16em] md:tracking-[0.14em] lg:tracking-[0.16em] xl:tracking-[0.2em] text-white group-hover:text-amber-200/95 transition-colors uppercase whitespace-nowrap">
+            SILLOW MILL
+          </span>
         </a>
 
         {/* Zone 2: Single-line typography navigation links with dedicated brand colors and subtle dividers */}
