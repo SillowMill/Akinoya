@@ -173,10 +173,21 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   });
   const [adminResetNotice, setAdminResetNotice] = useState<string | null>(null);
 
-  // Dynamic vote-based ranking: highest votes at the top
+  // Dynamic vote-based ranking: highest votes at the top (merges user's active submission into showcase grid)
   const sortedSubmissions = useMemo(() => {
-    return [...allSubmissions].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
-  }, [allSubmissions]);
+    const list = [...allSubmissions];
+    if (
+      activeSubmission &&
+      !list.some(
+        (s) =>
+          s.id === activeSubmission.id ||
+          s.planetName?.toLowerCase() === activeSubmission.planetName?.toLowerCase()
+      )
+    ) {
+      list.push(activeSubmission);
+    }
+    return list.sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+  }, [allSubmissions, activeSubmission]);
 
   // Purge legacy browser-wide lock keys so new accounts never falsely inherit ONE-SHOT CLAIMED
   useEffect(() => {
@@ -1286,114 +1297,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           </section>
         )}
 
-        {/* ACTIVE USER DOSSIER (LOCKED GOLDEN TICKET SUBMISSION) */}
-        {activeSubmission && (
-          <section
-            id="user-dossier-card"
-            className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-950/40 via-[#050a14]/85 to-cyan-950/35 backdrop-blur-xl border border-amber-500/45 shadow-[0_12px_45px_rgba(0,0,0,0.6),0_0_30px_rgba(245,158,11,0.18)] space-y-6"
-          >
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                  {isPioneerPlanet(activeSubmission) && (
-                    <span className="text-[10px] font-mono px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500/30 via-yellow-500/25 to-amber-600/30 text-amber-200 border border-amber-300/70 font-extrabold uppercase flex items-center gap-1.5 shadow-[0_0_15px_rgba(251,191,36,0.35)]">
-                      <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
-                      <span>
-                        {isFoundingPioneerPlanet(activeSubmission)
-                          ? '👑 FOUNDING PIONEER · #01'
-                          : activeSubmission.pioneerBadge || '⚡ PIONEER 2027'}
-                      </span>
-                    </span>
-                  )}
-                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-400/40 font-bold uppercase flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-amber-400" />
-                    <span>ONE-SHOT CLAIMED · LOCKED TO ACCOUNT</span>
-                  </span>
-                  <span className="text-xs font-mono text-white/50">{activeSubmission.id}</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white">
-                  {activeSubmission.planetName}
-                </h2>
-                <p className="text-xs text-white/60 font-mono">
-                  Architect: {activeSubmission.authorName} (@{activeSubmission.authorUsername})
-                </p>
-              </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundManager.playTone(660, 0.05);
-                    setModalPlanet(activeSubmission);
-                  }}
-                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-amber-400 text-black hover:bg-amber-300 font-mono font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>View 5-Photo &amp; 9:16 Dossier</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCopyShare}
-                  className="min-h-[44px] px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5"
-                >
-                  <Share2 className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>{copiedLink ? 'Link Copied!' : 'Share Entry'}</span>
-                </button>
-
-                {onNavigateToCreator && (
-                  <button
-                    type="button"
-                    onClick={() => onNavigateToCreator(activeSubmission.authorUsername)}
-                    className="min-h-[44px] px-3.5 py-2 rounded-xl bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-300 text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>View in Portfolio</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Unified Shareable 9:16 Story & Trailer Verification Hub */}
-            <WorldStoryVerificationBadge
-              dossier={activeSubmission}
-            />
-
-            {/* Lore and Specs */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 p-5 rounded-2xl bg-[#070b16]/90 backdrop-blur-md border border-white/10 space-y-2">
-                <span className="text-[10.5px] font-mono text-amber-300 font-bold uppercase">
-                  REGISTERED PLANETARY LORE
-                </span>
-                <p className="text-xs sm:text-sm text-white/85 font-sans leading-relaxed whitespace-pre-line">
-                  {activeSubmission.generatedLore}
-                </p>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-[#050914]/90 backdrop-blur-md border border-white/10 space-y-3">
-                <span className="text-[10.5px] font-mono text-cyan-300 font-bold uppercase block">
-                  TECHNICAL SPECIFICATIONS
-                </span>
-                <div className="space-y-2 text-xs font-mono">
-                  <div>
-                    <span className="text-white/40 block text-[10px]">SONIC PROFILE:</span>
-                    <span className="text-white">{activeSubmission.sonicVibe}</span>
-                  </div>
-                  <div>
-                    <span className="text-white/40 block text-[10px]">PIPELINE:</span>
-                    <span className="text-white">{activeSubmission.visualAesthetic}</span>
-                  </div>
-                  <div>
-                    <span className="text-white/40 block text-[10px]">VOTES RECORDED:</span>
-                    <span className="bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent font-black text-base drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
-                      {activeSubmission.votesCount} Ballots
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* COMMUNITY CONTEST ENTRIES GALLERY & VOTING (CLOSING JUNE 30) */}
         <section className="space-y-6">
@@ -1424,11 +1328,15 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             {sortedSubmissions.map((sub, idx) => {
               const isFounder = isFoundingPioneerPlanet(sub);
               const isPioneer = isPioneerPlanet(sub);
+              const isUserWorld =
+                sub.id === activeSubmission?.id ||
+                (user?.id && sub.userId === user.id) ||
+                (user?.email && sub.authorEmail?.toLowerCase() === user.email.toLowerCase());
               return (
                 <div
                   key={sub.id}
                   className={`rounded-2xl overflow-hidden bg-gradient-to-br from-cyan-950/40 via-[#060c18]/85 to-[#040812]/90 backdrop-blur-xl border transition-all duration-300 flex flex-col justify-between shadow-[0_10px_32px_rgba(0,0,0,0.5)] group ${
-                    isFounder
+                    isFounder || isUserWorld
                       ? 'border-amber-400/60 hover:border-amber-300 shadow-[0_10px_36px_rgba(0,0,0,0.55),0_0_25px_rgba(245,158,11,0.2)]'
                       : 'border-cyan-500/30 hover:border-amber-400/50'
                   }`}
@@ -1484,6 +1392,11 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                         {isFounder && (
                           <span className="px-1.5 py-0.2 rounded text-[8.5px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-400/40">
                             FOUNDER
+                          </span>
+                        )}
+                        {isUserWorld && (
+                          <span className="px-1.5 py-0.2 rounded text-[8.5px] font-mono font-extrabold bg-cyan-400/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.25)]">
+                            YOUR WORLD
                           </span>
                         )}
                       </div>

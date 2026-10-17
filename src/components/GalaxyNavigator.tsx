@@ -1112,7 +1112,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           )}
         </div>
 
-        {/* Pioneer Map Filter & Quick-Jump Pill Bar */}
+        {/* Pioneer Map Filter Pill Bar */}
         <div className="flex items-center justify-center gap-1.5 flex-wrap">
           <button
             type="button"
@@ -1145,24 +1145,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           >
             <Sparkles className={`w-3 h-3 ${mapFilter === 'pioneer' ? 'text-black' : 'text-amber-300'}`} />
             <span>⚡ Pioneer Worlds ({pioneerPlanetsCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              const amlemi = planets.find(
-                (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
-              );
-              if (amlemi) {
-                soundManager.playTone(820, 0.06);
-                setSelectedPlanet(amlemi);
-                panTo(amlemi.coordX ?? 280, amlemi.coordY ?? -260, 1.15, 800, 0);
-              }
-            }}
-            className="px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-amber-600/20 hover:from-amber-500/35 hover:to-amber-500/35 border border-amber-400/55 text-amber-200 hover:text-white font-mono text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1 backdrop-blur-xl shadow-[0_0_12px_rgba(251,191,36,0.25)]"
-            title="Jump to Odi's Founding Pioneer Planet: Ämlemi"
-          >
-            <span>👑 Odi&apos;s Ämlemi</span>
           </button>
         </div>
       </div>

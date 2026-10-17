@@ -163,7 +163,20 @@ export const FAL_VIDEO_ENDPOINT = 'https://fal.run/fal-ai/minimax/video-01/image
 export const FAL_VIDEO_FALLBACK_ENDPOINT = 'https://fal.run/fal-ai/luma-dream-machine/image-to-video';
 
 export const getFalApiKey = (): string => {
-  return (process.env.FAL_KEY || process.env.VITE_FAL_KEY || '').trim();
+  return (
+    process.env.FAL_KEY ||
+    process.env.VAL_AI_KEY ||
+    process.env.VITE_FAL_KEY ||
+    process.env.VITE_VAL_AI_KEY ||
+    process.env.FAL_API_KEY ||
+    process.env.VAL_API_KEY ||
+    ''
+  ).trim();
+};
+
+export const isValAiKeyConfigured = (overrideKey?: string): boolean => {
+  const key = (overrideKey || getFalApiKey()).trim();
+  return Boolean(key && key !== '[SENSITIVE]' && key.length > 8);
 };
 
 /**
@@ -879,6 +892,139 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
 
 export const generateSectorImages = generatePlanetRenders;
 
+const resolvedAiVideoCache = new Map<string, string>();
+const failedCheckCooldownMap = new Map<string, number>();
+
+/**
+ * Dynamic Val.ai / Fal.ai Video Pipeline Resolver:
+ * - Maintains the 5-photo zoom montage slideshow as the active fallback when API credits are pending.
+ * - As soon as the Val.ai / Fal.ai key is active/topped up and an AI video is available or synthesized,
+ *   automatically returns the final production AI video URL across all dossiers and downloads.
+ */
+export async function checkAndResolveDynamicVideo(params: {
+  planetId?: string;
+  planetName?: string;
+  heroImageUrl?: string;
+  existingVideoUrl?: string;
+  apiKey?: string;
+  triggerSynthesis?: boolean;
+}): Promise<{
+  success: boolean;
+  keyConfigured: boolean;
+  isAiVideoAvailable: boolean;
+  videoUrl: string;
+  pipelineMode: 'PRODUCTION_AI_VIDEO' | 'FALLBACK_SLIDESHOW_MONTAGE';
+  status: 'READY' | 'FALLBACK_MONTAGE';
+}> {
+  const existing = (params.existingVideoUrl || '').trim();
+  if (existing && /^https?:\/\//i.test(existing)) {
+    return {
+      success: true,
+      keyConfigured: true,
+      isAiVideoAvailable: true,
+      videoUrl: existing,
+      pipelineMode: 'PRODUCTION_AI_VIDEO',
+      status: 'READY',
+    };
+  }
+
+  const cacheKey = (params.planetId || params.planetName || params.heroImageUrl || '').trim().toLowerCase();
+  if (cacheKey && resolvedAiVideoCache.has(cacheKey)) {
+    const cachedUrl = resolvedAiVideoCache.get(cacheKey)!;
+    return {
+      success: true,
+      keyConfigured: true,
+      isAiVideoAvailable: true,
+      videoUrl: cachedUrl,
+      pipelineMode: 'PRODUCTION_AI_VIDEO',
+      status: 'READY',
+    };
+  }
+
+  const activeKey = (params.apiKey || getFalApiKey()).trim();
+  const keyConfigured = isValAiKeyConfigured(activeKey);
+  if (!keyConfigured) {
+    return {
+      success: true,
+      keyConfigured: false,
+      isAiVideoAvailable: false,
+      videoUrl: '',
+      pipelineMode: 'FALLBACK_SLIDESHOW_MONTAGE',
+      status: 'FALLBACK_MONTAGE',
+    };
+  }
+
+  // Check if Supabase already has a persisted video_url for this planet
+  if (supabase && (params.planetId || params.planetName)) {
+    try {
+      const query = supabase.from('planet_submissions').select('video_url, renders, human_answers');
+      const { data: rows } = params.planetId
+        ? await query.eq('id', params.planetId).limit(1)
+        : await query.ilike('planet_name', params.planetName || '').limit(1);
+      const row = Array.isArray(rows) ? rows[0] : null;
+      const dbVideoUrl =
+        row?.video_url ||
+        row?.renders?.videoUrl ||
+        row?.renders?.video_url ||
+        row?.human_answers?.video_url ||
+        '';
+      if (dbVideoUrl && /^https?:\/\//i.test(dbVideoUrl)) {
+        if (cacheKey) resolvedAiVideoCache.set(cacheKey, dbVideoUrl);
+        return {
+          success: true,
+          keyConfigured: true,
+          isAiVideoAvailable: true,
+          videoUrl: dbVideoUrl,
+          pipelineMode: 'PRODUCTION_AI_VIDEO',
+          status: 'READY',
+        };
+      }
+    } catch {
+      // Non-fatal DB check
+    }
+  }
+
+  // If synthesis is requested and we have a valid heroImageUrl (https or data URI), attempt live Val.ai/Fal.ai synthesis
+  const heroUrl = (params.heroImageUrl || '').trim();
+  const now = Date.now();
+  const lastFail = cacheKey ? failedCheckCooldownMap.get(cacheKey) || 0 : 0;
+  const withinCooldown = now - lastFail < 45_000;
+
+  if (params.triggerSynthesis !== false && heroUrl && !withinCooldown) {
+    try {
+      const synthesizedUrl = await generateViralVideoWithFal(heroUrl, activeKey);
+      if (synthesizedUrl && /^https?:\/\//i.test(synthesizedUrl)) {
+        if (cacheKey) resolvedAiVideoCache.set(cacheKey, synthesizedUrl);
+        if (supabase && params.planetId) {
+          await supabase
+            .from('planet_submissions')
+            .update({ video_url: synthesizedUrl })
+            .eq('id', params.planetId);
+        }
+        return {
+          success: true,
+          keyConfigured: true,
+          isAiVideoAvailable: true,
+          videoUrl: synthesizedUrl,
+          pipelineMode: 'PRODUCTION_AI_VIDEO',
+          status: 'READY',
+        };
+      }
+    } catch {
+      if (cacheKey) failedCheckCooldownMap.set(cacheKey, Date.now());
+    }
+  }
+
+  return {
+    success: true,
+    keyConfigured,
+    isAiVideoAvailable: false,
+    videoUrl: '',
+    pipelineMode: 'FALLBACK_SLIDESHOW_MONTAGE',
+    status: 'FALLBACK_MONTAGE',
+  };
+}
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -893,12 +1039,29 @@ export default async function handler(req: any, res: any) {
 
   try {
     const body: GeneratePlanetRequest & {
+      action?: string;
       slot?: string;
+      planetId?: string;
+      existingVideoUrl?: string;
+      triggerSynthesis?: boolean;
       deviceId?: string;
       markCompleted?: boolean;
       resetLocks?: boolean;
       bypassLock?: boolean;
     } = req.body || {};
+
+    if (body.action === 'video-check' || body.slot === 'video-check') {
+      const videoCheck = await checkAndResolveDynamicVideo({
+        planetId: body.planetId,
+        planetName: body.planetName || body.worldName || body.sectorName,
+        heroImageUrl: body.heroImageUrl,
+        existingVideoUrl: body.existingVideoUrl,
+        triggerSynthesis: body.triggerSynthesis,
+      });
+      res.statusCode = 200;
+      res.end(JSON.stringify(videoCheck));
+      return;
+    }
 
     if (body.resetLocks) {
       resetGenerationLocks(body.userId, body.email);

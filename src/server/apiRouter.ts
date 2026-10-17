@@ -31,6 +31,8 @@ import {
   resetGenerationLocks,
   normalizeSlot,
   SLOT_METADATA,
+  checkAndResolveDynamicVideo,
+  isValAiKeyConfigured,
 } from '../../api/_generatePlanet';
 import { checkVipTokenStatus, claimVipTokenForUser } from '../lib/vipTokens';
 import {
@@ -682,6 +684,37 @@ apiRouter.get(['/dossier/submissions', '/submissions'], async (_req: Request, re
     res.status(200).json({ success: true, submissions });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'Failed to fetch submissions' });
+  }
+});
+
+// ─── 16. Dynamic Val.ai / Fal.ai Video Pipeline Status & Resolver ────────────
+apiRouter.all(['/video-pipeline/status', '/generate-planet/video-check'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const planetId = (req.body?.planetId || req.query.planetId as string || '').trim();
+    const planetName = (req.body?.planetName || req.query.planetName as string || '').trim();
+    const heroImageUrl = (req.body?.heroImageUrl || req.query.heroImageUrl as string || '').trim();
+    const existingVideoUrl = (req.body?.existingVideoUrl || req.query.existingVideoUrl as string || '').trim();
+    const triggerSynthesis = req.body?.triggerSynthesis !== false && req.query.triggerSynthesis !== 'false';
+
+    const result = await checkAndResolveDynamicVideo({
+      planetId,
+      planetName,
+      heroImageUrl,
+      existingVideoUrl,
+      triggerSynthesis,
+    });
+
+    res.status(200).json(result);
+  } catch (err: any) {
+    res.status(200).json({
+      success: true,
+      keyConfigured: false,
+      isAiVideoAvailable: false,
+      videoUrl: '',
+      pipelineMode: 'FALLBACK_SLIDESHOW_MONTAGE',
+      status: 'FALLBACK_MONTAGE',
+      error: err?.message || 'Pipeline check fallback',
+    });
   }
 });
 

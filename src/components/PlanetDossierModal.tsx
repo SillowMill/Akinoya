@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -32,6 +32,12 @@ import {
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
+import {
+  LiveStoryTrailerViewport,
+  exportWorldTrailerVideoBlob,
+  useDynamicWorldVideo,
+  deriveWorldVerificationMeta,
+} from './WorldStoryVerificationBadge';
 
 export interface PlanetDossierModalProps {
   planet: PlanetSubmission | null;
@@ -134,9 +140,16 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
 
   if (typeof document === 'undefined') return null;
 
+  const dynamicVideo = useDynamicWorldVideo(activePlanet);
+  const meta = useMemo(
+    () => (activePlanet ? deriveWorldVerificationMeta(activePlanet) : null),
+    [activePlanet]
+  );
+
   const isTrailerTab = activePhotoIdx === photoCards.length;
   const currentPhoto = photoCards[activePhotoIdx] || photoCards[0];
   const videoUrl =
+    dynamicVideo.videoUrl ||
     activePlanet?.videoUrl ||
     activePlanet?.renders?.videoUrl ||
     activePlanet?.renders?.video_url ||
@@ -145,25 +158,45 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
   const heroPhotoUrl = photoCards[0]?.url || activePlanet?.renders?.hero || '';
 
   const handleDownloadTrailer = async () => {
-    if (!activePlanet || !videoUrl) return;
+    if (!activePlanet) return;
     soundManager.playTone(740, 0.06);
     setIsDownloading(true);
+    const safeName = (activePlanet.planetName || 'akinoya-sector')
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]/g, '-');
+
     try {
-      const response = await fetch(videoUrl);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const safeName = (activePlanet.planetName || 'akinoya-sector')
-        .toLowerCase()
-        .replace(/[^a-z0-9-_]/g, '-');
-      link.href = blobUrl;
-      link.download = `${safeName}-9x16-trailer.mp4`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      window.open(videoUrl, '_blank', 'noopener,noreferrer');
+      if (videoUrl) {
+        try {
+          const response = await fetch(videoUrl);
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `${safeName}-9x16-trailer.mp4`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+          return;
+        } catch {
+          window.open(videoUrl, '_blank', 'noopener,noreferrer');
+          return;
+        }
+      }
+
+      // Fallback: 5-photo zoom montage generator
+      const result = await exportWorldTrailerVideoBlob(activePlanet);
+      if (result?.blob) {
+        const blobUrl = URL.createObjectURL(result.blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${safeName}-9x16-trailer.${result.ext}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -332,48 +365,15 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                     onTouchStart={handleTouchStartStage}
                     onTouchEnd={handleTouchEndStage}
                   >
-                    {/* Strict 9:16 Vertical Video Player */}
+                    {/* Strict 9:16 Vertical Video / Trailer Montage Player */}
                     <div className="relative w-full max-w-[240px] xs:max-w-[270px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center">
-                      {videoUrl ? (
-                        <video
-                          src={videoUrl}
-                          poster={heroPhotoUrl || undefined}
-                          controls
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          className="w-full h-full object-cover"
+                      {meta && (
+                        <LiveStoryTrailerViewport
+                          dossier={activePlanet}
+                          meta={meta}
+                          photoCards={photoCards}
+                          activeVideoUrl={dynamicVideo.videoUrl}
                         />
-                      ) : (
-                        <div className="relative w-full h-full flex flex-col items-center justify-center p-4 text-center overflow-hidden">
-                          {heroPhotoUrl && (
-                            <img
-                              src={heroPhotoUrl}
-                              alt={activePlanet.planetName}
-                              className="absolute inset-0 w-full h-full object-cover opacity-35 scale-110"
-                            />
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-b from-[#070d1e]/90 via-[#050813]/85 to-black/95" />
-                          <div className="relative z-10 flex flex-col items-center space-y-3 px-2">
-                            <div className="relative w-12 h-12 rounded-full border border-cyan-400/50 bg-cyan-950/60 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-                              <div
-                                className="absolute inset-0 rounded-full border border-dashed border-amber-400/50 animate-spin"
-                                style={{ animationDuration: '8s' }}
-                              />
-                              <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
-                            </div>
-                            <span className="text-[10px] font-mono font-bold text-cyan-200 uppercase tracking-wider">
-                              STATUS: QUEUED_PENDING
-                            </span>
-                            <p className="text-[11px] font-sans text-white/85 leading-relaxed">
-                              {UI_RECALIBRATING_STATUS_TEXT}
-                            </p>
-                            <span className="text-[9.5px] font-mono text-white/45">
-                              9:16 Vertical · 5s Orbital Loop
-                            </span>
-                          </div>
-                        </div>
                       )}
                     </div>
 
@@ -382,16 +382,16 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                       <button
                         type="button"
                         onClick={handleDownloadTrailer}
-                        disabled={!videoUrl || isDownloading}
-                        className={`w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                          videoUrl
-                            ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer'
-                            : 'bg-white/5 border border-white/15 text-white/50 cursor-not-allowed'
-                        }`}
+                        disabled={isDownloading}
+                        className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>
-                          {isDownloading ? 'Preparing MP4...' : '⬇ Download 9:16 MP4 Trailer'}
+                          {isDownloading
+                            ? 'Preparing MP4...'
+                            : dynamicVideo.isAiVideo
+                            ? '⬇ Download Val.ai 9:16 MP4 Trailer'
+                            : '⬇ Download 9:16 MP4 Trailer'}
                         </span>
                       </button>
 
@@ -704,23 +704,23 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
               )}
             </div>
 
-            {/* Modal Sticky Bottom Action Footer */}
-            <footer className="px-4 sm:px-5 py-3 sm:py-3.5 bg-[#070c18] border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                <div className="flex items-center gap-1.5 text-xs font-mono text-white/60">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>One Golden Ticket Verified</span>
+            {/* Modal Sticky Bottom Action Footer (Sleek Compact Glassmorphic Bar) */}
+            <footer className="px-3 sm:px-4 py-2 sm:py-2.5 bg-[#050914]/92 backdrop-blur-xl border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0">
+              <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-start">
+                <div className="flex items-center gap-1.5 text-[11px] font-mono text-white/70">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="truncate">One Golden Ticket Verified</span>
                 </div>
-                <span className="text-xs font-mono font-bold text-amber-300">
-                  {activePlanet.votesCount} Total Community Votes
+                <span className="text-[11px] font-mono font-extrabold text-amber-300 bg-amber-950/70 border border-amber-400/40 px-2 py-0.5 rounded-full shrink-0 shadow-[0_0_10px_rgba(251,191,36,0.2)]">
+                  ★ {activePlanet.votesCount} Community Votes
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+              <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end flex-wrap">
                 <button
                   type="button"
                   onClick={handleCopyGalaxyLink}
-                  className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                  className="min-h-[36px] px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-[11px] transition-colors cursor-pointer flex items-center gap-1.5"
                   title="Copy Shareable Planet Link"
                 >
                   <MapPin className="w-3.5 h-3.5 text-amber-400" />
@@ -734,7 +734,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                       onClose();
                       onNavigateToGalaxy(activePlanet.id);
                     }}
-                    className="min-h-[42px] px-4 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+                    className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
                   >
                     <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
                     <span>View in Galaxy</span>
@@ -748,21 +748,21 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                       soundManager.playTone(740, 0.08);
                       onVote(activePlanet.id);
                     }}
-                    className={`min-h-[42px] px-5 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
+                    className={`min-h-[36px] px-4 py-1.5 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md ${
                       activePlanet.hasVoted
                         ? 'bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
                         : 'bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black'
                     }`}
                   >
                     <ThumbsUp className={`w-3.5 h-3.5 ${activePlanet.hasVoted ? 'fill-black' : ''}`} />
-                    <span>{activePlanet.hasVoted ? 'Voted for World' : 'Cast Vote for World'}</span>
+                    <span>{activePlanet.hasVoted ? 'Voted for World' : 'Vote for World'}</span>
                   </button>
                 )}
 
                 <button
                   type="button"
                   onClick={onClose}
-                  className="min-h-[42px] px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-xs transition-colors cursor-pointer"
+                  className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-[11px] transition-colors cursor-pointer"
                 >
                   Close Dossier
                 </button>

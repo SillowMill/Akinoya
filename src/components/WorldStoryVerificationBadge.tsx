@@ -13,7 +13,10 @@ import {
   X,
   Play,
   Eye,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { PlanetSubmission } from '../types/contest';
 import { getPlanetPhotoCards } from '../data/contest';
 import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
@@ -779,15 +782,102 @@ export async function exportWorldTrailerVideoBlob(
 }
 
 /**
+ * Dynamic Val.ai / Fal.ai Video Hook:
+ * - Keeps the automated 5-photo zoom slideshow montage as the active fallback.
+ * - Dynamically verifies against the Val.ai API pipeline; once topped up and synthesized,
+ *   automatically promotes the production AI video across all dossier views and downloads.
+ */
+export function useDynamicWorldVideo(dossier: PlanetSubmission | null | undefined) {
+  const initialUrl =
+    dossier?.videoUrl ||
+    dossier?.renders?.videoUrl ||
+    dossier?.renders?.video_url ||
+    (dossier?.humanAnswers as any)?.video_url ||
+    '';
+
+  const [videoUrl, setVideoUrl] = useState<string>(initialUrl);
+  const [pipelineMode, setPipelineMode] = useState<'PRODUCTION_AI_VIDEO' | 'FALLBACK_SLIDESHOW_MONTAGE'>(
+    initialUrl ? 'PRODUCTION_AI_VIDEO' : 'FALLBACK_SLIDESHOW_MONTAGE'
+  );
+  const [isChecking, setIsChecking] = useState<boolean>(false);
+
+  useEffect(() => {
+    const currentInit =
+      dossier?.videoUrl ||
+      dossier?.renders?.videoUrl ||
+      dossier?.renders?.video_url ||
+      (dossier?.humanAnswers as any)?.video_url ||
+      '';
+
+    if (currentInit) {
+      setVideoUrl(currentInit);
+      setPipelineMode('PRODUCTION_AI_VIDEO');
+      return;
+    }
+
+    if (!dossier) return;
+
+    let isSubscribed = true;
+    setIsChecking(true);
+
+    const checkDynamicVideo = async () => {
+      try {
+        const heroUrl = dossier.renders?.hero || dossier.renders?.['01_main'] || '';
+        const res = await fetch('/api/video-pipeline/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planetId: dossier.id,
+            planetName: dossier.planetName,
+            heroImageUrl: heroUrl,
+            existingVideoUrl: currentInit,
+          }),
+        });
+
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isSubscribed && data?.success) {
+          if (data.isAiVideoAvailable && data.videoUrl) {
+            setVideoUrl(data.videoUrl);
+            setPipelineMode('PRODUCTION_AI_VIDEO');
+          } else {
+            setPipelineMode('FALLBACK_SLIDESHOW_MONTAGE');
+          }
+        }
+      } catch {
+        // Fallback remains active
+      } finally {
+        if (isSubscribed) setIsChecking(false);
+      }
+    };
+
+    checkDynamicVideo();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [dossier?.id, dossier?.videoUrl, dossier?.renders?.hero]);
+
+  return {
+    videoUrl,
+    isAiVideo: Boolean(videoUrl && pipelineMode === 'PRODUCTION_AI_VIDEO'),
+    pipelineMode,
+    isChecking,
+  };
+}
+
+/**
  * Live 9:16 Orbital Trailer Canvas/Video Player component with embedded Sillowmilllogo.png in the bottom-left corner.
  */
-const LiveStoryTrailerViewport: React.FC<{
+export const LiveStoryTrailerViewport: React.FC<{
   dossier: PlanetSubmission;
   meta: ReturnType<typeof deriveWorldVerificationMeta>;
   photoCards: ReturnType<typeof getPlanetPhotoCards>;
-}> = ({ dossier, meta, photoCards }) => {
+  activeVideoUrl?: string;
+}> = ({ dossier, meta, photoCards, activeVideoUrl }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const videoUrl =
+    activeVideoUrl ||
     dossier.videoUrl ||
     dossier.renders?.videoUrl ||
     dossier.renders?.video_url ||
@@ -911,6 +1001,10 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
   const [isExportingBadge, setIsExportingBadge] = useState(false);
   const [isExportingTrailer, setIsExportingTrailer] = useState(false);
   const [isCopiedCode, setIsCopiedCode] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Dynamic Val.ai / Fal.ai Video Pipeline check & automatic promotion
+  const dynamicVideo = useDynamicWorldVideo(dossier);
 
   const photoCards = useMemo(() => getPlanetPhotoCards(dossier), [dossier]);
   const meta = useMemo(
@@ -918,17 +1012,47 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
     [dossier, editionRank]
   );
 
-  // Close Fullscreen Viewer on Escape key
+  // Close Fullscreen Viewer on Escape key & Left/Right arrow navigation
   useEffect(() => {
-    if (!isFullscreenOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && isFullscreenOpen) {
         setIsFullscreenOpen(false);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        if (isFullscreenOpen) {
+          e.preventDefault();
+          soundManager.playTone(640, 0.04);
+          setActiveViewMode((prev) => (prev === 'card' ? 'trailer' : 'card'));
+        }
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isFullscreenOpen]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) {
+      touchStartRef.current = null;
+      return;
+    }
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || e.changedTouches.length === 0) return;
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      soundManager.playTone(640, 0.04);
+      setActiveViewMode((prev) => (prev === 'card' ? 'trailer' : 'card'));
+    }
+  };
+
+  const handleToggleViewMode = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    soundManager.playTone(650, 0.04);
+    setActiveViewMode((prev) => (prev === 'card' ? 'trailer' : 'card'));
+  };
 
   const handleCopyCode = () => {
     soundManager.playTone(720, 0.05);
@@ -971,32 +1095,40 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       .replace(/[^a-z0-9-_]/g, '-');
 
     try {
+      // 1. If dynamic Val.ai production AI video is active, download it directly
+      const activeVideoUrl =
+        dynamicVideo.videoUrl ||
+        dossier.videoUrl ||
+        dossier.renders?.videoUrl ||
+        dossier.renders?.video_url ||
+        '';
+
+      if (activeVideoUrl) {
+        try {
+          const response = await fetch(activeVideoUrl);
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `sillowmill-${safeName}-9x16-trailer.mp4`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          return;
+        } catch {
+          window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');
+          return;
+        }
+      }
+
+      // 2. Active Fallback: Automated 5-photo zoom slideshow montage
       const result = await exportWorldTrailerVideoBlob(dossier, editionRank);
       if (result?.blob) {
         const url = URL.createObjectURL(result.blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `sillowmill-${safeName}-9x16-trailer.${result.ext}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        return;
-      }
-
-      // Fallback if direct videoUrl exists
-      const videoUrl =
-        dossier.videoUrl ||
-        dossier.renders?.videoUrl ||
-        dossier.renders?.video_url ||
-        '';
-      if (videoUrl) {
-        const response = await fetch(videoUrl);
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `sillowmill-${safeName}-9x16-trailer.mp4`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1057,179 +1189,225 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
    * Reusable 9:16 Story Card & Trailer Viewport content (used both inline and in Fullscreen Viewer Modal).
    */
   const renderStoryAfficheCard = (isInsideModal = false) => (
-    <div
-      onClick={() => {
-        if (!isInsideModal) {
-          soundManager.playTone(680, 0.05);
-          setIsFullscreenOpen(true);
-        }
-      }}
-      className={`relative w-full ${
-        isInsideModal ? 'max-w-[400px] sm:max-w-[430px]' : 'max-w-[350px] sm:max-w-[375px] cursor-pointer'
-      } aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/60 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none group transition-transform duration-300 ${
-        !isInsideModal ? 'hover:scale-[1.01] hover:border-amber-300' : ''
-      }`}
-      title={!isInsideModal ? 'Click to open Fullscreen 9:16 Card & Trailer Viewer' : undefined}
-    >
-      {/* Inner Cyan Hairline Frame */}
-      <div className="absolute inset-2 rounded-[20px] border border-cyan-400/25 pointer-events-none z-20" />
-      {/* Ambient Cosmic Glow */}
-      <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
-      <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-cyan-400/15 rounded-full blur-2xl pointer-events-none" />
+    <div className={`relative w-full ${isInsideModal ? 'max-w-[400px] sm:max-w-[430px]' : 'max-w-[350px] sm:max-w-[375px]'} flex items-center justify-center`}>
+      {/* Sleek Side Chevron Arrow Navigation (Desktop & Mobile) */}
+      <button
+        type="button"
+        onClick={handleToggleViewMode}
+        className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#050a18]/90 hover:bg-[#081226] border border-amber-400/50 hover:border-amber-300 text-amber-300 flex items-center justify-center transition-all shadow-[0_0_15px_rgba(0,0,0,0.8),0_0_10px_rgba(245,158,11,0.3)] cursor-pointer"
+        aria-label="Toggle to Previous / Alternate View"
+        title="Toggle between 9:16 Story Card and 9:16 MP4 Trailer"
+      >
+        <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
+      </button>
 
-      {activeViewMode === 'trailer' ? (
-        <LiveStoryTrailerViewport dossier={dossier} meta={meta} photoCards={photoCards} />
-      ) : (
-        <>
-          {/* 1. TOP-LEVEL BRANDING HEADER: SILLOW MILL + CELOMILLE & ÄKINOYA UNIVERSE */}
-          <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-white/15">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/20 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(255,255,255,0.16)]">
-                <img
-                  src={sillowMillLogoUrl}
-                  alt="Sillow Mill Official Logo"
-                  className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.55)]"
-                />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs sm:text-[13px] font-display font-black tracking-[0.16em] text-white uppercase leading-none truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
-                  SILLOW MILL
-                </div>
-                <div className="text-[7.5px] sm:text-[8px] font-mono font-extrabold text-white tracking-[0.13em] uppercase mt-1 truncate">
-                  CELOMILLE · ÄKINOYA UNIVERSE
-                </div>
-              </div>
-            </div>
+      <button
+        type="button"
+        onClick={handleToggleViewMode}
+        className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#050a18]/90 hover:bg-[#081226] border border-cyan-400/50 hover:border-cyan-300 text-cyan-300 flex items-center justify-center transition-all shadow-[0_0_15px_rgba(0,0,0,0.8),0_0_10px_rgba(6,182,212,0.3)] cursor-pointer"
+        aria-label="Toggle to Next / Alternate View"
+        title="Toggle between 9:16 Story Card and 9:16 MP4 Trailer"
+      >
+        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-300" />
+      </button>
 
-            {/* Unique Numbering Badge (#1, #2, etc.) */}
-            <div className="shrink-0 px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
-              <span className="block text-[6.5px] font-mono font-bold uppercase tracking-widest text-amber-200/90">
-                EDITION
-              </span>
-              <span className="block text-xs sm:text-sm font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent leading-tight">
-                #{meta.worldNumber}
-              </span>
-            </div>
-          </div>
+      <div
+        onClick={() => {
+          if (!isInsideModal) {
+            soundManager.playTone(680, 0.05);
+            setIsFullscreenOpen(true);
+          }
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className={`relative w-full aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/60 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none group transition-transform duration-300 ${
+          !isInsideModal ? 'cursor-pointer hover:scale-[1.01] hover:border-amber-300' : ''
+        }`}
+        title={!isInsideModal ? 'Click to open Fullscreen 9:16 Card & Trailer Viewer (Swipe or click arrows to toggle)' : undefined}
+      >
+        {/* Inner Cyan Hairline Frame */}
+        <div className="absolute inset-2 rounded-[20px] border border-cyan-400/25 pointer-events-none z-20" />
+        {/* Ambient Cosmic Glow */}
+        <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-cyan-400/15 rounded-full blur-2xl pointer-events-none" />
 
-          {/* 2. PLANET TITLE, HOLDER INFO & SECTOR SPECIFICATIONS (Immediately below Top Branding Header) */}
-          <div className="relative z-10 pt-1.5 pb-1.5 border-b border-cyan-400/20">
-            <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
-              <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
-              <span className="truncate">
-                {meta.isAmlemi
-                  ? 'FOUNDING PIONEER · GENESIS BENCHMARK'
-                  : meta.isPioneer
-                  ? 'PIONEER 2027 · PRE-RELEASE WORLD'
-                  : 'VERIFIED PLANETARY ARCHIVE'}
-              </span>
-            </div>
-            <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide uppercase truncate mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
-              {dossier.planetName}
-            </h4>
-            <div className="text-[8.5px] sm:text-[9px] font-mono text-white/85 truncate mt-0.5">
-              HOLDER:{' '}
-              <strong className="text-white font-bold uppercase">
-                {dossier.authorName || 'ODI SELIS'}
-              </strong>{' '}
-              · <span className="text-cyan-300 font-bold">{dossier.sectorId || 'SECTOR AKN-01'}</span>
-            </div>
-          </div>
-
-          {/* 3. Slick 5-Photo Vertical Collage */}
-          <div className="relative z-10 flex-1 my-1.5 flex flex-col gap-1.5 min-h-0">
-            {/* Photo 01: Main Orbital Hero */}
-            <div className="relative flex-[1.3] min-h-0 rounded-xl overflow-hidden border border-amber-400/55 bg-slate-950 shadow-md">
-              {heroPhoto?.url && (
-                <img
-                  src={heroPhoto.url}
-                  alt={heroPhoto.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  loading="lazy"
-                  decoding="async"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
-              <div className="absolute top-1.5 left-2 px-1.5 py-0.5 rounded bg-black/75 border border-amber-400/40 text-[7px] font-mono font-bold text-amber-300 uppercase tracking-wider">
-                01_MAIN · ORBITAL HORIZON
-              </div>
-              <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between gap-1">
-                <span className="text-[9.5px] font-sans font-bold text-white truncate">
-                  {heroPhoto?.title || 'Orbital Horizon'}
-                </span>
-                <span className="text-[7px] font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-400/40 px-1.5 py-0.2 rounded">
-                  4K VERIFIED
-                </span>
-              </div>
-            </div>
-
-            {/* Photos 02 - 05: Symmetrical 2x2 Sub-Grid */}
-            <div className="flex-[1.5] grid grid-cols-2 grid-rows-2 gap-1.5 min-h-0">
-              {subPhotos.map((photo, idx) => {
-                const slotTags = ['02 · FLORA', '03 · FAUNA', '04 · CANOPY', '05 · LORE'];
-                return (
-                  <div
-                    key={photo.id}
-                    className="relative rounded-lg overflow-hidden border border-cyan-400/35 bg-slate-950 min-h-0"
-                  >
-                    {photo.url && (
-                      <img
-                        src={photo.url}
-                        alt={photo.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
-                    <div className="absolute bottom-1 left-1.5 right-1.5">
-                      <span className="block text-[6.5px] font-mono font-bold text-cyan-300 uppercase tracking-wider truncate">
-                        {slotTags[idx]}
-                      </span>
-                      <span className="block text-[8px] font-sans font-semibold text-white truncate">
-                        {photo.title}
-                      </span>
+        <AnimatePresence mode="wait">
+          {activeViewMode === 'trailer' ? (
+            <motion.div
+              key="view-trailer"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full h-full flex flex-col"
+            >
+              <LiveStoryTrailerViewport
+                dossier={dossier}
+                meta={meta}
+                photoCards={photoCards}
+                activeVideoUrl={dynamicVideo.videoUrl}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="view-card"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full h-full flex flex-col justify-between"
+            >
+              {/* 1. TOP-LEVEL BRANDING HEADER: SILLOW MILL + CELOMILLE & ÄKINOYA UNIVERSE */}
+              <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-white/15">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/20 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(255,255,255,0.16)]">
+                    <img
+                      src={sillowMillLogoUrl}
+                      alt="Sillow Mill Official Logo"
+                      className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.55)]"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-[13px] font-display font-black tracking-[0.16em] text-white uppercase leading-none truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
+                      SILLOW MILL
+                    </div>
+                    <div className="text-[7.5px] sm:text-[8px] font-mono font-extrabold text-white tracking-[0.13em] uppercase mt-1 truncate">
+                      CELOMILLE · ÄKINOYA UNIVERSE
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                </div>
 
-          {/* 4. Streamlined Minimalist Footer with Bottom-Left Embedded Sillow Mill Logo & Verification Code (No QR) */}
-          <div className="relative z-10 p-2 rounded-xl bg-[#071022]/90 border border-amber-400/35 space-y-1.5">
-            <p className="text-[8px] sm:text-[8.5px] font-sans italic text-amber-100/95 line-clamp-1 leading-snug">
-              &ldquo;
-              {dossier.futurePromise ||
-                dossier.generatedLore ||
-                'Synthesized planetary archive bound to the Sillow Mill — Äkinoya universe.'}
-              &rdquo;
-            </p>
-
-            <div className="px-2 py-1 rounded-lg bg-[#040914]/95 border border-cyan-400/35 flex items-center justify-between gap-1.5 text-[7.5px] font-mono">
-              <span className="text-cyan-300 font-bold truncate">
-                CODE: {meta.verificationCode}
-              </span>
-              <span className="text-emerald-400 font-bold shrink-0">● AUTHENTICATED</span>
-            </div>
-
-            {/* Bottom-Left Embedded Sillowmilllogo.png */}
-            <div className="flex items-center justify-between gap-2 pt-0.5">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <img
-                  src={sillowMillLogoUrl}
-                  alt="Sillow Mill Logo"
-                  className="w-5 h-5 object-contain shrink-0 drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]"
-                />
-                <span className="text-[7.5px] font-display font-black tracking-[0.12em] text-white uppercase truncate">
-                  SILLOW MILL · CELOMILLE
-                </span>
+                {/* Unique Numbering Badge (#1, #2, etc.) */}
+                <div className="shrink-0 px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+                  <span className="block text-[6.5px] font-mono font-bold uppercase tracking-widest text-amber-200/90">
+                    EDITION
+                  </span>
+                  <span className="block text-xs sm:text-sm font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent leading-tight">
+                    #{meta.worldNumber}
+                  </span>
+                </div>
               </div>
-              <span className="text-[7px] font-mono text-white/60 shrink-0">sillowmill.com</span>
-            </div>
-          </div>
-        </>
-      )}
+
+              {/* 2. PLANET TITLE, HOLDER INFO & SECTOR SPECIFICATIONS (Immediately below Top Branding Header) */}
+              <div className="relative z-10 pt-1.5 pb-1.5 border-b border-cyan-400/20">
+                <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
+                  <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
+                  <span className="truncate">
+                    {meta.isAmlemi
+                      ? 'FOUNDING PIONEER · GENESIS BENCHMARK'
+                      : meta.isPioneer
+                      ? 'PIONEER 2027 · PRE-RELEASE WORLD'
+                      : 'VERIFIED PLANETARY ARCHIVE'}
+                  </span>
+                </div>
+                <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide uppercase truncate mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+                  {dossier.planetName}
+                </h4>
+                <div className="text-[8.5px] sm:text-[9px] font-mono text-white/85 truncate mt-0.5">
+                  HOLDER:{' '}
+                  <strong className="text-white font-bold uppercase">
+                    {dossier.authorName || 'ODI SELIS'}
+                  </strong>{' '}
+                  · <span className="text-cyan-300 font-bold">{dossier.sectorId || 'SECTOR AKN-01'}</span>
+                </div>
+              </div>
+
+              {/* 3. Slick 5-Photo Vertical Collage */}
+              <div className="relative z-10 flex-1 my-1.5 flex flex-col gap-1.5 min-h-0">
+                {/* Photo 01: Main Orbital Hero */}
+                <div className="relative flex-[1.3] min-h-0 rounded-xl overflow-hidden border border-amber-400/55 bg-slate-950 shadow-md">
+                  {heroPhoto?.url && (
+                    <img
+                      src={heroPhoto.url}
+                      alt={heroPhoto.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
+                  <div className="absolute top-1.5 left-2 px-1.5 py-0.5 rounded bg-black/75 border border-amber-400/40 text-[7px] font-mono font-bold text-amber-300 uppercase tracking-wider">
+                    01_MAIN · ORBITAL HORIZON
+                  </div>
+                  <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between gap-1">
+                    <span className="text-[9.5px] font-sans font-bold text-white truncate">
+                      {heroPhoto?.title || 'Orbital Horizon'}
+                    </span>
+                    <span className="text-[7px] font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-400/40 px-1.5 py-0.2 rounded">
+                      4K VERIFIED
+                    </span>
+                  </div>
+                </div>
+
+                {/* Photos 02 - 05: Symmetrical 2x2 Sub-Grid */}
+                <div className="flex-[1.5] grid grid-cols-2 grid-rows-2 gap-1.5 min-h-0">
+                  {subPhotos.map((photo, idx) => {
+                    const slotTags = ['02 · FLORA', '03 · FAUNA', '04 · CANOPY', '05 · LORE'];
+                    return (
+                      <div
+                        key={photo.id}
+                        className="relative rounded-lg overflow-hidden border border-cyan-400/35 bg-slate-950 min-h-0"
+                      >
+                        {photo.url && (
+                          <img
+                            src={photo.url}
+                            alt={photo.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
+                        <div className="absolute bottom-1 left-1.5 right-1.5">
+                          <span className="block text-[6.5px] font-mono font-bold text-cyan-300 uppercase tracking-wider truncate">
+                            {slotTags[idx]}
+                          </span>
+                          <span className="block text-[8px] font-sans font-semibold text-white truncate">
+                            {photo.title}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 4. Streamlined Minimalist Footer with Bottom-Left Embedded Sillow Mill Logo & Verification Code (No QR) */}
+              <div className="relative z-10 p-2 rounded-xl bg-[#071022]/90 border border-amber-400/35 space-y-1.5">
+                <p className="text-[8px] sm:text-[8.5px] font-sans italic text-amber-100/95 line-clamp-1 leading-snug">
+                  &ldquo;
+                  {dossier.futurePromise ||
+                    dossier.generatedLore ||
+                    'Synthesized planetary archive bound to the Sillow Mill — Äkinoya universe.'}
+                  &rdquo;
+                </p>
+
+                <div className="px-2 py-1 rounded-lg bg-[#040914]/95 border border-cyan-400/35 flex items-center justify-between gap-1.5 text-[7.5px] font-mono">
+                  <span className="text-cyan-300 font-bold truncate">
+                    CODE: {meta.verificationCode}
+                  </span>
+                  <span className="text-emerald-400 font-bold shrink-0">● AUTHENTICATED</span>
+                </div>
+
+                {/* Bottom-Left Embedded Sillowmilllogo.png */}
+                <div className="flex items-center justify-between gap-2 pt-0.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <img
+                      src={sillowMillLogoUrl}
+                      alt="Sillow Mill Logo"
+                      className="w-5 h-5 object-contain shrink-0 drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]"
+                    />
+                    <span className="text-[7.5px] font-display font-black tracking-[0.12em] text-white uppercase truncate">
+                      SILLOW MILL · CELOMILLE
+                    </span>
+                  </div>
+                  <span className="text-[7px] font-mono text-white/60 shrink-0">sillowmill.com</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 
