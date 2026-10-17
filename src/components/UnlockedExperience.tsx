@@ -247,7 +247,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
   const [userDossier, setUserDossier] = useState<PlanetSubmission | null>(null);
   const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);
-  const [selectedDossierInitialIdx, setSelectedDossierInitialIdx] = useState<number>(0);
   const [isCopiedDossierLink, setIsCopiedDossierLink] = useState(false);
 
   const [allCommunityPlanets, setAllCommunityPlanets] = useState<PlanetSubmission[]>(() =>
@@ -2231,10 +2230,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       window.location.href = '/contest';
                     }
                   }}
-                  onInspectDossier={(d, stageIdx) => {
-                    setSelectedDossierModal(d);
-                    setSelectedDossierInitialIdx(stageIdx ?? 0);
-                  }}
                 />
 
                 {/* Story & Philosophy Creed */}
@@ -2319,10 +2314,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     } else if (typeof window !== 'undefined') {
                       window.location.href = '/contest';
                     }
-                  }}
-                  onInspectDossier={(d, stageIdx) => {
-                    setSelectedDossierModal(d);
-                    setSelectedDossierInitialIdx(stageIdx ?? 0);
                   }}
                 />
               )}
@@ -3021,7 +3012,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       <PlanetDossierModal
         planet={selectedDossierModal}
         isOpen={Boolean(selectedDossierModal)}
-        initialPhotoIdx={selectedDossierInitialIdx}
         onClose={() => setSelectedDossierModal(null)}
         onNavigateToGalaxy={onNavigateToGalaxy}
       />

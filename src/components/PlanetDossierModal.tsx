@@ -46,7 +46,6 @@ export interface PlanetDossierModalProps {
   onVote?: (planetId: string) => void;
   onOpenCreator?: (username: string) => void;
   onNavigateToGalaxy?: (planetId?: string) => void;
-  initialPhotoIdx?: number;
 }
 
 export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
@@ -56,7 +55,6 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
   onVote,
   onOpenCreator,
   onNavigateToGalaxy,
-  initialPhotoIdx = 0,
 }) => {
   // Retain last active planet reference so exit animation remains completely fluid when planet is cleared
   const lastPlanetRef = useRef<PlanetSubmission | null>(planet);
@@ -66,7 +64,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
   const activePlanet = planet || lastPlanetRef.current;
 
   // activePhotoIdx: 0..4 for the 5 photos, or 5 for the "🎥 9:16 Trailer" tab
-  const [activePhotoIdx, setActivePhotoIdx] = useState<number>(initialPhotoIdx ?? 0);
+  const [activePhotoIdx, setActivePhotoIdx] = useState<number>(0);
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [isCopiedGalaxyLink, setIsCopiedGalaxyLink] = useState<boolean>(false);
@@ -82,13 +80,13 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
     }
   };
 
-  // Reset active photo on modal open, stage index change, or planet change
+  // Reset active photo on planet change
   useEffect(() => {
-    if (isOpen) {
-      setActivePhotoIdx(typeof initialPhotoIdx === 'number' ? initialPhotoIdx : 0);
+    if (planet?.id) {
+      setActivePhotoIdx(0);
       setIsZoomed(false);
     }
-  }, [isOpen, initialPhotoIdx, planet?.id]);
+  }, [planet?.id]);
 
   const photoCards: PlanetPhotoCard[] = activePlanet ? getPlanetPhotoCards(activePlanet) : [];
   const totalTabs = Math.max(1, photoCards.length + 1); // 5 photos + 1 "🎥 9:16 Trailer" tab
