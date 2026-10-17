@@ -323,6 +323,8 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     },
     votesCount: 3,
     hasVoted: false,
+    isPioneer: true,
+    pioneerBadge: 'FOUNDING PIONEER · #01',
     status: 'PUBLISHED',
     coordX: 280,
     coordY: -260,
@@ -363,11 +365,16 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
               : (sub.coord_x !== undefined && sub.coord_y !== undefined)
               ? { x: sub.coord_x, y: sub.coord_y, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
               : getDeterministicPlanetCoordinates(sub.id, sub.planetName);
+            const isPreRelease = !sub.createdAt || new Date(sub.createdAt).getTime() < new Date('2027-01-09T00:00:00Z').getTime();
             return {
               ...sub,
               planetName: isAmlemi ? 'Ämlemi' : formatAkinoyaPlanetName(sub.planetName),
               votesCount,
               hasVoted: userVoted,
+              isPioneer: isAmlemi || (sub.isPioneer ?? isPreRelease),
+              pioneerBadge: isAmlemi
+                ? 'FOUNDING PIONEER · #01'
+                : sub.pioneerBadge || (isPreRelease ? 'PIONEER 2027 · PRE-RELEASE' : undefined),
               videoUrl: resolvedVideoUrl,
               videoStatus: resolvedVideoUrl ? 'READY' : sub.videoStatus || 'QUEUED_PENDING',
               coordX: coords.x,
@@ -602,6 +609,8 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
               })(),
               votesCount,
               hasVoted: userVoted,
+              isPioneer: isAmlemi || (!d.created_at || new Date(d.created_at).getTime() < new Date('2027-01-09T00:00:00Z').getTime()),
+              pioneerBadge: isAmlemi ? 'FOUNDING PIONEER · #01' : 'PIONEER 2027 · PRE-RELEASE',
               status: (d.status as any) || 'PUBLISHED',
               createdAt: d.created_at || new Date().toISOString(),
               votingDeadline: 'June 30, 2027',
@@ -658,10 +667,15 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
     if (isAmlemi && serverCounts[sub.id] === undefined) {
       votesCount = userVoted ? 4 : 3;
     }
+    const isPreRelease = !sub.createdAt || new Date(sub.createdAt).getTime() < new Date('2027-01-09T00:00:00Z').getTime();
     return {
       ...sub,
       votesCount,
       hasVoted: userVoted,
+      isPioneer: isAmlemi || (sub.isPioneer ?? isPreRelease),
+      pioneerBadge: isAmlemi
+        ? 'FOUNDING PIONEER · #01'
+        : sub.pioneerBadge || (isPreRelease ? 'PIONEER 2027 · PRE-RELEASE' : undefined),
     };
   });
 
@@ -679,11 +693,19 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
 export const getUserContestSubmission = (userId?: string, email?: string): PlanetSubmission | null => {
   if (!userId && !email) return null;
   const submissions = getStoredPlanetSubmissions();
+  const normalizedEmail = (email || '').trim().toLowerCase();
+  const isOdi =
+    normalizedEmail === 'odi.selis3@gmail.com' ||
+    normalizedEmail === 'odi@sillowmill.com' ||
+    normalizedEmail === 'sillowmill@gmail.com' ||
+    userId === 'user-odi-founder' ||
+    userId === 'user-odi-genesis';
   const match = submissions.find(
     (s) =>
       !isForbiddenSubmission(s) &&
       ((userId && s.userId === userId) ||
-        (email && s.authorEmail && s.authorEmail.toLowerCase() === email.toLowerCase()))
+        (normalizedEmail && s.authorEmail && s.authorEmail.toLowerCase() === normalizedEmail) ||
+        (isOdi && (s.id === 'planet-amlemi-genesis-01' || s.planetName === 'Ämlemi')))
   );
   return match || null;
 };

@@ -300,9 +300,22 @@ export const CreatorPortfolioView: React.FC<CreatorPortfolioViewProps> = ({
               {/* Badges Row */}
               <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                 {creator.role === 'CREATOR' && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-400 text-black shadow-[0_0_10px_rgba(245,158,11,0.3)]">
-                    👑 CREATOR / FOUNDER
-                  </span>
+                  <>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black shadow-[0_0_14px_rgba(245,158,11,0.4)]">
+                      👑 CREATOR / FOUNDER
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-amber-950/80 text-amber-200 border border-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.3)] flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-amber-300" />
+                      <span>FOUNDING PIONEER · #01</span>
+                    </span>
+                    <a
+                      href="/galaxy?planet=planet-amlemi-genesis-01"
+                      className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-950/80 hover:bg-cyan-900 text-cyan-200 border border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.25)] flex items-center gap-1 transition-colors"
+                    >
+                      <Globe className="w-3 h-3 text-amber-400" />
+                      <span>PLANET: ÄMLEMI</span>
+                    </a>
+                  </>
                 )}
                 {creator.role === 'ANNUAL_PASS' && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-400 text-black">

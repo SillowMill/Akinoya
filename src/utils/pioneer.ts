@@ -131,3 +131,80 @@ export const saveSectorClaim = (record: SectorClaimRecord) => {
     // Ignore storage error
   }
 };
+
+export const isOdiFounderAccount = (input?: {
+  email?: string | null;
+  username?: string | null;
+  name?: string | null;
+  userId?: string | null;
+} | null): boolean => {
+  if (!input) return false;
+  const email = (input.email || '').trim().toLowerCase();
+  const username = (input.username || '').trim().toLowerCase().replace(/^@/, '');
+  const name = (input.name || '').trim().toLowerCase();
+  const userId = (input.userId || '').trim().toLowerCase();
+
+  return (
+    email === 'odi.selis3@gmail.com' ||
+    email === 'odi@sillowmill.com' ||
+    email === 'sillowmill@gmail.com' ||
+    username === 'odi' ||
+    username === 'odi_selis' ||
+    username === 'odiselis' ||
+    name === 'odi selis' ||
+    name === 'odi' ||
+    userId === 'user-odi-genesis'
+  );
+};
+
+export const isFoundingPioneerPlanet = (planet?: {
+  id?: string | null;
+  planetName?: string | null;
+  authorUsername?: string | null;
+  authorEmail?: string | null;
+  authorName?: string | null;
+  userId?: string | null;
+} | null): boolean => {
+  if (!planet) return false;
+  const id = (planet.id || '').trim().toLowerCase();
+  const planetName = (planet.planetName || '').trim().toLowerCase();
+  if (
+    id === 'planet-amlemi-genesis-01' ||
+    planetName === 'ämlemi' ||
+    planetName === 'amlemi'
+  ) {
+    return true;
+  }
+  return isOdiFounderAccount({
+    email: planet.authorEmail,
+    username: planet.authorUsername,
+    name: planet.authorName,
+    userId: planet.userId,
+  });
+};
+
+export const isPioneerPlanet = (planet?: {
+  id?: string | null;
+  planetName?: string | null;
+  authorUsername?: string | null;
+  authorEmail?: string | null;
+  authorName?: string | null;
+  userId?: string | null;
+  createdAt?: string | null;
+  isPioneer?: boolean | null;
+} | null): boolean => {
+  if (!planet) return false;
+  if (planet.isPioneer === true) return true;
+  if (planet.isPioneer === false) return false;
+  if (isFoundingPioneerPlanet(planet)) return true;
+
+  if (planet.createdAt) {
+    const parsed = Date.parse(planet.createdAt);
+    if (!Number.isNaN(parsed)) {
+      return parsed < PIONEER_LAUNCH_DATE;
+    }
+  }
+  // Pre-release worlds created prior to official launch (Jan 9, 2027)
+  return isPreLaunch();
+};
+

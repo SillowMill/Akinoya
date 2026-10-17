@@ -25,6 +25,7 @@ import {
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
+import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import akinoyaHeroBg from '../assets/images/akinoya_hero_bg-CiYAZVRx.jpg';
 
@@ -85,8 +86,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const hudDistRef = useRef<HTMLSpanElement | null>(null);
   const hudZoomRef = useRef<HTMLSpanElement | null>(null);
 
-  // Community planets state
+  // Community planets state & Pioneer filter
   const [planets, setPlanets] = useState<PlanetSubmission[]>(() => getStoredPlanetSubmissions());
+  const [mapFilter, setMapFilter] = useState<'all' | 'pioneer'>('all');
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetSubmission | null>(null);
   const [hoveredPlanet, setHoveredPlanet] = useState<PlanetSubmission | null>(null);
   const [isAkinoyaModalOpen, setIsAkinoyaModalOpen] = useState(false);
@@ -96,14 +98,24 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
 
+  const filteredPlanets = useMemo(() => {
+    const base = mapFilter === 'pioneer' ? planets.filter((p) => isPioneerPlanet(p)) : planets;
+    return [...base].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+  }, [planets, mapFilter]);
+
+  const pioneerPlanetsCount = useMemo(
+    () => planets.filter((p) => isPioneerPlanet(p)).length,
+    [planets]
+  );
+
   // High-frequency Pan, Zoom & Rotation Refs (60fps GPU pipeline without React re-render lag)
   const initialZoom = typeof window !== 'undefined' && window.innerWidth < 768 ? 0.65 : 0.85;
   const panRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const zoomRef = useRef<number>(initialZoom);
   const rotationRef = useRef<number>(0);
 
-  const planetsRef = useRef(planets);
-  planetsRef.current = planets;
+  const planetsRef = useRef(filteredPlanets);
+  planetsRef.current = filteredPlanets;
   const selectedPlanetRef = useRef(selectedPlanet);
   selectedPlanetRef.current = selectedPlanet;
   const hoveredPlanetRef = useRef(hoveredPlanet);
@@ -1086,9 +1098,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         </div>
       </header>
 
-      {/* FLOATING TOP SEARCH BAR */}
+      {/* FLOATING TOP SEARCH & PIONEER FILTER BAR */}
       <div
-        className="interactive-hud-element absolute left-1/2 -translate-x-1/2 z-30 w-[92%] max-w-md"
+        className="interactive-hud-element absolute left-1/2 -translate-x-1/2 z-30 w-[92%] max-w-md space-y-2"
         style={{ top: 'calc(env(safe-area-inset-top, 0px) + 5rem)' }}
       >
         <div className="relative">
@@ -1100,7 +1112,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             />
           )}
 
-          <div className="relative z-20 flex items-center bg-[#070c1a] border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.18)] transition-all overflow-hidden">
+          <div className="relative z-20 flex items-center bg-gradient-to-r from-cyan-950/60 via-[#070c1a]/90 to-[#050914]/90 backdrop-blur-xl border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.18)] transition-all overflow-hidden">
             <Search className="w-4 h-4 text-cyan-400 ml-3.5 shrink-0" />
             <input
               type="text"
@@ -1113,7 +1125,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               onBlur={() => {
                 setTimeout(() => window.scrollTo(0, 0), 100);
               }}
-              placeholder="Search planet or architect..."
+              placeholder="Search planet, Pioneer, or architect..."
               className="w-full py-2.5 px-3 bg-transparent text-xs text-white placeholder-white/40 font-mono focus:outline-none"
             />
             {searchQuery && (
@@ -1129,39 +1141,107 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
           {/* Search Autocomplete Dropdown */}
           {isSearchFocused && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-[#060914] border border-white/15 rounded-2xl shadow-2xl max-h-48 sm:max-h-64 overflow-y-auto divide-y divide-white/5 z-50">
-              {searchResults.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => handleSelectSearchResult(p)}
-                  className="p-3 hover:bg-cyan-950/40 transition-colors cursor-pointer flex items-center justify-between gap-3 group"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-display font-bold text-white group-hover:text-amber-300 transition-colors">
-                        {p.planetName}
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#060914]/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl shadow-2xl max-h-48 sm:max-h-64 overflow-y-auto divide-y divide-white/5 z-50">
+              {searchResults.map((p) => {
+                const isFounder = isFoundingPioneerPlanet(p);
+                const isPioneer = isPioneerPlanet(p);
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => handleSelectSearchResult(p)}
+                    className="p-3 hover:bg-cyan-950/40 transition-colors cursor-pointer flex items-center justify-between gap-3 group"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-display font-bold text-white group-hover:text-amber-300 transition-colors">
+                          {p.planetName}
+                        </span>
+                        {isPioneer && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 text-[8.5px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_8px_rgba(251,191,36,0.35)]">
+                            {isFounder ? '👑 FOUNDING PIONEER' : '⚡ PIONEER'}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-mono text-white/50 block truncate mt-0.5">
+                        By @{p.authorUsername} · ({p.coordX ?? 0}, {p.coordY ?? 0}) AU
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono text-white/50 block truncate">
-                      By @{p.authorUsername} · ({p.coordX ?? 0}, {p.coordY ?? 0}) AU
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-400/40 text-amber-300 font-mono text-[10px] font-extrabold shadow-[0_0_10px_rgba(251,191,36,0.25)]">
+                        ★ {p.votesCount}
+                      </span>
+                      <button
+                        type="button"
+                        className="px-2 py-1 rounded-lg bg-cyan-950/80 group-hover:bg-amber-400 group-hover:text-black text-cyan-300 font-mono text-[10px] font-bold transition-all shrink-0 flex items-center gap-1"
+                      >
+                        <span>Jump</span>
+                        <ChevronRight className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    className="px-2 py-1 rounded-lg bg-cyan-950/80 group-hover:bg-amber-400 group-hover:text-black text-cyan-300 font-mono text-[10px] font-bold transition-all shrink-0 flex items-center gap-1"
-                  >
-                    <span>Jump</span>
-                    <ChevronRight className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
+        </div>
+
+        {/* Pioneer Map Filter & Quick-Jump Pill Bar */}
+        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              soundManager.playTone(620, 0.04);
+              setMapFilter('all');
+            }}
+            className={`px-2.5 py-1 rounded-full font-mono text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1.5 backdrop-blur-xl ${
+              mapFilter === 'all'
+                ? 'bg-cyan-950/90 border border-cyan-400/70 text-cyan-200 shadow-[0_0_14px_rgba(34,211,238,0.35)]'
+                : 'bg-[#060a14]/80 border border-white/15 text-white/60 hover:text-white'
+            }`}
+          >
+            <Globe2 className="w-3 h-3 text-cyan-400" />
+            <span>All Worlds ({planets.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              soundManager.playTone(740, 0.05);
+              setMapFilter(mapFilter === 'pioneer' ? 'all' : 'pioneer');
+            }}
+            className={`px-2.5 py-1 rounded-full font-mono text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1.5 backdrop-blur-xl ${
+              mapFilter === 'pioneer'
+                ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black border border-amber-300 shadow-[0_0_18px_rgba(251,191,36,0.55)]'
+                : 'bg-amber-950/60 border border-amber-400/50 text-amber-300 hover:bg-amber-900/70 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+            }`}
+            title="Filter planets created prior to official release (Jan 9, 2027)"
+          >
+            <Sparkles className={`w-3 h-3 ${mapFilter === 'pioneer' ? 'text-black' : 'text-amber-300'}`} />
+            <span>⚡ Pioneer Worlds ({pioneerPlanetsCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const amlemi = planets.find(
+                (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+              );
+              if (amlemi) {
+                soundManager.playTone(820, 0.06);
+                setSelectedPlanet(amlemi);
+                panTo(amlemi.coordX ?? 280, amlemi.coordY ?? -260, 1.15, 800, 0);
+              }
+            }}
+            className="px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-amber-600/20 hover:from-amber-500/35 hover:to-amber-500/35 border border-amber-400/55 text-amber-200 hover:text-white font-mono text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1 backdrop-blur-xl shadow-[0_0_12px_rgba(251,191,36,0.25)]"
+            title="Jump to Odi's Founding Pioneer Planet: Ämlemi"
+          >
+            <span>👑 Odi&apos;s Ämlemi</span>
+          </button>
         </div>
       </div>
 
       {/* ASTROGATION COORDINATES HUD (Bottom Left) — Direct-DOM 60fps Refs */}
-      <div className="interactive-hud-element absolute bottom-4 left-4 z-30 hidden sm:flex flex-col gap-1.5 p-3 rounded-2xl bg-[#060a14] border border-white/15 font-mono text-[10.5px] text-white/70 shadow-lg">
+      <div className="interactive-hud-element absolute bottom-4 left-4 z-30 hidden sm:flex flex-col gap-1.5 p-3.5 rounded-2xl bg-gradient-to-br from-cyan-950/45 via-[#060a14]/90 to-[#040812]/95 backdrop-blur-xl border border-cyan-500/30 font-mono text-[10.5px] text-white/70 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(34,211,238,0.12)]">
         <div className="flex items-center gap-2 text-cyan-300 font-bold">
           <Target className="w-3.5 h-3.5 text-cyan-400" />
           <span>ASTROGATION HUD</span>
@@ -1180,7 +1260,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             {(initialZoom * 100).toFixed(0)}%
           </span>
           <span>CHARTED WORLDS:</span>
-          <span className="text-cyan-300 font-bold text-right">{planets.length} WORLDS</span>
+          <span className="text-cyan-300 font-extrabold text-right drop-shadow-[0_0_6px_rgba(34,211,238,0.5)]">
+            {filteredPlanets.length} WORLDS
+          </span>
+          <span>PIONEER WORLDS:</span>
+          <span className="text-amber-300 font-extrabold text-right drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]">
+            ⚡ {pioneerPlanetsCount} PRE-RELEASE
+          </span>
         </div>
       </div>
 
@@ -1311,19 +1397,21 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           {/* ===================================================================== */}
           {/* 2. COMMUNITY PLANET NODES (Distributed by Deterministic Coordinates) */}
           {/* ===================================================================== */}
-          {planets.map((planet) => {
+          {filteredPlanets.map((planet, index) => {
             const posX = planet.coordX ?? 0;
             const posY = planet.coordY ?? 0;
             if (posX === 0 && posY === 0 && planet.id !== 'akinoya-core') {
               return null;
             }
 
-            const isAmlemi = planet.id === 'planet-amlemi-genesis-01' || planet.planetName === 'Ämlemi';
+            const isAmlemi = isFoundingPioneerPlanet(planet);
+            const isPioneer = isPioneerPlanet(planet);
             const isHovered = hoveredPlanet?.id === planet.id;
             const isSelected = selectedPlanet?.id === planet.id;
             const photoCards = getPlanetPhotoCards(planet);
             const thumbnail = photoCards[0]?.url || planet.renders?.hero || '';
             const isTopVoted = planet.votesCount >= 3;
+            const rankNumber = index + 1;
 
             return (
               <div
@@ -1340,49 +1428,86 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10 flex flex-col items-center select-none"
                 style={{ left: posX, top: posY }}
               >
-                {/* Active / Top-Voted Beacon Ripple */}
-                {isTopVoted && (
-                  <div className="absolute w-16 h-16 -top-2 -left-2 rounded-full border border-amber-400/50 animate-ping pointer-events-none opacity-40" />
+                {/* Pioneer Status Floating Marker Above Orb */}
+                {isPioneer && (
+                  <div className="mb-1.5 pointer-events-none whitespace-nowrap">
+                    {isAmlemi ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black font-mono font-extrabold text-[8.5px] tracking-widest uppercase shadow-[0_0_16px_rgba(251,191,36,0.65)]">
+                        <span>👑 FOUNDING PIONEER · #01</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/90 border border-amber-400/60 text-amber-300 font-mono font-extrabold text-[8px] tracking-widest uppercase shadow-[0_0_12px_rgba(245,158,11,0.35)]">
+                        <span>⚡ PIONEER</span>
+                      </span>
+                    )}
+                  </div>
                 )}
 
-                {/* Celestial Planet Orb */}
-                <div
-                  className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 transition-all duration-300 bg-[#070c18] flex items-center justify-center shadow-lg ${
-                    isAmlemi
-                      ? 'border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.6)] group-hover:scale-120'
-                      : isSelected
-                      ? 'border-amber-400 scale-120 shadow-[0_0_25px_rgba(245,158,11,0.7)]'
-                      : isHovered
-                      ? 'border-amber-300 scale-115 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
-                      : 'border-white/30 group-hover:border-amber-400 group-hover:scale-110'
-                  }`}
-                >
-                  {thumbnail ? (
-                    <img
-                      src={thumbnail}
-                      alt={planet.planetName}
-                      className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
-                      draggable={false}
+                {/* Active / Pioneer Beacon Ripple */}
+                <div className="relative flex items-center justify-center">
+                  {isTopVoted && (
+                    <div className="absolute -inset-2.5 rounded-full border border-amber-400/50 animate-ping pointer-events-none opacity-40" />
+                  )}
+                  {isPioneer && (
+                    <div
+                      className={`absolute -inset-2 rounded-full border border-dashed pointer-events-none animate-spin ${
+                        isAmlemi ? 'border-amber-300/70' : 'border-amber-400/40'
+                      }`}
+                      style={{ animationDuration: isAmlemi ? '18s' : '26s' }}
                     />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-amber-950 via-slate-900 to-black flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                    </div>
                   )}
 
-                  {/* Gradient atmospheric shell */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
+                  {/* Celestial Planet Orb */}
+                  <div
+                    className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 transition-all duration-300 bg-[#070c18] flex items-center justify-center shadow-lg ${
+                      isAmlemi
+                        ? 'border-amber-400 shadow-[0_0_28px_rgba(245,158,11,0.75)] group-hover:scale-120'
+                        : isSelected
+                        ? 'border-amber-400 scale-120 shadow-[0_0_25px_rgba(245,158,11,0.7)]'
+                        : isHovered
+                        ? 'border-amber-300 scale-115 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+                        : isPioneer
+                        ? 'border-amber-400/60 shadow-[0_0_18px_rgba(245,158,11,0.35)] group-hover:border-amber-300 group-hover:scale-110'
+                        : 'border-white/30 group-hover:border-amber-400 group-hover:scale-110'
+                    }`}
+                  >
+                    {thumbnail ? (
+                      <img
+                        src={thumbnail}
+                        alt={planet.planetName}
+                        className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
+                        draggable={false}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-amber-950 via-slate-900 to-black flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                      </div>
+                    )}
+
+                    {/* Gradient atmospheric shell */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
+                  </div>
                 </div>
 
-                {/* Planet Label: Clean planet name and creator handle */}
+                {/* Planet Label: Clean planet name, creator handle, and luminous Rank & Votes pill */}
                 <div className="mt-1.5 flex flex-col items-center pointer-events-none">
                   <span className="text-xs font-display font-bold text-white tracking-wide group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] whitespace-nowrap">
                     {planet.planetName}
                   </span>
 
-                  <span className="text-[9.5px] font-mono text-white/50 tracking-wider">
+                  <span className="text-[9.5px] font-mono text-white/60 tracking-wider">
                     @{planet.authorUsername}
                   </span>
+
+                  <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#060c18]/90 border border-amber-400/45 shadow-[0_0_12px_rgba(251,191,36,0.28)] whitespace-nowrap">
+                    <span className="text-[9px] font-mono font-black text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]">
+                      #{rankNumber}
+                    </span>
+                    <span className="text-white/25 text-[8px]">·</span>
+                    <span className="text-[9px] font-mono font-extrabold text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]">
+                      ★ {planet.votesCount}
+                    </span>
+                  </div>
                 </div>
               </div>
             );

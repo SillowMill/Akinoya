@@ -31,6 +31,7 @@ import {
   copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
+import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
 
 export interface PlanetDossierModalProps {
   planet: PlanetSubmission | null;
@@ -226,10 +227,20 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap min-w-0">
+                  <div className="flex items-center gap-x-2 gap-y-1 flex-wrap min-w-0">
                     <h2 className="text-base sm:text-lg font-display font-extrabold text-white tracking-wide truncate max-w-full">
                       {activePlanet.planetName}
                     </h2>
+                    {isPioneerPlanet(activePlanet) && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-600/25 border border-amber-400/65 text-amber-200 text-[9.5px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(251,191,36,0.35)]">
+                        <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
+                        <span>
+                          {isFoundingPioneerPlanet(activePlanet)
+                            ? '👑 FOUNDING PIONEER · #01'
+                            : activePlanet.pioneerBadge || '⚡ PIONEER 2027'}
+                        </span>
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-xs font-mono text-white/50 min-w-0">
                     <span>By {activePlanet.authorName}</span>
@@ -274,9 +285,11 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                   </button>
                 )}
 
-                <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/60 border border-white/10 text-xs font-mono text-amber-300 font-bold">
-                  <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{activePlanet.votesCount} Votes</span>
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-950/70 via-[#081224]/90 to-amber-950/60 border border-amber-400/50 text-xs font-mono font-extrabold shadow-[0_0_15px_rgba(251,191,36,0.28)]">
+                  <Trophy className="w-3.5 h-3.5 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
+                  <span className="bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]">
+                    {activePlanet.votesCount} Votes
+                  </span>
                 </div>
 
                 <button

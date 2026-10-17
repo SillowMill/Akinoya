@@ -50,7 +50,14 @@ import {
   UI_RECALIBRATING_STATUS_TEXT,
 } from '../data/contest';
 import { attachContestSubmissionToCreator } from '../data/creators';
-import { isPostLaunch, hasPaidMembership, openMembershipGateModal, openClaimWorldModal } from '../utils/pioneer';
+import {
+  isPostLaunch,
+  hasPaidMembership,
+  openMembershipGateModal,
+  openClaimWorldModal,
+  isFoundingPioneerPlanet,
+  isPioneerPlanet,
+} from '../utils/pioneer';
 import { isFounderEmail, PRIMARY_FOUNDER_EMAIL } from '../data/vipTokens';
 
 export type SlotStreamStatus = 'PENDING' | 'SYNTHESIZING_4K' | 'DONE' | 'QUEUED' | 'ERROR';
@@ -1286,11 +1293,21 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         {activeSubmission && (
           <section
             id="user-dossier-card"
-            className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-950/30 via-black to-black border border-amber-500/40 shadow-2xl space-y-6"
+            className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-950/40 via-[#050a14]/85 to-cyan-950/35 backdrop-blur-xl border border-amber-500/45 shadow-[0_12px_45px_rgba(0,0,0,0.6),0_0_30px_rgba(245,158,11,0.18)] space-y-6"
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  {isPioneerPlanet(activeSubmission) && (
+                    <span className="text-[10px] font-mono px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500/30 via-yellow-500/25 to-amber-600/30 text-amber-200 border border-amber-300/70 font-extrabold uppercase flex items-center gap-1.5 shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+                      <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
+                      <span>
+                        {isFoundingPioneerPlanet(activeSubmission)
+                          ? '👑 FOUNDING PIONEER · #01'
+                          : activeSubmission.pioneerBadge || '⚡ PIONEER 2027'}
+                      </span>
+                    </span>
+                  )}
                   <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-400/40 font-bold uppercase flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3 text-amber-400" />
                     <span>ONE-SHOT CLAIMED · LOCKED TO ACCOUNT</span>
@@ -1349,7 +1366,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
             {/* Lore and Specs */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 p-5 rounded-2xl bg-[#070b16] border border-white/10 space-y-2">
+              <div className="lg:col-span-2 p-5 rounded-2xl bg-[#070b16]/90 backdrop-blur-md border border-white/10 space-y-2">
                 <span className="text-[10.5px] font-mono text-amber-300 font-bold uppercase">
                   REGISTERED PLANETARY LORE
                 </span>
@@ -1358,7 +1375,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-black/60 border border-white/10 space-y-3">
+              <div className="p-5 rounded-2xl bg-[#050914]/90 backdrop-blur-md border border-white/10 space-y-3">
                 <span className="text-[10.5px] font-mono text-cyan-300 font-bold uppercase block">
                   TECHNICAL SPECIFICATIONS
                 </span>
@@ -1373,7 +1390,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                   </div>
                   <div>
                     <span className="text-white/40 block text-[10px]">VOTES RECORDED:</span>
-                    <span className="text-amber-400 font-bold text-sm">{activeSubmission.votesCount} Ballots</span>
+                    <span className="bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent font-black text-base drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
+                      {activeSubmission.votesCount} Ballots
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1396,113 +1415,140 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               </p>
             </div>
 
-            <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/30 font-bold shrink-0 self-start sm:self-auto">
-              {allSubmissions.length} Registered Worlds
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-mono text-amber-300 bg-amber-950/60 px-3 py-1 rounded-full border border-amber-400/50 font-extrabold shadow-[0_0_12px_rgba(251,191,36,0.25)]">
+                ⚡ {allSubmissions.filter((s) => isPioneerPlanet(s)).length} Pioneer Worlds
+              </span>
+              <span className="text-xs font-mono text-emerald-300 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/40 font-extrabold shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                {allSubmissions.length} Registered Worlds
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedSubmissions.map((sub, idx) => (
-              <div
-                key={sub.id}
-                className="rounded-2xl overflow-hidden bg-[#070b16] border border-white/15 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
-              >
-                <div>
-                  <div
-                    onClick={() => {
-                      soundManager.playTone(660, 0.05);
-                      setModalPlanet(sub);
-                    }}
-                    className="relative h-48 w-full overflow-hidden bg-black/90 cursor-pointer"
-                  >
-                    <img
-                      src={sub.renders.hero}
-                      alt={sub.planetName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/40">
-                      RANK #{idx + 1}
-                    </div>
-                    <div className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-black/80 backdrop-blur-md text-cyan-300 border border-cyan-400/40">
-                      {sub.votesCount} VOTES
-                    </div>
-                  </div>
-
-                  <div className="p-4 sm:p-5 space-y-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3
-                        onClick={() => {
-                          soundManager.playTone(660, 0.05);
-                          setModalPlanet(sub);
-                        }}
-                        className="text-base font-display font-bold text-white truncate cursor-pointer hover:text-amber-400 transition-colors"
-                      >
-                        {sub.planetName}
-                      </h3>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-xs font-mono text-white/60">
-                      <div className={`w-5 h-5 rounded-full bg-gradient-to-tr ${sub.authorAvatarGradient || 'from-cyan-400 to-indigo-600'} flex items-center justify-center font-bold text-[9px] text-black`}>
-                        {sub.authorName.slice(0, 1)}
+            {sortedSubmissions.map((sub, idx) => {
+              const isFounder = isFoundingPioneerPlanet(sub);
+              const isPioneer = isPioneerPlanet(sub);
+              return (
+                <div
+                  key={sub.id}
+                  className={`rounded-2xl overflow-hidden bg-gradient-to-br from-cyan-950/40 via-[#060c18]/85 to-[#040812]/90 backdrop-blur-xl border transition-all duration-300 flex flex-col justify-between shadow-[0_10px_32px_rgba(0,0,0,0.5)] group ${
+                    isFounder
+                      ? 'border-amber-400/60 hover:border-amber-300 shadow-[0_10px_36px_rgba(0,0,0,0.55),0_0_25px_rgba(245,158,11,0.2)]'
+                      : 'border-cyan-500/30 hover:border-amber-400/50'
+                  }`}
+                >
+                  <div>
+                    <div
+                      onClick={() => {
+                        soundManager.playTone(660, 0.05);
+                        setModalPlanet(sub);
+                      }}
+                      className="relative h-48 w-full overflow-hidden bg-black/90 cursor-pointer"
+                    >
+                      <img
+                        src={sub.renders.hero}
+                        alt={sub.planetName}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-[#050914]/90 backdrop-blur-md border border-amber-400/60 shadow-[0_0_14px_rgba(251,191,36,0.4)]">
+                        <span className="bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent">
+                          RANK #{idx + 1}
+                        </span>
                       </div>
-                      <span className="truncate">By {sub.authorName}</span>
+                      <div className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-[#050914]/90 backdrop-blur-md border border-cyan-400/60 shadow-[0_0_14px_rgba(34,211,238,0.4)]">
+                        <span className="bg-gradient-to-b from-cyan-100 via-cyan-300 to-sky-400 bg-clip-text text-transparent">
+                          ★ {sub.votesCount} VOTES
+                        </span>
+                      </div>
+                      {isPioneer && (
+                        <div className="absolute bottom-2.5 left-3 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-extrabold bg-gradient-to-r from-amber-500/85 via-yellow-400/90 to-amber-500/85 text-black border border-amber-200/80 shadow-[0_0_14px_rgba(251,191,36,0.6)] uppercase tracking-wider">
+                          {isFounder ? '👑 FOUNDING PIONEER · #01' : '⚡ PIONEER 2027'}
+                        </div>
+                      )}
                     </div>
 
-                    <p className="text-xs text-white/70 font-sans line-clamp-3 leading-relaxed">
-                      {sub.futurePromise || sub.generatedLore}
-                    </p>
+                    <div className="p-4 sm:p-5 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3
+                          onClick={() => {
+                            soundManager.playTone(660, 0.05);
+                            setModalPlanet(sub);
+                          }}
+                          className="text-base font-display font-bold text-white truncate cursor-pointer hover:text-amber-400 transition-colors"
+                        >
+                          {sub.planetName}
+                        </h3>
+                      </div>
 
-                    <div className="pt-2 flex flex-wrap gap-1.5">
-                      <span className="px-2 py-0.5 rounded text-[9.5px] font-mono bg-white/5 text-white/60">
-                        {sub.atmosphere.split('&')[0].trim()}
-                      </span>
-                      <span className="px-2 py-0.5 rounded text-[9.5px] font-mono bg-white/5 text-white/60">
-                        {sub.landmark.split('(')[0].trim()}
-                      </span>
+                      <div className="flex items-center gap-2 text-xs font-mono text-white/60">
+                        <div className={`w-5 h-5 rounded-full bg-gradient-to-tr ${sub.authorAvatarGradient || 'from-cyan-400 to-indigo-600'} flex items-center justify-center font-bold text-[9px] text-black`}>
+                          {sub.authorName.slice(0, 1)}
+                        </div>
+                        <span className="truncate">By {sub.authorName}</span>
+                        {isFounder && (
+                          <span className="px-1.5 py-0.2 rounded text-[8.5px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                            FOUNDER
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-white/70 font-sans line-clamp-3 leading-relaxed">
+                        {sub.futurePromise || sub.generatedLore}
+                      </p>
+
+                      <div className="pt-2 flex flex-wrap gap-1.5">
+                        <span className="px-2 py-0.5 rounded text-[9.5px] font-mono bg-white/5 text-white/60">
+                          {sub.atmosphere.split('&')[0].trim()}
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[9.5px] font-mono bg-white/5 text-white/60">
+                          {sub.landmark.split('(')[0].trim()}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="p-4 border-t border-white/10 flex items-center justify-between gap-2 bg-[#050812]">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      soundManager.playTone(660, 0.05);
-                      setModalPlanet(sub);
-                    }}
-                    className="min-h-[44px] px-3 py-2 rounded-xl bg-white/5 hover:bg-cyan-950/60 border border-white/10 hover:border-cyan-400/40 text-white/80 hover:text-cyan-300 text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                    title="View 5-Photo Dossier"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>Dossier</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleVoteSubmission(sub.id)}
-                    className={`min-h-[44px] flex-1 px-3 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      sub.hasVoted
-                        ? 'bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                        : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10'
-                    }`}
-                  >
-                    <ThumbsUp className={`w-3.5 h-3.5 ${sub.hasVoted ? 'fill-black' : ''}`} />
-                    <span>{sub.hasVoted ? 'Voted' : 'Vote for World'}</span>
-                  </button>
-
-                  {onNavigateToCreator && (
+                  <div className="p-4 border-t border-white/10 flex items-center justify-between gap-2 bg-[#050812]/90">
                     <button
                       type="button"
-                      onClick={() => onNavigateToCreator(sub.authorUsername)}
-                      className="min-h-[44px] px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-cyan-300 transition-colors cursor-pointer text-xs font-mono"
-                      title="View Creator"
+                      onClick={() => {
+                        soundManager.playTone(660, 0.05);
+                        setModalPlanet(sub);
+                      }}
+                      className="min-h-[44px] px-3 py-2 rounded-xl bg-white/5 hover:bg-cyan-950/60 border border-white/10 hover:border-cyan-400/40 text-white/80 hover:text-cyan-300 text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      title="View 5-Photo Dossier"
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>Dossier</span>
                     </button>
-                  )}
+
+                    <button
+                      type="button"
+                      onClick={() => handleVoteSubmission(sub.id)}
+                      className={`min-h-[44px] flex-1 px-3 py-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        sub.hasVoted
+                          ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-[0_0_16px_rgba(245,158,11,0.4)]'
+                          : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      <ThumbsUp className={`w-3.5 h-3.5 ${sub.hasVoted ? 'fill-black' : ''}`} />
+                      <span>{sub.hasVoted ? 'Voted' : 'Vote for World'}</span>
+                    </button>
+
+                    {onNavigateToCreator && (
+                      <button
+                        type="button"
+                        onClick={() => onNavigateToCreator(sub.authorUsername)}
+                        className="min-h-[44px] px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-cyan-300 transition-colors cursor-pointer text-xs font-mono"
+                        title="View Creator"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       </main>

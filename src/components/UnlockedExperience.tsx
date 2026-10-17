@@ -60,6 +60,7 @@ import {
   subscribeToPlanetSubmissions,
 } from '../data/contest';
 import { getUserStatusConfig } from '../utils/statusPill';
+import { isFoundingPioneerPlanet, isPioneerPlanet, isPreLaunch } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { MyWorld } from './MyWorld';
 import {
@@ -201,21 +202,36 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);
   const [isCopiedDossierLink, setIsCopiedDossierLink] = useState(false);
 
+  const [allCommunityPlanets, setAllCommunityPlanets] = useState<PlanetSubmission[]>(() =>
+    getStoredPlanetSubmissions().sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0))
+  );
+
   useEffect(() => {
     const userId = user?.id || profile?.id;
-    const email = user?.email;
+    const email = user?.email || profile?.email;
     if (userId || email) {
       fetchUserContestSubmission(userId, email).then((sub) => {
         if (sub) {
           setUserDossier(sub);
+        } else if (email && isFounderEmail(email.toLowerCase().trim())) {
+          const amlemi = getStoredPlanetSubmissions().find(
+            (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+          );
+          if (amlemi) setUserDossier(amlemi);
         }
       });
+    } else {
+      const amlemi = getStoredPlanetSubmissions().find(
+        (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+      );
+      if (amlemi && typeof window !== 'undefined') {
+        const storedToken = localStorage.getItem('akinoya_patron_token') || sessionStorage.getItem('akinoya_patron_token');
+        if (storedToken === FOUNDING_PASS_ID) {
+          setUserDossier(amlemi);
+        }
+      }
     }
-  }, [user?.id, profile?.id, user?.email]);
-
-  const [allCommunityPlanets, setAllCommunityPlanets] = useState<PlanetSubmission[]>(() =>
-    getStoredPlanetSubmissions().sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0))
-  );
+  }, [user?.id, profile?.id, user?.email, profile?.email]);
 
   useEffect(() => {
     fetchPlanetSubmissions(user?.id, user?.email).then((fresh) => {
@@ -907,12 +923,29 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <ShieldCheck className="w-5 h-5 text-cyan-400" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0 mb-0.5">
               <span className="text-[10px] sm:text-xs font-mono text-cyan-400 font-semibold tracking-wider shrink-0">PORTAL ACTIVE</span>
               <span className="text-white/30 text-xs">·</span>
               <span className="text-[10px] sm:text-xs text-white/70 font-mono truncate">
                 {isVipMode && holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
               </span>
+              {(isOdiUser || isMaster || isPreLaunch()) && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-600/25 border border-amber-400/60 text-amber-200 text-[9px] sm:text-[10px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(251,191,36,0.35)] shrink-0">
+                  <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
+                  <span>{isOdiUser || isMaster ? 'FOUNDING PIONEER · #01' : 'PIONEER 2027'}</span>
+                </span>
+              )}
+              {(userDossier || isOdiUser || isMaster) && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('my-world')}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-400/45 text-cyan-200 hover:text-white text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase shadow-[0_0_10px_rgba(34,211,238,0.25)] transition-all cursor-pointer shrink-0"
+                  title="Inspect Bound Planetary Profile"
+                >
+                  <Globe2 className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                  <span>PLANET: {(userDossier?.planetName || 'ÄMLEMI').toUpperCase()}</span>
+                </button>
+              )}
             </div>
             <h2 className="text-sm sm:text-base lg:text-lg font-display font-bold text-white tracking-wide break-words drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
               {isVipMode && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
@@ -1217,16 +1250,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 </div>
                               </div>
 
-                              {/* Bulleted Value Triggers with Glowing Cyan/Gold Checkmarks */}
+                              {/* Bulleted Value Triggers with Exquisite Luminous Gold Checkmarks */}
                               <ul className="space-y-2 mb-4 text-[11px] sm:text-xs text-white/85 font-sans">
                                 {perk.bullets.map((b, idx) => (
                                   <li key={idx} className="flex items-start gap-2.5 group/item">
                                     <span
-                                      className={`inline-flex items-center justify-center w-4 h-4 rounded-full border text-[10px] font-extrabold shrink-0 mt-0.5 transition-all duration-300 ${
-                                        idx % 2 === 0
-                                          ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.4)] drop-shadow-[0_0_6px_rgba(34,211,238,0.85)] group-hover:border-cyan-300'
-                                          : 'bg-amber-500/20 border-amber-400/50 text-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.4)] drop-shadow-[0_0_6px_rgba(251,191,36,0.85)] group-hover:border-amber-300'
-                                      }`}
+                                      className="inline-flex items-center justify-center w-4 h-4 rounded-full border text-[10px] font-extrabold shrink-0 mt-0.5 transition-all duration-300 bg-gradient-to-br from-amber-400/25 via-yellow-500/20 to-amber-600/25 border-amber-400/70 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.5)] drop-shadow-[0_0_6px_rgba(251,191,36,0.95)] group-hover:border-amber-300 group-hover:shadow-[0_0_16px_rgba(251,191,36,0.75)]"
                                     >
                                       ✓
                                     </span>
@@ -1950,21 +1979,33 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               ) : (
                 /* Active state: User's synthesized planet dossier */
                 <div className="space-y-6">
-                  {/* Top Sector Dossier Header Banner */}
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/80 via-black/80 to-[#070b14] border border-amber-500/40 p-5 sm:p-6 shadow-[0_0_35px_rgba(245,158,11,0.2)]">
-                    <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                  {/* Top Sector Dossier Header Banner — Glassmorphic with Pioneer Badging */}
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/60 via-[#050a14]/80 to-cyan-950/45 backdrop-blur-xl border border-amber-500/45 p-5 sm:p-6 shadow-[0_0_35px_rgba(245,158,11,0.22),inset_0_1px_1px_rgba(255,255,255,0.1)]">
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/12 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4 relative z-10">
                       <div className="flex items-center gap-2">
-                        <span className="p-1.5 rounded-lg bg-amber-400 text-black shrink-0">
+                        <span className="p-1.5 rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 text-black shrink-0 shadow-[0_0_12px_rgba(251,191,36,0.5)]">
                           <Globe2 className="w-4 h-4" />
                         </span>
-                        <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-amber-300">
+                        <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
                           My Synthesized Sector · Dossier Active
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 flex-wrap">
+                        {isPioneerPlanet(userDossier) && (
+                          <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-gradient-to-r from-amber-500/30 via-yellow-500/25 to-amber-600/30 text-amber-200 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_16px_rgba(251,191,36,0.4)]">
+                            <Sparkles className="w-3 h-3 text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
+                            <span>
+                              {isFoundingPioneerPlanet(userDossier)
+                                ? 'FOUNDING PIONEER · #01 · ODI SELIS'
+                                : userDossier.pioneerBadge || 'PIONEER 2027 · PRE-RELEASE'}
+                            </span>
+                          </span>
+                        )}
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-400/40 flex items-center gap-1.5">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                           <span>GOLDEN TICKET EXPENDED · ONE-SHOT LOCKED</span>
@@ -1979,12 +2020,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
                       <div className="min-w-0">
                         <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap min-w-0">
-                          <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-wide truncate">
+                          <h2 className="text-xl sm:text-2xl font-display font-black text-white tracking-wide truncate drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
                             {userDossier.planetName}
                           </h2>
+                          <span className="px-2.5 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-mono text-[10px] font-bold tracking-wider uppercase">
+                            {userDossier.sectorId || 'SECTOR AKN-01'}
+                          </span>
                         </div>
-                        <p className="text-xs font-mono text-white/60 mt-1">
-                          Synthesized by {userDossier.authorName} ({userDossier.authorEmail || user?.email || 'Verified Account'})
+                        <p className="text-xs font-mono text-white/70 mt-1">
+                          Synthesized by <strong className="text-amber-300">{userDossier.authorName}</strong> ({userDossier.authorEmail || user?.email || 'Verified Account'})
                         </p>
                       </div>
 
@@ -1992,7 +2036,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         <button
                           type="button"
                           onClick={handleShareDossier}
-                          className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                          className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/15 font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer min-h-[42px]"
                         >
                           {isCopiedDossierLink ? (
                             <>
@@ -2013,7 +2057,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             soundManager.playTone(660, 0.05);
                             setSelectedDossierModal(userDossier);
                           }}
-                          className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono text-xs font-bold shadow-[0_0_20px_rgba(245,158,11,0.3)] flex items-center gap-2 transition-all cursor-pointer"
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono text-xs font-bold shadow-[0_0_20px_rgba(245,158,11,0.35)] flex items-center gap-2 transition-all cursor-pointer min-h-[42px]"
                         >
                           <Camera className="w-3.5 h-3.5" />
                           <span>Inspect 5-Photo Dossier</span>
@@ -2023,29 +2067,30 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
 
-                  {/* 3 Live Social Engagement Metric Cards */}
+                  {/* 3 Live Social Engagement Metric Cards — Glassmorphism & Luminous Metallic Numbers */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
                     {/* Metric 1: Likes / Votes Count */}
-                    <div className="p-4 sm:p-5 rounded-2xl bg-[#0a0e1a]/90 backdrop-blur-md border border-white/15 flex items-center justify-between gap-3 shadow-lg">
-                      <div>
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/75 block">
+                    <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-950/35 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-amber-400/35 hover:border-amber-300/60 flex items-center justify-between gap-3 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(245,158,11,0.12)] transition-all">
+                      <div className="absolute -top-8 -right-8 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+                      <div className="relative z-10">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-amber-200/80 font-bold block">
                           Community Votes
                         </span>
                         <div className="flex items-baseline gap-2 mt-1">
-                          <span className="text-2xl sm:text-3xl font-display font-extrabold text-amber-400">
+                          <span className="text-2xl sm:text-3xl font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(251,191,36,0.6)]">
                             {userDossier.votesCount}
                           </span>
-                          <span className="text-xs font-mono text-white/50">total votes</span>
+                          <span className="text-[11px] font-mono text-amber-200/60 uppercase tracking-wider">votes</span>
                         </div>
                       </div>
 
                       <button
                         type="button"
                         onClick={handleVoteUserDossier}
-                        className={`p-3 rounded-xl font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                        className={`relative z-10 p-3 rounded-xl font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer min-h-[42px] ${
                           userDossier.hasVoted
-                            ? 'bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
-                            : 'bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10'
+                            ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.45)]'
+                            : 'bg-amber-950/50 hover:bg-amber-900/60 text-amber-200 hover:text-white border border-amber-400/40'
                         }`}
                         title="Cast Vote"
                       >
@@ -2055,45 +2100,47 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
 
                     {/* Metric 2: Leaderboard Position */}
-                    <div className="p-4 sm:p-5 rounded-2xl bg-[#0a0e1a]/90 backdrop-blur-md border border-white/15 flex items-center justify-between gap-3 shadow-lg">
-                      <div>
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/75 block">
+                    <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-cyan-950/40 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-cyan-400/35 hover:border-cyan-300/60 flex items-center justify-between gap-3 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(34,211,238,0.12)] transition-all">
+                      <div className="absolute -top-8 -right-8 w-24 h-24 bg-cyan-400/10 rounded-full blur-2xl pointer-events-none" />
+                      <div className="relative z-10">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-200/80 font-bold block">
                           Leaderboard Position
                         </span>
                         <div className="flex items-baseline gap-2 mt-1">
-                          <span className="text-2xl sm:text-3xl font-display font-extrabold text-cyan-400">
+                          <span className="text-2xl sm:text-3xl font-display font-black bg-gradient-to-b from-cyan-100 via-cyan-300 to-sky-400 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.65)]">
                             #{planetRank > 0 ? planetRank : 1}
                           </span>
-                          <span className="text-xs font-mono text-white/50">on Group's Favorites</span>
+                          <span className="text-[11px] font-mono text-cyan-200/60">Group&apos;s Favorites</span>
                         </div>
                       </div>
 
                       <a
                         href="/community"
-                        className="px-3 py-2 rounded-xl bg-cyan-950/50 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-500/30 font-mono text-xs transition-colors flex items-center gap-1"
+                        className="relative z-10 px-3 py-2 rounded-xl bg-cyan-950/70 hover:bg-cyan-900/80 text-cyan-200 border border-cyan-400/40 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-[0_0_12px_rgba(34,211,238,0.2)]"
                       >
-                        <Trophy className="w-3.5 h-3.5" />
+                        <Trophy className="w-3.5 h-3.5 text-amber-400" />
                         <span>Board</span>
                       </a>
                     </div>
 
-                    {/* Metric 3: Lore Governance Status */}
-                    <div className="p-4 sm:p-5 rounded-2xl bg-[#0a0e1a]/90 backdrop-blur-md border border-white/15 flex items-center justify-between gap-3 shadow-lg">
-                      <div>
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/75 block">
-                          Lore Governance Council
+                    {/* Metric 3: Lore Governance & Pioneer Status */}
+                    <div className="relative overflow-hidden p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-950/35 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-emerald-400/35 hover:border-emerald-300/60 flex items-center justify-between gap-3 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(16,185,129,0.12)] transition-all">
+                      <div className="absolute -top-8 -right-8 w-24 h-24 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+                      <div className="relative z-10">
+                        <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-200/80 font-bold block">
+                          Pioneer &amp; Lore Status
                         </span>
-                        <div className="flex items-baseline gap-1 mt-1">
-                          <span className="text-base sm:text-lg font-display font-bold text-emerald-400">
-                            Active Candidate
+                        <div className="flex items-baseline gap-1.5 mt-1">
+                          <span className="text-base sm:text-lg font-display font-extrabold text-emerald-300 drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]">
+                            {isFoundingPioneerPlanet(userDossier) ? 'Founding Benchmark' : 'Pioneer Candidate'}
                           </span>
                         </div>
-                        <span className="text-[10px] font-mono text-white/40 block mt-0.5">
+                        <span className="text-[10px] font-mono text-white/50 block mt-0.5">
                           Voting Closes: June 30, 2027
                         </span>
                       </div>
 
-                      <div className="w-10 h-10 rounded-xl bg-emerald-950/60 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shrink-0">
+                      <div className="relative z-10 w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
                         <Vote className="w-5 h-5" />
                       </div>
                     </div>
@@ -2110,17 +2157,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   />
 
                   {/* Story & Philosophy Creed */}
-                  <div className="p-5 sm:p-6 rounded-2xl bg-[#0a0e1a]/95 backdrop-blur-md border border-white/15 space-y-3 shadow-xl">
+                  <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#060c18]/85 to-[#040812]/90 backdrop-blur-xl border border-cyan-500/25 space-y-3 shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                      <Sparkles className="w-4 h-4 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
                       <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
-                        Archival Lore & Philosophical Creed
+                        Archival Lore &amp; Philosophical Creed
                       </h3>
                     </div>
 
                     {userDossier.futurePromise && (
-                      <blockquote className="p-3.5 rounded-xl bg-slate-950/90 border border-amber-400/30 border-l-4 border-l-amber-400 text-xs sm:text-sm text-amber-100 font-sans italic leading-relaxed">
-                        "{userDossier.futurePromise}"
+                      <blockquote className="p-3.5 rounded-xl bg-slate-950/90 border border-amber-400/35 border-l-4 border-l-amber-400 text-xs sm:text-sm text-amber-100 font-sans italic leading-relaxed shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+                        &ldquo;{userDossier.futurePromise}&rdquo;
                       </blockquote>
                     )}
 
