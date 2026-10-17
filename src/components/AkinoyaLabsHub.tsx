@@ -934,10 +934,11 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             decoding="async"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover/banner:scale-105 opacity-85 group-hover/banner:opacity-100"
                           />
-                          <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                          {/* Desktop-Only Image Gradient & Overlays (Hidden on Mobile & iPad <1280px to keep photography 100% clean) */}
+                          <div className="hidden xl:block absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
 
-                          {/* Top Overlay Badges (Hidden on mobile < md to keep render 100% clean & unobscured) */}
-                          <div className="hidden md:flex absolute top-4 left-4 right-4 items-center justify-between gap-2">
+                          {/* Top Overlay Badges (Desktop Only >= 1280px) */}
+                          <div className="hidden xl:flex absolute top-4 left-4 right-4 items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <span className="px-2.5 py-1 rounded-lg bg-cyan-400 text-black font-mono font-extrabold text-xs tracking-wider shadow-md">
                                 STAGE {stage.stageNumber}
@@ -960,8 +961,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             )}
                           </div>
 
-                          {/* Bottom Overlay Title & Action Indicator (Hidden on mobile < md) */}
-                          <div className="hidden md:flex absolute bottom-4 left-4 right-4 items-end justify-between">
+                          {/* Bottom Overlay Title & Action Indicator (Desktop Only >= 1280px) */}
+                          <div className="hidden xl:flex absolute bottom-4 left-4 right-4 items-end justify-between">
                             <div className="space-y-0.5 max-w-[80%]">
                               <span className="text-[10px] font-mono text-cyan-300/80 uppercase tracking-wider">
                                 {stage.timeframe}
@@ -979,8 +980,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
                         {/* Card Body Brief */}
                         <div className="p-4 sm:p-5 space-y-3">
-                          {/* Mobile-Only Header Block (Positioned neatly below visual container) */}
-                          <div className="md:hidden space-y-1.5 pb-2 border-b border-white/10">
+                          {/* Mobile & iPad Header Block (Positioned neatly below visual container on < 1280px) */}
+                          <div className="xl:hidden space-y-1.5 pb-2 border-b border-white/10">
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex items-center gap-1.5">
                                 <span className="px-2 py-0.5 rounded bg-cyan-400 text-black font-mono font-extrabold text-[10px] tracking-wider shadow-sm">
@@ -1023,13 +1024,13 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                               const folderId = VAULT_STAGE_FOLDER_IDS[stage.stageNumber] || 'folder-01';
                               if (onNavigateToVault) onNavigateToVault(folderId);
                             }}
-                            className="pt-2 border-t border-white/10 flex items-center justify-between text-xs font-mono cursor-pointer hover:text-cyan-300 transition-colors"
+                            className="pt-2 border-t border-white/10 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 text-xs font-mono cursor-pointer hover:text-cyan-300 transition-colors min-w-0"
                           >
-                            <span className="text-cyan-300 font-semibold flex items-center gap-1.5 truncate mr-2">
+                            <span className="text-cyan-300 font-semibold flex items-center gap-1.5 truncate min-w-0 flex-1 mr-1">
                               <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                              📁 Vault Folder: {stage.vaultFolderMapping}
+                              <span className="truncate">📁 Vault: {stage.vaultFolderMapping}</span>
                             </span>
-                            <span className="text-white/70 hover:text-cyan-400 underline shrink-0 font-bold">
+                            <span className="text-white/70 hover:text-cyan-400 underline shrink-0 font-bold whitespace-nowrap">
                               VIEW ASSET VAULT →
                             </span>
                           </div>
@@ -1078,7 +1079,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         </div>
 
                         {/* Milestone Card Action Buttons */}
-                        <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                        <div className="flex flex-col xs:flex-row sm:flex-col lg:flex-row items-stretch sm:items-stretch lg:items-center gap-2 pt-1 w-full min-w-0">
                           <button
                             type="button"
                             onClick={() => {
@@ -1086,25 +1087,25 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                               const folderId = VAULT_STAGE_FOLDER_IDS[stage.stageNumber] || 'folder-01';
                               if (onNavigateToVault) onNavigateToVault(folderId);
                             }}
-                            className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(0,242,254,0.3)]"
+                            className="flex-1 min-w-0 py-2.5 px-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(0,242,254,0.3)] whitespace-nowrap overflow-hidden"
                           >
-                            <FolderOpen className="w-3.5 h-3.5" />
-                            <span>VIEW ASSET VAULT →</span>
+                            <FolderOpen className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">VIEW ASSET VAULT →</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleOpenStageModal(stage)}
-                            className="w-full sm:w-auto py-2.5 px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="shrink-0 py-2.5 px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white font-mono text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
                           >
                             {isStageLocked ? (
                               <>
-                                <Lock className="w-3.5 h-3.5 text-amber-400" />
+                                <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                                 <span>Inspect Stage</span>
                               </>
                             ) : (
                               <>
                                 <span>Inspect Stage</span>
-                                <ChevronRight className="w-3.5 h-3.5" />
+                                <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                               </>
                             )}
                           </button>
@@ -1230,7 +1231,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                   alt={selectedStageForModal.heroImageAlt}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-5">
+                {/* Desktop-Only Image Gradient & Title Overlay (Hidden on Mobile & iPad <1280px) */}
+                <div className="hidden xl:flex absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent items-end p-5">
                   <div className="space-y-1 w-full">
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300">
                       BESPOKE GEMINI / IMAGEN 3 PIPELINE VISUAL
@@ -1249,6 +1251,16 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                   <Maximize2 className="w-3.5 h-3.5 text-cyan-300" />
                   <span>Expand Visual</span>
                 </button>
+              </div>
+
+              {/* Mobile & iPad Header Block (Clean Visual Below Imagery for < 1280px) */}
+              <div className="xl:hidden p-4 rounded-2xl bg-black/60 border border-white/10 space-y-1.5">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300">
+                  STAGE {selectedStageForModal.stageNumber} · {selectedStageForModal.tag}
+                </span>
+                <h2 className="text-lg sm:text-xl font-display font-extrabold text-white">
+                  {selectedStageForModal.title}
+                </h2>
               </div>
 
               {/* Mill's Dialogue Banner inside Modal */}

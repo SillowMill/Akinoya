@@ -52,11 +52,30 @@ import moodboardImg from '../assets/images/Mood.png';
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME, BINGAA_COVER_URL, BINGAA_COVER_FILENAME } from '../utils/certificate';
 import { useAuth } from '../context/AuthContext';
 import { AuthHeaderButton } from './AuthHeaderButton';
-import { CreatorLeaderboard } from './CreatorLeaderboard';
-import { LoreGovernancePortal } from './LoreGovernancePortal';
-import { AkinoyaLabsHub } from './AkinoyaLabsHub';
-import { DriveFolderVault } from './DriveFolderVault';
-import { WelcomeVisionPortal } from './WelcomeVisionPortal';
+const CreatorLeaderboard = React.lazy(() =>
+  import('./CreatorLeaderboard').then((m) => ({ default: m.CreatorLeaderboard }))
+);
+const LoreGovernancePortal = React.lazy(() =>
+  import('./LoreGovernancePortal').then((m) => ({ default: m.LoreGovernancePortal }))
+);
+const AkinoyaLabsHub = React.lazy(() =>
+  import('./AkinoyaLabsHub').then((m) => ({ default: m.AkinoyaLabsHub }))
+);
+const DriveFolderVault = React.lazy(() =>
+  import('./DriveFolderVault').then((m) => ({ default: m.DriveFolderVault }))
+);
+const WelcomeVisionPortal = React.lazy(() =>
+  import('./WelcomeVisionPortal').then((m) => ({ default: m.WelcomeVisionPortal }))
+);
+
+const HubModuleLoading: React.FC<{ label?: string }> = ({ label = 'LOADING MODULE...' }) => (
+  <div className="flex flex-col items-center justify-center p-12 space-y-3 min-h-[300px]">
+    <div className="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shadow-[0_0_12px_rgba(0,242,254,0.3)]" />
+    <span className="text-xs font-mono text-cyan-300 tracking-wider uppercase animate-pulse">
+      {label}
+    </span>
+  </div>
+);
 import { getStoredCreators } from '../data/creators';
 import { openClaimWorldModal, isPostLaunch, openMembershipGateModal, hasPaidMembership } from '../utils/pioneer';
 import { VAULT_STAGE_FOLDER_IDS, VAULT_STAGE_NAMES, getVaultFolderIdForStage } from '../utils/drive';
@@ -1227,7 +1246,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               {/* ======================================================== */}
               {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION (>= 768px)   */}
               {/* ======================================================== */}
-              <aside className="hub-sidebar hidden md:flex w-64 lg:w-72 shrink-0 flex-col bg-[#050812] border-r border-white/10 sticky self-start z-40 overflow-hidden">
+              <aside
+                className="hub-sidebar hidden md:flex w-64 lg:w-72 shrink-0 flex-col bg-[#050812] border-r border-white/10 sticky self-start z-40 overflow-hidden transform-gpu"
+                style={{ contain: 'layout style', WebkitTransform: 'translateZ(0)' }}
+              >
                 <div className="hub-sidebar-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 space-y-6">
                 <div className="space-y-4">
                   {/* Sidebar Branding Header */}
@@ -1379,7 +1401,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               </aside>
 
               {/* Main Content Viewport */}
-              <main className="relative z-0 isolate flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8">
+              <main
+                className="relative z-0 isolate flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8"
+                style={{ contain: 'layout' }}
+              >
                 {/* ======================================================== */}
                 {/* SECTION 0: 00 · WELCOME & VISION PORTAL (PRIMARY LANDING)*/}
                 {/* ======================================================== */}
@@ -1391,14 +1416,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     exit={{ opacity: 0, y: -12 }}
                     className="space-y-6"
                   >
-                    <WelcomeVisionPortal
-                      isMember={userHasAnnual}
-                      onNavigateToWorkflows={() => handleSwitchSection('workflows')}
-                      onNavigateToVault={() => handleNavigateToVault('root')}
-                      onNavigateToDiscussion={() => handleSwitchSection('discussion')}
-                      onNavigateToLeaderboard={() => handleSwitchSection('creators')}
-                      onOpenAuthModal={() => openAuthModal('signin')}
-                    />
+                    <React.Suspense fallback={<HubModuleLoading label="INITIALIZING VISION PORTAL..." />}>
+                      <WelcomeVisionPortal
+                        isMember={userHasAnnual}
+                        onNavigateToWorkflows={() => handleSwitchSection('workflows')}
+                        onNavigateToVault={() => handleNavigateToVault('root')}
+                        onNavigateToDiscussion={() => handleSwitchSection('discussion')}
+                        onNavigateToLeaderboard={() => handleSwitchSection('creators')}
+                        onOpenAuthModal={() => openAuthModal('signin')}
+                      />
+                    </React.Suspense>
                   </motion.div>
                 )}
 
@@ -1413,14 +1440,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     exit={{ opacity: 0, y: -12 }}
                     className="space-y-6"
                   >
-                    <AkinoyaLabsHub
-                      isMember={userHasAnnual}
-                      onOpenAuthModal={() => openAuthModal('signin')}
-                      onNavigateVerify={() => {
-                        window.location.href = '/verify';
-                      }}
-                      onNavigateToVault={handleNavigateToVault}
-                    />
+                    <React.Suspense fallback={<HubModuleLoading label="LOADING WORKFLOW LABS..." />}>
+                      <AkinoyaLabsHub
+                        isMember={userHasAnnual}
+                        onOpenAuthModal={() => openAuthModal('signin')}
+                        onNavigateVerify={() => {
+                          window.location.href = '/verify';
+                        }}
+                        onNavigateToVault={handleNavigateToVault}
+                      />
+                    </React.Suspense>
                   </motion.div>
                 )}
 
@@ -1435,11 +1464,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     exit={{ opacity: 0, y: -12 }}
                     className="space-y-6"
                   >
-                    <DriveFolderVault
-                      isMember={userHasAnnual}
-                      initialFolderId={targetVaultFolderId}
-                      onOpenAuthModal={() => openAuthModal('signin')}
-                    />
+                    <React.Suspense fallback={<HubModuleLoading label="INITIALIZING DRIVE VAULT..." />}>
+                      <DriveFolderVault
+                        isMember={userHasAnnual}
+                        initialFolderId={targetVaultFolderId}
+                        onOpenAuthModal={() => openAuthModal('signin')}
+                      />
+                    </React.Suspense>
                   </motion.div>
                 )}
 
@@ -2217,7 +2248,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             </div>
 
             <div className="w-full">
-              <CreatorLeaderboard />
+              <React.Suspense fallback={<HubModuleLoading label="COMPUTING LEADERBOARDS..." />}>
+                <CreatorLeaderboard />
+              </React.Suspense>
             </div>
           </motion.div>
         )}
@@ -2233,20 +2266,22 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             exit={{ opacity: 0, y: -12 }}
             className="space-y-6"
           >
-            <LoreGovernancePortal
-              onNavigateToContest={() => {
-                window.location.href = '/contest';
-              }}
-              onOpenCreator={(u) => {
-                setSelectedCreatorUsername(u);
-                setActiveSection('creators');
-                if (onOpenCreator) onOpenCreator(u);
-              }}
-              onOpenUpgradeModal={(reason) => {
-                setUpgradeModalReason(reason);
-                setIsUpgradeModalOpen(true);
-              }}
-            />
+            <React.Suspense fallback={<HubModuleLoading label="LOADING GOVERNANCE PORTAL..." />}>
+              <LoreGovernancePortal
+                onNavigateToContest={() => {
+                  window.location.href = '/contest';
+                }}
+                onOpenCreator={(u) => {
+                  setSelectedCreatorUsername(u);
+                  setActiveSection('creators');
+                  if (onOpenCreator) onOpenCreator(u);
+                }}
+                onOpenUpgradeModal={(reason) => {
+                  setUpgradeModalReason(reason);
+                  setIsUpgradeModalOpen(true);
+                }}
+              />
+            </React.Suspense>
           </motion.div>
         )}
       </main>

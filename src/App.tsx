@@ -16,7 +16,9 @@ import { KycVerification } from './components/KycVerification';
 import { CheckoutSuccess } from './components/CheckoutSuccess';
 import { NfcHudToast } from './components/NfcHudToast';
 import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerification';
-import { CommunityHub } from './components/CommunityHub';
+const CommunityHub = React.lazy(() =>
+  import('./components/CommunityHub').then((m) => ({ default: m.CommunityHub }))
+);
 import { CreatorPortfolioView } from './components/CreatorPortfolioView';
 import { ContestLaunchpad } from './components/ContestLaunchpad';
 import { GalaxyNavigator } from './components/GalaxyNavigator';
@@ -452,13 +454,24 @@ export default function App() {
           </div>
         ) : route === 'community' ? (
           <div className="relative z-20 flex-1 w-full flex flex-col">
-            <CommunityHub
-              onBackToHome={() => navigateTo('home', '/')}
-              onOpenCreator={(u) => {
-                setCreatorUsername(u);
-                navigateTo('creators', `/creators/${u}`);
-              }}
-            />
+            <React.Suspense
+              fallback={
+                <div className="flex-1 w-full flex flex-col items-center justify-center p-12 space-y-3 min-h-[60vh]">
+                  <div className="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" />
+                  <span className="text-xs font-mono text-cyan-300 tracking-wider uppercase animate-pulse">
+                    LOADING COMMUNITY HUB...
+                  </span>
+                </div>
+              }
+            >
+              <CommunityHub
+                onBackToHome={() => navigateTo('home', '/')}
+                onOpenCreator={(u) => {
+                  setCreatorUsername(u);
+                  navigateTo('creators', `/creators/${u}`);
+                }}
+              />
+            </React.Suspense>
           </div>
         ) : route === 'privacy' ? (
           <div className="relative z-20 flex-1 w-full">

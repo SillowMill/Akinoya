@@ -22,6 +22,7 @@ import {
   copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
+import { useDynamicWorldVideo } from './WorldStoryVerificationBadge';
 
 const SLOT_CODES = ['01_main', '02_flora', '03_fauna', '04_atmo', '05_lore'];
 const SLOT_LABELS = ['01 Main', '02 Botanical', '03 Exotic', '04 Atmo', '05 Lore'];
@@ -66,7 +67,9 @@ export const MyWorld: React.FC<MyWorldProps> = ({
       setTimeout(() => setIsCopiedGalaxyLink(false), 2200);
     }
   };
+  const dynamicVideo = useDynamicWorldVideo(dossier);
   const videoUrl =
+    dynamicVideo.videoUrl ||
     dossier.videoUrl ||
     dossier.renders?.videoUrl ||
     dossier.renders?.video_url ||

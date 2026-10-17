@@ -938,7 +938,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <ShieldCheck className="w-5 h-5 text-cyan-400" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0 mb-0.5">
+            <h2 className="text-base sm:text-lg lg:text-xl font-display font-bold text-white tracking-wide break-words drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] mb-1.5">
+              {isVipMode && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
+            </h2>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
               <span className="text-[10px] sm:text-xs font-mono text-cyan-400 font-semibold tracking-wider shrink-0">PORTAL ACTIVE</span>
               <span className="text-white/30 text-xs">·</span>
               <span className="text-[10px] sm:text-xs text-white/70 font-mono truncate">
@@ -960,9 +963,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 <span>PLANET: {(userDossier?.planetName || 'ÄMLEMI').toUpperCase()}</span>
               </button>
             </div>
-            <h2 className="text-sm sm:text-base lg:text-lg font-display font-bold text-white tracking-wide break-words drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
-              {isVipMode && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
-            </h2>
           </div>
         </div>
 
