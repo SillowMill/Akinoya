@@ -898,33 +898,35 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 py-6 sm:py-8 lg:py-10"
     >
-      {/* Top Status & Lock Control (Mobile & iPad Portrait friendly wrapping) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 bg-[#060a14] border border-white/15 rounded-2xl p-4 sm:px-5 lg:px-8 lg:py-5 shadow-xl">
-        <div className="flex items-center gap-3 min-w-0 flex-1 max-w-full">
-          <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
+      {/* Top Status & Lock Control — Translucent Glassmorphism matching the Visualizer Hub Showcase Widget */}
+      <div className="relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:px-5 lg:px-8 lg:py-5 shadow-[0_0_30px_rgba(56,189,248,0.15)]">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex items-center gap-3 min-w-0 flex-1 max-w-full">
+          <div className="w-10 h-10 rounded-xl bg-cyan-950/80 backdrop-blur-md border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
             <ShieldCheck className="w-5 h-5 text-cyan-400" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[10px] sm:text-xs font-mono text-cyan-400 tracking-wider shrink-0">PORTAL ACTIVE</span>
+              <span className="text-[10px] sm:text-xs font-mono text-cyan-400 font-semibold tracking-wider shrink-0">PORTAL ACTIVE</span>
               <span className="text-white/30 text-xs">·</span>
-              <span className="text-[10px] sm:text-xs text-white/60 font-mono truncate">
+              <span className="text-[10px] sm:text-xs text-white/70 font-mono truncate">
                 {isVipMode && holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
               </span>
             </div>
-            <h2 className="text-sm sm:text-base lg:text-lg font-display font-bold text-white tracking-wide break-words">
+            <h2 className="text-sm sm:text-base lg:text-lg font-display font-bold text-white tracking-wide break-words drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
               {isVipMode && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
             </h2>
           </div>
         </div>
 
         {/* Action buttons (Touch targets >= 44px) */}
-        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap shrink-0">
+        <div className="relative z-10 flex items-center gap-2 w-full sm:w-auto flex-wrap shrink-0">
           {onNavigateToGalaxy && (
             <button
               type="button"
               onClick={() => onNavigateToGalaxy()}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2 text-xs font-mono font-bold text-cyan-200 hover:text-white bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2 text-xs font-mono font-bold text-cyan-200 hover:text-white bg-cyan-950/80 hover:bg-cyan-900/90 backdrop-blur-md border border-cyan-400/40 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
             >
               <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin shrink-0" style={{ animationDuration: '24s' }} />
               <span className="truncate tracking-wide">Galaxy Navigator</span>
@@ -933,7 +935,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
           <button
             onClick={() => onToggleViewMode(currentViewMode === 'orbit' ? 'surface' : 'orbit')}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2 text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/60 border border-cyan-800/40 rounded-xl transition-all cursor-pointer min-h-[44px]"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2 text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/60 hover:bg-cyan-950/85 backdrop-blur-md border border-cyan-500/35 rounded-xl transition-all cursor-pointer min-h-[44px]"
           >
             {currentViewMode === 'orbit' ? (
               <>
