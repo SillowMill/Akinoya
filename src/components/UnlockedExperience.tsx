@@ -893,13 +893,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 py-6 sm:py-8 lg:py-10"
     >
-      {/* Top Status & Lock Control (Mobile friendly wrapping) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 bg-[#060a14] border border-white/15 rounded-2xl p-4 sm:px-6 lg:px-8 lg:py-5 shadow-xl">
-        <div className="flex items-center gap-3 min-w-0 max-w-full">
+      {/* Top Status & Lock Control (Mobile & iPad Portrait friendly wrapping) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8 bg-[#060a14] border border-white/15 rounded-2xl p-4 sm:px-5 lg:px-8 lg:py-5 shadow-xl">
+        <div className="flex items-center gap-3 min-w-0 flex-1 max-w-full">
           <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
             <ShieldCheck className="w-5 h-5 text-cyan-400" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-[10px] sm:text-xs font-mono text-cyan-400 tracking-wider shrink-0">PORTAL ACTIVE</span>
               <span className="text-white/30 text-xs">·</span>
@@ -907,14 +907,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 {isVipMode && holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
               </span>
             </div>
-            <h2 className="text-sm sm:text-lg font-display font-bold text-white tracking-wide break-words">
+            <h2 className="text-sm sm:text-base lg:text-lg font-display font-bold text-white tracking-wide break-words">
               {isVipMode && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
             </h2>
           </div>
         </div>
 
         {/* Action buttons (Touch targets >= 44px) */}
-        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap shrink-0">
           {onNavigateToGalaxy && (
             <button
               type="button"
@@ -1404,15 +1404,35 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           {activeTab === 'edition' && (
             <div className="space-y-4 lg:space-y-6">
               <div className="bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-7 lg:p-8 xl:p-9 relative overflow-hidden shadow-xl">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+                {/* Ambient Twinkling White Stars Across Product Showcase Container (CSS-Only, GPU-Composited) */}
+                <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="bingaa-twinkle-star absolute top-5 right-8 w-3 h-3 text-white/85"
+                    style={{ '--twinkle-duration': '3.8s', '--twinkle-delay': '0.3s' } as React.CSSProperties}
+                  >
+                    <path d="M12 1L14.1 9.9L23 12L14.1 14.1L12 23L9.9 14.1L1 12L9.9 9.9L12 1Z" fill="currentColor" />
+                  </svg>
+                  <span
+                    className="bingaa-twinkle-star bingaa-twinkle-star-extra absolute top-14 right-24 w-1.5 h-1.5 rounded-full bg-white/80"
+                    style={{ '--twinkle-duration': '4.4s', '--twinkle-delay': '1.5s' } as React.CSSProperties}
+                  />
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="bingaa-twinkle-star bingaa-twinkle-star-extra absolute bottom-6 right-12 w-2.5 h-2.5 text-white/75"
+                    style={{ '--twinkle-duration': '4.1s', '--twinkle-delay': '2.2s' } as React.CSSProperties}
+                  >
+                    <path d="M12 1L14.1 9.9L23 12L14.1 14.1L12 23L9.9 14.1L1 12L9.9 9.9L12 1Z" fill="currentColor" />
+                  </svg>
+                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-center">
-                  {/* Left: Dedicated Comic Cover Showcase with Isolated Artwork & Custom Widgets */}
-                  <div className="lg:col-span-5 flex flex-col items-center w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[300px] xl:max-w-[330px] mx-auto space-y-3">
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-center">
+                  {/* Left: Dedicated Comic Cover Showcase with Isolated Artwork, Twinkling White Star Accents & Custom Widgets */}
+                  <div className="lg:col-span-5 relative flex flex-col items-center w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[300px] xl:max-w-[330px] mx-auto space-y-3">
                     {/* Top Information Widget (Above Artwork) */}
-                    <div className="w-full bg-[#050505]/90 backdrop-blur-md border border-cyan-500/30 rounded-xl px-3.5 py-2.5 flex items-center justify-between shadow-[0_0_15px_rgba(56,189,248,0.12)]">
-                      <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono font-semibold text-cyan-300">
-                        <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <div className="w-full bg-[#050505] border border-white/15 rounded-xl px-3.5 py-2.5 flex items-center justify-between shadow-md">
+                      <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono font-semibold text-white/90">
+                        <Sparkles className="w-3.5 h-3.5 text-white/80 shrink-0" />
                         <span>FIRST EDITION · ISSUE #01</span>
                       </div>
                       <span className="text-[9px] font-mono tracking-widest uppercase text-white/50 border border-white/10 px-1.5 py-0.5 rounded bg-white/5">
@@ -1420,35 +1440,92 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </span>
                     </div>
 
-                    {/* Central Cover Art: Clean Graphic Novel Cover with interactive reader trigger */}
-                    <button
-                      type="button"
-                      onClick={() => setShowComicReader(true)}
-                      className="relative group w-full aspect-[3/4] rounded-2xl overflow-hidden border-2 border-cyan-500/40 shadow-[0_0_35px_rgba(56,189,248,0.25)] bg-[#050505] transition-transform duration-500 hover:scale-[1.02] cursor-pointer text-left block"
-                      aria-label="Open Bingäa comic reader"
-                    >
-                      <img
-                        src={BINGAA_COVER_URL}
-                        alt="Sillow Mill — Bingäa (Collector's Graphic Novel) Cover"
-                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                      />
-
-                      {/* Subtle bioluminescent glossy sheen overlay (clean ambient lighting only) */}
-                      <div className="absolute inset-0 bg-gradient-to-tr from-cyan-950/20 via-transparent to-white/10 pointer-events-none" />
-                      <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
-
-                      {/* Hover action prompt overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3 px-2">
-                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/90 border border-cyan-400/50 text-[11px] font-mono font-semibold text-cyan-200 shadow-[0_0_12px_rgba(56,189,248,0.3)]">
-                          <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>{isVipMode && bingaaCertificate ? 'Read Full Comic' : 'Read 2-Page Preview'}</span>
-                        </span>
+                    {/* Central Cover Art Wrapper with Subtle Twinkling White Star Constellation */}
+                    <div className="relative w-full">
+                      {/* Lightweight CSS-only twinkling white stars around the Bingää comic book cover */}
+                      <div className="absolute -inset-3 sm:-inset-4 pointer-events-none select-none z-20" aria-hidden="true">
+                        {/* Top-left 4-point white star */}
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="bingaa-twinkle-star absolute -top-1.5 -left-1.5 w-3.5 h-3.5 text-white"
+                          style={{ '--twinkle-duration': '3.4s', '--twinkle-delay': '0s' } as React.CSSProperties}
+                        >
+                          <path d="M12 1L14.2 9.8L23 12L14.2 14.2L12 23L9.8 14.2L1 12L9.8 9.8L12 1Z" fill="currentColor" />
+                        </svg>
+                        {/* Top-right 4-point white star */}
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="bingaa-twinkle-star absolute -top-2 right-3 w-3 h-3 text-white/90"
+                          style={{ '--twinkle-duration': '4.0s', '--twinkle-delay': '1.1s' } as React.CSSProperties}
+                        >
+                          <path d="M12 1L14.2 9.8L23 12L14.2 14.2L12 23L9.8 14.2L1 12L9.8 9.8L12 1Z" fill="currentColor" />
+                        </svg>
+                        {/* Mid-left pinpoint starlight */}
+                        <span
+                          className="bingaa-twinkle-star absolute top-1/3 -left-2 w-1.5 h-1.5 rounded-full bg-white"
+                          style={{ '--twinkle-duration': '3.2s', '--twinkle-delay': '0.7s' } as React.CSSProperties}
+                        />
+                        {/* Mid-right 4-point white star */}
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="bingaa-twinkle-star absolute top-1/2 -right-2.5 w-3.5 h-3.5 text-white"
+                          style={{ '--twinkle-duration': '3.7s', '--twinkle-delay': '1.8s' } as React.CSSProperties}
+                        >
+                          <path d="M12 1L14.2 9.8L23 12L14.2 14.2L12 23L9.8 14.2L1 12L9.8 9.8L12 1Z" fill="currentColor" />
+                        </svg>
+                        {/* Upper-right pinpoint starlight (auto-scales down on lite devices) */}
+                        <span
+                          className="bingaa-twinkle-star bingaa-twinkle-star-extra absolute top-1/4 -right-1.5 w-1.5 h-1.5 rounded-full bg-white/85"
+                          style={{ '--twinkle-duration': '4.3s', '--twinkle-delay': '0.4s' } as React.CSSProperties}
+                        />
+                        {/* Lower-left 4-point white star */}
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="bingaa-twinkle-star absolute bottom-8 -left-2.5 w-3 h-3 text-white/90"
+                          style={{ '--twinkle-duration': '4.2s', '--twinkle-delay': '2.4s' } as React.CSSProperties}
+                        >
+                          <path d="M12 1L14.2 9.8L23 12L14.2 14.2L12 23L9.8 14.2L1 12L9.8 9.8L12 1Z" fill="currentColor" />
+                        </svg>
+                        {/* Bottom-right pinpoint starlight */}
+                        <span
+                          className="bingaa-twinkle-star bingaa-twinkle-star-extra absolute -bottom-1.5 right-4 w-1.5 h-1.5 rounded-full bg-white/90"
+                          style={{ '--twinkle-duration': '3.6s', '--twinkle-delay': '1.4s' } as React.CSSProperties}
+                        />
+                        {/* Bottom-left pinpoint starlight */}
+                        <span
+                          className="bingaa-twinkle-star bingaa-twinkle-star-extra absolute -bottom-1 left-6 w-1 h-1 rounded-full bg-white/80"
+                          style={{ '--twinkle-duration': '3.9s', '--twinkle-delay': '2.0s' } as React.CSSProperties}
+                        />
                       </div>
-                    </button>
+
+                      {/* Central Cover Art: Clean Graphic Novel Cover with interactive reader trigger */}
+                      <button
+                        type="button"
+                        onClick={() => setShowComicReader(true)}
+                        className="relative group w-full aspect-[3/4] rounded-2xl overflow-hidden border border-white/20 shadow-[0_14px_40px_rgba(0,0,0,0.85)] bg-[#050505] transition-transform duration-500 hover:scale-[1.02] cursor-pointer text-left block"
+                        aria-label="Open Bingäa comic reader"
+                      >
+                        <img
+                          src={BINGAA_COVER_URL}
+                          alt="Sillow Mill — Bingäa (Collector's Graphic Novel) Cover"
+                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                        />
+
+                        <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
+
+                        {/* Hover action prompt overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3 px-2">
+                          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#060a14] border border-white/25 text-[11px] font-mono font-semibold text-white shadow-lg">
+                            <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+                            <span>{isVipMode && bingaaCertificate ? 'Read Full Comic' : 'Read 2-Page Preview'}</span>
+                          </span>
+                        </div>
+                      </button>
+                    </div>
 
                     {/* Bottom Information Widget (Below Artwork) */}
-                    <div className="w-full bg-[#050505]/90 backdrop-blur-md border border-cyan-500/30 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-[10px] sm:text-[11px] font-mono shadow-[0_0_15px_rgba(56,189,248,0.12)]">
-                      <span className="flex items-center gap-1.5 text-cyan-300 font-medium">
+                    <div className="w-full bg-[#050505] border border-white/15 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-[10px] sm:text-[11px] font-mono shadow-md">
+                      <span className="flex items-center gap-1.5 text-white/90 font-medium">
                         <QrCode className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                         <span>QR VERIFIED PHYSICAL DROP</span>
                       </span>
@@ -2472,9 +2549,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               transition={{ duration: 0.25 }}
               className="relative w-full max-w-xl md:max-w-2xl bg-[#070b12] border border-cyan-500/40 rounded-2xl p-5 sm:p-7 lg:p-8 shadow-[0_0_60px_rgba(56,189,248,0.25)] overflow-hidden my-6 mb-12 sm:mb-6"
             >
-              {/* Background ambient glow */}
-              <div className="absolute top-0 right-0 w-44 h-44 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
               <button
                 onClick={handleResetCheckout}
                 className="absolute top-4 right-4 p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer z-10"

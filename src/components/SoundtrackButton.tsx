@@ -22,7 +22,7 @@ export const SoundtrackButton: React.FC = () => {
       type="button"
       aria-label={isPlaying ? 'Pause Sillow Mill - Bingäa' : 'Play Sillow Mill - Bingäa'}
       title={isPlaying ? 'Pause Soundtrack: Sillow Mill - Bingäa' : 'Play Soundtrack: Sillow Mill - Bingäa'}
-      className={`group relative flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-mono transition-all duration-300 cursor-pointer select-none shrink-0 min-h-[44px] sm:min-h-[48px] ${
+      className={`group relative flex items-center justify-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-xl border text-[11px] lg:text-xs font-mono transition-all duration-300 cursor-pointer select-none shrink-0 min-h-[40px] sm:min-h-[42px] lg:min-h-[46px] ${
         isPlaying
           ? 'bg-cyan-950/80 border-cyan-400/60 text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.35)]'
           : 'bg-black/50 hover:bg-black/80 border-white/20 hover:border-cyan-400/50 text-white/80 hover:text-cyan-200 shadow-md hover:shadow-[0_0_12px_rgba(103,232,249,0.2)]'
@@ -41,13 +41,13 @@ export const SoundtrackButton: React.FC = () => {
         )}
       </div>
 
-      {/* Track Label — hidden on mobile (<sm) to prevent any header overflow */}
+      {/* Track Label — compact on iPad portrait (md) so header navigation never clips */}
       <div className="hidden sm:flex items-center gap-1.5 overflow-hidden min-w-0">
-        <span className="font-medium tracking-wide truncate max-w-[140px]">
+        <span className="font-medium tracking-wide truncate max-w-[110px] lg:max-w-[140px]">
           Bingäa
         </span>
         <span
-          className={`text-[9.5px] uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 ${
+          className={`hidden xl:inline-block text-[9.5px] uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 ${
             isPlaying
               ? 'bg-cyan-400/20 text-cyan-300 border border-cyan-400/40'
               : 'bg-white/10 text-white/50 group-hover:bg-cyan-950 group-hover:text-cyan-300'

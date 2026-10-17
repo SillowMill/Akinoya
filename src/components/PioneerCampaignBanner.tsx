@@ -69,24 +69,24 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ on
       {/* Ambient background gold glow lines */}
       <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-transparent to-amber-500/10 pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-4">
+      <div className="relative max-w-7xl mx-auto flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-3 lg:gap-4">
         {/* Row 1 (mobile) / Left (desktop): beacon, badge, headline + mobile dismiss */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 md:justify-start">
+        <div className="flex items-center gap-2 sm:gap-2.5 lg:gap-3 min-w-0 flex-1 md:justify-start">
           <div className="relative shrink-0 flex items-center justify-center">
             <span className="absolute w-2.5 h-2.5 rounded-full bg-amber-400/40 animate-ping" />
             <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,1)]" />
           </div>
 
-          <div className="hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-950/80 border border-amber-500/40 text-amber-300 font-mono text-[10.5px] font-bold tracking-wider uppercase shrink-0 shadow-sm">
+          <div className="hidden lg:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-950/80 border border-amber-500/40 text-amber-300 font-mono text-[10.5px] font-bold tracking-wider uppercase shrink-0 shadow-sm">
             <Globe2 className="w-3 h-3 text-amber-400" />
             <span>[PIONEER-2027]</span>
           </div>
 
-          <p className="text-[11px] md:text-xs text-white/90 font-sans leading-tight min-w-0 flex-1 truncate md:whitespace-normal md:overflow-visible">
+          <p className="text-[11px] md:text-xs text-white/90 font-sans leading-tight min-w-0 flex-1 truncate xl:whitespace-normal xl:overflow-visible">
             <span className="font-semibold text-amber-300 font-mono tracking-wide">
               Create your free world before 09/01/2027.
             </span>{' '}
-            <span className="hidden md:inline text-white/75">
+            <span className="hidden xl:inline text-white/75">
               After launch, planetary claims and full community access require a paid membership (€60/year)!
             </span>
           </p>

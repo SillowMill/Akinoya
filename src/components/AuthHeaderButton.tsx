@@ -70,10 +70,10 @@ export const AuthHeaderButton: React.FC = () => {
       <button
         type="button"
         onClick={() => openAuthModal('signin')}
-        className="min-h-[48px] px-2.5 xs:px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:scale-[1.02] active:scale-[0.98] shrink-0"
+        className="min-h-[40px] sm:min-h-[42px] lg:min-h-[46px] px-2.5 xs:px-3 lg:px-4 py-1.5 lg:py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-[11px] lg:text-xs tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.35)] hover:scale-[1.02] active:scale-[0.98] shrink-0 whitespace-nowrap"
       >
         <User className="w-3.5 h-3.5 fill-black shrink-0" />
-        <span>SIGN IN<span className="hidden lg:inline"> / JOIN</span></span>
+        <span>SIGN IN<span className="hidden xl:inline"> / JOIN</span></span>
       </button>
     );
   }
@@ -196,27 +196,27 @@ export const AuthHeaderButton: React.FC = () => {
           setIsDropdownOpen(!isDropdownOpen);
           soundManager.playTone(600, 0.04);
         }}
-        className="min-h-[48px] px-2.5 sm:px-3 py-1.5 rounded-xl bg-black/60 hover:bg-black/80 border border-cyan-500/30 hover:border-cyan-400/60 transition-all cursor-pointer flex items-center gap-2 group shadow-lg"
+        className="min-h-[40px] sm:min-h-[42px] lg:min-h-[46px] px-2 sm:px-2.5 lg:px-3 py-1 lg:py-1.5 rounded-xl bg-black/60 hover:bg-black/80 border border-cyan-500/30 hover:border-cyan-400/60 transition-all cursor-pointer flex items-center gap-1.5 lg:gap-2 group shadow-lg"
       >
         {/* Avatar */}
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-400 to-indigo-600 flex items-center justify-center text-black font-mono font-bold text-xs shadow-[0_0_10px_rgba(56,189,248,0.3)] shrink-0">
+        <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-lg bg-gradient-to-tr from-cyan-400 to-indigo-600 flex items-center justify-center text-black font-mono font-bold text-xs shadow-[0_0_10px_rgba(56,189,248,0.3)] shrink-0">
           {displayName.charAt(0).toUpperCase()}
         </div>
 
-        {/* Greeting + Role Badge (Hidden on mobile <640px) */}
-        <div className="hidden sm:flex flex-col text-left">
-          <div className="text-[11px] font-sans font-semibold text-white group-hover:text-cyan-200 transition-colors leading-tight">
-            Welcome, {displayName}
+        {/* Greeting + Role Badge (Hidden on mobile <640px, compact on iPad portrait md) */}
+        <div className="hidden sm:flex flex-col text-left min-w-0">
+          <div className="text-[10.5px] lg:text-[11px] font-sans font-semibold text-white group-hover:text-cyan-200 transition-colors leading-tight truncate max-w-[90px] lg:max-w-[140px]">
+            <span className="hidden lg:inline">Welcome, </span>{displayName}
           </div>
           <div className="flex items-center gap-1 mt-0.5">
-            <span className={`text-[8.5px] font-mono px-1.5 py-0.2 rounded font-semibold uppercase ${roleBadge.className}`}>
+            <span className={`text-[8px] lg:text-[8.5px] font-mono px-1.5 py-0.2 rounded font-semibold uppercase truncate max-w-[96px] lg:max-w-none ${roleBadge.className}`}>
               {roleBadge.label}
             </span>
           </div>
         </div>
 
         <ChevronDown
-          className={`w-3.5 h-3.5 text-white/50 transition-transform duration-200 ${
+          className={`w-3.5 h-3.5 text-white/50 transition-transform duration-200 shrink-0 ${
             isDropdownOpen ? 'rotate-180 text-cyan-400' : ''
           }`}
         />

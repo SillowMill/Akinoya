@@ -839,12 +839,12 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             <button
               type="button"
               onClick={onNavigateToCommunity}
-              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px] sm:min-h-[40px]"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px] sm:min-h-[40px] whitespace-nowrap shrink-0"
               title="Lore Hub & Governance"
             >
               <Globe2 className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden md:inline">Lore Hub &amp; Governance</span>
-              <span className="md:hidden text-[11px] font-bold">Lore Hub</span>
+              <span className="hidden lg:inline">Lore Hub &amp; Governance</span>
+              <span className="lg:hidden text-[11px] font-bold">Lore Hub</span>
             </button>
           )}
 
