@@ -478,6 +478,8 @@ export async function registerPassHolder(
       await appendVipGuestRecordToSheets({
         timestamp: pass.registeredAt,
         email: pass.ownerEmail,
+        holderName: pass.ownerName,
+        passId: pass.normalizedId,
         founderPassStatus: isMaster ? 'Founder Pass (#0) - Active' : `Claimed (${pass.normalizedId})`,
         worldName: 'Unclaimed',
         role: isMaster ? 'CREATOR' : 'VIP_GUEST',

@@ -266,7 +266,7 @@ export function issueCertificate(passId, holderName, emailVerified = true, holde
 export async function handleCertificateAction(body = {}) {
   const action = body.action;
   const passId = normalizePassId(body.token || body.passId || body.id);
-  const email = normalizeEmail(body.email);
+  const email = normalizeEmail(body.email || body.ownerEmail || body.holderEmail);
 
   if (!isValidPassId(passId)) {
     return { status: 400, body: { success: false, error: 'INVALID_PASS', message: 'This Pass ID is not recognized.' } };
@@ -274,7 +274,16 @@ export async function handleCertificateAction(body = {}) {
 
   // Action: Send Card PIN to Email via Resend
   if (action === 'send-pin') {
-    const result = await sendEmailCardPin(passId, email, body.ownerName || body.holderName || body.name);
+    const rawName = sanitizeHolderName(body.ownerName || body.holderName || body.name);
+    const result = await sendEmailCardPin(passId, email, rawName);
+    if (result.success && isValidEmail(email)) {
+      try {
+        const { syncPassClaimToGoogleSheets } = await import('./_googleSheetsSync.js');
+        await syncPassClaimToGoogleSheets(passId, rawName || email.split('@')[0], email);
+      } catch (err) {
+        console.warn('[COA] Google Sheets sync notice on send-pin:', err);
+      }
+    }
     return { status: result.status, body: result };
   }
 
@@ -303,6 +312,13 @@ export async function handleCertificateAction(body = {}) {
     }
 
     const cert = issueCertificate(passId, holderName, Boolean(email), email);
+    try {
+      const { syncPassClaimToGoogleSheets } = await import('./_googleSheetsSync.js');
+      await syncPassClaimToGoogleSheets(passId, holderName, email);
+    } catch (err) {
+      console.warn('[COA] Google Sheets sync notice on certify:', err);
+    }
+
     return {
       status: 200,
       body: {

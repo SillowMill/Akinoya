@@ -15,7 +15,13 @@ import {
   isValidPassId,
 } from './nfcDnaService';
 import { handleCertificateAction } from '../../api/nfc/_certificateService.js';
-import { resetPassInGoogleSheets } from '../../api/nfc/_googleSheetsSync.js';
+import {
+  resetPassInGoogleSheets,
+  syncPassClaimToGoogleSheets,
+  syncSubscriberRowToGoogleSheets,
+  appendWhitelistEmailToGoogleSheets,
+  WHITELIST_SPREADSHEET_ID,
+} from '../../api/nfc/_googleSheetsSync.js';
 import {
   generatePlanetRenders,
   generateSectorImages,
@@ -310,6 +316,10 @@ apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<voi
     const baseUrl = req.headers?.origin || (host ? `${proto}://${host}` : 'https://www.sillowmill.com');
     const magicUrl = `${baseUrl}/verify/${token}?auth=magic&email=${encodeURIComponent(email)}`;
 
+    // Also synchronize magic-link VIP email to Google Sheets
+    const magicHolderName = ((body.ownerName || body.holderName || email.split('@')[0]) as string).trim();
+    syncPassClaimToGoogleSheets(token, magicHolderName, email).catch(() => {});
+
     if (!resendApiKey) {
       res.status(200).json({ success: true, message: `Magic link dispatched to ${email}.`, magicUrl, devMode: true });
       return;
@@ -345,13 +355,21 @@ apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<voi
   // Bingäa Certificate of Authenticity actions (Card PIN + optional email OTP)
   if (body.action === 'send-pin' || body.action === 'send-otp' || body.action === 'certify') {
     const result = await handleCertificateAction(body);
+    if (body.action === 'certify' && result.status === 200) {
+      const certPassId = (body.token || body.passId || body.id) as string;
+      const certName = (body.ownerName || body.holderName || body.name) as string;
+      const certEmail = (body.email || body.ownerEmail || body.holderEmail) as string | undefined;
+      if (certPassId && certName) {
+        await registerPassHolder(certPassId, certName, certEmail, body.deviceId).catch(() => {});
+      }
+    }
     res.status(result.status).json(result.body);
     return;
   }
 
   const token = (body.token || body.id) as string;
-  const ownerName = (body.ownerName || body.displayName) as string;
-  const ownerEmail = (body.ownerEmail || body.email) as string | undefined;
+  const ownerEmail = ((body.ownerEmail || body.email) as string | undefined)?.trim();
+  const ownerName = ((body.ownerName || body.displayName || body.holderName || (ownerEmail ? ownerEmail.split('@')[0] : '')) as string).trim();
   const deviceId = body.deviceId as string | undefined;
 
   if (!token) {
@@ -359,7 +377,7 @@ apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<voi
     return;
   }
 
-  if (!ownerName || !ownerName.trim()) {
+  if (!ownerName) {
     res.status(400).json({ success: false, error: 'MISSING_NAME', message: 'Owner name or handle is required' });
     return;
   }
@@ -396,8 +414,8 @@ apiRouter.all('/nfc/reset-pass', async (req: Request, res: Response): Promise<vo
   });
 });
 
-// ─── 7. Whitelist Subscription ────────────────────────────────────────────────
-apiRouter.post('/whitelist/subscribe', (req: Request, res: Response): void => {
+// ─── 7. Whitelist Subscription (Automated Google Sheets Capture) ─────────────
+apiRouter.post('/whitelist/subscribe', async (req: Request, res: Response): Promise<void> => {
   const rawEmail = ((req.body?.email as string) || '').trim().toLowerCase();
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(rawEmail);
 
@@ -406,10 +424,26 @@ apiRouter.post('/whitelist/subscribe', (req: Request, res: Response): void => {
     return;
   }
 
-  console.log(`[WHITELIST] Subscribed: ${rawEmail}`);
+  const source = ((req.body?.source as string) || 'Comic Preview Gate (Page 3 Lock)').trim();
+  const chapter = ((req.body?.chapter as string) || 'Bingäa Issue #1 — Chapter 2 Preview Gate').trim();
+  const notes = ((req.body?.notes as string) || 'Wave 2 Priority Notification & Early Access').trim();
+
+  console.log(`[WHITELIST] Subscribed: ${rawEmail} (${source})`);
+  const sheetSync = await appendWhitelistEmailToGoogleSheets({
+    email: rawEmail,
+    source,
+    chapter,
+    notes,
+    timestamp: new Date().toISOString(),
+  }).catch((err: any) => ({ success: false, error: err?.message }));
+
   res.status(200).json({
     success: true,
     email: rawEmail,
+    source,
+    chapter,
+    spreadsheetId: WHITELIST_SPREADSHEET_ID,
+    sheetSync,
     message: "You've been added to the Äkinoya Whitelist! You will receive priority notification for the next drop.",
   });
 });
@@ -513,6 +547,11 @@ apiRouter.all(['/vip/claim'], async (req: Request, res: Response): Promise<void>
     const holderName = ((req.body?.holderName || req.body?.ownerName || req.query?.holderName) as string) || '';
     const holderEmail = ((req.body?.holderEmail || req.body?.email || req.query?.email) as string) || '';
     const result = await claimVipTokenForUser(token, userId, holderName, holderEmail);
+    if (result.success && token) {
+      const resolvedName = holderName || (holderEmail ? holderEmail.split('@')[0] : 'Founding VIP Holder');
+      await registerPassHolder(token, resolvedName, holderEmail).catch(() => {});
+      await syncPassClaimToGoogleSheets(token, resolvedName, holderEmail).catch(() => {});
+    }
     res.status(result.success ? 200 : result.error?.includes('claimed') ? 403 : 400).json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'VIP claim failed' });
@@ -542,6 +581,20 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
       role,
       passCode,
     });
+    if (result.success && email) {
+      const fullName = [firstName, lastName].filter(Boolean).join(' ') || String(email).split('@')[0];
+      await syncSubscriberRowToGoogleSheets({
+        firstName: firstName || fullName,
+        lastName: lastName || '',
+        email,
+        role: result.profile?.role || role || 'FREE',
+        vipCode: result.profile?.vip_code_redeemed || passCode || 'N/A',
+        registrationDate: new Date().toISOString(),
+      }).catch(() => {});
+      if (passCode && String(passCode).trim()) {
+        await syncPassClaimToGoogleSheets(String(passCode).trim(), fullName, email).catch(() => {});
+      }
+    }
     res.status(result.success ? 200 : 400).json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'Registration failed' });

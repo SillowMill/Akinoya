@@ -110,12 +110,20 @@ export default async function handler(req, res) {
     // Support both direct client call and Supabase Webhook event structure (record/type)
     const record = payload.record || payload;
 
-    const firstName = String(record.first_name || record.firstName || '').trim();
-    const lastName = String(record.last_name || record.lastName || '').trim();
+    let firstName = String(record.first_name || record.firstName || '').trim();
+    let lastName = String(record.last_name || record.lastName || '').trim();
+    const rawFullName = String(record.fullName || record.full_name || record.holderName || record.ownerName || '').trim();
+    if (!firstName && rawFullName) {
+      const parts = rawFullName.split(/\s+/);
+      firstName = parts[0] || '';
+      lastName = parts.slice(1).join(' ');
+    }
+    const holderName = [firstName, lastName].filter(Boolean).join(' ') || rawFullName;
     const email = String(record.email || '').trim().toLowerCase();
     const isFounder = email === 'odi.selis3@gmail.com';
     let role = isFounder ? 'CREATOR' : String(record.role || 'FREE').trim().toUpperCase();
-    let vipCode = String(record.vip_code_redeemed || record.vipCode || '').trim() || 'N/A';
+    const rawVipCode = String(record.vip_code_redeemed || record.vipCode || record.passId || record.token || '').trim();
+    let vipCode = rawVipCode || 'N/A';
     const registrationDate = record.timestamp || record.created_at || new Date().toISOString();
     const isPioneer = new Date(registrationDate).getTime() < new Date('2027-01-09T00:00:00+01:00').getTime();
     const pioneerBadge = isPioneer ? '[PIONEER-2027]' : '';
@@ -172,10 +180,12 @@ export default async function handler(req, res) {
       });
     }
 
-    // 1. Append directly to VIP GUESTS tab with columns: [Timestamp, Email, Founder Pass Status, World Name, Role]
+    // 1. Synchronize directly to VIP GUESTS tab (updates pass row if Pass ID is present, or upserts/appends guest record)
     const vipGuestsResult = await appendVipGuestRecordToSheets({
       timestamp: registrationDate,
       email,
+      holderName,
+      passId: rawVipCode,
       founderPassStatus,
       worldName: claimedSector || (isFounder ? 'Ämlemi' : 'Unclaimed'),
       role: roleDisplay,

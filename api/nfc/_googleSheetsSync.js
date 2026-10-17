@@ -5,6 +5,9 @@ import crypto from 'crypto';
 export const SPREADSHEET_ID =
   process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '1gCYEDFNCZ2QlStvE2IuJiq4gUxrAJ08spaOvZM6Ke_0';
 
+export const WHITELIST_SPREADSHEET_ID =
+  process.env.GOOGLE_SHEETS_WHITELIST_SPREADSHEET_ID || '1SivG6Sh9mdr3_1b_YInB5JR2Ol_SiqNkw9GtITE6gnY';
+
 let _cachedAccessToken = null;
 let _tokenExpiresAt = 0;
 
@@ -91,6 +94,32 @@ function getOAuthCredentials() {
   let clientId = process.env.GOOGLE_SHEETS_CLIENT_ID;
   let clientSecret = process.env.GOOGLE_SHEETS_CLIENT_SECRET;
   let refreshToken = process.env.GOOGLE_SHEETS_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    const envFiles = [
+      path.resolve(process.cwd(), '.env.vercel'),
+      path.resolve(process.cwd(), '.env.production.local'),
+      path.resolve(process.cwd(), '.env.local'),
+      path.resolve(process.cwd(), '.env'),
+    ];
+    for (const envPath of envFiles) {
+      try {
+        if (fs.existsSync(envPath)) {
+          const content = fs.readFileSync(envPath, 'utf8');
+          for (const line of content.split(/\r?\n/)) {
+            const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+            if (!match) continue;
+            const key = match[1];
+            const val = match[2].replace(/^["']|["']$/g, '').trim();
+            if (key === 'GOOGLE_SHEETS_CLIENT_ID' && !clientId) clientId = val;
+            if (key === 'GOOGLE_SHEETS_CLIENT_SECRET' && !clientSecret) clientSecret = val;
+            if (key === 'GOOGLE_SHEETS_REFRESH_TOKEN' && !refreshToken) refreshToken = val;
+          }
+          if (clientId && clientSecret && refreshToken) break;
+        }
+      } catch {}
+    }
+  }
 
   if (!clientId || !clientSecret || !refreshToken) {
     const localTokenPaths = [
@@ -306,15 +335,24 @@ async function findPassRowInSheet(accessToken, tabName, rawPassId) {
 /**
  * Updates Column C (Holder Name), Column D (Holder Email), and Column F (Status)
  * for a claimed pass in Google Sheets, leaving Column E (NFC Target URL) and Column G (Notes) intact.
+ * Also synchronizes the holder into the Subscribers tab in real time.
  */
 export async function syncPassClaimToGoogleSheets(passId, holderName, holderEmail = '') {
   try {
     const cleanId = normalizePassIdForLookup(passId);
-    const cleanName = String(holderName || '').trim();
-    const cleanEmail = String(holderEmail || '').trim();
+    const cleanEmail = String(holderEmail || '').trim().toLowerCase();
+    const isMaster =
+      cleanId === 'AKN-VIP-2027-X0914' || cleanId === '0' || cleanEmail === 'odi.selis3@gmail.com';
+    const derivedName =
+      String(holderName || '').trim() ||
+      (isMaster
+        ? 'Odi Selis'
+        : cleanEmail && cleanEmail.includes('@')
+        ? cleanEmail.split('@')[0]
+        : 'Founding VIP Holder');
 
-    if (!cleanId || !cleanName) {
-      return { success: false, reason: 'MISSING_DATA' };
+    if (!cleanId) {
+      return { success: false, reason: 'MISSING_PASS_ID' };
     }
 
     const accessToken = await getAccessToken();
@@ -331,27 +369,31 @@ export async function syncPassClaimToGoogleSheets(passId, holderName, holderEmai
       return { success: false, reason: 'ROW_NOT_FOUND' };
     }
 
-    const isMaster =
-      cleanId === 'AKN-VIP-2027-X0914' || cleanId === '0' || targetRow === 2;
-    const statusVal = isMaster ? 'Active / Primary Key' : 'Active / Claimed';
+    const statusVal =
+      isMaster || targetRow === 2 ? 'Active / Primary Key' : 'Active / Claimed';
+
+    const dataUpdates = [
+      {
+        range: `'${vipTab}'!C${targetRow}`,
+        values: [[derivedName]],
+      },
+      {
+        range: `'${vipTab}'!F${targetRow}`,
+        values: [[statusVal]],
+      },
+    ];
+
+    if (cleanEmail) {
+      dataUpdates.push({
+        range: `'${vipTab}'!D${targetRow}`,
+        values: [[cleanEmail]],
+      });
+    }
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`;
     const payload = {
       valueInputOption: 'USER_ENTERED',
-      data: [
-        {
-          range: `'${vipTab}'!C${targetRow}`,
-          values: [[cleanName]],
-        },
-        {
-          range: `'${vipTab}'!D${targetRow}`,
-          values: [[cleanEmail || '']],
-        },
-        {
-          range: `'${vipTab}'!F${targetRow}`,
-          values: [[statusVal]],
-        },
-      ],
+      data: dataUpdates,
     };
 
     const res = await fetch(url, {
@@ -370,12 +412,28 @@ export async function syncPassClaimToGoogleSheets(passId, holderName, holderEmai
     }
 
     const resData = await res.json();
+
+    // Also synchronize into Subscribers tab when email is available
+    if (cleanEmail && cleanEmail.includes('@')) {
+      const nameParts = derivedName.split(/\s+/);
+      await syncSubscriberRowToGoogleSheets({
+        firstName: nameParts[0] || derivedName,
+        lastName: nameParts.slice(1).join(' '),
+        email: cleanEmail,
+        role: isMaster ? 'CREATOR [PIONEER-2027]' : 'VIP_GUEST [PIONEER-2027]',
+        vipCode: cleanId.startsWith('AKN-') ? cleanId : `AKN-VIP-2027-${cleanId}`,
+        registrationDate: new Date().toISOString(),
+      }).catch(() => {});
+    }
+
     return {
       success: true,
       row: targetRow,
       updatedCells: resData.totalUpdatedCells,
       tab: vipTab,
       passId: cleanId,
+      holderName: derivedName,
+      holderEmail: cleanEmail,
     };
   } catch (err) {
     console.warn('[Google Sheets] Exception during sheet sync:', err);
@@ -457,42 +515,120 @@ export async function resetPassInGoogleSheets(passId) {
 }
 
 /**
- * Appends a new record directly to the `VIP GUESTS` tab in Google Spreadsheet
- * 1gCYEDFNCZ2QlStvE2IuJiq4gUxrAJ08spaOvZM6Ke_0 with columns:
- * [Timestamp, Email, Founder Pass Status, World Name, Role]
+ * Synchronizes a VIP guest or registration record to the `VIP GUESTS` tab in
+ * Google Spreadsheet 1gCYEDFNCZ2QlStvE2IuJiq4gUxrAJ08spaOvZM6Ke_0.
+ * - If a specific Pass ID (e.g. AKN-VIP-2027-X001 .. X100 or X0914) is matched, updates
+ *   Columns C (Holder Name), D (Holder Email), and F (Status) on that edition row.
+ * - If the email already exists in Column D of VIP GUESTS, updates that row in place.
+ * - Otherwise appends a 7-column row aligned with the VIP GUESTS schema:
+ *   [Edition / Tier, Pass ID, Holder Name, Holder Email, Target URL / World, Status, Notes]
  */
 export async function appendVipGuestRecordToSheets({
-  timestamp,
-  email,
-  founderPassStatus,
-  worldName,
-  role,
-}) {
+  timestamp = '',
+  email = '',
+  holderName = '',
+  passId = '',
+  founderPassStatus = '',
+  worldName = '',
+  role = '',
+} = {}) {
   try {
     const cleanEmail = String(email || '').trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
       return { success: false, reason: 'INVALID_EMAIL' };
     }
 
+    const isFounder = cleanEmail === 'odi.selis3@gmail.com';
+    const cleanName =
+      String(holderName || '').trim() ||
+      (isFounder ? 'Odi Selis' : cleanEmail.split('@')[0]);
+
+    // Check if passId or founderPassStatus contains an explicit AKN-VIP pass code
+    let resolvedPassId = String(passId || '').trim().toUpperCase();
+    if (!resolvedPassId && founderPassStatus) {
+      const matchCode = String(founderPassStatus).match(/AKN-VIP-\d{4}-[A-Z]\d{3,4}/i);
+      if (matchCode) resolvedPassId = matchCode[0].toUpperCase();
+    }
+    if (isFounder && (!resolvedPassId || resolvedPassId === 'N/A')) {
+      resolvedPassId = 'AKN-VIP-2027-X0914';
+    }
+
+    if (resolvedPassId && resolvedPassId.startsWith('AKN-VIP-')) {
+      const claimSync = await syncPassClaimToGoogleSheets(resolvedPassId, cleanName, cleanEmail);
+      if (claimSync.success) {
+        return claimSync;
+      }
+    }
+
     const accessToken = await getAccessToken();
     if (!accessToken) {
-      console.warn('[Google Sheets] Skipped VIP GUESTS append: No access token available.');
+      console.warn('[Google Sheets] Skipped VIP GUESTS sync: No access token available.');
       return { success: false, reason: 'NO_TOKEN' };
     }
 
     const vipTab = await resolveVipTabName(accessToken);
-    const isFounder = cleanEmail === 'odi.selis3@gmail.com';
+
+    // Check if email already exists in Column D of VIP GUESTS to avoid duplicate rows
+    try {
+      const scanRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
+          `'${vipTab}'!A1:G200`
+        )}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (scanRes.ok) {
+        const scanData = await scanRes.json();
+        const rows = scanData.values || [];
+        for (let i = 1; i < rows.length; i++) {
+          const rowIndex = i + 1;
+          const colD = String(rows[i][3] || '').trim().toLowerCase();
+          const colB = String(rows[i][1] || '').trim().toLowerCase();
+          if (colD === cleanEmail || colB === cleanEmail) {
+            const statusText =
+              founderPassStatus || (isFounder ? 'Active / Primary Key' : 'Active / Registered');
+            await fetch(
+              `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`,
+              {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  valueInputOption: 'USER_ENTERED',
+                  data: [
+                    { range: `'${vipTab}'!C${rowIndex}`, values: [[cleanName]] },
+                    { range: `'${vipTab}'!D${rowIndex}`, values: [[cleanEmail]] },
+                    { range: `'${vipTab}'!F${rowIndex}`, values: [[statusText]] },
+                  ],
+                }),
+              }
+            );
+            return {
+              success: true,
+              action: 'updated_existing_row',
+              row: rowIndex,
+              tab: vipTab,
+            };
+          }
+        }
+      }
+    } catch (scanErr) {
+      console.warn('[Google Sheets] Notice scanning VIP GUESTS for existing email:', scanErr);
+    }
 
     const rowValues = [
-      timestamp || new Date().toISOString(),
+      role || (isFounder ? 'CREATOR' : 'VIP / PIONEER'),
+      resolvedPassId && resolvedPassId !== 'N/A' ? resolvedPassId : 'WHITELIST / PIONEER',
+      cleanName,
       cleanEmail,
-      founderPassStatus || (isFounder ? 'Founder Pass (#0) - Active' : 'Standard / Unclaimed'),
-      worldName || (isFounder ? 'Ämlemi' : 'Unclaimed'),
-      role || (isFounder ? 'CREATOR' : 'FREE'),
+      worldName && worldName !== 'Unclaimed' ? `SECTOR: ${worldName}` : 'https://www.sillowmill.com',
+      founderPassStatus || (isFounder ? 'Active / Primary Key' : 'Registered / Active'),
+      `Registered ${timestamp || new Date().toISOString()}`,
     ];
 
     const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
-      `'${vipTab}'!A:E`
+      `'${vipTab}'!A:G`
     )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
 
     const res = await fetch(appendUrl, {
@@ -524,4 +660,346 @@ export async function appendVipGuestRecordToSheets({
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Upserts a subscriber row into the `Subscribers` tab of SPREADSHEET_ID
+ * (1gCYEDFNCZ2QlStvE2IuJiq4gUxrAJ08spaOvZM6Ke_0).
+ */
+export async function syncSubscriberRowToGoogleSheets({
+  firstName = '',
+  lastName = '',
+  fullName = '',
+  email = '',
+  role = 'FREE',
+  vipCode = 'N/A',
+  claimedSector = '',
+  registrationDate = '',
+}) {
+  try {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return { success: false, reason: 'INVALID_EMAIL' };
+    }
+
+    const token = await getAccessToken();
+    if (!token) {
+      return { success: false, reason: 'NO_TOKEN' };
+    }
+
+    const isFounder = cleanEmail === 'odi.selis3@gmail.com';
+    let resolvedFirst = String(firstName || '').trim();
+    let resolvedLast = String(lastName || '').trim();
+    if (!resolvedFirst && fullName) {
+      const parts = String(fullName).trim().split(/\s+/);
+      resolvedFirst = parts[0] || '';
+      resolvedLast = parts.slice(1).join(' ');
+    }
+
+    const regDate = registrationDate || new Date().toISOString();
+    let roleDisplay = isFounder ? 'CREATOR [PIONEER-2027]' : String(role || 'FREE').trim().toUpperCase();
+    if (!roleDisplay.includes('PIONEER')) {
+      roleDisplay = `${roleDisplay} [PIONEER-2027]`;
+    }
+
+    let codeDisplay = isFounder ? 'AKN-VIP-2027-X0914' : String(vipCode || 'N/A').trim();
+    if (claimedSector && !codeDisplay.includes(claimedSector)) {
+      codeDisplay = codeDisplay && codeDisplay !== 'N/A' ? `${codeDisplay} · SECTOR: ${claimedSector}` : `SECTOR: ${claimedSector}`;
+    }
+
+    const tabName = 'Subscribers';
+    const getRes = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
+        `${tabName}!A:F`
+      )}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    let rows = [];
+    if (getRes.ok) {
+      const data = await getRes.json();
+      rows = data.values || [];
+    }
+
+    if (rows.length === 0) {
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
+          `${tabName}!A1:F1`
+        )}?valueInputOption=USER_ENTERED`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: [
+              [
+                'First Name',
+                'Last Name',
+                'Email Address',
+                'Role Status',
+                'VIP Code Used',
+                'Registration Date',
+              ],
+            ],
+          }),
+        }
+      );
+      rows = [['First Name', 'Last Name', 'Email Address', 'Role Status', 'VIP Code Used', 'Registration Date']];
+    }
+
+    let targetRowIndex = -1;
+    let existingRow = null;
+    for (let i = 1; i < rows.length; i++) {
+      const rEmail = String(rows[i]?.[2] || '').trim().toLowerCase();
+      if (rEmail === cleanEmail) {
+        targetRowIndex = i + 1;
+        existingRow = rows[i];
+        break;
+      }
+    }
+
+    if (targetRowIndex > 1 && existingRow) {
+      const updatedRow = [
+        resolvedFirst || existingRow[0] || (isFounder ? 'Odi' : 'Subscriber'),
+        resolvedLast || existingRow[1] || (isFounder ? 'Selis' : ''),
+        cleanEmail,
+        isFounder
+          ? 'CREATOR [PIONEER-2027]'
+          : existingRow[3] && existingRow[3].includes('VIP') && !roleDisplay.includes('VIP')
+          ? existingRow[3]
+          : roleDisplay,
+        isFounder
+          ? 'AKN-VIP-2027-X0914'
+          : codeDisplay && codeDisplay !== 'N/A'
+          ? codeDisplay
+          : existingRow[4] || 'N/A',
+        existingRow[5] || regDate,
+      ];
+
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
+          `${tabName}!A${targetRowIndex}:F${targetRowIndex}`
+        )}?valueInputOption=USER_ENTERED`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ values: [updatedRow] }),
+        }
+      );
+
+      return { success: true, action: 'updated', row: targetRowIndex, email: cleanEmail };
+    }
+
+    const newRow = [
+      resolvedFirst || (isFounder ? 'Odi' : 'Subscriber'),
+      resolvedLast || (isFounder ? 'Selis' : ''),
+      cleanEmail,
+      roleDisplay,
+      codeDisplay || 'N/A',
+      regDate,
+    ];
+
+    await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
+        `${tabName}!A:F`
+      )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ values: [newRow] }),
+      }
+    );
+
+    return { success: true, action: 'appended', email: cleanEmail };
+  } catch (err) {
+    console.warn('[Google Sheets] syncSubscriberRowToGoogleSheets notice:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Automated Whitelist & Comic Preview Email Capture:
+ * Pushes submitted whitelist / comic preview / Wave 2 notification emails directly to:
+ * 1) The dedicated Google Sheet in Google Drive (`WHITELIST_SPREADSHEET_ID`: 1SivG6Sh9mdr3_1b_YInB5JR2Ol_SiqNkw9GtITE6gnY, tab `Whitelist`)
+ * 2) The `Subscribers` tab of the main VIP spreadsheet (`SPREADSHEET_ID`: 1gCYEDFNCZ2QlStvE2IuJiq4gUxrAJ08spaOvZM6Ke_0)
+ * 3) Local durable JSON backup (`/tmp/sillow_whitelist.json` & `data/whitelist.json`)
+ */
+export async function appendWhitelistEmailToGoogleSheets({
+  email,
+  source = 'Comic Preview Gate (Page 3 Lock)',
+  chapter = 'Bingäa Issue #1 — Chapter 2 Preview Gate',
+  notes = 'Wave 2 Priority Notification & Early Access',
+  timestamp = '',
+}) {
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  const ts = timestamp || new Date().toISOString();
+
+  if (!cleanEmail || !cleanEmail.includes('@')) {
+    return { success: false, reason: 'INVALID_EMAIL' };
+  }
+
+  // 1. Persist locally for instant resilience
+  const entry = {
+    timestamp: ts,
+    email: cleanEmail,
+    source,
+    chapter,
+    status: 'Whitelisted — Wave 2 Priority',
+    notes,
+  };
+
+  for (const filePath of ['/tmp/sillow_whitelist.json', path.resolve(process.cwd(), 'data', 'whitelist.json')]) {
+    try {
+      const dir = path.dirname(filePath);
+      if (fs.existsSync(dir)) {
+        let list = [];
+        if (fs.existsSync(filePath)) {
+          try {
+            list = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            if (!Array.isArray(list)) list = [];
+          } catch {
+            list = [];
+          }
+        }
+        const existingIdx = list.findIndex((item) => String(item.email || '').toLowerCase() === cleanEmail);
+        if (existingIdx >= 0) {
+          list[existingIdx] = { ...list[existingIdx], ...entry, updatedAt: ts };
+        } else {
+          list.push(entry);
+        }
+        fs.writeFileSync(filePath, JSON.stringify(list, null, 2), 'utf8');
+      }
+    } catch {}
+  }
+
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.warn('[Google Sheets Whitelist] No access token available; saved locally.');
+      return { success: false, reason: 'NO_TOKEN', savedLocally: true };
+    }
+
+    // Resolve tab name in WHITELIST_SPREADSHEET_ID (defaults to 'Whitelist')
+    let whitelistTab = 'Whitelist';
+    try {
+      const metaRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${WHITELIST_SPREADSHEET_ID}?fields=sheets.properties.title`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (metaRes.ok) {
+        const meta = await metaRes.json();
+        const titles = (meta.sheets || []).map((s) => s.properties?.title);
+        if (titles.includes('Whitelist')) whitelistTab = 'Whitelist';
+        else if (titles[0]) whitelistTab = titles[0];
+      }
+    } catch {}
+
+    // Check existing rows in Whitelist sheet so we update in-place if the email already registered
+    let existingRowIdx = -1;
+    try {
+      const readRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${WHITELIST_SPREADSHEET_ID}/values/${encodeURIComponent(
+          `'${whitelistTab}'!A1:F500`
+        )}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (readRes.ok) {
+        const readData = await readRes.json();
+        const rows = readData.values || [];
+        if (rows.length === 0) {
+          await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${WHITELIST_SPREADSHEET_ID}/values/${encodeURIComponent(
+              `'${whitelistTab}'!A1:F1`
+            )}?valueInputOption=USER_ENTERED`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                values: [['Timestamp', 'Email Address', 'Source / Gate', 'Chapter / Drop', 'Wave Status', 'Notes']],
+              }),
+            }
+          );
+        } else {
+          for (let i = 1; i < rows.length; i++) {
+            const rEmail = String(rows[i]?.[1] || '').trim().toLowerCase();
+            if (rEmail === cleanEmail) {
+              existingRowIdx = i + 1;
+              break;
+            }
+          }
+        }
+      }
+    } catch {}
+
+    const rowValues = [
+      ts,
+      cleanEmail,
+      source,
+      chapter,
+      'Whitelisted — Wave 2 Priority',
+      notes,
+    ];
+
+    if (existingRowIdx > 1) {
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${WHITELIST_SPREADSHEET_ID}/values/${encodeURIComponent(
+          `'${whitelistTab}'!A${existingRowIdx}:F${existingRowIdx}`
+        )}?valueInputOption=USER_ENTERED`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ values: [rowValues] }),
+        }
+      );
+    } else {
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${WHITELIST_SPREADSHEET_ID}/values/${encodeURIComponent(
+          `'${whitelistTab}'!A:F`
+        )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ values: [rowValues] }),
+        }
+      );
+    }
+
+    // 2. Also sync into the main VIP spreadsheet Subscribers & VIP GUESTS tabs
+    await syncSubscriberRowToGoogleSheets({
+      firstName: cleanEmail.split('@')[0],
+      email: cleanEmail,
+      role: 'WHITELIST [PIONEER-2027]',
+      vipCode: `WHITELIST: ${source}`,
+      registrationDate: ts,
+    }).catch(() => {});
+
+    return {
+      success: true,
+      spreadsheetId: WHITELIST_SPREADSHEET_ID,
+      tab: whitelistTab,
+      email: cleanEmail,
+      action: existingRowIdx > 1 ? 'updated' : 'appended',
+    };
+  } catch (err) {
+    console.warn('[Google Sheets Whitelist] Exception syncing email:', err);
+    return { success: false, error: err.message, savedLocally: true };
+  }
+}
+
 

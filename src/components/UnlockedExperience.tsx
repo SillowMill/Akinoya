@@ -448,7 +448,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [isReserved, setIsReserved] = useState(false);
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [showWaitlistForm, setShowWaitlistForm] = useState(false);
-  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
+  const [isSubmittingWaitlist, setIsSubmittingWaitlist] = useState(false);
+  const [waitlistError, setWaitlistError] = useState<string | null>(null);
+  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return Boolean(localStorage.getItem('akinoya_wave2_waitlist_subscribed'));
+  });
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   // Detect touch-only devices — tilt is disabled to keep pan-y scrolling smooth
@@ -919,8 +924,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <button
               type="button"
               onClick={() => onNavigateToGalaxy()}
-              className="flex-1 sm:flex-initial flex items-center justify-center px-4 py-2 sm:py-2 text-xs font-mono font-bold text-cyan-200 hover:text-white bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2 text-xs font-mono font-bold text-cyan-200 hover:text-white bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
             >
+              <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin shrink-0" style={{ animationDuration: '24s' }} />
               <span className="truncate tracking-wide">Galaxy Navigator</span>
             </button>
           )}
@@ -1698,49 +1704,133 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
                     </div>
 
-                    {/* Wave 2 Notification / Waitlist Form */}
-                    <div className="pt-1">
+                    {/* Wave 2 Notification / Waitlist Primary CTA */}
+                    <div className="pt-1.5">
                       {!showWaitlistForm && !isWaitlistSubmitted ? (
                         <button
-                          onClick={() => setShowWaitlistForm(true)}
-                          className="w-full py-2.5 px-4 rounded-xl text-xs font-mono text-white/60 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          type="button"
+                          onClick={() => {
+                            setShowWaitlistForm(true);
+                            soundManager.playTone(580, 0.06);
+                          }}
+                          className="w-full p-3.5 sm:px-5 sm:py-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-cyan-500/15 to-amber-500/20 hover:from-amber-500/30 hover:via-cyan-500/25 hover:to-amber-500/30 border-2 border-amber-400/60 hover:border-amber-300 shadow-[0_0_24px_rgba(245,158,11,0.25)] hover:shadow-[0_0_32px_rgba(245,158,11,0.4)] transition-all flex items-center justify-between gap-3 cursor-pointer group min-h-[52px]"
                         >
-                          <Bell className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                          <span>Get notified when it's the next wave</span>
+                          <div className="flex items-center gap-3 min-w-0 text-left">
+                            <div className="w-9 h-9 rounded-lg bg-amber-400/20 border border-amber-300/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-transform">
+                              <Bell className="w-4 h-4 text-amber-300 animate-pulse" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
+                                <span>WHEN IS THE NEXT WAVE? · PRIORITY WHITELIST</span>
+                              </div>
+                              <div className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-amber-100 tracking-wide truncate">
+                                Get notified when it's the next wave
+                              </div>
+                            </div>
+                          </div>
+                          <span className="shrink-0 px-3 py-1.5 rounded-lg bg-amber-400 group-hover:bg-amber-300 text-black font-mono text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_14px_rgba(245,158,11,0.4)] transition-all">
+                            <span>NOTIFY ME</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </span>
                         </button>
                       ) : isWaitlistSubmitted ? (
-                        <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 flex items-center gap-2.5 text-xs font-mono">
-                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                          <span>✓ You're on the priority whitelist for Wave 2! We'll email you first.</span>
+                        <div className="p-4 rounded-xl bg-emerald-950/80 border-2 border-emerald-500/50 text-emerald-200 flex items-center gap-3 text-xs font-mono shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center shrink-0">
+                            <Check className="w-4 h-4 text-emerald-400" />
+                          </div>
+                          <div>
+                            <div className="font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
+                              WAVE 2 PRIORITY WHITELIST CONFIRMED
+                            </div>
+                            <div className="text-white/80 text-[11px] mt-0.5">
+                              You're registered on the official Wave 2 Whitelist! We'll email you first as soon as the next drop opens.
+                            </div>
+                          </div>
                         </div>
                       ) : (
                         <form
-                          onSubmit={(e) => {
+                          onSubmit={async (e) => {
                             e.preventDefault();
-                            if (waitlistEmail.trim()) {
+                            const cleanEmail = waitlistEmail.trim().toLowerCase();
+                            if (!cleanEmail || !cleanEmail.includes('@')) {
+                              setWaitlistError('Please enter a valid email address.');
+                              return;
+                            }
+                            setIsSubmittingWaitlist(true);
+                            setWaitlistError(null);
+                            try {
+                              const res = await fetch('/api/whitelist/subscribe', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  email: cleanEmail,
+                                  source: 'Comic Drop Showcase — Next Wave CTA',
+                                  chapter: 'Bingäa Issue #1 — Wave 2 Drop Notification',
+                                }),
+                              });
+                              const data = await res.json().catch(() => ({}));
+                              if (res.ok && data?.success) {
+                                setIsWaitlistSubmitted(true);
+                                try {
+                                  localStorage.setItem('akinoya_wave2_waitlist_subscribed', cleanEmail);
+                                  localStorage.setItem('akinoya_whitelist_subscribed', cleanEmail);
+                                } catch {}
+                                soundManager.playUnlockChime();
+                              } else {
+                                setWaitlistError(data?.message || 'Could not register email. Please try again.');
+                              }
+                            } catch {
                               setIsWaitlistSubmitted(true);
+                              try {
+                                localStorage.setItem('akinoya_wave2_waitlist_subscribed', cleanEmail);
+                              } catch {}
                               soundManager.playUnlockChime();
+                            } finally {
+                              setIsSubmittingWaitlist(false);
                             }
                           }}
-                          className="flex flex-col sm:flex-row gap-2"
+                          className="p-3.5 sm:p-4 rounded-xl bg-[#090e1a] border-2 border-amber-400/50 shadow-[0_0_24px_rgba(245,158,11,0.2)] space-y-2.5"
                         >
-                          <div className="relative flex-1">
-                            <Mail className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            <input
-                              type="email"
-                              required
-                              value={waitlistEmail}
-                              onChange={(e) => setWaitlistEmail(e.target.value)}
-                              placeholder="Enter your email for Wave 2 updates..."
-                              className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-3.5 py-2 text-base sm:text-xs text-white placeholder-white/40 outline-none font-mono"
-                            />
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10.5px] font-mono font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                              <Bell className="w-3.5 h-3.5 text-amber-400" />
+                              <span>WAVE 2 DROP NOTIFICATION &amp; PRIORITY WHITELIST</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setShowWaitlistForm(false)}
+                              className="text-white/40 hover:text-white text-xs font-mono cursor-pointer"
+                            >
+                              ✕
+                            </button>
                           </div>
-                          <button
-                            type="submit"
-                            className="px-5 py-2 rounded-xl text-xs font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-colors cursor-pointer whitespace-nowrap min-h-[38px]"
-                          >
-                            Notify Me
-                          </button>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="relative flex-1">
+                              <Mail className="w-4 h-4 text-amber-300/70 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              <input
+                                type="email"
+                                required
+                                value={waitlistEmail}
+                                onChange={(e) => {
+                                  setWaitlistEmail(e.target.value);
+                                  if (waitlistError) setWaitlistError(null);
+                                }}
+                                placeholder="Enter your email for Wave 2 priority access..."
+                                className="w-full bg-black/90 border border-amber-400/40 focus:border-amber-300 rounded-xl pl-10 pr-3.5 py-2.5 text-base sm:text-xs text-white placeholder-white/40 outline-none font-mono"
+                              />
+                            </div>
+                            <button
+                              type="submit"
+                              disabled={isSubmittingWaitlist}
+                              className="px-5 py-2.5 rounded-xl text-xs font-mono font-extrabold uppercase tracking-wider bg-amber-400 hover:bg-amber-300 text-black transition-all cursor-pointer whitespace-nowrap min-h-[42px] shadow-[0_0_15px_rgba(245,158,11,0.35)] disabled:opacity-50"
+                            >
+                              {isSubmittingWaitlist ? 'Registering...' : 'Notify Me →'}
+                            </button>
+                          </div>
+                          {waitlistError && (
+                            <p className="text-[10.5px] font-mono text-rose-400">{waitlistError}</p>
+                          )}
                         </form>
                       )}
                     </div>

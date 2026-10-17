@@ -168,7 +168,11 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       const res = await fetch('/api/whitelist/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail }),
+        body: JSON.stringify({
+          email: cleanEmail,
+          source: 'Comic Preview Gate (Page 3 Lock)',
+          chapter: 'Bingäa Issue #1 — Chapter 2 Preview Gate',
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.success) {

@@ -985,8 +985,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: cleanEmail,
+            first_name: cleanFirst,
+            last_name: cleanLast,
             fullName: `${cleanFirst} ${cleanLast}`.trim(),
             role: serverData.profile.role,
+            vip_code_redeemed: serverData.profile.vip_code_redeemed || pendingPass || 'N/A',
+            has_vip_pass: serverData.profile.has_vip_pass,
             isPioneer: true,
           }),
         }).catch(() => {});
