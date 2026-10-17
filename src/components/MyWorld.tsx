@@ -268,15 +268,19 @@ export const MyWorld: React.FC<MyWorldProps> = ({
 
         {/* RIGHT COLUMN: 5 Photo Cards (01_main through 05_lore) */}
         <div className="lg:col-span-8 flex flex-col gap-4 min-w-0">
-          {/* MOBILE (< 768px): compact interactive carousel */}
-          <div className="md:hidden space-y-2.5">
+          {/* MOBILE & TABLET (< 1024px): interactive photo viewer with sleek left/right arrows */}
+          <div className="lg:hidden space-y-3">
             <div
-              className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-black border border-white/10 shadow-lg touch-pan-y"
+              className="relative w-full aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden bg-black border border-cyan-500/35 shadow-[0_0_30px_rgba(6,182,212,0.15)] touch-pan-y select-none"
               onTouchStart={(e) => {
-                touchStartXRef.current = e.touches[0].clientX;
+                if (e.touches.length === 1) {
+                  touchStartXRef.current = e.touches[0].clientX;
+                } else {
+                  touchStartXRef.current = null;
+                }
               }}
               onTouchEnd={(e) => {
-                if (touchStartXRef.current === null) return;
+                if (touchStartXRef.current === null || e.changedTouches.length === 0) return;
                 const dx = e.changedTouches[0].clientX - touchStartXRef.current;
                 touchStartXRef.current = null;
                 if (Math.abs(dx) > 40) goToSlide(dx < 0 ? 1 : -1);
@@ -287,7 +291,8 @@ export const MyWorld: React.FC<MyWorldProps> = ({
                   key={activeCard.id}
                   src={activeCard.url}
                   alt={activeCard.title}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  draggable={false}
+                  className="absolute inset-0 w-full h-full object-cover select-none"
                   onClick={() => {
                     if (onInspectModal) {
                       soundManager.playTone(660, 0.05);
@@ -304,37 +309,84 @@ export const MyWorld: React.FC<MyWorldProps> = ({
               )}
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 to-transparent pointer-events-none" />
 
+              {/* Sleek Left/Right Navigation Arrows */}
               <button
                 type="button"
-                onClick={() => goToSlide(-1)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToSlide(-1);
+                }}
                 aria-label="Previous photo"
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 border border-white/20 text-white flex items-center justify-center cursor-pointer active:scale-95"
+                className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-[#040916]/90 hover:bg-cyan-950/95 border border-cyan-400/40 text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.25)] touch-manipulation"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-6 h-6 text-cyan-300" />
               </button>
               <button
                 type="button"
-                onClick={() => goToSlide(1)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToSlide(1);
+                }}
                 aria-label="Next photo"
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 border border-white/20 text-white flex items-center justify-center cursor-pointer active:scale-95"
+                className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-[#040916]/90 hover:bg-cyan-950/95 border border-cyan-400/40 text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.25)] touch-manipulation"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-6 h-6 text-cyan-300" />
               </button>
 
-              <div className="absolute left-3 right-3 bottom-2.5 flex items-end justify-between gap-2 pointer-events-none">
+              <div className="absolute left-3.5 right-3.5 bottom-3 flex items-end justify-between gap-2 pointer-events-none">
                 <div className="min-w-0">
-                  <span className="text-[9px] font-mono font-bold tracking-wider text-amber-300 uppercase block truncate">
+                  <span className="text-[9.5px] font-mono font-bold tracking-wider text-amber-300 uppercase block truncate">
                     {SLOT_CODES[safeIdx]} · {activeCard?.category}
                   </span>
-                  <h4 className="text-xs font-sans font-semibold text-white truncate">{activeCard?.title}</h4>
+                  <h4 className="text-xs sm:text-sm font-sans font-semibold text-white truncate">{activeCard?.title}</h4>
                 </div>
-                <span className="text-[10px] font-mono text-white/70 shrink-0">
-                  {safeIdx + 1}/{photoCards.length}
+                <span className="px-2.5 py-0.5 rounded-full bg-[#040915]/85 border border-white/15 text-[10px] font-mono font-bold text-cyan-300 shrink-0">
+                  0{safeIdx + 1} / 0{photoCards.length}
                 </span>
               </div>
             </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x" style={{ scrollbarWidth: 'none' }}>
+            {/* Mobile & Tablet Quick-Cycle Control Bar */}
+            <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[#070d1b] border border-cyan-500/25">
+              <button
+                type="button"
+                onClick={() => goToSlide(-1)}
+                className="min-h-[38px] px-3 py-1.5 rounded-lg bg-cyan-950/70 hover:bg-cyan-900 active:scale-95 border border-cyan-400/35 text-cyan-200 font-mono text-xs font-bold flex items-center gap-1 cursor-pointer touch-manipulation"
+              >
+                <ChevronLeft className="w-4 h-4 text-cyan-400" />
+                <span>Prev</span>
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {photoCards.map((photo, index) => (
+                  <button
+                    key={photo.id}
+                    type="button"
+                    onClick={() => {
+                      soundManager.playTone(600, 0.03);
+                      setActiveSlide(index);
+                    }}
+                    aria-label={`Select photo ${index + 1}`}
+                    className={`h-2 rounded-full transition-all cursor-pointer ${
+                      index === safeIdx
+                        ? 'w-5 bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
+                        : 'w-2 bg-white/25 hover:bg-white/45'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => goToSlide(1)}
+                className="min-h-[38px] px-3 py-1.5 rounded-lg bg-cyan-950/70 hover:bg-cyan-900 active:scale-95 border border-cyan-400/35 text-cyan-200 font-mono text-xs font-bold flex items-center gap-1 cursor-pointer touch-manipulation"
+              >
+                <span>Next</span>
+                <ChevronRight className="w-4 h-4 text-cyan-400" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-5 gap-2">
               {photoCards.map((photo, index) => (
                 <button
                   key={photo.id}
@@ -343,15 +395,15 @@ export const MyWorld: React.FC<MyWorldProps> = ({
                     soundManager.playTone(600, 0.03);
                     setActiveSlide(index);
                   }}
-                  className={`relative shrink-0 snap-start w-[72px] rounded-lg overflow-hidden border transition-all cursor-pointer ${
+                  className={`relative rounded-lg overflow-hidden border transition-all cursor-pointer touch-manipulation select-none ${
                     index === safeIdx
-                      ? 'border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.45)]'
-                      : 'border-white/10 opacity-70'
+                      ? 'border-amber-400 ring-1 ring-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.45)]'
+                      : 'border-white/10 opacity-70 hover:opacity-100'
                   }`}
                 >
                   <div className="aspect-square bg-black">
                     {photo.url ? (
-                      <img src={photo.url} alt={photo.title} className="w-full h-full object-cover" loading="lazy" />
+                      <img src={photo.url} alt={photo.title} className="w-full h-full object-cover pointer-events-none" loading="lazy" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-[#070d1e]">
                         <Sparkles className="w-3.5 h-3.5 text-amber-300/70" />
@@ -366,8 +418,8 @@ export const MyWorld: React.FC<MyWorldProps> = ({
             </div>
           </div>
 
-          {/* DESKTOP (>= 768px): bento grid filling the full container */}
-          <div className="hidden md:grid grid-cols-6 grid-rows-[repeat(3,minmax(0,1fr))] gap-3.5 aspect-[4/3] lg:aspect-auto lg:flex-1 lg:min-h-[520px]">
+          {/* DESKTOP (>= 1024px): bento grid filling the full container */}
+          <div className="hidden lg:grid grid-cols-6 grid-rows-[repeat(3,minmax(0,1fr))] gap-3.5 lg:flex-1 lg:min-h-[520px]">
             {photoCards.map((photo, index) => {
               const hasPhoto = Boolean(photo.url);
               const spanClass =

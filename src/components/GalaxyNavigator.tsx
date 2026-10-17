@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { rafThrottle } from '../utils/performance';
 import {
@@ -9,21 +10,10 @@ import {
   Target,
   Sparkles,
   Trophy,
-  Share2,
   X,
   ArrowLeft,
   ChevronRight,
   Globe2,
-  Video,
-  Download,
-  ThumbsUp,
-  ExternalLink,
-  ShieldCheck,
-  CheckCircle2,
-  Layers,
-  MapPin,
-  RefreshCw,
-  Eye,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
 import {
@@ -31,12 +21,7 @@ import {
   fetchPlanetSubmissions,
   subscribeToPlanetSubmissions,
   togglePlanetSubmissionVote,
-  copyPlanetGalaxyLink,
-  getPlanetGalaxyLink,
   getPlanetPhotoCards,
-  PlanetPhotoCard,
-  COMMUNITY_SHARE_VIDEO_MESSAGE,
-  UI_RECALIBRATING_STATUS_TEXT,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
@@ -65,11 +50,13 @@ interface CameraTarget {
   x: number;
   y: number;
   zoom: number;
+  rotation: number;
   startTime: number;
   duration: number;
   startX: number;
   startY: number;
   startZoom: number;
+  startRotation: number;
 }
 
 const ORBITAL_RINGS = [
@@ -90,6 +77,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const { user, profile } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const worldRotationWrapperRef = useRef<HTMLDivElement | null>(null);
+  const worldLayerRef = useRef<HTMLDivElement | null>(null);
+
+  // Direct-DOM HUD refs for zero-react-rerender 60fps updates
+  const hudCoordRef = useRef<HTMLSpanElement | null>(null);
+  const hudDistRef = useRef<HTMLSpanElement | null>(null);
+  const hudZoomRef = useRef<HTMLSpanElement | null>(null);
 
   // Community planets state
   const [planets, setPlanets] = useState<PlanetSubmission[]>(() => getStoredPlanetSubmissions());
@@ -98,22 +92,15 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const [isAkinoyaModalOpen, setIsAkinoyaModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [isCopiedLink, setIsCopiedLink] = useState(false);
   const [isMobile, setIsMobile] = useState<boolean>(() =>
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
 
-  // Mobile Bottom Sheet active photo index
-  const [mobilePhotoIdx, setMobilePhotoIdx] = useState<number>(0);
-  const [mobileIsDownloading, setMobileIsDownloading] = useState<boolean>(false);
-
-  // Pan & Zoom Engine
-  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState<number>(() => (typeof window !== 'undefined' && window.innerWidth < 768 ? 0.65 : 0.85));
-  const panRef = useRef(pan);
-  const zoomRef = useRef(zoom);
-  panRef.current = pan;
-  zoomRef.current = zoom;
+  // High-frequency Pan, Zoom & Rotation Refs (60fps GPU pipeline without React re-render lag)
+  const initialZoom = typeof window !== 'undefined' && window.innerWidth < 768 ? 0.65 : 0.85;
+  const panRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const zoomRef = useRef<number>(initialZoom);
+  const rotationRef = useRef<number>(0);
 
   const planetsRef = useRef(planets);
   planetsRef.current = planets;
@@ -122,24 +109,57 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const hoveredPlanetRef = useRef(hoveredPlanet);
   hoveredPlanetRef.current = hoveredPlanet;
 
-  // Inertia and Drag Tracking
+  // Multi-Touch, Inertia & Gesture Tracking Refs
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const lastPointerPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const hasMovedBeyondTapRef = useRef(false);
+  const wasMultiTouchRef = useRef(false);
+  const lastCentroidRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const velocityRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const lastMoveTimeRef = useRef<number>(0);
   const inertiaAnimRef = useRef<number | null>(null);
 
-  // Two-Finger Pinch Tracking
+  // Active Pointers Map & Two-Finger Pinch/Rotate State
   const touchesRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const pinchStartDistRef = useRef<number | null>(null);
-  const pinchStartZoomRef = useRef<number>(1);
+  const pinchStartZoomRef = useRef<number>(initialZoom);
+  const pinchStartAngleRef = useRef<number | null>(null);
+  const pinchStartRotRef = useRef<number>(0);
 
   // Camera Animation
   const cameraTargetRef = useRef<CameraTarget | null>(null);
 
   // Starfield Simulation State
   const starsRef = useRef<Star[]>([]);
+
+  // Direct GPU DOM Transform & HUD Synchronizer (Runs in <0.1ms with zero React overhead)
+  const syncWorldTransformAndHud = useCallback(() => {
+    const curPan = panRef.current;
+    const curZoom = zoomRef.current;
+    const curRot = rotationRef.current;
+
+    if (worldLayerRef.current) {
+      worldLayerRef.current.style.transform = `translate3d(${curPan.x * curZoom}px, ${curPan.y * curZoom}px, 0) scale(${curZoom})`;
+    }
+    if (worldRotationWrapperRef.current) {
+      const deg = (curRot * 180) / Math.PI;
+      worldRotationWrapperRef.current.style.transform = `rotate3d(0, 0, 1, ${deg}deg)`;
+    }
+    if (hudCoordRef.current) {
+      hudCoordRef.current.textContent = `X: ${Math.round(-curPan.x)} · Y: ${Math.round(-curPan.y)}`;
+    }
+    if (hudDistRef.current) {
+      hudDistRef.current.textContent = `${Math.round(Math.hypot(curPan.x, curPan.y))} AU`;
+    }
+    if (hudZoomRef.current) {
+      hudZoomRef.current.textContent = `${(curZoom * 100).toFixed(0)}%`;
+    }
+  }, []);
+
+  // Ensure initial transform is applied on mount
+  useEffect(() => {
+    syncWorldTransformAndHud();
+  }, [syncWorldTransformAndHud]);
 
   // Mobile detection
   useEffect(() => {
@@ -150,6 +170,51 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     return () => {
       handleResize.cancel();
       window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Native Non-Passive Multi-Touch & Safari Gesture Blocker (Prevents 2/3/4-finger browser glitches)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const isHudTarget = (target: EventTarget | null) =>
+      target instanceof HTMLElement && Boolean(target.closest('.interactive-hud-element'));
+
+    const handleTouchStartNative = (e: TouchEvent) => {
+      if (isHudTarget(e.target)) return;
+      // Immediately suppress browser multi-finger gestures (2+ fingers pinch, 3-finger swipe/dismiss)
+      if (e.touches.length >= 2 && e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    const handleTouchMoveNative = (e: TouchEvent) => {
+      if (isHudTarget(e.target)) return;
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    const handleGestureNative = (e: Event) => {
+      if (isHudTarget(e.target)) return;
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    container.addEventListener('touchstart', handleTouchStartNative, { passive: false });
+    container.addEventListener('touchmove', handleTouchMoveNative, { passive: false });
+    container.addEventListener('gesturestart', handleGestureNative, { passive: false });
+    container.addEventListener('gesturechange', handleGestureNative, { passive: false });
+    container.addEventListener('gestureend', handleGestureNative, { passive: false });
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStartNative);
+      container.removeEventListener('touchmove', handleTouchMoveNative);
+      container.removeEventListener('gesturestart', handleGestureNative);
+      container.removeEventListener('gesturechange', handleGestureNative);
+      container.removeEventListener('gestureend', handleGestureNative);
     };
   }, []);
 
@@ -215,7 +280,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       isMounted = false;
       unsubscribe();
     };
-  }, []);
+  }, [user?.id, user?.email]);
 
   // Initialize deterministic Starfield
   useEffect(() => {
@@ -242,7 +307,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   }, [isMobile]);
 
   // Smooth Camera Pan to Coordinates
-  const panTo = useCallback((targetX: number, targetY: number, targetZoom?: number, duration = 800) => {
+  const panTo = useCallback((targetX: number, targetY: number, targetZoom?: number, duration = 800, targetRotation = 0) => {
     if (inertiaAnimRef.current) {
       cancelAnimationFrame(inertiaAnimRef.current);
       inertiaAnimRef.current = null;
@@ -250,6 +315,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
     const currentPan = panRef.current;
     const currentZoom = zoomRef.current;
+    const currentRotation = rotationRef.current;
     const desiredZoom = targetZoom !== undefined ? targetZoom : Math.max(0.75, currentZoom);
 
     // Screen Center in coordinates: We want (targetX, targetY) to be at screen center (pan.x = -targetX, pan.y = -targetY)
@@ -257,11 +323,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       x: -targetX,
       y: -targetY,
       zoom: desiredZoom,
+      rotation: targetRotation,
       startTime: performance.now(),
       duration,
       startX: currentPan.x,
       startY: currentPan.y,
       startZoom: currentZoom,
+      startRotation: currentRotation,
     };
   }, []);
 
@@ -298,7 +366,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     let animId: number;
 
     const render = (time: number) => {
-      // 1. Process active camera animation
+      // 1. Process active camera animation directly on GPU refs (zero React re-renders)
       if (cameraTargetRef.current) {
         const ct = cameraTargetRef.current;
         const elapsed = time - ct.startTime;
@@ -309,12 +377,14 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             ? 4 * progress * progress * progress
             : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
-        const nextX = ct.startX + (ct.x - ct.startX) * ease;
-        const nextY = ct.startY + (ct.y - ct.startY) * ease;
-        const nextZoom = ct.startZoom + (ct.zoom - ct.startZoom) * ease;
+        panRef.current = {
+          x: ct.startX + (ct.x - ct.startX) * ease,
+          y: ct.startY + (ct.y - ct.startY) * ease,
+        };
+        zoomRef.current = ct.startZoom + (ct.zoom - ct.startZoom) * ease;
+        rotationRef.current = ct.startRotation + (ct.rotation - ct.startRotation) * ease;
 
-        setPan({ x: nextX, y: nextY });
-        setZoom(nextZoom);
+        syncWorldTransformAndHud();
 
         if (progress >= 1) {
           cameraTargetRef.current = null;
@@ -338,6 +408,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       const centerY = height / 2;
       const curPan = panRef.current;
       const curZoom = zoomRef.current;
+      const curRot = rotationRef.current;
 
       // 2. Cosmic Background Ambient Gradient
       const bgGrad = ctx.createRadialGradient(
@@ -353,6 +424,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       bgGrad.addColorStop(1, '#010206');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
+
+      // Apply synchronized 2-finger map rotation around screen center
+      if (curRot !== 0) {
+        ctx.translate(centerX, centerY);
+        ctx.rotate(curRot);
+        ctx.translate(-centerX, -centerY);
+      }
 
       // 3. Central Äkinoya Golden Core Glow
       const coreScreenX = centerX + curPan.x * curZoom;
@@ -409,14 +487,15 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
       // 4. Parallax Starfield
       const stars = starsRef.current;
+      const boundMargin = Math.max(width, height) * 0.45;
       for (let i = 0; i < stars.length; i++) {
         const star = stars[i];
         const parallaxFactor = star.layer === 0 ? 0.08 : star.layer === 1 ? 0.25 : 0.65;
         const sx = centerX + (star.x + curPan.x * parallaxFactor) * (curZoom * 0.85 + 0.15);
         const sy = centerY + (star.y + curPan.y * parallaxFactor) * (curZoom * 0.85 + 0.15);
 
-        // Bounds culling
-        if (sx < -20 || sx > width + 20 || sy < -20 || sy > height + 20) continue;
+        // Bounds culling (expanded for rotation)
+        if (sx < -boundMargin || sx > width + boundMargin || sy < -boundMargin || sy > height + boundMargin) continue;
 
         const twinkle = Math.sin(time * star.twinkleSpeed + i) * 0.25;
         const alpha = Math.max(0.1, Math.min(1, star.baseAlpha + twinkle));
@@ -444,7 +523,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         // Ring distance label badge
         if (ringRadius > 80 && curZoom > 0.4) {
           ctx.font = `${Math.max(9, Math.min(11, 10 * curZoom))}px monospace`;
-          ctx.fillStyle = ring.color.replace(/[\d\.]+\)$/, '0.75)');
+          ctx.fillStyle = ring.color.replace(/[\d.]+\)$/, '0.75)');
           ctx.textAlign = 'left';
           ctx.fillText(ring.label, coreScreenX + 10, coreScreenY - ringRadius + 14);
         }
@@ -466,7 +545,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       if (hoveredNode && (hoveredNode.coordX !== 0 || hoveredNode.coordY !== 0)) {
         const px = centerX + (curPan.x + (hoveredNode.coordX ?? 0)) * curZoom;
         const py = centerY + (curPan.y + (hoveredNode.coordY ?? 0)) * curZoom;
-        const distanceAU = Math.round(Math.hypot(hoveredNode.coordX ?? 0, hoveredNode.coordY ?? 0));
+        const distAU = Math.round(Math.hypot(hoveredNode.coordX ?? 0, hoveredNode.coordY ?? 0));
 
         ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
         ctx.lineWidth = 1.5;
@@ -483,7 +562,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         ctx.font = '10px monospace';
         ctx.fillStyle = '#fbbf24';
         ctx.textAlign = 'center';
-        ctx.fillText(`VECTOR: ${distanceAU} AU`, midX, midY - 6);
+        ctx.fillText(`VECTOR: ${distAU} AU`, midX, midY - 6);
       }
 
       // 8. Universal Gold Centered Rings for all planet nodes (Exact Canvas Centering)
@@ -492,21 +571,18 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         const p = allPlanets[i];
         const posX = p.coordX ?? 0;
         const posY = p.coordY ?? 0;
-        // Avoid duplicate ring at (0, 0) as Äkinoya Core has its own dedicated multi-layered golden core rings
         if (posX === 0 && posY === 0) continue;
 
-        // Exact canvas centering: screen coordinates calculated directly from planet coordinates with 0 offset
         const px = centerX + (curPan.x + posX) * curZoom;
         const py = centerY + (curPan.y + posY) * curZoom;
 
-        // Viewport bounds culling
-        if (px < -120 || px > width + 120 || py < -120 || py > height + 120) continue;
+        if (px < -boundMargin || px > width + boundMargin || py < -boundMargin || py > height + boundMargin) continue;
 
         const isSel = selectedPlanetRef.current?.id === p.id;
         const isHov = hoveredPlanetRef.current?.id === p.id;
         const pulse = Math.sin(time * 0.0028 + (posX * 0.05 + posY * 0.05)) * 1.8;
         const ringRadius = (isSel ? 32 : isHov ? 30 : 27 + pulse) * curZoom;
-        const ringAlpha = isSel ? 0.95 : isHov ? 0.85 : (0.5 + pulse * 0.08);
+        const ringAlpha = isSel ? 0.95 : isHov ? 0.85 : 0.5 + pulse * 0.08;
 
         ctx.save();
         ctx.strokeStyle = isSel ? '#fbbf24' : `rgba(245, 158, 11, ${ringAlpha})`;
@@ -518,7 +594,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         ctx.arc(px, py, ringRadius, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Outer soft golden halo when selected or hovered
         if (isSel || isHov) {
           ctx.strokeStyle = `rgba(251, 191, 36, ${ringAlpha * 0.4})`;
           ctx.lineWidth = 1.2 * curZoom;
@@ -536,11 +611,49 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, []);
+  }, [syncWorldTransformAndHud]);
 
-  // Pointer Interaction Handlers (Inertia Drag & Gestures)
+  // Helper: Compute centroid of all currently active touch/pointer points
+  const getTouchesCentroid = () => {
+    const pts = Array.from(touchesRef.current.values());
+    if (pts.length === 0) return { x: 0, y: 0 };
+    let sumX = 0;
+    let sumY = 0;
+    for (let i = 0; i < pts.length; i++) {
+      sumX += pts[i].x;
+      sumY += pts[i].y;
+    }
+    return { x: sumX / pts.length, y: sumY / pts.length };
+  };
+
+  // Re-anchor multi-touch state whenever a finger is added or lifted (eliminates 1↔2↔3+ finger jumps)
+  const reanchorMultiTouch = () => {
+    const count = touchesRef.current.size;
+    velocityRef.current = { x: 0, y: 0 };
+    lastMoveTimeRef.current = performance.now();
+
+    if (count > 0) {
+      lastCentroidRef.current = getTouchesCentroid();
+    }
+
+    if (count === 2) {
+      wasMultiTouchRef.current = true;
+      const [t1, t2] = Array.from(touchesRef.current.values());
+      pinchStartDistRef.current = Math.max(10, Math.hypot(t2.x - t1.x, t2.y - t1.y));
+      pinchStartZoomRef.current = zoomRef.current;
+      pinchStartAngleRef.current = Math.atan2(t2.y - t1.y, t2.x - t1.x);
+      pinchStartRotRef.current = rotationRef.current;
+    } else {
+      pinchStartDistRef.current = null;
+      pinchStartAngleRef.current = null;
+      if (count >= 3) {
+        wasMultiTouchRef.current = true;
+      }
+    }
+  };
+
+  // Glitch-Free Multi-Touch & Pointer Interaction Handlers (60fps Direct GPU)
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // If clicking a UI button or modal, do not initiate canvas drag
     if ((e.target as HTMLElement).closest('.interactive-hud-element')) return;
 
     if (inertiaAnimRef.current) {
@@ -549,84 +662,160 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     }
     cameraTargetRef.current = null;
 
-    isDraggingRef.current = true;
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-    lastPointerPosRef.current = { x: e.clientX, y: e.clientY };
-    velocityRef.current = { x: 0, y: 0 };
-    lastMoveTimeRef.current = performance.now();
-
-    // Track multi-touch
     touchesRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (touchesRef.current.size === 2) {
-      const [t1, t2] = Array.from(touchesRef.current.values());
-      pinchStartDistRef.current = Math.hypot(t2.x - t1.x, t2.y - t1.y);
-      pinchStartZoomRef.current = zoomRef.current;
+
+    if (touchesRef.current.size === 1) {
+      isDraggingRef.current = true;
+      dragStartRef.current = { x: e.clientX, y: e.clientY };
+      hasMovedBeyondTapRef.current = false;
+      wasMultiTouchRef.current = false;
     }
+
+    reanchorMultiTouch();
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current) return;
+    if (!isDraggingRef.current || !touchesRef.current.has(e.pointerId)) return;
 
     touchesRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const touchCount = touchesRef.current.size;
 
-    // Handle two-finger pinch-to-zoom
-    if (touchesRef.current.size === 2 && pinchStartDistRef.current !== null) {
-      const [t1, t2] = Array.from(touchesRef.current.values());
-      const currentDist = Math.hypot(t2.x - t1.x, t2.y - t1.y);
-      const scale = currentDist / pinchStartDistRef.current;
-      const nextZoom = Math.min(2.5, Math.max(0.28, pinchStartZoomRef.current * scale));
-      setZoom(nextZoom);
+    // 3 or more fingers: stabilize & smoothly pan by centroid only without zoom/velocity jumps
+    if (touchCount >= 3) {
+      wasMultiTouchRef.current = true;
+      hasMovedBeyondTapRef.current = true;
+      const centroid = getTouchesCentroid();
+      const dx = centroid.x - lastCentroidRef.current.x;
+      const dy = centroid.y - lastCentroidRef.current.y;
+      const curZoom = zoomRef.current;
+      const curRot = rotationRef.current;
+      const cos = Math.cos(-curRot);
+      const sin = Math.sin(-curRot);
+
+      panRef.current = {
+        x: panRef.current.x + (dx * cos - dy * sin) / curZoom,
+        y: panRef.current.y + (dx * sin + dy * cos) / curZoom,
+      };
+      lastCentroidRef.current = centroid;
+      velocityRef.current = { x: 0, y: 0 };
+      syncWorldTransformAndHud();
       return;
     }
 
-    const now = performance.now();
-    const dt = Math.max(1, now - lastMoveTimeRef.current);
-    const dx = e.clientX - lastPointerPosRef.current.x;
-    const dy = e.clientY - lastPointerPosRef.current.y;
+    // 2 fingers: simultaneous pinch-to-zoom + centroid pan + smooth 2-finger rotation
+    if (touchCount === 2 && pinchStartDistRef.current !== null) {
+      wasMultiTouchRef.current = true;
+      hasMovedBeyondTapRef.current = true;
+      const [t1, t2] = Array.from(touchesRef.current.values());
+      const currentDist = Math.max(10, Math.hypot(t2.x - t1.x, t2.y - t1.y));
+      const scale = currentDist / pinchStartDistRef.current;
+      const nextZoom = Math.min(2.6, Math.max(0.28, pinchStartZoomRef.current * scale));
 
-    const curZoom = zoomRef.current;
-    // Map screen movement to universal coordinate delta
-    const coordDx = dx / curZoom;
-    const coordDy = dy / curZoom;
+      // Smooth 2-finger twist rotation (with subtle deadzone for rock-solid pinch)
+      if (pinchStartAngleRef.current !== null && currentDist > 36) {
+        const currentAngle = Math.atan2(t2.y - t1.y, t2.x - t1.x);
+        let angleDelta = currentAngle - pinchStartAngleRef.current;
+        if (angleDelta > Math.PI) angleDelta -= Math.PI * 2;
+        if (angleDelta < -Math.PI) angleDelta += Math.PI * 2;
+        if (Math.abs(angleDelta) > 0.035) {
+          rotationRef.current = pinchStartRotRef.current + angleDelta;
+        }
+      }
 
-    setPan((prev) => ({
-      x: prev.x + coordDx,
-      y: prev.y + coordDy,
-    }));
+      // Pan by 2-finger midpoint delta
+      const centroid = getTouchesCentroid();
+      const dx = centroid.x - lastCentroidRef.current.x;
+      const dy = centroid.y - lastCentroidRef.current.y;
+      const curRot = rotationRef.current;
+      const cos = Math.cos(-curRot);
+      const sin = Math.sin(-curRot);
 
-    // Velocity exponential moving average for inertia damping
-    velocityRef.current = {
-      x: (coordDx / dt) * 16,
-      y: (coordDy / dt) * 16,
-    };
+      panRef.current = {
+        x: panRef.current.x + (dx * cos - dy * sin) / nextZoom,
+        y: panRef.current.y + (dx * sin + dy * cos) / nextZoom,
+      };
+      zoomRef.current = nextZoom;
+      lastCentroidRef.current = centroid;
+      velocityRef.current = { x: 0, y: 0 };
 
-    lastPointerPosRef.current = { x: e.clientX, y: e.clientY };
-    lastMoveTimeRef.current = now;
+      syncWorldTransformAndHud();
+      return;
+    }
+
+    // 1 finger / mouse drag
+    if (touchCount === 1) {
+      const now = performance.now();
+      const dt = Math.max(1, now - lastMoveTimeRef.current);
+      const centroid = getTouchesCentroid();
+      const dx = centroid.x - lastCentroidRef.current.x;
+      const dy = centroid.y - lastCentroidRef.current.y;
+
+      if (Math.hypot(centroid.x - dragStartRef.current.x, centroid.y - dragStartRef.current.y) > 7) {
+        hasMovedBeyondTapRef.current = true;
+      }
+
+      const curZoom = zoomRef.current;
+      const curRot = rotationRef.current;
+      const cos = Math.cos(-curRot);
+      const sin = Math.sin(-curRot);
+
+      const coordDx = (dx * cos - dy * sin) / curZoom;
+      const coordDy = (dx * sin + dy * cos) / curZoom;
+
+      panRef.current = {
+        x: panRef.current.x + coordDx,
+        y: panRef.current.y + coordDy,
+      };
+
+      // Smooth exponential moving average velocity for buttery 60fps inertia
+      const instVx = (coordDx / dt) * 16;
+      const instVy = (coordDy / dt) * 16;
+      velocityRef.current = {
+        x: velocityRef.current.x * 0.35 + instVx * 0.65,
+        y: velocityRef.current.y * 0.35 + instVy * 0.65,
+      };
+
+      lastCentroidRef.current = centroid;
+      lastMoveTimeRef.current = now;
+      syncWorldTransformAndHud();
+    }
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     touchesRef.current.delete(e.pointerId);
-    if (touchesRef.current.size < 2) {
-      pinchStartDistRef.current = null;
+
+    // If fingers remain on screen (e.g., 3→2 or 2→1), re-anchor centroid cleanly without ending drag
+    if (touchesRef.current.size > 0) {
+      reanchorMultiTouch();
+      return;
     }
+
+    pinchStartDistRef.current = null;
+    pinchStartAngleRef.current = null;
 
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
 
-    // Apply inertia damping physics
+    // Only apply inertia after a clean single-finger pan (never fling after a multi-touch pinch)
+    if (wasMultiTouchRef.current) {
+      velocityRef.current = { x: 0, y: 0 };
+      return;
+    }
+
     let vx = velocityRef.current.x;
     let vy = velocityRef.current.y;
     const speed = Math.hypot(vx, vy);
 
-    if (speed > 0.4) {
+    if (speed > 0.35) {
       const stepInertia = () => {
-        vx *= 0.92;
-        vy *= 0.92;
+        vx *= 0.925;
+        vy *= 0.925;
 
-        setPan((prev) => ({
-          x: prev.x + vx,
-          y: prev.y + vy,
-        }));
+        panRef.current = {
+          x: panRef.current.x + vx,
+          y: panRef.current.y + vy,
+        };
+        syncWorldTransformAndHud();
 
         if (Math.hypot(vx, vy) > 0.08) {
           inertiaAnimRef.current = requestAnimationFrame(stepInertia);
@@ -638,7 +827,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     }
   };
 
-  // Wheel Zoom Centered on Cursor
+  // Wheel / Trackpad Zoom
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (inertiaAnimRef.current) {
@@ -646,27 +835,28 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       inertiaAnimRef.current = null;
     }
 
-    const zoomFactor = e.deltaY < 0 ? 1.12 : 0.89;
-    const currentZoom = zoomRef.current;
-    const nextZoom = Math.min(2.5, Math.max(0.28, currentZoom * zoomFactor));
-
-    setZoom(nextZoom);
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.91;
+    const nextZoom = Math.min(2.6, Math.max(0.28, zoomRef.current * zoomFactor));
+    zoomRef.current = nextZoom;
+    syncWorldTransformAndHud();
   };
 
   // Zoom Button Controls
   const handleZoomIn = () => {
     soundManager.playTone(660, 0.04);
-    setZoom((prev) => Math.min(2.5, prev * 1.25));
+    zoomRef.current = Math.min(2.6, zoomRef.current * 1.25);
+    syncWorldTransformAndHud();
   };
 
   const handleZoomOut = () => {
     soundManager.playTone(520, 0.04);
-    setZoom((prev) => Math.max(0.28, prev * 0.8));
+    zoomRef.current = Math.max(0.28, zoomRef.current * 0.8);
+    syncWorldTransformAndHud();
   };
 
   const handleCenterAkinoya = () => {
     soundManager.playTone(800, 0.06);
-    panTo(0, 0, isMobile ? 0.68 : 0.9, 800);
+    panTo(0, 0, isMobile ? 0.68 : 0.9, 800, 0);
   };
 
   // Search filter - ranked dynamically by persistent community votes
@@ -689,38 +879,27 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     setSearchQuery('');
     setIsSearchFocused(false);
     setSelectedPlanet(planet);
-    setMobilePhotoIdx(0);
-    panTo(planet.coordX ?? 0, planet.coordY ?? 0, 1.1, 850);
+    panTo(planet.coordX ?? 0, planet.coordY ?? 0, 1.1, 850, 0);
   };
 
-  // Planet Click
+  // Planet Click (ignore if user was dragging or pinching)
   const handlePlanetClick = (planet: PlanetSubmission) => {
+    if (hasMovedBeyondTapRef.current || wasMultiTouchRef.current) return;
     soundManager.playTone(680, 0.05);
     setSelectedPlanet(planet);
-    setMobilePhotoIdx(0);
-    // Smooth camera pan to center clicked node
-    panTo(planet.coordX ?? 0, planet.coordY ?? 0, Math.max(1.0, zoomRef.current), 700);
+    panTo(planet.coordX ?? 0, planet.coordY ?? 0, Math.max(1.0, zoomRef.current), 700, 0);
   };
 
   // Äkinoya Hub Click -> Open Planet Preview / Dossier Widget
   const handleAkinoyaClick = () => {
+    if (hasMovedBeyondTapRef.current || wasMultiTouchRef.current) return;
     soundManager.playTone(880, 0.07);
     setIsAkinoyaModalOpen(true);
-    panTo(0, 0, Math.max(1.1, zoomRef.current), 700);
+    panTo(0, 0, Math.max(1.1, zoomRef.current), 700, 0);
   };
 
-  // Copy Sector Link Handler
-  const handleCopySectorLink = async (planetId: string) => {
-    soundManager.playTone(720, 0.05);
-    const success = await copyPlanetGalaxyLink(planetId);
-    if (success) {
-      setIsCopiedLink(true);
-      setTimeout(() => setIsCopiedLink(false), 2200);
-    }
-  };
-
-  // Mobile Bottom Sheet Vote Action
-  const handleMobileVote = async (planetId: string) => {
+  // Vote Action inside Full-Screen PlanetDossierModal
+  const handleVotePlanet = async (planetId: string) => {
     soundManager.playTone(740, 0.06);
     const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
     const userUsername = profile?.username || user?.user_metadata?.username || user?.user_metadata?.full_name || '';
@@ -740,37 +919,97 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     }
   };
 
-  // Mobile Trailer Download
-  const handleMobileDownloadTrailer = async (planet: PlanetSubmission) => {
-    const videoUrl =
-      planet.videoUrl ||
-      planet.renders?.video_url ||
-      planet.renders?.videoUrl ||
-      (planet.humanAnswers as any)?.video_url;
-    if (!videoUrl) return;
-    soundManager.playTone(740, 0.06);
-    setMobileIsDownloading(true);
-    try {
-      const response = await fetch(videoUrl);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const safeName = (planet.planetName || 'akinoya-sector').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-      link.href = blobUrl;
-      link.download = `${safeName}-9x16-trailer.mp4`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      window.open(videoUrl, '_blank', 'noopener,noreferrer');
-    } finally {
-      setMobileIsDownloading(false);
-    }
-  };
+  // Portaled Capital Core Äkinoya Modal node
+  const akinoyaModalNode = (
+    <AnimatePresence>
+      {isAkinoyaModalOpen && (
+        <motion.div
+          key="akinoya-core-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+          className="interactive-hud-element fixed inset-0 z-[9999] w-screen h-[100dvh] flex items-center justify-center p-4 bg-[#02040a]/95 backdrop-blur-xl transform-gpu select-none"
+          style={{ willChange: 'opacity' }}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <div className="fixed inset-0 z-0" onClick={() => setIsAkinoyaModalOpen(false)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            className="relative z-10 w-full max-w-lg bg-[#070c18] border border-amber-400/50 rounded-2xl p-6 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(245,158,11,0.25)] space-y-4 transform-gpu"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex flex-col items-start gap-1">
+                <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[10px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] items-center gap-1">
+                  <span>👑 ÄKINOYA CORE</span>
+                </span>
+                <span className="text-[11px] font-display font-extrabold text-white tracking-wider">
+                  Capital of Sillow Mill
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAkinoyaModalOpen(false)}
+                className="w-9 h-9 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-  // Current distance from core in AU
-  const distanceAU = Math.round(Math.hypot(pan.x, pan.y));
+            <div className="relative aspect-video rounded-xl overflow-hidden border border-amber-400/30 shadow-[0_0_30px_rgba(245,158,11,0.25)]">
+              <img
+                src={akinoyaHeroBg}
+                alt="Äkinoya Capital Core · Bingäa Visualizer"
+                className="w-full h-full object-cover scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex items-end justify-between p-3.5">
+                <span className="text-xs font-mono text-cyan-300 font-semibold">
+                  Bingäa Visualizer · Protocol Release 2027
+                </span>
+                <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-400 text-black">
+                  CAPITAL CORE
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs font-sans text-white/80 leading-relaxed">
+              Äkinoya stands as the cosmic genesis core of Sillow Mill. Here lies the anchor of all 11 immersive visualizers and the central storyline of the Äkinoya Protocol. Experience the core visual saga, from which all surrounding community sectors, pioneer expeditions, and creator worlds expand outward into the uncharted galaxy.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsAkinoyaModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-mono text-xs transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAkinoyaModalOpen(false);
+                  if (onNavigateToVisualizerHub) {
+                    onNavigateToVisualizerHub();
+                  } else if (typeof window !== 'undefined') {
+                    window.location.href = '/unlocked';
+                  } else {
+                    onBackToHome();
+                  }
+                }}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.35)] flex items-center gap-2"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Go To Visualizer Hub</span>
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <div
@@ -780,11 +1019,16 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
       onWheel={handleWheel}
-      style={{ touchAction: 'none' }}
-      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#020308] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30"
+      style={{
+        touchAction: 'none',
+        overscrollBehavior: 'none',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+      }}
+      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#020308] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30 transform-gpu"
     >
       {/* Background Starfield & Orbit Rings Canvas */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0" />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0 transform-gpu" />
 
       {/* TOP NAVIGATION BAR / SCI-FI HEADER */}
       <header className="interactive-hud-element absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[#060914]/95 via-[#060914]/80 to-transparent p-3 sm:p-4 backdrop-blur-md flex items-center justify-between gap-3 border-b border-white/5">
@@ -810,7 +1054,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 </span>
               </h1>
               <p className="text-[10px] font-mono text-white/40 truncate hidden sm:block">
-                Universal Astrogation Map · Drag to Explore · Scroll or Pinch to Zoom
+                Universal Astrogation Map · Drag to Pan · Pinch to Zoom &amp; Rotate
               </p>
             </div>
           </div>
@@ -916,7 +1160,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         </div>
       </div>
 
-      {/* ASTROGATION COORDINATES HUD (Bottom Left) */}
+      {/* ASTROGATION COORDINATES HUD (Bottom Left) — Direct-DOM 60fps Refs */}
       <div className="interactive-hud-element absolute bottom-4 left-4 z-30 hidden sm:flex flex-col gap-1.5 p-3 rounded-2xl bg-[#060a14] border border-white/15 font-mono text-[10.5px] text-white/70 shadow-lg">
         <div className="flex items-center gap-2 text-cyan-300 font-bold">
           <Target className="w-3.5 h-3.5 text-cyan-400" />
@@ -924,13 +1168,17 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         </div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-white/60">
           <span>COORDINATES:</span>
-          <span className="text-white font-bold text-right">
-            X: {Math.round(-pan.x)} · Y: {Math.round(-pan.y)}
+          <span ref={hudCoordRef} className="text-white font-bold text-right">
+            X: 0 · Y: 0
           </span>
           <span>DISTANCE TO CORE:</span>
-          <span className="text-amber-300 font-bold text-right">{distanceAU} AU</span>
+          <span ref={hudDistRef} className="text-amber-300 font-bold text-right">
+            0 AU
+          </span>
           <span>OPTICAL ZOOM:</span>
-          <span className="text-white font-bold text-right">{(zoom * 100).toFixed(0)}%</span>
+          <span ref={hudZoomRef} className="text-white font-bold text-right">
+            {(initialZoom * 100).toFixed(0)}%
+          </span>
           <span>CHARTED WORLDS:</span>
           <span className="text-cyan-300 font-bold text-right">{planets.length} WORLDS</span>
         </div>
@@ -970,22 +1218,25 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* INTERACTIVE UNIVERSAL CANVAS / NODES LAYER                                */}
-      {/* Container is translated and scaled with pan and zoom                      */}
+      {/* INTERACTIVE UNIVERSAL CANVAS / NODES LAYER (60FPS DIRECT GPU TRANSFORM)   */}
       {/* ========================================================================= */}
       <div
+        ref={worldRotationWrapperRef}
         className="absolute pointer-events-none"
         style={{
           left: '50%',
           top: '50%',
           width: 0,
           height: 0,
+          transformOrigin: '0 0',
+          willChange: 'transform',
         }}
       >
         <div
+          ref={worldLayerRef}
           className="relative pointer-events-auto"
           style={{
-            transform: `translate3d(${pan.x * zoom}px, ${pan.y * zoom}px, 0) scale(${zoom})`,
+            transform: `translate3d(0px, 0px, 0) scale(${initialZoom})`,
             transformOrigin: '0 0',
             willChange: 'transform',
             backfaceVisibility: 'hidden',
@@ -1041,11 +1292,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 src={akinoyaHeroBg}
                 alt="Äkinoya Core"
                 className="w-full h-full object-cover scale-110 group-hover:rotate-12 transition-transform duration-700"
+                draggable={false}
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/40 via-transparent to-yellow-300/40" />
             </div>
 
-            {/* Capital Core Badge Label - positioned below orb with exact desktop parity & without coordinates */}
+            {/* Capital Core Badge Label */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 flex flex-col items-center pointer-events-none whitespace-nowrap text-center">
               <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] items-center gap-1">
                 <span>👑 ÄKINOYA CORE</span>
@@ -1062,7 +1314,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           {planets.map((planet) => {
             const posX = planet.coordX ?? 0;
             const posY = planet.coordY ?? 0;
-            // Prevent exact overlap with Äkinoya (0, 0)
             if (posX === 0 && posY === 0 && planet.id !== 'akinoya-core') {
               return null;
             }
@@ -1111,6 +1362,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                       src={thumbnail}
                       alt={planet.planetName}
                       className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
+                      draggable={false}
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-amber-950 via-slate-900 to-black flex items-center justify-center">
@@ -1139,350 +1391,20 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. MOBILE-FIRST SWIPEABLE DOSSIER BOTTOM SHEET / DRAWER                   */}
+      {/* 3. UNIFIED FULL-SCREEN PORTALED DOSSIER MODAL (MOBILE, TABLET & DESKTOP)  */}
       {/* ========================================================================= */}
-      <AnimatePresence>
-        {isMobile && selectedPlanet && (
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-            className="interactive-hud-element fixed bottom-0 left-0 right-0 z-50 bg-[#060914] border-t border-cyan-500/40 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.95)] max-h-[86vh] flex flex-col overflow-hidden"
-          >
-            {/* Drag Handle & Top Action Bar */}
-            <div className="p-3 bg-[#080d1d] border-b border-white/10 flex items-center justify-between gap-3 shrink-0">
-              <div className="w-12 h-1.5 rounded-full bg-white/25 mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
-              <div className="flex flex-col items-start mt-1 min-w-0">
-                {selectedPlanet.id === 'akinoya-core' ? (
-                  <>
-                    <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9.5px] tracking-widest uppercase shadow-[0_0_12px_rgba(245,158,11,0.5)] items-center gap-1">
-                      <span>👑 ÄKINOYA CORE</span>
-                    </span>
-                    <span className="text-[11px] font-display font-extrabold text-white tracking-wider mt-0.5">
-                      Capital of Sillow Mill
-                    </span>
-                  </>
-                ) : (
-                  <h3 className="text-sm font-display font-bold text-white truncate">
-                    {selectedPlanet.planetName}
-                  </h3>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0 mt-1">
-                <button
-                  type="button"
-                  onClick={() => handleCopySectorLink(selectedPlanet.id)}
-                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-[10px] font-mono transition-colors cursor-pointer flex items-center gap-1"
-                >
-                  <MapPin className="w-3 h-3 text-amber-400" />
-                  <span>{isCopiedLink ? 'Copied' : 'Share'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedPlanet(null)}
-                  className="w-8 h-8 rounded-lg bg-white/10 text-white/80 hover:text-white flex items-center justify-center cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Scrollable Mobile Sheet Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {(() => {
-                const photoCards = getPlanetPhotoCards(selectedPlanet);
-                const videoUrl =
-                  selectedPlanet.videoUrl ||
-                  selectedPlanet.renders?.video_url ||
-                  selectedPlanet.renders?.videoUrl ||
-                  (selectedPlanet.humanAnswers as any)?.video_url ||
-                  '';
-                const isTrailerTab = mobilePhotoIdx === photoCards.length;
-                const activePhoto = photoCards[mobilePhotoIdx] || photoCards[0];
-
-                return (
-                  <>
-                    {/* Main Viewport: Either 9:16 Vertical Trailer or Active Photo */}
-                    {isTrailerTab ? (
-                      <div className="space-y-2.5">
-                        <div className="flex items-center justify-between text-[10px] font-mono text-cyan-300">
-                          <span className="flex items-center gap-1.5 font-bold">
-                            <Video className="w-3.5 h-3.5 text-amber-400" />
-                            <span>🎥 9:16 VIRAL TRAILER · 5S LOOP</span>
-                          </span>
-                          <span className={`font-bold ${videoUrl ? 'text-emerald-400' : 'text-amber-400'}`}>
-                            {videoUrl ? 'READY · 9:16' : 'QUEUED_PENDING'}
-                          </span>
-                        </div>
-
-                        <div className="relative w-full max-w-[220px] aspect-[9/16] mx-auto rounded-2xl overflow-hidden bg-black border border-cyan-400/40 shadow-xl flex items-center justify-center">
-                          {videoUrl ? (
-                            <video
-                              src={videoUrl}
-                              poster={photoCards[0]?.url || selectedPlanet.renders?.hero || undefined}
-                              controls
-                              autoPlay
-                              loop
-                              muted
-                              playsInline
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="relative w-full h-full flex flex-col items-center justify-center p-4 text-center overflow-hidden">
-                              {photoCards[0]?.url && (
-                                <img
-                                  src={photoCards[0].url}
-                                  alt={selectedPlanet.planetName}
-                                  className="absolute inset-0 w-full h-full object-cover opacity-35 scale-110 pointer-events-none select-none"
-                                />
-                              )}
-                              <div className="absolute inset-0 bg-gradient-to-b from-[#070d1e]/90 via-[#050813]/85 to-black/95 pointer-events-none" />
-                              <div className="relative z-10 flex flex-col items-center space-y-2 px-2 pointer-events-none select-none">
-                                <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
-                                <span className="text-[10px] font-mono font-bold text-cyan-200 uppercase tracking-wider">
-                                  STATUS: QUEUED_PENDING
-                                </span>
-                                <p className="text-[11px] font-sans text-white/80 leading-relaxed">
-                                  {UI_RECALIBRATING_STATUS_TEXT}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleMobileDownloadTrailer(selectedPlanet)}
-                          disabled={!videoUrl || mobileIsDownloading}
-                          className={`w-full py-2 px-3 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
-                            videoUrl
-                              ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black hover:from-amber-300 hover:to-yellow-300'
-                              : 'bg-white/5 border border-white/10 text-white/40 cursor-not-allowed'
-                          }`}
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          <span>{mobileIsDownloading ? 'Saving MP4...' : '⬇ Download 9:16 MP4 Trailer'}</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10 shadow-lg">
-                        <img
-                          src={activePhoto?.url || selectedPlanet.renders?.hero || akinoyaHeroBg}
-                          alt={activePhoto?.title || selectedPlanet.planetName}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end justify-between p-3">
-                          <span className="text-xs font-mono font-bold text-white">
-                            0{mobilePhotoIdx + 1} · {activePhoto?.title || 'Orbit'}
-                          </span>
-                          <span className={`text-[10px] font-mono ${selectedPlanet.id === 'akinoya-core' ? 'text-amber-300 font-bold' : 'text-cyan-300'}`}>
-                            {selectedPlanet.id === 'akinoya-core'
-                              ? 'Capital of Sillow Mill'
-                              : `Coordinates: (${selectedPlanet.coordX ?? 0}, ${selectedPlanet.coordY ?? 0}) AU`}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 5-Photo Visual Archive + 🎥 9:16 Trailer Tab */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-[10px] font-mono text-white/50 uppercase tracking-wider">
-                        <span>Visual Archive (Tap to View)</span>
-                        <span className="text-cyan-400 font-bold">
-                          {isTrailerTab ? '🎥 9:16 Trailer' : `Photo 0${mobilePhotoIdx + 1} of 05`}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-6 gap-1.5">
-                        {photoCards.map((photo, i) => (
-                          <button
-                            key={photo.id}
-                            type="button"
-                            onClick={() => {
-                              soundManager.playTone(540 + i * 40, 0.04);
-                              setMobilePhotoIdx(i);
-                            }}
-                            className={`relative aspect-square rounded-lg overflow-hidden border cursor-pointer transition-all touch-manipulation select-none ${
-                              mobilePhotoIdx === i
-                                ? 'border-amber-400 ring-2 ring-amber-400/50 scale-105 z-10'
-                                : 'border-white/10 opacity-70 hover:opacity-100'
-                            }`}
-                          >
-                            <img src={photo.url} alt={photo.title} className="w-full h-full object-cover pointer-events-none select-none" />
-                            <div className="absolute bottom-0 inset-x-0 bg-black/70 py-0.5 text-center pointer-events-none select-none">
-                              <span className="text-[8px] font-mono font-bold text-white">0{i + 1}</span>
-                            </div>
-                          </button>
-                        ))}
-
-                        {/* Dedicated 🎥 9:16 Trailer Tab */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            soundManager.playTone(760, 0.05);
-                            setMobilePhotoIdx(photoCards.length);
-                          }}
-                          className={`relative aspect-square rounded-lg overflow-hidden border cursor-pointer transition-all touch-manipulation select-none flex flex-col items-center justify-center p-1 ${
-                            isTrailerTab
-                              ? 'border-amber-400 ring-2 ring-amber-400/50 scale-105 z-10 bg-gradient-to-br from-amber-950/80 to-black'
-                              : 'border-amber-500/30 bg-gradient-to-br from-[#0a1228] to-black opacity-80 hover:opacity-100'
-                          }`}
-                        >
-                          <Video className="w-3.5 h-3.5 text-amber-300 pointer-events-none" />
-                          <span className="text-[7.5px] font-mono font-bold text-amber-300 mt-0.5 leading-none pointer-events-none">
-                            9:16
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
-
-              {/* World Lore & Creed */}
-              <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-white/60">Architect:</span>
-                  <span className="text-cyan-300 font-bold">
-                    {selectedPlanet.authorName} (@{selectedPlanet.authorUsername})
-                  </span>
-                </div>
-                {selectedPlanet.futurePromise && (
-                  <p className="text-xs font-sans text-amber-200/90 italic border-l-2 border-amber-400 pl-2">
-                    "{selectedPlanet.futurePromise}"
-                  </p>
-                )}
-                {selectedPlanet.generatedLore && (
-                  <p className="text-xs font-sans text-white/80 line-clamp-3">
-                    {selectedPlanet.generatedLore}
-                  </p>
-                )}
-              </div>
-
-              {/* Mobile Actions: Cast Vote & Close */}
-              <div className="flex items-center gap-2 pt-1 pb-4">
-                <button
-                  type="button"
-                  onClick={() => handleMobileVote(selectedPlanet.id)}
-                  className={`flex-1 py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
-                    selectedPlanet.hasVoted
-                      ? 'bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-                      : 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black'
-                  }`}
-                >
-                  <ThumbsUp className={`w-3.5 h-3.5 ${selectedPlanet.hasVoted ? 'fill-black' : ''}`} />
-                  <span>{selectedPlanet.hasVoted ? 'Voted' : `Vote (${selectedPlanet.votesCount})`}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedPlanet(null)}
-                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-mono text-xs transition-colors cursor-pointer"
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PlanetDossierModal
+        planet={selectedPlanet}
+        isOpen={Boolean(selectedPlanet)}
+        onClose={() => setSelectedPlanet(null)}
+        onVote={(id) => handleVotePlanet(id)}
+        onOpenCreator={onOpenCreator}
+      />
 
       {/* ========================================================================= */}
-      {/* 4. DESKTOP FULL CONTEST DOSSIER MODAL                                     */}
+      {/* 4. PORTALED CAPITAL CORE ÄKINOYA MODAL (z-[9999])                         */}
       {/* ========================================================================= */}
-      {!isMobile && selectedPlanet && (
-        <PlanetDossierModal
-          planet={selectedPlanet}
-          isOpen={Boolean(selectedPlanet)}
-          onClose={() => setSelectedPlanet(null)}
-          onVote={(id) => handleMobileVote(id)}
-          onOpenCreator={onOpenCreator}
-        />
-      )}
-
-      {/* ========================================================================= */}
-      {/* 5. CAPITAL CORE ÄKINOYA MODAL                                             */}
-      {/* ========================================================================= */}
-      <AnimatePresence>
-        {isAkinoyaModalOpen && (
-          <div className="interactive-hud-element fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 transform-gpu" style={{ willChange: 'opacity' }}>
-            <div className="fixed inset-0" onClick={() => setIsAkinoyaModalOpen(false)} />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative z-10 w-full max-w-lg bg-[#070c18] border border-amber-400/50 rounded-2xl p-6 shadow-[0_0_50px_rgba(245,158,11,0.25)] space-y-4"
-            >
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex flex-col items-start gap-1">
-                  <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[10px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] items-center gap-1">
-                    <span>👑 ÄKINOYA CORE</span>
-                  </span>
-                  <span className="text-[11px] font-display font-extrabold text-white tracking-wider">
-                    Capital of Sillow Mill
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsAkinoyaModalOpen(false)}
-                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white flex items-center justify-center cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="relative aspect-video rounded-xl overflow-hidden border border-amber-400/30 shadow-[0_0_30px_rgba(245,158,11,0.25)]">
-                <img
-                  src={akinoyaHeroBg}
-                  alt="Äkinoya Capital Core · Bingäa Visualizer"
-                  className="w-full h-full object-cover scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex items-end justify-between p-3.5">
-                  <span className="text-xs font-mono text-cyan-300 font-semibold">
-                    Bingäa Visualizer · Protocol Release 2027
-                  </span>
-                  <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-400 text-black">
-                    CAPITAL CORE
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-xs font-sans text-white/80 leading-relaxed">
-                Äkinoya stands as the cosmic genesis core of Sillow Mill. Here lies the anchor of all 11 immersive visualizers and the central storyline of the Äkinoya Protocol. Experience the core visual saga, from which all surrounding community sectors, pioneer expeditions, and creator worlds expand outward into the uncharted galaxy.
-              </p>
-
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAkinoyaModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-mono text-xs transition-colors cursor-pointer"
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAkinoyaModalOpen(false);
-                    if (onNavigateToVisualizerHub) {
-                      onNavigateToVisualizerHub();
-                    } else if (typeof window !== 'undefined') {
-                      window.location.href = '/unlocked';
-                    } else {
-                      onBackToHome();
-                    }
-                  }}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.35)] flex items-center gap-2"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Go To Visualizer Hub</span>
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {typeof document !== 'undefined' ? createPortal(akinoyaModalNode, document.body) : akinoyaModalNode}
     </div>
   );
 };
