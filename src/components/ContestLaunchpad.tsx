@@ -32,7 +32,7 @@ import { soundManager } from '../utils/audio';
 import millAvatar from '../assets/images/mill_photo.jpg';
 import { PlanetGeneratorChat } from './PlanetGeneratorChat';
 import { PlanetDossierModal } from './PlanetDossierModal';
-import { MyWorld } from './MyWorld';
+import { WorldStoryVerificationBadge } from './WorldStoryVerificationBadge';
 import { AkinoyaSciFiLoader } from './AkinoyaSciFiLoader';
 import { WizardAnswers, PlanetSubmission } from '../types/contest';
 import {
@@ -1265,13 +1265,10 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               })}
             </div>
 
-            {/* 9:16 Viral Video Trailer & 5-Photo Archive Portal (when previewDossier is active) */}
+            {/* 9:16 Story & Trailer Verification Hub (when previewDossier is active) */}
             {previewDossier && (
-              <MyWorld
+              <WorldStoryVerificationBadge
                 dossier={previewDossier}
-                onInspectModal={(d) => setModalPlanet(d)}
-                isSynthesizingVideo={isGeneratingRenders}
-                onNavigateToGalaxy={onNavigateToGalaxy}
               />
             )}
 
@@ -1357,11 +1354,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               </div>
             </div>
 
-            {/* 5-Photo Visual Archive + 9:16 Viral Video Trailer */}
-            <MyWorld
+            {/* Unified Shareable 9:16 Story & Trailer Verification Hub */}
+            <WorldStoryVerificationBadge
               dossier={activeSubmission}
-              onInspectModal={(d) => setModalPlanet(d)}
-              onNavigateToGalaxy={onNavigateToGalaxy}
             />
 
             {/* Lore and Specs */}
