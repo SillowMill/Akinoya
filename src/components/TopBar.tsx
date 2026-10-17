@@ -5,13 +5,11 @@ import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
 import { openClaimWorldModal } from '../utils/pioneer';
 import { getUserStatusConfig } from '../utils/statusPill';
-import { hasAnyStoredCertificate } from '../utils/certificate';
 
 interface TopBarProps {
   isUnlocked: boolean;
   isVip?: boolean;
   onNavigateHome?: () => void;
-  onNavigateToVerify?: () => void;
   onNavigateToGalaxy?: () => void;
 }
 
@@ -19,7 +17,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   isUnlocked: _isUnlocked,
   isVip = false,
   onNavigateHome,
-  onNavigateToVerify,
   onNavigateToGalaxy,
 }) => {
   const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
@@ -49,25 +46,6 @@ export const TopBar: React.FC<TopBarProps> = ({
     profile,
     role,
     effectiveIsVip
-  );
-
-  const hasClaimedPass = Boolean(
-    effectiveIsVip ||
-    isVip ||
-    authIsVip ||
-    profile?.has_vip_pass === true ||
-    profile?.is_vip === true ||
-    role === 'VIP_GUEST' ||
-    role === 'CREATOR' ||
-    Boolean(profile?.vip_code_redeemed) ||
-    hasAnyStoredCertificate() ||
-    (typeof window !== 'undefined' && (
-      Boolean(localStorage.getItem('akinoya_patron_token')) ||
-      Boolean(localStorage.getItem('akinoya_bingaa_certificates')) ||
-      Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
-      Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
-      Boolean(localStorage.getItem('sillow_vip_bound_token'))
-    ))
   );
 
   return (
@@ -123,29 +101,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             <Users className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
             <span>Community Hub</span>
           </a>
-
-          {/* Digital Passport: Only visible on large desktop for guests / unverified users */}
-          {!hasClaimedPass && (
-            <span className="hidden xl:inline-flex items-center gap-2.5">
-              <span className="text-white/20 select-none text-[11px]" aria-hidden="true">|</span>
-              {onNavigateToVerify ? (
-                <button
-                  type="button"
-                  onClick={onNavigateToVerify}
-                  className="text-slate-300 hover:text-white font-semibold whitespace-nowrap transition-colors cursor-pointer"
-                >
-                  Digital Passport
-                </button>
-              ) : (
-                <a
-                  href="/verify"
-                  className="text-slate-300 hover:text-white font-semibold whitespace-nowrap transition-colors cursor-pointer"
-                >
-                  Digital Passport
-                </a>
-              )}
-            </span>
-          )}
         </nav>
 
         {/* Zone 3: Actions (Mobile optimized to prevent clipping) */}

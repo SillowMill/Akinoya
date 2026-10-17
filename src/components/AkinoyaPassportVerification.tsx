@@ -74,7 +74,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     claim: string | null;
   }>(() => {
     if (typeof window === 'undefined') {
-      return { token: 'AKN-VIP-2027-X0914', enc: null, cmac: null, claim: null };
+      return { token: '', enc: null, cmac: null, claim: null };
     }
     const params = new URLSearchParams(window.location.search);
     const pathToken = window.location.pathname.replace(/^\/verify\/?/, '').replace(/\/+$/, '').trim();
@@ -84,19 +84,19 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       params.get('token') ||
       params.get('id') ||
       params.get('pass') ||
-      'AKN-VIP-2027-X0914';
+      '';
 
     return {
-      token: token.toUpperCase().replace(/^#/, ''),
+      token: token ? token.toUpperCase().replace(/^#/, '') : '',
       enc: params.get('enc'),
       cmac: params.get('cmac'),
       claim: params.get('claim'),
     };
   });
 
-  const activeToken = queryParams.token || 'AKN-VIP-2027-X0914';
-  const isMaster = activeToken === 'AKN-VIP-2027-X0914';
-  const derivedEdition = deriveEditionNumber(activeToken);
+  const activeToken = queryParams.token || '';
+  const isMaster = Boolean(activeToken && activeToken === 'AKN-VIP-2027-X0914');
+  const derivedEdition = activeToken ? deriveEditionNumber(activeToken) : 0;
 
   // Per-pass stored holder name and certificate (isolated per Pass ID)
   const localStoredName = useHolderName(activeToken);
@@ -127,13 +127,13 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
     registeredAt: string | null;
     certificate?: BingaaCertificate | null;
   }>({
-    tokenId: `#${activeToken}`,
-    edition: isMaster ? 'Founders Pass (#0)' : `${derivedEdition} of 100`,
+    tokenId: activeToken ? `#${activeToken}` : '',
+    edition: isMaster ? 'Founders Pass (#0)' : (activeToken ? `${derivedEdition} of 100` : 'Pass Required'),
     editionNumber: isMaster ? 0 : derivedEdition,
     origin: 'Genesis Archive (Leuven Origin)',
     issueDate: '09.01.2027',
     coordinates: "RA 04h 35m / +16° 30'",
-    status: 'Unclaimed VIP Pass — Ready for Registration',
+    status: activeToken ? 'Unclaimed VIP Pass — Ready for Registration' : 'No Valid Pass ID Provided',
     ownerName: '',
     ownerEmail: null,
     isClaimed: false,
@@ -264,6 +264,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
   const [isResettingPass, setIsResettingPass] = useState(false);
 
   const handleResetPass = async () => {
+    if (!isFounderAccount) return;
     setIsResettingPass(true);
     soundManager.playTone(480, 0.05);
     try {
@@ -300,6 +301,15 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
 
   // Execute verification against server-side NTAG engine
   const executeVerification = async (token: string, enc: string | null, cmac: string | null) => {
+    // If no token is provided at all, require authorized authentication
+    if (!token) {
+      setIsDnaAuthentic(false);
+      setStatusText('TOKEN REQUIRED');
+      setDnaError('Authentication Required: Please scan your authentic Äkinoya NFC pass or enter via an authorized VIP invitation.');
+      setIsValidating(false);
+      return;
+    }
+
     // If the logged-in user already holds a verified pass / Certificate of Authenticity and didn't provide a claim key,
     // do not trigger error loops against unowned/master passes
     if (userAlreadyHoldsPass && !queryParams.claim) {
@@ -338,10 +348,10 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       }
     } else {
       // Master Founder Pass (AKN-VIP-2027-X0914) strictly bound to odi.selis3@gmail.com
-      if (currentUserEmail && !isFounderEmail(currentUserEmail)) {
+      if (!isFounderAccount) {
         setIsDnaAuthentic(false);
-        setStatusText('Pass already claimed');
-        setDnaError('Pass already claimed');
+        setStatusText('FOUNDER ACCESS RESTRICTED');
+        setDnaError('Restricted Access: The Founder Pass (#0) is strictly restricted to the primary founder credentials (Odi Selis).');
         soundManager.playError();
         setIsValidating(false);
         return;
@@ -645,7 +655,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           <span>Back to Home</span>
         </button>
         <div className="flex items-center gap-2">
-          {(activeToken === 'AKN-VIP-2027-X001' || activeToken === 'AKN-VIP-2027-X0914') && (
+          {isFounderAccount && (activeToken === 'AKN-VIP-2027-X001' || activeToken === 'AKN-VIP-2027-X0914') && (
             <button
               type="button"
               onClick={handleResetPass}
@@ -662,18 +672,6 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
         </div>
       </div>
 
-      {/* Security Warning if Cloned/Invalid */}
-      {!userAlreadyHoldsPass && dnaError && dnaError !== 'ALREADY CLAIMED VIP LINK' && dnaError !== OTHER_ACCOUNT_VIP_ERROR && (
-        <div className="mb-5 p-4 rounded-xl bg-rose-950/50 border border-rose-500/40 text-rose-200 text-xs font-mono space-y-1">
-          <div className="font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>INVALID / UNRECOGNIZED PASS DETECTED</span>
-          </div>
-          <p className="text-[11px] text-rose-200/80 leading-relaxed">
-            {dnaError}
-          </p>
-        </div>
-      )}
 
       {/* VIEW: LOGGED-IN VERIFIED PASS HOLDER NOTICE */}
       {userAlreadyHoldsPass && !queryParams.claim ? (
@@ -811,6 +809,78 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                 </button>
               </div>
 
+              {isFounderAccount && (
+                <div className="pt-2 border-t border-white/10 text-center">
+                  <button
+                    type="button"
+                    onClick={handleResetPass}
+                    disabled={isResettingPass}
+                    className="text-[11px] font-mono text-cyan-400 hover:text-cyan-200 underline cursor-pointer p-1"
+                  >
+                    {isResettingPass ? 'Resetting Pass...' : `[TEST MODE]: Clear & Reset ${activeToken} to Fresh Unassigned Status`}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </motion.div>
+      ) : dnaError ? (
+        <motion.div
+          key="restricted-security-card"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="rounded-2xl bg-[#090d16] border border-rose-500/40 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(244,63,94,0.15)]"
+        >
+          {/* Header */}
+          <div className="border-b border-white/10 pb-4 sm:pb-5 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold text-rose-300 bg-rose-950/70 border border-rose-500/40 shadow-[0_0_12px_rgba(244,63,94,0.2)]">
+                <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                <span>ACCESS RESTRICTED · SECURE PROTOCOL</span>
+              </span>
+              <span className="text-[10px] font-mono text-rose-400/90 font-bold tracking-wider">
+                {statusText || 'RESTRICTED'}
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
+              {statusText === 'TOKEN REQUIRED' ? 'Authorized Invitation Required' : 'Restricted Founder / VIP Access'}
+            </h1>
+            <p className="text-xs font-mono text-rose-200/95 leading-relaxed font-semibold">
+              {dnaError}
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-xs font-mono text-rose-200/80 bg-rose-950/40 border border-rose-500/30 p-3.5 rounded-xl leading-relaxed">
+              {statusText === 'TOKEN REQUIRED'
+                ? 'To view or activate an Äkinoya VIP Pass or Founder Pass, you must access this page via a valid NFC pass scan or encrypted invitation URL.'
+                : isMaster
+                  ? 'The Founder Pass (#0) is exclusively reserved for the primary founder account. Please sign in with founder credentials to manage this pass.'
+                  : 'This token could not be verified. Please verify the URL or scan your physical NFC card again.'}
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => openAuthModal('signin')}
+                className="w-full py-3 px-4 rounded-xl font-mono text-xs font-bold bg-white/10 hover:bg-white/15 border border-white/20 text-white flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
+              >
+                <Lock className="w-3.5 h-3.5 text-cyan-400" />
+                <span>SIGN IN TO AN ACCOUNT</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onNavigateHome}
+                className="w-full py-3 px-4 rounded-xl font-mono text-xs font-bold bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
+              >
+                <span>RETURN TO HOME</span>
+              </button>
+            </div>
+
+            {isFounderAccount && (
               <div className="pt-2 border-t border-white/10 text-center">
                 <button
                   type="button"
@@ -818,11 +888,11 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                   disabled={isResettingPass}
                   className="text-[11px] font-mono text-cyan-400 hover:text-cyan-200 underline cursor-pointer p-1"
                 >
-                  {isResettingPass ? 'Resetting Pass...' : `[TEST MODE]: Clear & Reset ${activeToken} to Fresh Unassigned Status`}
+                  {isResettingPass ? 'Resetting Pass...' : `[FOUNDER RESET]: Clear & Reset ${activeToken} to Fresh Unassigned Status`}
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </motion.div>
       ) : !isClaimed ? (
         <motion.div

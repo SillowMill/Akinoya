@@ -408,11 +408,6 @@ export default function App() {
           isVip={isVipRoute || isUserVip}
           onNavigateHome={() => navigateTo('home', '/')}
           onNavigateToGalaxy={() => navigateToGalaxy()}
-          onNavigateToVerify={
-            isVipRoute
-              ? () => setVipSubView('passport')
-              : () => navigateTo('verify', '/verify')
-          }
         />
       )}
 
