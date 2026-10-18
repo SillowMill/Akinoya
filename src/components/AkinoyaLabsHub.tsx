@@ -897,7 +897,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                 <div
                   key={stage.id}
                   id={`stage-${stage.id}`}
-                  className={`relative z-10 pt-4 pb-6 transition-all duration-300 ${
+                  className={`relative z-10 pt-4 pb-6 transition-all duration-300 cv-card ${
                     isStageLocked ? 'group/locked' : 'group/active'
                   }`}
                 >

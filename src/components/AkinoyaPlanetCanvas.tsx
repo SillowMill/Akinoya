@@ -142,11 +142,19 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
 
   return (
     <div
-      className="akinoya-bg-layer fixed top-0 left-0 right-0 pointer-events-none overflow-hidden bg-[#050505] z-0"
-      style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)', willChange: 'transform' }}
+      className="akinoya-bg-layer fixed inset-0 w-full h-[100dvh] pointer-events-none overflow-hidden bg-[#050505] z-0"
+      style={{
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+        contain: 'strict',
+        isolation: 'isolate',
+      }}
     >
       {/* Background exact photograph representation with Framer Motion smooth cross-fade */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
         <AnimatePresence mode="sync">
           {!isUnlocked ? (
             <motion.div
@@ -156,6 +164,7 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.8, ease: 'easeInOut' }}
               className="absolute inset-0"
+              style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
             >
               <picture className="w-full h-full block">
                 <source media="(max-width: 767px)" srcSet={exactPlanetMobile} />
@@ -164,6 +173,7 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
                   alt="Background 1: Planet Äkinoya Locked Landing State"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover object-center filter brightness-[0.92] contrast-[1.05]"
+                  style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
                 />
               </picture>
             </motion.div>
@@ -175,12 +185,14 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.8, ease: 'easeInOut' }}
               className="absolute inset-0"
+              style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
             >
               <img
                 src={viewMode === 'orbit' ? akinoyaVistaImg : exactPlanetDesktop}
                 alt="Background 2: Unlocked Äkinoya World State"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover object-center filter brightness-90 contrast-105"
+                style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
               />
             </motion.div>
           )}

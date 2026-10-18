@@ -68,12 +68,27 @@ const WelcomeVisionPortal = React.lazy(() =>
   import('./WelcomeVisionPortal').then((m) => ({ default: m.WelcomeVisionPortal }))
 );
 
-const HubModuleLoading: React.FC<{ label?: string }> = ({ label = 'LOADING MODULE...' }) => (
-  <div className="flex flex-col items-center justify-center p-12 space-y-3 min-h-[300px]">
-    <div className="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shadow-[0_0_12px_rgba(0,242,254,0.3)]" />
-    <span className="text-xs font-mono text-cyan-300 tracking-wider uppercase animate-pulse">
-      {label}
-    </span>
+const HubModuleLoading: React.FC<{ label?: string }> = ({ label = 'INITIALIZING MODULE...' }) => (
+  <div className="w-full rounded-2xl bg-[#060a14] border border-white/10 p-6 sm:p-8 space-y-6 min-h-[520px] shadow-2xl relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent animate-pulse pointer-events-none" />
+
+    <div className="flex items-center justify-between pb-4 border-b border-white/10">
+      <div className="space-y-2">
+        <div className="h-3 w-32 rounded bg-cyan-400/20 animate-pulse" />
+        <div className="h-6 w-64 rounded bg-white/10 animate-pulse" />
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="w-5 h-5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+        <span className="text-[10px] font-mono text-cyan-300 tracking-wider uppercase animate-pulse">{label}</span>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+      <div className="h-44 rounded-xl bg-white/[0.03] border border-white/5 animate-pulse" />
+      <div className="h-44 rounded-xl bg-white/[0.03] border border-white/5 animate-pulse" />
+      <div className="h-44 rounded-xl bg-white/[0.03] border border-white/5 animate-pulse" />
+      <div className="h-44 rounded-xl bg-white/[0.03] border border-white/5 animate-pulse" />
+    </div>
   </div>
 );
 import { getStoredCreators } from '../data/creators';
@@ -1594,7 +1609,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
-                    className="space-y-6"
+                    className="space-y-6 min-h-[550px] cv-large"
                   >
                     <React.Suspense fallback={<HubModuleLoading label="INITIALIZING VISION PORTAL..." />}>
                       <WelcomeVisionPortal
@@ -1618,7 +1633,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
-                    className="space-y-6"
+                    className="space-y-6 min-h-[550px] cv-large"
                   >
                     <React.Suspense fallback={<HubModuleLoading label="LOADING WORKFLOW LABS..." />}>
                       <AkinoyaLabsHub
@@ -1642,7 +1657,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
-                    className="space-y-6"
+                    className="space-y-6 min-h-[550px] cv-large"
                   >
                     <React.Suspense fallback={<HubModuleLoading label="INITIALIZING DRIVE VAULT..." />}>
                       <DriveFolderVault
@@ -2444,7 +2459,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="space-y-6"
+            className="space-y-6 min-h-[550px] cv-large"
           >
             <React.Suspense fallback={<HubModuleLoading label="LOADING GOVERNANCE PORTAL..." />}>
               <LoreGovernancePortal

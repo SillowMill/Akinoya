@@ -1172,7 +1172,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.4 }}
-                  className="space-y-4 lg:space-y-6"
+                  className="space-y-4 lg:space-y-6 min-h-[600px] cv-large"
                 >
                   {/* Visualizer Hub Showcase Widget with 16:9 Cinematic Thumbnail */}
                   <div className="bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)]">
@@ -1585,7 +1585,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
           {/* Tab 2: Limited Comic Drop Showcase & Pre-Order */}
           {activeTab === 'edition' && (
-            <div className="space-y-4 lg:space-y-6">
+            <div className="space-y-4 lg:space-y-6 min-h-[600px] cv-large">
               <div className="bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-7 lg:p-8 xl:p-9 relative overflow-hidden shadow-xl">
                 {/* Ambient Twinkling White Stars Across Product Showcase Container (CSS-Only, GPU-Composited) */}
                 <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
@@ -2025,7 +2025,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.4 }}
-              className="space-y-6 md:space-y-7"
+              className="space-y-6 md:space-y-7 min-h-[600px] cv-large"
             >
               {/* Guest Simulation Mode & Magnetic Conversion Banner (Displayed when visitor hasn't synthesized their own world yet) */}
               {isGuestWorldSimulation && (
@@ -2350,7 +2350,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="space-y-5 sm:space-y-6 md:space-y-7"
+              className="space-y-5 sm:space-y-6 md:space-y-7 min-h-[600px] cv-large"
             >
               {/* Asset 01: Unified Shareable 9:16 Story & Trailer Verification Hub (Accessible for every registered world, even non-VIP) */}
               {activeWorldDossier && (
