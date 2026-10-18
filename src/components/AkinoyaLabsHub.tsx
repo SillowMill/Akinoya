@@ -190,6 +190,11 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
   const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null);
   const [activeStageId, setActiveStageId] = useState<number>(() => {
     if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (hash.startsWith('stage-')) {
+        const num = Number(hash.replace('stage-', ''));
+        if (num >= 1 && num <= 5) return num;
+      }
       const saved = sessionStorage.getItem('akinoya_labs_active_stage');
       const num = Number(saved);
       if (num >= 1 && num <= 5) return num;
@@ -202,6 +207,27 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       sessionStorage.setItem('akinoya_labs_active_stage', String(activeStageId));
     }
   }, [activeStageId]);
+
+  // Auto-scroll to active stage on initial load if stage > 1
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash.toLowerCase().replace('#', '');
+    const targetStage = hash.startsWith('stage-')
+      ? Number(hash.replace('stage-', ''))
+      : activeStageId;
+
+    if (targetStage && targetStage > 1 && targetStage <= 5) {
+      const delays = [150, 400, 800];
+      delays.forEach((delay) => {
+        setTimeout(() => {
+          const el = document.getElementById(`stage-${targetStage}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' });
+          }
+        }, delay);
+      });
+    }
+  }, []);
 
   // Countdown Timer State pointing to January 9, 2027
   const [timeLeft, setTimeLeft] = useState<{
@@ -262,6 +288,14 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
   const handleJumpToStage = (stageNum: number) => {
     setActiveStageId(stageNum);
     soundManager.playTone(580, 0.05);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('akinoya_labs_active_stage', String(stageNum));
+      try {
+        const url = new URL(window.location.href);
+        url.hash = `stage-${stageNum}`;
+        window.history.replaceState(null, '', url.toString());
+      } catch {}
+    }
     const target = document.getElementById(`stage-${stageNum}`);
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });

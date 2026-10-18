@@ -205,12 +205,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('akinoya_portal_active_tab', activeTab);
+      try {
+        const currentHash = window.location.hash.toLowerCase().replace('#', '');
+        if (currentHash !== activeTab) {
+          const url = new URL(window.location.href);
+          url.hash = activeTab;
+          window.history.replaceState(null, '', url.toString());
+        }
+      } catch {}
     }
   }, [activeTab]);
 
   // Viewport scroll position saving & restoration across reloads
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
 
     let timeoutId: any;
     const saveScroll = () => {
@@ -219,27 +231,38 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         if (window.scrollY > 0) {
           sessionStorage.setItem('akinoya_portal_scroll_y', String(window.scrollY));
         }
-      }, 80);
+      }, 60);
+    };
+
+    const handleInstantSaveScroll = () => {
+      if (window.scrollY > 0) {
+        sessionStorage.setItem('akinoya_portal_scroll_y', String(window.scrollY));
+      }
     };
 
     window.addEventListener('scroll', saveScroll, { passive: true });
-    window.addEventListener('beforeunload', saveScroll);
+    window.addEventListener('beforeunload', handleInstantSaveScroll);
+    window.addEventListener('pagehide', handleInstantSaveScroll);
 
     const savedY = sessionStorage.getItem('akinoya_portal_scroll_y');
     if (savedY) {
       const targetY = parseFloat(savedY);
       if (!isNaN(targetY) && targetY > 50) {
-        requestAnimationFrame(() => {
+        const delays = [60, 150, 300, 600, 1000];
+        delays.forEach((delay) => {
           setTimeout(() => {
-            window.scrollTo({ top: targetY, behavior: 'smooth' });
-          }, 120);
+            if (Math.abs(window.scrollY - targetY) > 20) {
+              window.scrollTo({ top: targetY, behavior: 'instant' as ScrollBehavior });
+            }
+          }, delay);
         });
       }
     }
 
     return () => {
       window.removeEventListener('scroll', saveScroll);
-      window.removeEventListener('beforeunload', saveScroll);
+      window.removeEventListener('beforeunload', handleInstantSaveScroll);
+      window.removeEventListener('pagehide', handleInstantSaveScroll);
       clearTimeout(timeoutId);
     };
   }, []);
@@ -390,12 +413,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [passSubView, setPassSubView] = useState<'overview' | 'hub'>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('subview') === 'hub' || params.get('tab') === 'visualizers') {
+      const savedSubview = sessionStorage.getItem('akinoya_portal_pass_subview');
+      if (params.get('subview') === 'hub' || params.get('tab') === 'visualizers' || savedSubview === 'hub') {
         return 'hub';
       }
     }
     return 'overview';
   });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('akinoya_portal_pass_subview', passSubView);
+    }
+  }, [passSubView]);
 
   // Listen for direct navigation to Visualizer Hub and Passperks Home
   useEffect(() => {
@@ -410,6 +440,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       setPassSubView('overview');
       try {
         sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+        sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
+        const url = new URL(window.location.href);
+        url.hash = 'pass';
+        window.history.replaceState(null, '', url.toString());
       } catch {
         // ignore
       }
@@ -419,12 +453,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     const checkUrlParams = () => {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
-        const hash = window.location.hash.toLowerCase();
-        if (params.get('tab') === 'assets' || hash === '#assets') {
+        const hash = window.location.hash.toLowerCase().replace('#', '');
+        if (params.get('tab') === 'assets' || hash === 'assets') {
           setActiveTab('assets');
-        } else if (params.get('tab') === 'my-world' || hash === '#my-world') {
+        } else if (params.get('tab') === 'my-world' || hash === 'my-world') {
           setActiveTab('my-world');
-        } else if (params.get('tab') === 'edition' || hash === '#edition') {
+        } else if (params.get('tab') === 'edition' || hash === 'edition' || hash === 'comic') {
           setActiveTab('edition');
         } else if (params.get('tab') === 'pass' && params.get('subview') === 'hub') {
           setActiveTab('pass');
@@ -432,9 +466,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         } else if (params.get('tab') === 'visualizers') {
           setActiveTab('pass');
           setPassSubView('hub');
-        } else if (params.get('tab') === 'pass' || (params.get('tab') === null && !hash && window.location.pathname === '/')) {
+        } else if (params.get('tab') === 'pass' || hash === 'pass') {
           setActiveTab('pass');
-          setPassSubView('overview');
         }
       }
     };
@@ -443,10 +476,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     window.addEventListener('akinoya-open-visualizer-hub', handleOpenHub);
     window.addEventListener('akinoya-navigate-passperks-home', handleNavigatePassperksHome);
     window.addEventListener('popstate', checkUrlParams);
+    window.addEventListener('hashchange', checkUrlParams);
     return () => {
       window.removeEventListener('akinoya-open-visualizer-hub', handleOpenHub);
       window.removeEventListener('akinoya-navigate-passperks-home', handleNavigatePassperksHome);
       window.removeEventListener('popstate', checkUrlParams);
+      window.removeEventListener('hashchange', checkUrlParams);
     };
   }, []);
 
@@ -737,6 +772,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
+  const handleSelectTab = (tab: 'pass' | 'edition' | 'my-world' | 'assets') => {
+    soundManager.playTone(580, 0.04);
+    setActiveTab(tab);
+    if (tab === 'pass') {
+      setPassSubView('overview');
+    }
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('akinoya_portal_active_tab', tab);
+      try {
+        const url = new URL(window.location.href);
+        url.hash = tab;
+        window.history.replaceState(null, '', url.toString());
+      } catch {}
+    }
+  };
+
   const handleTrackCardClick = (track: VisualizerTrack) => {
     const isUnlocked = isVipMode || unlockedTracks[track.id] || track.defaultUnlocked;
     if (isUnlocked) {
@@ -1018,7 +1069,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               )}
               <button
                 type="button"
-                onClick={() => setActiveTab('my-world')}
+                onClick={() => handleSelectTab('my-world')}
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-400/45 text-cyan-200 hover:text-white text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase shadow-[0_0_10px_rgba(34,211,238,0.25)] transition-all cursor-pointer shrink-0"
                 title="Inspect Bound Planetary Profile"
               >
@@ -1066,7 +1117,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         {/* Navigation Tabs (All 4 tabs accessible, including My Assets for 9:16 Story Verification Badge) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
           <button
-            onClick={() => setActiveTab('pass')}
+            onClick={() => handleSelectTab('pass')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
               activeTab === 'pass'
                 ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
@@ -1077,7 +1128,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <span className="truncate">Pass Perks</span>
           </button>
           <button
-            onClick={() => setActiveTab('edition')}
+            onClick={() => handleSelectTab('edition')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
               activeTab === 'edition'
                 ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
@@ -1088,7 +1139,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <span className="truncate">Comic</span>
           </button>
           <button
-            onClick={() => setActiveTab('my-world')}
+            onClick={() => handleSelectTab('my-world')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
               activeTab === 'my-world'
                 ? 'bg-amber-400 text-black font-bold shadow-[0_0_15px_rgba(245,158,11,0.35)]'
@@ -1099,7 +1150,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <span className="truncate">My World</span>
           </button>
           <button
-            onClick={() => setActiveTab('assets')}
+            onClick={() => handleSelectTab('assets')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
               activeTab === 'assets'
                 ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'

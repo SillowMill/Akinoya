@@ -274,27 +274,42 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
   const isPatron = isVipOrAbove;
 
+  const normalizeHubSection = (raw: string | null | undefined): CreativeHubSection | null => {
+    if (!raw) return null;
+    const c = raw.toLowerCase().replace('#', '').trim();
+    if (c === 'drive-vault' || c === 'downloads' || c === 'vault') return 'downloads';
+    if (c === 'workflows' || c === 'labs' || c.startsWith('stage-')) return 'workflows';
+    if (c === 'discussion' || c === 'chat' || c === 'comm-net') return 'discussion';
+    if (c === 'creators' || c === 'leaderboard' || c === 'planets') return 'creators';
+    if (c === 'governance' || c === 'lore') return 'governance';
+    if (c === 'welcome' || c === 'vision') return 'welcome';
+    return null;
+  };
+
   // Active Hub Section with sessionStorage & URL hash persistence
   const [activeSection, setActiveSection] = useState<CreativeHubSection>(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const tabParam = urlParams.get('tab') || urlParams.get('section');
-      const hash = window.location.hash.toLowerCase().replace('#', '');
-      const savedSection = sessionStorage.getItem('akinoya_hub_active_section') as any;
+      const hash = window.location.hash;
+      const savedSection = sessionStorage.getItem('akinoya_hub_active_section');
 
-      const candidate = tabParam || hash || savedSection;
-      if (candidate === 'drive-vault' || candidate === 'downloads') return 'downloads';
-      if (candidate === 'workflows' || candidate === 'labs') return 'workflows';
-      if (candidate === 'discussion' || candidate === 'chat') return 'discussion';
-      if (candidate === 'creators' || candidate === 'leaderboard') return 'creators';
-      if (candidate === 'governance' || candidate === 'lore') return 'governance';
-      if (candidate === 'welcome' || candidate === 'vision') return 'welcome';
+      const resolved =
+        normalizeHubSection(tabParam) ||
+        normalizeHubSection(hash) ||
+        normalizeHubSection(savedSection);
+      if (resolved) return resolved;
     }
     return 'welcome';
   });
 
   const [activeStageId, setActiveStageId] = useState<number>(() => {
     if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (hash.startsWith('stage-')) {
+        const num = Number(hash.replace('stage-', ''));
+        if (num >= 1 && num <= 5) return num;
+      }
       const saved = sessionStorage.getItem('akinoya_hub_active_stage');
       const num = Number(saved);
       if (num >= 1 && num <= 5) return num;
@@ -331,7 +346,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       sessionStorage.setItem('akinoya_hub_active_section', normalized);
       sessionStorage.setItem('akinoya_hub_scroll_y', '0');
       try {
-        window.history.replaceState(null, '', `#${normalized}`);
+        const url = new URL(window.location.href);
+        url.hash = normalized;
+        window.history.replaceState(null, '', url.toString());
       } catch {}
       window.scrollTo({ top: 0, behavior: 'smooth' });
       document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
@@ -347,17 +364,27 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       sessionStorage.setItem('akinoya_hub_vault_folder', folderId);
       sessionStorage.setItem('akinoya_hub_scroll_y', '0');
       try {
-        window.history.replaceState(null, '', `#downloads`);
+        const url = new URL(window.location.href);
+        url.hash = 'downloads';
+        window.history.replaceState(null, '', url.toString());
       } catch {}
       window.scrollTo({ top: 0, behavior: 'smooth' });
       document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  // Synchronize state persistence to sessionStorage
+  // Synchronize state persistence to sessionStorage and URL hash
   useEffect(() => {
     if (typeof window === 'undefined') return;
     sessionStorage.setItem('akinoya_hub_active_section', activeSection);
+    try {
+      const currentHash = window.location.hash.toLowerCase().replace('#', '');
+      if (currentHash !== activeSection && !currentHash.startsWith('stage-')) {
+        const url = new URL(window.location.href);
+        url.hash = activeSection;
+        window.history.replaceState(null, '', url.toString());
+      }
+    } catch {}
   }, [activeSection]);
 
   useEffect(() => {
@@ -370,27 +397,49 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     sessionStorage.setItem('akinoya_hub_vault_folder', targetVaultFolderId);
   }, [targetVaultFolderId]);
 
-  // URL query parameter & hash detection on external navigation
+  // URL query parameter & hash detection on external navigation and popstate
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') return;
+
+    const checkUrlParams = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const tabParam = urlParams.get('tab') || urlParams.get('section');
       const folderParam = urlParams.get('folder');
-      if (tabParam === 'drive-vault' || tabParam === 'downloads') {
-        setActiveSection('downloads');
-        if (folderParam) {
-          setTargetVaultFolderId(folderParam);
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+
+      if (folderParam) {
+        setTargetVaultFolderId(folderParam);
+      }
+
+      if (hash.startsWith('stage-')) {
+        const num = Number(hash.replace('stage-', ''));
+        if (num >= 1 && num <= 5) {
+          setActiveStageId(num);
         }
       }
-      if (window.location.hash === '#drive-vault' || window.location.hash === '#downloads') {
-        setActiveSection('downloads');
+
+      const resolved = normalizeHubSection(tabParam) || normalizeHubSection(hash);
+      if (resolved) {
+        setActiveSection(resolved);
       }
-    }
+    };
+
+    checkUrlParams();
+    window.addEventListener('popstate', checkUrlParams);
+    window.addEventListener('hashchange', checkUrlParams);
+    return () => {
+      window.removeEventListener('popstate', checkUrlParams);
+      window.removeEventListener('hashchange', checkUrlParams);
+    };
   }, []);
 
   // Viewport scroll position saving & restoration across reloads
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
 
     let timeoutId: any;
     const saveScroll = () => {
@@ -399,28 +448,39 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         if (window.scrollY > 0) {
           sessionStorage.setItem('akinoya_hub_scroll_y', String(window.scrollY));
         }
-      }, 80);
+      }, 60);
+    };
+
+    const handleInstantSaveScroll = () => {
+      if (window.scrollY > 0) {
+        sessionStorage.setItem('akinoya_hub_scroll_y', String(window.scrollY));
+      }
     };
 
     window.addEventListener('scroll', saveScroll, { passive: true });
-    window.addEventListener('beforeunload', saveScroll);
+    window.addEventListener('beforeunload', handleInstantSaveScroll);
+    window.addEventListener('pagehide', handleInstantSaveScroll);
 
-    // Restore saved scroll position after rendering
+    // Multi-interval robust scroll restoration
     const savedY = sessionStorage.getItem('akinoya_hub_scroll_y');
     if (savedY) {
       const targetY = parseFloat(savedY);
       if (!isNaN(targetY) && targetY > 50) {
-        requestAnimationFrame(() => {
+        const delays = [60, 150, 300, 600, 1000];
+        delays.forEach((delay) => {
           setTimeout(() => {
-            window.scrollTo({ top: targetY, behavior: 'smooth' });
-          }, 120);
+            if (Math.abs(window.scrollY - targetY) > 20) {
+              window.scrollTo({ top: targetY, behavior: 'instant' as ScrollBehavior });
+            }
+          }, delay);
         });
       }
     }
 
     return () => {
       window.removeEventListener('scroll', saveScroll);
-      window.removeEventListener('beforeunload', saveScroll);
+      window.removeEventListener('beforeunload', handleInstantSaveScroll);
+      window.removeEventListener('pagehide', handleInstantSaveScroll);
       clearTimeout(timeoutId);
     };
   }, []);
@@ -451,9 +511,38 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     return () => observer.disconnect();
   }, [activeSection]);
 
+  // Auto-scroll to active stage on initial load/section switch in workflows
+  useEffect(() => {
+    if (typeof window === 'undefined' || activeSection !== 'workflows') return;
+    const hash = window.location.hash.toLowerCase();
+    const targetStage = hash.startsWith('#stage-')
+      ? Number(hash.replace('#stage-', ''))
+      : activeStageId;
+
+    if (targetStage && targetStage > 1 && targetStage <= 5) {
+      const delays = [150, 400, 800];
+      delays.forEach((delay) => {
+        setTimeout(() => {
+          const el = document.getElementById(`stage-${targetStage}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' });
+          }
+        }, delay);
+      });
+    }
+  }, [activeSection]);
+
   const handleJumpToStage = (stageNum: number) => {
     setActiveStageId(stageNum);
     soundManager.playTone(580, 0.05);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('akinoya_hub_active_stage', String(stageNum));
+      try {
+        const url = new URL(window.location.href);
+        url.hash = `stage-${stageNum}`;
+        window.history.replaceState(null, '', url.toString());
+      } catch {}
+    }
     const target = document.getElementById(`stage-${stageNum}`);
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
