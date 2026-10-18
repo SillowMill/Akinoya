@@ -588,12 +588,14 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
                   };
                 }
                 const current = d.renders;
+                const isItemSandbox = Boolean(d.is_sandbox || d.isSandbox);
                 const hasLeak =
-                  !current ||
+                  !isItemSandbox &&
+                  (!current ||
                   !current.hero ||
                   !isCleanPhotorealistic(current.hero) ||
                   isAmlemiAsset(current.hero) ||
-                  isAmlemiAsset(current.flora);
+                  isAmlemiAsset(current.flora));
                 if (hasLeak) {
                   return {
                     ...resolvePlanetRenders(d.human_answers || (d as any)),
@@ -789,12 +791,14 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
               };
             }
             const current = data.renders;
+            const isItemSandbox = Boolean(data.is_sandbox || data.isSandbox);
             const hasLeak =
-              !current ||
+              !isItemSandbox &&
+              (!current ||
               !current.hero ||
               !isCleanPhotorealistic(current.hero) ||
               isAmlemiAsset(current.hero) ||
-              isAmlemiAsset(current.flora);
+              isAmlemiAsset(current.flora));
             if (hasLeak) {
               return {
                 ...resolvePlanetRenders(data.human_answers || (data as any)),
@@ -886,7 +890,8 @@ function toBase64(str: string): string {
 // ZERO VECTOR / SVG PLACEHOLDERS: Returns empty strings if not yet synthesized.
 export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['renders'] => {
   const isAmlemi = answers.planetName === 'Ämlemi' || answers.planetName?.toLowerCase() === 'ämlemi';
-  if (isAmlemi) {
+  const isSandbox = typeof window !== 'undefined' && localStorage.getItem('akinoya_mill_sandbox_mode') === 'true';
+  if (isAmlemi || isSandbox) {
     return {
       hero: amlemiOrbitalImg,
       flora: amlemiBotanicalImg,
@@ -894,6 +899,11 @@ export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['
       atmosphere: amlemiCockpitImg,
       landmark: amlemiMonumentImg,
       ecosystem: amlemiBotanicalImg,
+      '01_main': amlemiOrbitalImg,
+      '02_flora': amlemiBotanicalImg,
+      '03_fauna': amlemiFaunaImg,
+      '04_atmo': amlemiCockpitImg,
+      '05_lore': amlemiMonumentImg,
     };
   }
 
@@ -964,8 +974,12 @@ export interface PlanetPhotoCard {
 
 export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] => {
   const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
+  const isSandbox = Boolean(
+    sub.isSandbox ||
+    (typeof window !== 'undefined' && localStorage.getItem('akinoya_mill_sandbox_mode') === 'true')
+  );
   let renders = sub.renders;
-  if (!isAmlemi) {
+  if (!isAmlemi && !isSandbox) {
     const hasLeak =
       !renders ||
       !renders.hero ||
@@ -977,11 +991,33 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
     }
   }
 
-  const heroUrl = (isAmlemi ? amlemiOrbitalImg : renders?.hero) || '';
-  const floraUrl = (isAmlemi ? amlemiBotanicalImg : (renders?.flora || renders?.ecosystem)) || '';
-  const faunaUrl = (isAmlemi ? amlemiFaunaImg : renders?.fauna) || '';
-  const atmoUrl = (isAmlemi ? amlemiCockpitImg : renders?.atmosphere) || '';
-  const landmarkUrl = (isAmlemi ? amlemiMonumentImg : renders?.landmark) || '';
+  // Unified asset resolution: dynamically resolves primary keys, slot aliases, and sandbox/canonical fallbacks
+  const heroUrl =
+    renders?.hero ||
+    renders?.['01_main'] ||
+    (isAmlemi || isSandbox ? amlemiOrbitalImg : '') ||
+    '';
+  const floraUrl =
+    renders?.flora ||
+    renders?.['02_flora'] ||
+    renders?.ecosystem ||
+    (isAmlemi || isSandbox ? amlemiBotanicalImg : '') ||
+    '';
+  const faunaUrl =
+    renders?.fauna ||
+    renders?.['03_fauna'] ||
+    (isAmlemi || isSandbox ? amlemiFaunaImg : '') ||
+    '';
+  const atmoUrl =
+    renders?.atmosphere ||
+    renders?.['04_atmo'] ||
+    (isAmlemi || isSandbox ? amlemiCockpitImg : '') ||
+    '';
+  const landmarkUrl =
+    renders?.landmark ||
+    renders?.['05_lore'] ||
+    (isAmlemi || isSandbox ? amlemiMonumentImg : '') ||
+    '';
 
   return [
     {

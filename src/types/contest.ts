@@ -70,6 +70,7 @@ export interface PlanetSubmission {
   votesCount: number;
   hasVoted?: boolean;
   isPioneer?: boolean;
+  isSandbox?: boolean;
   pioneerBadge?: string;
   status: 'SUBMITTED' | 'PUBLISHED' | 'FINALIST';
   createdAt: string;

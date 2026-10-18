@@ -462,6 +462,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       humanAnswers: answersWithFormattedName,
       futurePromise: answers.futurePromise,
       generatedLore: lore,
+      isSandbox: isSandboxMode,
       videoUrl: '',
       videoStatus: 'QUEUED_PENDING',
       renders: {
@@ -496,6 +497,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       videoUrl: '',
     };
 
+    const aliasMap: Record<string, string> = {
+      hero: '01_main',
+      flora: '02_flora',
+      fauna: '03_fauna',
+      atmosphere: '04_atmo',
+      landmark: '05_lore',
+    };
+
     // If Sandbox Mode is active, simulate real-time slot synthesis using canonical placeholders without invoking external APIs or DB
     if (isSandboxMode) {
       for (let i = 0; i < initialSlots.length; i++) {
@@ -515,6 +524,10 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         const placeholderUrl = SANDBOX_PLACEHOLDERS[slotItem.id] || amlemiOrbitalImg;
         collectedRenders[slotItem.id] = placeholderUrl;
         if (slotItem.id === 'flora') collectedRenders.ecosystem = placeholderUrl;
+        const aliasKey = aliasMap[slotItem.id];
+        if (aliasKey) {
+          collectedRenders[aliasKey] = placeholderUrl;
+        }
 
         setSlotStream((prev) =>
           prev.map((s, idx) =>
@@ -525,9 +538,11 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           prev
             ? {
                 ...prev,
+                isSandbox: true,
                 renders: {
                   ...prev.renders,
                   [slotItem.id]: placeholderUrl,
+                  ...(aliasKey ? { [aliasKey]: placeholderUrl } : {}),
                   ecosystem: collectedRenders.ecosystem,
                 },
               }
@@ -544,6 +559,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
       const synchronizedDraft: PlanetSubmission = {
         ...initialDraft,
+        isSandbox: true,
         videoUrl: '',
         videoStatus: 'READY',
         renders: {
@@ -630,6 +646,10 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         if (res.ok && json.success && json.imageUrl) {
           collectedRenders[slotItem.id] = json.imageUrl;
           if (slotItem.id === 'flora') collectedRenders.ecosystem = json.imageUrl;
+          const aliasKey = aliasMap[slotItem.id];
+          if (aliasKey) {
+            collectedRenders[aliasKey] = json.imageUrl;
+          }
 
           setSlotStream((prev) =>
             prev.map((s, idx) =>
@@ -643,6 +663,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                   renders: {
                     ...prev.renders,
                     [slotItem.id]: json.imageUrl,
+                    ...(aliasKey ? { [aliasKey]: json.imageUrl } : {}),
                     ecosystem: collectedRenders.ecosystem,
                   },
                 }
@@ -743,6 +764,15 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     const slotItem = slotStream[slotIndex];
     if (!slotItem) return;
 
+    const aliasMap: Record<string, string> = {
+      hero: '01_main',
+      flora: '02_flora',
+      fauna: '03_fauna',
+      atmosphere: '04_atmo',
+      landmark: '05_lore',
+    };
+    const aliasKey = aliasMap[slotItem.id];
+
     if (isSandboxMode) {
       soundManager.playTone(660, 0.08);
       setSlotStream((prev) =>
@@ -762,6 +792,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               renders: {
                 ...prev.renders,
                 [slotItem.id]: placeholderUrl,
+                ...(aliasKey ? { [aliasKey]: placeholderUrl } : {}),
                 ...(slotItem.id === 'flora' ? { ecosystem: placeholderUrl } : {}),
               },
             }
@@ -803,6 +834,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 renders: {
                   ...prev.renders,
                   [slotItem.id]: json.imageUrl,
+                  ...(aliasKey ? { [aliasKey]: json.imageUrl } : {}),
                   ...(slotItem.id === 'flora' ? { ecosystem: json.imageUrl } : {}),
                 },
               }
@@ -1509,6 +1541,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             {previewDossier && (
               <WorldStoryVerificationBadge
                 dossier={previewDossier}
+                isSimulationMode={isSandboxMode}
+                onInspectDossier={(d) => setModalPlanet(d)}
               />
             )}
 

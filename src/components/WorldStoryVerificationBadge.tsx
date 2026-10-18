@@ -995,6 +995,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
   editionRank,
   isSimulationMode = false,
   onUnlockSimulation,
+  onInspectDossier,
 }) => {
   const [activeViewMode, setActiveViewMode] = useState<StoryViewMode>('card');
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
@@ -1316,7 +1317,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               <div className="relative z-10 flex-1 my-1.5 flex flex-col gap-1.5 min-h-0">
                 {/* Photo 01: Main Orbital Hero */}
                 <div className="relative flex-[1.3] min-h-0 rounded-xl overflow-hidden border border-amber-400/55 bg-slate-950 shadow-md">
-                  {heroPhoto?.url && (
+                  {heroPhoto?.url ? (
                     <img
                       src={heroPhoto.url}
                       alt={heroPhoto.title}
@@ -1324,6 +1325,11 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                       loading="lazy"
                       decoding="async"
                     />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-cyan-950/40 text-cyan-300">
+                      <Sparkles className="w-5 h-5 animate-pulse text-cyan-400 mb-1" />
+                      <span className="text-[7.5px] font-mono tracking-wider">SYNTHESIZING 01 ORBITAL...</span>
+                    </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
                   <div className="absolute top-1.5 left-2 px-1.5 py-0.5 rounded bg-black/75 border border-amber-400/40 text-[7px] font-mono font-bold text-amber-300 uppercase tracking-wider">
@@ -1334,7 +1340,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                       {heroPhoto?.title || 'Orbital Horizon'}
                     </span>
                     <span className="text-[7px] font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-400/40 px-1.5 py-0.2 rounded">
-                      4K VERIFIED
+                      {heroPhoto?.url ? '4K VERIFIED' : 'SYNCHRONIZING'}
                     </span>
                   </div>
                 </div>
@@ -1346,9 +1352,9 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                     return (
                       <div
                         key={photo.id}
-                        className="relative rounded-lg overflow-hidden border border-cyan-400/35 bg-slate-950 min-h-0"
+                        className="relative rounded-lg overflow-hidden border border-cyan-400/35 bg-slate-950 min-h-0 flex items-center justify-center"
                       >
-                        {photo.url && (
+                        {photo.url ? (
                           <img
                             src={photo.url}
                             alt={photo.title}
@@ -1356,6 +1362,11 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                             loading="lazy"
                             decoding="async"
                           />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-cyan-950/30 text-cyan-400/60 font-mono text-[7.5px] p-1 text-center">
+                            <Sparkles className="w-3.5 h-3.5 text-cyan-400/60 animate-pulse mb-0.5" />
+                            <span className="truncate">{slotTags[idx]}</span>
+                          </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
                         <div className="absolute bottom-1 left-1.5 right-1.5">
@@ -1594,12 +1605,16 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                       key={card.id}
                       onClick={() => {
                         soundManager.playTone(680, 0.05);
-                        setIsFullscreenOpen(true);
+                        if (onInspectDossier) {
+                          onInspectDossier(dossier);
+                        } else {
+                          setIsFullscreenOpen(true);
+                        }
                       }}
                       className="group/mini relative aspect-square rounded-lg overflow-hidden border border-white/15 hover:border-amber-400/70 cursor-pointer bg-black"
-                      title="Open Fullscreen 9:16 Verification Viewer"
+                      title={`Stage 0${i + 1}: ${card.title} (Click to inspect full dossier)`}
                     >
-                      {card.url && (
+                      {card.url ? (
                         <img
                           src={card.url}
                           alt={card.title}
@@ -1607,6 +1622,10 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                           loading="lazy"
                           decoding="async"
                         />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-cyan-950/40">
+                          <Sparkles className="w-3.5 h-3.5 text-cyan-400/50 animate-pulse" />
+                        </div>
                       )}
                       <div className="absolute inset-x-0 bottom-0 bg-black/80 text-[8px] font-mono text-center text-amber-200 py-0.5 truncate px-0.5">
                         0{i + 1}
@@ -1761,12 +1780,46 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               </button>
             </div>
 
-            {/* Center 9:16 Card / Trailer Viewport */}
+            {/* Center 9:16 Card / Trailer Viewport & 5-Stage Switcher */}
             <div
-              className="my-auto py-4 w-full flex items-center justify-center"
+              className="my-auto py-2 sm:py-4 w-full flex flex-col items-center justify-center gap-3"
               onClick={(e) => e.stopPropagation()}
             >
               {renderStoryAfficheCard(true)}
+
+              {/* 5-Stage Interactive Thumbnail Switcher inside Fullscreen Modal */}
+              <div className="w-full max-w-sm px-2 flex items-center justify-center gap-2">
+                {photoCards.slice(0, 5).map((card, i) => (
+                  <div
+                    key={card.id}
+                    onClick={() => {
+                      soundManager.playTone(680, 0.05);
+                      if (onInspectDossier) {
+                        setIsFullscreenOpen(false);
+                        onInspectDossier(dossier);
+                      }
+                    }}
+                    className="group/thumb relative aspect-square w-12 sm:w-14 rounded-xl overflow-hidden border border-white/20 hover:border-amber-400/80 cursor-pointer bg-black shadow-lg transition-all hover:scale-105"
+                    title={`Stage 0${i + 1}: ${card.title} (Click to inspect full dossier)`}
+                  >
+                    {card.url ? (
+                      <img
+                        src={card.url}
+                        alt={card.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-cyan-950/40">
+                        <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-black/85 text-[7.5px] font-mono text-center text-amber-300 font-bold py-0.5">
+                      0{i + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Bottom Dual Action Bar inside Fullscreen Viewer */}
