@@ -251,19 +251,30 @@ export async function renderWorldStoryBadgeBlob(
   }
 
   const brandTextX = contentX + logoFrameSize + 26;
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 42px "Inter", sans-serif';
-  ctx.fillText('SILLOW MILL', brandTextX, brandHeaderY + 44);
-
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = '#fbbf24';
   ctx.font = 'bold 20px "JetBrains Mono", monospace';
-  ctx.fillText('CELOMILLE · ÄKINOYA UNIVERSE', brandTextX, brandHeaderY + 78);
+  ctx.fillText(
+    meta.isAmlemi
+      ? '★ FOUNDING PIONEER · GENESIS BENCHMARK'
+      : meta.isPioneer
+      ? '★ FOUNDING PIONEER · PRE-RELEASE'
+      : '★ FOUNDING PIONEER',
+    brandTextX,
+    brandHeaderY + 36
+  );
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
-  ctx.font = '600 15px "JetBrains Mono", monospace';
-  ctx.fillText('OFFICIAL PLANETARY VERIFICATION AFFICHE', brandTextX, brandHeaderY + 103);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 46px "Inter", sans-serif';
+  ctx.fillText((dossier.planetName || 'ÄMLEMI').toUpperCase(), brandTextX, brandHeaderY + 80);
 
-  // Unique Edition Number Badge (Top Right alongside Branding Header)
+  ctx.fillStyle = '#67e8f9';
+  ctx.font = 'bold 18px "JetBrains Mono", monospace';
+  const holderLine = `HOLDER: ${(dossier.authorName || 'ODI SELIS').toUpperCase()} · ${(
+    dossier.sectorId || 'SECTOR AKN-01'
+  ).toUpperCase()}`;
+  ctx.fillText(holderLine, brandTextX, brandHeaderY + 106);
+
+  // Unique Edition Number Badge (Top Right alongside Header)
   const badgeW = 196;
   const badgeH = 100;
   const badgeX = W - 84 - badgeW;
@@ -288,49 +299,17 @@ export async function renderWorldStoryBadgeBlob(
   ctx.fillText(`#${meta.worldNumber}`, badgeX + badgeW / 2, badgeY + 80);
   ctx.textAlign = 'left';
 
-  // Divider below Top-Level Branding Header
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(contentX, 212);
-  ctx.lineTo(W - contentX, 212);
-  ctx.stroke();
-
-  // 3. Planet Title, Holder Info & Sector Specifications (Immediately below Top-Level Branding Header)
-  ctx.fillStyle = '#fbbf24';
-  ctx.font = 'bold 20px "JetBrains Mono", monospace';
-  ctx.fillText(
-    meta.isAmlemi
-      ? '★ FOUNDING PIONEER · GENESIS BENCHMARK'
-      : meta.isPioneer
-      ? '★ PIONEER 2027 · PRE-RELEASE WORLD'
-      : '★ VERIFIED PLANETARY ARCHIVE',
-    contentX,
-    248
-  );
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 60px "Inter", sans-serif';
-  ctx.fillText((dossier.planetName || 'ÄMLEMI').toUpperCase(), contentX, 312);
-
-  ctx.fillStyle = '#e2e8f0';
-  ctx.font = 'bold 22px "JetBrains Mono", monospace';
-  const holderLine = `HOLDER: ${(dossier.authorName || 'ODI SELIS').toUpperCase()}   ·   ${(
-    dossier.sectorId || 'SECTOR AKN-01'
-  ).toUpperCase()}`;
-  ctx.fillText(holderLine, contentX, 350);
-
   // Subtle divider above 5-Photo Collage
   ctx.strokeStyle = 'rgba(34, 211, 238, 0.22)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(contentX, 372);
-  ctx.lineTo(W - contentX, 372);
+  ctx.moveTo(contentX, 224);
+  ctx.lineTo(W - contentX, 224);
   ctx.stroke();
 
-  // 4. Artistic 5-Photo Collage (01 Main Hero + 2x2 Grid for 02, 03, 04, 05)
-  const heroY = 394;
-  const heroH = 456;
+  // 3. Artistic 5-Photo Collage (01 Main Hero + 2x2 Grid for 02, 03, 04, 05)
+  const heroY = 246;
+  const heroH = 540;
 
   // 01 Main Hero Frame
   ctx.save();
@@ -581,14 +560,32 @@ function drawTrailerFrame(
   const contentX = Math.round(78 * s);
   const contentW = W - contentX * 2;
 
-  // TOP-LEVEL BRANDING HEADER
-  ctx.fillStyle = '#ffffff';
-  ctx.font = `900 ${Math.round(38 * s)}px "Inter", sans-serif`;
-  ctx.fillText('SILLOW MILL', contentX, Math.round(112 * s));
+  // TOP-LEVEL HEADER: FOUNDING PIONEER STATUS + PLANET NAME + HOLDER
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = `bold ${Math.round(20 * s)}px "JetBrains Mono", monospace`;
+  ctx.fillText(
+    meta.isAmlemi
+      ? '★ FOUNDING PIONEER · GENESIS BENCHMARK'
+      : meta.isPioneer
+      ? '★ FOUNDING PIONEER · 9:16 TRAILER'
+      : '★ FOUNDING PIONEER',
+    contentX,
+    Math.round(112 * s)
+  );
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${Math.round(19 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText('CELOMILLE · ÄKINOYA UNIVERSE', contentX, Math.round(146 * s));
+  ctx.font = `900 ${Math.round(52 * s)}px "Inter", sans-serif`;
+  ctx.fillText((dossier.planetName || 'ÄMLEMI').toUpperCase(), contentX, Math.round(168 * s));
+
+  ctx.fillStyle = '#67e8f9';
+  ctx.font = `bold ${Math.round(18 * s)}px "JetBrains Mono", monospace`;
+  ctx.fillText(
+    `HOLDER: ${(dossier.authorName || 'ODI SELIS').toUpperCase()} · ${(
+      dossier.sectorId || 'SECTOR AKN-01'
+    ).toUpperCase()}`,
+    contentX,
+    Math.round(202 * s)
+  );
 
   // Top-right Edition Pill
   const badgeW = Math.round(180 * s);
@@ -607,31 +604,6 @@ function drawTrailerFrame(
   ctx.textAlign = 'center';
   ctx.fillText(`#${meta.worldNumber}`, badgeX + badgeW / 2, badgeY + Math.round(50 * s));
   ctx.textAlign = 'left';
-
-  // Planet Title & Holder Info Directly Below Top Branding
-  ctx.fillStyle = '#fbbf24';
-  ctx.font = `bold ${Math.round(18 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(
-    meta.isAmlemi
-      ? '★ FOUNDING PIONEER · 9:16 ORBITAL TRAILER'
-      : '★ VERIFIED WORLD · 9:16 ORBITAL TRAILER',
-    contentX,
-    Math.round(202 * s)
-  );
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = `900 ${Math.round(56 * s)}px "Inter", sans-serif`;
-  ctx.fillText((dossier.planetName || 'ÄMLEMI').toUpperCase(), contentX, Math.round(264 * s));
-
-  ctx.fillStyle = '#e2e8f0';
-  ctx.font = `bold ${Math.round(21 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(
-    `HOLDER: ${(dossier.authorName || 'ODI SELIS').toUpperCase()}  ·  ${(
-      dossier.sectorId || 'SECTOR AKN-01'
-    ).toUpperCase()}`,
-    contentX,
-    Math.round(300 * s)
-  );
 
   // Active Archive Slot Telemetry Pill (Bottom-Area above Footer)
   const slotCard = photoCards[activeIdx] || photoCards[0];
@@ -942,8 +914,9 @@ export const LiveStoryTrailerViewport: React.FC<{
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none" />
           <div className="absolute top-3 left-3.5 right-3.5 flex items-start justify-between gap-2 pointer-events-none">
             <div>
-              <div className="text-[8px] font-display font-black tracking-[0.16em] text-white/80 uppercase">
-                SILLOW MILL · CELOMILLE
+              <div className="inline-flex items-center gap-1 text-[8.5px] font-mono font-extrabold text-amber-300 tracking-wider uppercase">
+                <Sparkles className="w-2.5 h-2.5 text-amber-300 inline" />
+                <span>FOUNDING PIONEER</span>
               </div>
               <div className="text-sm font-display font-black tracking-[0.15em] text-white uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mt-0.5">
                 {dossier.planetName || 'ÄMLEMI'}
@@ -1258,10 +1231,10 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               transition={{ duration: 0.2 }}
               className="relative w-full h-full flex flex-col justify-between"
             >
-              {/* 1. TOP-LEVEL BRANDING HEADER: OFFICIAL SILLOW MILL LOGO + CELOMILLE */}
-              <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-white/15">
+              {/* 1. TOP-LEVEL HEADER: FOUNDING PIONEER STATUS + PLANET NAME + HOLDER */}
+              <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-cyan-400/20">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/20 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(255,255,255,0.16)]">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-amber-400/40 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(251,191,36,0.2)]">
                     <img
                       src={sillowMillLogoUrl}
                       alt="Sillow Mill Official Logo"
@@ -1269,11 +1242,21 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                     />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs sm:text-[13px] font-display font-black tracking-[0.16em] text-white uppercase leading-none truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
-                      SILLOW MILL
+                    <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
+                      <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
+                      <span className="truncate">
+                        {meta.isAmlemi
+                          ? 'FOUNDING PIONEER · GENESIS BENCHMARK'
+                          : meta.isPioneer
+                          ? 'FOUNDING PIONEER · PRE-RELEASE'
+                          : 'FOUNDING PIONEER'}
+                      </span>
                     </div>
-                    <div className="text-[7.5px] sm:text-[8px] font-mono font-extrabold text-white/90 tracking-[0.13em] uppercase mt-1 truncate">
-                      CELOMILLE · ÄKINOYA UNIVERSE
+                    <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide uppercase truncate leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+                      {dossier.planetName}
+                    </h4>
+                    <div className="text-[7.5px] sm:text-[8px] font-mono text-cyan-300/90 truncate">
+                      HOLDER: <strong className="text-white font-bold uppercase">{dossier.authorName || 'ODI SELIS'}</strong> · {dossier.sectorId || 'SECTOR AKN-01'}
                     </div>
                   </div>
                 </div>
@@ -1286,30 +1269,6 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                   <span className="block text-xs sm:text-sm font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent leading-tight">
                     #{meta.worldNumber}
                   </span>
-                </div>
-              </div>
-
-              {/* 2. PLANET TITLE, HOLDER INFO & SECTOR SPECIFICATIONS (Immediately below Top Branding Header) */}
-              <div className="relative z-10 pt-1.5 pb-1.5 border-b border-cyan-400/20">
-                <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
-                  <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
-                  <span className="truncate">
-                    {meta.isAmlemi
-                      ? 'FOUNDING PIONEER · GENESIS BENCHMARK'
-                      : meta.isPioneer
-                      ? 'PIONEER 2027 · PRE-RELEASE WORLD'
-                      : 'VERIFIED PLANETARY ARCHIVE'}
-                  </span>
-                </div>
-                <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide uppercase truncate mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
-                  {dossier.planetName}
-                </h4>
-                <div className="text-[8.5px] sm:text-[9px] font-mono text-white/85 truncate mt-0.5">
-                  HOLDER:{' '}
-                  <strong className="text-white font-bold uppercase">
-                    {dossier.authorName || 'ODI SELIS'}
-                  </strong>{' '}
-                  · <span className="text-cyan-300 font-bold">{dossier.sectorId || 'SECTOR AKN-01'}</span>
                 </div>
               </div>
 

@@ -8,6 +8,9 @@ export interface PlanetSubmissionRenders {
   videoUrl?: string; // 9:16 Vertical Viral Video Trailer (5s)
   video_url?: string;
   videoStatus?: 'READY' | 'QUEUED_PENDING';
+  sfxAudioUrl?: string; // Synchronized 5-Second AI Sound Effects Track (~$0.01-$0.03/gen)
+  sfx_audio_url?: string;
+  sfxStatus?: 'READY' | 'QUEUED_PENDING';
   '01_main'?: string;
   '02_flora'?: string;
   '03_fauna'?: string;
@@ -62,6 +65,8 @@ export interface PlanetSubmission {
   renders: PlanetSubmissionRenders;
   videoUrl?: string;
   videoStatus?: 'READY' | 'QUEUED_PENDING';
+  sfxAudioUrl?: string;
+  sfxStatus?: 'READY' | 'QUEUED_PENDING';
   coordX?: number;
   coordY?: number;
   coord_x?: number;

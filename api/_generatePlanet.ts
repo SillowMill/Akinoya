@@ -35,9 +35,9 @@ try {
   dotenv.config({ path: path.resolve(process.cwd(), '.env.production.local') });
 } catch {}
 
-export const QUEUED_PENDING_STATUS = 'QUEUED_PENDING';
+export const QUEUED_PENDING_STATUS = 'QUEUED_PENDING' as const;
 export const QUEUED_PENDING_MESSAGE = 'Synthesizer recalibrating.';
-export const SYSTEM_MAINTENANCE_QUEUED_CODE = 'QUEUED_PENDING';
+export const SYSTEM_MAINTENANCE_QUEUED_CODE = 'QUEUED_PENDING' as const;
 export const SYSTEM_MAINTENANCE_QUEUED_MESSAGE = 'Synthesizer recalibrating.';
 export const UI_RECALIBRATING_STATUS_TEXT =
   'Äkinoya Core is currently recalibrating generator nodes. Your slot is safely reserved.';
@@ -154,6 +154,7 @@ export interface GeneratePlanetRequest {
   authorUsername?: string;
   deviceId?: string;
   slot?: string;
+  apiKey?: string;
   heroImageUrl?: string;
   markCompleted?: boolean;
   resetLocks?: boolean;
@@ -209,6 +210,8 @@ export class FalMaintenanceQueueError extends Error {
 export const FAL_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
 export const FAL_VIDEO_ENDPOINT = 'https://fal.run/fal-ai/bytedance/seaweed-2.5/image-to-video';
 export const FAL_VIDEO_FALLBACK_ENDPOINT = 'https://fal.run/fal-ai/minimax/video-01/image-to-video';
+export const FAL_SFX_MMAUDIO_ENDPOINT = 'https://fal.run/fal-ai/mmaudio-v2';
+export const FAL_SFX_STABLE_AUDIO_ENDPOINT = 'https://fal.run/fal-ai/stable-audio';
 
 export const getFalApiKey = (): string => {
   return (
@@ -226,6 +229,60 @@ export const isValAiKeyConfigured = (overrideKey?: string): boolean => {
   const key = (overrideKey || getFalApiKey()).trim();
   return Boolean(key && key !== '[SENSITIVE]' && key.length > 8);
 };
+
+/**
+ * Synchronized 5-Second AI Sound Effects Pipeline (Video-to-Audio / Ambient Sci-Fi SFX)
+ * Roadmap integration: Ingests 5-second FPV video loop and sonic vibe description,
+ * generating cinematic kinetic pass-bys, atmospheric wind shear, deep planetary sub-bass hum,
+ * and biome-specific telemetry audio at ~$0.01-$0.03/gen.
+ */
+export async function generatePlanetSfxAudioWithAi(params: {
+  videoUrl?: string;
+  sonicVibe?: string;
+  planetName?: string;
+  biome?: string;
+  apiKey?: string;
+}): Promise<{ audioUrl: string; duration: number; status: 'READY' | 'QUEUED_PENDING' }> {
+  const activeKey = (params.apiKey || getFalApiKey()).trim();
+  if (!activeKey || activeKey === '[SENSITIVE]') {
+    return { audioUrl: '', duration: 5, status: QUEUED_PENDING_STATUS };
+  }
+
+  const sonicDescription =
+    params.sonicVibe ||
+    `Cinematic 5-second sci-fi kinetic FPV drone flight soundscape across ${params.planetName || 'Äkinoya frontier sector'}, deep sub-bass atmospheric rumble, ionized wind shear pass-by, resonant bioluminescent telemetry chime, 24fps motion-synced ambient soundscape.`;
+
+  try {
+    const res = await fetch(FAL_SFX_MMAUDIO_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        Authorization: `Key ${activeKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: sonicDescription,
+        ...(params.videoUrl ? { video_url: params.videoUrl } : {}),
+        duration: 5,
+        num_inference_steps: 25,
+      }),
+    });
+
+    if (!res.ok) {
+      return { audioUrl: '', duration: 5, status: QUEUED_PENDING_STATUS };
+    }
+
+    const json = await res.json().catch(() => ({}));
+    const audioUrl = json?.audio?.url || json?.audio_url || '';
+    return {
+      audioUrl,
+      duration: 5,
+      status: audioUrl ? 'READY' : QUEUED_PENDING_STATUS,
+    };
+  } catch (err) {
+    console.warn('[AI SFX Pipeline] Queued pending:', err);
+    return { audioUrl: '', duration: 5, status: QUEUED_PENDING_STATUS };
+  }
+}
 
 /**
  * Step 1: Synthesize a single sector photo via the Najno Banajna generator engine.
@@ -395,6 +452,8 @@ export async function syncPlanetToSupabaseAtomic(params: {
     ecosystem: string;
     videoUrl?: string;
     videoStatus?: 'READY' | 'QUEUED_PENDING';
+    sfxAudioUrl?: string;
+    sfxStatus?: 'READY' | 'QUEUED_PENDING';
     '01_main'?: string;
     '02_flora'?: string;
     '03_fauna'?: string;
@@ -402,10 +461,12 @@ export async function syncPlanetToSupabaseAtomic(params: {
     '05_lore'?: string;
   };
   videoUrl?: string;
+  sfxAudioUrl?: string;
   generatedLore: string;
 }): Promise<{ synced: boolean; error?: string }> {
   try {
     const videoUrl = params.videoUrl || params.renders.videoUrl || '';
+    const sfxAudioUrl = params.sfxAudioUrl || (params.renders as any)?.sfxAudioUrl || '';
     const enrichedRenders = {
       ...params.renders,
       '01_main': params.renders.hero,
@@ -416,6 +477,9 @@ export async function syncPlanetToSupabaseAtomic(params: {
       videoUrl,
       video_url: videoUrl,
       videoStatus: videoUrl ? 'READY' : 'QUEUED_PENDING',
+      sfxAudioUrl,
+      sfx_audio_url: sfxAudioUrl,
+      sfxStatus: sfxAudioUrl ? 'READY' : 'QUEUED_PENDING',
     };
 
     const baseRecord: Record<string, any> = {
@@ -426,6 +490,7 @@ export async function syncPlanetToSupabaseAtomic(params: {
       author_email: params.authorEmail || '',
       author_avatar_gradient: 'from-amber-400 via-yellow-500 to-amber-700',
       planet_name: params.planetName,
+      sfx_audio_url: sfxAudioUrl,
       atmosphere: params.data.atmosphere || params.data.troposphereType || '',
       flora: params.data.flora || params.data.floraType || '',
       fauna: params.data.fauna || params.data.faunaType || '',
@@ -774,6 +839,9 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   videoUrl: string;
   video_url: string;
   videoStatus: 'READY' | 'QUEUED_PENDING';
+  sfxAudioUrl?: string;
+  sfx_audio_url?: string;
+  sfxStatus?: 'READY' | 'QUEUED_PENDING';
   slots: SlotRenderResult[];
   renders: {
     hero: string;
@@ -783,6 +851,11 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     landmark: string;
     ecosystem: string;
     videoUrl: string;
+    video_url?: string;
+    videoStatus?: 'READY' | 'QUEUED_PENDING';
+    sfxAudioUrl?: string;
+    sfx_audio_url?: string;
+    sfxStatus?: 'READY' | 'QUEUED_PENDING';
     '01_main': string;
     '02_flora': string;
     '03_fauna': string;
@@ -855,8 +928,42 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
         }),
   });
 
+  // Step 2.5: Synchronized 5-Second AI Sound Effects Pipeline (Roadmap Video-to-Audio / Ambient Sci-Fi SFX)
+  let sfxAudioUrl = '';
+  let sfxStatus: 'READY' | 'QUEUED_PENDING' = QUEUED_PENDING_STATUS;
+  if (videoUrl || heroImageUrl) {
+    try {
+      const sfxRes = await generatePlanetSfxAudioWithAi({
+        videoUrl,
+        sonicVibe: data.sonicVibe,
+        planetName,
+        biome: data.biome,
+        apiKey: data.apiKey,
+      });
+      sfxAudioUrl = sfxRes.audioUrl;
+      sfxStatus = sfxRes.status;
+    } catch (sfxErr) {
+      console.warn('[AI SFX Pipeline] Queued pending:', sfxErr);
+    }
+  }
+
+  slotResults.push({
+    slotId: '07_sfx',
+    slotName: '07 · SYNCHRONIZED 5S AI SOUND EFFECTS (AUDIO)',
+    status: sfxAudioUrl ? 'ready' : QUEUED_PENDING_STATUS,
+    ...(sfxAudioUrl
+      ? { audioUrl: sfxAudioUrl }
+      : {
+          code: QUEUED_PENDING_STATUS,
+          message: QUEUED_PENDING_MESSAGE,
+        }),
+  });
+
   const anyPhotoQueued = results.some((r) => !r.success || !r.imageUrl);
   const anyQueued = anyPhotoQueued || videoQueued;
+
+  const resolvedVideoStatus: 'READY' | 'QUEUED_PENDING' = videoUrl ? 'READY' : 'QUEUED_PENDING';
+  const resolvedSfxStatus: 'READY' | 'QUEUED_PENDING' = sfxAudioUrl ? 'READY' : 'QUEUED_PENDING';
 
   const finalRenders = {
     hero: results[0].imageUrl || '',
@@ -866,6 +973,11 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     landmark: results[4].imageUrl || '',
     ecosystem: results[1].imageUrl || '',
     videoUrl,
+    video_url: videoUrl,
+    videoStatus: resolvedVideoStatus,
+    sfxAudioUrl,
+    sfx_audio_url: sfxAudioUrl,
+    sfxStatus: resolvedSfxStatus,
     '01_main': results[0].imageUrl || '',
     '02_flora': results[1].imageUrl || '',
     '03_fauna': results[2].imageUrl || '',
@@ -894,6 +1006,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       data,
       renders: finalRenders,
       videoUrl,
+      sfxAudioUrl,
       generatedLore,
     });
   }
@@ -953,16 +1066,21 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     videoUrl,
     video_url: videoUrl,
     videoStatus: videoUrl ? 'READY' : QUEUED_PENDING_STATUS,
+    sfxAudioUrl,
+    sfx_audio_url: sfxAudioUrl,
+    sfxStatus,
     slots: slotResults,
     renders: finalRenders,
     galleryList,
     generatedAt,
     meta: {
-      engine: 'Fal.ai Flux Schnell + Image-to-Video 9:16 Pipeline',
+      engine: 'Fal.ai Flux Schnell + Image-to-Video 9:16 + Synchronized AI SFX Pipeline',
       photoModel: 'fal-ai/flux/schnell',
       videoModel: 'fal-ai/minimax/video-01',
+      sfxModel: 'fal-ai/mmaudio-v2',
       videoAspectRatio: '9:16',
       videoDurationSeconds: 5,
+      sfxDurationSeconds: 5,
       videoMotionPrompt: VIRAL_VIDEO_MOTION_PROMPT,
       aestheticGuideline: 'Official Sillow Mill High-Resolution Cinematic Sci-Fi Standard',
       photorealismMandate: 'Strict 3D Photorealism Enforced — Zero Vector Art, Zero Google Imagen Fallback',

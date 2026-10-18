@@ -363,6 +363,11 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
               sub.renders?.video_url ||
               (sub.humanAnswers as any)?.video_url ||
               '';
+            const resolvedSfxAudioUrl =
+              sub.sfxAudioUrl ||
+              sub.renders?.sfxAudioUrl ||
+              sub.renders?.sfx_audio_url ||
+              '';
             const coords = (sub.coordX !== undefined && sub.coordY !== undefined)
               ? { x: sub.coordX, y: sub.coordY, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
               : (sub.coord_x !== undefined && sub.coord_y !== undefined)
@@ -380,6 +385,8 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
                 : sub.pioneerBadge || (isPreRelease ? 'PIONEER 2027 · PRE-RELEASE' : undefined),
               videoUrl: resolvedVideoUrl,
               videoStatus: resolvedVideoUrl ? 'READY' : sub.videoStatus || 'QUEUED_PENDING',
+              sfxAudioUrl: resolvedSfxAudioUrl,
+              sfxStatus: resolvedSfxAudioUrl ? 'READY' : sub.sfxStatus || 'QUEUED_PENDING',
               coordX: coords.x,
               coordY: coords.y,
               coord_x: coords.x,
@@ -395,6 +402,8 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
                     landmark: amlemiMonumentImg,
                     ecosystem: amlemiBotanicalImg,
                     videoUrl: resolvedVideoUrl,
+                    sfxAudioUrl: resolvedSfxAudioUrl,
+                    sfxStatus: resolvedSfxAudioUrl ? 'READY' : 'QUEUED_PENDING',
                     '01_main': amlemiOrbitalImg,
                     '02_flora': amlemiBotanicalImg,
                     '03_fauna': amlemiFaunaImg,
@@ -413,11 +422,15 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
                   return {
                     ...resolvePlanetRenders(sub.humanAnswers || (sub as any)),
                     videoUrl: resolvedVideoUrl,
+                    sfxAudioUrl: resolvedSfxAudioUrl,
+                    sfxStatus: resolvedSfxAudioUrl ? 'READY' : 'QUEUED_PENDING',
                   };
                 }
                 return {
                   ...current,
                   videoUrl: resolvedVideoUrl,
+                  sfxAudioUrl: resolvedSfxAudioUrl,
+                  sfxStatus: resolvedSfxAudioUrl ? 'READY' : 'QUEUED_PENDING',
                   '01_main': current.hero,
                   '02_flora': current.flora,
                   '03_fauna': current.fauna,
@@ -743,6 +756,12 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           data.human_answers?.video_url ||
           '';
 
+        const resolvedSfxAudioUrl =
+          data.sfx_audio_url ||
+          data.renders?.sfxAudioUrl ||
+          data.renders?.sfx_audio_url ||
+          '';
+
         const coords = (data.coord_x !== undefined && data.coord_y !== undefined)
           ? { x: data.coord_x, y: data.coord_y, sectorId: data.sector_id || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
           : (data.coordX !== undefined && data.coordY !== undefined)
@@ -768,6 +787,8 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           generatedLore: data.generated_lore || '',
           videoUrl: resolvedVideoUrl,
           videoStatus: resolvedVideoUrl ? 'READY' : 'QUEUED_PENDING',
+          sfxAudioUrl: resolvedSfxAudioUrl,
+          sfxStatus: resolvedSfxAudioUrl ? 'READY' : 'QUEUED_PENDING',
           coordX: coords.x,
           coordY: coords.y,
           coord_x: coords.x,
@@ -783,6 +804,8 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
                 landmark: amlemiMonumentImg,
                 ecosystem: amlemiBotanicalImg,
                 videoUrl: resolvedVideoUrl,
+                sfxAudioUrl: resolvedSfxAudioUrl,
+                sfxStatus: resolvedSfxAudioUrl ? 'READY' : 'QUEUED_PENDING',
                 '01_main': amlemiOrbitalImg,
                 '02_flora': amlemiBotanicalImg,
                 '03_fauna': amlemiFaunaImg,
@@ -803,11 +826,15 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
               return {
                 ...resolvePlanetRenders(data.human_answers || (data as any)),
                 videoUrl: resolvedVideoUrl,
+                sfxAudioUrl: resolvedSfxAudioUrl,
+                sfxStatus: resolvedSfxAudioUrl ? 'READY' : 'QUEUED_PENDING',
               };
             }
             return {
               ...current,
               videoUrl: resolvedVideoUrl,
+              sfxAudioUrl: resolvedSfxAudioUrl,
+              sfxStatus: resolvedSfxAudioUrl ? 'READY' : 'QUEUED_PENDING',
               '01_main': current.hero,
               '02_flora': current.flora,
               '03_fauna': current.fauna,
@@ -1073,6 +1100,11 @@ export const savePlanetSubmission = async (
       submission.renders?.videoUrl ||
       submission.renders?.video_url ||
       '';
+    const sfxAudioUrl =
+      submission.sfxAudioUrl ||
+      submission.renders?.sfxAudioUrl ||
+      submission.renders?.sfx_audio_url ||
+      '';
 
     const coords = (submission.coordX !== undefined && submission.coordY !== undefined)
       ? { x: submission.coordX, y: submission.coordY, sectorId: submission.sectorId || 'SECTOR ALPHA-01' }
@@ -1085,6 +1117,8 @@ export const savePlanetSubmission = async (
       votesCount: Math.max(1, submission.votesCount || 1),
       videoUrl,
       videoStatus: videoUrl ? 'READY' : submission.videoStatus || 'QUEUED_PENDING',
+      sfxAudioUrl,
+      sfxStatus: sfxAudioUrl ? 'READY' : submission.sfxStatus || 'QUEUED_PENDING',
       coordX: coords.x,
       coordY: coords.y,
       coord_x: coords.x,
@@ -1100,6 +1134,9 @@ export const savePlanetSubmission = async (
         videoUrl,
         video_url: videoUrl,
         videoStatus: videoUrl ? 'READY' : submission.videoStatus || 'QUEUED_PENDING',
+        sfxAudioUrl,
+        sfx_audio_url: sfxAudioUrl,
+        sfxStatus: sfxAudioUrl ? 'READY' : submission.sfxStatus || 'QUEUED_PENDING',
       },
     };
 

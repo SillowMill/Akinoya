@@ -20,7 +20,8 @@ import millAvatar from '../assets/images/mill_photo.jpg';
 import { WizardAnswers, ChatMessage } from '../types/contest';
 import { soundManager } from '../utils/audio';
 import { formatAkinoyaPlanetName, derivePlanetAttributesFromHumanAnswers } from '../data/contest';
-import { getStoredSectorClaim } from '../utils/pioneer';
+import { getStoredSectorClaim, saveSectorClaim } from '../utils/pioneer';
+import { validatePlanetName } from '../utils/profanityFilter';
 
 interface PlanetGeneratorChatProps {
   userDisplayName: string;
@@ -44,19 +45,43 @@ interface StepConfig {
 }
 
 /**
+ * Extracts candidate planet name and inner landscape vision from user input for Question 1.
+ */
+export function parsePlanetNameAndVision(input: string): { planetName: string; vision: string } {
+  const trimmed = input.trim();
+  // Delimiter match: "Zephyria: A quiet star-desert..." or "Zephyria - A quiet..." or "Zephyria\nA quiet..."
+  const delimiterMatch = trimmed.match(/^([^:\n—\-]+)[:\n—\-]\s*(.+)$/s);
+  if (delimiterMatch) {
+    const rawName = delimiterMatch[1].replace(/^(planet|world|sector)\s+/i, '').trim();
+    const rawVision = delimiterMatch[2].trim();
+    return { planetName: rawName, vision: rawVision };
+  }
+  // Dot match: "Zephyria. A quiet star-desert..."
+  const dotMatch = trimmed.match(/^([^.]+)\.\s*(.+)$/s);
+  if (dotMatch) {
+    const rawName = dotMatch[1].replace(/^(planet|world|sector)\s+/i, '').trim();
+    const rawVision = dotMatch[2].trim();
+    return { planetName: rawName, vision: rawVision };
+  }
+  // Fallback: whole input is candidate name
+  const rawName = trimmed.replace(/^(planet|world|sector)\s+/i, '').trim();
+  return { planetName: rawName, vision: trimmed };
+}
+
+/**
  * Streamlined 5-Question Personality-Based Planet Generator for Mill
  * Designed around light, fun, and deep human questions to synthesize unique worlds.
  */
 export const WIZARD_STEPS: StepConfig[] = [
   {
     step: 1,
-    title: 'Inner Landscape & Topography',
-    category: 'INNER LANDSCAPE',
+    title: 'Custom Planet Naming & Inner Landscape',
+    category: 'PLANET NAME & INNER LANDSCAPE',
     prompt:
-      'If your inner world was a landscape, do you lean more towards a stormy, energetic neon city, a quiet misty star-desert, or a deep, mysterious bioluminescent jungle?',
-    placeholder: 'e.g. A quiet, misty star-desert with serene crystals and a calm, philosophical vibe...',
-    helperExample: 'A quiet, misty star-desert with serene crystals and a calm, philosophical vibe.',
-    icon: Layers,
+      'What is the name of your planet, and how do you envision its inner landscape?',
+    placeholder: 'e.g. Zephyria: A quiet, misty star-desert with serene crystals and a calm, philosophical vibe...',
+    helperExample: 'Zephyria: A quiet, misty star-desert with serene crystals and a calm, philosophical vibe.',
+    icon: Globe2,
     field: 'naturalEnvironment',
   },
   {
@@ -143,7 +168,10 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<WizardAnswers>(() => {
     const claim = getStoredSectorClaim();
-    const pName = formatAkinoyaPlanetName(claim?.sectorName || '', false) || 'Äkinoya Frontier Sector';
+    const storedSector =
+      claim?.sectorName && claim.sectorName.length > 1 && claim.sectorName.toLowerCase() !== 'd'
+        ? formatAkinoyaPlanetName(claim.sectorName, false)
+        : '';
     return {
       relaxation: '',
       creativeExpression: '',
@@ -153,7 +181,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       colorPalette: '',
       resilienceStory: '',
       futurePromise: '',
-      planetName: pName,
+      planetName: storedSector || '',
       atmosphere: '',
       flora: '',
       fauna: '',
@@ -162,7 +190,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       landmark: '',
       additionalNotes: '',
       biome: claim?.biome || 'Bioluminescent Canopy',
-      sectorName: pName,
+      sectorName: storedSector || '',
     };
   });
 
@@ -191,16 +219,13 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       return;
     }
 
-    const claim = getStoredSectorClaim();
-    const pName = formatAkinoyaPlanetName(claim?.sectorName || designatedPlanetName, false);
-
     // Initial human touch typing effect
     setIsMillTyping(true);
     const greetingTimer = setTimeout(() => {
       setIsMillTyping(false);
       soundManager.playTone(720, 0.06);
 
-      const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nYour world designation "${pName}" (${claim?.biome || 'Bioluminescent Canopy'}) is locked into telemetry. We will explore 5 light, fun, and deep personality questions to synthesize your custom 5-photo 4K dossier, 9:16 viral trailer, and registered lore.\n\nQuestion 01 of 05 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`;
+      const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nWe will explore 5 light, fun, and deep personality questions to synthesize your custom 5-photo 4K dossier, 9:16 viral trailer, and registered lore.\n\nQuestion 01 of 05 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`;
 
       setMessages([
         {
@@ -245,7 +270,90 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
 
     soundManager.playTone(740, 0.05);
 
-    // 1. Record user message immediately
+    // 1. QUESTION 1: Custom Planet Naming & Inner Landscape with strict profanity validation
+    if (currentStepIndex === 0) {
+      const { planetName: candidateName, vision } = parsePlanetNameAndVision(trimmed);
+      const validation = validatePlanetName(candidateName);
+
+      if (!validation.isValid) {
+        soundManager.playTone(340, 0.12);
+        const userMsg: ChatMessage = {
+          id: `usr-${Date.now()}`,
+          sender: 'user',
+          text: trimmed,
+          timestamp: 'Just now',
+        };
+        setInputVal('');
+        setMessages((prev) => [...prev, userMsg]);
+        setIsMillTyping(true);
+
+        setTimeout(() => {
+          setIsMillTyping(false);
+          const errorMsg: ChatMessage = {
+            id: `mill-val-err-${Date.now()}`,
+            sender: 'mill',
+            text: `⚠️ ${validation.error || 'Please provide a valid planet designation (e.g. "Zephyria: A quiet, misty star-desert...").'}\n\nQuestion 01 of 05 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`,
+            step: 1,
+            exampleToCopy: WIZARD_STEPS[0].helperExample,
+            timestamp: 'Just now',
+          };
+          setMessages((prev) => [...prev, errorMsg]);
+        }, 900);
+        return;
+      }
+
+      // Valid custom planet name!
+      const formattedName = formatAkinoyaPlanetName(candidateName, false);
+      const claim = getStoredSectorClaim();
+      saveSectorClaim({
+        sectorName: formattedName,
+        biome: claim?.biome || 'Bioluminescent Canopy',
+        coordinates: claim?.coordinates || 'SECTOR AKN-01',
+        claimedAt: new Date().toISOString(),
+        pioneerBadge: claim?.pioneerBadge || 'FOUNDING PIONEER',
+      });
+
+      const userMsg: ChatMessage = {
+        id: `usr-${Date.now()}`,
+        sender: 'user',
+        text: trimmed,
+        timestamp: 'Just now',
+      };
+
+      const nextAnswers: WizardAnswers = {
+        ...answers,
+        planetName: formattedName,
+        sectorName: formattedName,
+        naturalEnvironment: vision || trimmed,
+      };
+      setAnswers(nextAnswers);
+      setInputVal('');
+      setMessages((prev) => [...prev, userMsg]);
+
+      // Advance to Question 2
+      const nextStepIdx = 1;
+      setCurrentStepIndex(nextStepIdx);
+      const nextStepConfig = WIZARD_STEPS[nextStepIdx];
+      setIsMillTyping(true);
+
+      setTimeout(() => {
+        setIsMillTyping(false);
+        soundManager.playTone(820, 0.06);
+
+        const millNextMsg: ChatMessage = {
+          id: `mill-${Date.now()}`,
+          sender: 'mill',
+          text: `Planet designation "${formattedName}" registered.\n\nQuestion 0${nextStepConfig.step} of 05 (${nextStepConfig.title}):\n${nextStepConfig.prompt}`,
+          step: nextStepConfig.step,
+          exampleToCopy: nextStepConfig.helperExample,
+          timestamp: 'Just now',
+        };
+        setMessages((prev) => [...prev, millNextMsg]);
+      }, 1200);
+      return;
+    }
+
+    // 2. QUESTIONS 2 through 5:
     const userMsg: ChatMessage = {
       id: `usr-${Date.now()}`,
       sender: 'user',
@@ -263,7 +371,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
 
     const nextStepIdx = currentStepIndex + 1;
 
-    // 2. Start realistic typing indicator
+    // Start realistic typing indicator
     setIsMillTyping(true);
 
     if (nextStepIdx < WIZARD_STEPS.length) {
@@ -290,7 +398,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       const completeAnswers = derivePlanetAttributesFromHumanAnswers({
         ...nextAnswers,
         biome: nextAnswers.biome || claim?.biome || '',
-        sectorName: nextAnswers.sectorName || claim?.sectorName || designatedPlanetName,
+        sectorName: nextAnswers.sectorName || nextAnswers.planetName || designatedPlanetName,
       });
       setAnswers(completeAnswers);
 
