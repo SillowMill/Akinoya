@@ -78,6 +78,173 @@ const SLIDE_TABS: {
   },
 ];
 
+/**
+ * Loads an image safely with crossOrigin fallback for Canvas rendering.
+ */
+function loadImageForCanvas(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    if (!src) {
+      resolve(null);
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => {
+      const fallback = new Image();
+      fallback.onload = () => resolve(fallback);
+      fallback.onerror = () => resolve(null);
+      fallback.src = src;
+    };
+    img.src = src;
+  });
+}
+
+function drawRoundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+/**
+ * Cleanly embeds Sillowmilllogo.png and official universe provenance
+ * as a subtle, high-end watermark in the bottom-left corner of any exported planetary image.
+ */
+export async function renderWatermarkedImageBlob(
+  sourceUrl: string,
+  meta: {
+    planetName?: string;
+    stageCategory?: string;
+    verificationCode?: string;
+    authorName?: string;
+  }
+): Promise<Blob | null> {
+  try {
+    let sourceBlob: Blob | null = null;
+    let localBlobUrl: string | null = null;
+    try {
+      const res = await fetch(sourceUrl);
+      if (res.ok) {
+        sourceBlob = await res.blob();
+        localBlobUrl = URL.createObjectURL(sourceBlob);
+      }
+    } catch {
+      // Fallback to direct URL if fetch is blocked
+    }
+
+    const imgUrlToLoad = localBlobUrl || sourceUrl;
+    const [baseImg, logoImg] = await Promise.all([
+      loadImageForCanvas(imgUrlToLoad),
+      loadImageForCanvas(sillowMillLogoUrl),
+    ]);
+
+    if (localBlobUrl) {
+      URL.revokeObjectURL(localBlobUrl);
+    }
+
+    if (!baseImg) return null;
+
+    const W = baseImg.naturalWidth || baseImg.width || 1920;
+    const H = baseImg.naturalHeight || baseImg.height || 1080;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // 1. Draw base high-resolution render
+    ctx.drawImage(baseImg, 0, 0, W, H);
+
+    // 2. Proportional scale factor relative to 1920px standard width
+    const s = Math.max(0.65, Math.min(2.5, W / 1920));
+
+    // 3. Subtle bottom-left watermark badge placement
+    const pad = Math.round(36 * s);
+    const badgeH = Math.round(76 * s);
+    const badgeW = Math.round(390 * s);
+    const badgeX = pad;
+    const badgeY = H - pad - badgeH;
+
+    // Dark glassmorphic backing in bottom-left corner
+    ctx.save();
+    drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, Math.round(18 * s));
+    ctx.fillStyle = 'rgba(4, 9, 20, 0.82)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.88)';
+    ctx.shadowBlur = Math.round(20 * s);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = Math.max(1, 1.5 * s);
+    ctx.stroke();
+    ctx.restore();
+
+    // Sillowmilllogo.png watermark emblem inside bottom-left badge
+    if (logoImg) {
+      const padLogo = Math.round(10 * s);
+      const drawLogoSize = badgeH - padLogo * 2;
+      const lx = badgeX + padLogo;
+      const ly = badgeY + padLogo;
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.55)';
+      ctx.shadowBlur = Math.round(12 * s);
+      ctx.drawImage(logoImg, lx, ly, drawLogoSize, drawLogoSize);
+      ctx.restore();
+
+      // Divider inside watermark badge
+      const divX = lx + drawLogoSize + Math.round(10 * s);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.lineWidth = Math.max(1, 1 * s);
+      ctx.beginPath();
+      ctx.moveTo(divX, badgeY + Math.round(14 * s));
+      ctx.lineTo(divX, badgeY + badgeH - Math.round(14 * s));
+      ctx.stroke();
+
+      // Telemetry typography
+      const textX = divX + Math.round(12 * s);
+
+      // SILLOW MILL brand
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `900 ${Math.round(17 * s)}px "Inter", sans-serif`;
+      ctx.fillText('SILLOW MILL', textX, badgeY + Math.round(28 * s));
+
+      // Universe & World Name
+      ctx.fillStyle = '#67e8f9';
+      ctx.font = `bold ${Math.round(11 * s)}px "JetBrains Mono", monospace`;
+      const worldLabel = `ÄKINOYA · ${(meta.planetName || 'ÄMLEMI').toUpperCase()}`;
+      ctx.fillText(worldLabel, textX, badgeY + Math.round(46 * s));
+
+      // Provenance / Verification code
+      ctx.fillStyle = 'rgba(254, 243, 199, 0.85)';
+      ctx.font = `600 ${Math.round(9.5 * s)}px "JetBrains Mono", monospace`;
+      const provLine = meta.verificationCode || 'OFFICIAL PLANETARY ARCHIVE';
+      ctx.fillText(provLine, textX, badgeY + Math.round(62 * s));
+    }
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.96);
+    });
+  } catch (err) {
+    console.warn('[Watermark] Failed to render watermark canvas:', err);
+    return null;
+  }
+}
+
 export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
   dossier,
   editionRank,
@@ -199,24 +366,40 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
     }
   };
 
-  // Download High-Resolution 4K Master Photo
+  // Download High-Resolution 4K Master Photo with embedded Sillowmilllogo.png watermark
   const handleDownload4kPhoto = async () => {
     if (!activePhoto?.url) return;
     soundManager.playTone(740, 0.06);
     setIsDownloadingPhoto(true);
+    const safePlanet = (dossier.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+    const safeStage = activePhoto.category.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+
     try {
-      const response = await fetch(activePhoto.url);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const safePlanet = (dossier.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-      const safeStage = activePhoto.category.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-      a.href = url;
-      a.download = `sillowmill-${safePlanet}-4k-${safeStage}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // 1. Cleanly embed Sillowmilllogo.png watermark in the bottom-left corner
+      const watermarkedBlob = await renderWatermarkedImageBlob(activePhoto.url, {
+        planetName: dossier.planetName,
+        stageCategory: activePhoto.category,
+        verificationCode: meta.verificationCode,
+        authorName: dossier.authorName,
+      });
+
+      // 2. Fall back to direct blob if canvas export is unavailable
+      const finalBlob =
+        watermarkedBlob ||
+        (await fetch(activePhoto.url).then((res) => res.blob()).catch(() => null));
+
+      if (finalBlob) {
+        const url = URL.createObjectURL(finalBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `sillowmill-${safePlanet}-4k-${safeStage}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        window.open(activePhoto.url, '_blank', 'noopener,noreferrer');
+      }
     } catch {
       window.open(activePhoto.url, '_blank', 'noopener,noreferrer');
     } finally {
@@ -409,10 +592,28 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
             </span>
           </div>
 
-          {/* Primary World Identifier Headline: Appears STRICTLY ONCE here */}
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
-            {worldNameDisplay}
-          </h2>
+          {/* Primary World Identifier Headline with Official Sillow Mill Emblem & Chrome Divider */}
+          <div className="flex items-center gap-2.5 sm:gap-3 pt-0.5">
+            {/* Shimmering Logo with subtle cinematic glow & glass housing */}
+            <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-transparent p-1.5 border border-white/20 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-white/20 to-transparent pointer-events-none opacity-70" />
+              <img
+                src={sillowMillLogoUrl}
+                alt="Sillow Mill Emblem"
+                className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]"
+              />
+            </div>
+
+            {/* Minimalist Reflective Chrome / Brushed Metal Vertical Divider */}
+            <div
+              className="h-5 sm:h-6 w-[1.5px] bg-gradient-to-b from-white/10 via-white/50 to-white/10 shadow-[0_0_8px_rgba(255,255,255,0.35)] shrink-0"
+              aria-hidden="true"
+            />
+
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
+              {worldNameDisplay}
+            </h2>
+          </div>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-white/70">
             <span>
@@ -572,9 +773,15 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                   {/* Bottom HUD Information & Quick Action Button */}
                   <div className="absolute bottom-3.5 left-4 right-4 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
                     <div className="space-y-1 max-w-xl">
-                      <h3 className="text-base sm:text-xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
-                        {activePhoto.title}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base sm:text-xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+                          {activePhoto.title}
+                        </h3>
+                        <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/80 border border-white/20 text-[9px] font-mono text-cyan-300">
+                          <img src={sillowMillLogoUrl} alt="" className="w-2.5 h-2.5 object-contain" />
+                          <span>WATERMARKED 4K</span>
+                        </span>
+                      </div>
                       <p className="text-xs font-sans text-white/80 line-clamp-2 leading-relaxed">
                         {activePhoto.description || 'Synthesized high-detail planetary sector telemetry.'}
                       </p>
@@ -585,9 +792,10 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       onClick={handleDownload4kPhoto}
                       disabled={isDownloadingPhoto}
                       className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] shrink-0 min-h-[42px]"
+                      title="Download 4K Master with embedded Sillow Mill bottom-left watermark"
                     >
                       <Download className="w-4 h-4 text-black" />
-                      <span>{isDownloadingPhoto ? 'DOWNLOADING...' : 'DOWNLOAD 4K MASTER'}</span>
+                      <span>{isDownloadingPhoto ? 'WATERMARKING...' : 'DOWNLOAD 4K MASTER'}</span>
                     </button>
                   </div>
                 </div>
@@ -991,21 +1199,41 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-3.5 sm:p-4 bg-[#070d1e] border-b border-white/10 flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-[10px] font-mono text-cyan-300 uppercase">{fullscreenPhoto.category}</div>
-                  <div className="text-sm sm:text-base font-display font-bold text-white">{fullscreenPhoto.title}</div>
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white/[0.08] border border-white/20 p-1 flex items-center justify-center shrink-0 shadow-sm">
+                    <img src={sillowMillLogoUrl} alt="Sillow Mill Emblem" className="w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
+                  </div>
+                  <div className="h-5 sm:h-6 w-[1px] bg-white/20 shrink-0" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-mono text-cyan-300 uppercase tracking-wider">{fullscreenPhoto.category}</div>
+                    <div className="text-sm sm:text-base font-display font-bold text-white truncate">{fullscreenPhoto.title}</div>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsFullscreenModalOpen(false);
-                    setFullscreenPhoto(null);
-                  }}
-                  className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer"
-                  title="Close Fullscreen"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleDownload4kPhoto}
+                    disabled={isDownloadingPhoto}
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-bold tracking-wide transition-all cursor-pointer flex items-center gap-2 shadow-md"
+                    title="Download 4K Master with embedded Sillow Mill watermark"
+                  >
+                    <Download className="w-4 h-4 text-black" />
+                    <span className="hidden sm:inline">{isDownloadingPhoto ? 'WATERMARKING...' : 'DOWNLOAD 4K MASTER'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFullscreenModalOpen(false);
+                      setFullscreenPhoto(null);
+                    }}
+                    className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer transition-colors"
+                    title="Close Fullscreen"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="flex-1 overflow-hidden flex items-center justify-center bg-black p-2">
