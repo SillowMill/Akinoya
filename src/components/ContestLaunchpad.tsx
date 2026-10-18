@@ -26,10 +26,27 @@ import {
   AlertCircle,
   RefreshCw,
   Cpu,
+  Beaker,
+  X,
+  RotateCcw,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
 import millAvatar from '../assets/images/mill_photo.jpg';
+import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
+import amlemiBotanicalImg from '../assets/images/amlemi_renders/02-botanical.png';
+import amlemiFaunaImg from '../assets/images/amlemi_renders/03-fauna.png';
+import amlemiCockpitImg from '../assets/images/amlemi_renders/04-cockpit.png';
+import amlemiMonumentImg from '../assets/images/amlemi_renders/05-monument.png';
+
+const SANDBOX_PLACEHOLDERS: Record<string, string> = {
+  hero: amlemiOrbitalImg,
+  flora: amlemiBotanicalImg,
+  fauna: amlemiFaunaImg,
+  atmosphere: amlemiCockpitImg,
+  landmark: amlemiMonumentImg,
+};
+
 import { PlanetGeneratorChat } from './PlanetGeneratorChat';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { WorldStoryVerificationBadge } from './WorldStoryVerificationBadge';
@@ -172,6 +189,24 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     return localStorage.getItem('akinoya_founder_test_bypass') !== 'false';
   });
   const [adminResetNotice, setAdminResetNotice] = useState<string | null>(null);
+
+  // Risk-Free Sandbox / Preview Mode for Mill's 5-Question Flow (Defaults to true when Fal.ai key is not active)
+  const [isSandboxMode, setIsSandboxMode] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('sandbox') === 'true' || urlParams.get('test') === 'true') return true;
+    const stored = localStorage.getItem('akinoya_mill_sandbox_mode');
+    return stored !== null ? stored === 'true' : true;
+  });
+  const [sandboxSuccessDossier, setSandboxSuccessDossier] = useState<PlanetSubmission | null>(null);
+
+  const handleToggleSandbox = (val: boolean) => {
+    setIsSandboxMode(val);
+    soundManager.playTone(val ? 720 : 540, 0.05);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('akinoya_mill_sandbox_mode', String(val));
+    }
+  };
 
   // Dynamic vote-based ranking: highest votes at the top (merges user's active submission into showcase grid)
   const sortedSubmissions = useMemo(() => {
@@ -341,8 +376,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     return () => unsubscribe();
   }, [isAuthenticated, user?.id, user?.email, profile?.id, profile?.contest_submission_id]);
 
-  // Handle launch button: ALWAYS mandate "Create Your Free World" modal first
+  // Handle launch button: ALWAYS mandate "Create Your Free World" modal first (instant Mill launch in Sandbox mode)
   const handleStartWorldbuilding = () => {
+    if (isSandboxMode) {
+      soundManager.playTone(660, 0.08);
+      setIsChatOpen(true);
+      return;
+    }
+
     if (isPostLaunch() && !hasPaidMembership(user, profile, role, isVip)) {
       soundManager.playTone(330, 0.08);
       openMembershipGateModal();
@@ -369,7 +410,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
   // Called when Mill completes the 8 questions (Step 1: 5 Photos -> Step 2: 9:16 Viral Video Trailer -> Step 3: Atomic Supabase Sync)
   const handleWizardComplete = async (answers: WizardAnswers) => {
-    if (hasSubmittedContest) {
+    if (hasSubmittedContest && !isSandboxMode) {
       soundManager.playError();
       alert('You have already claimed your 1 generation attempt.');
       return;
@@ -380,8 +421,12 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     setIsChatOpen(false);
     setIsGeneratingRenders(true);
     setGenerationProgress(0);
-    setGenerationStageName('INITIALIZING REAL-TIME 4K SYNTHESIS...');
-    setGenerationStageDetails(`Connecting to Fal.ai Flux Schnell & 9:16 Video Engine for ${planetName}...`);
+    setGenerationStageName(isSandboxMode ? 'INITIALIZING SANDBOX TEST SYNTHESIS...' : 'INITIALIZING REAL-TIME 4K SYNTHESIS...');
+    setGenerationStageDetails(
+      isSandboxMode
+        ? `Preparing risk-free preview for ${planetName} with placeholder assets...`
+        : `Connecting to Fal.ai Flux Schnell & 9:16 Video Engine for ${planetName}...`
+    );
     soundManager.playTone(660, 0.08);
 
     // Initialize all 5 slots as PENDING in queue with no placeholder images
@@ -450,6 +495,83 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       ecosystem: '',
       videoUrl: '',
     };
+
+    // If Sandbox Mode is active, simulate real-time slot synthesis using canonical placeholders without invoking external APIs or DB
+    if (isSandboxMode) {
+      for (let i = 0; i < initialSlots.length; i++) {
+        const slotItem = initialSlots[i];
+        setGenerationSlotIndex(i + 1);
+        setGenerationStageName(`[SANDBOX] SYNTHESIZING: ${slotItem.title} (${i + 1}/5)...`);
+        setGenerationStageDetails(slotItem.subtitle);
+        setGenerationProgress(Math.round((i / (initialSlots.length + 1)) * 100));
+
+        setSlotStream((prev) =>
+          prev.map((s, idx) => (idx === i ? { ...s, status: 'SYNTHESIZING_4K', error: null } : s))
+        );
+        soundManager.playTone(600 + i * 70, 0.05);
+
+        await new Promise((resolve) => setTimeout(resolve, 600));
+
+        const placeholderUrl = SANDBOX_PLACEHOLDERS[slotItem.id] || amlemiOrbitalImg;
+        collectedRenders[slotItem.id] = placeholderUrl;
+        if (slotItem.id === 'flora') collectedRenders.ecosystem = placeholderUrl;
+
+        setSlotStream((prev) =>
+          prev.map((s, idx) =>
+            idx === i ? { ...s, status: 'DONE', url: placeholderUrl, error: null } : s
+          )
+        );
+        setPreviewDossier((prev) =>
+          prev
+            ? {
+                ...prev,
+                renders: {
+                  ...prev.renders,
+                  [slotItem.id]: placeholderUrl,
+                  ecosystem: collectedRenders.ecosystem,
+                },
+              }
+            : null
+        );
+        soundManager.playTone(880, 0.06);
+        setGenerationProgress(Math.round(((i + 1) / (initialSlots.length + 1)) * 100));
+      }
+
+      // Step 2: Sandbox 9:16 Video trailer step
+      setGenerationStageName('[SANDBOX] PREPARING 9:16 STORY CARD & TRAILER...');
+      setGenerationStageDetails('Assembling sandbox preview assets without database writes...');
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const synchronizedDraft: PlanetSubmission = {
+        ...initialDraft,
+        videoUrl: '',
+        videoStatus: 'READY',
+        renders: {
+          hero: collectedRenders.hero,
+          flora: collectedRenders.flora,
+          fauna: collectedRenders.fauna,
+          atmosphere: collectedRenders.atmosphere,
+          landmark: collectedRenders.landmark,
+          ecosystem: collectedRenders.ecosystem,
+          videoUrl: '',
+          video_url: '',
+          videoStatus: 'READY',
+          '01_main': collectedRenders.hero,
+          '02_flora': collectedRenders.flora,
+          '03_fauna': collectedRenders.fauna,
+          '04_atmo': collectedRenders.atmosphere,
+          '05_lore': collectedRenders.landmark,
+        },
+      };
+
+      setPreviewDossier(synchronizedDraft);
+      setGenerationProgress(100);
+      setGenerationStageName('SANDBOX TEST SYNTHESIS COMPLETE');
+      setGenerationStageDetails('5-Photo sandbox preview generated safely with placeholder assets.');
+      setIsGeneratingRenders(false);
+      soundManager.playUnlockChime();
+      return;
+    }
 
     // Step 1: Sequential Live Processing across all 5 photos (01_main through 05_lore)
     for (let i = 0; i < initialSlots.length; i++) {
@@ -621,6 +743,34 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     const slotItem = slotStream[slotIndex];
     if (!slotItem) return;
 
+    if (isSandboxMode) {
+      soundManager.playTone(660, 0.08);
+      setSlotStream((prev) =>
+        prev.map((s, idx) => (idx === slotIndex ? { ...s, status: 'SYNTHESIZING_4K', error: null } : s))
+      );
+      await new Promise((r) => setTimeout(r, 450));
+      const placeholderUrl = SANDBOX_PLACEHOLDERS[slotItem.id] || amlemiOrbitalImg;
+      setSlotStream((prev) =>
+        prev.map((s, idx) =>
+          idx === slotIndex ? { ...s, status: 'DONE', url: placeholderUrl, error: null } : s
+        )
+      );
+      setPreviewDossier((prev) =>
+        prev
+          ? {
+              ...prev,
+              renders: {
+                ...prev.renders,
+                [slotItem.id]: placeholderUrl,
+                ...(slotItem.id === 'flora' ? { ecosystem: placeholderUrl } : {}),
+              },
+            }
+          : null
+      );
+      soundManager.playUnlockChime();
+      return;
+    }
+
     soundManager.playTone(660, 0.08);
     setSlotStream((prev) =>
       prev.map((s, idx) => (idx === slotIndex ? { ...s, status: 'SYNTHESIZING_4K', error: null } : s))
@@ -688,6 +838,21 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     if (!previewDossier) return;
     setIsSubmitting(true);
     soundManager.playTone(880, 0.08);
+
+    if (isSandboxMode) {
+      soundManager.playUnlockChime();
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#06b6d4', '#f59e0b', '#10b981', '#a855f7'],
+      });
+      setSandboxSuccessDossier(previewDossier);
+      setPreviewDossier(null);
+      setPendingAnswers(null);
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       // 1. Save entry permanently to Supabase user_dossiers & localStorage
@@ -948,6 +1113,32 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 </div>
               </div>
 
+              {/* Sandbox / Test Mode Toggle */}
+              <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Beaker className="w-4 h-4 text-cyan-400" />
+                    <span className="text-[11px] font-mono font-bold text-white">Sandbox Test Mode</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSandbox(!isSandboxMode)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-all cursor-pointer ${
+                      isSandboxMode
+                        ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/50 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
+                        : 'bg-white/10 text-white/50 border-white/20 hover:text-white'
+                    }`}
+                  >
+                    {isSandboxMode ? 'TEST: ON' : 'TEST: OFF'}
+                  </button>
+                </div>
+                <p className="text-[10px] text-white/60 font-mono leading-tight">
+                  {isSandboxMode
+                    ? '🧪 Risk-free testing: 5 questions & preview run on placeholders with zero DB writes.'
+                    : '⚡ Production Mode: Uses Fal.ai live generation & official contest ticket.'}
+                </p>
+              </div>
+
               {hasSubmittedContest ? (
                 <div className="space-y-3">
                   <div className="p-3.5 rounded-xl bg-amber-950/70 border border-amber-500/50 text-center space-y-1 shadow-lg">
@@ -968,6 +1159,20 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                     <span className="text-amber-400 font-bold">{activeSubmission?.votesCount || 1} Ballots</span>
                   </div>
 
+                  {isSandboxMode && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundManager.playTone(660, 0.08);
+                        setIsChatOpen(true);
+                      }}
+                      className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-cyan-950/80 hover:bg-cyan-900/80 border border-cyan-400/50 text-cyan-200 font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.25)]"
+                    >
+                      <Beaker className="w-3.5 h-3.5 text-cyan-300" />
+                      <span>Test 5-Question Mill (Sandbox)</span>
+                    </button>
+                  )}
+
                   {activeSubmission && (
                     <button
                       type="button"
@@ -986,7 +1191,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               ) : (
                 <div className="space-y-3">
                   <div className="text-xs text-white/70 font-sans leading-relaxed">
-                    {isAuthenticated
+                    {isSandboxMode
+                      ? 'Sandbox Mode active. Test the 5 personality questions risk-free without consuming a golden ticket!'
+                      : isAuthenticated
                       ? `Welcome ${userDisplayName}! You hold 1 Golden Ticket to synthesize your planetary territory.`
                       : 'Sign in to claim your 1 Golden Ticket and launch your planet with Mill.'}
                   </div>
@@ -996,8 +1203,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                     onClick={handleStartWorldbuilding}
                     className="w-full min-h-[48px] py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(245,158,11,0.4)] active:scale-[0.98]"
                   >
-                    <Sparkles className="w-4 h-4 fill-black" />
-                    <span>{isAuthenticated ? 'Start Worldbuilding with Mill' : 'Sign In to Enter Contest'}</span>
+                    {isSandboxMode ? <Beaker className="w-4 h-4 fill-black" /> : <Sparkles className="w-4 h-4 fill-black" />}
+                    <span>
+                      {isSandboxMode
+                        ? 'Test Worldbuilding (Sandbox)'
+                        : isAuthenticated
+                        ? 'Start Worldbuilding with Mill'
+                        : 'Sign In to Enter Contest'}
+                    </span>
                   </button>
                 </div>
               )}
@@ -1044,16 +1257,24 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         </section>
 
         {/* REAL-TIME SEQUENTIAL 4K DOSSIER PREVIEW & SYNTHESIS STREAM */}
-        {(previewDossier || isGeneratingRenders) && (!activeSubmission || (isFounderAdmin && founderTestBypass)) && (
+        {(previewDossier || isGeneratingRenders) && (!activeSubmission || (isFounderAdmin && founderTestBypass) || isSandboxMode) && (
           <section
             id="live-dossier-preview"
             className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-cyan-950/40 via-black to-black border-2 border-cyan-400/60 shadow-[0_0_50px_rgba(6,182,212,0.25)] space-y-6"
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
-                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-400/40 font-bold uppercase tracking-wider">
-                  Live Dossier Preview · Najno Banajna 8K Photorealistic Engine
-                </span>
+                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-400/40 font-bold uppercase tracking-wider">
+                    Live Dossier Preview · Najno Banajna 8K Photorealistic Engine
+                  </span>
+                  {isSandboxMode && (
+                    <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Beaker className="w-3 h-3 text-cyan-400" />
+                      🧪 Sandbox Mode · Zero Quota &amp; Zero DB Writes
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-wrap items-center gap-2 mt-1">
                   <h2 className="text-xl sm:text-2xl font-display font-bold text-white">
                     {previewDossier?.planetName || pendingAnswers?.planetName || 'Frontier Sector'}
@@ -1072,6 +1293,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 <p className="text-xs text-white/60 font-mono mt-0.5">
                   {isGeneratingRenders
                     ? 'Watch each 4K photographic render synthesize sequentially in real-time.'
+                    : isSandboxMode
+                    ? 'Review your simulated sandbox dossier. Click Approve to complete the test preview.'
                     : 'Review your 5-photo synthesized specs and lore before publishing to the Governance Council.'}
                 </p>
               </div>
@@ -1091,14 +1314,20 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                   type="button"
                   onClick={handleApproveAndSubmit}
                   disabled={isSubmitting || isGeneratingRenders || !previewDossier}
-                  className="min-h-[48px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs shadow-[0_0_25px_rgba(245,158,11,0.4)] transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`min-h-[48px] px-5 py-2.5 rounded-xl font-mono font-bold text-xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isSandboxMode
+                      ? 'bg-gradient-to-r from-cyan-400 via-sky-400 to-cyan-500 hover:from-cyan-300 hover:to-sky-300 text-black shadow-[0_0_25px_rgba(6,182,212,0.4)]'
+                      : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_25px_rgba(245,158,11,0.4)]'
+                  }`}
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>
                     {isSubmitting
-                      ? 'PUBLISHING ENTRY...'
+                      ? 'PROCESSING...'
                       : isGeneratingRenders
                       ? 'SYNTHESIS IN PROGRESS...'
+                      : isSandboxMode
+                      ? 'APPROVE & COMPLETE TEST PREVIEW'
                       : 'APPROVE & SUBMIT ENTRY'}
                   </span>
                 </button>
@@ -1467,9 +1696,130 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           <PlanetGeneratorChat
             userDisplayName={userDisplayName}
             isLocked={hasSubmittedContest}
+            isSandboxMode={isSandboxMode}
+            onToggleSandbox={handleToggleSandbox}
             onComplete={handleWizardComplete}
             onClose={() => setIsChatOpen(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* SIMULATED SUCCESS PREVIEW MODAL (SANDBOX TEST MODE) */}
+      <AnimatePresence>
+        {sandboxSuccessDossier && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-2xl bg-[#070b16] border border-cyan-400/60 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(6,182,212,0.3)] space-y-5 text-white max-h-[90vh] overflow-y-auto"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-950 border border-cyan-400/50 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)] shrink-0">
+                    <Beaker className="w-6 h-6 text-cyan-300" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 font-bold uppercase tracking-wider">
+                        🧪 Simulated Test Success
+                      </span>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-display font-bold text-white mt-1">
+                      {sandboxSuccessDossier.planetName}
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSandboxSuccessDossier(null)}
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+                  title="Close preview"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Status Note */}
+              <div className="p-3.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs sm:text-sm text-cyan-200/90 font-mono leading-relaxed space-y-1">
+                <div className="flex items-center gap-2 font-bold text-cyan-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>5-Question World Generation Verified!</span>
+                </div>
+                <p className="text-[11px] text-white/70">
+                  In Sandbox Mode, this test run ran with canonical placeholder assets. Zero database records were modified and zero Fal.ai API tokens were consumed.
+                </p>
+              </div>
+
+              {/* 5 Placeholder Stage Strip */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-mono text-cyan-400 font-bold tracking-wider uppercase">
+                  5-Stage Synthesized Photo Archive
+                </span>
+                <div className="grid grid-cols-5 gap-2">
+                  {[
+                    { key: 'hero', label: '01 Orbital', img: sandboxSuccessDossier.renders.hero || amlemiOrbitalImg },
+                    { key: 'flora', label: '02 Flora', img: sandboxSuccessDossier.renders.flora || amlemiBotanicalImg },
+                    { key: 'fauna', label: '03 Fauna', img: sandboxSuccessDossier.renders.fauna || amlemiFaunaImg },
+                    { key: 'atmosphere', label: '04 Canopy', img: sandboxSuccessDossier.renders.atmosphere || amlemiCockpitImg },
+                    { key: 'landmark', label: '05 Lore', img: sandboxSuccessDossier.renders.landmark || amlemiMonumentImg },
+                  ].map((stage) => (
+                    <div
+                      key={stage.key}
+                      className="aspect-[9/16] rounded-xl overflow-hidden border border-cyan-400/40 relative group bg-black/80"
+                    >
+                      <img src={stage.img} alt={stage.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black via-black/80 to-transparent text-[9.5px] font-mono text-center text-cyan-200 font-bold truncate">
+                        {stage.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Synthesized Lore */}
+              {sandboxSuccessDossier.generatedLore && (
+                <div className="p-4 rounded-xl bg-black/60 border border-white/10 space-y-1.5">
+                  <span className="text-[10px] font-mono text-amber-300 font-bold tracking-wider uppercase">
+                    Synthesized Planetary Lore
+                  </span>
+                  <p className="text-xs text-white/80 leading-relaxed font-sans max-h-32 overflow-y-auto whitespace-pre-line">
+                    {sandboxSuccessDossier.generatedLore}
+                  </p>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSandboxSuccessDossier(null);
+                    soundManager.playTone(660, 0.08);
+                    setIsChatOpen(true);
+                  }}
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-400/40 text-cyan-200 font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Test Another World with Mill</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const dossier = sandboxSuccessDossier;
+                    setSandboxSuccessDossier(null);
+                    setModalPlanet(dossier);
+                  }}
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Open 5-Photo Dossier Modal</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

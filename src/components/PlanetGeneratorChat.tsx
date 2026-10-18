@@ -13,6 +13,8 @@ import {
   Lightbulb,
   Copy,
   Check,
+  Beaker,
+  Lock,
 } from 'lucide-react';
 import millAvatar from '../assets/images/mill_photo.jpg';
 import { WizardAnswers, ChatMessage } from '../types/contest';
@@ -23,6 +25,8 @@ import { getStoredSectorClaim } from '../utils/pioneer';
 interface PlanetGeneratorChatProps {
   userDisplayName: string;
   isLocked?: boolean;
+  isSandboxMode?: boolean;
+  onToggleSandbox?: (enabled: boolean) => void;
   onComplete: (answers: WizardAnswers) => void;
   onClose: () => void;
 }
@@ -105,11 +109,36 @@ export const WIZARD_STEPS: StepConfig[] = [
 export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   userDisplayName,
   isLocked,
+  isSandboxMode,
+  onToggleSandbox,
   onComplete,
   onClose,
 }) => {
   const initialClaim = getStoredSectorClaim();
   const designatedPlanetName = formatAkinoyaPlanetName(initialClaim?.sectorName || '', false) || 'Äkinoya Frontier Sector';
+
+  const [internalSandbox, setInternalSandbox] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const stored = localStorage.getItem('akinoya_mill_sandbox_mode');
+    return stored !== null ? stored === 'true' : true;
+  });
+
+  const isEffectiveSandbox = isSandboxMode !== undefined ? isSandboxMode : internalSandbox;
+
+  const handleToggleSandbox = () => {
+    const nextVal = !isEffectiveSandbox;
+    if (onToggleSandbox) {
+      onToggleSandbox(nextVal);
+    } else {
+      setInternalSandbox(nextVal);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('akinoya_mill_sandbox_mode', String(nextVal));
+      }
+    }
+    soundManager.playTone(nextVal ? 720 : 540, 0.05);
+  };
+
+  const isEffectiveLocked = Boolean(isLocked && !isEffectiveSandbox);
 
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<WizardAnswers>(() => {
@@ -150,12 +179,12 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   useEffect(() => {
     soundManager.playTone(660, 0.08);
 
-    if (isLocked) {
+    if (isEffectiveLocked) {
       setMessages([
         {
           id: 'msg-locked',
           sender: 'mill',
-          text: `⚠️ SUBMISSION LOCKED — 1 OF 1 TICKET USED\n\nGreetings ${userDisplayName || 'Architect'}. Your single Golden Ticket planet entry for this account has already been synthesized and permanently registered to the Lore Governance Council.\n\nTo preserve API token limits and maintain true digital scarcity, each account is strictly restricted to one planetary generation. You can inspect your active 5-photo planetary dossier directly on your dashboard.`,
+          text: `⚠️ SUBMISSION LOCKED — 1 OF 1 TICKET USED\n\nGreetings ${userDisplayName || 'Architect'}. Your single Golden Ticket planet entry for this account has already been synthesized and permanently registered to the Lore Governance Council.\n\nTo preserve API token limits and maintain true digital scarcity, each account is strictly restricted to one planetary generation. You can inspect your active 5-photo planetary dossier directly on your dashboard.\n\n💡 Tip: Toggle "SANDBOX MODE" in the top bar to test the 5-question flow freely without consuming tickets!`,
           timestamp: 'Just now',
         },
       ]);
@@ -372,7 +401,23 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {!isLocked && (
+            {/* Sandbox Mode Toggle Button */}
+            <button
+              type="button"
+              onClick={handleToggleSandbox}
+              className={`px-2.5 py-1 rounded-lg font-mono text-[10px] sm:text-[10.5px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer border ${
+                isEffectiveSandbox
+                  ? 'bg-emerald-950/90 text-emerald-300 border-emerald-400/60 shadow-[0_0_12px_rgba(52,211,153,0.3)]'
+                  : 'bg-white/5 text-white/60 border-white/15 hover:text-white'
+              }`}
+              title="Toggle Sandbox Mode (Risk-Free UI & Generation Testing without API/DB writes)"
+            >
+              <Beaker className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden xs:inline">SANDBOX:</span>
+              <span>{isEffectiveSandbox ? 'ON' : 'OFF'}</span>
+            </button>
+
+            {!isEffectiveLocked && (
               <button
                 type="button"
                 onClick={handleReset}
@@ -393,8 +438,22 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           </div>
         </header>
 
+        {/* Sandbox Active Ribbon */}
+        {isEffectiveSandbox && (
+          <div className="px-4 sm:px-6 py-1.5 bg-gradient-to-r from-emerald-950/80 via-[#061719] to-cyan-950/70 border-b border-emerald-400/40 flex items-center justify-between text-[10.5px] font-mono text-emerald-300 shrink-0">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-extrabold">SANDBOX PREVIEW MODE:</span>
+              <span className="text-white/80 hidden sm:inline">Zero DB writes · Placeholder assets · Risk-free testing</span>
+            </div>
+            <span className="px-2 py-0.5 rounded bg-emerald-400/15 border border-emerald-400/40 text-[9px] font-extrabold uppercase tracking-wider text-emerald-200">
+              ISOLATED TEST RUN
+            </span>
+          </div>
+        )}
+
         {/* Wizard Progress Ribbon (5 Steps) */}
-        {!isLocked && (
+        {!isEffectiveLocked && (
           <div className="px-4 sm:px-6 py-2 bg-black/40 border-b border-white/5 flex items-center justify-between gap-2 text-xs font-mono shrink-0">
             <div className="flex items-center gap-2 text-cyan-300">
               <span className="font-bold">QUESTION {Math.min(currentStepIndex + 1, 5)} OF 5:</span>
@@ -522,9 +581,20 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
 
         {/* Input Bar Form */}
         <footer className="p-3 sm:p-4 bg-[#070b16] border-t border-white/10 shrink-0 box-border space-y-2">
-          {isLocked ? (
-            <div className="py-2.5 text-center text-xs font-mono text-amber-300 flex items-center justify-center gap-2 bg-amber-950/40 rounded-xl border border-amber-500/30">
-              <span>⚠️ One-Shot Account Limit Reached · Inspect Your Active Dossier on Launchpad</span>
+          {isEffectiveLocked ? (
+            <div className="py-2.5 px-3 text-center text-xs font-mono text-amber-300 flex flex-col sm:flex-row items-center justify-between gap-2 bg-amber-950/40 rounded-xl border border-amber-500/30">
+              <span className="flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>One-Shot Ticket Locked</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleToggleSandbox}
+                className="px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/60 text-emerald-300 font-bold text-[11px] cursor-pointer flex items-center gap-1"
+              >
+                <Beaker className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Switch to Sandbox Test Mode →</span>
+              </button>
             </div>
           ) : currentStepIndex < WIZARD_STEPS.length ? (
             <form onSubmit={handleFormSubmit} className="space-y-2">
