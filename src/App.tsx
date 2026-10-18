@@ -471,25 +471,11 @@ export default function App() {
           <div className="relative z-20 flex-1 w-full flex flex-col">
             <React.Suspense
               fallback={
-                <div className="flex-1 w-full min-h-[85vh] bg-[#070b16] flex flex-col items-center justify-center p-4 sm:p-8">
-                  <div className="w-full max-w-5xl rounded-2xl bg-[#090e1c] border border-white/10 p-6 sm:p-8 space-y-6 shadow-2xl">
-                    <div className="flex items-center justify-between pb-4 border-b border-white/10">
-                      <div className="space-y-2">
-                        <div className="h-3 w-32 rounded bg-cyan-400/20 animate-pulse" />
-                        <div className="h-6 w-64 rounded bg-white/10 animate-pulse" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-                        <span className="text-[10px] font-mono text-cyan-300 uppercase tracking-wider animate-pulse">
-                          INITIALIZING COMMUNITY HUB...
-                        </span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                      <div className="h-44 rounded-xl bg-white/[0.03] border border-white/5 animate-pulse" />
-                      <div className="h-44 rounded-xl bg-white/[0.03] border border-white/5 animate-pulse" />
-                    </div>
-                  </div>
+                <div className="flex-1 w-full flex flex-col items-center justify-center p-12 space-y-3 min-h-[60vh]">
+                  <div className="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" />
+                  <span className="text-xs font-mono text-cyan-300 tracking-wider uppercase animate-pulse">
+                    LOADING COMMUNITY HUB...
+                  </span>
                 </div>
               }
             >

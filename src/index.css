@@ -107,11 +107,6 @@
    away / "float" with the page). `clip` keeps sticky working. */
 .app-shell {
   overflow-x: hidden;
-  position: relative;
-  z-index: 1;
-  isolation: isolate;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
 }
 @supports (overflow: clip) {
   .app-shell {
@@ -126,56 +121,13 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Fixed background layer sized to the LARGEST viewport with strict GPU isolation
-   so mobile / iPad scrolling never triggers repaint, flicker, or bleed-through. */
+/* Fixed background layer sized to the LARGEST viewport so iPad Safari toolbar
+   collapse/expand never exposes a black strip while scrolling. */
 .akinoya-bg-layer {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  height: 100lvh !important;
-  height: 100dvh !important;
-  transform: translateZ(0) !important;
-  -webkit-transform: translateZ(0) !important;
-  will-change: transform !important;
-  backface-visibility: hidden !important;
-  -webkit-backface-visibility: hidden !important;
-  perspective: 1000px;
-  -webkit-perspective: 1000px;
-  z-index: 0 !important;
-  pointer-events: none !important;
-  overflow: hidden !important;
-  contain: strict !important;
-  isolation: isolate !important;
-}
-
-.akinoya-bg-layer img,
-.akinoya-bg-layer picture,
-.akinoya-bg-layer canvas {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
+  height: 100vh;
+  height: 100lvh;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-}
-
-/* Pre-rendering & skeleton layout reservation for scrolling sections */
-.content-visibility-auto,
-.cv-auto {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 500px;
-}
-
-.content-visibility-card,
-.cv-card {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 320px;
-}
-
-.content-visibility-large,
-.cv-large {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 800px;
 }
 
 /* Sticky headers: own compositor layer -> no jitter/repaint while scrolling */
