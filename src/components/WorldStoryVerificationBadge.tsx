@@ -19,7 +19,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { PlanetSubmission } from '../types/contest';
 import { getPlanetPhotoCards } from '../data/contest';
-import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
+import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
 import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
@@ -78,6 +78,7 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
     shareUrl,
     isAmlemi,
     isPioneer: isPioneerPlanet(dossier),
+    isVipPioneer: isVipPioneerPlanet(dossier),
   };
 }
 
@@ -256,6 +257,8 @@ export async function renderWorldStoryBadgeBlob(
   ctx.fillText(
     meta.isAmlemi
       ? '★ FOUNDING PIONEER · GENESIS BENCHMARK'
+      : meta.isVipPioneer
+      ? '★ VIP PIONEER'
       : meta.isPioneer
       ? '★ FOUNDING PIONEER · PRE-RELEASE'
       : '★ FOUNDING PIONEER',
@@ -566,6 +569,8 @@ function drawTrailerFrame(
   ctx.fillText(
     meta.isAmlemi
       ? '★ FOUNDING PIONEER · GENESIS BENCHMARK'
+      : meta.isVipPioneer
+      ? '★ VIP PIONEER · 9:16 TRAILER'
       : meta.isPioneer
       ? '★ FOUNDING PIONEER · 9:16 TRAILER'
       : '★ FOUNDING PIONEER',
@@ -916,7 +921,13 @@ export const LiveStoryTrailerViewport: React.FC<{
             <div>
               <div className="inline-flex items-center gap-1 text-[8.5px] font-mono font-extrabold text-amber-300 tracking-wider uppercase">
                 <Sparkles className="w-2.5 h-2.5 text-amber-300 inline" />
-                <span>FOUNDING PIONEER</span>
+                <span>
+                  {meta.isAmlemi
+                    ? 'FOUNDING PIONEER'
+                    : meta.isVipPioneer
+                    ? 'VIP PIONEER'
+                    : 'FOUNDING PIONEER'}
+                </span>
               </div>
               <div className="text-sm font-display font-black tracking-[0.15em] text-white uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mt-0.5">
                 {dossier.planetName || 'ÄMLEMI'}
@@ -1247,6 +1258,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                       <span className="truncate">
                         {meta.isAmlemi
                           ? 'FOUNDING PIONEER · GENESIS BENCHMARK'
+                          : meta.isVipPioneer
+                          ? 'VIP PIONEER'
                           : meta.isPioneer
                           ? 'FOUNDING PIONEER · PRE-RELEASE'
                           : 'FOUNDING PIONEER'}

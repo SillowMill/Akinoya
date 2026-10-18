@@ -126,7 +126,8 @@ export default async function handler(req, res) {
     let vipCode = rawVipCode || 'N/A';
     const registrationDate = record.timestamp || record.created_at || new Date().toISOString();
     const isPioneer = new Date(registrationDate).getTime() < new Date('2027-01-09T00:00:00+01:00').getTime();
-    const pioneerBadge = isPioneer ? '[PIONEER-2027]' : '';
+    const isVip = record.is_vip === true || record.is_vip_pioneer === true || record.isVipPioneer === true || role === 'VIP_GUEST' || role === 'CREATOR' || vipCode !== 'N/A' || String(record.pioneer_badge || record.pioneerBadge || '').toUpperCase().includes('VIP');
+    const pioneerBadge = String(record.pioneer_badge || record.pioneerBadge || (isPioneer ? (isVip ? '[VIP-PIONEER-2027]' : '[PIONEER-2027]') : '')).trim();
     const claimedSector = String(
       record.worldName ||
       record.planetName ||

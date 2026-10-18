@@ -374,15 +374,30 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
               ? { x: sub.coord_x, y: sub.coord_y, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
               : getDeterministicPlanetCoordinates(sub.id, sub.planetName);
             const isPreRelease = !sub.createdAt || new Date(sub.createdAt).getTime() < new Date('2027-01-09T00:00:00Z').getTime();
+            const isVip = Boolean(
+              sub.isVipPioneer ||
+              sub.is_vip_pioneer ||
+              (sub.pioneerBadge && sub.pioneerBadge.toUpperCase().includes('VIP')) ||
+              (sub.pioneer_badge && sub.pioneer_badge.toUpperCase().includes('VIP'))
+            );
             return {
               ...sub,
               planetName: isAmlemi ? 'Ämlemi' : formatAkinoyaPlanetName(sub.planetName),
               votesCount,
               hasVoted: userVoted,
               isPioneer: isAmlemi || (sub.isPioneer ?? isPreRelease),
+              isVipPioneer: isVip,
+              is_vip_pioneer: isVip,
               pioneerBadge: isAmlemi
                 ? 'FOUNDING PIONEER · #01'
+                : isVip
+                ? 'VIP PIONEER'
                 : sub.pioneerBadge || (isPreRelease ? 'PIONEER 2027 · PRE-RELEASE' : undefined),
+              pioneer_badge: isAmlemi
+                ? 'FOUNDING PIONEER · #01'
+                : isVip
+                ? 'VIP PIONEER'
+                : sub.pioneer_badge || sub.pioneerBadge || (isPreRelease ? 'PIONEER 2027 · PRE-RELEASE' : undefined),
               videoUrl: resolvedVideoUrl,
               videoStatus: resolvedVideoUrl ? 'READY' : sub.videoStatus || 'QUEUED_PENDING',
               sfxAudioUrl: resolvedSfxAudioUrl,
@@ -628,7 +643,50 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
               votesCount,
               hasVoted: userVoted,
               isPioneer: isAmlemi || (!d.created_at || new Date(d.created_at).getTime() < new Date('2027-01-09T00:00:00Z').getTime()),
-              pioneerBadge: isAmlemi ? 'FOUNDING PIONEER · #01' : 'PIONEER 2027 · PRE-RELEASE',
+              isVipPioneer: Boolean(
+                (d as any).is_vip_pioneer ||
+                (d as any).isVipPioneer ||
+                (d.raw_answers as any)?.is_vip_pioneer ||
+                (d.raw_answers as any)?.isVipPioneer ||
+                (d.human_answers as any)?.is_vip_pioneer ||
+                (d.human_answers as any)?.isVipPioneer ||
+                ((d as any).pioneer_badge && String((d as any).pioneer_badge).toUpperCase().includes('VIP'))
+              ),
+              is_vip_pioneer: Boolean(
+                (d as any).is_vip_pioneer ||
+                (d as any).isVipPioneer ||
+                (d.raw_answers as any)?.is_vip_pioneer ||
+                (d.raw_answers as any)?.isVipPioneer ||
+                (d.human_answers as any)?.is_vip_pioneer ||
+                (d.human_answers as any)?.isVipPioneer ||
+                ((d as any).pioneer_badge && String((d as any).pioneer_badge).toUpperCase().includes('VIP'))
+              ),
+              pioneerBadge: isAmlemi
+                ? 'FOUNDING PIONEER · #01'
+                : Boolean(
+                    (d as any).is_vip_pioneer ||
+                    (d as any).isVipPioneer ||
+                    (d.raw_answers as any)?.is_vip_pioneer ||
+                    (d.raw_answers as any)?.isVipPioneer ||
+                    (d.human_answers as any)?.is_vip_pioneer ||
+                    (d.human_answers as any)?.isVipPioneer ||
+                    ((d as any).pioneer_badge && String((d as any).pioneer_badge).toUpperCase().includes('VIP'))
+                  )
+                ? 'VIP PIONEER'
+                : 'PIONEER 2027 · PRE-RELEASE',
+              pioneer_badge: isAmlemi
+                ? 'FOUNDING PIONEER · #01'
+                : Boolean(
+                    (d as any).is_vip_pioneer ||
+                    (d as any).isVipPioneer ||
+                    (d.raw_answers as any)?.is_vip_pioneer ||
+                    (d.raw_answers as any)?.isVipPioneer ||
+                    (d.human_answers as any)?.is_vip_pioneer ||
+                    (d.human_answers as any)?.isVipPioneer ||
+                    ((d as any).pioneer_badge && String((d as any).pioneer_badge).toUpperCase().includes('VIP'))
+                  )
+                ? 'VIP PIONEER'
+                : 'PIONEER 2027 · PRE-RELEASE',
               status: (d.status as any) || 'PUBLISHED',
               createdAt: d.created_at || new Date().toISOString(),
               votingDeadline: 'June 30, 2027',
@@ -686,14 +744,29 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
       votesCount = userVoted ? 4 : 3;
     }
     const isPreRelease = !sub.createdAt || new Date(sub.createdAt).getTime() < new Date('2027-01-09T00:00:00Z').getTime();
+    const isVip = Boolean(
+      sub.isVipPioneer ||
+      sub.is_vip_pioneer ||
+      (sub.pioneerBadge && sub.pioneerBadge.toUpperCase().includes('VIP')) ||
+      (sub.pioneer_badge && sub.pioneer_badge.toUpperCase().includes('VIP'))
+    );
     return {
       ...sub,
       votesCount,
       hasVoted: userVoted,
       isPioneer: isAmlemi || (sub.isPioneer ?? isPreRelease),
+      isVipPioneer: isVip,
+      is_vip_pioneer: isVip,
       pioneerBadge: isAmlemi
         ? 'FOUNDING PIONEER · #01'
+        : isVip
+        ? 'VIP PIONEER'
         : sub.pioneerBadge || (isPreRelease ? 'PIONEER 2027 · PRE-RELEASE' : undefined),
+      pioneer_badge: isAmlemi
+        ? 'FOUNDING PIONEER · #01'
+        : isVip
+        ? 'VIP PIONEER'
+        : sub.pioneer_badge || sub.pioneerBadge || (isPreRelease ? 'PIONEER 2027 · PRE-RELEASE' : undefined),
     };
   });
 
@@ -844,6 +917,51 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           })(),
           votesCount,
           hasVoted: userVoted,
+          isPioneer: isAmlemi || (!data.created_at || new Date(data.created_at).getTime() < new Date('2027-01-09T00:00:00Z').getTime()),
+          isVipPioneer: Boolean(
+            data.is_vip_pioneer ||
+            (data as any).isVipPioneer ||
+            (data.raw_answers as any)?.is_vip_pioneer ||
+            (data.raw_answers as any)?.isVipPioneer ||
+            (data.human_answers as any)?.is_vip_pioneer ||
+            (data.human_answers as any)?.isVipPioneer ||
+            ((data as any).pioneer_badge && String((data as any).pioneer_badge).toUpperCase().includes('VIP'))
+          ),
+          is_vip_pioneer: Boolean(
+            data.is_vip_pioneer ||
+            (data as any).isVipPioneer ||
+            (data.raw_answers as any)?.is_vip_pioneer ||
+            (data.raw_answers as any)?.isVipPioneer ||
+            (data.human_answers as any)?.is_vip_pioneer ||
+            (data.human_answers as any)?.isVipPioneer ||
+            ((data as any).pioneer_badge && String((data as any).pioneer_badge).toUpperCase().includes('VIP'))
+          ),
+          pioneerBadge: isAmlemi
+            ? 'FOUNDING PIONEER · #01'
+            : Boolean(
+                data.is_vip_pioneer ||
+                (data as any).isVipPioneer ||
+                (data.raw_answers as any)?.is_vip_pioneer ||
+                (data.raw_answers as any)?.isVipPioneer ||
+                (data.human_answers as any)?.is_vip_pioneer ||
+                (data.human_answers as any)?.isVipPioneer ||
+                ((data as any).pioneer_badge && String((data as any).pioneer_badge).toUpperCase().includes('VIP'))
+              )
+            ? 'VIP PIONEER'
+            : 'PIONEER 2027 · PRE-RELEASE',
+          pioneer_badge: isAmlemi
+            ? 'FOUNDING PIONEER · #01'
+            : Boolean(
+                data.is_vip_pioneer ||
+                (data as any).isVipPioneer ||
+                (data.raw_answers as any)?.is_vip_pioneer ||
+                (data.raw_answers as any)?.isVipPioneer ||
+                (data.human_answers as any)?.is_vip_pioneer ||
+                (data.human_answers as any)?.isVipPioneer ||
+                ((data as any).pioneer_badge && String((data as any).pioneer_badge).toUpperCase().includes('VIP'))
+              )
+            ? 'VIP PIONEER'
+            : 'PIONEER 2027 · PRE-RELEASE',
           status: (data.status as any) || 'PUBLISHED',
           createdAt: data.created_at || new Date().toISOString(),
           votingDeadline: 'June 30, 2027',
@@ -1112,9 +1230,21 @@ export const savePlanetSubmission = async (
       ? { x: submission.coord_x, y: submission.coord_y, sectorId: submission.sectorId || 'SECTOR ALPHA-01' }
       : getDeterministicPlanetCoordinates(submission.id, submission.planetName);
 
+    const isVip = Boolean(
+      submission.isVipPioneer ||
+      submission.is_vip_pioneer ||
+      (submission.pioneerBadge && submission.pioneerBadge.toUpperCase().includes('VIP')) ||
+      (submission.pioneer_badge && submission.pioneer_badge.toUpperCase().includes('VIP'))
+    );
+
     const enrichedSubmission: PlanetSubmission = {
       ...submission,
       votesCount: Math.max(1, submission.votesCount || 1),
+      isPioneer: true,
+      isVipPioneer: isVip,
+      is_vip_pioneer: isVip,
+      pioneerBadge: isVip ? 'VIP PIONEER' : (submission.pioneerBadge || 'PIONEER 2027'),
+      pioneer_badge: isVip ? 'VIP PIONEER' : (submission.pioneer_badge || submission.pioneerBadge || 'PIONEER 2027'),
       videoUrl,
       videoStatus: videoUrl ? 'READY' : submission.videoStatus || 'QUEUED_PENDING',
       sfxAudioUrl,
@@ -1173,6 +1303,9 @@ export const savePlanetSubmission = async (
           visual_aesthetic: enrichedSubmission.visualAesthetic,
           landmark: enrichedSubmission.landmark,
           additional_notes: enrichedSubmission.additionalNotes,
+          is_pioneer: true,
+          is_vip_pioneer: isVip,
+          pioneer_badge: isVip ? 'VIP PIONEER' : (submission.pioneerBadge || 'PIONEER 2027'),
           human_answers: {
             ...(enrichedSubmission.humanAnswers || {}),
             biome: enrichedSubmission.biome,
@@ -1181,6 +1314,9 @@ export const savePlanetSubmission = async (
             coord_x: coords.x,
             coord_y: coords.y,
             sector_id: coords.sectorId,
+            is_vip_pioneer: isVip,
+            isVipPioneer: isVip,
+            pioneer_badge: isVip ? 'VIP PIONEER' : (submission.pioneerBadge || 'PIONEER 2027'),
           },
           generated_lore: enrichedSubmission.generatedLore,
           renders: enrichedSubmission.renders,

@@ -25,7 +25,7 @@ import {
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
-import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
+import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import akinoyaHeroBg from '../assets/images/akinoya_hero_bg-CiYAZVRx.jpg';
 
@@ -1085,7 +1085,11 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                         </span>
                         {isPioneer && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 text-[8.5px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_8px_rgba(251,191,36,0.35)]">
-                            {isFounder ? '👑 FOUNDING PIONEER' : '⚡ PIONEER'}
+                            {isFounder
+                              ? '👑 FOUNDING PIONEER'
+                              : isVipPioneerPlanet(p)
+                              ? '👑 VIP PIONEER'
+                              : '⚡ PIONEER'}
                           </span>
                         )}
                       </div>
@@ -1334,6 +1338,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             }
 
             const isAmlemi = isFoundingPioneerPlanet(planet);
+            const isVipPioneer = isVipPioneerPlanet(planet);
             const isPioneer = isPioneerPlanet(planet);
             const isHovered = hoveredPlanet?.id === planet.id;
             const isSelected = selectedPlanet?.id === planet.id;
@@ -1362,6 +1367,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                     {isAmlemi ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black font-mono font-extrabold text-[8.5px] tracking-widest uppercase shadow-[0_0_16px_rgba(251,191,36,0.65)]">
                         <span>👑 FOUNDING PIONEER · #01</span>
+                      </span>
+                    ) : isVipPioneer ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black font-mono font-extrabold text-[8.5px] tracking-widest uppercase shadow-[0_0_14px_rgba(245,158,11,0.6)]">
+                        <span>👑 VIP PIONEER</span>
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/90 border border-amber-400/60 text-amber-300 font-mono font-extrabold text-[8px] tracking-widest uppercase shadow-[0_0_12px_rgba(245,158,11,0.35)]">

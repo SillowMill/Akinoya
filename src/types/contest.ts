@@ -75,8 +75,11 @@ export interface PlanetSubmission {
   votesCount: number;
   hasVoted?: boolean;
   isPioneer?: boolean;
+  isVipPioneer?: boolean;
+  is_vip_pioneer?: boolean;
   isSandbox?: boolean;
   pioneerBadge?: string;
+  pioneer_badge?: string;
   status: 'SUBMITTED' | 'PUBLISHED' | 'FINALIST';
   createdAt: string;
   votingDeadline: string; // 'June 30, 2027'

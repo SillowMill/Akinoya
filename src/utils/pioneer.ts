@@ -207,4 +207,81 @@ export const isPioneerPlanet = (planet?: {
   // Pre-release worlds created prior to official launch (Jan 9, 2027)
   return isPreLaunch();
 };
+export const isVipAccount = (
+  user?: any,
+  profile?: any,
+  role?: string,
+  isVipProp?: boolean
+): boolean => {
+  if (isVipProp === true) return true;
+  const normalizedRole = (role || profile?.role || '').toUpperCase();
+  if (normalizedRole === 'VIP_GUEST' || normalizedRole === 'CREATOR' || normalizedRole === 'ADMIN') {
+    return true;
+  }
+  if (profile?.is_vip === true || profile?.has_vip_pass === true) {
+    return true;
+  }
+  if (user?.app_metadata?.is_vip === true || user?.user_metadata?.is_vip === true) {
+    return true;
+  }
+  if (
+    isOdiFounderAccount({
+      email: user?.email || profile?.email,
+      username: profile?.username,
+      name: profile?.full_name,
+      userId: user?.id || profile?.id,
+    })
+  ) {
+    return true;
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      if (
+        localStorage.getItem('sillow_vip_device_access') === 'true' ||
+        sessionStorage.getItem('akinoya_vip_unlocked') === 'true' ||
+        Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+        Boolean(sessionStorage.getItem('sillow_vip_bound_token')) ||
+        localStorage.getItem('sillow_pending_role') === 'VIP_GUEST' ||
+        sessionStorage.getItem('sillow_pending_role') === 'VIP_GUEST'
+      ) {
+        return true;
+      }
+    } catch {}
+  }
+  return false;
+};
 
+export const isVipPioneerPlanet = (planet?: {
+  id?: string | null;
+  planetName?: string | null;
+  authorUsername?: string | null;
+  authorEmail?: string | null;
+  authorName?: string | null;
+  userId?: string | null;
+  isVipPioneer?: boolean | null;
+  is_vip_pioneer?: boolean | null;
+  pioneerBadge?: string | null;
+  pioneer_badge?: string | null;
+  createdAt?: string | null;
+  isPioneer?: boolean | null;
+} | null): boolean => {
+  if (!planet) return false;
+  // If explicitly flagged as VIP Pioneer
+  if (planet.isVipPioneer === true || planet.is_vip_pioneer === true) return true;
+  const badge = (planet.pioneerBadge || planet.pioneer_badge || '').toUpperCase();
+  if (badge.includes('VIP PIONEER') || badge.includes('VIP')) return true;
+
+  // If created by VIP account or founder account
+  if (
+    isOdiFounderAccount({
+      email: planet.authorEmail,
+      username: planet.authorUsername,
+      name: planet.authorName,
+      userId: planet.userId,
+    })
+  ) {
+    return true;
+  }
+
+  return false;
+};

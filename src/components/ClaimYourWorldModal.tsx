@@ -33,6 +33,7 @@ import {
   isPostLaunch,
   hasPaidMembership,
   openMembershipGateModal,
+  isVipAccount,
 } from '../utils/pioneer';
 import { formatAkinoyaPlanetName } from '../data/contest';
 import { validatePlanetName } from '../utils/profanityFilter';
@@ -132,12 +133,20 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
     const emailToUse = (user?.email || visitorEmail || '').trim().toLowerCase();
     const cleanPlanetName = formatAkinoyaPlanetName(trimmedSectorName, false) || trimmedSectorName;
 
+    const isUserVip = Boolean(
+      isVip ||
+      profile?.has_vip_pass ||
+      profile?.is_vip ||
+      isVipAccount(user, profile, role, isVip)
+    );
+    const badgeTag = isUserVip ? '[VIP-PIONEER-2027]' : PIONEER_BADGE_TAG;
+
     const claimRecord: SectorClaimRecord = {
       sectorName: cleanPlanetName,
       biome: selectedBiome.label,
       coordinates,
       claimedAt: new Date().toISOString(),
-      pioneerBadge: PIONEER_BADGE_TAG,
+      pioneerBadge: badgeTag,
       holderEmail: emailToUse,
     };
     saveSectorClaim(claimRecord);
@@ -149,10 +158,11 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
         first_name: profile?.first_name || user?.user_metadata?.first_name || emailToUse.split('@')[0],
         last_name: profile?.last_name || user?.user_metadata?.last_name || '',
         email: emailToUse,
-        role: role || (isVip ? 'VIP_GUEST' : 'FREE'),
+        role: role || (isUserVip ? 'VIP_GUEST' : 'FREE'),
         claimed_sector: `${cleanPlanetName} (${selectedBiome.label})`,
         is_pioneer: true,
-        pioneer_badge: PIONEER_BADGE_TAG,
+        is_vip_pioneer: isUserVip,
+        pioneer_badge: isUserVip ? 'VIP PIONEER' : PIONEER_BADGE_TAG,
         created_at: profile?.created_at || new Date().toISOString(),
       };
 

@@ -20,8 +20,9 @@ import millAvatar from '../assets/images/mill_photo.jpg';
 import { WizardAnswers, ChatMessage } from '../types/contest';
 import { soundManager } from '../utils/audio';
 import { formatAkinoyaPlanetName, derivePlanetAttributesFromHumanAnswers } from '../data/contest';
-import { getStoredSectorClaim, saveSectorClaim } from '../utils/pioneer';
+import { getStoredSectorClaim, saveSectorClaim, isVipAccount } from '../utils/pioneer';
 import { validatePlanetName } from '../utils/profanityFilter';
+import { useAuth } from '../context/AuthContext';
 
 interface PlanetGeneratorChatProps {
   userDisplayName: string;
@@ -141,6 +142,13 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
 }) => {
   const initialClaim = getStoredSectorClaim();
   const designatedPlanetName = formatAkinoyaPlanetName(initialClaim?.sectorName || '', false) || 'Äkinoya Frontier Sector';
+  const { user, profile, role, isVip } = useAuth();
+  const isUserVip = Boolean(
+    isVip ||
+    profile?.has_vip_pass ||
+    profile?.is_vip ||
+    isVipAccount(user, profile, role, isVip)
+  );
 
   const [internalSandbox, setInternalSandbox] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
@@ -310,7 +318,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         biome: claim?.biome || 'Bioluminescent Canopy',
         coordinates: claim?.coordinates || 'SECTOR AKN-01',
         claimedAt: new Date().toISOString(),
-        pioneerBadge: claim?.pioneerBadge || 'FOUNDING PIONEER',
+        pioneerBadge: claim?.pioneerBadge || (isUserVip ? 'VIP PIONEER' : 'FOUNDING PIONEER'),
       });
 
       const userMsg: ChatMessage = {

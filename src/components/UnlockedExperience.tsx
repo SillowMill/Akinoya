@@ -61,7 +61,7 @@ import {
   subscribeToPlanetSubmissions,
 } from '../data/contest';
 import { getUserStatusConfig } from '../utils/statusPill';
-import { isFoundingPioneerPlanet, isPioneerPlanet, isPreLaunch } from '../utils/pioneer';
+import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet, isPreLaunch } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { WorldStoryVerificationBadge } from './WorldStoryVerificationBadge';
 import { MyAssetsMasterCarousel } from './MyAssetsMasterCarousel';
@@ -2122,6 +2122,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           <span>
                             {isFoundingPioneerPlanet(activeWorldDossier)
                               ? 'FOUNDING PIONEER · #01 · ODI SELIS'
+                              : isVipPioneerPlanet(activeWorldDossier)
+                              ? 'VIP PIONEER · 2027 ARCHIVE'
                               : activeWorldDossier.pioneerBadge || 'PIONEER 2027 · PRE-RELEASE'}
                           </span>
                         </span>

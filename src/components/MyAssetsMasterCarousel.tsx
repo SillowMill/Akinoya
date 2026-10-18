@@ -27,7 +27,7 @@ import {
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { PlanetSubmission } from '../types/contest';
 import { getPlanetPhotoCards } from '../data/contest';
-import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
+import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
 import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import {
@@ -883,7 +883,13 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                     <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
                       <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
                       <span className="truncate">
-                        {meta.isAmlemi ? 'FOUNDING PIONEER · GENESIS BENCHMARK' : 'VERIFIED PLANETARY ARCHIVE'}
+                        {meta.isAmlemi
+                          ? 'FOUNDING PIONEER · GENESIS BENCHMARK'
+                          : meta.isVipPioneer
+                          ? 'VIP PIONEER · 2027 ARCHIVE'
+                          : meta.isPioneer
+                          ? 'PIONEER 2027 · PRE-RELEASE'
+                          : 'VERIFIED PLANETARY ARCHIVE'}
                       </span>
                     </div>
                     <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide uppercase truncate mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">

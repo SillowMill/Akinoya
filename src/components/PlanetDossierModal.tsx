@@ -31,7 +31,7 @@ import {
   copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
-import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
+import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
 import {
   LiveStoryTrailerViewport,
   exportWorldTrailerVideoBlob,
@@ -270,6 +270,8 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                         <span>
                           {isFoundingPioneerPlanet(activePlanet)
                             ? '👑 FOUNDING PIONEER · #01'
+                            : isVipPioneerPlanet(activePlanet)
+                            ? '👑 VIP PIONEER'
                             : activePlanet.pioneerBadge || '⚡ PIONEER 2027'}
                         </span>
                       </span>

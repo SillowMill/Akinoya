@@ -74,6 +74,8 @@ import {
   openClaimWorldModal,
   isFoundingPioneerPlanet,
   isPioneerPlanet,
+  isVipAccount,
+  isVipPioneerPlanet,
 } from '../utils/pioneer';
 import { isFounderEmail, PRIMARY_FOUNDER_EMAIL } from '../data/vipTokens';
 
@@ -441,6 +443,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     // Synthesize official sector lore incorporating founding creed
     const lore = generatePlanetLore(answersWithFormattedName, userDisplayName);
 
+    // Detect VIP Pioneer account status
+    const isUserVip = Boolean(
+      isVip ||
+      profile?.has_vip_pass ||
+      profile?.is_vip ||
+      isVipAccount(user, profile, role, isVip)
+    );
+
     // Mount initial preview dossier immediately so the user watches cards stream live
     const initialDraft: PlanetSubmission = {
       id: `PLN-2027-${Date.now().toString(36).toUpperCase()}`,
@@ -463,6 +473,11 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       futurePromise: answers.futurePromise,
       generatedLore: lore,
       isSandbox: isSandboxMode,
+      isPioneer: true,
+      isVipPioneer: isUserVip,
+      is_vip_pioneer: isUserVip,
+      pioneerBadge: isUserVip ? 'VIP PIONEER' : 'PIONEER 2027',
+      pioneer_badge: isUserVip ? 'VIP PIONEER' : 'PIONEER 2027',
       videoUrl: '',
       videoStatus: 'QUEUED_PENDING',
       sfxAudioUrl: '',
@@ -1643,7 +1658,11 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                       </div>
                       {isPioneer && (
                         <div className="absolute bottom-2.5 left-3 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-extrabold bg-gradient-to-r from-amber-500/85 via-yellow-400/90 to-amber-500/85 text-black border border-amber-200/80 shadow-[0_0_14px_rgba(251,191,36,0.6)] uppercase tracking-wider">
-                          {isFounder ? '👑 FOUNDING PIONEER · #01' : '⚡ PIONEER 2027'}
+                          {isFounder
+                            ? '👑 FOUNDING PIONEER · #01'
+                            : isVipPioneerPlanet(sub)
+                            ? '👑 VIP PIONEER'
+                            : '⚡ PIONEER 2027'}
                         </div>
                       )}
                     </div>
