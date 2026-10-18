@@ -162,7 +162,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   const [isGeneratingRenders, setIsGeneratingRenders] = useState<boolean>(false);
   const [generationProgress, setGenerationProgress] = useState<number>(0);
   const [generationStageName, setGenerationStageName] = useState<string>('ANALYZING PLANETARY DATA...');
-  const [generationStageDetails, setGenerationStageDetails] = useState<string>('Parsing 8 human-centric coordinates...');
+  const [generationStageDetails, setGenerationStageDetails] = useState<string>('Parsing 5 personality coordinates...');
   const [generationSlotIndex, setGenerationSlotIndex] = useState<number>(1);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [modalPlanet, setModalPlanet] = useState<PlanetSubmission | null>(null);
@@ -905,7 +905,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               </h1>
 
               <p className="text-sm sm:text-base text-white/70 font-sans leading-relaxed max-w-2xl">
-                Collaborate with <strong>Mill</strong>, our planetary AI synthesizer. Answer 8 human-centric questions (~10 minutes) to generate a complete 5-photo high-resolution cinematic sci-fi dossier, orbital specs, and sector lore.
+                Collaborate with <strong>Mill</strong>, our planetary AI synthesizer. Answer 5 personality questions (~3 minutes) to generate a complete 5-photo high-resolution cinematic sci-fi dossier, orbital specs, and sector lore.
               </p>
 
               {/* Contest Rules Ribbon */}

@@ -7,14 +7,12 @@ import {
   RotateCcw,
   CheckCircle2,
   Globe2,
-  Volume2,
-  Compass,
-  Trees,
   Layers,
   Camera,
   Heart,
-  Shield,
   Lightbulb,
+  Copy,
+  Check,
 } from 'lucide-react';
 import millAvatar from '../assets/images/mill_photo.jpg';
 import { WizardAnswers, ChatMessage } from '../types/contest';
@@ -41,93 +39,63 @@ interface StepConfig {
   isFreeform?: boolean;
 }
 
+/**
+ * Streamlined 5-Question Personality-Based Planet Generator for Mill
+ * Designed around light, fun, and deep human questions to synthesize unique worlds.
+ */
 export const WIZARD_STEPS: StepConfig[] = [
   {
     step: 1,
-    title: 'Planet Name & Designation',
-    category: 'PLANET NAME',
+    title: 'Inner Landscape & Topography',
+    category: 'INNER LANDSCAPE',
     prompt:
-      'What do you want to name your planet?\nGive your new world an evocative, organic name (e.g. Ämlemi, Valerion, Elysia, Aethelgard). Machine codes, serial numbers, hyphens, and numbers are strictly prohibited.',
-    placeholder: 'e.g., Ämlemi, Valerion, Elysia, Aethelgard...',
-    helperExample: 'Ämlemi',
-    icon: Globe2,
-    field: 'planetName',
-  },
-  {
-    step: 2,
-    title: 'Free Time & Inner Relaxation',
-    category: 'RELAXATION & CALM',
-    prompt:
-      'How do you spend your free time or find true relaxation? What peaceful rituals recharge your spirit?\n(Your answer shapes the tranquility, atmospheric rhythm, and sanctuary biomes of your world.)',
-    placeholder: 'e.g., Long walks in the forest, listening to vinyl by candlelight, sketching at midnight...',
-    helperExample: 'Long walks in the forest, listening to vinyl by candlelight, sketching at midnight.',
-    icon: Trees,
-    field: 'relaxation',
-  },
-  {
-    step: 3,
-    title: 'Creative, Visual & Musical Expression',
-    category: 'ART & SONIC VIBE',
-    prompt:
-      'What forms of art, music, or creative expressions resonate most deeply with you?\n(This defines the acoustic frequency, synthesizers, and artistic architecture of your sector.)',
-    placeholder: 'e.g., Cyberpunk aesthetics, cinematic space epics, deep analog synth soundtracks, ambient soundscapes...',
-    helperExample: 'Cyberpunk aesthetics, cinematic space epics, deep analog synth soundtracks, ambient soundscapes.',
-    icon: Volume2,
-    field: 'creativeExpression',
-  },
-  {
-    step: 4,
-    title: 'Comforting Natural Environments & Horizons',
-    category: 'NATURAL ENVIRONMENT',
-    prompt:
-      'What natural landscape or environment brings you the deepest sense of peace, awe, or belonging?\n(This shapes your planetary surface topography, flora systems, and horizon canopy.)',
-    placeholder: 'e.g., A misty mountain ridge at sunrise, a bioluminescent rainforest, a secluded ocean cove under starlight...',
-    helperExample: 'A misty mountain ridge at sunrise, a bioluminescent rainforest, a secluded ocean cove under starlight.',
+      'If your inner world was a landscape, do you lean more towards a stormy, energetic neon city, a quiet misty star-desert, or a deep, mysterious bioluminescent jungle?',
+    placeholder: 'e.g. A quiet, misty star-desert with serene crystals and a calm, philosophical vibe...',
+    helperExample: 'A quiet, misty star-desert with serene crystals and a calm, philosophical vibe.',
     icon: Layers,
     field: 'naturalEnvironment',
   },
   {
-    step: 5,
-    title: 'Admired Animal & Celestial Wildlife',
-    category: 'ADMIRED CREATURE',
+    step: 2,
+    title: 'Natural Force & Elemental Drive',
+    category: 'ELEMENTAL DRIVE',
     prompt:
-      'What animal or creature do you admire most in nature or myth, and what quality draws you to them?\n(This breathes life into the apex fauna and celestial wildlife inhabiting your world.)',
-    placeholder: 'e.g., A wolf for its pack loyalty, an eagle for boundless freedom, a manta ray for effortless grace...',
-    helperExample: 'A wolf for its pack loyalty, an eagle for boundless freedom, a manta ray for effortless grace.',
-    icon: Heart,
-    field: 'admiredCreature',
+      'Which natural force or element matches your drive or hobbies best? (e.g., flowing plasma, freezing oceans, floating cosmic rocks, or ancient forests).',
+    placeholder: 'e.g. Floating cosmic rocks with rings of gas and shooting stars...',
+    helperExample: 'Floating cosmic rocks with rings of gas and shooting stars.',
+    icon: Sparkles,
+    field: 'creativeExpression',
   },
   {
-    step: 6,
-    title: 'Natural Color Preference & Celestial Spectra',
+    step: 3,
+    title: 'Creative Palette & Spectra',
     category: 'COLOR PALETTE',
     prompt:
-      'What natural colors and tonal palette resonate with you?\n(These exact tones will render your planetary disc, orbital rings, and atmospheric auroras.)',
-    placeholder: 'e.g., Deep indigo blue combined with neon purple and warm copper accents...',
-    helperExample: 'Deep indigo blue combined with neon purple and warm copper accents.',
+      'What color palette reflects your personality best when you are at your most creative? (e.g., deep steel-blue and gold, neon purple and emerald green, or warm copper and moonlight silver).',
+    placeholder: 'e.g. Deep steel-blue with glowing gold energy lines and copper accents...',
+    helperExample: 'Deep steel-blue with glowing gold energy lines and copper accents.',
     icon: Camera,
     field: 'colorPalette',
   },
   {
-    step: 7,
-    title: 'Resilience & Overcome Challenge',
-    category: 'RESILIENCE & MONUMENT',
+    step: 4,
+    title: 'World Presence & Wildlife',
+    category: 'PRESENCE & LIFE',
     prompt:
-      'Share a brief story of a challenge you overcame, or a moment that shaped your resilience.\n(This will be forged into an iconic planetary monument or ancient megastructure on your horizon.)',
-    placeholder: 'e.g., Building a creative project entirely from scratch despite doubt, navigating through the unknown...',
-    helperExample: 'Building a creative project entirely from scratch despite doubt, persevering through the unknown.',
-    icon: Sparkles,
-    field: 'resilienceStory',
-    isFreeform: true,
+      'Would your world be a lonely, contemplative place for solo explorers, or burst with life, mysterious creatures, and flora?',
+    placeholder: 'e.g. A contemplative place for lone explorers featuring giant monuments of light...',
+    helperExample: 'A contemplative place for lone explorers featuring giant monuments of light.',
+    icon: Heart,
+    field: 'admiredCreature',
   },
   {
-    step: 8,
-    title: 'Future Promise & Planetary Creed',
-    category: 'PLANETARY PROMISE',
+    step: 5,
+    title: 'Life Motto & Planetary Creed',
+    category: 'PLANETARY MOTTO',
     prompt:
-      'What is your future promise, guiding philosophy, or message for the new world?\n(This founding creed will be permanently inscribed upon your Lore Dossier Cover and archival documents.)',
-    placeholder: 'e.g., Never forget that true beauty lies in curiosity and persistence...',
-    helperExample: 'Never forget that true beauty lies in curiosity and persistence.',
+      'If you could capture your life motto or vibe in one short sentence for this planet, what would it be? (e.g., \'Peace in the chaos\' or \'Always chasing the horizon\').',
+    placeholder: 'e.g. Always chasing the horizon in the silence of the cosmos...',
+    helperExample: 'Always chasing the horizon in the silence of the cosmos.',
     icon: Globe2,
     field: 'futurePromise',
     isFreeform: true,
@@ -141,16 +109,12 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   onClose,
 }) => {
   const initialClaim = getStoredSectorClaim();
-  const initialPlanetName = formatAkinoyaPlanetName(initialClaim?.sectorName || '', false);
-  const hasPreAnsweredPlanetName = Boolean(initialPlanetName && initialPlanetName.trim().length > 1);
+  const designatedPlanetName = formatAkinoyaPlanetName(initialClaim?.sectorName || '', false) || 'Äkinoya Frontier Sector';
 
-  const [currentStepIndex, setCurrentStepIndex] = useState<number>(() => {
-    return hasPreAnsweredPlanetName ? 1 : 0;
-  });
-
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<WizardAnswers>(() => {
     const claim = getStoredSectorClaim();
-    const pName = formatAkinoyaPlanetName(claim?.sectorName || '', false);
+    const pName = formatAkinoyaPlanetName(claim?.sectorName || '', false) || 'Äkinoya Frontier Sector';
     return {
       relaxation: '',
       creativeExpression: '',
@@ -168,19 +132,21 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       visualAesthetic: '',
       landmark: '',
       additionalNotes: '',
-      biome: claim?.biome || '',
+      biome: claim?.biome || 'Bioluminescent Canopy',
       sectorName: pName,
     };
   });
 
   const [inputVal, setInputVal] = useState<string>('');
   const [isSynthesizing, setIsSynthesizing] = useState<boolean>(false);
+  const [isMillTyping, setIsMillTyping] = useState<boolean>(false);
+  const [copiedExample, setCopiedExample] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const currentStep = WIZARD_STEPS[currentStepIndex];
 
-  // Initialize Mill's opening transmission
+  // Initialize Mill's opening transmission with realistic human typing animation
   useEffect(() => {
     soundManager.playTone(660, 0.08);
 
@@ -197,159 +163,141 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
     }
 
     const claim = getStoredSectorClaim();
-    const pName = formatAkinoyaPlanetName(claim?.sectorName || initialPlanetName, false);
+    const pName = formatAkinoyaPlanetName(claim?.sectorName || designatedPlanetName, false);
 
-    if (pName && pName.trim().length > 1) {
-      // Question 1 satisfied via Claim Your World form -> Advance directly to Question 2
-      const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\n[QUESTION 01 SATISFIED]: Your world designation "${pName}" and terrain (${claim?.biome || 'Bioluminescent Canopy'}) have been confirmed and locked into active telemetry.\n\nWe now proceed directly to Question 02 of 08 (${WIZARD_STEPS[1].title}).`;
+    // Initial human touch typing effect
+    setIsMillTyping(true);
+    const greetingTimer = setTimeout(() => {
+      setIsMillTyping(false);
+      soundManager.playTone(720, 0.06);
 
-      setMessages([
-        {
-          id: 'msg-greeting',
-          sender: 'mill',
-          text: greetingText,
-          timestamp: 'Just now',
-        },
-        {
-          id: 'msg-q1-user',
-          sender: 'user',
-          text: pName,
-          step: 1,
-          timestamp: 'Just now',
-        },
-        {
-          id: 'msg-q2',
-          sender: 'mill',
-          text: `Question 02 of 08 (${WIZARD_STEPS[1].title}):\n${WIZARD_STEPS[1].prompt}`,
-          step: 2,
-          timestamp: 'Just now',
-        },
-      ]);
-    } else {
-      // Standard Question 1 flow
-      const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nThis is an open-ended, human-centric worldbuilding protocol designed to take ~10 minutes of genuine creative exploration. There are no rigid presets—I will ask you 8 thoughtful questions about your life, passions, aesthetics, and vision.\n\nUpon completion, your answers will synthesize a custom 5-photo high-resolution cinematic sci-fi dossier (anchored to Mood.png and Äkinoya.jpg), technical telemetry, and official lore for the June 30 Lore Governance Council.\n\nLet us begin with Question 01: ${WIZARD_STEPS[0].title}.`;
+      const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nYour world designation "${pName}" (${claim?.biome || 'Bioluminescent Canopy'}) is locked into telemetry. We will explore 5 light, fun, and deep personality questions to synthesize your custom 5-photo 4K dossier, 9:16 viral trailer, and registered lore.\n\nQuestion 01 of 05 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`;
 
       setMessages([
         {
           id: 'msg-greeting',
           sender: 'mill',
           text: greetingText,
-          timestamp: 'Just now',
-        },
-        {
-          id: 'msg-q1',
-          sender: 'mill',
-          text: WIZARD_STEPS[0].prompt,
           step: 1,
+          exampleToCopy: WIZARD_STEPS[0].helperExample,
           timestamp: 'Just now',
         },
       ]);
-    }
+    }, 1100);
+
+    return () => clearTimeout(greetingTimer);
   }, [userDisplayName, isLocked]);
 
-  // Auto-scroll chat to bottom
+  // Auto-scroll chat to bottom on new messages, typing events, or synthesis
   useEffect(() => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
-  }, [messages, isSynthesizing]);
+  }, [messages, isMillTyping, isSynthesizing]);
 
-  // Handle advancing step with an answer
+  // Copy helper example into input field and system clipboard with feedback
+  const handleCopyAndAdoptExample = (exampleText: string) => {
+    if (!exampleText) return;
+    soundManager.playTone(660, 0.04);
+    setInputVal(exampleText);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(exampleText).catch(() => {});
+    }
+    setCopiedExample(exampleText);
+    setTimeout(() => {
+      setCopiedExample(null);
+    }, 2200);
+  };
+
+  // Handle advancing step with an answer, realistic human touch typing indicator
   const handleAnswer = (answerText: string) => {
     const trimmed = answerText.trim();
-    if (!trimmed) return;
+    if (!trimmed || isMillTyping) return;
 
     soundManager.playTone(740, 0.05);
 
-    const processedText =
-      currentStep.field === 'planetName' ? formatAkinoyaPlanetName(trimmed) : trimmed;
-
-    // Record user message
+    // 1. Record user message immediately
     const userMsg: ChatMessage = {
       id: `usr-${Date.now()}`,
       sender: 'user',
-      text: processedText,
+      text: trimmed,
       timestamp: 'Just now',
     };
 
     const nextAnswers: WizardAnswers = {
       ...answers,
-      [currentStep.field]: processedText,
+      [currentStep.field]: trimmed,
     };
     setAnswers(nextAnswers);
     setInputVal('');
-
     setMessages((prev) => [...prev, userMsg]);
 
     const nextStepIdx = currentStepIndex + 1;
+
+    // 2. Start realistic typing indicator
+    setIsMillTyping(true);
 
     if (nextStepIdx < WIZARD_STEPS.length) {
       setCurrentStepIndex(nextStepIdx);
       const nextStepConfig = WIZARD_STEPS[nextStepIdx];
 
       setTimeout(() => {
+        setIsMillTyping(false);
         soundManager.playTone(820, 0.06);
+
         const millNextMsg: ChatMessage = {
           id: `mill-${Date.now()}`,
           sender: 'mill',
-          text: `Recorded. Thank you.\n\nQuestion 0${nextStepConfig.step} of 08 (${nextStepConfig.title}):\n${nextStepConfig.prompt}`,
+          text: `Recorded. Thank you.\n\nQuestion 0${nextStepConfig.step} of 05 (${nextStepConfig.title}):\n${nextStepConfig.prompt}`,
           step: nextStepConfig.step,
+          exampleToCopy: nextStepConfig.helperExample,
           timestamp: 'Just now',
         };
         setMessages((prev) => [...prev, millNextMsg]);
-      }, 400);
+      }, 1300);
     } else {
-      // Completed all 8 human-centric steps!
-      setIsSynthesizing(true);
-      soundManager.playUnlockChime();
-
-      // Derive planetary attributes & Äkinoya designation
+      // Completed all 5 personality-driven questions!
       const claim = getStoredSectorClaim();
       const completeAnswers = derivePlanetAttributesFromHumanAnswers({
         ...nextAnswers,
         biome: nextAnswers.biome || claim?.biome || '',
-        sectorName: nextAnswers.sectorName || claim?.sectorName || '',
-        lifePhilosophy:
-          nextAnswers.lifePhilosophy ||
-          nextAnswers.futurePromise ||
-          'Harmony between technology, creativity, and nature',
+        sectorName: nextAnswers.sectorName || claim?.sectorName || designatedPlanetName,
       });
       setAnswers(completeAnswers);
 
       setTimeout(() => {
+        setIsMillTyping(false);
+        setIsSynthesizing(true);
+        soundManager.playUnlockChime();
+
         const finalMsg: ChatMessage = {
           id: `mill-done-${Date.now()}`,
           sender: 'mill',
-          text: `Territory protocol complete! All 8 human-centric coordinates recorded.\n\nDesignated World: ${completeAnswers.planetName}\n\nInitializing Najno Banajna 8K Photorealistic AI live synthesis for your 5-photo high-resolution cinematic sci-fi dossier and registered lore...`,
+          text: `Territory protocol complete! All 5 personality dimensions recorded.\n\nDesignated World: ${completeAnswers.planetName}\n\nConnecting to Najno Banajna 8K Photorealistic AI and Val.ai 24fps FPV pipeline to synthesize your 5-photo 4K dossier and registered lore...`,
           timestamp: 'Just now',
         };
         setMessages((prev) => [...prev, finalMsg]);
-        setIsSynthesizing(false);
 
-        // Notify parent with full answers
+        // Hand off to parent synthesis engine
         setTimeout(() => {
           onComplete(completeAnswers);
-        }, 1200);
-      }, 1500);
+        }, 1300);
+      }, 1400);
     }
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputVal.trim() || isLocked) return;
+    if (!inputVal.trim() || isLocked || isMillTyping) return;
     handleAnswer(inputVal);
-  };
-
-  const handleAdoptExample = () => {
-    if (!currentStep) return;
-    soundManager.playTone(600, 0.04);
-    setInputVal(currentStep.helperExample);
   };
 
   const handleReset = () => {
     if (isLocked) return;
     soundManager.playTone(400, 0.06);
     const claim = getStoredSectorClaim();
+    const pName = formatAkinoyaPlanetName(claim?.sectorName || designatedPlanetName, false);
+
     setCurrentStepIndex(0);
     setAnswers({
       relaxation: '',
@@ -360,7 +308,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       colorPalette: '',
       resilienceStory: '',
       futurePromise: '',
-      planetName: '',
+      planetName: pName,
       atmosphere: '',
       flora: '',
       fauna: '',
@@ -368,19 +316,25 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       visualAesthetic: '',
       landmark: '',
       additionalNotes: '',
-      biome: '',
-      sectorName: '',
+      biome: claim?.biome || 'Bioluminescent Canopy',
+      sectorName: pName,
     });
     setInputVal('');
-    setMessages([
-      {
-        id: `reset-${Date.now()}`,
-        sender: 'mill',
-        text: `Wizard reset. Let us begin anew (~10 mins guided workflow):\n\nQuestion 01 of 08 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`,
-        step: 1,
-        timestamp: 'Just now',
-      },
-    ]);
+    setIsMillTyping(true);
+
+    setTimeout(() => {
+      setIsMillTyping(false);
+      setMessages([
+        {
+          id: `reset-${Date.now()}`,
+          sender: 'mill',
+          text: `Protocol recalibrated for "${pName}". Let us begin anew with the 5 personality questions:\n\nQuestion 01 of 05 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`,
+          step: 1,
+          exampleToCopy: WIZARD_STEPS[0].helperExample,
+          timestamp: 'Just now',
+        },
+      ]);
+    }, 900);
   };
 
   return (
@@ -412,7 +366,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
                 </span>
               </div>
               <p className="text-[11px] font-mono text-white/50 truncate">
-                8 Human-Centric Questions (~10 Mins) · 1 Golden Ticket
+                5 Personality Questions (~3 Mins) · 1 Golden Ticket
               </p>
             </div>
           </div>
@@ -423,7 +377,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
                 type="button"
                 onClick={handleReset}
                 className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                title="Reset Wizard"
+                title="Reset Questionnaire"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
@@ -439,25 +393,25 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           </div>
         </header>
 
-        {/* Wizard Progress Ribbon */}
+        {/* Wizard Progress Ribbon (5 Steps) */}
         {!isLocked && (
           <div className="px-4 sm:px-6 py-2 bg-black/40 border-b border-white/5 flex items-center justify-between gap-2 text-xs font-mono shrink-0">
             <div className="flex items-center gap-2 text-cyan-300">
-              <span className="font-bold">QUESTION {Math.min(currentStepIndex + 1, 8)} OF 8:</span>
+              <span className="font-bold">QUESTION {Math.min(currentStepIndex + 1, 5)} OF 5:</span>
               <span className="text-white/80 truncate max-w-[200px] sm:max-w-none">
-                {currentStep ? currentStep.title : 'Generating Dossier'}
+                {currentStep ? currentStep.title : 'Synthesizing World'}
               </span>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               {WIZARD_STEPS.map((s, idx) => (
                 <span
                   key={s.step}
-                  className={`w-2 h-2 rounded-full transition-colors ${
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${
                     idx < currentStepIndex
-                      ? 'bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.6)]'
+                      ? 'bg-cyan-400 shadow-[0_0_8px_rgba(56,189,248,0.7)]'
                       : idx === currentStepIndex
-                      ? 'bg-amber-400 animate-pulse'
+                      ? 'bg-amber-400 animate-pulse scale-110 shadow-[0_0_8px_rgba(245,158,11,0.8)]'
                       : 'bg-white/20'
                   }`}
                 />
@@ -485,22 +439,83 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
               )}
 
               <div
-                className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 text-xs sm:text-sm font-sans whitespace-pre-line leading-relaxed shadow-md ${
+                className={`max-w-[85%] sm:max-w-[78%] rounded-2xl p-4 text-xs sm:text-sm font-sans whitespace-pre-line leading-relaxed shadow-md ${
                   msg.sender === 'user'
                     ? 'bg-gradient-to-r from-cyan-600 to-indigo-600 text-white rounded-tr-none'
                     : 'bg-[#0b1020] border border-cyan-500/20 text-white/90 rounded-tl-none'
                 }`}
               >
-                {msg.text}
+                <div>{msg.text}</div>
+
+                {/* Interactive Copyable Example Card inside Mill's question bubbles */}
+                {msg.exampleToCopy && (
+                  <div className="mt-3 p-2.5 sm:p-3 rounded-xl bg-black/60 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div className="flex items-start gap-1.5 min-w-0">
+                      <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                      <span className="text-white/80 italic font-sans leading-relaxed text-[11px] sm:text-xs">
+                        &ldquo;{msg.exampleToCopy}&rdquo;
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => handleCopyAndAdoptExample(msg.exampleToCopy!)}
+                        className="px-2.5 py-1 rounded-lg bg-cyan-950/90 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white font-mono text-[10px] sm:text-[10.5px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                        title="Copy example to clipboard and fill answer input"
+                      >
+                        {copiedExample === msg.exampleToCopy ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-400" />
+                            <span className="text-emerald-300">COPIED &amp; LOADED!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3 text-cyan-300" />
+                            <span>COPY EXAMPLE</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
+
+          {/* Realistic Human Touch Typing Animation */}
+          {isMillTyping && (
+            <div className="flex items-start gap-3 justify-start animate-fade-in">
+              <div className="w-8 h-8 rounded-full overflow-hidden border border-cyan-400/60 shrink-0 shadow-sm mt-0.5">
+                <img src={millAvatar} alt="Mill" className="w-full h-full object-cover" />
+              </div>
+
+              <div className="bg-[#0b1020] border border-cyan-500/30 rounded-2xl rounded-tl-none p-3.5 px-4.5 shadow-md flex items-center gap-2">
+                <span className="text-[11px] font-mono text-cyan-300 font-semibold tracking-wide">
+                  Mill is typing
+                </span>
+                <span className="flex items-center gap-1.5 pl-1">
+                  <span
+                    className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce"
+                    style={{ animationDuration: '900ms', animationDelay: '0ms' }}
+                  />
+                  <span
+                    className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce"
+                    style={{ animationDuration: '900ms', animationDelay: '200ms' }}
+                  />
+                  <span
+                    className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce"
+                    style={{ animationDuration: '900ms', animationDelay: '400ms' }}
+                  />
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Synthesis Loader */}
           {isSynthesizing && (
             <div className="flex items-center gap-3 p-4 rounded-xl bg-cyan-950/40 border border-cyan-400/30 text-cyan-300 text-xs font-mono animate-pulse">
               <Sparkles className="w-4 h-4 animate-spin text-cyan-400 shrink-0" />
-              <span>Mill is aligning your 8 answers with Najno Banajna 8K AI to synthesize a 5-photo dossier...</span>
+              <span>Mill is aligning your 5 personality answers with Najno Banajna 8K AI &amp; Val.ai to synthesize your 5-photo dossier...</span>
             </div>
           )}
         </div>
@@ -517,14 +532,15 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
               <div className="flex items-center justify-between text-[11px] font-mono text-white/60 px-1">
                 <span className="flex items-center gap-1.5 text-cyan-300">
                   <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Inspiring Example Available</span>
+                  <span>Inspiration Example Available</span>
                 </span>
                 <button
                   type="button"
-                  onClick={handleAdoptExample}
-                  className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-cyan-300 hover:text-cyan-200 transition-colors cursor-pointer text-[10.5px]"
+                  onClick={() => handleCopyAndAdoptExample(currentStep.helperExample)}
+                  className="px-2.5 py-0.5 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-cyan-300 hover:text-cyan-200 transition-colors cursor-pointer text-[10.5px] font-mono flex items-center gap-1"
                 >
-                  Adopt Helper Example
+                  <Copy className="w-3 h-3 text-cyan-400" />
+                  <span>{copiedExample === currentStep.helperExample ? 'Copied & Loaded!' : 'Adopt Helper Example'}</span>
                 </button>
               </div>
 
@@ -533,23 +549,25 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
                   <textarea
                     rows={2}
                     value={inputVal}
+                    disabled={isMillTyping}
                     onChange={(e) => setInputVal(e.target.value)}
                     placeholder={currentStep.placeholder}
-                    className="flex-1 bg-black/60 border border-white/15 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 outline-none font-sans resize-none min-h-[48px]"
+                    className="flex-1 bg-black/60 border border-white/15 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 outline-none font-sans resize-none min-h-[48px] disabled:opacity-50"
                   />
                 ) : (
                   <input
                     type="text"
                     value={inputVal}
+                    disabled={isMillTyping}
                     onChange={(e) => setInputVal(e.target.value)}
                     placeholder={currentStep.placeholder}
-                    className="flex-1 min-h-[48px] bg-black/60 border border-white/15 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 outline-none font-sans"
+                    className="flex-1 min-h-[48px] bg-black/60 border border-white/15 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 outline-none font-sans disabled:opacity-50"
                   />
                 )}
 
                 <button
                   type="submit"
-                  disabled={!inputVal.trim()}
+                  disabled={!inputVal.trim() || isMillTyping}
                   className="min-h-[48px] px-4 sm:px-6 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-30 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-[0_0_15px_rgba(56,189,248,0.3)]"
                 >
                   <span>Submit</span>
@@ -558,14 +576,14 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
               </div>
 
               <div className="flex items-center justify-between text-[10.5px] font-mono text-white/50 px-1">
-                <span className="text-cyan-400 font-semibold">~10-min guided workflow · Take your time</span>
+                <span className="text-cyan-400 font-semibold">5 questions · Deep personality synthesis</span>
                 <span>Press Enter ↵ to submit</span>
               </div>
             </form>
           ) : (
             <div className="py-2 text-center text-xs font-mono text-emerald-400 flex items-center justify-center gap-2">
               <CheckCircle2 className="w-4 h-4" />
-              <span>Planetary Wizard Completed — Initializing Sci-Fi Synthesizer...</span>
+              <span>5-Question Protocol Completed — Initializing Sci-Fi Synthesizer...</span>
             </div>
           )}
         </footer>

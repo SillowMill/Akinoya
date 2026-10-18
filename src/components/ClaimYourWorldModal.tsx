@@ -35,6 +35,7 @@ import {
   openMembershipGateModal,
 } from '../utils/pioneer';
 import { formatAkinoyaPlanetName } from '../data/contest';
+import { validatePlanetName } from '../utils/profanityFilter';
 import { useAuth } from '../context/AuthContext';
 
 export interface ClaimYourWorldModalProps {
@@ -118,8 +119,9 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
     }
 
     const trimmedSectorName = sectorName.trim();
-    if (!trimmedSectorName) {
-      setErrorMessage('Please enter the name of your planet to begin worldbuilding.');
+    const validation = validatePlanetName(trimmedSectorName);
+    if (!validation.isValid) {
+      setErrorMessage(validation.error || 'Please enter a valid, elegant planet name.');
       soundManager.playError();
       return;
     }
@@ -161,15 +163,15 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
       }).catch((err) => console.warn('[Pioneer Modal] Sheets sync notice:', err));
     }
 
-    // Auto-advance Mill directly to Question 2 with user's planet inputs
+    // Auto-advance Mill directly to Question 1 with user's planet inputs
     sessionStorage.setItem('akinoya_start_mill', 'true');
-    sessionStorage.setItem('akinoya_mill_start_step', '2');
+    sessionStorage.setItem('akinoya_mill_start_step', '1');
     window.dispatchEvent(
       new CustomEvent('akinoya-start-mill', {
         detail: {
           planetName: cleanPlanetName,
           biome: selectedBiome.label,
-          initialStep: 2,
+          initialStep: 1,
         },
       })
     );
@@ -299,7 +301,15 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                     <input
                       type="text"
                       value={sectorName}
-                      onChange={(e) => setSectorName(e.target.value)}
+                      onChange={(e) => {
+                        setSectorName(e.target.value);
+                        if (errorMessage) {
+                          const val = validatePlanetName(e.target.value);
+                          if (val.isValid) {
+                            setErrorMessage('');
+                          }
+                        }
+                      }}
                       placeholder="Name of your planet..."
                       maxLength={40}
                       className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-black/60 border border-white/15 focus:border-amber-400 text-white font-mono text-xs focus:outline-none transition-colors"
@@ -374,7 +384,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   >
                     <Sparkles className="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
                     <span>
-                      {isSubmitting ? 'INITIALIZING MILL (QUESTION 02)...' : 'WORLDBUILD WITH MILL →'}
+                      {isSubmitting ? 'CONNECTING TO MILL...' : 'WORLDBUILD WITH MILL →'}
                     </span>
                   </button>
                 </div>

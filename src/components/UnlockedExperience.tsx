@@ -5,6 +5,7 @@ import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_17908526409
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import moodboardImg from '../assets/images/Mood.png';
+import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import {
   Lock,
   Unlock,
@@ -2051,7 +2052,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         Experiencing Odi&apos;s Verified &ldquo;Ämlemi&rdquo; Planetary Dossier (#1)
                       </h3>
                       <p className="text-xs sm:text-sm text-white/80 font-sans leading-relaxed">
-                        You are exploring an interactive live simulation of Odi Selis&apos;s Founding Pioneer world <strong className="text-amber-300">Ämlemi</strong>. Sign in or launch Mill&apos;s 8-step Worldbuilding Protocol to claim your <strong className="text-cyan-300">1 Golden Ticket</strong>, synthesize your own 5-photo 4K sector, and mint your personal <strong className="text-amber-300">9:16 Story Verification Badge</strong>.
+                        You are exploring an interactive live simulation of Odi Selis&apos;s Founding Pioneer world <strong className="text-amber-300">Ämlemi</strong>. Sign in or launch Mill&apos;s 5-question Worldbuilding Protocol to claim your <strong className="text-cyan-300">1 Golden Ticket</strong>, synthesize your own 5-photo 4K sector, and mint your personal <strong className="text-amber-300">9:16 Story Verification Badge</strong>.
                       </p>
                     </div>
 
@@ -2142,8 +2143,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-x-2.5 gap-y-1 flex-wrap min-w-0">
-                        <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide truncate drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
+                      <div className="flex items-center gap-x-2.5 sm:gap-x-3 gap-y-1 flex-wrap min-w-0">
+                        {/* Shimmering Sillow Mill Logo with subtle cinematic glow & glass housing */}
+                        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-transparent p-1.5 border border-white/20 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-white/20 to-transparent pointer-events-none opacity-70" />
+                          <img
+                            src={sillowMillLogoUrl}
+                            alt="Sillow Mill"
+                            className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]"
+                          />
+                        </div>
+
+                        {/* Minimalist Reflective Chrome / Brushed Metal Vertical Divider */}
+                        <div
+                          className="h-5 sm:h-6 w-[1.5px] bg-gradient-to-b from-white/10 via-white/50 to-white/10 shadow-[0_0_8px_rgba(255,255,255,0.35)] shrink-0"
+                          aria-hidden="true"
+                        />
+
+                        <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide truncate drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] uppercase">
                           {activeWorldDossier.planetName}
                         </h2>
                         <span className="px-2.5 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-mono text-[10px] font-bold tracking-wider uppercase">
@@ -2318,7 +2335,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         Claim Your 1 Golden Ticket &amp; Synthesize Your World
                       </h3>
                       <p className="text-xs sm:text-sm text-white/65 font-sans leading-relaxed">
-                        Answer Mill&apos;s 8 human-centric questions to generate your personal 5-photo 4K sci-fi archive, claim your unique world edition number, and unlock your downloadable 9:16 Story Verification Badge &amp; MP4 Trailer in <strong className="text-amber-300">My Assets</strong>.
+                        Answer Mill&apos;s 5 personality questions to generate your personal 5-photo 4K sci-fi archive, claim your unique world edition number, and unlock your downloadable 9:16 Story Verification Badge &amp; MP4 Trailer in <strong className="text-amber-300">My Assets</strong>.
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center justify-center gap-3 pt-1">

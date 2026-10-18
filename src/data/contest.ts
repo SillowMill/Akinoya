@@ -180,7 +180,7 @@ export const formatAkinoyaPlanetName = (rawName?: string, allowFallback = false)
 };
 
 /**
- * Derives official Äkinoya planetary attributes from the 8 human-centric answers.
+ * Derives official Äkinoya planetary attributes from the 5 personality-based questions.
  */
 export const derivePlanetAttributesFromHumanAnswers = (answers: WizardAnswers): WizardAnswers => {
   let name = answers.planetName;
@@ -193,31 +193,31 @@ export const derivePlanetAttributesFromHumanAnswers = (answers: WizardAnswers): 
   const biomeInfo = answers.biome ? ` with terrain calibrated to ${answers.biome}` : '';
   const atmosphere =
     answers.atmosphere ||
-    `Ionized celestial atmosphere styled with ${answers.colorPalette || 'deep cosmic cobalt and incandescent amber'}${biomeInfo} and serene horizons of ${answers.naturalEnvironment || 'misty mountain ridges'}`;
+    `Ionized celestial atmosphere styled with ${answers.colorPalette || 'deep steel-blue with glowing gold energy lines'}${biomeInfo} and serene horizons of ${answers.naturalEnvironment || 'a quiet misty star-desert'}`;
 
   const flora =
     answers.flora ||
-    `Bioluminescent botanical systems inspired by ${answers.biome || answers.naturalEnvironment || 'ancient rainforests'}, creating peaceful biomes echoing ${answers.relaxation || 'deep relaxation'}`;
+    `Bioluminescent botanical systems inspired by ${answers.biome || answers.naturalEnvironment || 'mysterious star-desert crystals and ancient flora'}, creating sanctuary biomes echoing ${answers.relaxation || answers.naturalEnvironment || 'deep contemplative peace'}`;
 
   const fauna =
     answers.fauna ||
-    `Celestial apex wildlife inspired by the ${answers.admiredCreature || 'noble pack wolf and soaring plasma glider'}, roaming through high-altitude thermals`;
+    `Celestial ecosystem and presence inspired by: ${answers.admiredCreature || 'a contemplative space for lone explorers with giant light monuments'}, roaming high-altitude thermals`;
 
   const sonicVibe =
     answers.sonicVibe ||
-    `${answers.creativeExpression || 'Deep analog synthesizers and cinematic ACEScc ambient pads'} vibrating across the planetary crust`;
+    `Atmospheric acoustic resonance attuned to ${answers.creativeExpression || 'floating cosmic rocks and shooting stars'}, vibrating through deep analog synthesizers and ambient pads`;
 
   const visualAesthetic =
     answers.visualAesthetic ||
-    `High-Resolution Cinematic Sci-Fi Render (Sillow Mill Aesthetic, Mood.png & Äkinoya.jpg), palette: ${answers.colorPalette || 'deep cosmic cobalt and incandescent amber'}`;
+    `High-Resolution Cinematic Sci-Fi Render (Sillow Mill Aesthetic, Mood.png & Äkinoya.jpg), palette: ${answers.colorPalette || 'deep steel-blue and gold'}`;
 
   const landmark =
     answers.landmark ||
-    `The Monument of Resilience: An ancient obsidian megastructure commemorating "${answers.resilienceStory || 'forging a creative vision from scratch'}"`;
+    `The Beacon of the Creed: an ancient celestial monument commemorating "${answers.futurePromise || answers.resilienceStory || 'Always chasing the horizon in the silence of the cosmos'}"`;
 
   const additionalNotes =
     answers.additionalNotes ||
-    `${answers.sectorName ? `Designated Sector: ${answers.sectorName}. Terrain Biome: ${answers.biome || 'Bioluminescent Canopy'}. ` : ''}Founding Creed & Future Promise: "${answers.futurePromise || 'Never forget that true beauty lies in curiosity and persistence'}". Guided by core philosophy: "${answers.lifePhilosophy || 'Harmony between technology and nature'}".`;
+    `${answers.sectorName ? `Designated Sector: ${answers.sectorName}. Terrain Biome: ${answers.biome || 'Bioluminescent Canopy'}. ` : ''}Founding Creed & Life Motto: "${answers.futurePromise || 'Always chasing the horizon in the silence of the cosmos'}". Inner Landscape: "${answers.naturalEnvironment || 'Quiet misty star-desert'}". Elemental Drive: "${answers.creativeExpression || 'Floating cosmic rocks'}". Palette: "${answers.colorPalette || 'Deep steel-blue and gold'}". World Presence: "${answers.admiredCreature || 'Contemplative solitude for lone explorers'}".`;
 
   return {
     ...answers,
@@ -231,6 +231,9 @@ export const derivePlanetAttributesFromHumanAnswers = (answers: WizardAnswers): 
     additionalNotes,
     biome: answers.biome,
     sectorName: answers.sectorName,
+    relaxation: answers.relaxation || answers.naturalEnvironment,
+    lifePhilosophy: answers.lifePhilosophy || answers.futurePromise,
+    resilienceStory: answers.resilienceStory || answers.futurePromise,
   };
 };
 

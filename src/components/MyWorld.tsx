@@ -23,6 +23,7 @@ import {
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { useDynamicWorldVideo } from './WorldStoryVerificationBadge';
+import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
 const SLOT_CODES = ['01_main', '02_flora', '03_fauna', '04_atmo', '05_lore'];
 const SLOT_LABELS = ['01 Main', '02 Botanical', '03 Exotic', '04 Atmo', '05 Lore'];
@@ -105,11 +106,23 @@ export const MyWorld: React.FC<MyWorldProps> = ({
   return (
     <div className="p-5 sm:p-6 md:p-7 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#050a14]/85 to-[#030710]/95 backdrop-blur-xl border border-cyan-500/30 space-y-6 md:space-y-7 shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(6,182,212,0.12)]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4 pb-3.5 border-b border-white/10">
-        <div className="flex items-center gap-x-2.5 gap-y-1.5 flex-wrap min-w-0">
-          <Camera className="w-4 h-4 text-amber-400 shrink-0" />
-          <h3 className="text-xs sm:text-sm md:text-base font-mono font-bold uppercase tracking-wider text-white min-w-0 break-words">
-            Synthesized 5-Photo Visual Archive &amp; 9:16 Viral Trailer
-          </h3>
+        <div className="flex items-center gap-x-2.5 sm:gap-x-3 gap-y-1.5 flex-wrap min-w-0">
+          <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-transparent p-1.5 border border-white/20 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(255,255,255,0.18)]">
+            <img
+              src={sillowMillLogoUrl}
+              alt="Sillow Mill"
+              className="w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]"
+            />
+          </div>
+          <div className="h-5 sm:h-6 w-[1.5px] bg-gradient-to-b from-white/10 via-white/50 to-white/10 shadow-[0_0_6px_rgba(255,255,255,0.3)] shrink-0" aria-hidden="true" />
+          <div className="min-w-0">
+            <div className="text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider truncate">
+              {dossier.planetName || 'ÄKINOYA SECTOR'}
+            </div>
+            <h3 className="text-xs sm:text-sm md:text-base font-mono font-bold uppercase tracking-wider text-white min-w-0 break-words">
+              Synthesized 5-Photo Visual Archive &amp; 9:16 Viral Trailer
+            </h3>
+          </div>
         </div>
 
         <div className="hidden sm:flex items-center gap-2.5 flex-wrap shrink-0">

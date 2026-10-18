@@ -81,6 +81,7 @@ export interface ChatMessage {
   sender: 'mill' | 'user';
   text: string;
   step?: number;
+  exampleToCopy?: string;
   timestamp: string;
   isStreaming?: boolean;
   options?: string[];

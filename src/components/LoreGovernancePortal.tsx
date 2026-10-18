@@ -159,7 +159,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
                 No worlds synthesized yet
               </h3>
               <p className="text-xs sm:text-sm font-sans text-white/60 leading-relaxed">
-                No worlds synthesized yet. Be the first creator to claim a world! Answer the 8 human-centric questions in the Mill Wizard to forge your 5-photo high-resolution cinematic sci-fi dossier.
+                No worlds synthesized yet. Be the first creator to claim a world! Answer the 5 personality questions in the Mill Wizard to forge your 5-photo high-resolution cinematic sci-fi dossier.
               </p>
             </div>
             <a

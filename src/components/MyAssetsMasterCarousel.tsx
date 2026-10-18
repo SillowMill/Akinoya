@@ -366,7 +366,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
     }
   };
 
-  // Download High-Resolution 4K Master Photo with embedded Sillowmilllogo.png watermark
+  // Download Pristine High-Resolution 4K Master Photo (Clean Lossless Direct Export)
   const handleDownload4kPhoto = async () => {
     if (!activePhoto?.url) return;
     soundManager.playTone(740, 0.06);
@@ -375,21 +375,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
     const safeStage = activePhoto.category.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
 
     try {
-      // 1. Cleanly embed Sillowmilllogo.png watermark in the bottom-left corner
-      const watermarkedBlob = await renderWatermarkedImageBlob(activePhoto.url, {
-        planetName: dossier.planetName,
-        stageCategory: activePhoto.category,
-        verificationCode: meta.verificationCode,
-        authorName: dossier.authorName,
-      });
-
-      // 2. Fall back to direct blob if canvas export is unavailable
-      const finalBlob =
-        watermarkedBlob ||
-        (await fetch(activePhoto.url).then((res) => res.blob()).catch(() => null));
-
-      if (finalBlob) {
-        const url = URL.createObjectURL(finalBlob);
+      // Direct clean 4K download with absolute resolution clarity (no watermarks)
+      const res = await fetch(activePhoto.url);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `sillowmill-${safePlanet}-4k-${safeStage}.jpg`;
@@ -777,9 +767,9 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                         <h3 className="text-base sm:text-xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
                           {activePhoto.title}
                         </h3>
-                        <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/80 border border-white/20 text-[9px] font-mono text-cyan-300">
-                          <img src={sillowMillLogoUrl} alt="" className="w-2.5 h-2.5 object-contain" />
-                          <span>WATERMARKED 4K</span>
+                        <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/80 border border-cyan-400/30 text-[9px] font-mono text-cyan-300">
+                          <Sparkles className="w-2.5 h-2.5 text-cyan-300" />
+                          <span>PRISTINE 4K MASTER</span>
                         </span>
                       </div>
                       <p className="text-xs font-sans text-white/80 line-clamp-2 leading-relaxed">
@@ -792,10 +782,10 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       onClick={handleDownload4kPhoto}
                       disabled={isDownloadingPhoto}
                       className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] shrink-0 min-h-[42px]"
-                      title="Download 4K Master with embedded Sillow Mill bottom-left watermark"
+                      title="Download clean original 4K Master with absolute resolution clarity"
                     >
                       <Download className="w-4 h-4 text-black" />
-                      <span>{isDownloadingPhoto ? 'WATERMARKING...' : 'DOWNLOAD 4K MASTER'}</span>
+                      <span>{isDownloadingPhoto ? 'DOWNLOADING...' : 'DOWNLOAD 4K MASTER'}</span>
                     </button>
                   </div>
                 </div>
@@ -1216,10 +1206,10 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                     onClick={handleDownload4kPhoto}
                     disabled={isDownloadingPhoto}
                     className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-bold tracking-wide transition-all cursor-pointer flex items-center gap-2 shadow-md"
-                    title="Download 4K Master with embedded Sillow Mill watermark"
+                    title="Download clean original 4K Master with absolute resolution clarity"
                   >
                     <Download className="w-4 h-4 text-black" />
-                    <span className="hidden sm:inline">{isDownloadingPhoto ? 'WATERMARKING...' : 'DOWNLOAD 4K MASTER'}</span>
+                    <span className="hidden sm:inline">{isDownloadingPhoto ? 'DOWNLOADING...' : 'DOWNLOAD 4K MASTER'}</span>
                   </button>
 
                   <button
