@@ -82,6 +82,19 @@
   animation: floatDrift 6s ease-in-out infinite;
 }
 
+@keyframes spinReverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-spin-reverse {
+  animation: spinReverse 32s linear infinite;
+}
+
 /* Prevent iOS / Safari auto-zoom on input focus */
 @media screen and (max-width: 768px) {
   input,
@@ -185,6 +198,7 @@ body {
 
 /* Heavy infinite animations: promote to their own layer */
 .animate-spin,
+.animate-spin-reverse,
 .animate-pulse,
 .animate-ping,
 .animate-float,

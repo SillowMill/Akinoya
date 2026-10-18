@@ -1268,32 +1268,56 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             }}
             onPointerLeave={() => setHoveredPlanet(null)}
             className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none"
-            style={{ left: 0, top: 0, width: 56, height: 56 }}
+            style={{ left: 0, top: 0, width: 72, height: 72 }}
           >
-            {/* Ambient Golden Aura + Single Delicate Dotted Ring centered symmetrically on (0, 0) */}
-            <div className="absolute -inset-6 rounded-full bg-amber-400/20 blur-xl animate-pulse pointer-events-none" />
+            {/* 1. Volumetric Golden Corona & Core Flare */}
+            <div className="absolute -inset-10 rounded-full bg-gradient-to-tr from-amber-500/25 via-yellow-400/15 to-transparent blur-2xl animate-pulse pointer-events-none" />
+            <div className="absolute -inset-5 rounded-full bg-amber-400/20 blur-lg pointer-events-none" />
+
+            {/* 2. Tier 1: Outer Astrolabe Ring with 4 Cardinal Star-Diamonds (Clockwise Drift) */}
             <div
-              className="absolute -inset-2.5 rounded-full border border-dotted border-amber-300/80 animate-spin pointer-events-none"
-              style={{ animationDuration: '24s' }}
+              className="absolute -inset-8 rounded-full border border-amber-400/35 animate-spin pointer-events-none"
+              style={{ animationDuration: '48s' }}
+            >
+              {/* Cardinal Navigation Pips */}
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
+              <span className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
+              <span className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
+            </div>
+
+            {/* 3. Tier 2: Mid Segmented Energy Crest (Counter-Clockwise Rotation) */}
+            <div
+              className="absolute -inset-5 rounded-full border border-dashed border-amber-300/60 animate-spin-reverse pointer-events-none"
+              style={{ animationDuration: '32s' }}
             />
 
-            {/* Core Orb with Glowing Solid Gold Primary Border */}
-            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.85)] group-hover:scale-115 transition-transform duration-300 bg-black flex items-center justify-center shrink-0">
+            {/* 4. Tier 3: Concentric Geometric Hairline Resonator */}
+            <div className="absolute -inset-3 rounded-full border border-amber-400/25 pointer-events-none" />
+
+            {/* 5. Tier 4: Inner High-Precision Dotted Orbital Halo (Clockwise Rotation) */}
+            <div
+              className="absolute -inset-1.5 rounded-full border border-dotted border-amber-200/90 animate-spin pointer-events-none"
+              style={{ animationDuration: '18s' }}
+            />
+
+            {/* 6. Capital Core Planet Orb: Refined 72px Scale with Luminous Gold Border */}
+            <div className="relative w-[70px] h-[70px] sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden border-2 border-amber-300 shadow-[0_0_40px_rgba(245,158,11,0.9),0_0_80px_rgba(251,191,36,0.4),inset_0_0_24px_rgba(245,158,11,0.5)] group-hover:scale-108 transition-all duration-300 bg-black flex items-center justify-center shrink-0">
               <img
                 src={akinoyaHeroBg}
                 alt="Äkinoya Core"
                 className="w-full h-full object-cover scale-110 group-hover:rotate-12 transition-transform duration-700"
                 draggable={false}
               />
-              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/40 via-transparent to-yellow-300/40" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/40 via-transparent to-yellow-200/40 pointer-events-none" />
             </div>
 
             {/* Capital Core Badge Label */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 flex flex-col items-center pointer-events-none whitespace-nowrap text-center">
-              <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[9px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] items-center gap-1">
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3.5 flex flex-col items-center pointer-events-none whitespace-nowrap text-center">
+              <span className="inline-flex px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-mono font-black text-[9.5px] tracking-widest uppercase shadow-[0_0_20px_rgba(245,158,11,0.6)] items-center gap-1">
                 <span>👑 ÄKINOYA CORE</span>
               </span>
-              <span className="text-[11px] font-display font-extrabold text-white tracking-wider mt-0.5 group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+              <span className="text-xs font-display font-extrabold text-white tracking-wider mt-0.5 group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                 Capital of Sillow Mill
               </span>
             </div>
