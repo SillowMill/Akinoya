@@ -63,6 +63,7 @@ import { getUserStatusConfig } from '../utils/statusPill';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isPreLaunch } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { WorldStoryVerificationBadge } from './WorldStoryVerificationBadge';
+import { MyAssetsMasterCarousel } from './MyAssetsMasterCarousel';
 import {
   BINGAA_PDF_URL,
   BINGAA_PDF_FILENAME,
@@ -2352,9 +2353,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               transition={{ duration: 0.4 }}
               className="space-y-5 sm:space-y-6 md:space-y-7 min-h-[600px] cv-large"
             >
-              {/* Asset 01: Unified Shareable 9:16 Story & Trailer Verification Hub (Accessible for every registered world, even non-VIP) */}
+              {/* Asset 01: Differentiated Master Multi-Media Carousel (4K Archive, 9:16 Story Card, 9:16 MP4 Trailer) */}
               {activeWorldDossier && (
-                <WorldStoryVerificationBadge
+                <MyAssetsMasterCarousel
                   dossier={activeWorldDossier}
                   editionRank={planetRank > 0 ? planetRank : 1}
                   isSimulationMode={isGuestWorldSimulation}
@@ -2366,6 +2367,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       window.location.href = '/contest';
                     }
                   }}
+                  onNavigateToGalaxy={onNavigateToGalaxy}
                 />
               )}
 

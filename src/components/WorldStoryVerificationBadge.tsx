@@ -1433,7 +1433,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               </span>
             </div>
             <h3 className="text-base sm:text-lg md:text-xl font-display font-black text-white tracking-wide">
-              {dossier.planetName} — Shareable 9:16 Story Verification Asset
+              Official Proof of World Ownership &amp; 9:16 Verification Affiche
             </h3>
             <p className="text-xs font-sans text-white/70 max-w-2xl leading-relaxed">
               Click the 9:16 card to launch the Fullscreen Viewer or toggle seamlessly between the <strong>9:16 Story Verification Card</strong> and the <strong>9:16 MP4 Trailer Loop</strong>.

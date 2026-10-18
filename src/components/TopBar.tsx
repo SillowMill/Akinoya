@@ -67,6 +67,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             soundManager.playTone(600, 0.04);
             try {
               sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+              sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
             } catch {
               // ignore
             }
@@ -77,7 +78,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 window.dispatchEvent(new CustomEvent('akinoya-navigate-passperks-home'));
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               } else {
-                window.location.href = '/';
+                window.location.href = '/?tab=pass#pass';
               }
             }
           }}
