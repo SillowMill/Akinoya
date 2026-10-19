@@ -1282,6 +1282,7 @@ export const LiveStoryTrailerViewport: React.FC<{
   onToggleAudio?: () => void;
   isPlaying?: boolean;
   onTogglePlay?: () => void;
+  onPlaybackStateChange?: (playing: boolean) => void;
   onVideoElementReady?: (el: HTMLVideoElement | null) => void;
 }> = React.memo(({
   dossier,
@@ -1292,6 +1293,7 @@ export const LiveStoryTrailerViewport: React.FC<{
   onToggleAudio,
   isPlaying,
   onTogglePlay,
+  onPlaybackStateChange,
   onVideoElementReady,
 }) => {
   const [internalMuted, setInternalMuted] = useState(true);
@@ -1423,6 +1425,15 @@ export const LiveStoryTrailerViewport: React.FC<{
             muted={isMuted}
             playsInline
             preload="auto"
+            onPlay={() => {
+              onPlaybackStateChange?.(true);
+            }}
+            onPause={() => {
+              onPlaybackStateChange?.(false);
+            }}
+            onEnded={() => {
+              onPlaybackStateChange?.(false);
+            }}
             style={{
               transform: 'translate3d(0, 0, 0)',
               WebkitTransform: 'translate3d(0, 0, 0)',

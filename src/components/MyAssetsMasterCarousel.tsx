@@ -279,9 +279,9 @@ const StoryCard9x16View: React.FC<{
       <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
       <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-cyan-400/15 rounded-full blur-2xl pointer-events-none" />
 
-      {/* Interactive Fullscreen Tap Badge */}
+      {/* Interactive Fullscreen Tap Badge - Exclusively Mobile/Tablet (lg:hidden) */}
       {showFullscreenHint && (
-        <div className="absolute top-3.5 right-3.5 z-30 pointer-events-none">
+        <div className="absolute top-3.5 right-3.5 z-30 pointer-events-none lg:hidden">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/85 border border-amber-400/70 text-[9px] font-mono font-bold text-amber-300 tracking-wider shadow-lg backdrop-blur-md group-hover:scale-105 group-hover:bg-amber-950/90 transition-all">
             <Maximize2 className="w-3 h-3 text-amber-300" />
             <span>FULLSCREEN 9:16</span>
@@ -741,7 +741,18 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
     }
   };
 
-  const toggleVideoPlayback = () => {
+  const lastTouchTimeRef = useRef<number>(0);
+  const lastAudioTouchTimeRef = useRef<number>(0);
+
+  const toggleVideoPlayback = (e?: React.SyntheticEvent) => {
+    if (e) {
+      e.stopPropagation();
+      if (e.type === 'touchend') {
+        lastTouchTimeRef.current = Date.now();
+      } else if (e.type === 'click' && Date.now() - lastTouchTimeRef.current < 450) {
+        return;
+      }
+    }
     soundManager.playTone(isPlayingVideo ? 440 : 660, 0.05);
     if (videoElementRef.current) {
       if (videoElementRef.current.paused) {
@@ -756,7 +767,15 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
     }
   };
 
-  const toggleAudio = () => {
+  const toggleAudio = (e?: React.SyntheticEvent) => {
+    if (e) {
+      e.stopPropagation();
+      if (e.type === 'touchend') {
+        lastAudioTouchTimeRef.current = Date.now();
+      } else if (e.type === 'click' && Date.now() - lastAudioTouchTimeRef.current < 450) {
+        return;
+      }
+    }
     soundManager.playTone(isMuted ? 680 : 440, 0.05);
     if (videoElementRef.current) {
       videoElementRef.current.muted = !isMuted;
@@ -802,6 +821,12 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
       ref={carouselContainerRef}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      style={{
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+        willChange: 'transform',
+        overflowAnchor: 'none',
+      }}
       className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#080d1a] via-[#050914] to-[#02050b] border-2 border-amber-400/50 shadow-[0_20px_70px_rgba(0,0,0,0.85),0_0_40px_rgba(245,158,11,0.18)] p-4 sm:p-6 md:p-8 space-y-6 select-none"
     >
       {/* Ambient Radial Specular Glows */}
@@ -881,8 +906,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
         </div>
       </div>
 
-      {/* ─── 2. LUMINOUS SLIDE SELECTOR PILLS BAR ─── */}
-      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-2 p-1.5 rounded-2xl bg-black/50 border border-white/10 backdrop-blur-md">
+      {/* ─── 2. DISTINCT 3-BUTTON ASSET SELECTOR SUITE ─── */}
+      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 w-full">
         {SLIDE_TABS.map((tab) => {
           const isActive = activeSlide === tab.id;
           const Icon = tab.icon;
@@ -891,90 +916,83 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
               key={tab.id}
               type="button"
               onClick={() => goToSlide(tab.id)}
-              className={`relative flex items-center justify-center sm:justify-start gap-2.5 px-4 py-3 rounded-xl font-mono text-xs font-bold transition-all duration-300 cursor-pointer min-h-[48px] ${
+              className={`relative flex items-center justify-between sm:justify-start gap-3 px-4 py-3.5 rounded-2xl font-mono text-xs font-bold transition-all duration-200 cursor-pointer min-h-[58px] border-2 shadow-lg active:scale-[0.98] hover:scale-[1.01] touch-manipulation ${
                 isActive
-                  ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black shadow-[0_0_25px_rgba(245,158,11,0.45)]'
-                  : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                  ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 border-amber-300 text-black shadow-[0_0_30px_rgba(245,158,11,0.45),0_8px_24px_rgba(0,0,0,0.6)] font-extrabold'
+                  : 'bg-[#060c1c]/90 hover:bg-[#0c1630] border-white/15 hover:border-cyan-400/50 text-white/80 hover:text-white shadow-[0_6px_20px_rgba(0,0,0,0.5)]'
               }`}
             >
-              <span
-                className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-black ${
-                  isActive ? 'bg-black text-amber-300' : 'bg-white/10 text-white/60'
-                }`}
-              >
-                {tab.index}
-              </span>
-              <div className="text-left min-w-0">
-                <span className="block truncate tracking-wide uppercase text-[11px] sm:text-xs leading-tight">
-                  {tab.label}
-                </span>
+              <div className="flex items-center gap-3 min-w-0">
                 <span
-                  className={`block text-[9px] font-mono tracking-widest uppercase ${
-                    isActive ? 'text-black/80 font-extrabold' : 'text-cyan-400/80'
+                  className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 text-[11px] font-black border transition-all ${
+                    isActive
+                      ? 'bg-black text-amber-300 border-black/40 shadow-sm'
+                      : 'bg-cyan-950/80 text-cyan-300 border-cyan-400/40'
                   }`}
                 >
-                  {tab.badge}
+                  {tab.index}
                 </span>
+                <div className="text-left min-w-0">
+                  <span className="block truncate tracking-wide uppercase text-xs sm:text-[12.5px] leading-tight font-extrabold">
+                    {tab.label}
+                  </span>
+                  <span
+                    className={`block text-[9.5px] font-mono tracking-widest uppercase mt-0.5 ${
+                      isActive ? 'text-black/85 font-extrabold' : 'text-cyan-400/90'
+                    }`}
+                  >
+                    {tab.badge}
+                  </span>
+                </div>
+              </div>
+
+              <div
+                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-all ${
+                  isActive
+                    ? 'bg-black/20 text-black border-black/20'
+                    : 'bg-white/5 text-cyan-400 border-white/10'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* ─── 2.5 DEDICATED TABLET & MOBILE TOUCH NAVIGATION BAR (NO OVERLAPPING) ─── */}
-      <div className="flex lg:hidden items-center justify-between gap-3 p-1.5 rounded-xl bg-black/60 border border-white/10 backdrop-blur-md">
-        <button
-          type="button"
-          onClick={handlePrevSlide}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-[#050a18]/90 hover:bg-[#09152e] border border-amber-400/50 text-amber-300 font-mono text-xs font-bold active:scale-95 transition-all shadow-sm cursor-pointer min-h-[44px]"
-          aria-label="Previous Asset Slide"
-        >
-          <ChevronLeft className="w-4 h-4 text-amber-300" />
-          <span>PREV ASSET</span>
-        </button>
-
-        <div className="px-3.5 py-2 rounded-lg bg-black/80 border border-cyan-400/30 text-[11px] font-mono font-bold text-white/80 shrink-0">
-          SLIDE <span className="text-amber-300 font-extrabold">{slideOrder.indexOf(activeSlide) + 1}</span> / 3
-        </div>
-
-        <button
-          type="button"
-          onClick={handleNextSlide}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-[#050a18]/90 hover:bg-[#09152e] border border-cyan-400/50 text-cyan-300 font-mono text-xs font-bold active:scale-95 transition-all shadow-sm cursor-pointer min-h-[44px]"
-          aria-label="Next Asset Slide"
-        >
-          <span>NEXT ASSET</span>
-          <ChevronRight className="w-4 h-4 text-cyan-300" />
-        </button>
-      </div>
-
-      {/* ─── 3. CAROUSEL MAIN VIEWPORT WITH LUMINOUS SIDE DIRECTIONAL ARROWS (DESKTOP) ─── */}
+      {/* ─── 3. CAROUSEL MAIN VIEWPORT WITH SLEEK FLOATING CIRCULAR BLUE ARROWS ─── */}
       <div
         ref={carouselContainerRef}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        style={{
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
+          willChange: 'transform',
+          overflowAnchor: 'none',
+        }}
         className="relative z-10 min-h-[580px] sm:min-h-[620px] flex items-center justify-center"
       >
-        {/* Sleek Luminous Left Chevron Arrow Button - Desktop only, positioned safely outside content */}
+        {/* Sleek Minimalist Circular Blue Navigation Arrow (Left) - Symmetrically anchored floating arrow */}
         <button
           type="button"
           onClick={handlePrevSlide}
-          className="hidden lg:flex absolute -left-4 xl:-left-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-[#050a18]/90 hover:bg-[#09152e] border-2 border-amber-400/60 hover:border-amber-300 text-amber-300 hover:text-white items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.85),0_0_15px_rgba(245,158,11,0.35)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] cursor-pointer active:scale-95 group"
+          className="absolute -left-2 sm:-left-4 lg:-left-5 xl:-left-6 top-1/2 -translate-y-1/2 z-30 min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#040916]/92 hover:bg-cyan-950/95 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white flex items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.9),0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.7)] cursor-pointer active:scale-95 hover:scale-105 touch-manipulation group"
           aria-label="Previous Asset Slide"
           title="Previous Asset Slide (or press Left Arrow)"
         >
-          <ChevronLeft className="w-6 h-6 text-amber-300 group-hover:scale-110 transition-transform" />
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-300 group-hover:scale-110 transition-transform" />
         </button>
 
-        {/* Sleek Luminous Right Chevron Arrow Button - Desktop only, positioned safely outside content */}
+        {/* Sleek Minimalist Circular Blue Navigation Arrow (Right) - Symmetrically anchored floating arrow */}
         <button
           type="button"
           onClick={handleNextSlide}
-          className="hidden lg:flex absolute -right-4 xl:-right-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-[#050a18]/90 hover:bg-[#09152e] border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.35)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] cursor-pointer active:scale-95 group"
+          className="absolute -right-2 sm:-right-4 lg:-right-5 xl:-right-6 top-1/2 -translate-y-1/2 z-30 min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#040916]/92 hover:bg-cyan-950/95 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white flex items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.9),0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.7)] cursor-pointer active:scale-95 hover:scale-105 touch-manipulation group"
           aria-label="Next Asset Slide"
           title="Next Asset Slide (or press Right Arrow)"
         >
-          <ChevronRight className="w-6 h-6 text-cyan-300 group-hover:scale-110 transition-transform" />
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-300 group-hover:scale-110 transition-transform" />
         </button>
 
         {/* Dynamic Multi-Media Carousel Slides Container */}
@@ -1039,7 +1057,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                           e.stopPropagation();
                           openFullscreenViewer('archive_4k');
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/85 hover:bg-black border border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white text-xs font-mono font-bold transition-all cursor-pointer shadow-lg"
+                        className="inline-flex lg:hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/85 hover:bg-black border border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white text-xs font-mono font-bold transition-all cursor-pointer shadow-lg"
                         title="Inspect in 4K Fullscreen"
                       >
                         <Maximize2 className="w-4 h-4 text-cyan-300" />
@@ -1239,8 +1257,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                   onClick={() => openFullscreenViewer('video_trailer')}
                   className="relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none cursor-pointer group active:scale-[0.99] transition-all hover:border-cyan-300 hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)]"
                 >
-                  {/* Interactive Fullscreen Tap Badge */}
-                  <div className="absolute top-3.5 right-3.5 z-30 pointer-events-none">
+                  {/* Interactive Fullscreen Tap Badge - Exclusively Mobile/Tablet (lg:hidden) */}
+                  <div className="absolute top-3.5 right-3.5 z-30 pointer-events-none lg:hidden">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/85 border border-cyan-400/70 text-[9px] font-mono font-bold text-cyan-300 tracking-wider shadow-lg backdrop-blur-md group-hover:scale-105 group-hover:bg-cyan-950/90 transition-all">
                       <Maximize2 className="w-3 h-3 text-cyan-300" />
                       <span>FULLSCREEN 9:16</span>
@@ -1256,6 +1274,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                     onToggleAudio={toggleAudio}
                     isPlaying={isPlayingVideo}
                     onTogglePlay={toggleVideoPlayback}
+                    onPlaybackStateChange={setIsPlayingVideo}
                     onVideoElementReady={(el) => {
                       videoElementRef.current = el;
                     }}
@@ -1266,32 +1285,18 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleVideoPlayback();
-                        }}
-                        onTouchEnd={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          toggleVideoPlayback();
-                        }}
-                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                        onClick={toggleVideoPlayback}
+                        onTouchEnd={toggleVideoPlayback}
+                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
                         title={isPlayingVideo ? 'Pause Video' : 'Play Video'}
                       >
                         {isPlayingVideo ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
                       </button>
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleAudio();
-                        }}
-                        onTouchEnd={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          toggleAudio();
-                        }}
-                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                        onClick={toggleAudio}
+                        onTouchEnd={toggleAudio}
+                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
                         title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
                       >
                         {isMuted ? <VolumeX className="w-4 h-4 text-white/60" /> : <Volume2 className="w-4 h-4 text-cyan-300" />}
@@ -1544,6 +1549,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       onToggleAudio={toggleAudio}
                       isPlaying={isPlayingVideo}
                       onTogglePlay={toggleVideoPlayback}
+                      onPlaybackStateChange={setIsPlayingVideo}
                       onVideoElementReady={(el) => {
                         videoElementRef.current = el;
                       }}
@@ -1552,31 +1558,19 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleVideoPlayback();
-                          }}
-                          onTouchEnd={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            toggleVideoPlayback();
-                          }}
-                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                          onClick={toggleVideoPlayback}
+                          onTouchEnd={toggleVideoPlayback}
+                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
+                          title={isPlayingVideo ? 'Pause Video' : 'Play Video'}
                         >
                           {isPlayingVideo ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
                         </button>
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleAudio();
-                          }}
-                          onTouchEnd={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            toggleAudio();
-                          }}
-                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                          onClick={toggleAudio}
+                          onTouchEnd={toggleAudio}
+                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
+                          title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
                         >
                           {isMuted ? <VolumeX className="w-4 h-4 text-white/60" /> : <Volume2 className="w-4 h-4 text-cyan-300" />}
                         </button>
