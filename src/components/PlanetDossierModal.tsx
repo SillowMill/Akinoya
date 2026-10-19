@@ -35,6 +35,8 @@ import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '..
 import {
   LiveStoryTrailerViewport,
   exportWorldTrailerVideoBlob,
+  downloadOrShareVideoBlob,
+  optimizeMp4FastStart,
   useDynamicWorldVideo,
   deriveWorldVerificationMeta,
 } from './WorldStoryVerificationBadge';
@@ -164,19 +166,15 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
     const safeName = (activePlanet.planetName || 'akinoya-sector')
       .toLowerCase()
       .replace(/[^a-z0-9-_]/g, '-');
+    const filename = `sillowmill-${safeName}-9x16-trailer.mp4`;
+    const shareTitle = `${activePlanet.planetName || 'Ämlemi'} — Sillow Mill 9:16 Trailer`;
+    const shareText = `Verified Planetary Dossier: ${activePlanet.planetName || 'Ämlemi'}`;
 
     try {
       // 1. Attempt official branded template composite export
       const result = await exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl);
       if (result?.blob) {
-        const blobUrl = URL.createObjectURL(result.blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `sillowmill-${safeName}-9x16-trailer.${result.ext}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
+        await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
         return;
       }
 
@@ -184,15 +182,9 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
       if (videoUrl) {
         try {
           const response = await fetch(videoUrl);
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = `${safeName}-9x16-trailer.mp4`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(blobUrl);
+          const rawBlob = await response.blob();
+          const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+          await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
           return;
         } catch {
           window.open(videoUrl, '_blank', 'noopener,noreferrer');

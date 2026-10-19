@@ -771,6 +771,185 @@ export function drawTrailerOverlay(
 }
 
 /**
+ * Relocates the `moov` atom to before the `mdat` atom in an MP4 file (Fast-Start / qt-faststart).
+ * This ensures progressive download/streaming starts immediately without buffering or stutter
+ * on iOS Safari, iPhone, iPad, and mobile hardware.
+ */
+export async function optimizeMp4FastStart(inputBlob: Blob): Promise<Blob> {
+  try {
+    const buffer = await inputBlob.arrayBuffer();
+    const data = new DataView(buffer);
+    const totalLen = buffer.byteLength;
+
+    if (totalLen < 16) return inputBlob;
+
+    let offset = 0;
+    let ftypOffset = -1;
+    let ftypSize = 0;
+    let moovOffset = -1;
+    let moovSize = 0;
+    let mdatOffset = -1;
+
+    // Scan top-level atoms
+    while (offset < totalLen - 8) {
+      let atomSize = data.getUint32(offset);
+      const atomType = String.fromCharCode(
+        data.getUint8(offset + 4),
+        data.getUint8(offset + 5),
+        data.getUint8(offset + 6),
+        data.getUint8(offset + 7)
+      );
+
+      if (atomSize === 1) {
+        if (offset + 16 > totalLen) break;
+        const high = data.getUint32(offset + 8);
+        const low = data.getUint32(offset + 12);
+        atomSize = high * 0x100000000 + low;
+      } else if (atomSize === 0) {
+        atomSize = totalLen - offset;
+      }
+
+      if (atomSize < 8 || offset + atomSize > totalLen) break;
+
+      if (atomType === 'ftyp') {
+        ftypOffset = offset;
+        ftypSize = atomSize;
+      } else if (atomType === 'moov') {
+        moovOffset = offset;
+        moovSize = atomSize;
+      } else if (atomType === 'mdat' && mdatOffset === -1) {
+        mdatOffset = offset;
+      }
+
+      offset += atomSize;
+    }
+
+    if (moovOffset === -1 || mdatOffset === -1 || moovOffset < mdatOffset) {
+      return inputBlob;
+    }
+
+    const moovBuffer = buffer.slice(moovOffset, moovOffset + moovSize);
+    const moovView = new DataView(moovBuffer);
+
+    function patchChunkOffsets(atomStart: number, atomLen: number) {
+      let pos = atomStart;
+      const end = atomStart + atomLen;
+
+      while (pos < end - 8) {
+        const sz = moovView.getUint32(pos);
+        if (sz < 8 || pos + sz > end) break;
+
+        const type = String.fromCharCode(
+          moovView.getUint8(pos + 4),
+          moovView.getUint8(pos + 5),
+          moovView.getUint8(pos + 6),
+          moovView.getUint8(pos + 7)
+        );
+
+        if (type === 'moov' || type === 'trak' || type === 'mdia' || type === 'minf' || type === 'stbl') {
+          patchChunkOffsets(pos + 8, sz - 8);
+        } else if (type === 'stco') {
+          const entryCount = moovView.getUint32(pos + 12);
+          for (let i = 0; i < entryCount; i++) {
+            const entryOffset = pos + 16 + i * 4;
+            if (entryOffset + 4 <= end) {
+              const currentVal = moovView.getUint32(entryOffset);
+              moovView.setUint32(entryOffset, currentVal + moovSize);
+            }
+          }
+        } else if (type === 'co64') {
+          const entryCount = moovView.getUint32(pos + 12);
+          for (let i = 0; i < entryCount; i++) {
+            const entryOffset = pos + 16 + i * 8;
+            if (entryOffset + 8 <= end) {
+              const high = moovView.getUint32(entryOffset);
+              const low = moovView.getUint32(entryOffset + 4);
+              const currentVal = BigInt(high) * 0x100000000n + BigInt(low);
+              const newVal = currentVal + BigInt(moovSize);
+              moovView.setUint32(entryOffset, Number(newVal >> 32n));
+              moovView.setUint32(entryOffset + 4, Number(newVal & 0xffffffffn));
+            }
+          }
+        }
+
+        pos += sz;
+      }
+    }
+
+    patchChunkOffsets(0, moovSize);
+
+    const parts: BlobPart[] = [];
+    if (ftypSize > 0) {
+      parts.push(buffer.slice(ftypOffset, ftypOffset + ftypSize));
+    }
+    parts.push(moovBuffer);
+    parts.push(buffer.slice(ftypSize, moovOffset));
+    if (moovOffset + moovSize < totalLen) {
+      parts.push(buffer.slice(moovOffset + moovSize));
+    }
+
+    return new Blob(parts, { type: 'video/mp4' });
+  } catch {
+    return inputBlob;
+  }
+}
+
+/**
+ * Intelligently downloads or opens the native iOS / Mobile Share Sheet.
+ * On iPhone and iPad, this invokes `navigator.share` with a File object,
+ * prompting Apple's native share modal with "Save Video" (Bewaar video)
+ * directly into the device's Camerarol / Photos app.
+ * On desktop or unsupported platforms, it triggers standard anchor download.
+ */
+export async function downloadOrShareVideoBlob(
+  blob: Blob,
+  filename: string,
+  title: string = 'Sillow Mill 9:16 Video Trailer',
+  text: string = 'Verified Genesis World 9:16 Video Trailer · Sillow Mill'
+): Promise<void> {
+  const isIosOrMobile =
+    typeof navigator !== 'undefined' &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+      /Android|Mobile/.test(navigator.userAgent));
+
+  const videoFile = new File([blob], filename, { type: 'video/mp4' });
+
+  if (
+    isIosOrMobile &&
+    typeof navigator !== 'undefined' &&
+    typeof navigator.share === 'function' &&
+    navigator.canShare &&
+    navigator.canShare({ files: [videoFile] })
+  ) {
+    try {
+      await navigator.share({
+        files: [videoFile],
+        title,
+        text,
+      });
+      return;
+    } catch (err: any) {
+      if (err?.name === 'AbortError') {
+        // User tapped Cancel or closed the share sheet
+        return;
+      }
+      // If native sharing failed unexpectedly, fall through to anchor download
+    }
+  }
+
+  // Desktop or fallback anchor download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2500);
+}
+
+/**
  * Generates and downloads a 9:16 video trailer loop with the official Sillow Mill template
  * and logo embedded in the exported file. Supports compositing either an active MP4 video
  * loop (with audio tracks when available) or the 5-photo Ken Burns montage.
@@ -801,9 +980,12 @@ export async function exportWorldTrailerVideoBlob(
   }
 
   const candidateTypes = [
+    'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+    'video/mp4;codecs=avc1.4D401F,mp4a.40.2',
     'video/mp4;codecs=avc1,mp4a.40.2',
     'video/mp4;codecs=avc1',
     'video/mp4',
+    'video/webm;codecs=h264,opus',
     'video/webm;codecs=h264',
     'video/webm;codecs=vp9,opus',
     'video/webm;codecs=vp9',
@@ -819,7 +1001,8 @@ export async function exportWorldTrailerVideoBlob(
       }
     }) || '';
 
-  const stream = canvas.captureStream(30);
+  // 60FPS ultra-smooth stream
+  const stream = canvas.captureStream(60);
 
   // If activeVideoUrl or dossier.videoUrl is provided, attempt to composite directly from the video stream
   const targetVideoUrl =
@@ -893,7 +1076,7 @@ export async function exportWorldTrailerVideoBlob(
   }
 
   const recorder = supportedMime
-    ? new MediaRecorder(stream, { mimeType: supportedMime, videoBitsPerSecond: 8_000_000 })
+    ? new MediaRecorder(stream, { mimeType: supportedMime, videoBitsPerSecond: 10_000_000 })
     : new MediaRecorder(stream);
 
   const chunks: BlobPart[] = [];
@@ -908,15 +1091,16 @@ export async function exportWorldTrailerVideoBlob(
   const durationMs = Math.min(10000, Math.max(3500, Math.round(videoDurationSec * 1000)));
 
   return new Promise((resolve) => {
-    recorder.onstop = () => {
+    recorder.onstop = async () => {
       if (objectUrlToRevoke) {
         URL.revokeObjectURL(objectUrlToRevoke);
       }
       if (audioCtx && audioCtx.state !== 'closed') {
         audioCtx.close().catch(() => {});
       }
-      const finalBlob = new Blob(chunks, { type: supportedMime || 'video/mp4' });
-      resolve({ blob: finalBlob, ext: 'mp4' });
+      const rawBlob = new Blob(chunks, { type: supportedMime || 'video/mp4' });
+      const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+      resolve({ blob: fastStartBlob, ext: 'mp4' });
     };
 
     recorder.start();
@@ -1370,6 +1554,9 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
     const safeName = (dossier.planetName || 'akinoya-world')
       .toLowerCase()
       .replace(/[^a-z0-9-_]/g, '-');
+    const filename = `sillowmill-${safeName}-9x16-trailer.mp4`;
+    const shareTitle = `${dossier.planetName || 'Ämlemi'} — Sillow Mill 9:16 Trailer`;
+    const shareText = `Verified Planetary Dossier: ${dossier.planetName || 'Ämlemi'} (${meta.verificationCode})`;
 
     try {
       const activeVideoUrl =
@@ -1382,14 +1569,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       // 1. Run integrated canvas-rendering branded marketing composite pipeline
       const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
       if (result?.blob) {
-        const url = URL.createObjectURL(result.blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `sillowmill-${safeName}-9x16-trailer.${result.ext}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
         return;
       }
 
@@ -1397,15 +1577,9 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       if (activeVideoUrl) {
         try {
           const response = await fetch(activeVideoUrl);
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `sillowmill-${safeName}-9x16-trailer.mp4`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          const rawBlob = await response.blob();
+          const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+          await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
           return;
         } catch {
           window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');

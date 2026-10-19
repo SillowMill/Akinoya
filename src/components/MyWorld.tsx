@@ -22,7 +22,12 @@ import {
   copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
-import { useDynamicWorldVideo, exportWorldTrailerVideoBlob } from './WorldStoryVerificationBadge';
+import {
+  useDynamicWorldVideo,
+  exportWorldTrailerVideoBlob,
+  downloadOrShareVideoBlob,
+  optimizeMp4FastStart,
+} from './WorldStoryVerificationBadge';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
 const SLOT_CODES = ['01_main', '02_flora', '03_fauna', '04_atmo', '05_lore'];
@@ -85,32 +90,23 @@ export const MyWorld: React.FC<MyWorldProps> = ({
     const safeName = (dossier.planetName || 'akinoya-sector')
       .toLowerCase()
       .replace(/[^a-z0-9-_]/g, '-');
+    const filename = `sillowmill-${safeName}-9x16-trailer.mp4`;
+    const shareTitle = `${dossier.planetName || 'Ämlemi'} — Sillow Mill 9:16 Trailer`;
+    const shareText = `Verified Planetary Dossier: ${dossier.planetName || 'Ämlemi'}`;
+
     try {
       // 1. Run integrated canvas-rendering branded marketing composite pipeline
       const result = await exportWorldTrailerVideoBlob(dossier, undefined, videoUrl);
       if (result?.blob) {
-        const blobUrl = URL.createObjectURL(result.blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `sillowmill-${safeName}-9x16-trailer.${result.ext}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
+        await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
         return;
       }
 
       // 2. Fallback to direct raw video download only if composite unavailable
       const response = await fetch(videoUrl);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `sillowmill-${safeName}-9x16-trailer.mp4`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
+      const rawBlob = await response.blob();
+      const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+      await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
     } catch {
       window.open(videoUrl, '_blank', 'noopener,noreferrer');
     } finally {
