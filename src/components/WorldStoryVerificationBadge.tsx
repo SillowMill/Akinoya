@@ -85,14 +85,26 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
 }
 
 /**
- * Loads an image safely with crossOrigin fallback for Canvas rendering.
+ * Appends a dynamic timestamp hash parameter to force mobile browsers (especially iOS Safari)
+ * to bypass local caching and fetch the absolute newest asset directly from the server.
  */
-function loadImageForCanvas(src: string): Promise<HTMLImageElement | null> {
+export function getCacheBustedUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}v=${Date.now()}`;
+}
+
+/**
+ * Loads an image safely with crossOrigin fallback and cache-busting for Canvas rendering.
+ */
+export function loadImageForCanvas(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     if (!src) {
       resolve(null);
       return;
     }
+    const targetUrl = getCacheBustedUrl(src);
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
@@ -100,9 +112,9 @@ function loadImageForCanvas(src: string): Promise<HTMLImageElement | null> {
       const fallback = new Image();
       fallback.onload = () => resolve(fallback);
       fallback.onerror = () => resolve(null);
-      fallback.src = src;
+      fallback.src = targetUrl;
     };
-    img.src = src;
+    img.src = targetUrl;
   });
 }
 
@@ -895,50 +907,58 @@ export async function optimizeMp4FastStart(inputBlob: Blob): Promise<Blob> {
 }
 
 /**
- * Intelligently downloads or opens the native iOS / Mobile Share Sheet.
- * On iPhone and iPad, this invokes `navigator.share` with a File object,
- * prompting Apple's native share modal with "Save Video" (Bewaar video)
- * directly into the device's Camerarol / Photos app.
- * On desktop or unsupported platforms, it triggers standard anchor download.
+ * Accurate mobile & tablet device detector covering iPhone, iPad, iPod, Android, and iPadOS (MacIntel with touch points).
  */
-export async function downloadOrShareVideoBlob(
+export function isMobileOrTabletDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+    /Android|Mobile|Tablet/i.test(navigator.userAgent)
+  );
+}
+
+/**
+ * Intelligently exports or downloads files across devices:
+ * - On Mobile / Tablet (iOS & Android): Triggers the native system share sheet (`navigator.share`)
+ *   with the generated File blob, allowing users to tap "Save to Photos" ("Bewaar video" / "Bewaar afbeelding")
+ *   directly into their device's Photos/Camerarol.
+ * - On Desktop: Executes a direct, high-speed anchor download straight into the user's Downloads folder.
+ */
+export async function downloadOrShareFileBlob(
   blob: Blob,
   filename: string,
-  title: string = 'Sillow Mill 9:16 Video Trailer',
-  text: string = 'Verified Genesis World 9:16 Video Trailer · Sillow Mill'
+  mimeType: string,
+  title: string = 'Sillow Mill Asset',
+  text: string = 'Verified Genesis World Asset · Sillow Mill'
 ): Promise<void> {
-  const isIosOrMobile =
-    typeof navigator !== 'undefined' &&
-    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-      /Android|Mobile/.test(navigator.userAgent));
-
-  const videoFile = new File([blob], filename, { type: 'video/mp4' });
+  const isMobile = isMobileOrTabletDevice();
+  const file = new File([blob], filename, { type: mimeType });
 
   if (
-    isIosOrMobile &&
+    isMobile &&
     typeof navigator !== 'undefined' &&
     typeof navigator.share === 'function' &&
     navigator.canShare &&
-    navigator.canShare({ files: [videoFile] })
+    navigator.canShare({ files: [file] })
   ) {
     try {
       await navigator.share({
-        files: [videoFile],
+        files: [file],
         title,
         text,
       });
       return;
     } catch (err: any) {
       if (err?.name === 'AbortError') {
-        // User tapped Cancel or closed the share sheet
+        // User dismissed the native share sheet
         return;
       }
-      // If native sharing failed unexpectedly, fall through to anchor download
+      // If native sharing fails unexpectedly, fall through to anchor download
     }
   }
 
-  // Desktop or fallback anchor download
+  // Desktop or fallback direct anchor download
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -947,6 +967,18 @@ export async function downloadOrShareVideoBlob(
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 2500);
+}
+
+/**
+ * Downloads or shares an MP4 video trailer blob with camera roll support on mobile.
+ */
+export async function downloadOrShareVideoBlob(
+  blob: Blob,
+  filename: string,
+  title: string = 'Sillow Mill 9:16 Video Trailer',
+  text: string = 'Verified Genesis World 9:16 Video Trailer · Sillow Mill'
+): Promise<void> {
+  return downloadOrShareFileBlob(blob, filename, 'video/mp4', title, text);
 }
 
 /**
@@ -1022,17 +1054,18 @@ export async function exportWorldTrailerVideoBlob(
       v.playsInline = true;
       v.preload = 'auto';
 
+      const cacheBustedVideoUrl = getCacheBustedUrl(targetVideoUrl);
       try {
-        const response = await fetch(targetVideoUrl);
+        const response = await fetch(cacheBustedVideoUrl, { cache: 'no-store' });
         if (response.ok) {
           const blob = await response.blob();
           objectUrlToRevoke = URL.createObjectURL(blob);
           v.src = objectUrlToRevoke;
         } else {
-          v.src = targetVideoUrl;
+          v.src = cacheBustedVideoUrl;
         }
       } catch {
-        v.src = targetVideoUrl;
+        v.src = cacheBustedVideoUrl;
       }
 
       await new Promise<void>((resolve) => {
@@ -1241,6 +1274,9 @@ export const LiveStoryTrailerViewport: React.FC<{
   activeVideoUrl?: string;
   isMuted?: boolean;
   onToggleAudio?: () => void;
+  isPlaying?: boolean;
+  onTogglePlay?: () => void;
+  onVideoElementReady?: (el: HTMLVideoElement | null) => void;
 }> = ({
   dossier,
   meta,
@@ -1248,6 +1284,9 @@ export const LiveStoryTrailerViewport: React.FC<{
   activeVideoUrl,
   isMuted: externalIsMuted,
   onToggleAudio,
+  isPlaying,
+  onTogglePlay,
+  onVideoElementReady,
 }) => {
   const [internalMuted, setInternalMuted] = useState(true);
   const isMuted = externalIsMuted !== undefined ? externalIsMuted : internalMuted;
@@ -1259,6 +1298,17 @@ export const LiveStoryTrailerViewport: React.FC<{
       videoRef.current.muted = isMuted;
     }
   }, [isMuted]);
+
+  // Sync video play/pause status when controlled externally
+  useEffect(() => {
+    if (videoRef.current && isPlaying !== undefined) {
+      if (isPlaying && videoRef.current.paused) {
+        videoRef.current.play().catch(() => {});
+      } else if (!isPlaying && !videoRef.current.paused) {
+        videoRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
 
   const handleToggleAudio = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -1327,6 +1377,9 @@ export const LiveStoryTrailerViewport: React.FC<{
     };
   }, [dossier, meta, photoCards]);
 
+  const posterUrl = photoCards[0]?.url ? getCacheBustedUrl(photoCards[0].url) : undefined;
+  const resolvedVideoSrc = videoUrl ? getCacheBustedUrl(videoUrl) : undefined;
+
   return (
     <div
       className="relative w-full h-full overflow-hidden rounded-[22px] bg-[#030712] select-none"
@@ -1339,9 +1392,9 @@ export const LiveStoryTrailerViewport: React.FC<{
       }}
     >
       {/* Background Poster Image: Eliminates black/gray loading flashes while video or canvas initialises */}
-      {photoCards[0]?.url && (
+      {posterUrl && (
         <img
-          src={photoCards[0].url}
+          src={posterUrl}
           alt={dossier.planetName || 'Ämlemi'}
           className="absolute inset-0 w-full h-full object-cover z-0 filter brightness-95"
           decoding="async"
@@ -1351,9 +1404,12 @@ export const LiveStoryTrailerViewport: React.FC<{
       {videoUrl ? (
         <div className="relative z-10 w-full h-full">
           <video
-            ref={videoRef}
-            src={videoUrl}
-            poster={photoCards[0]?.url}
+            ref={(el) => {
+              videoRef.current = el;
+              onVideoElementReady?.(el);
+            }}
+            src={resolvedVideoSrc}
+            poster={posterUrl}
             autoPlay
             loop
             muted={isMuted}
@@ -1371,10 +1427,10 @@ export const LiveStoryTrailerViewport: React.FC<{
           {/* Top-level & Bottom-left Branded Overlay on native MP4 */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none z-20" />
           <div className="absolute top-3 left-3.5 right-3.5 flex items-start justify-between gap-2 pointer-events-none z-30">
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="inline-flex items-center gap-1 text-[8.5px] font-mono font-extrabold text-amber-300 tracking-wider uppercase">
-                <Sparkles className="w-2.5 h-2.5 text-amber-300 inline" />
-                <span>
+                <Sparkles className="w-2.5 h-2.5 text-amber-300 inline shrink-0" />
+                <span className="truncate">
                   {meta.isAmlemi
                     ? 'FOUNDING PIONEER'
                     : meta.isVipPioneer
@@ -1382,16 +1438,16 @@ export const LiveStoryTrailerViewport: React.FC<{
                     : 'FOUNDING PIONEER'}
                 </span>
               </div>
-              <div className="text-sm font-display font-black tracking-[0.15em] text-white uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mt-0.5">
+              <div className="text-sm font-display font-black tracking-[0.15em] text-white uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mt-0.5 truncate">
                 {dossier.planetName || 'ÄMLEMI'}
               </div>
-              <div className="text-[7.5px] font-mono text-cyan-300 mt-0.5">
+              <div className="text-[7.5px] font-mono text-cyan-300 mt-0.5 truncate">
                 HOLDER: {(dossier.authorName || 'ODI SELIS').toUpperCase()} · {dossier.sectorId || 'SECTOR AKN-01'}
               </div>
             </div>
 
             {/* Audio Toggle Button & Edition Number */}
-            <div className="flex items-center gap-1.5 pointer-events-auto">
+            <div className="flex items-center gap-1.5 pointer-events-auto shrink-0">
               <button
                 type="button"
                 onClick={handleToggleAudio}
@@ -1412,7 +1468,7 @@ export const LiveStoryTrailerViewport: React.FC<{
                 )}
               </button>
 
-              <span className="px-2 py-1 rounded-lg bg-black/75 border border-amber-400/60 text-[10px] font-mono font-extrabold text-amber-300">
+              <span className="shrink-0 min-w-[36px] px-2 py-1 rounded-lg bg-black/75 border border-amber-400/60 text-[10px] font-mono font-extrabold text-amber-300 text-center">
                 #{meta.worldNumber}
               </span>
             </div>
@@ -1532,6 +1588,11 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
     }
   };
 
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  useEffect(() => {
+    setIsMobileDevice(isMobileOrTabletDevice());
+  }, []);
+
   const handleDownloadStoryBadge = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
     soundManager.playTone(780, 0.07);
@@ -1542,14 +1603,10 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       const safeName = (dossier.planetName || 'akinoya-world')
         .toLowerCase()
         .replace(/[^a-z0-9-_]/g, '-');
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `sillowmill-${safeName}-story-badge-9x16.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const filename = `sillowmill-${safeName}-story-badge-9x16.png`;
+      const shareTitle = `${dossier.planetName || 'Ämlemi'} — 9:16 Story Card`;
+      const shareText = `Verified Genesis World: ${dossier.planetName || 'Ämlemi'} (${meta.verificationCode})`;
+      await downloadOrShareFileBlob(blob, filename, 'image/png', shareTitle, shareText);
     } finally {
       setIsExportingBadge(false);
     }
@@ -1584,7 +1641,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       // 2. Direct video fallback if composite generation unavailable
       if (activeVideoUrl) {
         try {
-          const response = await fetch(activeVideoUrl);
+          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
+          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
           const rawBlob = await response.blob();
           const fastStartBlob = await optimizeMp4FastStart(rawBlob);
           await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
@@ -1719,7 +1777,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
             >
               {/* 1. TOP-LEVEL HEADER: FOUNDING PIONEER STATUS + PLANET NAME + HOLDER */}
               <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-cyan-400/20">
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-amber-400/40 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(251,191,36,0.2)]">
                     <img
                       src={sillowMillLogoUrl}
@@ -1727,7 +1785,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                       className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.55)]"
                     />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
                       <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
                       <span className="truncate">
@@ -1750,7 +1808,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 </div>
 
                 {/* Unique Numbering Badge (#1, #2, etc.) */}
-                <div className="shrink-0 px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+                <div className="shrink-0 min-w-[50px] sm:min-w-[58px] px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 flex flex-col items-center justify-center text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
                   <span className="block text-[6.5px] font-mono font-bold uppercase tracking-widest text-amber-200/90">
                     EDITION
                   </span>
@@ -1907,7 +1965,11 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-cyan-500 hover:from-cyan-300 hover:to-sky-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.35)] min-h-[44px]"
             >
               <Film className="w-4 h-4 text-black shrink-0" />
-              <span>{isExportingTrailer ? 'Encoding 9:16 MP4...' : 'Download 9:16 MP4 Trailer'}</span>
+              <span>
+                {isExportingTrailer
+                  ? (isMobileDevice ? 'Saving to Photos...' : 'Encoding 9:16 MP4...')
+                  : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 MP4 Trailer')}
+              </span>
             </button>
 
             <button
@@ -1917,7 +1979,11 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[44px]"
             >
               <Download className="w-4 h-4 text-black shrink-0" />
-              <span>{isExportingBadge ? 'Rendering 9:16 PNG...' : 'Download 9:16 Story Badge'}</span>
+              <span>
+                {isExportingBadge
+                  ? (isMobileDevice ? 'Saving to Photos...' : 'Rendering 9:16 PNG...')
+                  : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 Story Badge')}
+              </span>
             </button>
           </div>
         </div>
@@ -2121,7 +2187,11 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                     className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_18px_rgba(245,158,11,0.3)] min-h-[44px]"
                   >
                     <Download className="w-4 h-4 text-black shrink-0" />
-                    <span>{isExportingBadge ? 'Rendering PNG...' : 'Download 9:16 Story Badge'}</span>
+                    <span>
+                      {isExportingBadge
+                        ? (isMobileDevice ? 'Saving to Photos...' : 'Rendering PNG...')
+                        : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 Story Badge')}
+                    </span>
                   </button>
 
                   <button
@@ -2131,7 +2201,11 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                     className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-cyan-500 hover:from-cyan-300 hover:to-sky-300 text-black font-mono text-xs font-extrabold tracking-wide cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_18px_rgba(6,182,212,0.3)] min-h-[44px]"
                   >
                     <Film className="w-4 h-4 text-black shrink-0" />
-                    <span>{isExportingTrailer ? 'Encoding MP4...' : 'Download 9:16 MP4 Trailer'}</span>
+                    <span>
+                      {isExportingTrailer
+                        ? (isMobileDevice ? 'Saving to Photos...' : 'Encoding MP4...')
+                        : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 MP4 Trailer')}
+                    </span>
                   </button>
                 </div>
 
@@ -2281,7 +2355,11 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 className="flex-1 min-w-[220px] py-3 px-5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(245,158,11,0.4)] min-h-[46px]"
               >
                 <Download className="w-4 h-4 text-black shrink-0" />
-                <span>{isExportingBadge ? 'Rendering 9:16 PNG...' : 'Download 9:16 Story Badge'}</span>
+                <span>
+                  {isExportingBadge
+                    ? (isMobileDevice ? 'Saving to Photos...' : 'Rendering 9:16 PNG...')
+                    : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 Story Badge')}
+                </span>
               </button>
 
               <button
@@ -2291,7 +2369,11 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 className="flex-1 min-w-[220px] py-3 px-5 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-cyan-500 hover:from-cyan-300 hover:to-sky-300 text-black font-mono text-xs font-extrabold tracking-wide cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(6,182,212,0.4)] min-h-[46px]"
               >
                 <Film className="w-4 h-4 text-black shrink-0" />
-                <span>{isExportingTrailer ? 'Encoding 9:16 MP4...' : 'Download 9:16 MP4 Trailer'}</span>
+                <span>
+                  {isExportingTrailer
+                    ? (isMobileDevice ? 'Saving to Photos...' : 'Encoding 9:16 MP4...')
+                    : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 MP4 Trailer')}
+                </span>
               </button>
             </div>
           </div>,

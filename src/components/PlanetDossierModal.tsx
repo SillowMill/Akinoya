@@ -39,6 +39,8 @@ import {
   optimizeMp4FastStart,
   useDynamicWorldVideo,
   deriveWorldVerificationMeta,
+  isMobileOrTabletDevice,
+  getCacheBustedUrl,
 } from './WorldStoryVerificationBadge';
 
 export interface PlanetDossierModalProps {
@@ -70,7 +72,12 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [isCopiedGalaxyLink, setIsCopiedGalaxyLink] = useState<boolean>(false);
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    setIsMobileDevice(isMobileOrTabletDevice());
+  }, []);
 
   const handleCopyGalaxyLink = async () => {
     if (!activePlanet) return;
@@ -181,7 +188,8 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
       // 2. Fallback to direct raw video fetch if canvas composite unavailable
       if (videoUrl) {
         try {
-          const response = await fetch(videoUrl);
+          const cacheBustedUrl = getCacheBustedUrl(videoUrl);
+          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
           const rawBlob = await response.blob();
           const fastStartBlob = await optimizeMp4FastStart(rawBlob);
           await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
@@ -384,10 +392,12 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                         <Download className="w-3.5 h-3.5" />
                         <span>
                           {isDownloading
-                            ? 'Preparing MP4...'
-                            : dynamicVideo.isAiVideo
-                            ? '⬇ Download Val.ai 9:16 MP4 Trailer'
-                            : '⬇ Download 9:16 MP4 Trailer'}
+                            ? (isMobileDevice ? 'Saving to Photos...' : 'Preparing MP4...')
+                            : (isMobileDevice
+                                ? 'Save to Photos'
+                                : dynamicVideo.isAiVideo
+                                ? '⬇ Download Val.ai 9:16 MP4 Trailer'
+                                : '⬇ Download 9:16 MP4 Trailer')}
                         </span>
                       </button>
 

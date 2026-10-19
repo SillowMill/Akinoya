@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Camera,
   Video,
@@ -27,6 +27,8 @@ import {
   exportWorldTrailerVideoBlob,
   downloadOrShareVideoBlob,
   optimizeMp4FastStart,
+  isMobileOrTabletDevice,
+  getCacheBustedUrl,
 } from './WorldStoryVerificationBadge';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
@@ -50,7 +52,12 @@ export const MyWorld: React.FC<MyWorldProps> = ({
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isCopiedGalaxyLink, setIsCopiedGalaxyLink] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
   const photoCards = getPlanetPhotoCards(dossier);
+
+  useEffect(() => {
+    setIsMobileDevice(isMobileOrTabletDevice());
+  }, []);
 
   // Mobile carousel (opens on 01 Main by default)
   const [activeSlide, setActiveSlide] = useState(0);
@@ -103,7 +110,8 @@ export const MyWorld: React.FC<MyWorldProps> = ({
       }
 
       // 2. Fallback to direct raw video download only if composite unavailable
-      const response = await fetch(videoUrl);
+      const cacheBustedUrl = getCacheBustedUrl(videoUrl);
+      const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
       const rawBlob = await response.blob();
       const fastStartBlob = await optimizeMp4FastStart(rawBlob);
       await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
@@ -257,7 +265,9 @@ export const MyWorld: React.FC<MyWorldProps> = ({
           >
             <Download className="w-3.5 h-3.5" />
             <span>
-              {isDownloading ? 'Preparing MP4...' : '⬇ Download 9:16 MP4 Trailer'}
+              {isDownloading
+                ? (isMobileDevice ? 'Saving to Photos...' : 'Preparing MP4...')
+                : (isMobileDevice ? 'Save to Photos' : '⬇ Download 9:16 MP4 Trailer')}
             </span>
           </button>
 

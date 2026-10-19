@@ -35,9 +35,12 @@ import {
   renderWorldStoryBadgeBlob,
   exportWorldTrailerVideoBlob,
   downloadOrShareVideoBlob,
+  downloadOrShareFileBlob,
   optimizeMp4FastStart,
   useDynamicWorldVideo,
   LiveStoryTrailerViewport,
+  isMobileOrTabletDevice,
+  getCacheBustedUrl,
 } from './WorldStoryVerificationBadge';
 
 export type MasterAssetSlideId = 'archive_4k' | 'story_card' | 'video_trailer';
@@ -287,7 +290,7 @@ const StoryCard9x16View: React.FC<{
 
       {/* 1. TOP-LEVEL BRANDING HEADER */}
       <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-white/15">
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/20 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(255,255,255,0.16)]">
             <img
               src={sillowMillLogoUrl}
@@ -295,7 +298,7 @@ const StoryCard9x16View: React.FC<{
               className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.55)]"
             />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-xs sm:text-[13px] font-display font-black tracking-[0.16em] text-white uppercase leading-none truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
               SILLOW MILL
             </div>
@@ -305,7 +308,7 @@ const StoryCard9x16View: React.FC<{
           </div>
         </div>
 
-        <div className="shrink-0 px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+        <div className="shrink-0 min-w-[50px] sm:min-w-[58px] px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 flex flex-col items-center justify-center text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
           <span className="block text-[6.5px] font-mono font-bold uppercase tracking-widest text-amber-200/90">
             EDITION
           </span>
@@ -580,6 +583,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
     }
   };
 
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
+  useEffect(() => {
+    setIsMobileDevice(isMobileOrTabletDevice());
+  }, []);
+
   // Download Pristine High-Resolution 4K Master Photo (Clean Lossless Direct Export)
   const handleDownload4kPhoto = async () => {
     if (!activePhoto?.url) return;
@@ -587,20 +595,17 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
     setIsDownloadingPhoto(true);
     const safePlanet = (dossier.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const safeStage = activePhoto.category.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+    const filename = `sillowmill-${safePlanet}-4k-${safeStage}.jpg`;
+    const shareTitle = `${dossier.planetName || 'Ämlemi'} — 4K Master`;
+    const shareText = `Verified Genesis World: ${activePhoto.title}`;
 
     try {
       // Direct clean 4K download with absolute resolution clarity (no watermarks)
-      const res = await fetch(activePhoto.url);
+      const cacheBustedUrl = getCacheBustedUrl(activePhoto.url);
+      const res = await fetch(cacheBustedUrl, { cache: 'no-store' });
       if (res.ok) {
         const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `sillowmill-${safePlanet}-4k-${safeStage}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        await downloadOrShareFileBlob(blob, filename, 'image/jpeg', shareTitle, shareText);
       } else {
         window.open(activePhoto.url, '_blank', 'noopener,noreferrer');
       }
@@ -620,39 +625,9 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
       if (!blob) return;
       const safeName = (dossier.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
       const filename = `sillowmill-${safeName}-story-badge-9x16.png`;
-      const isMobile =
-        typeof navigator !== 'undefined' &&
-        (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-          /Android|Mobile|Tablet/.test(navigator.userAgent));
-
-      const file = new File([blob], filename, { type: 'image/png' });
-      if (
-        isMobile &&
-        typeof navigator.share === 'function' &&
-        navigator.canShare &&
-        navigator.canShare({ files: [file] })
-      ) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: `${dossier.planetName || 'Ämlemi'} — 9:16 Story Card`,
-            text: `Verified Genesis World: ${dossier.planetName || 'Ämlemi'}`,
-          });
-          return;
-        } catch (err: any) {
-          if (err?.name === 'AbortError') return;
-        }
-      }
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const shareTitle = `${dossier.planetName || 'Ämlemi'} — 9:16 Story Card`;
+      const shareText = `Verified Genesis World: ${dossier.planetName || 'Ämlemi'}`;
+      await downloadOrShareFileBlob(blob, filename, 'image/png', shareTitle, shareText);
     } finally {
       setIsExportingBadge(false);
     }
@@ -721,7 +696,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
       // 2. Direct video fallback if composite generation unavailable
       if (activeVideoUrl) {
         try {
-          const response = await fetch(activeVideoUrl);
+          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
+          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
           const rawBlob = await response.blob();
           const fastStartBlob = await optimizeMp4FastStart(rawBlob);
           await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
@@ -737,21 +713,27 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
   };
 
   const toggleVideoPlayback = () => {
+    soundManager.playTone(isPlayingVideo ? 440 : 660, 0.05);
     if (videoElementRef.current) {
       if (videoElementRef.current.paused) {
-        videoElementRef.current.play();
+        videoElementRef.current.play().catch(() => {});
         setIsPlayingVideo(true);
       } else {
         videoElementRef.current.pause();
         setIsPlayingVideo(false);
       }
+    } else {
+      setIsPlayingVideo((prev) => !prev);
     }
   };
 
   const toggleAudio = () => {
+    soundManager.playTone(isMuted ? 680 : 440, 0.05);
     if (videoElementRef.current) {
       videoElementRef.current.muted = !isMuted;
       setIsMuted(!isMuted);
+    } else {
+      setIsMuted((prev) => !prev);
     }
   };
 
@@ -1065,7 +1047,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       title="Download clean original 4K Master with absolute resolution clarity"
                     >
                       <Download className="w-4 h-4 text-black" />
-                      <span>{isDownloadingPhoto ? 'DOWNLOADING...' : 'DOWNLOAD 4K MASTER'}</span>
+                      <span>
+                        {isDownloadingPhoto
+                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'DOWNLOADING...')
+                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD 4K MASTER')}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -1178,7 +1164,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       className="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-[0_0_25px_rgba(245,158,11,0.4)] min-h-[46px]"
                     >
                       <Download className="w-4 h-4 text-black" />
-                      <span>{isExportingBadge ? 'RENDERING HIGH-RES AFFICHE...' : 'DOWNLOAD 9:16 STORY CARD (PNG)'}</span>
+                      <span>
+                        {isExportingBadge
+                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'RENDERING HIGH-RES AFFICHE...')
+                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD 9:16 STORY CARD (PNG)')}
+                      </span>
                     </button>
 
                     <button
@@ -1235,6 +1225,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                     activeVideoUrl={dynamicVideo.videoUrl}
                     isMuted={isMuted}
                     onToggleAudio={toggleAudio}
+                    isPlaying={isPlayingVideo}
+                    onTogglePlay={toggleVideoPlayback}
+                    onVideoElementReady={(el) => {
+                      videoElementRef.current = el;
+                    }}
                   />
 
                   {/* Playback Controls Floating Bar */}
@@ -1246,6 +1241,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                           e.stopPropagation();
                           toggleVideoPlayback();
                         }}
+                        onTouchEnd={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          toggleVideoPlayback();
+                        }}
                         className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
                         title={isPlayingVideo ? 'Pause Video' : 'Play Video'}
                       >
@@ -1255,6 +1255,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
+                          toggleAudio();
+                        }}
+                        onTouchEnd={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
                           toggleAudio();
                         }}
                         className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
@@ -1314,7 +1319,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       className="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-[0_0_25px_rgba(245,158,11,0.4)] min-h-[46px]"
                     >
                       <Download className="w-4 h-4 text-black" />
-                      <span>{isExportingTrailer ? 'GENERATING MP4 VIDEO...' : 'DOWNLOAD 9:16 MP4 TRAILER'}</span>
+                      <span>
+                        {isExportingTrailer
+                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'GENERATING MP4 VIDEO...')
+                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD 9:16 MP4 TRAILER')}
+                      </span>
                     </button>
 
                     <button
@@ -1503,6 +1512,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       activeVideoUrl={dynamicVideo.videoUrl}
                       isMuted={isMuted}
                       onToggleAudio={toggleAudio}
+                      isPlaying={isPlayingVideo}
+                      onTogglePlay={toggleVideoPlayback}
+                      onVideoElementReady={(el) => {
+                        videoElementRef.current = el;
+                      }}
                     />
                     <div className="absolute bottom-3 left-3 right-3 z-30 flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-black/85 border border-white/20 backdrop-blur-md">
                       <div className="flex items-center gap-2">
@@ -1510,6 +1524,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            toggleVideoPlayback();
+                          }}
+                          onTouchEnd={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
                             toggleVideoPlayback();
                           }}
                           className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
@@ -1520,6 +1539,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            toggleAudio();
+                          }}
+                          onTouchEnd={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
                             toggleAudio();
                           }}
                           className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
@@ -1595,7 +1619,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
                     >
                       <Download className="w-4 h-4 text-black" />
-                      <span>{isExportingTrailer ? 'GENERATING MP4...' : 'SAVE 9:16 TRAILER (CAMERA ROLL)'}</span>
+                      <span>
+                        {isExportingTrailer
+                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'GENERATING MP4...')
+                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD 9:16 TRAILER (MP4)')}
+                      </span>
                     </button>
                   )}
 
@@ -1607,7 +1635,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
                     >
                       <Download className="w-4 h-4 text-black" />
-                      <span>{isExportingBadge ? 'RENDERING...' : 'DOWNLOAD STORY CARD (PNG)'}</span>
+                      <span>
+                        {isExportingBadge
+                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'RENDERING...')
+                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD STORY CARD (PNG)')}
+                      </span>
                     </button>
                   )}
 
@@ -1619,7 +1651,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
                     >
                       <Download className="w-4 h-4 text-black" />
-                      <span>{isDownloadingPhoto ? 'DOWNLOADING...' : 'DOWNLOAD 4K MASTER'}</span>
+                      <span>
+                        {isDownloadingPhoto
+                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'DOWNLOADING...')
+                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD 4K MASTER')}
+                      </span>
                     </button>
                   )}
 
