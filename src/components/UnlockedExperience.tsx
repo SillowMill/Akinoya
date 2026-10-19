@@ -2182,34 +2182,26 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       {/* Sillow Mill Logo, Stylized ÄMLEMI Title, and Metadata Sector Badge in Clean Vertical Alignment on Portrait Tablet (< xl) */}
                       <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-start gap-3 sm:gap-4 xl:gap-5 min-w-0 w-full">
                         {/* Official Ämlemi Planetary Thumbnail Render (Matching Galaxy Navigator Celestial Orb) */}
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0 group flex items-center justify-center">
-                            {/* Single Delicate Dotted Ring Structure (Clockwise Rotation) */}
-                            <div
-                              className="absolute -inset-2.5 rounded-full border border-dotted border-amber-300/85 pointer-events-none animate-spin"
-                              style={{ animationDuration: '20s' }}
-                            />
-
-                            {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
-                            <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300">
-                              <img
-                                src={amlemiThumbnailUrl}
-                                alt={`${activeWorldDossier.planetName} Planetary Horizon`}
-                                className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
-                                draggable={false}
-                                loading="eager"
-                                decoding="async"
-                              />
-                              {/* Gradient Atmospheric Shell matching Galaxy Navigator (Crystal-Clear Purity) */}
-                              <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
-                            </div>
-                          </div>
-
-                          {/* Minimalist Reflective Chrome Divider (Only visible on wide desktop xl:block when in horizontal row) */}
+                        <div className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0 group flex items-center justify-center">
+                          {/* Single Delicate Dotted Ring Structure (Clockwise Rotation) */}
                           <div
-                            className="hidden xl:block h-8 w-[2px] bg-gradient-to-b from-white/10 via-white/60 to-white/10 shadow-[0_0_10px_rgba(255,255,255,0.4)] shrink-0"
-                            aria-hidden="true"
+                            className="absolute -inset-2.5 rounded-full border border-dotted border-amber-300/85 pointer-events-none animate-spin"
+                            style={{ animationDuration: '20s' }}
                           />
+
+                          {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
+                          <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300">
+                            <img
+                              src={amlemiThumbnailUrl}
+                              alt={`${activeWorldDossier.planetName} Planetary Horizon`}
+                              className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
+                              draggable={false}
+                              loading="eager"
+                              decoding="async"
+                            />
+                            {/* Gradient Atmospheric Shell matching Galaxy Navigator (Crystal-Clear Purity) */}
+                            <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
+                          </div>
                         </div>
 
                         {/* Large Stylized ÄMLEMI World Name & Sector Badge */}

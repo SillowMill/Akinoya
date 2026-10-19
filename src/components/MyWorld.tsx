@@ -194,7 +194,6 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
               <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
             </div>
           </div>
-          <div className="h-5 sm:h-6 w-[1.5px] bg-gradient-to-b from-white/10 via-white/50 to-white/10 shadow-[0_0_6px_rgba(255,255,255,0.3)] shrink-0" aria-hidden="true" />
           <div className="min-w-0">
             <div className="text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider truncate flex items-center gap-1.5">
               <span>{dossier.planetName || 'ÄKINOYA SECTOR'}</span>
