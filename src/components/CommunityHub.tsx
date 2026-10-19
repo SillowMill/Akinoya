@@ -69,9 +69,12 @@ const WelcomeVisionPortal = React.lazy(() =>
 );
 
 const HubModuleLoading: React.FC<{ label?: string }> = ({ label = 'LOADING MODULE...' }) => (
-  <div className="flex flex-col items-center justify-center p-12 space-y-3 min-h-[300px]">
-    <div className="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shadow-[0_0_12px_rgba(0,242,254,0.3)]" />
-    <span className="text-xs font-mono text-cyan-300 tracking-wider uppercase animate-pulse">
+  <div
+    style={{ willChange: 'opacity, transform' }}
+    className="flex flex-col items-center justify-center p-8 sm:p-12 space-y-3 min-h-[360px] rounded-3xl bg-[#040711] border border-cyan-500/20 transform-gpu"
+  >
+    <div className="w-9 h-9 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shadow-[0_0_15px_rgba(0,242,254,0.4)]" />
+    <span className="text-xs font-mono text-cyan-300 tracking-wider uppercase animate-pulse font-bold">
       {label}
     </span>
   </div>
@@ -1626,10 +1629,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                 {activeSection === 'workflows' && (
                   <motion.div
                     key="section-workflows"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    className="space-y-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    style={{ willChange: 'opacity, transform' }}
+                    className="space-y-6 w-full bg-[#040711] rounded-3xl p-1.5 sm:p-3 md:p-5 border border-cyan-500/25 shadow-[0_12px_45px_rgba(0,0,0,0.95)] transform-gpu"
                   >
                     <React.Suspense fallback={<HubModuleLoading label="LOADING WORKFLOW LABS..." />}>
                       <AkinoyaLabsHub

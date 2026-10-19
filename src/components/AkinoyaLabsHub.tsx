@@ -795,21 +795,23 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
   };
 
   return (
-    <div className="relative w-full text-white font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Background Cosmic Atmosphere */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-gradient-to-tr from-cyan-600/10 via-purple-600/10 to-transparent blur-[140px] rounded-full" />
-        <div className="absolute top-2/3 left-1/3 w-[500px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full" />
+    <div className="relative w-full min-h-screen bg-[#050812] text-white font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Solid Dark Sci-Fi Backdrop (Masks out all background photography for 100% contrast & maximum readability) */}
+      <div className="absolute inset-0 bg-[#050812] z-0 pointer-events-none" />
+
+      {/* Subtle Atmospheric Ambient Glow (Lightweight local container, GPU-accelerated) */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-cyan-600/5 blur-[120px] rounded-full" />
+        <div className="absolute top-2/3 left-1/3 w-[450px] h-[450px] bg-purple-600/5 blur-[100px] rounded-full" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
         {/* ======================================================== */}
         {/* WELCOMING INTAKE BANNER & WORKFLOW-ASSET MAPPING          */}
         {/* ======================================================== */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative rounded-3xl bg-gradient-to-r from-[#0d1326]/95 via-[#0a0f1d]/90 to-[#070a14]/98 border border-cyan-500/30 p-5 sm:p-6 shadow-[0_0_35px_rgba(0,242,254,0.12)] overflow-hidden space-y-4"
+        <div
+          style={{ willChange: 'opacity, transform' }}
+          className="relative rounded-3xl bg-[#090e1f] border border-cyan-500/30 p-5 sm:p-6 shadow-[0_0_35px_rgba(0,242,254,0.12)] overflow-hidden space-y-4 transform-gpu"
         >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="space-y-2 max-w-3xl">
@@ -883,7 +885,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               </button>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Strict 100% Asset Vault Locking Notice Banner */}
         <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-950/60 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs font-mono text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
@@ -1037,23 +1039,27 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     <div className={`space-y-4 ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
                       <div
                         onClick={() => handleOpenStageModal(stage)}
-                        className={`relative rounded-3xl overflow-hidden border transition-all cursor-pointer shadow-[0_4px_35px_rgba(0,0,0,0.7)] ${
+                        style={{ willChange: 'opacity, transform' }}
+                        className={`relative rounded-3xl overflow-hidden border transition-transform duration-200 cursor-pointer shadow-[0_4px_35px_rgba(0,0,0,0.7)] transform-gpu ${
                           isStageLocked
-                            ? 'bg-black/60 border-white/10 hover:border-amber-400/40 opacity-70 hover:opacity-85'
-                            : 'bg-black/80 border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_35px_rgba(0,242,254,0.25)] hover:scale-[1.01]'
+                            ? 'bg-[#060a15] border-white/10 hover:border-amber-400/40 opacity-75 hover:opacity-90'
+                            : 'bg-[#070d1e] border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_35px_rgba(0,242,254,0.25)] hover:scale-[1.01]'
                         }`}
                       >
-                        {/* Bespoke 16:9 Gemini/Imagen Visual Banner */}
-                        <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/90 group/banner">
+                        {/* Bespoke 16:9 Gemini/Imagen Visual Banner with Solid Skeletal Base */}
+                        <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#050811] group/banner">
+                          {/* Lightweight GPU-accelerated skeletal base */}
+                          <div className="absolute inset-0 bg-[#070d1a] pointer-events-none" />
                           <img
                             src={stage.heroImage}
                             alt={stage.heroImageAlt}
                             loading="lazy"
                             decoding="async"
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover/banner:scale-105 opacity-85 group-hover/banner:opacity-100"
+                            style={{ willChange: 'opacity, transform' }}
+                            className="relative z-10 w-full h-full object-cover transition-transform duration-300 group-hover/banner:scale-105 opacity-90 group-hover/banner:opacity-100 transform-gpu"
                           />
                           {/* Desktop-Only Image Gradient & Overlays (Hidden on Mobile & iPad <1280px to keep photography 100% clean) */}
-                          <div className="hidden xl:block absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                          <div className="hidden xl:block absolute inset-0 z-20 bg-gradient-to-t from-black via-black/30 to-transparent pointer-events-none" />
 
                           {/* Top Overlay Badges (Desktop Only >= 1280px) */}
                           <div className="hidden xl:flex absolute top-4 left-4 right-4 items-center justify-between gap-2">
@@ -1165,10 +1171,11 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     </div>
 
                     {/* Narrative & Master Asset Brief Column */}
-                    <div className={`space-y-4 transform-gpu will-change-transform ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
+                    <div className={`space-y-4 transform-gpu ${isEven ? 'lg:order-2' : 'lg:order-1'}`} style={{ willChange: 'opacity, transform' }}>
                       <div
                         onClick={() => handleOpenStageModal(stage)}
-                        className="p-6 rounded-3xl bg-[#0a0f1d]/80 border border-cyan-500/20 hover:border-cyan-500/50 hover:shadow-[0_0_30px_rgba(0,242,254,0.15)] transition-all cursor-pointer space-y-4 transform-gpu"
+                        style={{ willChange: 'opacity, transform' }}
+                        className="p-6 rounded-3xl bg-[#070d1e] border border-cyan-500/30 hover:border-cyan-400/60 hover:shadow-[0_0_30px_rgba(0,242,254,0.15)] transition-colors duration-200 cursor-pointer space-y-4 transform-gpu"
                       >
                         <div className="flex items-center gap-2">
                           <img
@@ -1257,11 +1264,9 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                   {/* Midway Checkpoint: 50% Member Wall Banner after Stage 03 */}
                   {stage.id === 3 && (
                     <div className="relative my-12 sm:my-16 z-30">
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        className="relative rounded-3xl bg-gradient-to-b from-[#0a0f20]/95 via-[#070b18]/95 to-[#050711]/98 border-2 border-cyan-400/60 p-6 sm:p-10 shadow-[0_0_60px_rgba(0,242,254,0.2)] overflow-hidden text-center space-y-6"
+                      <div
+                        style={{ willChange: 'opacity, transform' }}
+                        className="relative rounded-3xl bg-[#070d1e] border-2 border-cyan-400/60 p-6 sm:p-10 shadow-[0_0_60px_rgba(0,242,254,0.2)] overflow-hidden text-center space-y-6 transform-gpu"
                       >
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-950/80 border border-cyan-400/60 text-cyan-300 font-mono text-xs font-extrabold tracking-wider shadow-[0_0_15px_rgba(0,242,254,0.3)]">
                           <Lock className="w-3.5 h-3.5 text-amber-400" />
@@ -1293,7 +1298,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           ].map((unit) => (
                             <div
                               key={unit.label}
-                              className="p-3 sm:p-4 rounded-2xl bg-black/60 border border-cyan-500/40 shadow-[0_0_15px_rgba(0,242,254,0.1)] flex flex-col items-center justify-center"
+                              className="p-3 sm:p-4 rounded-2xl bg-[#040814] border border-cyan-500/40 shadow-[0_0_15px_rgba(0,242,254,0.1)] flex flex-col items-center justify-center"
                             >
                               <span className="text-2xl sm:text-4xl font-mono font-black text-cyan-300">
                                 {String(unit.value).padStart(2, '0')}
@@ -1304,8 +1309,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             </div>
                           ))}
                         </div>
-
-                      </motion.div>
+                      </div>
                     </div>
                   )}
                 </div>

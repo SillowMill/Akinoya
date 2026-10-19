@@ -413,8 +413,8 @@ export default function App() {
       {/* Global NFC Magic Link Verification HUD Toast (Strictly restricted to explicit VIP access route) */}
       {isVipRoute && <NfcHudToast />}
 
-      {/* Immersive Planet Äkinoya Canvas (hidden on Galaxy Navigator route) */}
-      {route !== 'galaxy' && (
+      {/* Immersive Planet Äkinoya Canvas (hidden on Galaxy Navigator and Community Hub routes) */}
+      {route !== 'galaxy' && route !== 'community' && (
         <AkinoyaPlanetCanvas viewMode={viewMode} hideOverlay={backdropOnly} isUnlocked={isCanvasUnlocked} />
       )}
 
