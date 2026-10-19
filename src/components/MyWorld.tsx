@@ -30,6 +30,7 @@ import {
   isMobileOrTabletDevice,
   getCacheBustedUrl,
 } from './WorldStoryVerificationBadge';
+import { formatTitleCaseUserName } from '../utils/holder';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
 const SLOT_CODES = ['01_main', '02_flora', '03_fauna', '04_atmo', '05_lore'];
@@ -124,23 +125,34 @@ export const MyWorld: React.FC<MyWorldProps> = ({
     }
   };
 
+  const formattedAuthor = formatTitleCaseUserName(dossier.authorName);
+
   return (
-    <div className="p-5 sm:p-6 md:p-7 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#050a14]/85 to-[#030710]/95 backdrop-blur-xl border border-cyan-500/30 space-y-6 md:space-y-7 shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(6,182,212,0.12)]">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4 pb-3.5 border-b border-white/10">
+    <div className="relative overflow-hidden p-5 sm:p-6 md:p-8 rounded-3xl bg-gradient-to-b from-[#060c1e]/90 via-[#030612]/92 to-[#01040a]/98 backdrop-blur-2xl border border-cyan-400/35 space-y-6 md:space-y-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(6,182,212,0.18)]">
+      {/* ─── MULTI-LAYERED RADIAL NEBULA GLOWS (INDIGO, STELLAR GOLD, ELECTRIC CYAN) ─── */}
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-amber-400/15 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[350px] bg-indigo-600/12 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/80 via-amber-300/80 to-transparent pointer-events-none" />
+
+      {/* Header Bar */}
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4 pb-4 border-b border-white/10">
         <div className="flex items-center gap-x-2.5 sm:gap-x-3 gap-y-1.5 flex-wrap min-w-0">
-          <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-transparent p-1.5 border border-white/20 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(255,255,255,0.18)]">
+          <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-white/[0.18] via-white/[0.05] to-transparent p-1.5 border border-white/25 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.25)]">
             <img
               src={sillowMillLogoUrl}
               alt="Sillow Mill"
-              className="w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]"
+              className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]"
             />
           </div>
           <div className="h-5 sm:h-6 w-[1.5px] bg-gradient-to-b from-white/10 via-white/50 to-white/10 shadow-[0_0_6px_rgba(255,255,255,0.3)] shrink-0" aria-hidden="true" />
           <div className="min-w-0">
-            <div className="text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider truncate">
-              {dossier.planetName || 'ÄKINOYA SECTOR'}
+            <div className="text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider truncate flex items-center gap-1.5">
+              <span>{dossier.planetName || 'ÄKINOYA SECTOR'}</span>
+              <span className="text-white/40">·</span>
+              <span className="text-cyan-300">ARCHITECT: {formattedAuthor}</span>
             </div>
-            <h3 className="text-xs sm:text-sm md:text-base font-mono font-bold uppercase tracking-wider text-white min-w-0 break-words">
+            <h3 className="text-xs sm:text-sm md:text-base font-mono font-bold uppercase tracking-wider text-white min-w-0 break-words drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
               Synthesized 5-Photo Visual Archive &amp; 9:16 Viral Trailer
             </h3>
           </div>
@@ -175,18 +187,18 @@ export const MyWorld: React.FC<MyWorldProps> = ({
       </div>
 
       {/* Main Layout: 9:16 Vertical Video Trailer + 5 Photo Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-7 items-stretch">
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-7 items-stretch">
         {/* LEFT COLUMN: 9:16 Viral Vertical Video Trailer */}
-        <div className="lg:col-span-4 flex flex-col items-center space-y-4 bg-gradient-to-b from-[#070d1e]/90 via-[#050813]/90 to-[#02050c]/95 border border-cyan-500/30 rounded-2xl p-4 sm:p-5 md:p-6 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
+        <div className="lg:col-span-4 flex flex-col items-center space-y-4 bg-gradient-to-b from-[#070e24]/90 via-[#040817]/90 to-[#02040d]/95 border border-cyan-400/40 rounded-2xl p-4 sm:p-5 md:p-6 shadow-[0_0_35px_rgba(6,182,212,0.2)]">
           <div className="w-full flex items-center justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-300">
               <Video className="w-3.5 h-3.5 text-cyan-400" />
               <span>🎥 9:16 Viral Trailer · 5s Loop</span>
             </span>
             <span
-              className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border ${
+              className={`text-[9px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border ${
                 isVideoReady
-                  ? 'bg-emerald-950/80 border-emerald-400/50 text-emerald-300'
+                  ? 'bg-emerald-950/80 border-emerald-400/50 text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.3)]'
                   : 'bg-cyan-950/80 border-cyan-400/40 text-cyan-200'
               }`}
             >
@@ -195,11 +207,11 @@ export const MyWorld: React.FC<MyWorldProps> = ({
           </div>
 
           {/* Strict 9:16 Vertical Viewport */}
-          <div className="relative w-full max-w-[260px] md:max-w-[290px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/40 shadow-[0_0_30px_rgba(6,182,212,0.25)] flex items-center justify-center">
+          <div className="relative w-full max-w-[260px] md:max-w-[290px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_35px_rgba(6,182,212,0.3)] flex items-center justify-center">
             {isVideoReady ? (
               <video
-                src={videoUrl}
-                poster={heroPhotoUrl || undefined}
+                src={getCacheBustedUrl(videoUrl)}
+                poster={heroPhotoUrl ? getCacheBustedUrl(heroPhotoUrl) : undefined}
                 controls
                 autoPlay
                 loop
@@ -310,7 +322,8 @@ export const MyWorld: React.FC<MyWorldProps> = ({
           {/* MOBILE & TABLET (< 1024px): interactive photo viewer with sleek left/right arrows */}
           <div className="lg:hidden space-y-3">
             <div
-              className="relative w-full aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden bg-black border border-cyan-500/35 shadow-[0_0_30px_rgba(6,182,212,0.15)] touch-pan-y select-none"
+              style={{ transform: 'translate3d(0,0,0)', willChange: 'transform', overflowAnchor: 'none' }}
+              className="relative w-full aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_35px_rgba(6,182,212,0.25)] touch-pan-y select-none transform-gpu"
               onTouchStart={(e) => {
                 if (e.touches.length === 1) {
                   touchStartXRef.current = e.touches[0].clientX;
@@ -328,7 +341,7 @@ export const MyWorld: React.FC<MyWorldProps> = ({
               {activeCard?.url ? (
                 <img
                   key={activeCard.id}
-                  src={activeCard.url}
+                  src={getCacheBustedUrl(activeCard.url)}
                   alt={activeCard.title}
                   draggable={false}
                   className="absolute inset-0 w-full h-full object-cover select-none"
@@ -348,7 +361,7 @@ export const MyWorld: React.FC<MyWorldProps> = ({
               )}
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 to-transparent pointer-events-none" />
 
-              {/* Sleek Left/Right Navigation Arrows */}
+              {/* Sleek Blue Navigation Arrows - Perfectly Centered Vertically without Overlapping Text */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -356,7 +369,7 @@ export const MyWorld: React.FC<MyWorldProps> = ({
                   goToSlide(-1);
                 }}
                 aria-label="Previous photo"
-                className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-[#040916]/90 hover:bg-cyan-950/95 border border-cyan-400/40 text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.25)] touch-manipulation"
+                className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-30 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-[#040916]/92 hover:bg-cyan-950/95 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white flex items-center justify-center cursor-pointer active:scale-95 hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,0,0,0.9),0_0_15px_rgba(6,182,212,0.4)] touch-manipulation"
               >
                 <ChevronLeft className="w-6 h-6 text-cyan-300" />
               </button>
@@ -367,7 +380,7 @@ export const MyWorld: React.FC<MyWorldProps> = ({
                   goToSlide(1);
                 }}
                 aria-label="Next photo"
-                className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-[#040916]/90 hover:bg-cyan-950/95 border border-cyan-400/40 text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.25)] touch-manipulation"
+                className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-30 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-[#040916]/92 hover:bg-cyan-950/95 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white flex items-center justify-center cursor-pointer active:scale-95 hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,0,0,0.9),0_0_15px_rgba(6,182,212,0.4)] touch-manipulation"
               >
                 <ChevronRight className="w-6 h-6 text-cyan-300" />
               </button>

@@ -28,6 +28,7 @@ import { motion, AnimatePresence, Variants } from 'motion/react';
 import { PlanetSubmission } from '../types/contest';
 import { getPlanetPhotoCards } from '../data/contest';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
+import { formatTitleCaseUserName } from '../utils/holder';
 import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import {
@@ -336,7 +337,7 @@ const StoryCard9x16View: React.FC<{
           {dossier.planetName}
         </h4>
         <div className="text-[8.5px] sm:text-[9px] font-mono text-white/85 truncate mt-0.5">
-          HOLDER: <strong className="text-white font-bold uppercase">{dossier.authorName || 'ODI SELIS'}</strong> ·{' '}
+          HOLDER: <strong className="text-white font-bold">{formatTitleCaseUserName(dossier.authorName)}</strong> ·{' '}
           <span className="text-cyan-300 font-bold">{dossier.sectorId || 'SECTOR AKN-01'}</span>
         </div>
       </div>
@@ -828,7 +829,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-white/70">
             <span>
-              HOLDER: <strong className="text-white font-bold uppercase">{dossier.authorName || 'ODI SELIS'}</strong>
+              HOLDER: <strong className="text-white font-bold">{formatTitleCaseUserName(dossier.authorName)}</strong>
             </span>
             <span>·</span>
             <span className="text-cyan-300 font-bold">{dossier.sectorId || 'SECTOR AKN-01'}</span>

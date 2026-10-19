@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { PlanetSubmission } from '../types/contest';
 import { getPlanetPhotoCards } from '../data/contest';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
+import { formatTitleCaseUserName } from '../utils/holder';
 import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
@@ -288,7 +289,8 @@ export async function renderWorldStoryBadgeBlob(
 
   ctx.fillStyle = '#67e8f9';
   ctx.font = 'bold 18px "JetBrains Mono", monospace';
-  const holderLine = `HOLDER: ${(dossier.authorName || 'ODI SELIS').toUpperCase()} · ${(
+  const cleanHolderName = formatTitleCaseUserName(dossier.authorName);
+  const holderLine = `HOLDER: ${cleanHolderName.toUpperCase()} · ${(
     dossier.sectorId || 'SECTOR AKN-01'
   ).toUpperCase()}`;
   ctx.fillText(holderLine, brandTextX, brandHeaderY + 106);
@@ -686,7 +688,7 @@ export function drawTrailerOverlay(
   ctx.restore();
 
   // Holder & Sector Info
-  const holderText = (dossier.authorName || 'ODI SELIS').toUpperCase();
+  const holderText = formatTitleCaseUserName(dossier.authorName).toUpperCase();
   const sectorText = (dossier.sectorId || 'SECTOR AKN-01').toUpperCase();
   ctx.fillStyle = '#67e8f9';
   ctx.font = `bold ${Math.round(19 * s)}px "JetBrains Mono", monospace`;
@@ -1446,7 +1448,7 @@ export const LiveStoryTrailerViewport: React.FC<{
                 {dossier.planetName || 'ÄMLEMI'}
               </div>
               <div className="text-[7.5px] font-mono text-cyan-300 mt-0.5 truncate">
-                HOLDER: {(dossier.authorName || 'ODI SELIS').toUpperCase()} · {dossier.sectorId || 'SECTOR AKN-01'}
+                HOLDER: {formatTitleCaseUserName(dossier.authorName).toUpperCase()} · {dossier.sectorId || 'SECTOR AKN-01'}
               </div>
             </div>
 
@@ -1806,7 +1808,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                       {dossier.planetName}
                     </h4>
                     <div className="text-[7.5px] sm:text-[8px] font-mono text-cyan-300/90 truncate">
-                      HOLDER: <strong className="text-white font-bold uppercase">{dossier.authorName || 'ODI SELIS'}</strong> · {dossier.sectorId || 'SECTOR AKN-01'}
+                      HOLDER: <strong className="text-white font-bold">{formatTitleCaseUserName(dossier.authorName)}</strong> · {dossier.sectorId || 'SECTOR AKN-01'}
                     </div>
                   </div>
                 </div>
@@ -2074,7 +2076,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                   <span className="text-[10px] text-white/45 block uppercase">VERIFIED HOLDER</span>
                   <span className="text-sm font-display font-bold text-amber-300 mt-0.5 block truncate">
-                    {dossier.authorName}
+                    {formatTitleCaseUserName(dossier.authorName)}
                   </span>
                 </div>
 

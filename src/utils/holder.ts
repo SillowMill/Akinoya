@@ -46,6 +46,40 @@ export const setExplicitVipRouteActive = (active: boolean): void => {
 export const sanitizeHolderName = (name: string): string =>
   name.replace(/\s+/g, ' ').trim().slice(0, HOLDER_NAME_MAX_LENGTH);
 
+/**
+ * Rigorously formats user/author names in Title Case (e.g. "Odi Selis"),
+ * stripping out any legacy technical suffixes (such as "(Master)", "- #1 Showcase",
+ * trailing digits like "odi.selis3", "#01", email domains, underscores, etc.).
+ */
+export const formatTitleCaseUserName = (rawName?: string | null): string => {
+  if (!rawName) return 'Odi Selis';
+
+  // 1. If it's an email, extract local part
+  let clean = rawName.includes('@') ? rawName.split('@')[0] : rawName;
+
+  // 2. Normalize primary founder variations immediately to pure "Odi Selis"
+  if (/^(?:odi[\._\s-]?selis\d*|odiselis\d*)$/i.test(clean.trim())) {
+    return 'Odi Selis';
+  }
+
+  // 3. Strip legacy technical parentheticals, suffixes, badges & showcase tags
+  clean = clean.replace(/\s*[\(\[\{]?(?:master|founder|pioneer|showcase|vip|member|admin|benchmark|genesis)[\)\]\}]?/gi, '');
+  clean = clean.replace(/\s*[-–—#].*$/i, ''); // Strip trailing " - #1 Showcase" or " #1"
+  clean = clean.replace(/\s*#\d+/g, '');
+  clean = clean.replace(/([a-zA-Z]+)[\._\-]?\d+$/g, '$1'); // Strip trailing digits attached to words: user123 -> user
+  clean = clean.replace(/[\._\-]+/g, ' '); // Replace separators with clean spaces
+
+  // 4. Split into clean words and format in strict Title Case
+  const words = clean.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return 'Odi Selis';
+
+  const titleCased = words
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+
+  return titleCased || 'Odi Selis';
+};
+
 export const getHolderName = (passId?: string): string => {
   if (typeof window === 'undefined') return '';
   const cleanId = (passId || '').trim().toUpperCase().replace(/^#/, '');

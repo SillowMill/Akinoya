@@ -32,6 +32,7 @@ import {
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
+import { formatTitleCaseUserName } from '../utils/holder';
 import {
   LiveStoryTrailerViewport,
   exportWorldTrailerVideoBlob,
@@ -282,7 +283,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                     )}
                   </div>
                   <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-xs font-mono text-white/50 min-w-0">
-                    <span>By {activePlanet.authorName}</span>
+                    <span>By {formatTitleCaseUserName(activePlanet.authorName)}</span>
                     <span>·</span>
                     <span className="text-cyan-400">@{activePlanet.authorUsername}</span>
                     {onOpenCreator && (

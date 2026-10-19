@@ -47,7 +47,7 @@ import {
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
-import { useHolderName, isValidPassId, TOTAL_EDITION_LIMIT } from '../utils/holder';
+import { useHolderName, isValidPassId, TOTAL_EDITION_LIMIT, formatTitleCaseUserName } from '../utils/holder';
 import { useVipAccess } from '../context/VipAccessContext';
 import { useAuth } from '../context/AuthContext';
 import { PlanetSubmission } from '../types/contest';
@@ -2049,10 +2049,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         </span>
                       </div>
                       <h3 className="text-lg sm:text-xl md:text-2xl font-display font-black text-white tracking-wide">
-                        Experiencing Odi&apos;s Verified &ldquo;Ämlemi&rdquo; Planetary Dossier (#1)
+                        Experiencing {formatTitleCaseUserName(activeWorldDossier.authorName)}&apos;s Verified &ldquo;Ämlemi&rdquo; Planetary Dossier (#1)
                       </h3>
                       <p className="text-xs sm:text-sm text-white/80 font-sans leading-relaxed">
-                        You are exploring an interactive live simulation of Odi Selis&apos;s Founding Pioneer world <strong className="text-amber-300">Ämlemi</strong>. Sign in or launch Mill&apos;s 5-question Worldbuilding Protocol to claim your <strong className="text-cyan-300">1 Golden Ticket</strong>, synthesize your own 5-photo 4K sector, and mint your personal <strong className="text-amber-300">9:16 Story Verification Badge</strong>.
+                        You are exploring an interactive live simulation of {formatTitleCaseUserName(activeWorldDossier.authorName)}&apos;s Founding Pioneer world <strong className="text-amber-300">Ämlemi</strong>. Sign in or launch Mill&apos;s 5-question Worldbuilding Protocol to claim your <strong className="text-cyan-300">1 Golden Ticket</strong>, synthesize your own 5-photo 4K sector, and mint your personal <strong className="text-amber-300">9:16 Story Verification Badge</strong>.
                       </p>
                     </div>
 
@@ -2097,11 +2097,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
               {/* Active or Simulated Planet Dossier Experience */}
               <div className="space-y-6 md:space-y-7">
-                {/* Top Sector Dossier Header Banner — Glassmorphic with Pioneer Badging */}
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/60 via-[#050a14]/80 to-cyan-950/45 backdrop-blur-xl border border-amber-500/45 p-5 sm:p-6 md:p-7 shadow-[0_0_35px_rgba(245,158,11,0.22),inset_0_1px_1px_rgba(255,255,255,0.1)]">
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent pointer-events-none" />
-                  <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/12 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+                {/* Top Sector Dossier Header Banner — Supreme Galaxy Vibe Glassmorphism with Pioneer Badging */}
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d1630]/90 via-[#040816]/92 to-[#09152b]/90 backdrop-blur-2xl border border-cyan-400/35 p-5 sm:p-6 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(6,182,212,0.18)]">
+                  {/* Multi-layered radial nebula glows */}
+                  <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/80 via-amber-300/80 to-transparent pointer-events-none" />
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-[90px] pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/15 rounded-full blur-[90px] pointer-events-none" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-indigo-600/12 rounded-full blur-[110px] pointer-events-none" />
 
                   <div className="flex flex-wrap items-center justify-center xl:justify-between gap-3 mb-4 relative z-10 text-center xl:text-left">
                     <div className="flex items-center gap-2">
@@ -2121,7 +2123,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           <Sparkles className="w-3 h-3 text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
                           <span>
                             {isFoundingPioneerPlanet(activeWorldDossier)
-                              ? 'FOUNDING PIONEER · #01 · ODI SELIS'
+                              ? `FOUNDING PIONEER · #01 · ${formatTitleCaseUserName(activeWorldDossier.authorName).toUpperCase()}`
                               : isVipPioneerPlanet(activeWorldDossier)
                               ? 'VIP PIONEER · 2027 ARCHIVE'
                               : activeWorldDossier.pioneerBadge || 'PIONEER 2027 · PRE-RELEASE'}
@@ -2178,7 +2180,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
 
                       <p className="text-xs sm:text-sm font-mono text-white/75 text-center xl:text-left max-w-xl">
-                        Synthesized by <strong className="text-amber-300 font-bold">{activeWorldDossier.authorName}</strong> ({activeWorldDossier.authorEmail || user?.email || 'Verified Pioneer Account'})
+                        Synthesized by <strong className="text-amber-300 font-bold">{formatTitleCaseUserName(activeWorldDossier.authorName)}</strong> ({activeWorldDossier.authorEmail || user?.email || 'Verified Pioneer Account'})
                       </p>
                     </div>
 
@@ -2221,7 +2223,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 {/* 3 Live Social Engagement Metric Cards — Calibrated for iPad Portrait (md:grid-cols-3 md:gap-5 md:p-6) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                   {/* Metric 1: Likes / Votes Count */}
-                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-amber-950/35 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-amber-400/35 hover:border-amber-300/60 flex items-center justify-between gap-3.5 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(245,158,11,0.12)] transition-all">
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#0e172e]/85 via-[#060b17]/90 to-[#03060f]/95 backdrop-blur-2xl border border-amber-400/40 hover:border-amber-300/70 flex items-center justify-between gap-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(245,158,11,0.15)] transition-all">
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent pointer-events-none" />
                     <div className="absolute -top-8 -right-8 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10 min-w-0">
                       <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-amber-200/80 font-bold block">
@@ -2251,7 +2254,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
 
                   {/* Metric 2: Leaderboard Position */}
-                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-cyan-950/40 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-cyan-400/35 hover:border-cyan-300/60 flex items-center justify-between gap-3.5 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(34,211,238,0.12)] transition-all">
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#081935]/85 via-[#040c1a]/90 to-[#02050f]/95 backdrop-blur-2xl border border-cyan-400/40 hover:border-cyan-300/70 flex items-center justify-between gap-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(34,211,238,0.15)] transition-all">
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent pointer-events-none" />
                     <div className="absolute -top-8 -right-8 w-24 h-24 bg-cyan-400/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10 min-w-0">
                       <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-200/80 font-bold block">
@@ -2275,7 +2279,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
 
                   {/* Metric 3: Lore Governance & Pioneer Status */}
-                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-emerald-950/35 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-emerald-400/35 hover:border-emerald-300/60 flex items-center justify-between gap-3.5 shadow-[0_8px_28px_rgba(0,0,0,0.45),0_0_20px_rgba(16,185,129,0.12)] transition-all">
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#08241e]/85 via-[#041216]/90 to-[#02060f]/95 backdrop-blur-2xl border border-emerald-400/40 hover:border-emerald-300/70 flex items-center justify-between gap-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(16,185,129,0.15)] transition-all">
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent pointer-events-none" />
                     <div className="absolute -top-8 -right-8 w-24 h-24 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10 min-w-0">
                       <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-200/80 font-bold block">

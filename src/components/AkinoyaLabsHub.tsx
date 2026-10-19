@@ -1534,7 +1534,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                                 alt={th.caption}
                                 className={`w-full h-full object-cover transition-all duration-300 pointer-events-none select-none ${
                                   isStage2
-                                    ? 'filter blur-[8px] group-hover/thumb:blur-[5px] scale-105'
+                                    ? 'filter blur-[12px] group-hover/thumb:blur-[9px] scale-105'
                                     : 'group-hover/thumb:scale-105'
                                 }`}
                               />
