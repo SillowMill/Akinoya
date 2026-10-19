@@ -25,6 +25,7 @@
  *   `{ success: false, status: 'QUEUED_PENDING', message: 'Synthesizer recalibrating.' }`
  */
 
+import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
@@ -181,6 +182,8 @@ export interface GeneratePlanetRequest {
 
   biome?: string;
   sectorName?: string;
+  isSandbox?: boolean;
+  is_sandbox?: boolean;
 }
 
 export interface SlotRenderResult {
@@ -213,8 +216,156 @@ export const FAL_VIDEO_FALLBACK_ENDPOINT = 'https://fal.run/fal-ai/minimax/video
 export const FAL_SFX_MMAUDIO_ENDPOINT = 'https://fal.run/fal-ai/mmaudio-v2';
 export const FAL_SFX_STABLE_AUDIO_ENDPOINT = 'https://fal.run/fal-ai/stable-audio';
 
+// ─── Credit Pool & Usage Ledger ($25.00 Funded Balance) ──────────────────────
+export const INITIAL_FAL_CREDIT_POOL_USD = 25.0;
+export const COST_PER_IMAGE_USD = 0.0035; // fal-ai/flux/schnell ($0.0035 / image)
+export const COST_PER_VIDEO_USD = 0.0500; // fal-ai/bytedance/seaweed-2.5 or minimax/video-01 ($0.05 / 5s)
+export const COST_PER_SFX_USD = 0.0100;   // fal-ai/mmaudio-v2 ($0.01 / 5s)
+
+export const SANDBOX_CANONICAL_PLACEHOLDERS: Record<string, string> = {
+  hero: '/assets/01-orbital-D4ZjgTfh.png',
+  flora: '/assets/02-botanical-DZIx60VW.png',
+  fauna: '/assets/03-fauna-DDblx8gG.png',
+  atmosphere: '/assets/04-cockpit-DoMrOJu8.png',
+  landmark: '/assets/05-monument-BQfnc8GK.png',
+  video: '/assets/01-orbital-D4ZjgTfh.png',
+};
+
+export interface FalUsageLog {
+  id: string;
+  timestamp: string;
+  slot: string;
+  model: string;
+  durationMs: number;
+  estimatedCostUsd: number;
+  remainingPoolUsd: number;
+  status: 'SUCCESS' | 'RATE_LIMITED_RETRY' | 'QUEUED_PENDING' | 'SANDBOX_SIMULATION' | 'ERROR';
+  error?: string;
+}
+
+export interface FalLedgerState {
+  initialPoolUsd: number;
+  totalEstimatedCostUsd: number;
+  remainingBalanceUsd: number;
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  sandboxRequests: number;
+  averageLatencyMs: number;
+  lastUpdated: string;
+  recentLogs: FalUsageLog[];
+}
+
+const LEDGER_FILE_PATH = path.resolve(process.cwd(), 'data', 'fal_balance_ledger.json');
+
+let _ledgerState: FalLedgerState | null = null;
+
+export function loadFalLedger(): FalLedgerState {
+  if (_ledgerState) return _ledgerState;
+  try {
+    if (fs.existsSync(LEDGER_FILE_PATH)) {
+      const raw = fs.readFileSync(LEDGER_FILE_PATH, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.remainingBalanceUsd === 'number') {
+        _ledgerState = parsed;
+        return _ledgerState!;
+      }
+    }
+  } catch (err) {
+    console.warn('[Fal.ai Ledger] Read notice:', err);
+  }
+
+  _ledgerState = {
+    initialPoolUsd: INITIAL_FAL_CREDIT_POOL_USD,
+    totalEstimatedCostUsd: 0,
+    remainingBalanceUsd: INITIAL_FAL_CREDIT_POOL_USD,
+    totalRequests: 0,
+    successfulRequests: 0,
+    failedRequests: 0,
+    sandboxRequests: 0,
+    averageLatencyMs: 0,
+    lastUpdated: new Date().toISOString(),
+    recentLogs: [],
+  };
+  return _ledgerState;
+}
+
+export function saveFalLedger(state: FalLedgerState): void {
+  try {
+    const dir = path.dirname(LEDGER_FILE_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(LEDGER_FILE_PATH, JSON.stringify(state, null, 2), 'utf8');
+  } catch (err) {
+    console.warn('[Fal.ai Ledger] Write notice:', err);
+  }
+}
+
+export function recordFalUsage(entry: {
+  slot: string;
+  model: string;
+  durationMs: number;
+  estimatedCostUsd: number;
+  status: FalUsageLog['status'];
+  error?: string;
+}): FalUsageLog {
+  const ledger = loadFalLedger();
+  const cost = Math.max(0, entry.estimatedCostUsd || 0);
+  ledger.totalRequests++;
+
+  if (entry.status === 'SUCCESS') {
+    ledger.successfulRequests++;
+    ledger.totalEstimatedCostUsd = Math.round((ledger.totalEstimatedCostUsd + cost) * 10000) / 10000;
+    ledger.remainingBalanceUsd = Math.max(
+      0,
+      Math.round((ledger.initialPoolUsd - ledger.totalEstimatedCostUsd) * 10000) / 10000
+    );
+  } else if (entry.status === 'SANDBOX_SIMULATION') {
+    ledger.sandboxRequests++;
+  } else if (entry.status === 'ERROR' || entry.status === 'QUEUED_PENDING') {
+    ledger.failedRequests++;
+  }
+
+  if (entry.durationMs > 0 && entry.status !== 'SANDBOX_SIMULATION') {
+    const prevCount = ledger.successfulRequests + ledger.failedRequests;
+    ledger.averageLatencyMs =
+      prevCount <= 1
+        ? entry.durationMs
+        : Math.round((ledger.averageLatencyMs * (prevCount - 1) + entry.durationMs) / prevCount);
+  }
+
+  ledger.lastUpdated = new Date().toISOString();
+
+  const logItem: FalUsageLog = {
+    id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    timestamp: ledger.lastUpdated,
+    slot: entry.slot,
+    model: entry.model,
+    durationMs: entry.durationMs,
+    estimatedCostUsd: cost,
+    remainingPoolUsd: ledger.remainingBalanceUsd,
+    status: entry.status,
+    ...(entry.error ? { error: entry.error } : {}),
+  };
+
+  ledger.recentLogs.unshift(logItem);
+  if (ledger.recentLogs.length > 60) {
+    ledger.recentLogs = ledger.recentLogs.slice(0, 60);
+  }
+
+  saveFalLedger(ledger);
+
+  const poolRemainingStr = `$${ledger.remainingBalanceUsd.toFixed(4)} / $${ledger.initialPoolUsd.toFixed(2)}`;
+  console.log(
+    `[Fal.ai Bridge] ${entry.slot} (${entry.model}) -> ${entry.status} in ${entry.durationMs}ms | Cost: $${cost.toFixed(4)} | Pool Remaining: ${poolRemainingStr}`
+  );
+
+  return logItem;
+}
+
 export const getFalApiKey = (): string => {
-  return (
+  let key = (
     process.env.FAL_KEY ||
     process.env.VAL_AI_KEY ||
     process.env.VITE_FAL_KEY ||
@@ -223,12 +374,179 @@ export const getFalApiKey = (): string => {
     process.env.VAL_API_KEY ||
     ''
   ).trim();
+
+  // If not yet in process.env, inspect dotenv files safely without hardcoding
+  if (!key) {
+    const envCandidates = ['.env.local', '.env.production.local', '.env'];
+    for (const envFile of envCandidates) {
+      try {
+        const fullPath = path.resolve(process.cwd(), envFile);
+        if (fs.existsSync(fullPath)) {
+          const raw = fs.readFileSync(fullPath, 'utf8');
+          const match = raw.match(/^(?:FAL_KEY|VAL_AI_KEY|VITE_FAL_KEY)\s*=\s*["']?([^"'\r\n]+)["']?/m);
+          if (match && match[1]) {
+            key = match[1].trim();
+            process.env.FAL_KEY = key;
+            break;
+          }
+        }
+      } catch {}
+    }
+  }
+
+  return key;
 };
 
 export const isValAiKeyConfigured = (overrideKey?: string): boolean => {
   const key = (overrideKey || getFalApiKey()).trim();
   return Boolean(key && key !== '[SENSITIVE]' && key.length > 8);
 };
+
+export async function verifyFalApiConnection(overrideKey?: string): Promise<{
+  connected: boolean;
+  authenticated: boolean;
+  account?: string;
+  email?: string;
+  userId?: string;
+  concurrentRequestsLimit?: number;
+  balancePool: {
+    initialPoolUsd: number;
+    totalSpentUsd: number;
+    remainingBalanceUsd: number;
+    totalRequests: number;
+    successfulRequests: number;
+    sandboxRequests: number;
+    averageLatencyMs: number;
+  };
+  statusCode: number;
+  message: string;
+}> {
+  const activeKey = (overrideKey || getFalApiKey()).trim();
+  const ledger = loadFalLedger();
+
+  if (!activeKey || activeKey === '[SENSITIVE]') {
+    return {
+      connected: false,
+      authenticated: false,
+      statusCode: 401,
+      message: 'FAL_KEY is missing or invalid in environment.',
+      balancePool: {
+        initialPoolUsd: ledger.initialPoolUsd,
+        totalSpentUsd: ledger.totalEstimatedCostUsd,
+        remainingBalanceUsd: ledger.remainingBalanceUsd,
+        totalRequests: ledger.totalRequests,
+        successfulRequests: ledger.successfulRequests,
+        sandboxRequests: ledger.sandboxRequests,
+        averageLatencyMs: ledger.averageLatencyMs,
+      },
+    };
+  }
+
+  const start = Date.now();
+  try {
+    const res = await fetch('https://rest.alpha.fal.ai/users/current', {
+      headers: {
+        Authorization: `Key ${activeKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const durationMs = Date.now() - start;
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      return {
+        connected: false,
+        authenticated: false,
+        statusCode: res.status,
+        message: `Fal.ai endpoint rejected authentication (HTTP ${res.status}): ${errText || 'Unauthorized'}`,
+        balancePool: {
+          initialPoolUsd: ledger.initialPoolUsd,
+          totalSpentUsd: ledger.totalEstimatedCostUsd,
+          remainingBalanceUsd: ledger.remainingBalanceUsd,
+          totalRequests: ledger.totalRequests,
+          successfulRequests: ledger.successfulRequests,
+          sandboxRequests: ledger.sandboxRequests,
+          averageLatencyMs: ledger.averageLatencyMs,
+        },
+      };
+    }
+
+    const userData = await res.json().catch(() => ({}));
+    const accountName = userData.nickname || userData.full_name || 'SillowMill';
+    const email = userData.email || 'N/A';
+    const concurrentRequestsLimit = userData.concurrent_requests_limit || 10;
+
+    return {
+      connected: true,
+      authenticated: true,
+      account: accountName,
+      email,
+      userId: userData.user_id,
+      concurrentRequestsLimit,
+      statusCode: 200,
+      message: `Successfully authenticated with Fal.ai (${accountName} · $25.00 funded balance pool active, latency: ${durationMs}ms).`,
+      balancePool: {
+        initialPoolUsd: ledger.initialPoolUsd,
+        totalSpentUsd: ledger.totalEstimatedCostUsd,
+        remainingBalanceUsd: ledger.remainingBalanceUsd,
+        totalRequests: ledger.totalRequests,
+        successfulRequests: ledger.successfulRequests,
+        sandboxRequests: ledger.sandboxRequests,
+        averageLatencyMs: ledger.averageLatencyMs,
+      },
+    };
+  } catch (err: any) {
+    return {
+      connected: false,
+      authenticated: false,
+      statusCode: 503,
+      message: `Failed to connect to Fal.ai gateway: ${err?.message || err}`,
+      balancePool: {
+        initialPoolUsd: ledger.initialPoolUsd,
+        totalSpentUsd: ledger.totalEstimatedCostUsd,
+        remainingBalanceUsd: ledger.remainingBalanceUsd,
+        totalRequests: ledger.totalRequests,
+        successfulRequests: ledger.successfulRequests,
+        sandboxRequests: ledger.sandboxRequests,
+        averageLatencyMs: ledger.averageLatencyMs,
+      },
+    };
+  }
+}
+
+// ─── Rate-Limiting Concurrency Queue (Max 6 Concurrent Requests) ─────────────
+class FalRequestQueue {
+  private activeCount = 0;
+  private readonly maxConcurrent = 6;
+  private waiting: Array<() => void> = [];
+
+  async run<T>(task: () => Promise<T>): Promise<T> {
+    if (this.activeCount >= this.maxConcurrent) {
+      await new Promise<void>((resolve) => this.waiting.push(resolve));
+    }
+    this.activeCount++;
+    try {
+      return await task();
+    } finally {
+      this.activeCount--;
+      if (this.waiting.length > 0) {
+        const next = this.waiting.shift();
+        if (next) next();
+      }
+    }
+  }
+
+  getPendingCount(): number {
+    return this.waiting.length;
+  }
+
+  getActiveCount(): number {
+    return this.activeCount;
+  }
+}
+
+export const falRequestQueue = new FalRequestQueue();
 
 /**
  * Synchronized 5-Second AI Sound Effects Pipeline (Video-to-Audio / Ambient Sci-Fi SFX)
@@ -242,9 +560,29 @@ export async function generatePlanetSfxAudioWithAi(params: {
   planetName?: string;
   biome?: string;
   apiKey?: string;
+  isSandbox?: boolean;
 }): Promise<{ audioUrl: string; duration: number; status: 'READY' | 'QUEUED_PENDING' }> {
+  if (params.isSandbox) {
+    recordFalUsage({
+      slot: 'sfx',
+      model: 'Sandbox Mode (Zero Fal Credit)',
+      durationMs: 5,
+      estimatedCostUsd: 0,
+      status: 'SANDBOX_SIMULATION',
+    });
+    return { audioUrl: '', duration: 5, status: 'READY' };
+  }
+
   const activeKey = (params.apiKey || getFalApiKey()).trim();
   if (!activeKey || activeKey === '[SENSITIVE]') {
+    recordFalUsage({
+      slot: 'sfx',
+      model: 'fal-ai/mmaudio-v2',
+      durationMs: 0,
+      estimatedCostUsd: 0,
+      status: 'QUEUED_PENDING',
+      error: 'Unauthenticated / FAL_KEY missing',
+    });
     return { audioUrl: '', duration: 5, status: QUEUED_PENDING_STATUS };
   }
 
@@ -252,33 +590,64 @@ export async function generatePlanetSfxAudioWithAi(params: {
     params.sonicVibe ||
     `Cinematic 5-second sci-fi kinetic FPV drone flight soundscape across ${params.planetName || 'Äkinoya frontier sector'}, deep sub-bass atmospheric rumble, ionized wind shear pass-by, resonant bioluminescent telemetry chime, 24fps motion-synced ambient soundscape.`;
 
+  const startTime = Date.now();
   try {
-    const res = await fetch(FAL_SFX_MMAUDIO_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        Authorization: `Key ${activeKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: sonicDescription,
-        ...(params.videoUrl ? { video_url: params.videoUrl } : {}),
-        duration: 5,
-        num_inference_steps: 25,
-      }),
-    });
+    const res = await falRequestQueue.run(() =>
+      fetch(FAL_SFX_MMAUDIO_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          Authorization: `Key ${activeKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: sonicDescription,
+          ...(params.videoUrl ? { video_url: params.videoUrl } : {}),
+          duration: 5,
+          num_inference_steps: 25,
+        }),
+      })
+    );
+
+    const durationMs = Date.now() - startTime;
 
     if (!res.ok) {
+      recordFalUsage({
+        slot: 'sfx',
+        model: 'fal-ai/mmaudio-v2',
+        durationMs,
+        estimatedCostUsd: 0,
+        status: 'QUEUED_PENDING',
+        error: `HTTP ${res.status}`,
+      });
       return { audioUrl: '', duration: 5, status: QUEUED_PENDING_STATUS };
     }
 
     const json = await res.json().catch(() => ({}));
     const audioUrl = json?.audio?.url || json?.audio_url || '';
+
+    recordFalUsage({
+      slot: 'sfx',
+      model: 'fal-ai/mmaudio-v2',
+      durationMs,
+      estimatedCostUsd: audioUrl ? COST_PER_SFX_USD : 0,
+      status: audioUrl ? 'SUCCESS' : 'QUEUED_PENDING',
+    });
+
     return {
       audioUrl,
       duration: 5,
       status: audioUrl ? 'READY' : QUEUED_PENDING_STATUS,
     };
-  } catch (err) {
+  } catch (err: any) {
+    const durationMs = Date.now() - startTime;
+    recordFalUsage({
+      slot: 'sfx',
+      model: 'fal-ai/mmaudio-v2',
+      durationMs,
+      estimatedCostUsd: 0,
+      status: 'ERROR',
+      error: err?.message || String(err),
+    });
     console.warn('[AI SFX Pipeline] Queued pending:', err);
     return { audioUrl: '', duration: 5, status: QUEUED_PENDING_STATUS };
   }
@@ -286,37 +655,102 @@ export async function generatePlanetSfxAudioWithAi(params: {
 
 /**
  * Step 1: Synthesize a single sector photo via the Najno Banajna generator engine.
- * Strict Error Shielding: Catches HTTP 403, TOP_UP, or insufficient credit errors cleanly.
+ * Strict Error Shielding: Catches HTTP 403, 429, TOP_UP, or insufficient credit errors cleanly with exponential backoff.
  */
-export async function generateSlotImageWithFal(prompt: string, apiKey?: string): Promise<string> {
+export async function generateSlotImageWithFal(
+  prompt: string,
+  apiKey?: string,
+  slotLabel = 'photo'
+): Promise<string> {
   const activeKey = (apiKey || getFalApiKey()).trim();
   if (!activeKey || activeKey === '[SENSITIVE]') {
+    recordFalUsage({
+      slot: slotLabel,
+      model: 'fal-ai/flux/schnell',
+      durationMs: 0,
+      estimatedCostUsd: 0,
+      status: 'QUEUED_PENDING',
+      error: 'Unauthenticated / FAL_KEY missing',
+    });
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 403);
   }
 
+  const startTime = Date.now();
   let response: Response;
-  try {
-    response = await fetch(FAL_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        Authorization: `Key ${activeKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        image_size: 'landscape_16_9',
-        num_images: 1,
-        enable_safety_checker: false,
-      }),
-    });
-  } catch (netErr: any) {
-    console.warn('[Najno Banajna Engine] Network notice:', netErr?.message || netErr);
-    throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 503);
+  const maxRetries = 2;
+  let attempt = 0;
+
+  while (true) {
+    try {
+      response = await falRequestQueue.run(() =>
+        fetch(FAL_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Key ${activeKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt: prompt,
+            image_size: 'landscape_16_9',
+            num_images: 1,
+            enable_safety_checker: false,
+          }),
+        })
+      );
+
+      // Handle Rate-Limiting or Service Congestion with Backoff
+      if ((response.status === 429 || response.status === 503 || response.status === 504) && attempt < maxRetries) {
+        attempt++;
+        const backoffMs = 1000 * Math.pow(2, attempt) + Math.random() * 400;
+        console.warn(
+          `[Fal.ai Rate Limit] HTTP ${response.status} on ${slotLabel}. Backing off for ${Math.round(backoffMs)}ms (attempt ${attempt}/${maxRetries})...`
+        );
+        recordFalUsage({
+          slot: slotLabel,
+          model: 'fal-ai/flux/schnell',
+          durationMs: Date.now() - startTime,
+          estimatedCostUsd: 0,
+          status: 'RATE_LIMITED_RETRY',
+          error: `HTTP ${response.status}`,
+        });
+        await new Promise((r) => setTimeout(r, backoffMs));
+        continue;
+      }
+      break;
+    } catch (netErr: any) {
+      if (attempt < maxRetries) {
+        attempt++;
+        const backoffMs = 1200 + Math.random() * 300;
+        console.warn(`[Fal.ai Network Glitch] ${netErr?.message || netErr}. Retrying in ${Math.round(backoffMs)}ms...`);
+        await new Promise((r) => setTimeout(r, backoffMs));
+        continue;
+      }
+      const durationMs = Date.now() - startTime;
+      recordFalUsage({
+        slot: slotLabel,
+        model: 'fal-ai/flux/schnell',
+        durationMs,
+        estimatedCostUsd: 0,
+        status: 'ERROR',
+        error: netErr?.message || String(netErr),
+      });
+      throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 503);
+    }
   }
+
+  const durationMs = Date.now() - startTime;
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
     console.warn(`[Najno Banajna Engine] HTTP ${response.status} notice:`, errorText);
+    recordFalUsage({
+      slot: slotLabel,
+      model: 'fal-ai/flux/schnell',
+      durationMs,
+      estimatedCostUsd: 0,
+      status: 'QUEUED_PENDING',
+      error: `HTTP ${response.status}: ${errorText.slice(0, 100)}`,
+    });
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, response.status);
   }
 
@@ -324,8 +758,24 @@ export async function generateSlotImageWithFal(prompt: string, apiKey?: string):
   const imageUrl = data?.images?.[0]?.url;
 
   if (!imageUrl) {
+    recordFalUsage({
+      slot: slotLabel,
+      model: 'fal-ai/flux/schnell',
+      durationMs,
+      estimatedCostUsd: 0,
+      status: 'QUEUED_PENDING',
+      error: 'Empty image URL returned',
+    });
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 502);
   }
+
+  recordFalUsage({
+    slot: slotLabel,
+    model: 'fal-ai/flux/schnell',
+    durationMs,
+    estimatedCostUsd: COST_PER_IMAGE_USD,
+    status: 'SUCCESS',
+  });
 
   return imageUrl;
 }
@@ -336,7 +786,7 @@ export async function generateSlotImageWithFal(prompt: string, apiKey?: string):
  * - Duration: Strictly 5 seconds (seamless dopamine-looping).
  * - Cinematic Physics: continuous low-altitude FPV drone movement, aggressive close-proximity orbits,
  *   rapid vertical climbs, natural shutter motion blur, strong parallax separation, energetic 24fps camera motion.
- * - Strict Error Shielding: Catches 403 / TOP_UP / credit depletion cleanly.
+ * - Strict Error Shielding: Catches 403 / 429 / TOP_UP / credit depletion cleanly with exponential backoff.
  */
 export async function generateViralVideoWithFal(
   heroImageUrl: string,
@@ -345,6 +795,14 @@ export async function generateViralVideoWithFal(
 ): Promise<string> {
   const activeKey = (apiKey || getFalApiKey()).trim();
   if (!activeKey || activeKey === '[SENSITIVE]' || !heroImageUrl) {
+    recordFalUsage({
+      slot: 'video',
+      model: 'fal-ai/bytedance/seaweed-2.5',
+      durationMs: 0,
+      estimatedCostUsd: 0,
+      status: 'QUEUED_PENDING',
+      error: 'Unauthenticated / FAL_KEY missing or empty heroImageUrl',
+    });
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 403);
   }
 
@@ -360,45 +818,101 @@ export async function generateViralVideoWithFal(
     fps: 24,
   };
 
+  const startTime = Date.now();
   let response: Response | null = null;
-  try {
-    response = await fetch(FAL_VIDEO_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        Authorization: `Key ${activeKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-  } catch (netErr: any) {
-    console.warn('[Seedance 2.5 Video] Primary network notice, attempting fallback:', netErr?.message || netErr);
+  const maxRetries = 2;
+  let attempt = 0;
+
+  while (attempt <= maxRetries) {
+    try {
+      response = await falRequestQueue.run(() =>
+        fetch(FAL_VIDEO_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Key ${activeKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        })
+      );
+
+      if ((response.status === 429 || response.status === 503 || response.status === 504) && attempt < maxRetries) {
+        attempt++;
+        const backoffMs = 1200 * Math.pow(2, attempt) + Math.random() * 400;
+        console.warn(
+          `[Fal.ai Video Rate Limit] HTTP ${response.status}. Backing off for ${Math.round(backoffMs)}ms (attempt ${attempt}/${maxRetries})...`
+        );
+        recordFalUsage({
+          slot: 'video',
+          model: 'fal-ai/bytedance/seaweed-2.5',
+          durationMs: Date.now() - startTime,
+          estimatedCostUsd: 0,
+          status: 'RATE_LIMITED_RETRY',
+          error: `HTTP ${response.status}`,
+        });
+        await new Promise((r) => setTimeout(r, backoffMs));
+        continue;
+      }
+      break;
+    } catch (netErr: any) {
+      if (attempt < maxRetries) {
+        attempt++;
+        const backoffMs = 1400 + Math.random() * 400;
+        console.warn(`[Fal.ai Video Primary Network Glitch] ${netErr?.message}. Retrying in ${Math.round(backoffMs)}ms...`);
+        await new Promise((r) => setTimeout(r, backoffMs));
+        continue;
+      }
+      console.warn('[Seedance 2.5 Video] Primary network notice, attempting fallback:', netErr?.message || netErr);
+      break;
+    }
   }
 
   if (!response || !response.ok) {
     try {
-      response = await fetch(FAL_VIDEO_FALLBACK_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          Authorization: `Key ${activeKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt,
-          image_url: heroImageUrl,
-          aspect_ratio: '9:16',
-          duration: '5',
-          prompt_optimizer: true,
-        }),
-      });
+      response = await falRequestQueue.run(() =>
+        fetch(FAL_VIDEO_FALLBACK_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Key ${activeKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt,
+            image_url: heroImageUrl,
+            aspect_ratio: '9:16',
+            duration: '5',
+            prompt_optimizer: true,
+          }),
+        })
+      );
     } catch (fbErr: any) {
       console.warn('[Video Fallback] Network notice:', fbErr?.message || fbErr);
+      const durationMs = Date.now() - startTime;
+      recordFalUsage({
+        slot: 'video',
+        model: 'fal-ai/minimax/video-01',
+        durationMs,
+        estimatedCostUsd: 0,
+        status: 'ERROR',
+        error: fbErr?.message || String(fbErr),
+      });
       throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 503);
     }
   }
 
+  const durationMs = Date.now() - startTime;
+
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
     console.warn(`[Video Pipeline] HTTP ${response.status} notice:`, errorText);
+    recordFalUsage({
+      slot: 'video',
+      model: 'fal-ai/minimax/video-01',
+      durationMs,
+      estimatedCostUsd: 0,
+      status: 'QUEUED_PENDING',
+      error: `HTTP ${response.status}: ${errorText.slice(0, 100)}`,
+    });
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, response.status);
   }
 
@@ -411,8 +925,24 @@ export async function generateViralVideoWithFal(
     '';
 
   if (!videoUrl) {
+    recordFalUsage({
+      slot: 'video',
+      model: 'fal-ai/minimax/video-01',
+      durationMs,
+      estimatedCostUsd: 0,
+      status: 'QUEUED_PENDING',
+      error: 'Empty video URL returned',
+    });
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 502);
   }
+
+  recordFalUsage({
+    slot: 'video',
+    model: 'fal-ai/minimax/video-01',
+    durationMs,
+    estimatedCostUsd: COST_PER_VIDEO_USD,
+    status: 'SUCCESS',
+  });
 
   return videoUrl;
 }
@@ -756,10 +1286,36 @@ export async function generateSlotRender(
   const prompt = prompts[normSlot] || prompts.hero;
   const meta = SLOT_METADATA[normSlot] || SLOT_METADATA.hero;
 
+  const isSandbox = Boolean(data.isSandbox || (data as any).is_sandbox);
+  if (isSandbox) {
+    recordFalUsage({
+      slot: normSlot,
+      model: 'Sandbox Simulation (Zero Credit)',
+      durationMs: 8,
+      estimatedCostUsd: 0,
+      status: 'SANDBOX_SIMULATION',
+    });
+    const placeholderUrl =
+      SANDBOX_CANONICAL_PLACEHOLDERS[normSlot] || SANDBOX_CANONICAL_PLACEHOLDERS.hero;
+    return {
+      success: true,
+      status: 'ready',
+      slot: normSlot,
+      slotIndex: meta.index,
+      slotLabel: meta.label,
+      planetName,
+      prompt: normSlot === 'video' ? VIRAL_VIDEO_MOTION_PROMPT : prompt,
+      ...(normSlot === 'video'
+        ? { videoUrl: placeholderUrl, aspectRatio: '9:16', durationSeconds: 5 }
+        : { imageUrl: placeholderUrl }),
+      model: 'Sandbox Simulation (Placeholder Preview)',
+    };
+  }
+
   if (normSlot === 'video') {
     try {
       const heroImageUrl = (data.heroImageUrl || '').trim();
-      const videoUrl = await generateViralVideoWithFal(heroImageUrl);
+      const videoUrl = await generateViralVideoWithFal(heroImageUrl, data.apiKey);
       return {
         success: true,
         status: 'ready',
@@ -793,7 +1349,7 @@ export async function generateSlotRender(
   }
 
   try {
-    const imageUrl = await generateSlotImageWithFal(prompt);
+    const imageUrl = await generateSlotImageWithFal(prompt, data.apiKey, normSlot);
     return {
       success: true,
       status: 'ready',
@@ -882,12 +1438,17 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
 
   const heroImageUrl = results[0].imageUrl || '';
 
+  const isSandbox = Boolean(data.isSandbox || (data as any).is_sandbox);
+
   // Step 2: Viral 9:16 Video Trailer (5 seconds, 9:16 vertical, orbital zoom motion prompt)
   let videoUrl = '';
   let videoQueued = false;
-  if (heroImageUrl) {
+  if (isSandbox) {
+    videoUrl = SANDBOX_CANONICAL_PLACEHOLDERS.video;
+    videoQueued = false;
+  } else if (heroImageUrl) {
     try {
-      videoUrl = await generateViralVideoWithFal(heroImageUrl);
+      videoUrl = await generateViralVideoWithFal(heroImageUrl, data.apiKey);
     } catch (vidErr: any) {
       console.warn('[Step 2 Video Trailer] Queued pending:', vidErr?.message || vidErr);
       videoQueued = true;
@@ -939,6 +1500,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
         planetName,
         biome: data.biome,
         apiKey: data.apiKey,
+        isSandbox,
       });
       sfxAudioUrl = sfxRes.audioUrl;
       sfxStatus = sfxRes.status;
@@ -985,8 +1547,8 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     '05_lore': results[4].imageUrl || '',
   };
 
-  // Step 3: Atomic Database Sync (if user/planet context is supplied)
-  if (data.syncDatabase !== false && (data.userId || data.email || data.id || data.planetId)) {
+  // Step 3: Atomic Database Sync (if user/planet context is supplied, skipped in Sandbox mode)
+  if (!isSandbox && data.syncDatabase !== false && (data.userId || data.email || data.id || data.planetId)) {
     const recordId =
       data.id || data.planetId || `PLN-2027-${Date.now().toString(36).toUpperCase()}`;
     const generatedLore =
@@ -1246,8 +1808,20 @@ export default async function handler(req: any, res: any) {
       deviceId?: string;
       markCompleted?: boolean;
       resetLocks?: boolean;
-      bypassLock?: boolean;
     } = req.body || {};
+
+    if (body.action === 'balance-check' || body.action === 'fal-status' || req.url?.includes('balance')) {
+      const falStatus = await verifyFalApiConnection();
+      res.statusCode = 200;
+      res.end(
+        JSON.stringify({
+          success: true,
+          ...falStatus,
+          ledger: loadFalLedger(),
+        })
+      );
+      return;
+    }
 
     if (body.action === 'video-check' || body.slot === 'video-check') {
       const videoCheck = await checkAndResolveDynamicVideo({

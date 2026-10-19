@@ -33,6 +33,8 @@ import {
   SLOT_METADATA,
   checkAndResolveDynamicVideo,
   isValAiKeyConfigured,
+  verifyFalApiConnection,
+  loadFalLedger,
 } from '../../api/_generatePlanet';
 import { checkVipTokenStatus, claimVipTokenForUser } from '../lib/vipTokens';
 import {
@@ -469,6 +471,16 @@ apiRouter.all(
     try {
       const body = req.body || {};
 
+      if (body.action === 'balance-check' || body.action === 'fal-status' || req.query?.action === 'balance-check') {
+        const falStatus = await verifyFalApiConnection();
+        res.status(200).json({
+          success: true,
+          ...falStatus,
+          ledger: loadFalLedger(),
+        });
+        return;
+      }
+
       if (body.resetLocks) {
         resetGenerationLocks(body.userId, body.email);
         res.status(200).json({ success: true, message: 'Generation lock reset for Founder testing.' });
@@ -528,6 +540,24 @@ apiRouter.all(
     }
   }
 );
+
+// ─── 10.1 Fal.ai Balance & Status Bridge ($25 Pool Verification) ─────────────
+apiRouter.all(['/fal/status', '/fal/balance', '/generate-planet/balance'], async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const status = await verifyFalApiConnection();
+    res.status(200).json({
+      success: true,
+      ...status,
+      ledger: loadFalLedger(),
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: err?.message || 'Failed to verify Fal.ai balance',
+      ledger: loadFalLedger(),
+    });
+  }
+});
 
 // ─── 11. VIP Token Verification & Single-Claim ────────────────────────────────
 apiRouter.all(['/vip/verify'], async (req: Request, res: Response): Promise<void> => {
