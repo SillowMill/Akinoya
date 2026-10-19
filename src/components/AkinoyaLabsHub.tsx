@@ -1250,6 +1250,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedStageForModal(null)}
+              style={{ transform: 'translate3d(0,0,0)', willChange: 'opacity' }}
               className="fixed inset-0 bg-black/85 backdrop-blur-xl z-0"
             />
 
@@ -1261,6 +1262,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
+              style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity' }}
               className="relative m-auto w-full max-w-4xl max-h-[88vh] overflow-y-auto rounded-3xl bg-[#070b16]/95 border-2 border-cyan-400/60 shadow-[0_20px_70px_rgba(0,0,0,0.9),0_0_50px_rgba(0,242,254,0.3)] z-10 text-white font-sans space-y-6 p-6 sm:p-8"
             >
               {/* Sticky Modal Header Bar */}
@@ -1591,9 +1593,13 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedPreviewImage(null)}
-            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 sm:p-8 cursor-zoom-out"
+            style={{ transform: 'translate3d(0,0,0)', willChange: 'opacity' }}
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 cursor-zoom-out"
           >
-            <div className="relative max-w-5xl max-h-[90vh] rounded-2xl overflow-hidden border border-cyan-500/40 shadow-[0_0_50px_rgba(0,242,254,0.3)]">
+            <div
+              style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity' }}
+              className="relative m-auto max-w-5xl max-h-[90vh] rounded-2xl overflow-hidden border border-cyan-500/40 shadow-[0_0_50px_rgba(0,242,254,0.3)]"
+            >
               <img
                 src={selectedPreviewImage}
                 alt="Enlarged Case Study Asset"

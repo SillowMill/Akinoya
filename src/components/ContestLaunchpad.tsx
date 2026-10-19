@@ -720,13 +720,21 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       setGenerationProgress(Math.round(((i + 1) / (initialSlots.length + 1)) * 100));
     }
 
-    // Step 2: Viral 9:16 Video Trailer Synthesis (from 01_main Orbital Render)
+    // Step 2: Viral 9:16 Video Trailer Synthesis (from all 5 newly rendered photos)
     setGenerationStageName('SYNTHESIZING 9:16 VIRAL VIDEO TRAILER (5S)...');
-    setGenerationStageDetails('Animating 01_main orbital render into 9:16 vertical trailer via Fal.ai...');
+    setGenerationStageDetails(`Fusing all 5 rendered photos (${planetName}) into a dynamic continuous FPV drone flight via Seedance 2.5...`);
     let synthesizedVideoUrl = '';
 
     if (collectedRenders.hero) {
       try {
+        const photoList = [
+          collectedRenders.hero,
+          collectedRenders.flora,
+          collectedRenders.fauna,
+          collectedRenders.atmosphere,
+          collectedRenders.landmark,
+        ].filter(Boolean);
+
         const videoRes = await fetch('/api/generate-planet', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -737,12 +745,44 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             planetName,
             heroImageUrl: collectedRenders.hero,
             slot: 'video',
+            renders: collectedRenders,
+            imageUrls: photoList,
+            authorUsername: username,
+            architectName: userDisplayName,
+            relaxation: answers.relaxation,
+            creativeExpression: answers.creativeExpression,
+            naturalEnvironment: answers.naturalEnvironment,
+            lifePhilosophy: answers.lifePhilosophy,
+            admiredCreature: answers.admiredCreature,
+            colorPalette: answers.colorPalette,
+            resilienceStory: answers.resilienceStory,
+            futurePromise: answers.futurePromise,
+            atmosphere: answers.atmosphere,
+            flora: answers.flora,
+            fauna: answers.fauna,
+            sonicVibe: answers.sonicVibe,
+            visualAesthetic: answers.visualAesthetic,
+            landmark: answers.landmark,
+            biome: answers.biome,
           }),
         });
         const videoJson = await videoRes.json().catch(() => ({}));
         if (videoRes.ok && videoJson.success && videoJson.videoUrl) {
           synthesizedVideoUrl = videoJson.videoUrl;
           collectedRenders.videoUrl = synthesizedVideoUrl;
+          setPreviewDossier((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  videoUrl: synthesizedVideoUrl,
+                  videoStatus: 'READY',
+                  renders: {
+                    ...prev.renders,
+                    videoUrl: synthesizedVideoUrl,
+                  },
+                }
+              : null
+          );
         }
       } catch (vidErr) {
         console.warn('[Video Trailer] Queued pending:', vidErr);

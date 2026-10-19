@@ -82,6 +82,55 @@ export function buildCinematicFpvMotionPrompt(params?: {
 export const AMLEMI_CINEMATIC_FPV_PROMPT =
   'Single continuous FPV drone shot, no cuts. The camera begins inches above a dark rocky ledge beside a misty blue body of water. It races forward along the cliffside, weaving past wild grass, rough stone, and several goats standing naturally among the rocks. The camera banks left around the base of a massive weathered cliff, with dense green foliage and broad leaves sweeping close to the lens. The drone then climbs rapidly along the vertical rock face, staying extremely close to the textured stone. It passes beneath the legs of a young man seated on the cliff edge, wearing a light blue patterned shirt, dark trousers, sneakers, and a chain. He calmly writes in a small notebook while looking down at the pages. The camera circles tightly around him, briefly revealing his profile, the notebook in his hands, and the dramatic drop behind him...';
 
+/**
+ * Universal Dynamic Asset-Aligned FPV Drone Prompt Engine:
+ * Generates an end-to-end continuous cinematic FPV drone sequence seamlessly uniting all 5
+ * canonical planetary photos for ANY world registered across the platform:
+ * - Photo 01 (Orbital Horizon): Low-altitude start skimming across the celestial crust and atmospheric rim.
+ * - Photo 02 (Flora Canopy): High-speed dive weaving millimetres above dense exotic bioluminescent flora.
+ * - Photo 03 (Exotic Fauna): Proximity banking turns tracking indigenous wildlife across mountain ridges.
+ * - Photo 04 (Cockpit / Troposphere): Rapid vertical climb bursting through cloud decks with cockpit HUD reflections.
+ * - Photo 05 (Sacred Monument): Spiral orbit wrapping tightly around the ancient monumental landmark conduit.
+ */
+export function buildUniversalAssetAlignedFpvPrompt(params?: {
+  planetName?: string;
+  authorName?: string;
+  atmosphere?: string;
+  flora?: string;
+  fauna?: string;
+  landmark?: string;
+  colorPalette?: string;
+  naturalEnvironment?: string;
+  admiredCreature?: string;
+  lifePhilosophy?: string;
+  futurePromise?: string;
+}): string {
+  const planet = (params?.planetName || 'Äkinoya Frontier Sector').trim();
+  const isAmlemi =
+    planet.toLowerCase().includes('ämlemi') ||
+    planet.toLowerCase().includes('amlemi');
+
+  if (isAmlemi) {
+    return AMLEMI_CINEMATIC_FPV_PROMPT;
+  }
+
+  const author = params?.authorName || 'Founding Pioneer';
+  const horizonVibe = params?.atmosphere || params?.naturalEnvironment || 'a radiant misty horizon with deep glowing hues';
+  const floraVibe = params?.flora || params?.naturalEnvironment || 'dense exotic alien flora with broad iridescent leaves';
+  const faunaVibe = params?.fauna || params?.admiredCreature || 'native celestial wildlife standing naturally in their habitat';
+  const landmarkVibe = params?.landmark || 'an ancient monumental stone conduit channeling planetary energy';
+  const palette = params?.colorPalette || 'deep ionized cobalt, warm copper highlights, and luminescent auroral filaments';
+
+  return (
+    `Single continuous FPV drone shot, no cuts. The camera begins inches above a dark textured planetary ledge beside ${horizonVibe} under skies bathed in ${palette} on ${planet}. ` +
+    `It races forward along the rugged terrain, weaving past ${floraVibe} with glowing tendrils and dense leaves sweeping millimetres close to the lens. ` +
+    `The drone banks aggressively left around a colossal weathered cliff formation, skimming past ${faunaVibe} moving naturally among the rocks. ` +
+    `Accelerating into a vertical climb, the camera bursts through ionized atmospheric cloud decks and cockpit canopy reflections, staying extremely close to textured stone face. ` +
+    `The drone spirals tightly around ${landmarkVibe}, briefly revealing the pioneering explorer ${author} calmly observing the horizon, before pulling up into a breathtaking reveal of the dramatic planetary drop, vast curvature, and stellar expanse behind. ` +
+    `14mm ultra-wide FPV lens, photorealistic 24fps cinematic motion blur, natural lighting, deep atmospheric depth, seamless 5-second vertical 9:16 loop, synchronized Foley sound effects.`
+  );
+}
+
 export const VIRAL_VIDEO_MOTION_PROMPT = buildCinematicFpvMotionPrompt({
   planetName: 'Äkinoya Frontier Sector',
   biome: 'Cosmic Frontier',
@@ -187,6 +236,8 @@ export interface GeneratePlanetRequest {
   sectorName?: string;
   isSandbox?: boolean;
   is_sandbox?: boolean;
+  renders?: Record<string, string>;
+  imageUrls?: string[];
 }
 
 export interface SlotRenderResult {
@@ -217,7 +268,9 @@ export const FAL_NANO_BANANA_ENDPOINT = 'https://fal.run/google/nano-banana-2.1'
 export const FAL_NANO_BANANA_FALLBACK_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
 export const FAL_ENDPOINT = FAL_NANO_BANANA_ENDPOINT;
 
-export const FAL_SEEDANCE_VIDEO_ENDPOINT = 'https://fal.run/bytedance/seedance-2.5/us/image-to-video';
+export const FAL_SEEDANCE_REF_VIDEO_ENDPOINT = 'https://fal.run/bytedance/seedance-2.5/us/reference-to-video';
+export const FAL_SEEDANCE_IMAGE_VIDEO_ENDPOINT = 'https://fal.run/bytedance/seedance-2.5/us/image-to-video';
+export const FAL_SEEDANCE_VIDEO_ENDPOINT = FAL_SEEDANCE_REF_VIDEO_ENDPOINT;
 export const FAL_SEEDANCE_FALLBACK_ENDPOINT = 'https://fal.run/minimax/h3/image-to-video';
 export const FAL_VIDEO_ENDPOINT = FAL_SEEDANCE_VIDEO_ENDPOINT;
 export const FAL_VIDEO_FALLBACK_ENDPOINT = FAL_SEEDANCE_FALLBACK_ENDPOINT;
@@ -235,9 +288,21 @@ export function resolveAbsoluteImageUrl(url: string): string {
   if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:image/')) {
     return trimmed;
   }
-  // Canonical Ämlemi orbital asset
+  // Canonical Ämlemi renders mapping
   if (trimmed.includes('01-orbital') || trimmed.includes('amlemi_renders/01') || trimmed.includes('01_orbital')) {
     return 'https://www.sillowmill.com/assets/01-orbital-D4ZjgTfh.png';
+  }
+  if (trimmed.includes('02-botanical') || trimmed.includes('amlemi_renders/02') || trimmed.includes('02_flora')) {
+    return 'https://www.sillowmill.com/assets/02-botanical-DZIx60VW.png';
+  }
+  if (trimmed.includes('03-fauna') || trimmed.includes('amlemi_renders/03') || trimmed.includes('03_fauna')) {
+    return 'https://www.sillowmill.com/assets/03-fauna-DDblx8gG.png';
+  }
+  if (trimmed.includes('04-cockpit') || trimmed.includes('amlemi_renders/04') || trimmed.includes('04_cockpit') || trimmed.includes('04_atmo')) {
+    return 'https://www.sillowmill.com/assets/04-cockpit-DoMrOJu8.png';
+  }
+  if (trimmed.includes('05-monument') || trimmed.includes('amlemi_renders/05') || trimmed.includes('05_monument') || trimmed.includes('05_lore')) {
+    return 'https://www.sillowmill.com/assets/05-monument-BQfnc8GK.png';
   }
   if (trimmed.startsWith('/')) {
     return `https://www.sillowmill.com${trimmed}`;
@@ -838,8 +903,10 @@ export async function generateSlotImageWithFal(
 
 /**
  * Step 2: Viral 9:16 Video Trailer Synthesis via Seedance 2.5 / Val.ai Pipeline.
+ * - Multi-image asset alignment: Ingests all 5 newly rendered photos (01_main through 05_lore).
  * - Aspect Ratio: Strictly 9:16 vertical (TikTok / Instagram Reels / YouTube Shorts standard).
  * - Duration: Strictly 5 seconds (seamless dopamine-looping).
+ * - Audio: Native ByteDance Seedance 2.5 synchronized Foley audio & sound effects (generate_audio: true).
  * - Cinematic Physics: continuous low-altitude FPV drone movement, aggressive close-proximity orbits,
  *   rapid vertical climbs, natural shutter motion blur, strong parallax separation, energetic 24fps camera motion.
  * - Strict Error Shielding: Catches 403 / 429 / TOP_UP / credit depletion cleanly with exponential backoff.
@@ -847,13 +914,27 @@ export async function generateSlotImageWithFal(
 export async function generateViralVideoWithFal(
   heroImageUrl: string,
   apiKey?: string,
-  customMotionPrompt?: string
+  customMotionPrompt?: string,
+  imageUrls?: string[],
+  metadata?: {
+    planetName?: string;
+    authorName?: string;
+    atmosphere?: string;
+    flora?: string;
+    fauna?: string;
+    landmark?: string;
+    colorPalette?: string;
+    naturalEnvironment?: string;
+    admiredCreature?: string;
+    lifePhilosophy?: string;
+    futurePromise?: string;
+  }
 ): Promise<string> {
   const activeKey = (apiKey || getFalApiKey()).trim();
-  if (!activeKey || activeKey === '[SENSITIVE]' || !heroImageUrl) {
+  if (!activeKey || activeKey === '[SENSITIVE]' || (!heroImageUrl && (!imageUrls || imageUrls.length === 0))) {
     recordFalUsage({
       slot: 'video',
-      model: 'bytedance/seedance-2.5/us/image-to-video',
+      model: 'bytedance/seedance-2.5/us/reference-to-video',
       durationMs: 0,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
@@ -862,21 +943,57 @@ export async function generateViralVideoWithFal(
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 403);
   }
 
-  const resolvedHeroUrl = resolveAbsoluteImageUrl(heroImageUrl);
+  const rawUrls = (imageUrls && imageUrls.length > 0) ? imageUrls : [heroImageUrl];
+  const resolvedImageUrls = Array.from(new Set(rawUrls.map(resolveAbsoluteImageUrl))).filter(Boolean);
+  const resolvedHeroUrl = resolvedImageUrls[0] || resolveAbsoluteImageUrl(heroImageUrl);
+
   const isAmlemi =
     resolvedHeroUrl.includes('01-orbital') ||
     resolvedHeroUrl.includes('amlemi') ||
+    (metadata?.planetName && metadata.planetName.toLowerCase().includes('amlemi')) ||
     (customMotionPrompt && customMotionPrompt.toLowerCase().includes('amlemi'));
-  const prompt = customMotionPrompt || (isAmlemi ? AMLEMI_CINEMATIC_FPV_PROMPT : VIRAL_VIDEO_MOTION_PROMPT);
 
-  const payload = {
-    prompt,
-    image_url: resolvedHeroUrl,
-    duration: '5',
-    resolution: '720p',
-    aspect_ratio: isAmlemi ? '9:16' : 'auto',
-    generate_audio: true, // Native ByteDance Seedance 2.5 synchronized Foley audio & sound effects!
-  };
+  const prompt =
+    customMotionPrompt ||
+    (isAmlemi
+      ? AMLEMI_CINEMATIC_FPV_PROMPT
+      : buildUniversalAssetAlignedFpvPrompt({
+          planetName: metadata?.planetName,
+          authorName: metadata?.authorName,
+          atmosphere: metadata?.atmosphere,
+          flora: metadata?.flora,
+          fauna: metadata?.fauna,
+          landmark: metadata?.landmark,
+          colorPalette: metadata?.colorPalette,
+          naturalEnvironment: metadata?.naturalEnvironment,
+          admiredCreature: metadata?.admiredCreature,
+          lifePhilosophy: metadata?.lifePhilosophy,
+          futurePromise: metadata?.futurePromise,
+        }));
+
+  const useReferenceEndpoint = resolvedImageUrls.length > 1;
+  const primaryEndpoint = useReferenceEndpoint ? FAL_SEEDANCE_REF_VIDEO_ENDPOINT : FAL_SEEDANCE_IMAGE_VIDEO_ENDPOINT;
+  const primaryModel = useReferenceEndpoint
+    ? 'bytedance/seedance-2.5/us/reference-to-video'
+    : 'bytedance/seedance-2.5/us/image-to-video';
+
+  const payload: any = useReferenceEndpoint
+    ? {
+        prompt,
+        image_urls: resolvedImageUrls,
+        duration: '5',
+        resolution: '720p',
+        aspect_ratio: '9:16',
+        generate_audio: true, // Native ByteDance Seedance 2.5 synchronized Foley audio & sound effects!
+      }
+    : {
+        prompt,
+        image_url: resolvedHeroUrl,
+        duration: '5',
+        resolution: '720p',
+        aspect_ratio: '9:16',
+        generate_audio: true,
+      };
 
   const startTime = Date.now();
   let response: Response | null = null;
@@ -886,7 +1003,7 @@ export async function generateViralVideoWithFal(
   while (attempt <= maxRetries) {
     try {
       response = await falRequestQueue.run(() =>
-        fetch(FAL_SEEDANCE_VIDEO_ENDPOINT, {
+        fetch(primaryEndpoint, {
           method: 'POST',
           headers: {
             Authorization: `Key ${activeKey}`,
@@ -904,7 +1021,7 @@ export async function generateViralVideoWithFal(
         );
         recordFalUsage({
           slot: 'video',
-          model: 'bytedance/seedance-2.5/us/image-to-video',
+          model: primaryModel,
           durationMs: Date.now() - startTime,
           estimatedCostUsd: 0,
           status: 'RATE_LIMITED_RETRY',
@@ -927,6 +1044,32 @@ export async function generateViralVideoWithFal(
     }
   }
 
+  // Fallback 1: If reference-to-video returned non-OK, try single image-to-video Seedance 2.5
+  if ((!response || !response.ok) && useReferenceEndpoint) {
+    try {
+      response = await falRequestQueue.run(() =>
+        fetch(FAL_SEEDANCE_IMAGE_VIDEO_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Key ${activeKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt,
+            image_url: resolvedHeroUrl,
+            duration: '5',
+            resolution: '720p',
+            aspect_ratio: '9:16',
+            generate_audio: true,
+          }),
+        })
+      );
+    } catch (singleErr) {
+      console.warn('[Seedance 2.5 Single Fallback Notice]:', singleErr);
+    }
+  }
+
+  // Fallback 2: Minimax video generator fallback
   if (!response || !response.ok) {
     try {
       response = await falRequestQueue.run(() =>
@@ -966,7 +1109,7 @@ export async function generateViralVideoWithFal(
     console.warn(`[Video Pipeline] HTTP ${response.status} notice:`, errorText);
     recordFalUsage({
       slot: 'video',
-      model: 'bytedance/seedance-2.5/us/image-to-video',
+      model: primaryModel,
       durationMs,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
@@ -986,7 +1129,7 @@ export async function generateViralVideoWithFal(
   if (!videoUrl) {
     recordFalUsage({
       slot: 'video',
-      model: 'bytedance/seedance-2.5/us/image-to-video',
+      model: primaryModel,
       durationMs,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
@@ -997,7 +1140,7 @@ export async function generateViralVideoWithFal(
 
   recordFalUsage({
     slot: 'video',
-    model: 'bytedance/seedance-2.5/us/image-to-video',
+    model: primaryModel,
     durationMs,
     estimatedCostUsd: COST_PER_VIDEO_USD,
     status: 'SUCCESS',
@@ -1372,9 +1515,53 @@ export async function generateSlotRender(
   }
 
   if (normSlot === 'video') {
+    const allRenders = (data.renders || {}) as Record<string, string>;
+    const candidateUrls: string[] = [
+      (data.heroImageUrl || '').trim() || allRenders.hero || allRenders['01_main'],
+      allRenders.flora || allRenders['02_flora'] || allRenders.ecosystem,
+      allRenders.fauna || allRenders['03_fauna'],
+      allRenders.atmosphere || allRenders['04_atmo'],
+      allRenders.landmark || allRenders['05_lore'],
+    ].filter(Boolean) as string[];
+
+    const rawUrls = (data.imageUrls && data.imageUrls.length > 0) ? data.imageUrls : candidateUrls;
+    const imageUrls = Array.from(new Set(rawUrls.map(resolveAbsoluteImageUrl))).filter(Boolean);
+    const heroImageUrl = imageUrls[0] || (data.heroImageUrl || '').trim();
+
+    const dynamicPrompt = buildUniversalAssetAlignedFpvPrompt({
+      planetName,
+      authorName: data.authorUsername || data.architectName,
+      atmosphere: data.atmosphere,
+      flora: data.flora,
+      fauna: data.fauna,
+      landmark: data.landmark,
+      colorPalette: data.colorPalette,
+      naturalEnvironment: data.naturalEnvironment,
+      admiredCreature: data.admiredCreature,
+      lifePhilosophy: data.lifePhilosophy,
+      futurePromise: data.futurePromise,
+    });
+
     try {
-      const heroImageUrl = (data.heroImageUrl || '').trim();
-      const videoUrl = await generateViralVideoWithFal(heroImageUrl, data.apiKey);
+      const videoUrl = await generateViralVideoWithFal(
+        heroImageUrl,
+        data.apiKey,
+        dynamicPrompt,
+        imageUrls,
+        {
+          planetName,
+          authorName: data.authorUsername || data.architectName,
+          atmosphere: data.atmosphere,
+          flora: data.flora,
+          fauna: data.fauna,
+          landmark: data.landmark,
+          colorPalette: data.colorPalette,
+          naturalEnvironment: data.naturalEnvironment,
+          admiredCreature: data.admiredCreature,
+          lifePhilosophy: data.lifePhilosophy,
+          futurePromise: data.futurePromise,
+        }
+      );
       return {
         success: true,
         status: 'ready',
@@ -1382,11 +1569,13 @@ export async function generateSlotRender(
         slotIndex: meta.index,
         slotLabel: meta.label,
         planetName,
-        prompt: VIRAL_VIDEO_MOTION_PROMPT,
+        prompt: dynamicPrompt,
         videoUrl,
         aspectRatio: '9:16',
         durationSeconds: 5,
-        model: 'Fal.ai Image-to-Video (9:16 Vertical 5s Trailer)',
+        model: imageUrls.length > 1
+          ? 'ByteDance Seedance 2.5 (Reference-to-Video 9:16 Foley Audio)'
+          : 'ByteDance Seedance 2.5 (Image-to-Video 9:16 Foley Audio)',
       };
     } catch (err: any) {
       console.warn(`[Slot video] Fal.ai 9:16 trailer queued:`, err?.message || err);
@@ -1399,7 +1588,7 @@ export async function generateSlotRender(
         slotIndex: meta.index,
         slotLabel: meta.label,
         planetName,
-        prompt: VIRAL_VIDEO_MOTION_PROMPT,
+        prompt: dynamicPrompt,
         aspectRatio: '9:16',
         durationSeconds: 5,
         model: 'Fal.ai Image-to-Video (QUEUED_PENDING)',
@@ -1507,7 +1696,40 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     videoQueued = false;
   } else if (heroImageUrl) {
     try {
-      videoUrl = await generateViralVideoWithFal(heroImageUrl, data.apiKey);
+      const allRendersList = results.map((r) => r.imageUrl).filter(Boolean) as string[];
+      const dynamicPrompt = buildUniversalAssetAlignedFpvPrompt({
+        planetName,
+        authorName: data.authorUsername || data.architectName,
+        atmosphere: data.atmosphere,
+        flora: data.flora,
+        fauna: data.fauna,
+        landmark: data.landmark,
+        colorPalette: data.colorPalette,
+        naturalEnvironment: data.naturalEnvironment,
+        admiredCreature: data.admiredCreature,
+        lifePhilosophy: data.lifePhilosophy,
+        futurePromise: data.futurePromise,
+      });
+
+      videoUrl = await generateViralVideoWithFal(
+        heroImageUrl,
+        data.apiKey,
+        dynamicPrompt,
+        allRendersList,
+        {
+          planetName,
+          authorName: data.authorUsername || data.architectName,
+          atmosphere: data.atmosphere,
+          flora: data.flora,
+          fauna: data.fauna,
+          landmark: data.landmark,
+          colorPalette: data.colorPalette,
+          naturalEnvironment: data.naturalEnvironment,
+          admiredCreature: data.admiredCreature,
+          lifePhilosophy: data.lifePhilosophy,
+          futurePromise: data.futurePromise,
+        }
+      );
     } catch (vidErr: any) {
       console.warn('[Step 2 Video Trailer] Queued pending:', vidErr?.message || vidErr);
       videoQueued = true;
