@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Camera,
   Video,
@@ -32,6 +32,7 @@ import {
 } from './WorldStoryVerificationBadge';
 import { formatTitleCaseUserName } from '../utils/holder';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
+import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
 
 const SLOT_CODES = ['01_main', '02_flora', '03_fauna', '04_atmo', '05_lore'];
 const SLOT_LABELS = ['01 Main', '02 Botanical', '03 Exotic', '04 Atmo', '05 Lore'];
@@ -44,7 +45,7 @@ interface MyWorldProps {
   onNavigateToGalaxy?: (planetId?: string) => void;
 }
 
-export const MyWorld: React.FC<MyWorldProps> = ({
+export const MyWorld: React.FC<MyWorldProps> = React.memo(({
   dossier,
   onInspectModal,
   onRetryVideoSynthesis,
@@ -53,8 +54,15 @@ export const MyWorld: React.FC<MyWorldProps> = ({
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isCopiedGalaxyLink, setIsCopiedGalaxyLink] = useState(false);
-  const [isMobileDevice, setIsMobileDevice] = useState(false);
-  const photoCards = getPlanetPhotoCards(dossier);
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? isMobileOrTabletDevice() : false
+  );
+  const photoCards = useMemo(() => getPlanetPhotoCards(dossier), [dossier]);
+  const formattedAuthor = useMemo(() => formatTitleCaseUserName(dossier.authorName), [dossier.authorName]);
+  const planetThumbnailUrl = useMemo(
+    () => photoCards[0]?.url || dossier.renders?.hero || dossier.renders?.['01_main'] || amlemiOrbitalImg,
+    [photoCards, dossier.renders]
+  );
 
   useEffect(() => {
     setIsMobileDevice(isMobileOrTabletDevice());
@@ -145,10 +153,16 @@ export const MyWorld: React.FC<MyWorldProps> = ({
     }
   };
 
-  const formattedAuthor = formatTitleCaseUserName(dossier.authorName);
-
   return (
-    <div className="relative overflow-hidden p-5 sm:p-6 md:p-8 rounded-3xl bg-gradient-to-b from-[#060c1e]/90 via-[#030612]/92 to-[#01040a]/98 backdrop-blur-2xl border border-cyan-400/35 space-y-6 md:space-y-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(6,182,212,0.18)]">
+    <div
+      className="relative overflow-hidden p-5 sm:p-6 md:p-8 rounded-3xl bg-gradient-to-b from-[#060c1e]/90 via-[#030612]/92 to-[#01040a]/98 backdrop-blur-2xl border border-cyan-400/35 space-y-6 md:space-y-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(6,182,212,0.18)]"
+      style={{
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+        willChange: 'transform',
+        overflowAnchor: 'none',
+      }}
+    >
       {/* ─── MULTI-LAYERED RADIAL NEBULA GLOWS (INDIGO, STELLAR GOLD, ELECTRIC CYAN) ─── */}
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-amber-400/15 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none" />
@@ -158,12 +172,19 @@ export const MyWorld: React.FC<MyWorldProps> = ({
       {/* Header Bar */}
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4 pb-4 border-b border-white/10">
         <div className="flex items-center gap-x-2.5 sm:gap-x-3 gap-y-1.5 flex-wrap min-w-0">
-          <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-white/[0.18] via-white/[0.05] to-transparent p-1.5 border border-white/25 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.25)]">
-            <img
-              src={sillowMillLogoUrl}
-              alt="Sillow Mill"
-              className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]"
-            />
+          {/* Official Ämlemi Planetary Thumbnail Render (01_MAIN - ORBITAL HORIZON) */}
+          <div className="relative w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-amber-300 to-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.5),0_0_10px_rgba(245,158,11,0.35)] shrink-0 group transform-gpu">
+            <div className="w-full h-full rounded-full overflow-hidden bg-black/90 relative">
+              <img
+                src={planetThumbnailUrl}
+                alt={`${dossier.planetName || 'Ämlemi'} Planetary Horizon`}
+                className="w-full h-full object-cover transform scale-105 group-hover:scale-115 transition-transform duration-500"
+                loading="eager"
+              />
+              <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/20 pointer-events-none" />
+            </div>
+            {/* Ambient Pulse Glow */}
+            <div className="absolute -inset-0.5 rounded-full bg-cyan-400/20 blur-[2px] pointer-events-none" />
           </div>
           <div className="h-5 sm:h-6 w-[1.5px] bg-gradient-to-b from-white/10 via-white/50 to-white/10 shadow-[0_0_6px_rgba(255,255,255,0.3)] shrink-0" aria-hidden="true" />
           <div className="min-w-0">
@@ -561,6 +582,6 @@ export const MyWorld: React.FC<MyWorldProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default MyWorld;

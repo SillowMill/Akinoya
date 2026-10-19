@@ -6,6 +6,7 @@ import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import moodboardImg from '../assets/images/Mood.png';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
+import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
 import {
   Lock,
   Unlock,
@@ -336,6 +337,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   const activeWorldDossier = userDossier || amlemiBenchmarkDossier;
   const isGuestWorldSimulation = !userDossier;
+
+  const amlemiPhotoCards = useMemo(() => {
+    return activeWorldDossier ? getPlanetPhotoCards(activeWorldDossier) : [];
+  }, [activeWorldDossier]);
+
+  const amlemiThumbnailUrl = useMemo(() => {
+    return (
+      amlemiPhotoCards[0]?.url ||
+      activeWorldDossier?.renders?.hero ||
+      activeWorldDossier?.renders?.['01_main'] ||
+      amlemiOrbitalImg
+    );
+  }, [amlemiPhotoCards, activeWorldDossier?.renders]);
 
   const handleVoteUserDossier = async () => {
     const targetDossier = activeWorldDossier;
@@ -2023,10 +2037,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           {activeTab === 'my-world' && activeWorldDossier && (
             <motion.div
               key="my-world-view"
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.4 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+              style={{
+                transform: 'translateZ(0)',
+                WebkitTransform: 'translateZ(0)',
+                willChange: 'transform, opacity',
+                overflowAnchor: 'none',
+              }}
               className="space-y-6 md:space-y-7"
             >
               {/* Guest Simulation Mode & Magnetic Conversion Banner (Displayed when visitor hasn't synthesized their own world yet) */}
@@ -2150,15 +2170,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="min-w-0 flex flex-col items-center xl:items-start text-center xl:text-left space-y-3 sm:space-y-3.5">
                       {/* Sillow Mill Logo, Stylized ÄMLEMI Title, and Metadata Sector Badge in Clean Vertical Alignment on Portrait Tablet (< xl) */}
                       <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-start gap-3 sm:gap-4 xl:gap-5 min-w-0 w-full">
-                        {/* Shimmering Sillow Mill Logo with subtle cinematic glow & glass housing */}
+                        {/* Official Ämlemi Planetary Thumbnail Render (01_MAIN - ORBITAL HORIZON) */}
                         <div className="flex items-center justify-center gap-3">
-                          <div className="relative w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-white/[0.18] via-white/[0.06] to-transparent p-2 sm:p-2.5 border border-white/25 flex items-center justify-center shrink-0 shadow-[0_0_25px_rgba(255,255,255,0.3)] transform-gpu">
-                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/25 to-transparent pointer-events-none opacity-80" />
-                            <img
-                              src={sillowMillLogoUrl}
-                              alt="Sillow Mill"
-                              className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.85)]"
-                            />
+                          <div className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-amber-300 to-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.5),0_0_12px_rgba(245,158,11,0.4)] shrink-0 group transform-gpu">
+                            <div className="w-full h-full rounded-full overflow-hidden bg-black/90 relative">
+                              <img
+                                src={amlemiThumbnailUrl}
+                                alt={`${activeWorldDossier.planetName} Planetary Horizon`}
+                                className="w-full h-full object-cover transform scale-105 group-hover:scale-115 transition-transform duration-500"
+                                loading="eager"
+                              />
+                              <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/25 pointer-events-none" />
+                            </div>
+                            {/* Ambient Radial Nebula Glow */}
+                            <div className="absolute -inset-1 rounded-full bg-cyan-400/25 blur-sm pointer-events-none" />
                           </div>
 
                           {/* Minimalist Reflective Chrome Divider (Only visible on wide desktop xl:block when in horizontal row) */}

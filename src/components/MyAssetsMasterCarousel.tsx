@@ -433,7 +433,7 @@ const StoryCard9x16View: React.FC<{
   );
 };
 
-export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
+export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = React.memo(({
   dossier,
   editionRank,
   isSimulationMode = false,
@@ -584,7 +584,9 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
     }
   };
 
-  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? isMobileOrTabletDevice() : false
+  );
   useEffect(() => {
     setIsMobileDevice(isMobileOrTabletDevice());
   }, []);
@@ -1704,4 +1706,4 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
         )}
     </div>
   );
-};
+});

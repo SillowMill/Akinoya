@@ -1283,7 +1283,7 @@ export const LiveStoryTrailerViewport: React.FC<{
   isPlaying?: boolean;
   onTogglePlay?: () => void;
   onVideoElementReady?: (el: HTMLVideoElement | null) => void;
-}> = ({
+}> = React.memo(({
   dossier,
   meta,
   photoCards,
@@ -1344,6 +1344,8 @@ export const LiveStoryTrailerViewport: React.FC<{
   useEffect(() => {
     let rafId = 0;
     let isCancelled = false;
+    // If native MP4 video is present, skip loading images for canvas and running RAF loop
+    if (videoUrl) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -1518,9 +1520,9 @@ export const LiveStoryTrailerViewport: React.FC<{
       )}
     </div>
   );
-};
+});
 
-export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgeProps> = ({
+export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgeProps> = React.memo(({
   dossier,
   editionRank,
   isSimulationMode = false,
@@ -1594,7 +1596,9 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
     }
   };
 
-  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? isMobileOrTabletDevice() : false
+  );
   useEffect(() => {
     setIsMobileDevice(isMobileOrTabletDevice());
   }, []);
@@ -2410,6 +2414,6 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         )}
     </>
   );
-};
+});
 
 export default WorldStoryVerificationBadge;

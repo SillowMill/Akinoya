@@ -53,7 +53,7 @@ export interface PlanetDossierModalProps {
   onNavigateToGalaxy?: (planetId?: string) => void;
 }
 
-export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
+export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(({
   planet,
   isOpen,
   onClose,
@@ -73,7 +73,9 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [isCopiedGalaxyLink, setIsCopiedGalaxyLink] = useState<boolean>(false);
-  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? isMobileOrTabletDevice() : false
+  );
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -809,4 +811,4 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
   );
 
   return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : modalNode;
-};
+});
