@@ -925,7 +925,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                   </div>
 
                   {/* Mobile-Only Top Accent Footstep Badge */}
-                  <div className="md:hidden flex items-center justify-between gap-2 p-3 rounded-2xl bg-[#090e1c]/90 border border-cyan-500/40 mb-3 shadow-[0_0_15px_rgba(0,242,254,0.15)]">
+                  <div
+                    onClick={() => handleOpenStageModal(stage)}
+                    className="md:hidden flex items-center justify-between gap-2 p-3 rounded-2xl bg-[#090e1c]/90 border border-cyan-500/40 mb-3 shadow-[0_0_15px_rgba(0,242,254,0.15)] cursor-pointer hover:border-cyan-400 transition-all"
+                  >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-xl bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center shrink-0">
                         <FootstepIcon className="w-4 h-4" isActive pulse />
@@ -943,7 +946,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     {isStageLocked ? (
                       <button
                         type="button"
-                        onClick={() => handleOpenStageModal(stage)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenStageModal(stage);
+                        }}
                         className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 text-white/90 text-[10.5px] font-mono font-bold cursor-pointer shrink-0 flex items-center gap-1"
                       >
                         <Lock className="w-2.5 h-2.5 text-amber-400" />
@@ -952,7 +958,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleOpenStageModal(stage)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenStageModal(stage);
+                        }}
                         className="px-2.5 py-1 rounded-lg bg-cyan-400 text-black text-[10.5px] font-mono font-bold cursor-pointer shrink-0"
                       >
                         Deep Dive →
@@ -962,8 +971,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
                   {/* Full-Width Mobile Cards & Staggered Desktop Layout */}
                   <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-14 items-center">
-                    {/* Visual Card Column (Hidden on Mobile for Stage 01 for Clean Text Layout) */}
-                    <div className={`space-y-4 ${isEven ? 'md:order-1' : 'md:order-2'} ${stage.id === 1 ? 'hidden md:block' : ''}`}>
+                    {/* Visual Card Column (Available Across All Devices) */}
+                    <div className={`space-y-4 ${isEven ? 'md:order-1' : 'md:order-2'}`}>
                       <div
                         onClick={() => handleOpenStageModal(stage)}
                         className={`relative rounded-3xl overflow-hidden border transition-all cursor-pointer shadow-[0_4px_35px_rgba(0,0,0,0.7)] ${
@@ -1087,7 +1096,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
                     {/* Narrative & Master Asset Brief Column */}
                     <div className={`space-y-4 ${isEven ? 'md:order-2' : 'md:order-1'}`}>
-                      <div className="p-6 rounded-3xl bg-[#0a0f1d]/80 border border-cyan-500/20 space-y-4">
+                      <div
+                        onClick={() => handleOpenStageModal(stage)}
+                        className="p-6 rounded-3xl bg-[#0a0f1d]/80 border border-cyan-500/20 hover:border-cyan-500/50 hover:shadow-[0_0_30px_rgba(0,242,254,0.15)] transition-all cursor-pointer space-y-4"
+                      >
                         <div className="flex items-center gap-2">
                           <img
                             src={millAvatar}
@@ -1129,7 +1141,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         <div className="flex flex-col xs:flex-row sm:flex-col lg:flex-row items-stretch sm:items-stretch lg:items-center gap-2 pt-1 w-full min-w-0">
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               soundManager.playTone(720, 0.08);
                               const folderId = VAULT_STAGE_FOLDER_IDS[stage.stageNumber] || 'folder-01';
                               if (onNavigateToVault) onNavigateToVault(folderId);
@@ -1141,7 +1154,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleOpenStageModal(stage)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenStageModal(stage);
+                            }}
                             className="shrink-0 py-2.5 px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white font-mono text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
                           >
                             {isStageLocked ? (
@@ -1234,15 +1250,18 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedStageForModal(null)}
-              className="fixed inset-0 bg-black/95"
+              className="fixed inset-0 bg-black/85 backdrop-blur-xl z-0"
             />
 
             {/* Modal Dialog Window */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 16 }}
-              className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl bg-[#070b16] border border-cyan-400/50 shadow-[0_0_80px_rgba(0,242,254,0.25)] z-10 text-white font-sans space-y-6 p-6 sm:p-8"
+              role="dialog"
+              aria-modal="true"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="relative m-auto w-full max-w-4xl max-h-[88vh] overflow-y-auto rounded-3xl bg-[#070b16]/95 border-2 border-cyan-400/60 shadow-[0_20px_70px_rgba(0,0,0,0.9),0_0_50px_rgba(0,242,254,0.3)] z-10 text-white font-sans space-y-6 p-6 sm:p-8"
             >
               {/* Sticky Modal Header Bar */}
               <div className="flex items-center justify-between border-b border-white/10 pb-4">

@@ -79,6 +79,9 @@ export function buildCinematicFpvMotionPrompt(params?: {
   }
 }
 
+export const AMLEMI_CINEMATIC_FPV_PROMPT =
+  'Single continuous FPV drone shot, no cuts. The camera begins inches above a dark rocky ledge beside a misty blue body of water. It races forward along the cliffside, weaving past wild grass, rough stone, and several goats standing naturally among the rocks. The camera banks left around the base of a massive weathered cliff, with dense green foliage and broad leaves sweeping close to the lens. The drone then climbs rapidly along the vertical rock face, staying extremely close to the textured stone. It passes beneath the legs of a young man seated on the cliff edge, wearing a light blue patterned shirt, dark trousers, sneakers, and a chain. He calmly writes in a small notebook while looking down at the pages. The camera circles tightly around him, briefly revealing his profile, the notebook in his hands, and the dramatic drop behind him...';
+
 export const VIRAL_VIDEO_MOTION_PROMPT = buildCinematicFpvMotionPrompt({
   planetName: 'Äkinoya Frontier Sector',
   biome: 'Cosmic Frontier',
@@ -860,14 +863,18 @@ export async function generateViralVideoWithFal(
   }
 
   const resolvedHeroUrl = resolveAbsoluteImageUrl(heroImageUrl);
-  const prompt = customMotionPrompt || VIRAL_VIDEO_MOTION_PROMPT;
+  const isAmlemi =
+    resolvedHeroUrl.includes('01-orbital') ||
+    resolvedHeroUrl.includes('amlemi') ||
+    (customMotionPrompt && customMotionPrompt.toLowerCase().includes('amlemi'));
+  const prompt = customMotionPrompt || (isAmlemi ? AMLEMI_CINEMATIC_FPV_PROMPT : VIRAL_VIDEO_MOTION_PROMPT);
 
   const payload = {
     prompt,
     image_url: resolvedHeroUrl,
     duration: '5',
     resolution: '720p',
-    aspect_ratio: 'auto',
+    aspect_ratio: isAmlemi ? '9:16' : 'auto',
     generate_audio: true, // Native ByteDance Seedance 2.5 synchronized Foley audio & sound effects!
   };
 

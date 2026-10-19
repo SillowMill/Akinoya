@@ -323,7 +323,10 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       atmosphere: amlemiCockpitImg,
       landmark: amlemiMonumentImg,
       ecosystem: amlemiBotanicalImg,
+      videoUrl: '/assets/videos/amlemi_trailer.mp4',
     },
+    videoUrl: '/assets/videos/amlemi_trailer.mp4',
+    videoStatus: 'READY',
     votesCount: 3,
     hasVoted: false,
     isPioneer: true,
@@ -362,7 +365,7 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
               sub.renders?.videoUrl ||
               sub.renders?.video_url ||
               (sub.humanAnswers as any)?.video_url ||
-              '';
+              (isAmlemi ? '/assets/videos/amlemi_trailer.mp4' : '');
             const resolvedSfxAudioUrl =
               sub.sfxAudioUrl ||
               sub.renders?.sfxAudioUrl ||
@@ -568,7 +571,7 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
               d.renders?.videoUrl ||
               d.renders?.video_url ||
               d.human_answers?.video_url ||
-              '';
+              (isAmlemi ? '/assets/videos/amlemi_trailer.mp4' : '');
             const coords = (d.coord_x !== undefined && d.coord_y !== undefined)
               ? { x: d.coord_x, y: d.coord_y, sectorId: d.sector_id || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
               : (d.coordX !== undefined && d.coordY !== undefined)
