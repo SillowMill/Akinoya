@@ -695,9 +695,28 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
 
       const isMobile = isMobileOrTabletDevice();
 
-      // 1. Always execute official branded template composite export
-      // Burns in official Sillow Mill logo, typography, FOUNDING PIONEER badge,
-      // world name, holder telemetry, and custom border framing at ultra-high fidelity.
+      // MOBILE & TABLET DIRECT-TO-PHOTOS PIPELINE:
+      // High-speed fetch preserves the active user gesture token for single-tap native Save-to-Photos.
+      // Bypasses generic browser download dialogs so media saves directly to native gallery ("Foto's").
+      if (isMobile) {
+        if (activeVideoUrl) {
+          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
+          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
+          const rawBlob = await response.blob();
+          const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+          await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
+          return;
+        }
+
+        const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
+        if (result?.blob) {
+          await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
+        }
+        return;
+      }
+
+      // DESKTOP PIPELINE:
+      // Run full-fidelity 4K canvas composite generation with burned-in branding straight to Downloads
       const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
       if (result?.blob) {
         await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
@@ -706,19 +725,12 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
 
       // 2. Direct video fallback if composite generation unavailable
       if (activeVideoUrl) {
-        try {
-          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
-          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-          const rawBlob = await response.blob();
-          const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-          await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-          return;
-        } catch {
-          if (!isMobile) {
-            window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');
-          }
-          return;
-        }
+        const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
+        const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
+        const rawBlob = await response.blob();
+        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+        await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
+        return;
       }
     } finally {
       setIsExportingTrailer(false);

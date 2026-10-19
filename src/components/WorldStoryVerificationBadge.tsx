@@ -913,19 +913,25 @@ export async function optimizeMp4FastStart(inputBlob: Blob): Promise<Blob> {
  */
 export function isMobileOrTabletDevice(): boolean {
   if (typeof navigator === 'undefined') return false;
-  return (
-    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-    /Android|Mobile|Tablet/i.test(navigator.userAgent)
-  );
+  const ua = navigator.userAgent || '';
+  const isTouchDevice =
+    (typeof navigator.maxTouchPoints === 'number' && navigator.maxTouchPoints > 0) ||
+    (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  const isAppleMobile =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroidOrMobile = /Android|Mobile|Tablet|Silk|Kindle/i.test(ua);
+
+  return Boolean(isAppleMobile || isAndroidOrMobile || (isTouchDevice && /Mobi|Tablet|iPad/i.test(ua)));
 }
 
 /**
  * Intelligently exports or downloads files across devices:
  * - On Mobile / Tablet (iOS & Android): Triggers the native system share sheet (`navigator.share`)
  *   with the generated File blob, allowing users to tap "Save to Photos" ("Bewaar video" / "Bewaar afbeelding")
- *   directly into their device's Photos/Camerarol.
- * - On Desktop: Executes a direct, high-speed anchor download straight into the user's Downloads folder.
+ *   directly into their device's native Camera Roll / "Foto's" with a single tap.
+ *   Completely bypasses generic browser download dialogs or prompts on mobile/tablet.
+ * - On Desktop: Executes a direct, high-speed anchor download straight into the user's local Downloads folder.
  */
 export async function downloadOrShareFileBlob(
   blob: Blob,
@@ -953,15 +959,18 @@ export async function downloadOrShareFileBlob(
         return;
       } catch (err: any) {
         if (err?.name === 'AbortError') {
-          // User dismissed the native share sheet
+          // User dismissed or closed the native share sheet
           return;
         }
-        console.warn('Native mobile share warning:', err);
+        console.warn('Native mobile share error:', err);
+        return;
       }
     }
+    // On mobile and tablet, completely bypass generic browser download dialogs/prompts
+    return;
   }
 
-  // Desktop or universal mobile fallback direct anchor download
+  // Desktop only: direct local anchor download straight into Downloads folder
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -1677,9 +1686,28 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
 
       const isMobile = isMobileOrTabletDevice();
 
-      // 1. Run integrated canvas-rendering branded marketing composite pipeline
-      // Burns in official Sillow Mill logo, typography, FOUNDING PIONEER badge,
-      // world name, holder telemetry, and custom border framing at ultra-high fidelity.
+      // MOBILE & TABLET DIRECT-TO-PHOTOS PIPELINE:
+      // Fast fetch preserves transient user gesture token for single-tap native Save-to-Photos.
+      // Bypasses generic browser download dialogs so media saves directly to native gallery ("Foto's").
+      if (isMobile) {
+        if (activeVideoUrl) {
+          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
+          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
+          const rawBlob = await response.blob();
+          const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+          await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
+          return;
+        }
+
+        const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
+        if (result?.blob) {
+          await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
+        }
+        return;
+      }
+
+      // DESKTOP PIPELINE:
+      // Run full-fidelity 4K canvas composite generation with burned-in branding straight to Downloads
       const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
       if (result?.blob) {
         await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
@@ -1688,19 +1716,12 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
 
       // 2. Direct video fallback if composite generation unavailable
       if (activeVideoUrl) {
-        try {
-          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
-          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-          const rawBlob = await response.blob();
-          const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-          await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-          return;
-        } catch {
-          if (!isMobile) {
-            window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');
-          }
-          return;
-        }
+        const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
+        const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
+        const rawBlob = await response.blob();
+        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+        await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
+        return;
       }
     } finally {
       setIsExportingTrailer(false);

@@ -37,6 +37,7 @@ import {
   LiveStoryTrailerViewport,
   exportWorldTrailerVideoBlob,
   downloadOrShareVideoBlob,
+  downloadOrShareFileBlob,
   optimizeMp4FastStart,
   useDynamicWorldVideo,
   deriveWorldVerificationMeta,
@@ -183,30 +184,64 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
     try {
       const isMobile = isMobileOrTabletDevice();
 
-      // 1. Attempt official branded template composite export
-      // Burns in official Sillow Mill logo, typography, FOUNDING PIONEER badge,
-      // world name, holder telemetry, and custom border framing at ultra-high fidelity.
-      const result = await exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl);
-      if (result?.blob) {
-        await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
-        return;
-      }
-
-      // 2. Fallback to direct raw video fetch if canvas composite unavailable
-      if (videoUrl) {
-        try {
+      // MOBILE & TABLET DIRECT-TO-PHOTOS PIPELINE (GALAXY NAVIGATOR):
+      // High-speed fetch preserves user gesture token for single-tap native Save-to-Photos.
+      // Bypasses generic browser download dialogs so media saves directly to native gallery ("Foto's").
+      if (isMobile) {
+        if (videoUrl) {
           const cacheBustedUrl = getCacheBustedUrl(videoUrl);
           const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
           const rawBlob = await response.blob();
           const fastStartBlob = await optimizeMp4FastStart(rawBlob);
           await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
           return;
-        } catch {
-          if (!isMobile) {
-            window.open(videoUrl, '_blank', 'noopener,noreferrer');
-          }
-          return;
         }
+
+        const result = await exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl);
+        if (result?.blob) {
+          await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
+        }
+        return;
+      }
+
+      // DESKTOP PIPELINE:
+      // Run full-fidelity 4K canvas composite generation with burned-in branding straight to Downloads
+      const result = await exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl);
+      if (result?.blob) {
+        await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
+        return;
+      }
+
+      // 2. Direct video fallback if composite generation unavailable
+      if (videoUrl) {
+        const cacheBustedUrl = getCacheBustedUrl(videoUrl);
+        const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
+        const rawBlob = await response.blob();
+        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+        await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
+        return;
+      }
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadPhoto = async (photo: PlanetPhotoCard) => {
+    if (!photo?.url || !activePlanet) return;
+    soundManager.playTone(740, 0.06);
+    setIsDownloading(true);
+    const safePlanet = (activePlanet.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+    const safeTitle = (photo.title || 'photo').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+    const filename = `sillowmill-${safePlanet}-${safeTitle}.jpg`;
+    const shareTitle = `${activePlanet.planetName || 'Ämlemi'} — ${photo.title}`;
+    const shareText = `Verified Genesis World: ${photo.title}`;
+
+    try {
+      const cacheBustedUrl = getCacheBustedUrl(photo.url);
+      const res = await fetch(cacheBustedUrl, { cache: 'no-store' });
+      if (res.ok) {
+        const blob = await res.blob();
+        await downloadOrShareFileBlob(blob, filename, 'image/jpeg', shareTitle, shareText);
       }
     } finally {
       setIsDownloading(false);
@@ -505,6 +540,25 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                       title="Next Photo"
                     >
                       <ChevronRight className="w-6 h-6 text-cyan-300" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Direct Save-to-Photos Action for Archive Photos (Mobile & Tablet: Native Gallery, Desktop: Direct Download) */}
+                {!isTrailerTab && currentPhoto?.url && (
+                  <div className="w-full max-w-md mx-auto flex flex-col items-center space-y-2 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadPhoto(currentPhoto)}
+                      disabled={isDownloading}
+                      className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5 text-black" />
+                      <span>
+                        {isDownloading
+                          ? (isMobileDevice ? 'Saving Photo to Photos...' : 'Downloading Photo...')
+                          : (isMobileDevice ? 'Save Photo to Photos' : '⬇ Download Master Photo')}
+                      </span>
                     </button>
                   </div>
                 )}

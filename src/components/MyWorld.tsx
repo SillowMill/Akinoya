@@ -113,16 +113,27 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
     try {
       const isMobile = isMobileOrTabletDevice();
 
-      // 1. Run integrated canvas-rendering branded marketing composite pipeline
-      // Burns in official Sillow Mill logo, typography, FOUNDING PIONEER badge,
-      // world name, holder telemetry, and custom border framing at ultra-high fidelity.
+      // MOBILE & TABLET DIRECT-TO-PHOTOS PIPELINE:
+      // High-speed fetch preserves user gesture token for single-tap native Save-to-Photos.
+      // Bypasses generic browser download dialogs so media saves directly to native gallery ("Foto's").
+      if (isMobile) {
+        const cacheBustedUrl = getCacheBustedUrl(videoUrl);
+        const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
+        const rawBlob = await response.blob();
+        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+        await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
+        return;
+      }
+
+      // DESKTOP PIPELINE:
+      // Run full-fidelity 4K canvas composite generation with burned-in branding straight to Downloads
       const result = await exportWorldTrailerVideoBlob(dossier, undefined, videoUrl);
       if (result?.blob) {
         await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
         return;
       }
 
-      // 2. Fallback to direct raw video download only if composite unavailable
+      // Fallback to direct raw video download only if composite unavailable
       const cacheBustedUrl = getCacheBustedUrl(videoUrl);
       const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
       const rawBlob = await response.blob();
