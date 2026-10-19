@@ -324,9 +324,33 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     }
     const target = document.getElementById(`stage-${stageNum}`);
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const headerOffset = 110;
+      const elementPosition = target.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth',
+      });
     }
   };
+
+  // Open Stage Deep-Dive Modal via Universal Event (e.g. from Community Hub Left Sidebar or Stage Navigation)
+  useEffect(() => {
+    const handleOpenExternalStageModal = (e: Event) => {
+      const customEvent = e as CustomEvent<{ stageId: number }>;
+      if (customEvent.detail && customEvent.detail.stageId) {
+        const stage = STAGES.find((s) => s.id === customEvent.detail.stageId);
+        if (stage) {
+          handleOpenStageModal(stage);
+        }
+      }
+    };
+
+    window.addEventListener('open-workflow-stage-modal', handleOpenExternalStageModal as EventListener);
+    return () => {
+      window.removeEventListener('open-workflow-stage-modal', handleOpenExternalStageModal as EventListener);
+    };
+  }, []);
 
   // Comprehensive 5-Stage Data Architecture (Mapped to Drive Vault Folders)
   const STAGES: StageDetail[] = [
@@ -875,10 +899,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         </div>
 
         {/* ======================================================== */}
-        {/* MOBILE & IPAD PORTRAIT STAGE FAST-JUMP BAR (< 1024px)    */}
+        {/* UNIVERSAL WORKFLOW STAGE FAST-JUMP & MODAL INSPECT BAR   */}
         {/* ======================================================== */}
-        <div className="lg:hidden sticky top-2 z-40 my-2 flex justify-center w-full px-2 pointer-events-none">
-          <div className="pointer-events-auto backdrop-blur-md bg-black/85 border border-cyan-500/40 rounded-full px-2 py-1 shadow-[0_4px_25px_rgba(0,242,254,0.2)] flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full transform-gpu">
+        <div className="sticky top-2 sm:top-3 z-40 my-3 flex justify-center w-full px-2 pointer-events-none">
+          <div className="pointer-events-auto backdrop-blur-xl bg-[#050814]/90 border border-cyan-500/40 rounded-2xl sm:rounded-full p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.8),0_0_20px_rgba(0,242,254,0.25)] flex items-center justify-start sm:justify-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar max-w-full transform-gpu will-change-transform">
             {STAGES.map((s) => {
               const isActive = activeStageId === s.id;
               const isLocked = s.isAdvancedLocked && !isMember;
@@ -887,17 +911,29 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                 <button
                   key={s.id}
                   type="button"
-                  onClick={() => handleJumpToStage(s.id)}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                  onClick={() => {
+                    handleJumpToStage(s.id);
+                    handleOpenStageModal(s);
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl sm:rounded-full text-xs font-mono font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     isActive
-                      ? 'bg-cyan-400 text-black shadow-[0_0_15px_rgba(0,242,254,0.7)] font-extrabold scale-105'
+                      ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-black shadow-[0_0_20px_rgba(0,242,254,0.8)] font-extrabold scale-105'
                       : isLocked
-                      ? 'bg-white/5 hover:bg-white/10 text-white/50 border border-white/10'
-                      : 'bg-white/10 hover:bg-white/20 text-white/80 hover:text-white border border-white/10'
+                      ? 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/10'
+                      : 'bg-white/10 hover:bg-white/20 text-white/85 hover:text-white border border-white/15 hover:border-cyan-400/40'
                   }`}
+                  title={`Inspect Stage ${s.stageNumber}: ${s.title}`}
                 >
-                  <span>{s.richIcon} {s.stageNumber}</span>
-                  {isLocked && <Lock className="w-2.5 h-2.5 text-amber-400" />}
+                  <span className="text-sm">{s.richIcon}</span>
+                  <span className="font-extrabold">STAGE {s.stageNumber}</span>
+                  <span className="hidden md:inline text-[11px] font-sans font-medium text-inherit/80 truncate max-w-[120px]">
+                    · {s.navLabel}
+                  </span>
+                  {isLocked ? (
+                    <Lock className="w-3 h-3 text-amber-400 shrink-0 ml-0.5" />
+                  ) : (
+                    <Eye className={`w-3 h-3 shrink-0 ml-0.5 ${isActive ? 'text-black' : 'text-cyan-400'}`} />
+                  )}
                 </button>
               );
             })}
@@ -1054,9 +1090,17 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                               </h3>
                             </div>
 
-                            <div className="w-9 h-9 rounded-xl bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 group-hover/banner:bg-cyan-400 group-hover/banner:text-black transition-all">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenStageModal(stage);
+                              }}
+                              className="w-9 h-9 rounded-xl bg-cyan-400/20 hover:bg-cyan-400 hover:text-black border border-cyan-400/40 flex items-center justify-center text-cyan-300 group-hover/banner:bg-cyan-400 group-hover/banner:text-black transition-all cursor-pointer"
+                              title={`Inspect Stage ${stage.stageNumber} Deep-Dive`}
+                            >
                               <ChevronRight className="w-5 h-5" />
-                            </div>
+                            </button>
                           </div>
                         </div>
 
@@ -1149,16 +1193,23 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           &ldquo;{stage.millTransmission}&rdquo;
                         </p>
 
-                        {/* Master Asset Delivery Spec Box (Clean, No Uploader) */}
-                        <div className="p-3.5 rounded-2xl bg-black/50 border border-cyan-500/30 space-y-2">
+                        {/* Master Asset Delivery Spec Box (Clickable to Inspect Stage Deliverables) */}
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenStageModal(stage);
+                          }}
+                          className="p-3.5 rounded-2xl bg-black/50 hover:bg-black/70 border border-cyan-500/30 hover:border-cyan-400/60 transition-all cursor-pointer space-y-2 group/asset"
+                          title="Click to Inspect Stage Deliverables & Architecture"
+                        >
                           <div className="flex items-center justify-between text-xs font-mono">
-                            <span className="font-bold text-white flex items-center gap-1.5">
+                            <span className="font-bold text-white flex items-center gap-1.5 group-hover/asset:text-cyan-300 transition-colors">
                               <FolderDown className="w-3.5 h-3.5 text-cyan-400" />
                               Deliverable Asset
                             </span>
                             <span className="text-cyan-300 font-semibold">{stage.masterAsset.fileSize}</span>
                           </div>
-                          <p className="text-[11.5px] text-white/70 font-sans">
+                          <p className="text-[11.5px] text-white/70 font-sans group-hover/asset:text-white/90 transition-colors">
                             {stage.masterAsset.title} ({stage.masterAsset.fileFormat})
                           </p>
                         </div>

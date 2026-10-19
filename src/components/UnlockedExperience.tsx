@@ -2143,47 +2143,47 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
 
-                  {/* iPad Portrait & Mobile Centered Branding: Sillow Mill Logo, Stylized ÄMLEMI & Stacked Touch Buttons */}
-                  <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 relative z-10">
-                    <div className="min-w-0 flex flex-col items-center xl:items-start text-center xl:text-left space-y-2.5">
-                      {/* Sillow Mill Logo, Stylized ÄMLEMI Title, and Metadata Sector Badge */}
-                      <div className="flex flex-col sm:flex-row items-center justify-center xl:justify-start gap-3 sm:gap-4 flex-wrap min-w-0">
+                  {/* Tablet Portrait & Mobile Vertical Alignment: Sillow Mill Logo, Stylized ÄMLEMI & Stacked Touch Buttons */}
+                  <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 md:gap-7 relative z-10">
+                    <div className="min-w-0 flex flex-col items-center xl:items-start text-center xl:text-left space-y-3 sm:space-y-3.5">
+                      {/* Sillow Mill Logo, Stylized ÄMLEMI Title, and Metadata Sector Badge in Clean Vertical Alignment on Portrait Tablet (< xl) */}
+                      <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-start gap-3 sm:gap-4 xl:gap-5 min-w-0 w-full">
                         {/* Shimmering Sillow Mill Logo with subtle cinematic glow & glass housing */}
                         <div className="flex items-center justify-center gap-3">
-                          <div className="relative w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-2xl bg-gradient-to-br from-white/[0.15] via-white/[0.05] to-transparent p-1.5 sm:p-2 border border-white/20 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(255,255,255,0.25)]">
+                          <div className="relative w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-white/[0.18] via-white/[0.06] to-transparent p-2 sm:p-2.5 border border-white/25 flex items-center justify-center shrink-0 shadow-[0_0_25px_rgba(255,255,255,0.3)] transform-gpu">
                             <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/25 to-transparent pointer-events-none opacity-80" />
                             <img
                               src={sillowMillLogoUrl}
                               alt="Sillow Mill"
-                              className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                              className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.85)]"
                             />
                           </div>
 
-                          {/* Minimalist Reflective Chrome / Brushed Metal Vertical Divider */}
+                          {/* Minimalist Reflective Chrome Divider (Only visible on wide desktop xl:block when in horizontal row) */}
                           <div
-                            className="h-6 sm:h-7 md:h-8 w-[2px] bg-gradient-to-b from-white/10 via-white/60 to-white/10 shadow-[0_0_10px_rgba(255,255,255,0.4)] shrink-0"
+                            className="hidden xl:block h-8 w-[2px] bg-gradient-to-b from-white/10 via-white/60 to-white/10 shadow-[0_0_10px_rgba(255,255,255,0.4)] shrink-0"
                             aria-hidden="true"
                           />
                         </div>
 
                         {/* Large Stylized ÄMLEMI World Name & Sector Badge */}
-                        <div className="flex items-center justify-center gap-2.5 sm:gap-3.5 flex-wrap">
-                          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-black text-white tracking-wider sm:tracking-widest drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)] uppercase">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3.5 flex-wrap">
+                          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-black text-white tracking-wider sm:tracking-widest drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)] uppercase text-center xl:text-left">
                             {activeWorldDossier.planetName}
                           </h2>
-                          <span className="px-3 py-1 rounded-lg bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 font-mono text-[10.5px] sm:text-xs font-extrabold tracking-widest uppercase shadow-[0_0_14px_rgba(6,182,212,0.35)]">
+                          <span className="px-3 py-1 rounded-lg bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 font-mono text-[10.5px] sm:text-xs font-extrabold tracking-widest uppercase shadow-[0_0_14px_rgba(6,182,212,0.35)] shrink-0">
                             {activeWorldDossier.sectorId || 'SECTOR AKN-01'}
                           </span>
                         </div>
                       </div>
 
-                      <p className="text-xs sm:text-sm font-mono text-white/75 text-center xl:text-left">
+                      <p className="text-xs sm:text-sm font-mono text-white/75 text-center xl:text-left max-w-xl">
                         Synthesized by <strong className="text-amber-300 font-bold">{activeWorldDossier.authorName}</strong> ({activeWorldDossier.authorEmail || user?.email || 'Verified Pioneer Account'})
                       </p>
                     </div>
 
-                    {/* Stacked Action Buttons: Responsive Column Layout for Touch Interaction on iPad */}
-                    <div className="w-full sm:max-w-md xl:max-w-none xl:w-auto mx-auto xl:mx-0 flex flex-col sm:flex-col xl:flex-row items-stretch xl:items-center gap-3 xl:shrink-0 pt-1 xl:pt-0">
+                    {/* Stacked Action Buttons: Responsive Column Layout for Touch Interaction on Tablet Portrait */}
+                    <div className="w-full max-w-sm sm:max-w-md xl:max-w-none xl:w-auto mx-auto xl:mx-0 flex flex-col xl:flex-row items-stretch xl:items-center gap-3 xl:shrink-0 pt-2 xl:pt-0">
                       <button
                         type="button"
                         onClick={handleShareDossier}

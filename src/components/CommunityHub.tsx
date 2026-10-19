@@ -542,10 +542,21 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         url.hash = `stage-${stageNum}`;
         window.history.replaceState(null, '', url.toString());
       } catch {}
+
+      // Dispatch universal event so the stage deep-dive modal opens reliably
+      window.dispatchEvent(
+        new CustomEvent('open-workflow-stage-modal', { detail: { stageId: stageNum } })
+      );
     }
     const target = document.getElementById(`stage-${stageNum}`);
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const headerOffset = 110;
+      const elementPosition = target.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth',
+      });
     }
   };
 
