@@ -56,25 +56,25 @@ const SLIDE_TABS: {
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
   {
-    id: 'archive_4k',
+    id: 'video_trailer',
     index: '01',
+    label: '9:16 MP4 Trailer Loop',
+    badge: 'VAL.AI FPV',
+    icon: Film,
+  },
+  {
+    id: 'archive_4k',
+    index: '02',
     label: '4K Planetary Archive',
     badge: '4K UHD MASTER',
     icon: Camera,
   },
   {
     id: 'story_card',
-    index: '02',
+    index: '03',
     label: '9:16 Story Verification Card',
     badge: 'OFFICIAL AFFICHE',
     icon: ShieldCheck,
-  },
-  {
-    id: 'video_trailer',
-    index: '03',
-    label: '9:16 MP4 Trailer Loop',
-    badge: 'VAL.AI FPV',
-    icon: Film,
   },
 ];
 
@@ -252,7 +252,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
   onUnlockSimulation,
   onNavigateToGalaxy,
 }) => {
-  const [activeSlide, setActiveSlide] = useState<MasterAssetSlideId>('archive_4k');
+  const [activeSlide, setActiveSlide] = useState<MasterAssetSlideId>('video_trailer');
   const [slideDirection, setSlideDirection] = useState<number>(1);
   const [activePhotoIdx, setActivePhotoIdx] = useState<number>(0);
   const [isExportingBadge, setIsExportingBadge] = useState<boolean>(false);
@@ -262,7 +262,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
   const [fullscreenPhoto, setFullscreenPhoto] = useState<{ url: string; title: string; category: string } | null>(null);
   const [isFullscreenModalOpen, setIsFullscreenModalOpen] = useState<boolean>(false);
 
-  // Video playback controls for Slide 3
+  // Video playback controls for Slide 1
   const [isPlayingVideo, setIsPlayingVideo] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
@@ -283,8 +283,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
   const activePhoto = photoCards[activePhotoIdx] || photoCards[0];
   const worldNameDisplay = (dossier.planetName || 'ÄMLEMI').toUpperCase();
 
-  // Handle slide transitions circularly
-  const slideOrder: MasterAssetSlideId[] = ['archive_4k', 'story_card', 'video_trailer'];
+  // Handle slide transitions circularly: Video Trailer (01) -> 4K Archive (02) -> Story Card (03)
+  const slideOrder: MasterAssetSlideId[] = ['video_trailer', 'archive_4k', 'story_card'];
 
   const goToSlide = useCallback(
     (target: MasterAssetSlideId, direction?: number) => {
@@ -467,6 +467,21 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
         dossier.renders?.video_url ||
         '';
 
+      // 1. Export official branded template composite
+      const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
+      if (result?.blob) {
+        const url = URL.createObjectURL(result.blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `sillowmill-${safeName}-9x16-trailer.${result.ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      // 2. Direct video fallback if composite generation unavailable
       if (activeVideoUrl) {
         try {
           const response = await fetch(activeVideoUrl);
@@ -484,19 +499,6 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
           window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');
           return;
         }
-      }
-
-      // Active fallback: Automated 5-photo zoom montage
-      const result = await exportWorldTrailerVideoBlob(dossier, editionRank);
-      if (result?.blob) {
-        const url = URL.createObjectURL(result.blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `sillowmill-${safeName}-9x16-trailer.${result.ext}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
       }
     } finally {
       setIsExportingTrailer(false);
@@ -1010,7 +1012,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                 <div className="space-y-4 max-w-md w-full">
                   <div className="space-y-2">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-widest uppercase bg-cyan-950/90 text-cyan-200 border border-cyan-400/40">
-                      ARTIFACT 02 · SOCIAL STORY AFFICHE
+                      ARTIFACT 03 · SOCIAL STORY AFFICHE
                     </span>
                     <h3 className="text-lg sm:text-xl font-display font-black text-white tracking-wide">
                       Official 9:16 Story Verification Badge
@@ -1091,6 +1093,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                     meta={meta}
                     photoCards={photoCards}
                     activeVideoUrl={dynamicVideo.videoUrl}
+                    isMuted={isMuted}
+                    onToggleAudio={toggleAudio}
                   />
 
                   {/* Playback Controls Floating Bar */}
@@ -1125,7 +1129,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-widest uppercase bg-amber-950/90 text-amber-300 border border-amber-400/40">
-                        ARTIFACT 03 · 9:16 MP4 TRAILER LOOP
+                        ARTIFACT 01 · 9:16 MP4 TRAILER LOOP
                       </span>
                     </div>
                     <h3 className="text-lg sm:text-xl font-display font-black text-white tracking-wide">

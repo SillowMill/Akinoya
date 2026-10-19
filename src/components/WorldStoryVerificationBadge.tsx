@@ -15,6 +15,8 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PlanetSubmission } from '../types/contest';
@@ -538,6 +540,25 @@ function drawTrailerFrame(
   }
 
   // Cinematic top & bottom dark gradient vignettes for crisp HUD legibility
+  drawTrailerOverlay(ctx, W, H, progress, dossier, meta, photoCards, logoImg, activeIdx);
+}
+
+/**
+ * Draws the complete Sillow Mill branded template overlay (vignettes, outer frame,
+ * VIP/Founding Pioneer header, telemetry card, and bottom-left logo signature).
+ */
+export function drawTrailerOverlay(
+  ctx: CanvasRenderingContext2D,
+  W: number,
+  H: number,
+  progress: number,
+  dossier: PlanetSubmission,
+  meta: ReturnType<typeof deriveWorldVerificationMeta>,
+  photoCards: ReturnType<typeof getPlanetPhotoCards>,
+  logoImg: HTMLImageElement | null,
+  activeIdx: number = 0
+) {
+  // Cinematic top & bottom dark gradient vignettes for crisp HUD legibility
   const topVignette = ctx.createLinearGradient(0, 0, 0, H * 0.34);
   topVignette.addColorStop(0, 'rgba(3, 7, 18, 0.92)');
   topVignette.addColorStop(0.65, 'rgba(3, 7, 18, 0.55)');
@@ -563,7 +584,7 @@ function drawTrailerFrame(
   const contentX = Math.round(78 * s);
   const contentW = W - contentX * 2;
 
-  // TOP-LEVEL HEADER: FOUNDING PIONEER STATUS + PLANET NAME + HOLDER
+  // TOP-LEVEL HEADER: FOUNDING PIONEER / VIP PIONEER STATUS + PLANET NAME + HOLDER
   ctx.fillStyle = '#fbbf24';
   ctx.font = `bold ${Math.round(20 * s)}px "JetBrains Mono", monospace`;
   ctx.fillText(
@@ -680,11 +701,14 @@ function drawTrailerFrame(
 }
 
 /**
- * Generates and downloads a 9:16 video trailer loop with the official Sillow Mill logo embedded in the bottom-left corner.
+ * Generates and downloads a 9:16 video trailer loop with the official Sillow Mill template
+ * and logo embedded in the exported file. Supports compositing either an active MP4 video
+ * loop (with audio tracks when available) or the 5-photo Ken Burns montage.
  */
 export async function exportWorldTrailerVideoBlob(
   dossier: PlanetSubmission,
-  editionRank?: number
+  editionRank?: number,
+  activeVideoUrl?: string
 ): Promise<{ blob: Blob; ext: string } | null> {
   const W = 720;
   const H = 1280;
@@ -723,6 +747,42 @@ export async function exportWorldTrailerVideoBlob(
     }) || '';
 
   const stream = canvas.captureStream(30);
+
+  // If activeVideoUrl or dossier.videoUrl is provided, attempt to composite directly from the video stream
+  const targetVideoUrl =
+    activeVideoUrl ||
+    dossier.videoUrl ||
+    dossier.renders?.videoUrl ||
+    dossier.renders?.video_url;
+
+  let videoElement: HTMLVideoElement | null = null;
+  if (targetVideoUrl) {
+    try {
+      const v = document.createElement('video');
+      v.crossOrigin = 'anonymous';
+      v.muted = true;
+      v.playsInline = true;
+      v.preload = 'auto';
+      v.src = targetVideoUrl;
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(() => resolve(), 2500);
+        v.onloadeddata = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+        v.onerror = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+      });
+      if (v.readyState >= 2) {
+        videoElement = v;
+      }
+    } catch {
+      videoElement = null;
+    }
+  }
+
   const recorder = supportedMime
     ? new MediaRecorder(stream, { mimeType: supportedMime, videoBitsPerSecond: 6_000_000 })
     : new MediaRecorder(stream);
@@ -742,14 +802,30 @@ export async function exportWorldTrailerVideoBlob(
     const durationMs = 5000;
     const startTime = performance.now();
 
+    if (videoElement) {
+      videoElement.currentTime = 0;
+      videoElement.play().catch(() => {});
+    }
+
     const step = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(1, elapsed / durationMs);
-      drawTrailerFrame(ctx, W, H, progress, dossier, meta, photoCards, loadedPhotos, logoImg);
+
+      if (videoElement && !videoElement.paused && videoElement.readyState >= 2) {
+        ctx.fillStyle = '#030712';
+        ctx.fillRect(0, 0, W, H);
+        drawCoverImage(ctx, videoElement as unknown as HTMLImageElement, 0, 0, W, H, 1, 0, 0);
+        drawTrailerOverlay(ctx, W, H, progress, dossier, meta, photoCards, logoImg, 0);
+      } else {
+        drawTrailerFrame(ctx, W, H, progress, dossier, meta, photoCards, loadedPhotos, logoImg);
+      }
 
       if (elapsed < durationMs) {
         requestAnimationFrame(step);
       } else {
+        if (videoElement) {
+          videoElement.pause();
+        }
         recorder.stop();
       }
     };
@@ -851,8 +927,45 @@ export const LiveStoryTrailerViewport: React.FC<{
   meta: ReturnType<typeof deriveWorldVerificationMeta>;
   photoCards: ReturnType<typeof getPlanetPhotoCards>;
   activeVideoUrl?: string;
-}> = ({ dossier, meta, photoCards, activeVideoUrl }) => {
+  isMuted?: boolean;
+  onToggleAudio?: () => void;
+}> = ({
+  dossier,
+  meta,
+  photoCards,
+  activeVideoUrl,
+  isMuted: externalIsMuted,
+  onToggleAudio,
+}) => {
+  const [internalMuted, setInternalMuted] = useState(true);
+  const isMuted = externalIsMuted !== undefined ? externalIsMuted : internalMuted;
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  const handleToggleAudio = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    soundManager.playTone(isMuted ? 680 : 440, 0.05);
+    const nextMuted = !isMuted;
+    if (onToggleAudio) {
+      onToggleAudio();
+    } else {
+      setInternalMuted(nextMuted);
+    }
+    if (videoRef.current) {
+      videoRef.current.muted = nextMuted;
+      if (videoRef.current.paused) {
+        videoRef.current.play().catch(() => {});
+      }
+    }
+  };
+
   const videoUrl =
     activeVideoUrl ||
     dossier.videoUrl ||
@@ -926,11 +1039,12 @@ export const LiveStoryTrailerViewport: React.FC<{
       {videoUrl ? (
         <div className="relative z-10 w-full h-full">
           <video
+            ref={videoRef}
             src={videoUrl}
             poster={photoCards[0]?.url}
             autoPlay
             loop
-            muted
+            muted={isMuted}
             playsInline
             preload="auto"
             style={{
@@ -963,9 +1077,33 @@ export const LiveStoryTrailerViewport: React.FC<{
                 HOLDER: {(dossier.authorName || 'ODI SELIS').toUpperCase()} · {dossier.sectorId || 'SECTOR AKN-01'}
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded-lg bg-black/75 border border-amber-400/60 text-[10px] font-mono font-extrabold text-amber-300">
-              #{meta.worldNumber}
-            </span>
+
+            {/* Audio Toggle Button & Edition Number */}
+            <div className="flex items-center gap-1.5 pointer-events-auto">
+              <button
+                type="button"
+                onClick={handleToggleAudio}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-black/80 hover:bg-black border border-cyan-400/50 hover:border-cyan-300 text-cyan-200 hover:text-white transition-all shadow-md active:scale-95 cursor-pointer backdrop-blur-md"
+                title={isMuted ? 'Unmute Audio & Foley Sound Effects' : 'Mute Audio'}
+                aria-label={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+              >
+                {isMuted ? (
+                  <>
+                    <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-[8px] font-mono font-bold text-slate-300">UNMUTE</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                    <span className="text-[8px] font-mono font-bold text-amber-300">AUDIO ON</span>
+                  </>
+                )}
+              </button>
+
+              <span className="px-2 py-1 rounded-lg bg-black/75 border border-amber-400/60 text-[10px] font-mono font-extrabold text-amber-300">
+                #{meta.worldNumber}
+              </span>
+            </div>
           </div>
 
           <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between gap-2 pointer-events-none z-30">

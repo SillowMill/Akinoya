@@ -146,8 +146,8 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
     [activePlanet]
   );
 
-  const isTrailerTab = activePhotoIdx === photoCards.length;
-  const currentPhoto = photoCards[activePhotoIdx] || photoCards[0];
+  const isTrailerTab = activePhotoIdx === 0;
+  const currentPhoto = photoCards[activePhotoIdx - 1] || photoCards[0];
   const videoUrl =
     dynamicVideo.videoUrl ||
     activePlanet?.videoUrl ||
@@ -166,6 +166,21 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
       .replace(/[^a-z0-9-_]/g, '-');
 
     try {
+      // 1. Attempt official branded template composite export
+      const result = await exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl);
+      if (result?.blob) {
+        const blobUrl = URL.createObjectURL(result.blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${safeName}-9x16-trailer.${result.ext}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+        return;
+      }
+
+      // 2. Fallback to direct raw video fetch if canvas composite unavailable
       if (videoUrl) {
         try {
           const response = await fetch(videoUrl);
@@ -183,19 +198,6 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
           window.open(videoUrl, '_blank', 'noopener,noreferrer');
           return;
         }
-      }
-
-      // Fallback: 5-photo zoom montage generator
-      const result = await exportWorldTrailerVideoBlob(activePlanet);
-      if (result?.blob) {
-        const blobUrl = URL.createObjectURL(result.blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `${safeName}-9x16-trailer.${result.ext}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
       }
     } finally {
       setIsDownloading(false);
@@ -352,11 +354,11 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                     <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
                       {isTrailerTab
                         ? `🎥 9:16 Viral Video Trailer · ${activePlanet.planetName} (5s Vertical Loop)`
-                        : `${currentPhoto.title} · Photo 0${activePhotoIdx + 1} of 05`}
+                        : `${currentPhoto.title} · Photo 0${activePhotoIdx} of 05`}
                     </h3>
                   </div>
                   <span className="text-[10px] font-mono text-cyan-400/80">
-                    {isTrailerTab ? '06 · VIRAL 9:16 TRAILER (5.0S)' : currentPhoto.category}
+                    {isTrailerTab ? '01 · VIRAL 9:16 TRAILER (5.0S)' : currentPhoto.category}
                   </span>
                 </div>
 
@@ -463,7 +465,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
 
                     {/* Bottom-center subtle slide badge on photo stage */}
                     <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full bg-[#040915]/85 border border-white/15 text-[10px] font-mono text-cyan-200 flex items-center gap-2 shadow-lg">
-                      <span className="font-bold text-amber-300">0{activePhotoIdx + 1} / 05</span>
+                      <span className="font-bold text-amber-300">0{activePhotoIdx} / 05</span>
                       <span className="text-white/40">·</span>
                       <span className="truncate max-w-[160px] sm:max-w-[260px]">{currentPhoto.title}</span>
                     </div>
@@ -508,27 +510,11 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                   </button>
 
                   <div className="flex items-center gap-1.5">
-                    {photoCards.map((card, idx) => (
-                      <button
-                        key={card.id}
-                        type="button"
-                        onClick={() => {
-                          soundManager.playTone(540 + idx * 40, 0.04);
-                          setActivePhotoIdx(idx);
-                        }}
-                        aria-label={`View photo ${idx + 1}`}
-                        className={`h-2 rounded-full transition-all cursor-pointer ${
-                          activePhotoIdx === idx
-                            ? 'w-5 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]'
-                            : 'w-2 bg-white/25 hover:bg-white/40'
-                        }`}
-                      />
-                    ))}
                     <button
                       type="button"
                       onClick={() => {
                         soundManager.playTone(760, 0.05);
-                        setActivePhotoIdx(photoCards.length);
+                        setActivePhotoIdx(0);
                       }}
                       aria-label="View 9:16 Trailer"
                       className={`h-2 rounded-full transition-all cursor-pointer ${
@@ -537,6 +523,25 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                           : 'w-2 bg-amber-400/35 hover:bg-amber-400/60'
                       }`}
                     />
+                    {photoCards.map((card, idx) => {
+                      const tabIdx = idx + 1;
+                      return (
+                        <button
+                          key={card.id}
+                          type="button"
+                          onClick={() => {
+                            soundManager.playTone(540 + idx * 40, 0.04);
+                            setActivePhotoIdx(tabIdx);
+                          }}
+                          aria-label={`View photo ${idx + 1}`}
+                          className={`h-2 rounded-full transition-all cursor-pointer ${
+                            activePhotoIdx === tabIdx
+                              ? 'w-5 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]'
+                              : 'w-2 bg-white/25 hover:bg-white/40'
+                          }`}
+                        />
+                      );
+                    })}
                   </div>
 
                   <button
@@ -549,17 +554,50 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                   </button>
                 </div>
 
-                {/* 5-Photo Thumbnail Filmstrip + 🎥 9:16 Trailer Tab */}
+                {/* 🎥 9:16 Trailer Tab + 5-Photo Thumbnail Filmstrip */}
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
+                  {/* Dedicated 🎥 9:16 Trailer Tab (Index 01) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playTone(760, 0.05);
+                      setActivePhotoIdx(0);
+                    }}
+                    className={`relative aspect-[16/10] rounded-xl overflow-hidden border transition-all cursor-pointer text-left flex flex-col items-center justify-center p-1.5 touch-manipulation select-none ${
+                      isTrailerTab
+                        ? 'border-amber-400 ring-2 ring-amber-400/50 bg-gradient-to-br from-amber-950/80 via-[#070d1e] to-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                        : 'border-amber-500/30 hover:border-amber-400/60 bg-gradient-to-br from-[#0a1228] to-black opacity-90 hover:opacity-100'
+                    }`}
+                  >
+                    {heroPhotoUrl && (
+                      <img
+                        src={heroPhotoUrl}
+                        alt="9:16 Trailer"
+                        className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none select-none"
+                      />
+                    )}
+                    <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-0.5 pointer-events-none select-none">
+                      <Video className="w-4 h-4 text-amber-300" />
+                      <span className="text-[9.5px] font-mono font-extrabold text-amber-300 leading-tight">
+                        🎥 9:16 Trailer
+                      </span>
+                      <span className="text-[8px] font-mono text-cyan-300/90 uppercase">
+                        VAL.AI FPV
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* 5-Photo Thumbnails */}
                   {photoCards.map((card, idx) => {
-                    const isActive = activePhotoIdx === idx;
+                    const tabIdx = idx + 1;
+                    const isActive = activePhotoIdx === tabIdx;
                     return (
                       <button
                         key={card.id}
                         type="button"
                         onClick={() => {
                           soundManager.playTone(540 + idx * 40, 0.04);
-                          setActivePhotoIdx(idx);
+                          setActivePhotoIdx(tabIdx);
                         }}
                         className={`relative aspect-[16/10] rounded-xl overflow-hidden border transition-all cursor-pointer text-left touch-manipulation select-none ${
                           isActive
@@ -582,37 +620,6 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                       </button>
                     );
                   })}
-
-                  {/* Dedicated 🎥 9:16 Trailer Tab */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      soundManager.playTone(760, 0.05);
-                      setActivePhotoIdx(photoCards.length);
-                    }}
-                    className={`relative aspect-[16/10] rounded-xl overflow-hidden border transition-all cursor-pointer text-left flex flex-col items-center justify-center p-1.5 touch-manipulation select-none ${
-                      isTrailerTab
-                        ? 'border-amber-400 ring-2 ring-amber-400/50 bg-gradient-to-br from-amber-950/80 via-[#070d1e] to-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
-                        : 'border-amber-500/30 hover:border-amber-400/60 bg-gradient-to-br from-[#0a1228] to-black opacity-90 hover:opacity-100'
-                    }`}
-                  >
-                    {heroPhotoUrl && (
-                      <img
-                        src={heroPhotoUrl}
-                        alt="9:16 Trailer"
-                        className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none select-none"
-                      />
-                    )}
-                    <div className="relative z-10 flex flex-col items-center justify-center text-center space-y-0.5 pointer-events-none select-none">
-                      <Video className="w-4 h-4 text-amber-300" />
-                      <span className="text-[9.5px] font-mono font-extrabold text-amber-300 leading-tight">
-                        🎥 9:16 Trailer
-                      </span>
-                      <span className="text-[8px] font-mono text-cyan-300/90 uppercase">
-                        5s Vertical
-                      </span>
-                    </div>
-                  </button>
                 </div>
               </div>
 
