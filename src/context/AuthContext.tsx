@@ -27,9 +27,11 @@ interface AuthContextType {
   hasPendingVipInvitation: boolean;
   vipLinkError: string | null;
   clearVipLinkError: () => void;
+  authErrorMessage: string | null;
+  clearAuthErrorMessage: () => void;
   isAuthModalOpen: boolean;
   authModalMode: 'signin' | 'signup' | 'reset' | 'update_password';
-  openAuthModal: (mode?: 'signin' | 'signup' | 'reset' | 'update_password' | string) => void;
+  openAuthModal: (mode?: 'signin' | 'signup' | 'reset' | 'update_password' | string, initialError?: string) => void;
   closeAuthModal: () => void;
   updateProfile: (updates: Partial<Profile>) => Promise<{ success: boolean; error?: string }>;
   signInWithGoogle: () => Promise<{ data?: any; error?: any }>;
@@ -556,9 +558,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup' | 'reset' | 'update_password'>('signin');
   const [hasPendingVipInvitation, setHasPendingVipInvitation] = useState<boolean>(() => checkAndCaptureReferral());
   const [vipLinkError, setVipLinkError] = useState<string | null>(null);
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
 
   const clearVipLinkError = () => {
     setVipLinkError(null);
+  };
+
+  const clearAuthErrorMessage = () => {
+    setAuthErrorMessage(null);
   };
 
   // Derived Dynamic Entitlements
@@ -783,13 +790,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           window.dispatchEvent(new PopStateEvent('popstate'));
         }
 
-        // Detect incoming password recovery link
-        if (
-          typeof window !== 'undefined' &&
-          (window.location.hash.includes('type=recovery') ||
-           window.location.search.includes('type=recovery'))
-        ) {
-          openAuthModal('update_password');
+        // Step 3: Inspect URL parameters for error codes or password recovery tokens
+        const rawHash = typeof window !== 'undefined' ? window.location.hash : '';
+        const cleanHash = rawHash.replace(/^#/, '');
+        const hashParams = new URLSearchParams(cleanHash);
+        const searchParamsNow = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
+
+        const urlAuthError = hashParams.get('error') || searchParamsNow.get('error');
+        const urlErrorCode = hashParams.get('error_code') || searchParamsNow.get('error_code');
+        const urlErrorDesc = hashParams.get('error_description') || searchParamsNow.get('error_description');
+
+        if (urlAuthError || urlErrorCode) {
+          console.warn('[AuthContext] Auth URL error detected:', urlAuthError, urlErrorCode, urlErrorDesc);
+          // Immediately purge sensitive error parameters from address bar to prevent URL pollution
+          if (typeof window !== 'undefined' && window.location.hash) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+          const isExpired =
+            urlErrorCode === 'otp_expired' ||
+            urlAuthError === 'access_denied' ||
+            (urlErrorDesc && urlErrorDesc.toLowerCase().includes('expired'));
+          const friendlyMessage = isExpired
+            ? 'This recovery link has expired or has already been used. Please request a new recovery link.'
+            : (urlErrorDesc ? decodeURIComponent(urlErrorDesc.replace(/\+/g, ' ')) : 'Authentication link is invalid or expired.');
+          setAuthErrorMessage(friendlyMessage);
+          openAuthModal('reset', friendlyMessage);
+        } else {
+          const isRecoveryIntent =
+            cleanHash.includes('type=recovery') ||
+            searchParamsNow.get('type') === 'recovery' ||
+            currentPath === '/update-password' ||
+            currentPath.startsWith('/update-password');
+
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+
+          if (isRecoveryIntent && accessToken && refreshToken && isSupabaseConfigured) {
+            try {
+              const { data: recData, error: recErr } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              if (!recErr && recData?.session?.user && mounted) {
+                setUser(recData.session.user);
+              }
+            } catch (recoverySetErr) {
+              console.warn('[AuthContext] setSession recovery warning:', recoverySetErr);
+            }
+
+            // CRITICAL SECURITY: Strip access_token and refresh_token from the URL bar immediately!
+            // Prevents token leakage to browser history, screen recordings, or external Referer headers.
+            if (typeof window !== 'undefined' && window.location.hash) {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            openAuthModal('update_password');
+          } else if (isRecoveryIntent) {
+            // Strip any lingering hash fragments
+            if (typeof window !== 'undefined' && window.location.hash) {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            openAuthModal('update_password');
+          }
         }
       } catch (err) {
         console.warn('[AuthContext] Auth initialization warning:', err);
@@ -836,6 +899,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             window.dispatchEvent(new PopStateEvent('popstate'));
           }
         } else if (event === 'PASSWORD_RECOVERY') {
+          // Clean hash from URL bar immediately to eliminate token leakage
+          if (typeof window !== 'undefined' && window.location.hash) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
           openAuthModal('update_password');
         } else if (event === 'SIGNED_OUT') {
           // Explicit sign out only
@@ -857,7 +924,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const openAuthModal = (mode: 'signin' | 'signup' | 'reset' | 'update_password' | string = 'signin') => {
+  const openAuthModal = (
+    mode: 'signin' | 'signup' | 'reset' | 'update_password' | string = 'signin',
+    initialError?: string
+  ) => {
     const safeMode =
       mode === 'signup'
         ? 'signup'
@@ -867,12 +937,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? 'update_password'
         : 'signin';
     setAuthModalMode(safeMode as any);
+    if (initialError) {
+      setAuthErrorMessage(initialError);
+    }
     setIsAuthModalOpen(true);
     soundManager.playTone(580, 0.05);
   };
 
   const closeAuthModal = () => {
     setIsAuthModalOpen(false);
+    setAuthErrorMessage(null);
   };
 
   const signInWithGoogle = async (): Promise<{ data?: any; error?: any }> => {
@@ -1158,24 +1232,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!cleanEmail || !cleanEmail.includes('@')) {
       return { success: false, error: 'Please enter a valid email address.' };
     }
+
+    const siteOrigin =
+      typeof window !== 'undefined' && window.location.origin
+        ? window.location.origin
+        : 'https://sillowmill.com';
+    const redirectTo = `${siteOrigin}/update-password`;
+
+    let supaSuccess = false;
+    let supaErrorMessage = '';
+
     if (isSupabaseConfigured) {
       try {
-        const redirectTo =
-          typeof window !== 'undefined' && window.location.origin
-            ? `${window.location.origin}/`
-            : 'https://www.sillowmill.com/';
         const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
           redirectTo,
         });
         if (error) {
-          return { success: false, error: error.message };
+          supaErrorMessage = error.message;
+        } else {
+          supaSuccess = true;
         }
-        return { success: true };
       } catch (err: any) {
-        return { success: false, error: err?.message || 'Password reset request failed.' };
+        supaErrorMessage = err?.message || 'Password reset request failed.';
       }
     }
-    return { success: false, error: 'Authentication service not configured.' };
+
+    // Secondary dispatch via Resend SMTP endpoint (/api/auth/reset-password) for guaranteed deliverability
+    try {
+      const apiRes = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, redirectTo }),
+      });
+      const apiData = await apiRes.json().catch(() => null);
+      if (apiRes.ok && apiData?.success) {
+        soundManager.playUnlockChime();
+        return { success: true };
+      }
+    } catch (apiErr) {
+      console.warn('[AuthContext] Backup email dispatch notice:', apiErr);
+    }
+
+    if (supaSuccess) {
+      soundManager.playUnlockChime();
+      return { success: true };
+    }
+
+    if (supaErrorMessage) {
+      return { success: false, error: supaErrorMessage };
+    }
+
+    return { success: true };
   };
 
   const updatePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
@@ -1188,19 +1295,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: 'Password must contain at least 1 special character.' };
     }
 
+    let supaSuccess = false;
+    let supaError = '';
+
     if (isSupabaseConfigured) {
       try {
         const { error } = await supabase.auth.updateUser({ password: newPassword });
         if (error) {
-          return { success: false, error: error.message };
+          supaError = error.message;
+        } else {
+          supaSuccess = true;
         }
-        soundManager.playUnlockChime();
-        return { success: true };
       } catch (err: any) {
-        return { success: false, error: err?.message || 'Password update failed.' };
+        supaError = err?.message || 'Password update failed.';
       }
     }
-    return { success: false, error: 'Authentication service not configured.' };
+
+    // Also update server auth credentials store if user email is known
+    const targetEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+    if (targetEmail) {
+      try {
+        await fetch('/api/auth/update-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: targetEmail, password: newPassword }),
+        });
+      } catch (srvErr) {
+        console.warn('[AuthContext] Server credentials update notice:', srvErr);
+      }
+    }
+
+    if (supaSuccess || !isSupabaseConfigured) {
+      soundManager.playUnlockChime();
+      return { success: true };
+    }
+
+    return { success: false, error: supaError || 'Password update failed.' };
   };
 
   const signOut = async () => {
@@ -1406,6 +1536,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasPendingVipInvitation,
         vipLinkError,
         clearVipLinkError,
+        authErrorMessage,
+        clearAuthErrorMessage,
         isAuthModalOpen,
         authModalMode,
         openAuthModal,

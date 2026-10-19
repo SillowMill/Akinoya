@@ -20,6 +20,7 @@ export const AuthModal: React.FC = () => {
   const {
     isAuthModalOpen,
     authModalMode,
+    authErrorMessage,
     hasPendingVipInvitation,
     vipLinkError,
     closeAuthModal,
@@ -55,12 +56,12 @@ export const AuthModal: React.FC = () => {
   React.useEffect(() => {
     if (authModalMode) {
       setMode(authModalMode as any);
-      setError(null);
+      setError(authErrorMessage || null);
       setSuccess(null);
       setConfirmPassword('');
       setShowConfirmPassword(false);
     }
-  }, [authModalMode, isAuthModalOpen]);
+  }, [authModalMode, isAuthModalOpen, authErrorMessage]);
 
   if (!isAuthModalOpen) return null;
 
@@ -127,7 +128,7 @@ export const AuthModal: React.FC = () => {
           soundManager.playError();
         } else {
           soundManager.playUnlockChime();
-          setSuccess('Password reset link sent! Check your inbox to recover your account.');
+          setSuccess('A secure recovery link has been dispatched to your designated frequency.');
         }
       } else if (mode === 'update_password') {
         const res = await updatePassword(password);
@@ -290,337 +291,417 @@ export const AuthModal: React.FC = () => {
             </div>
           )}
 
-          {/* Password Reset Header */}
-          {mode === 'reset' && (
-            <div className="mt-4 p-3.5 rounded-xl bg-cyan-950/40 border border-cyan-500/20 text-left space-y-1">
+          {/* Password Reset Header (Shown when not in success feedback mode) */}
+          {mode === 'reset' && !success && (
+            <div className="mt-4 p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-left space-y-1.5 shadow-[0_0_20px_rgba(6,182,212,0.12)]">
               <div className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Password Recovery</span>
+                <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <span>Terminal Password Recovery</span>
               </div>
-              <p className="text-[11px] font-sans text-white/60 leading-relaxed">
-                Enter your account email below to receive a secure password reset link.
+              <p className="text-xs font-sans text-white/70 leading-relaxed">
+                Enter your account email frequency below. Sillow Mill will dispatch a secure one-time cryptographic recovery link to reset your credentials.
               </p>
             </div>
           )}
 
           {/* Password Update Header */}
           {mode === 'update_password' && (
-            <div className="mt-4 p-3.5 rounded-xl bg-cyan-950/40 border border-cyan-500/20 text-left space-y-1">
+            <div className="mt-4 p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-left space-y-1.5 shadow-[0_0_20px_rgba(6,182,212,0.12)]">
               <div className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-2">
-                <Lock className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Set New Password</span>
+                <Lock className="w-4 h-4 text-cyan-400" />
+                <span>Establish New Credentials</span>
               </div>
-              <p className="text-[11px] font-sans text-white/60 leading-relaxed">
-                Create a secure new password for your Sillow Mill profile.
+              <p className="text-xs font-sans text-white/70 leading-relaxed">
+                Create a secure new password for your Sillow Mill profile. Minimum 8 characters with at least one special character.
               </p>
             </div>
           )}
 
-          {/* Sign In / Register / Recovery Form */}
-          <div className="space-y-4 mt-5">
-            {/* Top Action: Official Continue with Google Button */}
-            {(mode === 'signin' || mode === 'signup') && (
-              <>
+          {/* Mode: Reset Password Success State Card (High-End Feedback) */}
+          {mode === 'reset' && success ? (
+            <div className="mt-5 space-y-4">
+              <div className="relative p-5 sm:p-6 rounded-2xl bg-[#080d1a]/95 border border-cyan-400/40 backdrop-blur-xl shadow-[0_0_35px_rgba(34,211,238,0.2)] text-center overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-400/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+
+                <div className="w-12 h-12 mx-auto rounded-full bg-cyan-400/20 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.4)] animate-pulse mb-3">
+                  <Mail className="w-6 h-6 text-cyan-300" />
+                </div>
+
+                <div className="inline-block px-2.5 py-0.5 rounded-full bg-cyan-400/10 border border-cyan-400/30 text-[10px] font-mono tracking-widest text-cyan-300 uppercase mb-2">
+                  TRANSMISSION DISPATCHED
+                </div>
+
+                <h3 className="text-base font-display font-extrabold text-white tracking-wide mb-2">
+                  Frequency Beacon Active
+                </h3>
+
+                <p className="text-xs sm:text-sm text-cyan-100 font-sans leading-relaxed mb-4">
+                  A secure recovery link has been dispatched to your designated frequency.
+                </p>
+
+                {/* Metadata telemetry card */}
+                <div className="p-3 rounded-xl bg-black/60 border border-white/10 text-left font-mono text-[11px] space-y-1.5 text-white/70">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/40 uppercase">TARGET FREQUENCY:</span>
+                    <span className="text-cyan-300 font-semibold truncate max-w-[200px]">{email}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/40 uppercase">DISPATCH PROTOCOL:</span>
+                    <span className="text-emerald-400 font-semibold">ENCRYPTED_MAGIC_LINK</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/40 uppercase">SECURITY EXPIRY:</span>
+                    <span className="text-white/80">60 MINUTES</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-1">
                 <button
                   type="button"
-                  onClick={handleGoogleAuth}
-                  disabled={isSubmitting}
-                  className="w-full min-h-[48px] px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-black font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-3 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:scale-[1.01] active:scale-[0.99] border border-white/20"
+                  onClick={() => {
+                    setMode('signin');
+                    setError(null);
+                    setSuccess(null);
+                    soundManager.playTone(560, 0.04);
+                  }}
+                  className="w-full min-h-[48px] px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs sm:text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all cursor-pointer"
                 >
-                  {/* Official Google G Logo SVG */}
-                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span>Continue with Google</span>
+                  <span>RETURN TO SIGN IN</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
 
-                {/* Minimalist Divider */}
-                <div className="relative flex items-center justify-center my-3">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/10" />
-                  </div>
-                  <span className="relative px-3 bg-[#050811] text-[10px] font-mono tracking-wider text-white/40 uppercase">
-                    OR SIGN {mode === 'signup' ? 'UP' : 'IN'} WITH EMAIL
-                  </span>
-                </div>
-              </>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {/* First Name & Last Name (Side-by-side on desktop ≥640px, stacked on mobile <640px) */}
-              {mode === 'signup' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-mono text-white/70 block">
-                      First Name <span className="text-cyan-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        required
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="Voornaam"
-                        className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-mono text-white/70 block">
-                      Last Name <span className="text-white/40">(Optional)</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Achternaam"
-                        className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Email Address */}
-              {mode !== 'update_password' && (
-                <div className="space-y-1">
-                  <label className="text-[11px] font-mono text-white/70 block">
-                    Email Address <span className="text-cyan-400">*</span>
-                  </label>
-                  <div className="relative flex items-center">
-                    <Mail className="absolute left-3.5 w-4 h-4 text-white/40 pointer-events-none" />
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="pilot@sillowmill.com"
-                      className="w-full min-h-[48px] pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Password Input */}
-              {mode !== 'reset' && (
-                <div className="space-y-1">
-                  <label className="text-[11px] font-mono text-white/70 block">
-                    {mode === 'update_password' ? 'New Password' : 'Password'} <span className="text-cyan-400">*</span>
-                  </label>
-                  <div className="relative flex items-center">
-                    <Lock className="absolute left-3.5 w-4 h-4 text-white/40 pointer-events-none" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      minLength={mode === 'signup' || mode === 'update_password' ? 8 : 6}
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        if (error) setError(null);
-                      }}
-                      placeholder="••••••••"
-                      className="w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 text-white/40 hover:text-white p-1 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-
-                  {/* Forgot Password Link on Sign In */}
-                  {mode === 'signin' && (
-                    <div className="flex justify-end pt-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMode('reset');
-                          setError(null);
-                          setSuccess(null);
-                          soundManager.playTone(560, 0.04);
-                        }}
-                        className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
-                      >
-                        Forgot Password?
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Confirm Password Input & Real-Time UX Feedback (Register and Update Password modes) */}
-              {(mode === 'signup' || mode === 'update_password') && (
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-mono text-white/70 block">
-                    {mode === 'update_password' ? 'Confirm New Password' : 'Confirm Password'} <span className="text-cyan-400">*</span>
-                  </label>
-                  <div className="relative flex items-center">
-                    <Lock className="absolute left-3.5 w-4 h-4 text-white/40 pointer-events-none" />
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      required
-                      value={confirmPassword}
-                      onChange={(e) => {
-                        setConfirmPassword(e.target.value);
-                        if (error) setError(null);
-                      }}
-                      placeholder="••••••••"
-                      className={`w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-[#080d1a] border ${
-                        confirmPassword.length > 0 && !passwordsMatch
-                          ? 'border-rose-500/60 focus:border-rose-400'
-                          : passwordsMatch
-                          ? 'border-emerald-500/60 focus:border-emerald-400'
-                          : 'border-white/15 focus:border-cyan-400'
-                      } text-white text-xs sm:text-sm font-sans outline-none transition-colors`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3.5 text-white/40 hover:text-white p-1 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
-                      aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-
-                  {/* Real-time UX Password Validation Checklist */}
-                  <div className="pt-1.5 pb-0.5 px-0.5 space-y-1.5 text-[11px] font-mono">
-                    <div
-                      className={`flex items-center gap-2 transition-colors ${
-                        hasMinLength
-                          ? 'text-emerald-400 font-medium'
-                          : password.length > 0
-                          ? 'text-white/60'
-                          : 'text-white/40'
-                      }`}
-                    >
-                      {hasMinLength ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      ) : (
-                        <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
-                      )}
-                      <span>• At least 8 characters</span>
-                    </div>
-
-                    <div
-                      className={`flex items-center gap-2 transition-colors ${
-                        hasSpecialChar
-                          ? 'text-emerald-400 font-medium'
-                          : password.length > 0
-                          ? 'text-white/60'
-                          : 'text-white/40'
-                      }`}
-                    >
-                      {hasSpecialChar ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      ) : (
-                        <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
-                      )}
-                      <span>• At least 1 special character</span>
-                    </div>
-
-                    <div
-                      className={`flex items-center gap-2 transition-colors ${
-                        passwordsMatch
-                          ? 'text-emerald-400 font-medium'
-                          : confirmPassword.length > 0
-                          ? 'text-rose-400 font-medium'
-                          : 'text-white/40'
-                      }`}
-                    >
-                      {passwordsMatch ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      ) : confirmPassword.length > 0 ? (
-                        <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                      ) : (
-                        <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
-                      )}
-                      <span>• Passwords match</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Error Banner */}
-              {error && (
-                <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs font-sans flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* Success Banner */}
-              {success && (
-                <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs font-sans flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>{success}</span>
-                </div>
-              )}
-
-              {/* Submit CTA */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full min-h-[48px] mt-2 px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs sm:text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <span>
-                      {mode === 'signup'
-                        ? 'CREATE FREE ACCOUNT'
-                        : mode === 'reset'
-                        ? 'SEND PASSWORD RESET LINK'
-                        : mode === 'update_password'
-                        ? 'UPDATE PASSWORD'
-                        : 'SIGN IN TO PORTAL'}
-                    </span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </>
-                )}
-              </button>
-
-              {/* Back to sign in link for recovery or update password modes */}
-              {(mode === 'reset' || mode === 'update_password') && (
-                <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSuccess(null);
+                    setError(null);
+                  }}
+                  className="w-full py-2 text-xs font-mono text-white/50 hover:text-white transition-colors cursor-pointer text-center"
+                >
+                  Need to transmit to a different frequency?
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Sign In / Register / Recovery Form */
+            <div className="space-y-4 mt-5">
+              {/* Top Action: Official Continue with Google Button */}
+              {(mode === 'signin' || mode === 'signup') && (
+                <>
                   <button
                     type="button"
-                    onClick={() => {
-                      setMode('signin');
-                      setError(null);
-                      setSuccess(null);
-                      soundManager.playTone(560, 0.04);
-                    }}
-                    className="text-xs font-mono text-white/60 hover:text-white transition-colors cursor-pointer"
+                    onClick={handleGoogleAuth}
+                    disabled={isSubmitting}
+                    className="w-full min-h-[48px] px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-black font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-3 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:scale-[1.01] active:scale-[0.99] border border-white/20"
                   >
-                    ← Back to Sign In
+                    {/* Official Google G Logo SVG */}
+                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                      <path
+                        fill="#4285F4"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                      />
+                    </svg>
+                    <span>Continue with Google</span>
                   </button>
-                </div>
+
+                  {/* Minimalist Divider */}
+                  <div className="relative flex items-center justify-center my-3">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-white/10" />
+                    </div>
+                    <span className="relative px-3 bg-[#050811] text-[10px] font-mono tracking-wider text-white/40 uppercase">
+                      OR SIGN {mode === 'signup' ? 'UP' : 'IN'} WITH EMAIL
+                    </span>
+                  </div>
+                </>
               )}
-            </form>
-          </div>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-3">
+                {/* First Name & Last Name (Side-by-side on desktop ≥640px, stacked on mobile <640px) */}
+                {mode === 'signup' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-mono text-white/70 block">
+                        First Name <span className="text-cyan-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          placeholder="Voornaam"
+                          className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-mono text-white/70 block">
+                        Last Name <span className="text-white/40">(Optional)</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          placeholder="Achternaam"
+                          className="w-full min-h-[48px] px-3.5 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Email Address */}
+                {mode !== 'update_password' && (
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-mono text-white/70 block">
+                      Email Address <span className="text-cyan-400">*</span>
+                    </label>
+                    <div className="relative flex items-center">
+                      <Mail className="absolute left-3.5 w-4 h-4 text-white/40 pointer-events-none" />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="pilot@sillowmill.com"
+                        className="w-full min-h-[48px] pl-10 pr-3.5 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Password Input */}
+                {mode !== 'reset' && (
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-mono text-white/70 block">
+                      {mode === 'update_password' ? 'New Password' : 'Password'} <span className="text-cyan-400">*</span>
+                    </label>
+                    <div className="relative flex items-center">
+                      <Lock className="absolute left-3.5 w-4 h-4 text-white/40 pointer-events-none" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        minLength={mode === 'signup' || mode === 'update_password' ? 8 : 6}
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          if (error) setError(null);
+                        }}
+                        placeholder="••••••••"
+                        className="w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-[#080d1a] border border-white/15 focus:border-cyan-400 text-white text-xs sm:text-sm font-sans outline-none transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 text-white/40 hover:text-white p-1 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+
+                    {/* Forgot Password Link on Sign In */}
+                    {mode === 'signin' && (
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMode('reset');
+                            setError(null);
+                            setSuccess(null);
+                            soundManager.playTone(560, 0.04);
+                          }}
+                          className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
+                        >
+                          Forgot Password?
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Confirm Password Input & Real-Time UX Feedback (Register and Update Password modes) */}
+                {(mode === 'signup' || mode === 'update_password') && (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-mono text-white/70 block">
+                      {mode === 'update_password' ? 'Confirm New Password' : 'Confirm Password'} <span className="text-cyan-400">*</span>
+                    </label>
+                    <div className="relative flex items-center">
+                      <Lock className="absolute left-3.5 w-4 h-4 text-white/40 pointer-events-none" />
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        required
+                        value={confirmPassword}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          if (error) setError(null);
+                        }}
+                        placeholder="••••••••"
+                        className={`w-full min-h-[48px] pl-10 pr-10 py-2.5 rounded-xl bg-[#080d1a] border ${
+                          confirmPassword.length > 0 && !passwordsMatch
+                            ? 'border-rose-500/60 focus:border-rose-400'
+                            : passwordsMatch
+                            ? 'border-emerald-500/60 focus:border-emerald-400'
+                            : 'border-white/15 focus:border-cyan-400'
+                        } text-white text-xs sm:text-sm font-sans outline-none transition-colors`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3.5 text-white/40 hover:text-white p-1 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                        aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+
+                    {/* Real-time UX Password Validation Checklist */}
+                    <div className="pt-1.5 pb-0.5 px-0.5 space-y-1.5 text-[11px] font-mono">
+                      <div
+                        className={`flex items-center gap-2 transition-colors ${
+                          hasMinLength
+                            ? 'text-emerald-400 font-medium'
+                            : password.length > 0
+                            ? 'text-white/60'
+                            : 'text-white/40'
+                        }`}
+                      >
+                        {hasMinLength ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        ) : (
+                          <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
+                        )}
+                        <span>• At least 8 characters</span>
+                      </div>
+
+                      <div
+                        className={`flex items-center gap-2 transition-colors ${
+                          hasSpecialChar
+                            ? 'text-emerald-400 font-medium'
+                            : password.length > 0
+                            ? 'text-white/60'
+                            : 'text-white/40'
+                        }`}
+                      >
+                        {hasSpecialChar ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        ) : (
+                          <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
+                        )}
+                        <span>• At least 1 special character</span>
+                      </div>
+
+                      <div
+                        className={`flex items-center gap-2 transition-colors ${
+                          passwordsMatch
+                            ? 'text-emerald-400 font-medium'
+                            : confirmPassword.length > 0
+                            ? 'text-rose-400 font-medium'
+                            : 'text-white/40'
+                        }`}
+                      >
+                        {passwordsMatch ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        ) : confirmPassword.length > 0 ? (
+                          <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                        ) : (
+                          <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
+                        )}
+                        <span>• Passwords match</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Banner */}
+                {error && (
+                  <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs font-sans flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Success Banner (for non-reset modes) */}
+                {success && mode !== 'reset' && (
+                  <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs font-sans flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{success}</span>
+                  </div>
+                )}
+
+                {/* Submit CTA */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full min-h-[48px] mt-2 px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs sm:text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>
+                        {mode === 'signup'
+                          ? 'CREATING ACCOUNT...'
+                          : mode === 'reset'
+                          ? 'TRANSMITTING RECOVERY BEACON...'
+                          : mode === 'update_password'
+                          ? 'ENCRYPTING NEW CREDENTIALS...'
+                          : 'SIGNING IN...'}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <span>
+                        {mode === 'signup'
+                          ? 'CREATE FREE ACCOUNT'
+                          : mode === 'reset'
+                          ? 'DISPATCH RECOVERY LINK'
+                          : mode === 'update_password'
+                          ? 'UPDATE CREDENTIALS'
+                          : 'SIGN IN TO PORTAL'}
+                      </span>
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
+                </button>
+
+                {/* Back to sign in link for recovery or update password modes */}
+                {(mode === 'reset' || mode === 'update_password') && (
+                  <div className="text-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('signin');
+                        setError(null);
+                        setSuccess(null);
+                        soundManager.playTone(560, 0.04);
+                      }}
+                      className="text-xs font-mono text-white/60 hover:text-white transition-colors cursor-pointer"
+                    >
+                      ← Back to Sign In
+                    </button>
+                  </div>
+                )}
+              </form>
+            </div>
+          )}
 
           {/* GDPR / Privacy Compliance Footer */}
           <div className="mt-5 pt-3 border-t border-white/5 text-center text-[10px] font-mono text-white/40 flex items-center justify-center gap-1.5">

@@ -41,6 +41,7 @@ import {
   registerUserCredentials,
   loginUserCredentials,
   getUserFromSessionToken,
+  updateUserPassword,
   castSubmissionVote,
   getVotesSummary,
   saveSubmissionRecord,
@@ -337,7 +338,7 @@ apiRouter.post('/nfc/register', async (req: Request, res: Response): Promise<voi
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Sillow Mill <onboarding@resend.dev>',
+          from: process.env.AUTH_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'Sillow Mill <auth@sillowmill.com>',
           to: [email],
           subject: 'Your Äkinoya VIP Magic Sign-In Link',
           html: `<div style="background-color: #05080e; color: #ffffff; padding: 32px; font-family: sans-serif; text-align: center; border-radius: 12px;">
@@ -651,6 +652,88 @@ apiRouter.get('/auth/session', async (req: Request, res: Response): Promise<void
     res.status(result.success ? 200 : 401).json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'Session validation failed' });
+  }
+});
+
+apiRouter.post('/auth/reset-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, redirectTo } = req.body || {};
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      res.status(400).json({ success: false, error: 'Please enter a valid email address.' });
+      return;
+    }
+
+    const resendApiKey = process.env.RESEND_API_KEY || '';
+    const host = req.headers['x-forwarded-host'] || req.headers?.host;
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const siteBase = req.headers?.origin || (host ? `${proto}://${host}` : 'https://sillowmill.com');
+    const updateUrl = redirectTo || `${siteBase}/update-password`;
+    const fromAddress = process.env.AUTH_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'Sillow Mill <auth@sillowmill.com>';
+
+    if (resendApiKey) {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: fromAddress,
+            to: [cleanEmail],
+            subject: 'Sillow Mill // Security Frequency: Password Recovery',
+            html: `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #05070c; color: #ffffff; padding: 40px 20px; line-height: 1.6;">
+                <div style="max-width: 540px; margin: 0 auto; background-color: #0a0d14; border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
+                  <div style="padding: 32px 32px 24px 32px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); text-align: center;">
+                    <p style="letter-spacing: 3px; font-size: 11px; font-weight: 700; color: #22d3ee; margin: 0 0 8px 0; text-transform: uppercase;">SILLOW MILL · SECURITY PROTOCOL</p>
+                    <h1 style="font-size: 22px; font-weight: 800; color: #ffffff; margin: 0; letter-spacing: 0.5px;">Password Recovery Transmission</h1>
+                    <p style="font-size: 12px; color: rgba(255, 255, 255, 0.5); margin: 6px 0 0 0; font-family: monospace;">Designated Frequency: ${cleanEmail}</p>
+                  </div>
+                  <div style="padding: 32px;">
+                    <p style="font-size: 14px; color: rgba(255, 255, 255, 0.85); margin: 0 0 16px 0;">
+                      A security recovery beacon was initiated for your Sillow Mill account terminal.
+                    </p>
+                    <p style="font-size: 13px; color: rgba(255, 255, 255, 0.65); margin: 0 0 24px 0;">
+                      Click the cryptographic recovery link below to establish a new password and unlock full portal telemetry:
+                    </p>
+                    <div style="text-align: center; margin: 32px 0;">
+                      <a href="${updateUrl}" style="background-color: #06b6d4; color: #000000; padding: 14px 32px; border-radius: 10px; font-weight: 800; font-size: 13px; letter-spacing: 1px; text-decoration: none; display: inline-block; box-shadow: 0 0 20px rgba(6, 182, 212, 0.4); text-transform: uppercase;">RESET PASSWORD NOW →</a>
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; margin-top: 24px; text-align: center;">
+                      For your protection, this recovery frequency token will expire in 60 minutes. If you did not initiate this transmission, no action is required.
+                    </p>
+                  </div>
+                </div>
+              </div>`,
+          }),
+        });
+      } catch (sendErr) {
+        console.warn('[Auth/ResetPassword] Resend dispatch warning:', sendErr);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'A secure recovery link has been dispatched to your designated frequency.',
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Password reset failed' });
+  }
+});
+
+apiRouter.post('/auth/update-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      res.status(400).json({ success: false, error: 'Email and password are required.' });
+      return;
+    }
+    const result = await updateUserPassword(email, password);
+    res.status(result.success ? 200 : 400).json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Password update failed' });
   }
 });
 

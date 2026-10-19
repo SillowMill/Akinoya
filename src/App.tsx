@@ -143,7 +143,7 @@ export default function App() {
       if (path === '/contest' || path.startsWith('/contest/')) return 'contest';
       if (path === '/creators' || path.startsWith('/creators/')) return 'creators';
       if (path === '/community' || path.startsWith('/community/')) return 'community';
-      if (path === '/auth/callback' || path.startsWith('/auth/callback') || isSupabaseAuth) {
+      if (path === '/auth/callback' || path.startsWith('/auth/callback') || path === '/update-password' || path.startsWith('/update-password') || isSupabaseAuth) {
         return 'home';
       }
       if (path === '/privacy' || path.startsWith('/privacy/')) return 'privacy';
@@ -191,7 +191,7 @@ export default function App() {
       window.location.hash.includes('access_token')
     );
 
-    if (path === '/auth/callback' || path.startsWith('/auth/callback') || isSupabaseAuth) {
+    if (path === '/auth/callback' || path.startsWith('/auth/callback') || path === '/update-password' || path.startsWith('/update-password') || isSupabaseAuth) {
       setRoute('home');
       return;
     }

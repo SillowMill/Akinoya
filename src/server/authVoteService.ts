@@ -427,6 +427,35 @@ export async function loginUserCredentials(
   };
 }
 
+export async function updateUserPassword(
+  email: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail || !cleanEmail.includes('@')) {
+    return { success: false, error: 'Please enter a valid email address.' };
+  }
+  if (!newPassword || newPassword.length < 8) {
+    return { success: false, error: 'Password must be at least 8 characters.' };
+  }
+
+  _userStore = loadUsersStore();
+  const existing = _userStore.users[cleanEmail];
+  if (!existing) {
+    return { success: false, error: 'User record not found.' };
+  }
+
+  const { salt, hash } = hashPassword(newPassword);
+  existing.salt = salt;
+  existing.passwordHash = hash;
+  existing.updatedAt = new Date().toISOString();
+
+  _userStore.users[cleanEmail] = existing;
+  saveUsersStore(_userStore);
+
+  return { success: true };
+}
+
 export async function getUserFromSessionToken(
   token: string
 ): Promise<{ success: boolean; user?: any; profile?: Profile; error?: string }> {

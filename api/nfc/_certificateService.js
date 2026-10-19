@@ -102,7 +102,7 @@ export async function sendEmailOtp(passId, email) {
   }
 
   const code = otpForWindow(passId, email, Math.floor(Date.now() / OTP_WINDOW_MS));
-  const from = process.env.OTP_FROM_EMAIL || 'Sillow Mill <onboarding@resend.dev>';
+  const from = process.env.OTP_FROM_EMAIL || process.env.AUTH_FROM_EMAIL || 'Sillow Mill <auth@sillowmill.com>';
   const html = `
     <div style="font-family:Arial,sans-serif;background:#05070c;color:#ffffff;padding:32px">
       <p style="letter-spacing:2px;font-size:12px;color:#67e8f9;margin:0 0 12px">SILLOW MILL · ÄKINOYA</p>
@@ -164,7 +164,7 @@ export async function sendEmailCardPin(passId, email, holderName = 'Founding Hol
     };
   }
 
-  const from = process.env.RESEND_FROM_EMAIL || 'Sillow Mill <onboarding@resend.dev>';
+  const from = process.env.RESEND_FROM_EMAIL || process.env.NOREPLY_FROM_EMAIL || 'Sillow Mill <noreply@sillowmill.com>';
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #05070c; color: #ffffff; padding: 40px 20px; line-height: 1.6;">
       <div style="max-width: 540px; margin: 0 auto; background-color: #0a0d14; border: 1px solid rgba(34, 211, 238, 0.25); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
