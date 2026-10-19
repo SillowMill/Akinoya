@@ -903,9 +903,28 @@ export const LiveStoryTrailerViewport: React.FC<{
   }, [dossier, meta, photoCards]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-[22px] bg-[#030712]">
+    <div
+      className="relative w-full h-full overflow-hidden rounded-[22px] bg-[#030712] select-none"
+      style={{
+        transform: 'translate3d(0, 0, 0)',
+        WebkitTransform: 'translate3d(0, 0, 0)',
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+      }}
+    >
+      {/* Background Poster Image: Eliminates black/gray loading flashes while video or canvas initialises */}
+      {photoCards[0]?.url && (
+        <img
+          src={photoCards[0].url}
+          alt={dossier.planetName || 'Ämlemi'}
+          className="absolute inset-0 w-full h-full object-cover z-0 filter brightness-95"
+          decoding="async"
+        />
+      )}
+
       {videoUrl ? (
-        <div className="relative w-full h-full">
+        <div className="relative z-10 w-full h-full">
           <video
             src={videoUrl}
             poster={photoCards[0]?.url}
@@ -913,11 +932,19 @@ export const LiveStoryTrailerViewport: React.FC<{
             loop
             muted
             playsInline
-            className="w-full h-full object-cover"
+            preload="auto"
+            style={{
+              transform: 'translate3d(0, 0, 0)',
+              WebkitTransform: 'translate3d(0, 0, 0)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+            }}
+            className="w-full h-full object-cover relative z-10"
           />
           {/* Top-level & Bottom-left Branded Overlay on native MP4 */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none" />
-          <div className="absolute top-3 left-3.5 right-3.5 flex items-start justify-between gap-2 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none z-20" />
+          <div className="absolute top-3 left-3.5 right-3.5 flex items-start justify-between gap-2 pointer-events-none z-30">
             <div>
               <div className="inline-flex items-center gap-1 text-[8.5px] font-mono font-extrabold text-amber-300 tracking-wider uppercase">
                 <Sparkles className="w-2.5 h-2.5 text-amber-300 inline" />
@@ -941,7 +968,7 @@ export const LiveStoryTrailerViewport: React.FC<{
             </span>
           </div>
 
-          <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between gap-2 pointer-events-none">
+          <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between gap-2 pointer-events-none z-30">
             <div className="flex items-center gap-2">
               <img
                 src={sillowMillLogoUrl}
@@ -967,7 +994,14 @@ export const LiveStoryTrailerViewport: React.FC<{
           ref={canvasRef}
           width={540}
           height={960}
-          className="w-full h-full object-cover block"
+          style={{
+            transform: 'translate3d(0, 0, 0)',
+            WebkitTransform: 'translate3d(0, 0, 0)',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+          className="relative z-10 w-full h-full object-cover block"
         />
       )}
     </div>

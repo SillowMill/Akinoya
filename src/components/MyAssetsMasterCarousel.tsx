@@ -715,14 +715,23 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                 initial="enter"
                 animate="center"
                 exit="exit"
+                style={{
+                  transform: 'translate3d(0, 0, 0)',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  willChange: 'transform, opacity',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                }}
                 className="space-y-4"
               >
                 {/* Main 4K Cinematic Display Stage */}
-                <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] max-h-[500px] rounded-2xl overflow-hidden bg-slate-950 border border-amber-400/40 shadow-[0_15px_50px_rgba(0,0,0,0.8)] group">
+                <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] max-h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#02050b] via-[#050b18] to-[#02050b] border border-amber-400/40 shadow-[0_15px_50px_rgba(0,0,0,0.8)] group">
                   {activePhoto?.url && (
                     <img
                       src={activePhoto.url}
                       alt={activePhoto.title}
+                      loading="eager"
+                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
                     />
                   )}
@@ -839,6 +848,13 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                 initial="enter"
                 animate="center"
                 exit="exit"
+                style={{
+                  transform: 'translate3d(0, 0, 0)',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  willChange: 'transform, opacity',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                }}
                 className="flex flex-col lg:flex-row items-center justify-center gap-6 md:gap-8 py-2"
               >
                 {/* 9:16 Story Card Canvas/Display Area */}
@@ -1059,6 +1075,13 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                 initial="enter"
                 animate="center"
                 exit="exit"
+                style={{
+                  transform: 'translate3d(0, 0, 0)',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  willChange: 'transform, opacity',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                }}
                 className="flex flex-col lg:flex-row items-center justify-center gap-6 md:gap-8 py-2"
               >
                 {/* 9:16 Animated Video Trailer Stage */}

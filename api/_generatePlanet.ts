@@ -212,9 +212,29 @@ export class FalMaintenanceQueueError extends Error {
 
 export const FAL_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
 export const FAL_VIDEO_ENDPOINT = 'https://fal.run/fal-ai/bytedance/seaweed-2.5/image-to-video';
-export const FAL_VIDEO_FALLBACK_ENDPOINT = 'https://fal.run/fal-ai/minimax/video-01/image-to-video';
+export const FAL_VIDEO_FALLBACK_ENDPOINT = 'https://fal.run/minimax/h3/image-to-video';
 export const FAL_SFX_MMAUDIO_ENDPOINT = 'https://fal.run/fal-ai/mmaudio-v2';
 export const FAL_SFX_STABLE_AUDIO_ENDPOINT = 'https://fal.run/fal-ai/stable-audio';
+
+/**
+ * Resolves any relative, local, or canonical planet assets into a fully qualified HTTPS URL.
+ * Ensures Fal.ai image-to-video pipelines never receive relative paths or unresolvable URLs.
+ */
+export function resolveAbsoluteImageUrl(url: string): string {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:image/')) {
+    return trimmed;
+  }
+  // Canonical Ämlemi orbital asset
+  if (trimmed.includes('01-orbital') || trimmed.includes('amlemi_renders/01') || trimmed.includes('01_orbital')) {
+    return 'https://www.sillowmill.com/assets/01-orbital-D4ZjgTfh.png';
+  }
+  if (trimmed.startsWith('/')) {
+    return `https://www.sillowmill.com${trimmed}`;
+  }
+  return `https://www.sillowmill.com/${trimmed}`;
+}
 
 // ─── Credit Pool & Usage Ledger ($25.00 Funded Balance) ──────────────────────
 export const INITIAL_FAL_CREDIT_POOL_USD = 25.0;
@@ -806,11 +826,12 @@ export async function generateViralVideoWithFal(
     throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 403);
   }
 
+  const resolvedHeroUrl = resolveAbsoluteImageUrl(heroImageUrl);
   const prompt = customMotionPrompt || VIRAL_VIDEO_MOTION_PROMPT;
 
   const payload = {
     prompt,
-    image_url: heroImageUrl,
+    image_url: resolvedHeroUrl,
     aspect_ratio: '9:16',
     duration: '5',
     prompt_optimizer: true,
@@ -878,10 +899,9 @@ export async function generateViralVideoWithFal(
           },
           body: JSON.stringify({
             prompt,
-            image_url: heroImageUrl,
-            aspect_ratio: '9:16',
-            duration: '5',
-            prompt_optimizer: true,
+            image_url: resolvedHeroUrl,
+            duration: 5,
+            resolution: '768P',
           }),
         })
       );
@@ -890,7 +910,7 @@ export async function generateViralVideoWithFal(
       const durationMs = Date.now() - startTime;
       recordFalUsage({
         slot: 'video',
-        model: 'fal-ai/minimax/video-01',
+        model: 'minimax/h3/image-to-video',
         durationMs,
         estimatedCostUsd: 0,
         status: 'ERROR',
@@ -1746,7 +1766,17 @@ export async function checkAndResolveDynamicVideo(params: {
   }
 
   // If synthesis is requested and we have a valid heroImageUrl (https or data URI), attempt live Val.ai/Fal.ai synthesis
-  const heroUrl = (params.heroImageUrl || '').trim();
+  let rawHeroUrl = (params.heroImageUrl || '').trim();
+  const isAmlemiWorld =
+    params.planetId === 'planet-amlemi-genesis-01' ||
+    params.planetName?.toLowerCase().includes('ämlemi') ||
+    params.planetName?.toLowerCase().includes('amlemi');
+
+  if (!rawHeroUrl && isAmlemiWorld) {
+    rawHeroUrl = 'https://www.sillowmill.com/assets/01-orbital-D4ZjgTfh.png';
+  }
+
+  const heroUrl = resolveAbsoluteImageUrl(rawHeroUrl);
   const now = Date.now();
   const lastFail = cacheKey ? failedCheckCooldownMap.get(cacheKey) || 0 : 0;
   const withinCooldown = now - lastFail < 45_000;

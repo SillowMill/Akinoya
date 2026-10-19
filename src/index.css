@@ -340,3 +340,36 @@ div[role="dialog"],
 .bg-black\/75 {
   background-color: #060a14 !important;
 }
+
+/* ==========================================================================
+   ENTERPRISE GPU HARDWARE ACCELERATION & ZERO-FLICKER WIDGET RENDERING
+   ========================================================================== */
+.gpu-accelerated,
+.widget-transition,
+[data-framer-motion],
+.carousel-slide-gpu {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Eliminate gray/black box loading flashes & layout shifts */
+.aspect-\[9\/16\],
+.aspect-\[16\/9\],
+.aspect-\[16\/10\],
+.aspect-square {
+  contain: layout paint;
+  background-color: #030712;
+}
+
+video,
+canvas {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
