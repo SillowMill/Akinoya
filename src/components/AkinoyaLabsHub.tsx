@@ -116,6 +116,7 @@ interface StageDetail {
   technicalSpecs: Array<{ label: string; value: string }>;
   characterDownloads?: Array<{
     name: string;
+    role?: string;
     fileName: string;
     size: string;
     format: string;
@@ -438,8 +439,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       vaultFolderMapping: '02 · Art Direction',
       isAdvancedLocked: false,
       heroImage: millLockingImg,
-      heroImageAlt: 'Character locking hero visual featuring Mill in biological exploration suit (MiLLLL.PNG)',
-      themeDescription: 'Master character locking turnaround plate (MiLLLL.PNG)',
+      heroImageAlt: 'Character locking hero visual featuring Mill in biological exploration suit with mushroom helmet archetype',
+      themeDescription: 'Master character locking turnaround plate — Mill, Alien Bio-Analyst',
       millTransmission:
         'Style drift is the silent killer of AI cinema! Anchor your character sheets and color palettes before rendering a single final frame.',
       millProTip:
@@ -470,54 +471,57 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         title: 'Locking the Äkinoya Style & Core Cast',
         summary: 'How Mill, Odi, and Sillow were locked using high-resolution turnaround plates.',
         deepDiveNarrative:
-          'To achieve a signature aesthetic across hundreds of experimental generation passes, Odi locked three foundational character reference sheets from the Character Locking vault: Mill in her environmental bio-analyst suit (MiLLLL.PNG), Odi in tactical mechanic reconnaissance armor (Odi.JPG), and Sillow as the lead planetary explorer (Sillow.JPG). Character sheets were formalized, freezing their visors, harnesses, and cyan/purple palette swatches.',
+          'To achieve a signature aesthetic across hundreds of experimental generation passes, Odi locked three foundational character reference sheets from the Character Locking vault: Mill in her environmental bio-analyst suit with the mushroom helmet archetype, Odi as the scout mechanic without dreadlocks wearing tactical reconnaissance armor, and Sillow as the lead planetary explorer styled with distinct dreadlocks and a tactical harness. Character sheets were formalized, freezing their visors, harnesses, and cyan/purple palette swatches.',
         previewThumbnails: [
-          { img: millLockingImg, caption: 'Mill Lead Bio-Analyst Master Turnaround (MiLLLL.PNG)' },
-          { img: odiLockingImg, caption: 'Odi Scout Mechanic Turnaround (Odi.JPG)' },
-          { img: sillowLockingImg, caption: 'Sillow Lead Explorer Turnaround (Sillow.JPG)' },
+          { img: millLockingImg, caption: 'Mill — Alien Bio-Analyst (Mushroom Helmet Archetype)' },
+          { img: odiLockingImg, caption: 'Odi — Scout Mechanic (Tactical Recon Armor, No Dreadlocks)' },
+          { img: sillowLockingImg, caption: 'Sillow — Lead Planetary Explorer (Dreadlocks & Tactical Harness)' },
         ],
       },
       characterDownloads: [
         {
-          name: 'Mill — Lead Bio-Analyst Master Plate',
-          fileName: 'MilLLL.PNG',
+          name: 'Mill',
+          role: 'Alien Bio-Analyst',
+          fileName: 'Mill — Master Character Plate',
           size: '6.7 MB',
-          format: '4K UHD Lossless PNG',
+          format: '4K Lossless Plate',
           img: millLockingImg,
           downloadUrl: '',
-          description: 'Master lossless character turnaround and visual anchor plate for Mill with environmental bio-analyst suit and cyan visor.',
+          description: 'The alien bio-analyst in her environmental suit with the mushroom helmet archetype.',
         },
         {
-          name: 'Odi — Scout & Mechanic Model Sheet',
-          fileName: 'Odi.JPG',
+          name: 'Odi',
+          role: 'Scout Mechanic',
+          fileName: 'Odi — Tactical Recon Sheet',
           size: '275 KB',
-          format: 'High-Res JPG · 300 DPI',
+          format: 'High-Res Model Plate',
           img: odiLockingImg,
           downloadUrl: '',
-          description: 'Armored reconnaissance suit model plate detailing tactical harness, tool holsters, and terrain equipment.',
+          description: 'The scout mechanic without dreadlocks, wearing tactical reconnaissance armor.',
         },
         {
-          name: 'Sillow — Lead Explorer Master Sheet',
-          fileName: 'Sillow.JPG',
+          name: 'Sillow',
+          role: 'Lead Planetary Explorer',
+          fileName: 'Sillow — Explorer Master Turnaround',
           size: '280 KB',
-          format: 'High-Res JPG · 300 DPI',
+          format: 'High-Res Model Plate',
           img: sillowLockingImg,
           downloadUrl: '',
-          description: 'Master 4-angle turnaround character sheet for Sillow with cybernetic visor annotations and exploration suit Mark IV specs.',
+          description: 'The lead planetary explorer styled with distinct dreadlocks and a tactical harness.',
         },
       ],
       masterAsset: {
         title: 'Äkinoya Character Locking Master Pack (Mill, Odi, Sillow)',
-        fileName: 'MilLLL.PNG',
+        fileName: 'Character_Locking_Master_Pack.zip',
         fileSize: '7.3 MB',
-        fileFormat: 'PNG + JPG Master Set',
+        fileFormat: 'Lossless Master Set',
         vaultPath: 'Drive / 02 · Art Direction & Character Anchors / Character_Sheets_Sillow_Odi_Mill',
-        description: 'Complete 3-character high-resolution reference locking plates: MiLLLL.PNG (Mill), Odi.JPG (Odi), and Sillow.JPG (Sillow).',
+        description: 'Complete 3-character high-resolution reference locking plates: Mill (Alien Bio-Analyst), Odi (Scout Mechanic), and Sillow (Lead Planetary Explorer).',
         specs: [
           { key: 'Resolution', val: '4096 x 2160 (4K UHD)' },
-          { key: 'Lead Character', val: 'Mill (MiLLLL.PNG)' },
-          { key: 'Scout Rig', val: 'Odi (Odi.JPG)' },
-          { key: 'Explorer Sheet', val: 'Sillow (Sillow.JPG)' },
+          { key: 'Lead Character', val: 'Mill (Alien Bio-Analyst)' },
+          { key: 'Scout Rig', val: 'Odi (Scout Mechanic)' },
+          { key: 'Explorer Sheet', val: 'Sillow (Lead Planetary Explorer)' },
         ],
       },
       technicalSpecs: [
@@ -1056,8 +1060,16 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             loading="lazy"
                             decoding="async"
                             style={{ willChange: 'opacity, transform' }}
-                            className="relative z-10 w-full h-full object-cover transition-transform duration-300 group-hover/banner:scale-105 opacity-90 group-hover/banner:opacity-100 transform-gpu"
+                            className={`relative z-10 w-full h-full object-cover transition-all duration-300 group-hover/banner:scale-105 opacity-90 group-hover/banner:opacity-100 transform-gpu ${
+                              stage.id === 2 ? 'filter blur-[7px] group-hover/banner:blur-[5px]' : ''
+                            }`}
                           />
+                          {stage.id === 2 && (
+                            <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-950/80 border border-purple-400/40 text-[9.5px] font-mono font-bold text-purple-200 shadow-md backdrop-blur-sm pointer-events-none">
+                              <ShieldCheck className="w-3 h-3 text-purple-300" />
+                              <span>SECURITY BLUR ACTIVE</span>
+                            </div>
+                          )}
                           {/* Desktop-Only Image Gradient & Overlays (Hidden on Mobile & iPad <1280px to keep photography 100% clean) */}
                           <div className="hidden xl:block absolute inset-0 z-20 bg-gradient-to-t from-black via-black/30 to-transparent pointer-events-none" />
 
@@ -1498,25 +1510,40 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                       </p>
 
                       {/* Case Study Image Thumbnails */}
-                      <div className="grid grid-cols-2 gap-3 pt-2">
-                        {selectedStageForModal.odiCaseStudy.previewThumbnails.map((th) => (
-                          <div
-                            key={th.caption}
-                            onClick={() => setSelectedPreviewImage(th.img)}
-                            className="relative rounded-xl overflow-hidden border border-white/10 group/thumb cursor-pointer aspect-[16/9] bg-black/70"
-                          >
-                            <img
-                              src={th.img}
-                              alt={th.caption}
-                              className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
-                              <span className="text-[10px] font-mono text-cyan-200 truncate">
-                                {th.caption}
-                              </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        {selectedStageForModal.odiCaseStudy.previewThumbnails.map((th) => {
+                          const isStage2 = selectedStageForModal.id === 2;
+                          return (
+                            <div
+                              key={th.caption}
+                              onClick={() => setSelectedPreviewImage(th.img)}
+                              className="relative rounded-xl overflow-hidden border border-white/10 hover:border-purple-400/50 group/thumb cursor-pointer aspect-[16/9] bg-black/70 select-none"
+                            >
+                              <img
+                                src={th.img}
+                                alt={th.caption}
+                                className={`w-full h-full object-cover transition-all duration-300 pointer-events-none select-none ${
+                                  isStage2
+                                    ? 'filter blur-[8px] group-hover/thumb:blur-[5px] scale-105'
+                                    : 'group-hover/thumb:scale-105'
+                                }`}
+                              />
+                              {isStage2 && (
+                                <div className="absolute inset-0 bg-black/30 flex items-center justify-center p-2 pointer-events-none">
+                                  <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-black/80 border border-purple-400/50 text-purple-200 uppercase tracking-wider shadow-sm flex items-center gap-1 backdrop-blur-sm">
+                                    <ShieldCheck className="w-3 h-3 text-purple-300" />
+                                    Security Blur
+                                  </span>
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex items-end p-2 pointer-events-none">
+                                <span className="text-[10px] font-mono text-cyan-200 truncate font-semibold">
+                                  {th.caption}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -1543,7 +1570,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         <div className="flex items-center gap-2">
                           <Crown className="w-4 h-4 text-purple-400" />
                           <h4 className="text-sm font-mono font-bold text-purple-200 tracking-wider uppercase">
-                            Character Locking Vault Plates (MiLLLL.PNG · Odi.JPG · Sillow.JPG)
+                            Character Locking Turnaround Plates (Mill · Odi · Sillow)
                           </h4>
                         </div>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-400/30">
@@ -1555,36 +1582,63 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         Official character turnaround sheets and visual anchors from the Character Locking vault, ready for direct multi-modal conditioning and pipeline study.
                       </p>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
                         {selectedStageForModal.characterDownloads.map((char) => (
                           <div
-                            key={char.fileName}
-                            className="p-3.5 rounded-xl bg-black/60 border border-white/10 hover:border-purple-400/40 space-y-3 flex flex-col justify-between transition-all"
+                            key={char.name}
+                            className="p-3.5 rounded-2xl bg-black/70 border border-purple-500/25 hover:border-purple-400/50 space-y-3 flex flex-col justify-between transition-all"
                           >
-                            <div className="space-y-2">
+                            <div className="space-y-3">
+                              {/* Preview Image with Stylish Asset Security Blur */}
                               <div
                                 onClick={() => setSelectedPreviewImage(char.img)}
-                                className="aspect-[4/3] rounded-lg overflow-hidden bg-black/80 border border-white/10 cursor-pointer relative group/char"
+                                className="aspect-[4/3] rounded-xl overflow-hidden bg-black/90 border border-white/10 hover:border-purple-400/60 cursor-pointer relative group/char select-none"
                               >
                                 <img
                                   src={char.img}
-                                  alt={char.name}
-                                  className="w-full h-full object-cover group-hover/char:scale-105 transition-transform"
+                                  alt={`${char.name} — ${char.role || ''}`}
+                                  className="w-full h-full object-cover filter blur-[8px] group-hover/char:blur-[5px] scale-105 transition-all duration-300 pointer-events-none select-none"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
-                                  <span className="text-[9.5px] font-mono text-purple-300 truncate">
-                                    Click to inspect plate
+
+                                {/* Anti-Screenshot Security Overlay */}
+                                <div className="absolute inset-0 bg-black/40 group-hover/char:bg-black/20 transition-colors flex flex-col items-center justify-center p-3 text-center pointer-events-none">
+                                  <div className="p-2 rounded-full bg-purple-950/85 border border-purple-400/50 shadow-[0_0_15px_rgba(168,85,247,0.4)] mb-1.5 backdrop-blur-sm">
+                                    <ShieldCheck className="w-4 h-4 text-purple-300" />
+                                  </div>
+                                  <span className="text-[10px] font-mono font-bold tracking-widest text-purple-200 uppercase">
+                                    SECURITY PROTECTED
+                                  </span>
+                                  <span className="text-[9px] font-mono text-white/70 mt-0.5">
+                                    Anti-Screenshot Blur Active
+                                  </span>
+                                </div>
+
+                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2 flex items-center justify-between pointer-events-none">
+                                  <span className="text-[9.5px] font-mono text-cyan-300 flex items-center gap-1 font-semibold">
+                                    <Eye className="w-3 h-3 text-cyan-400" /> Inspect Plate
+                                  </span>
+                                  <span className="text-[8.5px] font-mono px-1.5 py-0.5 rounded-full bg-purple-900/80 border border-purple-400/30 text-purple-200">
+                                    {char.format}
                                   </span>
                                 </div>
                               </div>
 
-                              <div>
-                                <div className="flex items-center justify-between text-xs font-mono font-bold text-white">
-                                  <span className="truncate">{char.fileName}</span>
-                                  <span className="text-[10px] text-purple-300 shrink-0 font-normal">{char.size}</span>
+                              {/* Character Details (No Technical Filenames) */}
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <h5 className="text-sm font-display font-bold text-white tracking-wide">
+                                    {char.name}
+                                  </h5>
+                                  <span className="text-[10px] font-mono text-purple-300 px-2 py-0.5 rounded bg-purple-950/80 border border-purple-500/30 font-semibold">
+                                    {char.size}
+                                  </span>
                                 </div>
-                                <span className="text-[10px] font-mono text-white/50 block">{char.name}</span>
-                                <p className="text-[10.5px] text-white/70 font-sans mt-1 line-clamp-2">
+                                {char.role && (
+                                  <span className="text-[11px] font-mono font-bold text-cyan-300 block">
+                                    {char.role}
+                                  </span>
+                                )}
+                                <p className="text-[11px] text-white/75 font-sans leading-relaxed pt-0.5">
                                   {char.description}
                                 </p>
                               </div>
@@ -1592,8 +1646,11 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
                             <button
                               type="button"
-                              onClick={() => handleDownloadCustomFile(char.downloadUrl, char.fileName)}
-                              className="w-full py-2 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                              onClick={() => {
+                                soundManager.playTone(580, 0.05);
+                                if (onNavigateToVault) onNavigateToVault('folder-02');
+                              }}
+                              className="w-full py-2 px-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                             >
                               <FolderOpen className="w-3.5 h-3.5" />
                               <span>VIEW ASSET VAULT →</span>
@@ -1683,23 +1740,48 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                 style={{ transform: 'translate3d(0,0,0)', willChange: 'opacity' }}
                 className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 cursor-zoom-out"
               >
-                <div
-                  style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity' }}
-                  className="relative m-auto max-w-5xl max-h-[90vh] rounded-2xl overflow-hidden border border-cyan-500/40 shadow-[0_0_50px_rgba(0,242,254,0.3)]"
-                >
-                  <img
-                    src={selectedPreviewImage}
-                    alt="Enlarged Case Study Asset"
-                    className="w-full h-full object-contain max-h-[85vh]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setSelectedPreviewImage(null)}
-                    className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/80 border border-white/20 text-white font-mono text-xs hover:bg-white/20 transition-colors"
-                  >
-                    Close ✕
-                  </button>
-                </div>
+                {(() => {
+                  const isCharacterPlate =
+                    selectedStageForModal?.id === 2 ||
+                    selectedPreviewImage === millLockingImg ||
+                    selectedPreviewImage === odiLockingImg ||
+                    selectedPreviewImage === sillowLockingImg;
+
+                  return (
+                    <div
+                      style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity' }}
+                      className="relative m-auto max-w-5xl max-h-[90vh] rounded-2xl overflow-hidden border border-cyan-500/40 shadow-[0_0_50px_rgba(0,242,254,0.3)] bg-black"
+                    >
+                      <img
+                        src={selectedPreviewImage}
+                        alt="Enlarged Case Study Asset"
+                        className={`w-full h-full object-contain max-h-[85vh] select-none pointer-events-none ${
+                          isCharacterPlate ? 'filter blur-[8px] scale-[1.02]' : ''
+                        }`}
+                      />
+                      {isCharacterPlate && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
+                          <div className="px-5 py-3.5 rounded-2xl bg-black/85 border border-purple-500/50 backdrop-blur-md shadow-[0_0_40px_rgba(168,85,247,0.5)] space-y-1.5 max-w-md">
+                            <div className="flex items-center justify-center gap-2 text-purple-300 font-mono text-xs font-bold uppercase tracking-widest">
+                              <ShieldCheck className="w-4 h-4 text-purple-400" />
+                              <span>ANTI-SCREENSHOT SECURITY BLUR</span>
+                            </div>
+                            <p className="text-[11px] font-mono text-white/80 leading-relaxed">
+                              Proprietary character designs and turnaround plates are protected against scraping. Uncensored lossless master plates unlock for members on Jan 9, 2027.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPreviewImage(null)}
+                        className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/80 border border-white/20 text-white font-mono text-xs hover:bg-white/20 transition-colors cursor-pointer"
+                      >
+                        Close ✕
+                      </button>
+                    </div>
+                  );
+                })()}
               </motion.div>
             )}
           </AnimatePresence>,

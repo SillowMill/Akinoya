@@ -240,7 +240,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           files: [
             {
               id: 'file-02-1',
-              name: 'Sillow.JPG',
+              name: 'Sillow — Lead Planetary Explorer',
               extension: 'JPG',
               size: '280 KB',
               typeBadge: 'Explorer Sheet',
@@ -248,11 +248,11 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               modified: 'Oct 14, 2026',
               isLocked: true,
               previewImg: sillowCharacterImg,
-              description: 'Master 4-angle turnaround character reference sheet for Sillow with cybernetic visor annotations and exploration suit Mark IV specs.',
+              description: 'The lead planetary explorer styled with distinct dreadlocks and a tactical harness.',
             },
             {
               id: 'file-02-2',
-              name: 'Odi.JPG',
+              name: 'Odi — Scout Mechanic',
               extension: 'JPG',
               size: '275 KB',
               typeBadge: 'Scout Rig',
@@ -260,11 +260,11 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               modified: 'Oct 14, 2026',
               isLocked: true,
               previewImg: odiCharacterImg,
-              description: 'Turnaround plates detailing Odi’s armored reconnaissance suit, tactical harness, tool holsters, and heavy terrain boots.',
+              description: 'The scout mechanic without dreadlocks, wearing tactical reconnaissance armor.',
             },
             {
               id: 'file-02-3',
-              name: 'MiLLLL.PNG',
+              name: 'Mill — Alien Bio-Analyst',
               extension: 'PNG',
               size: '6.7 MB',
               typeBadge: '4K Master Anchor',
@@ -272,7 +272,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               modified: 'Oct 14, 2026',
               isLocked: true,
               previewImg: millCharacterImg,
-              description: 'Master lossless character turnaround and visual anchor plate for Mill with environmental bio-analyst suit and cyan visor display.',
+              description: 'The alien bio-analyst in her environmental suit with the mushroom helmet archetype.',
             },
           ],
         },
@@ -1015,15 +1015,40 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                 </button>
               </div>
 
-              {selectedFileForPreview.previewImg && (
-                <div className="relative rounded-2xl overflow-hidden border border-white/15 aspect-[16/9] bg-black">
-                  <img
-                    src={selectedFileForPreview.previewImg}
-                    alt={selectedFileForPreview.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+              {selectedFileForPreview.previewImg && (() => {
+                const isCharPlate =
+                  selectedFileForPreview.name.includes('Mill') ||
+                  selectedFileForPreview.name.includes('Odi') ||
+                  selectedFileForPreview.name.includes('Sillow') ||
+                  selectedFileForPreview.previewImg === millCharacterImg ||
+                  selectedFileForPreview.previewImg === odiCharacterImg ||
+                  selectedFileForPreview.previewImg === sillowCharacterImg;
+
+                return (
+                  <div className="relative rounded-2xl overflow-hidden border border-white/15 aspect-[16/9] bg-black select-none">
+                    <img
+                      src={selectedFileForPreview.previewImg}
+                      alt={selectedFileForPreview.name}
+                      className={`w-full h-full object-cover select-none pointer-events-none ${
+                        isCharPlate ? 'filter blur-[8px] scale-[1.02]' : ''
+                      }`}
+                    />
+                    {isCharPlate && (
+                      <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
+                        <div className="px-5 py-3 rounded-2xl bg-black/85 border border-purple-500/50 backdrop-blur-md shadow-[0_0_25px_rgba(168,85,247,0.4)] space-y-1">
+                          <div className="flex items-center justify-center gap-2 text-purple-300 font-mono text-xs font-bold uppercase tracking-wider">
+                            <ShieldCheck className="w-4 h-4 text-purple-400" />
+                            <span>ANTI-SCREENSHOT SECURITY BLUR</span>
+                          </div>
+                          <span className="text-[11px] font-mono text-white/75 block">
+                            Proprietary character design · High-res uncensored master plates unlock Jan 9, 2027
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <p className="text-xs sm:text-sm text-white/75 font-sans leading-relaxed">
                 {selectedFileForPreview.description}
