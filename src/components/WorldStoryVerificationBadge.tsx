@@ -1075,8 +1075,16 @@ export async function exportWorldTrailerVideoBlob(
     }
   }
 
+  const isMobileOrTablet =
+    typeof navigator !== 'undefined' &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+      /Android|Mobile|Tablet/.test(navigator.userAgent));
+
+  const targetBitrate = isMobileOrTablet ? 6_000_000 : 10_000_000;
+
   const recorder = supportedMime
-    ? new MediaRecorder(stream, { mimeType: supportedMime, videoBitsPerSecond: 10_000_000 })
+    ? new MediaRecorder(stream, { mimeType: supportedMime, videoBitsPerSecond: targetBitrate })
     : new MediaRecorder(stream);
 
   const chunks: BlobPart[] = [];

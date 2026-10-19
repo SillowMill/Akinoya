@@ -247,6 +247,188 @@ export async function renderWatermarkedImageBlob(
   }
 }
 
+/**
+ * 9:16 Official Story Verification Card view component.
+ * Rendered identically on both the main carousel slide and inside the fullscreen viewer modal.
+ */
+const StoryCard9x16View: React.FC<{
+  dossier: PlanetSubmission;
+  meta: ReturnType<typeof deriveWorldVerificationMeta>;
+  photoCards: ReturnType<typeof getPlanetPhotoCards>;
+  onTapToFullscreen?: () => void;
+  showFullscreenHint?: boolean;
+}> = ({ dossier, meta, photoCards, onTapToFullscreen, showFullscreenHint = false }) => {
+  const heroPhoto = photoCards[0];
+  const subPhotos = photoCards.slice(1, 5);
+
+  return (
+    <div
+      onClick={onTapToFullscreen}
+      className={`relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none ${
+        onTapToFullscreen
+          ? 'cursor-pointer group active:scale-[0.99] transition-all hover:border-amber-300 hover:shadow-[0_25px_80px_rgba(245,158,11,0.35)]'
+          : ''
+      }`}
+    >
+      {/* Inner Cyan Hairline Frame */}
+      <div className="absolute inset-2 rounded-[20px] border border-cyan-400/25 pointer-events-none z-20" />
+      <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-cyan-400/15 rounded-full blur-2xl pointer-events-none" />
+
+      {/* Interactive Fullscreen Tap Badge */}
+      {showFullscreenHint && (
+        <div className="absolute top-3.5 right-3.5 z-30 pointer-events-none">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/85 border border-amber-400/70 text-[9px] font-mono font-bold text-amber-300 tracking-wider shadow-lg backdrop-blur-md group-hover:scale-105 group-hover:bg-amber-950/90 transition-all">
+            <Maximize2 className="w-3 h-3 text-amber-300" />
+            <span>FULLSCREEN 9:16</span>
+          </div>
+        </div>
+      )}
+
+      {/* 1. TOP-LEVEL BRANDING HEADER */}
+      <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-white/15">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/20 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(255,255,255,0.16)]">
+            <img
+              src={sillowMillLogoUrl}
+              alt="Sillow Mill Official Logo"
+              className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.55)]"
+            />
+          </div>
+          <div className="min-w-0">
+            <div className="text-xs sm:text-[13px] font-display font-black tracking-[0.16em] text-white uppercase leading-none truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
+              SILLOW MILL
+            </div>
+            <div className="text-[7.5px] sm:text-[8px] font-mono font-extrabold text-white/90 tracking-[0.13em] uppercase mt-1 truncate">
+              CELOMILLE · ÄKINOYA UNIVERSE
+            </div>
+          </div>
+        </div>
+
+        <div className="shrink-0 px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+          <span className="block text-[6.5px] font-mono font-bold uppercase tracking-widest text-amber-200/90">
+            EDITION
+          </span>
+          <span className="block text-xs sm:text-sm font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent leading-tight">
+            #{meta.worldNumber}
+          </span>
+        </div>
+      </div>
+
+      {/* 2. PLANET TITLE, HOLDER INFO & SECTOR SPECIFICATIONS */}
+      <div className="relative z-10 pt-1.5 pb-1.5 border-b border-cyan-400/20">
+        <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
+          <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
+          <span className="truncate">
+            {meta.isAmlemi
+              ? 'FOUNDING PIONEER · GENESIS BENCHMARK'
+              : meta.isVipPioneer
+              ? 'VIP PIONEER · 2027 ARCHIVE'
+              : meta.isPioneer
+              ? 'PIONEER 2027 · PRE-RELEASE'
+              : 'VERIFIED PLANETARY ARCHIVE'}
+          </span>
+        </div>
+        <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide uppercase truncate mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+          {dossier.planetName}
+        </h4>
+        <div className="text-[8.5px] sm:text-[9px] font-mono text-white/85 truncate mt-0.5">
+          HOLDER: <strong className="text-white font-bold uppercase">{dossier.authorName || 'ODI SELIS'}</strong> ·{' '}
+          <span className="text-cyan-300 font-bold">{dossier.sectorId || 'SECTOR AKN-01'}</span>
+        </div>
+      </div>
+
+      {/* 3. 5-Photo Vertical Collage */}
+      <div className="relative z-10 flex-1 my-1.5 flex flex-col gap-1.5 min-h-0">
+        <div className="relative flex-[1.3] min-h-0 rounded-xl overflow-hidden border border-amber-400/55 bg-slate-950 shadow-md">
+          {heroPhoto?.url && (
+            <img
+              src={heroPhoto.url}
+              alt={heroPhoto.title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
+          <div className="absolute top-1.5 left-2 px-1.5 py-0.5 rounded bg-black/75 border border-amber-400/40 text-[7px] font-mono font-bold text-amber-300 uppercase tracking-wider">
+            01_MAIN · ORBITAL HORIZON
+          </div>
+          <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between gap-1">
+            <span className="text-[9.5px] font-sans font-bold text-white truncate">
+              {heroPhoto?.title || 'Orbital Horizon'}
+            </span>
+            <span className="text-[7px] font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-400/40 px-1.5 py-0.2 rounded">
+              4K VERIFIED
+            </span>
+          </div>
+        </div>
+
+        <div className="flex-[1.5] grid grid-cols-2 grid-rows-2 gap-1.5 min-h-0">
+          {subPhotos.map((photo, idx) => {
+            const slotTags = ['02 · FLORA', '03 · FAUNA', '04 · CANOPY', '05 · LORE'];
+            return (
+              <div
+                key={photo.id || idx}
+                className="relative rounded-lg overflow-hidden border border-cyan-400/35 bg-slate-950 min-h-0"
+              >
+                {photo.url && (
+                  <img
+                    src={photo.url}
+                    alt={photo.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
+                <div className="absolute bottom-1 left-1.5 right-1.5">
+                  <span className="block text-[6.5px] font-mono font-bold text-cyan-300 uppercase tracking-wider truncate">
+                    {slotTags[idx]}
+                  </span>
+                  <span className="block text-[8px] font-sans font-semibold text-white truncate">
+                    {photo.title}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. Streamlined Minimalist Footer */}
+      <div className="relative z-10 p-2 rounded-xl bg-[#071022]/90 border border-amber-400/35 space-y-1.5">
+        <p className="text-[8px] sm:text-[8.5px] font-sans italic text-amber-100/95 line-clamp-1 leading-snug">
+          &ldquo;
+          {dossier.futurePromise ||
+            dossier.generatedLore ||
+            'Synthesized planetary archive bound to the Sillow Mill universe.'}
+          &rdquo;
+        </p>
+
+        <div className="px-2 py-1 rounded-lg bg-[#040914]/95 border border-cyan-400/35 flex items-center justify-between gap-1.5 text-[7.5px] font-mono">
+          <span className="text-cyan-300 font-bold truncate">
+            CODE: {meta.verificationCode}
+          </span>
+          <span className="text-emerald-400 font-bold shrink-0">● AUTHENTICATED</span>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <img
+              src={sillowMillLogoUrl}
+              alt="Sillow Mill Logo"
+              className="w-5 h-5 object-contain shrink-0 drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]"
+            />
+            <span className="text-[7.5px] font-display font-black tracking-[0.12em] text-white uppercase truncate">
+              SILLOW MILL
+            </span>
+          </div>
+          <span className="text-[7px] font-mono text-white/60 shrink-0">sillowmill.com</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
   dossier,
   editionRank,
@@ -263,6 +445,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
   const [isDownloadingPhoto, setIsDownloadingPhoto] = useState<boolean>(false);
   const [fullscreenPhoto, setFullscreenPhoto] = useState<{ url: string; title: string; category: string } | null>(null);
   const [isFullscreenModalOpen, setIsFullscreenModalOpen] = useState<boolean>(false);
+  const [fullscreenSlide, setFullscreenSlide] = useState<MasterAssetSlideId>('video_trailer');
 
   // Video playback controls for Slide 1
   const [isPlayingVideo, setIsPlayingVideo] = useState<boolean>(true);
@@ -312,13 +495,42 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
     goToSlide(slideOrder[nextIndex], 1);
   }, [activeSlide, slideOrder, goToSlide]);
 
-  // Keyboard navigation when user is on carousel
+  const openFullscreenViewer = useCallback((slideId: MasterAssetSlideId) => {
+    soundManager.playTone(720, 0.05);
+    setFullscreenSlide(slideId);
+    if (slideId === 'archive_4k') {
+      setFullscreenPhoto(activePhoto);
+    }
+    setIsFullscreenModalOpen(true);
+  }, [activePhoto]);
+
+  const handlePrevFullscreenSlide = useCallback(() => {
+    const currentIndex = slideOrder.indexOf(fullscreenSlide);
+    const prevIndex = (currentIndex - 1 + slideOrder.length) % slideOrder.length;
+    soundManager.playTone(600, 0.03);
+    setFullscreenSlide(slideOrder[prevIndex]);
+  }, [fullscreenSlide, slideOrder]);
+
+  const handleNextFullscreenSlide = useCallback(() => {
+    const currentIndex = slideOrder.indexOf(fullscreenSlide);
+    const nextIndex = (currentIndex + 1) % slideOrder.length;
+    soundManager.playTone(600, 0.03);
+    setFullscreenSlide(slideOrder[nextIndex]);
+  }, [fullscreenSlide, slideOrder]);
+
+  // Keyboard navigation when user is on carousel or in fullscreen
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isFullscreenModalOpen) {
         if (e.key === 'Escape') {
           setIsFullscreenModalOpen(false);
           setFullscreenPhoto(null);
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          handlePrevFullscreenSlide();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          handleNextFullscreenSlide();
         }
         return;
       }
@@ -332,7 +544,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlePrevSlide, handleNextSlide, isFullscreenModalOpen]);
+  }, [handlePrevSlide, handleNextSlide, isFullscreenModalOpen, handlePrevFullscreenSlide, handleNextFullscreenSlide]);
 
   // Touch Swipe Handlers
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -399,7 +611,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
     }
   };
 
-  // Download 9:16 Story Badge (PNG)
+  // Download 9:16 Story Badge (PNG or Camera Roll via Web Share on iOS)
   const handleDownloadStoryBadge = async () => {
     soundManager.playTone(780, 0.07);
     setIsExportingBadge(true);
@@ -407,10 +619,36 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
       const blob = await renderWorldStoryBadgeBlob(dossier, editionRank);
       if (!blob) return;
       const safeName = (dossier.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+      const filename = `sillowmill-${safeName}-story-badge-9x16.png`;
+      const isMobile =
+        typeof navigator !== 'undefined' &&
+        (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+          /Android|Mobile|Tablet/.test(navigator.userAgent));
+
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (
+        isMobile &&
+        typeof navigator.share === 'function' &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `${dossier.planetName || 'Ämlemi'} — 9:16 Story Card`,
+            text: `Verified Genesis World: ${dossier.planetName || 'Ämlemi'}`,
+          });
+          return;
+        } catch (err: any) {
+          if (err?.name === 'AbortError') return;
+        }
+      }
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `sillowmill-${safeName}-story-badge-9x16.png`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -672,28 +910,60 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
         })}
       </div>
 
-      {/* ─── 3. CAROUSEL MAIN VIEWPORT WITH LUMINOUS SIDE DIRECTIONAL ARROWS ─── */}
-      <div className="relative z-10 min-h-[580px] sm:min-h-[620px] flex items-center justify-center">
-        {/* Sleek Luminous Left Chevron Arrow Button */}
+      {/* ─── 2.5 DEDICATED TABLET & MOBILE TOUCH NAVIGATION BAR (NO OVERLAPPING) ─── */}
+      <div className="flex lg:hidden items-center justify-between gap-3 p-1.5 rounded-xl bg-black/60 border border-white/10 backdrop-blur-md">
         <button
           type="button"
           onClick={handlePrevSlide}
-          className="absolute left-1 sm:left-2 lg:-left-3 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#050a18]/90 hover:bg-[#09152e] border-2 border-amber-400/60 hover:border-amber-300 text-amber-300 hover:text-white flex items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.85),0_0_15px_rgba(245,158,11,0.35)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] cursor-pointer active:scale-95 group"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-[#050a18]/90 hover:bg-[#09152e] border border-amber-400/50 text-amber-300 font-mono text-xs font-bold active:scale-95 transition-all shadow-sm cursor-pointer min-h-[44px]"
           aria-label="Previous Asset Slide"
-          title="Previous Asset Slide (or press Left Arrow)"
         >
-          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-amber-300 group-hover:scale-110 transition-transform" />
+          <ChevronLeft className="w-4 h-4 text-amber-300" />
+          <span>PREV ASSET</span>
         </button>
 
-        {/* Sleek Luminous Right Chevron Arrow Button */}
+        <div className="px-3.5 py-2 rounded-lg bg-black/80 border border-cyan-400/30 text-[11px] font-mono font-bold text-white/80 shrink-0">
+          SLIDE <span className="text-amber-300 font-extrabold">{slideOrder.indexOf(activeSlide) + 1}</span> / 3
+        </div>
+
         <button
           type="button"
           onClick={handleNextSlide}
-          className="absolute right-1 sm:right-2 lg:-right-3 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#050a18]/90 hover:bg-[#09152e] border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white flex items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.35)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] cursor-pointer active:scale-95 group"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-[#050a18]/90 hover:bg-[#09152e] border border-cyan-400/50 text-cyan-300 font-mono text-xs font-bold active:scale-95 transition-all shadow-sm cursor-pointer min-h-[44px]"
+          aria-label="Next Asset Slide"
+        >
+          <span>NEXT ASSET</span>
+          <ChevronRight className="w-4 h-4 text-cyan-300" />
+        </button>
+      </div>
+
+      {/* ─── 3. CAROUSEL MAIN VIEWPORT WITH LUMINOUS SIDE DIRECTIONAL ARROWS (DESKTOP) ─── */}
+      <div
+        ref={carouselContainerRef}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="relative z-10 min-h-[580px] sm:min-h-[620px] flex items-center justify-center"
+      >
+        {/* Sleek Luminous Left Chevron Arrow Button - Desktop only, positioned safely outside content */}
+        <button
+          type="button"
+          onClick={handlePrevSlide}
+          className="hidden lg:flex absolute -left-4 xl:-left-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-[#050a18]/90 hover:bg-[#09152e] border-2 border-amber-400/60 hover:border-amber-300 text-amber-300 hover:text-white items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.85),0_0_15px_rgba(245,158,11,0.35)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] cursor-pointer active:scale-95 group"
+          aria-label="Previous Asset Slide"
+          title="Previous Asset Slide (or press Left Arrow)"
+        >
+          <ChevronLeft className="w-6 h-6 text-amber-300 group-hover:scale-110 transition-transform" />
+        </button>
+
+        {/* Sleek Luminous Right Chevron Arrow Button - Desktop only, positioned safely outside content */}
+        <button
+          type="button"
+          onClick={handleNextSlide}
+          className="hidden lg:flex absolute -right-4 xl:-right-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-[#050a18]/90 hover:bg-[#09152e] border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.35)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] cursor-pointer active:scale-95 group"
           aria-label="Next Asset Slide"
           title="Next Asset Slide (or press Right Arrow)"
         >
-          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-300 group-hover:scale-110 transition-transform" />
+          <ChevronRight className="w-6 h-6 text-cyan-300 group-hover:scale-110 transition-transform" />
         </button>
 
         {/* Dynamic Multi-Media Carousel Slides Container */}
@@ -720,7 +990,10 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                 className="space-y-4"
               >
                 {/* Main 4K Cinematic Display Stage */}
-                <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] max-h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#02050b] via-[#050b18] to-[#02050b] border border-amber-400/40 shadow-[0_15px_50px_rgba(0,0,0,0.8)] group">
+                <div
+                  onClick={() => openFullscreenViewer('archive_4k')}
+                  className="relative w-full aspect-[16/10] sm:aspect-[16/9] max-h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#02050b] via-[#050b18] to-[#02050b] border border-amber-400/40 shadow-[0_15px_50px_rgba(0,0,0,0.8)] group cursor-pointer hover:border-amber-300/80 transition-all"
+                >
                   {activePhoto?.url && (
                     <img
                       src={activePhoto.url}
@@ -751,15 +1024,15 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       </span>
                       <button
                         type="button"
-                        onClick={() => {
-                          soundManager.playTone(660, 0.04);
-                          setFullscreenPhoto(activePhoto);
-                          setIsFullscreenModalOpen(true);
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openFullscreenViewer('archive_4k');
                         }}
-                        className="w-9 h-9 rounded-xl bg-black/80 hover:bg-black border border-white/20 hover:border-cyan-400 text-white flex items-center justify-center transition-colors cursor-pointer shadow-lg"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/85 hover:bg-black border border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white text-xs font-mono font-bold transition-all cursor-pointer shadow-lg"
                         title="Inspect in 4K Fullscreen"
                       >
                         <Maximize2 className="w-4 h-4 text-cyan-300" />
+                        <span className="hidden sm:inline">FULLSCREEN</span>
                       </button>
                     </div>
                   </div>
@@ -783,7 +1056,10 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
 
                     <button
                       type="button"
-                      onClick={handleDownload4kPhoto}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload4kPhoto();
+                      }}
                       disabled={isDownloadingPhoto}
                       className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] shrink-0 min-h-[42px]"
                       title="Download clean original 4K Master with absolute resolution clarity"
@@ -852,160 +1128,20 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                 }}
                 className="flex flex-col lg:flex-row items-center justify-center gap-6 md:gap-8 py-2"
               >
-                {/* 9:16 Story Card Canvas/Display Area */}
-                <div className="relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none">
-                  {/* Inner Cyan Hairline Frame */}
-                  <div className="absolute inset-2 rounded-[20px] border border-cyan-400/25 pointer-events-none z-20" />
-                  <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
-                  <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-cyan-400/15 rounded-full blur-2xl pointer-events-none" />
-
-                  {/* 1. TOP-LEVEL BRANDING HEADER */}
-                  <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-white/15">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-white/20 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(255,255,255,0.16)]">
-                        <img
-                          src={sillowMillLogoUrl}
-                          alt="Sillow Mill Official Logo"
-                          className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.55)]"
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs sm:text-[13px] font-display font-black tracking-[0.16em] text-white uppercase leading-none truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
-                          SILLOW MILL
-                        </div>
-                        <div className="text-[7.5px] sm:text-[8px] font-mono font-extrabold text-white/90 tracking-[0.13em] uppercase mt-1 truncate">
-                          CELOMILLE · ÄKINOYA UNIVERSE
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="shrink-0 px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
-                      <span className="block text-[6.5px] font-mono font-bold uppercase tracking-widest text-amber-200/90">
-                        EDITION
-                      </span>
-                      <span className="block text-xs sm:text-sm font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent leading-tight">
-                        #{meta.worldNumber}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 2. PLANET TITLE, HOLDER INFO & SECTOR SPECIFICATIONS */}
-                  <div className="relative z-10 pt-1.5 pb-1.5 border-b border-cyan-400/20">
-                    <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
-                      <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
-                      <span className="truncate">
-                        {meta.isAmlemi
-                          ? 'FOUNDING PIONEER · GENESIS BENCHMARK'
-                          : meta.isVipPioneer
-                          ? 'VIP PIONEER · 2027 ARCHIVE'
-                          : meta.isPioneer
-                          ? 'PIONEER 2027 · PRE-RELEASE'
-                          : 'VERIFIED PLANETARY ARCHIVE'}
-                      </span>
-                    </div>
-                    <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide uppercase truncate mt-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
-                      {dossier.planetName}
-                    </h4>
-                    <div className="text-[8.5px] sm:text-[9px] font-mono text-white/85 truncate mt-0.5">
-                      HOLDER: <strong className="text-white font-bold uppercase">{dossier.authorName || 'ODI SELIS'}</strong> ·{' '}
-                      <span className="text-cyan-300 font-bold">{dossier.sectorId || 'SECTOR AKN-01'}</span>
-                    </div>
-                  </div>
-
-                  {/* 3. 5-Photo Vertical Collage */}
-                  <div className="relative z-10 flex-1 my-1.5 flex flex-col gap-1.5 min-h-0">
-                    <div className="relative flex-[1.3] min-h-0 rounded-xl overflow-hidden border border-amber-400/55 bg-slate-950 shadow-md">
-                      {heroPhoto?.url && (
-                        <img
-                          src={heroPhoto.url}
-                          alt={heroPhoto.title}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
-                      <div className="absolute top-1.5 left-2 px-1.5 py-0.5 rounded bg-black/75 border border-amber-400/40 text-[7px] font-mono font-bold text-amber-300 uppercase tracking-wider">
-                        01_MAIN · ORBITAL HORIZON
-                      </div>
-                      <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between gap-1">
-                        <span className="text-[9.5px] font-sans font-bold text-white truncate">
-                          {heroPhoto?.title || 'Orbital Horizon'}
-                        </span>
-                        <span className="text-[7px] font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-400/40 px-1.5 py-0.2 rounded">
-                          4K VERIFIED
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex-[1.5] grid grid-cols-2 grid-rows-2 gap-1.5 min-h-0">
-                      {subPhotos.map((photo, idx) => {
-                        const slotTags = ['02 · FLORA', '03 · FAUNA', '04 · CANOPY', '05 · LORE'];
-                        return (
-                          <div
-                            key={photo.id || idx}
-                            className="relative rounded-lg overflow-hidden border border-cyan-400/35 bg-slate-950 min-h-0"
-                          >
-                            {photo.url && (
-                              <img
-                                src={photo.url}
-                                alt={photo.title}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                              />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
-                            <div className="absolute bottom-1 left-1.5 right-1.5">
-                              <span className="block text-[6.5px] font-mono font-bold text-cyan-300 uppercase tracking-wider truncate">
-                                {slotTags[idx]}
-                              </span>
-                              <span className="block text-[8px] font-sans font-semibold text-white truncate">
-                                {photo.title}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 4. Streamlined Minimalist Footer */}
-                  <div className="relative z-10 p-2 rounded-xl bg-[#071022]/90 border border-amber-400/35 space-y-1.5">
-                    <p className="text-[8px] sm:text-[8.5px] font-sans italic text-amber-100/95 line-clamp-1 leading-snug">
-                      &ldquo;
-                      {dossier.futurePromise ||
-                        dossier.generatedLore ||
-                        'Synthesized planetary archive bound to the Sillow Mill universe.'}
-                      &rdquo;
-                    </p>
-
-                    <div className="px-2 py-1 rounded-lg bg-[#040914]/95 border border-cyan-400/35 flex items-center justify-between gap-1.5 text-[7.5px] font-mono">
-                      <span className="text-cyan-300 font-bold truncate">
-                        CODE: {meta.verificationCode}
-                      </span>
-                      <span className="text-emerald-400 font-bold shrink-0">● AUTHENTICATED</span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2 pt-0.5">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <img
-                          src={sillowMillLogoUrl}
-                          alt="Sillow Mill Logo"
-                          className="w-5 h-5 object-contain shrink-0 drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]"
-                        />
-                        <span className="text-[7.5px] font-display font-black tracking-[0.12em] text-white uppercase truncate">
-                          SILLOW MILL
-                        </span>
-                      </div>
-                      <span className="text-[7px] font-mono text-white/60 shrink-0">sillowmill.com</span>
-                    </div>
-                  </div>
-                </div>
+                {/* 9:16 Story Card View Component with Fullscreen Tap Handler */}
+                <StoryCard9x16View
+                  dossier={dossier}
+                  meta={meta}
+                  photoCards={photoCards}
+                  onTapToFullscreen={() => openFullscreenViewer('story_card')}
+                  showFullscreenHint
+                />
 
                 {/* Side Specifications & Direct Download Actions Panel */}
                 <div className="space-y-4 max-w-md w-full">
                   <div className="space-y-2">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-widest uppercase bg-cyan-950/90 text-cyan-200 border border-cyan-400/40">
-                      ARTIFACT 03 · SOCIAL STORY AFFICHE
+                      ARTIFACT 02 · SOCIAL STORY AFFICHE
                     </span>
                     <h3 className="text-lg sm:text-xl font-display font-black text-white tracking-wide">
                       Official 9:16 Story Verification Badge
@@ -1079,8 +1215,19 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                 }}
                 className="flex flex-col lg:flex-row items-center justify-center gap-6 md:gap-8 py-2"
               >
-                {/* 9:16 Animated Video Trailer Stage */}
-                <div className="relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none">
+                {/* 9:16 Animated Video Trailer Stage with Fullscreen Click Handler */}
+                <div
+                  onClick={() => openFullscreenViewer('video_trailer')}
+                  className="relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none cursor-pointer group active:scale-[0.99] transition-all hover:border-cyan-300 hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)]"
+                >
+                  {/* Interactive Fullscreen Tap Badge */}
+                  <div className="absolute top-3.5 right-3.5 z-30 pointer-events-none">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/85 border border-cyan-400/70 text-[9px] font-mono font-bold text-cyan-300 tracking-wider shadow-lg backdrop-blur-md group-hover:scale-105 group-hover:bg-cyan-950/90 transition-all">
+                      <Maximize2 className="w-3 h-3 text-cyan-300" />
+                      <span>FULLSCREEN 9:16</span>
+                    </div>
+                  </div>
+
                   <LiveStoryTrailerViewport
                     dossier={dossier}
                     meta={meta}
@@ -1095,7 +1242,10 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={toggleVideoPlayback}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleVideoPlayback();
+                        }}
                         className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
                         title={isPlayingVideo ? 'Pause Video' : 'Play Video'}
                       >
@@ -1103,7 +1253,10 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       </button>
                       <button
                         type="button"
-                        onClick={toggleAudio}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleAudio();
+                        }}
                         className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
                         title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
                       >
@@ -1199,61 +1352,287 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
         </div>
       )}
 
-      {/* Fullscreen Photo Lightbox Modal */}
+      {/* ─── 5. FULLSCREEN 9:16 MULTI-ASSET VIEWER & SWITCHER MODAL ─── */}
       {isFullscreenModalOpen &&
-        fullscreenPhoto &&
         createPortal(
           <div
-            className="fixed inset-0 z-[10000] w-screen h-[100dvh] flex items-center justify-center p-3 sm:p-6 bg-black/95 backdrop-blur-2xl"
+            className="fixed inset-0 z-[10000] w-screen h-[100dvh] flex flex-col justify-between bg-black/95 backdrop-blur-2xl p-2.5 sm:p-5 select-none overflow-y-auto"
             onClick={() => {
               setIsFullscreenModalOpen(false);
               setFullscreenPhoto(null);
             }}
+            onTouchStart={(e) => {
+              if (e.touches.length === 1) {
+                touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+              }
+            }}
+            onTouchEnd={(e) => {
+              if (!touchStartRef.current || e.changedTouches.length === 0) return;
+              const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+              const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+              touchStartRef.current = null;
+              if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+                if (dx < 0) {
+                  handleNextFullscreenSlide();
+                } else {
+                  handlePrevFullscreenSlide();
+                }
+              }
+            }}
           >
+            {/* Modal Dialog Content Container */}
             <div
-              className="relative max-w-6xl w-full max-h-[92dvh] flex flex-col rounded-2xl overflow-hidden bg-[#050914] border border-cyan-400/40 shadow-2xl"
+              className="relative max-w-5xl w-full mx-auto my-auto flex flex-col rounded-2xl overflow-hidden bg-[#040814] border border-cyan-400/40 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(6,182,212,0.2)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-3.5 sm:p-4 bg-[#070d1e] border-b border-white/10 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white/[0.08] border border-white/20 p-1 flex items-center justify-center shrink-0 shadow-sm">
-                    <img src={sillowMillLogoUrl} alt="Sillow Mill Emblem" className="w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" />
+              {/* TOP HEADER: Branding + Slide Switcher Tabs + Close */}
+              <div className="p-3 sm:p-4 bg-[#060c1d] border-b border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 w-full sm:w-auto justify-between sm:justify-start">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="relative w-8 h-8 rounded-lg bg-white/[0.08] border border-white/20 p-1 flex items-center justify-center shrink-0 shadow-sm">
+                      <img
+                        src={sillowMillLogoUrl}
+                        alt="Sillow Mill Emblem"
+                        className="w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]"
+                      />
+                    </div>
+                    <div className="h-5 w-[1px] bg-white/20 shrink-0" aria-hidden="true" />
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider truncate">
+                        {meta.isAmlemi ? 'FOUNDING PIONEER' : 'PIONEER DOSSIER'} · #{meta.worldNumber}
+                      </div>
+                      <div className="text-sm sm:text-base font-display font-black text-white uppercase tracking-wider truncate">
+                        {worldNameDisplay}
+                      </div>
+                    </div>
                   </div>
-                  <div className="h-5 sm:h-6 w-[1px] bg-white/20 shrink-0" aria-hidden="true" />
-                  <div className="min-w-0">
-                    <div className="text-[10px] font-mono text-cyan-300 uppercase tracking-wider">{fullscreenPhoto.category}</div>
-                    <div className="text-sm sm:text-base font-display font-bold text-white truncate">{fullscreenPhoto.title}</div>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleDownload4kPhoto}
-                    disabled={isDownloadingPhoto}
-                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-bold tracking-wide transition-all cursor-pointer flex items-center gap-2 shadow-md"
-                    title="Download clean original 4K Master with absolute resolution clarity"
-                  >
-                    <Download className="w-4 h-4 text-black" />
-                    <span className="hidden sm:inline">{isDownloadingPhoto ? 'DOWNLOADING...' : 'DOWNLOAD 4K MASTER'}</span>
-                  </button>
-
+                  {/* Mobile Close Button */}
                   <button
                     type="button"
                     onClick={() => {
+                      soundManager.playTone(500, 0.04);
+                      setIsFullscreenModalOpen(false);
+                      setFullscreenPhoto(null);
+                    }}
+                    className="sm:hidden w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer transition-colors"
+                    aria-label="Close Fullscreen"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Switcher Pills inside Fullscreen Modal */}
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/60 border border-white/10 w-full sm:w-auto justify-center">
+                  {SLIDE_TABS.map((tab) => {
+                    const isActive = fullscreenSlide === tab.id;
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => {
+                          soundManager.playTone(640, 0.03);
+                          setFullscreenSlide(tab.id);
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[11px] font-bold transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-md'
+                            : 'text-white/70 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        <span>{tab.index}</span>
+                        <span className="hidden md:inline">
+                          {tab.id === 'video_trailer' ? 'TRAILER' : tab.id === 'story_card' ? 'STORY' : '4K'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Close & Quick Action */}
+                <div className="hidden sm:flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playTone(500, 0.04);
                       setIsFullscreenModalOpen(false);
                       setFullscreenPhoto(null);
                     }}
                     className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer transition-colors"
-                    title="Close Fullscreen"
+                    aria-label="Close Fullscreen"
+                    title="Close Fullscreen (Esc)"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-hidden flex items-center justify-center bg-black p-2">
-                <img src={fullscreenPhoto.url} alt={fullscreenPhoto.title} className="max-w-full max-h-[75dvh] object-contain" />
+              {/* CENTER DISPLAY STAGE WITH CHEVRONS */}
+              <div className="relative flex-1 min-h-[460px] sm:min-h-[520px] flex items-center justify-center p-3 sm:p-6 bg-black/90">
+                {/* Left Switcher Arrow */}
+                <button
+                  type="button"
+                  onClick={handlePrevFullscreenSlide}
+                  className="absolute left-2 sm:left-4 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/85 hover:bg-[#09152e] border-2 border-amber-400/60 text-amber-300 hover:text-white flex items-center justify-center transition-all shadow-[0_0_20px_rgba(0,0,0,0.9),0_0_15px_rgba(245,158,11,0.35)] cursor-pointer active:scale-95"
+                  aria-label="Previous Slide"
+                  title="Previous Slide (Left Arrow)"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+
+                {/* Right Switcher Arrow */}
+                <button
+                  type="button"
+                  onClick={handleNextFullscreenSlide}
+                  className="absolute right-2 sm:right-4 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/85 hover:bg-[#09152e] border-2 border-cyan-400/60 text-cyan-300 hover:text-white flex items-center justify-center transition-all shadow-[0_0_20px_rgba(0,0,0,0.9),0_0_15px_rgba(6,182,212,0.35)] cursor-pointer active:scale-95"
+                  aria-label="Next Slide"
+                  title="Next Slide (Right Arrow)"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+
+                {/* 1. Video Trailer Fullscreen View */}
+                {fullscreenSlide === 'video_trailer' && (
+                  <div className="relative w-full max-w-[340px] sm:max-w-[380px] aspect-[9/16] max-h-[68dvh] rounded-[24px] overflow-hidden bg-black border-2 border-cyan-400/60 shadow-[0_0_40px_rgba(6,182,212,0.3)] flex flex-col justify-between">
+                    <LiveStoryTrailerViewport
+                      dossier={dossier}
+                      meta={meta}
+                      photoCards={photoCards}
+                      activeVideoUrl={dynamicVideo.videoUrl}
+                      isMuted={isMuted}
+                      onToggleAudio={toggleAudio}
+                    />
+                    <div className="absolute bottom-3 left-3 right-3 z-30 flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-black/85 border border-white/20 backdrop-blur-md">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleVideoPlayback();
+                          }}
+                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                          {isPlayingVideo ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleAudio();
+                          }}
+                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                          {isMuted ? <VolumeX className="w-4 h-4 text-white/60" /> : <Volume2 className="w-4 h-4 text-cyan-300" />}
+                        </button>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-cyan-300">
+                        {dynamicVideo.isAiVideo ? 'VAL.AI FPV 24FPS' : '60FPS ORBITAL KEN BURNS'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Story Card Fullscreen View */}
+                {fullscreenSlide === 'story_card' && (
+                  <StoryCard9x16View
+                    dossier={dossier}
+                    meta={meta}
+                    photoCards={photoCards}
+                  />
+                )}
+
+                {/* 3. 4K Master Photo Fullscreen View */}
+                {fullscreenSlide === 'archive_4k' && (
+                  <div className="w-full max-w-4xl flex flex-col items-center space-y-3">
+                    <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] max-h-[58dvh] rounded-2xl overflow-hidden bg-black border border-amber-400/50 shadow-2xl flex items-center justify-center">
+                      <img
+                        src={activePhoto.url}
+                        alt={activePhoto.title}
+                        className="w-full h-full object-contain"
+                      />
+                      <div className="absolute top-3 left-4 px-2.5 py-1 rounded bg-black/80 border border-amber-400/50 text-[10px] font-mono font-bold text-amber-300 uppercase">
+                        {activePhoto.category} · {activePhoto.title}
+                      </div>
+                    </div>
+                    {/* 5-Photo Strip in Fullscreen */}
+                    <div className="flex items-center gap-2 overflow-x-auto py-1 max-w-full">
+                      {photoCards.slice(0, 5).map((card, idx) => (
+                        <button
+                          key={card.id || idx}
+                          type="button"
+                          onClick={() => {
+                            soundManager.playTone(660 + idx * 30, 0.04);
+                            setActivePhotoIdx(idx);
+                          }}
+                          className={`w-16 h-12 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
+                            idx === activePhotoIdx ? 'border-amber-400 scale-105' : 'border-white/20 opacity-60 hover:opacity-100'
+                          }`}
+                        >
+                          <img src={card.url} alt={card.title} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* BOTTOM ACTION DOCK */}
+              <div className="p-3.5 sm:p-4 bg-[#060c1d] border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs font-mono text-white/70">
+                  <span className="text-cyan-300 font-bold">{meta.verificationCode}</span>
+                  <span>·</span>
+                  <span className="text-amber-300">{dossier.sectorId || 'SECTOR AKN-01'}</span>
+                </div>
+
+                <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                  {fullscreenSlide === 'video_trailer' && (
+                    <button
+                      type="button"
+                      onClick={handleDownloadTrailerMp4}
+                      disabled={isExportingTrailer}
+                      className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
+                    >
+                      <Download className="w-4 h-4 text-black" />
+                      <span>{isExportingTrailer ? 'GENERATING MP4...' : 'SAVE 9:16 TRAILER (CAMERA ROLL)'}</span>
+                    </button>
+                  )}
+
+                  {fullscreenSlide === 'story_card' && (
+                    <button
+                      type="button"
+                      onClick={handleDownloadStoryBadge}
+                      disabled={isExportingBadge}
+                      className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
+                    >
+                      <Download className="w-4 h-4 text-black" />
+                      <span>{isExportingBadge ? 'RENDERING...' : 'DOWNLOAD STORY CARD (PNG)'}</span>
+                    </button>
+                  )}
+
+                  {fullscreenSlide === 'archive_4k' && (
+                    <button
+                      type="button"
+                      onClick={handleDownload4kPhoto}
+                      disabled={isDownloadingPhoto}
+                      className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
+                    >
+                      <Download className="w-4 h-4 text-black" />
+                      <span>{isDownloadingPhoto ? 'DOWNLOADING...' : 'DOWNLOAD 4K MASTER'}</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleShareStoryBadge}
+                    disabled={isExportingBadge}
+                    className="px-4 py-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[42px]"
+                  >
+                    <Share2 className="w-4 h-4 text-cyan-300" />
+                    <span className="hidden sm:inline">SHARE</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>,
