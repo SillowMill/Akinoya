@@ -179,6 +179,26 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
     const shareText = `Verified Planetary Dossier: ${activePlanet.planetName || 'Ämlemi'}`;
 
     try {
+      const isMobile = isMobileOrTabletDevice();
+
+      // On mobile / tablet, prioritize fetching the pristine MP4 binary Blob directly
+      // so it wraps in a native File object and triggers navigator.share for direct "Save Trailer to Photos"
+      if (isMobile && videoUrl) {
+        try {
+          const cacheBustedUrl = getCacheBustedUrl(videoUrl);
+          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
+          if (response.ok) {
+            const rawBlob = await response.blob();
+            const mp4Blob = rawBlob.type.includes('mp4') ? rawBlob : new Blob([rawBlob], { type: 'video/mp4' });
+            const fastStartBlob = await optimizeMp4FastStart(mp4Blob);
+            await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
+            return;
+          }
+        } catch (fetchErr) {
+          console.warn('Direct mobile blob fetch warning:', fetchErr);
+        }
+      }
+
       // 1. Attempt official branded template composite export
       const result = await exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl);
       if (result?.blob) {
@@ -196,7 +216,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
           await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
           return;
         } catch {
-          if (!isMobileDevice) {
+          if (!isMobile) {
             window.open(videoUrl, '_blank', 'noopener,noreferrer');
           }
           return;
@@ -395,9 +415,9 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
                         <Download className="w-3.5 h-3.5" />
                         <span>
                           {isDownloading
-                            ? (isMobileDevice ? 'Saving to Photos...' : 'Preparing MP4...')
+                            ? (isMobileDevice ? 'Saving Trailer to Photos...' : 'Preparing MP4...')
                             : (isMobileDevice
-                                ? 'Save to Photos'
+                                ? 'Save Trailer to Photos'
                                 : dynamicVideo.isAiVideo
                                 ? '⬇ Download Val.ai 9:16 MP4 Trailer'
                                 : '⬇ Download 9:16 MP4 Trailer')}

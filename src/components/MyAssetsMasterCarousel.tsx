@@ -691,6 +691,26 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
         dossier.renders?.video_url ||
         '';
 
+      const isMobile = isMobileOrTabletDevice();
+
+      // On mobile / tablet, prioritize fetching the pristine MP4 binary Blob directly
+      // so it wraps in a native File object and triggers navigator.share for direct "Save Trailer to Photos"
+      if (isMobile && activeVideoUrl) {
+        try {
+          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
+          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
+          if (response.ok) {
+            const rawBlob = await response.blob();
+            const mp4Blob = rawBlob.type.includes('mp4') ? rawBlob : new Blob([rawBlob], { type: 'video/mp4' });
+            const fastStartBlob = await optimizeMp4FastStart(mp4Blob);
+            await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
+            return;
+          }
+        } catch (fetchErr) {
+          console.warn('Direct mobile blob fetch warning:', fetchErr);
+        }
+      }
+
       // 1. Export official branded template composite
       const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
       if (result?.blob) {
@@ -708,7 +728,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
           await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
           return;
         } catch {
-          if (!isMobileDevice) {
+          if (!isMobile) {
             window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');
           }
           return;
@@ -1056,8 +1076,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       <Download className="w-4 h-4 text-black" />
                       <span>
                         {isDownloadingPhoto
-                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'DOWNLOADING...')
-                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD 4K MASTER')}
+                          ? (isMobileDevice ? 'SAVING PICTURE...' : 'DOWNLOADING...')
+                          : (isMobileDevice ? 'SAVE PICTURE' : 'DOWNLOAD 4K MASTER')}
                       </span>
                     </button>
                   </div>
@@ -1173,8 +1193,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       <Download className="w-4 h-4 text-black" />
                       <span>
                         {isExportingBadge
-                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'RENDERING HIGH-RES AFFICHE...')
-                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD 9:16 STORY CARD (PNG)')}
+                          ? (isMobileDevice ? 'SAVING STORY CARD TO PHOTOS...' : 'RENDERING HIGH-RES AFFICHE...')
+                          : (isMobileDevice ? 'SAVE STORY CARD TO PHOTOS' : 'DOWNLOAD 9:16 STORY CARD (PNG)')}
                       </span>
                     </button>
 
@@ -1328,8 +1348,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       <Download className="w-4 h-4 text-black" />
                       <span>
                         {isExportingTrailer
-                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'GENERATING MP4 VIDEO...')
-                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD 9:16 MP4 TRAILER')}
+                          ? (isMobileDevice ? 'SAVING TRAILER TO PHOTOS...' : 'GENERATING MP4 VIDEO...')
+                          : (isMobileDevice ? 'SAVE TRAILER TO PHOTOS' : 'DOWNLOAD 9:16 MP4 TRAILER')}
                       </span>
                     </button>
 
@@ -1629,8 +1649,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       <Download className="w-4 h-4 text-black" />
                       <span>
                         {isExportingTrailer
-                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'GENERATING MP4...')
-                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD 9:16 TRAILER (MP4)')}
+                          ? (isMobileDevice ? 'SAVING TRAILER TO PHOTOS...' : 'GENERATING MP4...')
+                          : (isMobileDevice ? 'SAVE TRAILER TO PHOTOS' : 'DOWNLOAD 9:16 TRAILER (MP4)')}
                       </span>
                     </button>
                   )}
@@ -1645,8 +1665,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       <Download className="w-4 h-4 text-black" />
                       <span>
                         {isExportingBadge
-                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'RENDERING...')
-                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD STORY CARD (PNG)')}
+                          ? (isMobileDevice ? 'SAVING STORY CARD TO PHOTOS...' : 'RENDERING...')
+                          : (isMobileDevice ? 'SAVE STORY CARD TO PHOTOS' : 'DOWNLOAD STORY CARD (PNG)')}
                       </span>
                     </button>
                   )}
@@ -1661,8 +1681,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
                       <Download className="w-4 h-4 text-black" />
                       <span>
                         {isDownloadingPhoto
-                          ? (isMobileDevice ? 'SAVING TO PHOTOS...' : 'DOWNLOADING...')
-                          : (isMobileDevice ? 'SAVE TO PHOTOS' : 'DOWNLOAD 4K MASTER')}
+                          ? (isMobileDevice ? 'SAVING PICTURE...' : 'DOWNLOADING...')
+                          : (isMobileDevice ? 'SAVE PICTURE' : 'DOWNLOAD 4K MASTER')}
                       </span>
                     </button>
                   )}

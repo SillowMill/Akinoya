@@ -1637,6 +1637,26 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         dossier.renders?.video_url ||
         '';
 
+      const isMobile = isMobileOrTabletDevice();
+
+      // On mobile / tablet, prioritize fetching the pristine MP4 binary Blob directly
+      // so it wraps in a native File object and triggers navigator.share for direct "Save Trailer to Photos"
+      if (isMobile && activeVideoUrl) {
+        try {
+          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
+          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
+          if (response.ok) {
+            const rawBlob = await response.blob();
+            const mp4Blob = rawBlob.type.includes('mp4') ? rawBlob : new Blob([rawBlob], { type: 'video/mp4' });
+            const fastStartBlob = await optimizeMp4FastStart(mp4Blob);
+            await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
+            return;
+          }
+        } catch (fetchErr) {
+          console.warn('Direct mobile blob fetch warning:', fetchErr);
+        }
+      }
+
       // 1. Run integrated canvas-rendering branded marketing composite pipeline
       const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
       if (result?.blob) {
@@ -1654,7 +1674,9 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
           await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
           return;
         } catch {
-          window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');
+          if (!isMobile) {
+            window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');
+          }
           return;
         }
       }
@@ -1973,8 +1995,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               <Film className="w-4 h-4 text-black shrink-0" />
               <span>
                 {isExportingTrailer
-                  ? (isMobileDevice ? 'Saving to Photos...' : 'Encoding 9:16 MP4...')
-                  : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 MP4 Trailer')}
+                  ? (isMobileDevice ? 'Saving Trailer to Photos...' : 'Encoding 9:16 MP4...')
+                  : (isMobileDevice ? 'Save Trailer to Photos' : 'Download 9:16 MP4 Trailer')}
               </span>
             </button>
 
@@ -1987,8 +2009,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               <Download className="w-4 h-4 text-black shrink-0" />
               <span>
                 {isExportingBadge
-                  ? (isMobileDevice ? 'Saving to Photos...' : 'Rendering 9:16 PNG...')
-                  : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 Story Badge')}
+                  ? (isMobileDevice ? 'Saving Story Card to Photos...' : 'Rendering 9:16 PNG...')
+                  : (isMobileDevice ? 'Save Story Card to Photos' : 'Download 9:16 Story Badge')}
               </span>
             </button>
           </div>
@@ -2195,8 +2217,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                     <Download className="w-4 h-4 text-black shrink-0" />
                     <span>
                       {isExportingBadge
-                        ? (isMobileDevice ? 'Saving to Photos...' : 'Rendering PNG...')
-                        : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 Story Badge')}
+                        ? (isMobileDevice ? 'Saving Story Card to Photos...' : 'Rendering PNG...')
+                        : (isMobileDevice ? 'Save Story Card to Photos' : 'Download 9:16 Story Badge')}
                     </span>
                   </button>
 
@@ -2209,8 +2231,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                     <Film className="w-4 h-4 text-black shrink-0" />
                     <span>
                       {isExportingTrailer
-                        ? (isMobileDevice ? 'Saving to Photos...' : 'Encoding MP4...')
-                        : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 MP4 Trailer')}
+                        ? (isMobileDevice ? 'Saving Trailer to Photos...' : 'Encoding MP4...')
+                        : (isMobileDevice ? 'Save Trailer to Photos' : 'Download 9:16 MP4 Trailer')}
                     </span>
                   </button>
                 </div>
@@ -2364,8 +2386,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 <Download className="w-4 h-4 text-black shrink-0" />
                 <span>
                   {isExportingBadge
-                    ? (isMobileDevice ? 'Saving to Photos...' : 'Rendering 9:16 PNG...')
-                    : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 Story Badge')}
+                    ? (isMobileDevice ? 'Saving Story Card to Photos...' : 'Rendering 9:16 PNG...')
+                    : (isMobileDevice ? 'Save Story Card to Photos' : 'Download 9:16 Story Badge')}
                 </span>
               </button>
 
@@ -2378,8 +2400,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 <Film className="w-4 h-4 text-black shrink-0" />
                 <span>
                   {isExportingTrailer
-                    ? (isMobileDevice ? 'Saving to Photos...' : 'Encoding 9:16 MP4...')
-                    : (isMobileDevice ? 'Save to Photos' : 'Download 9:16 MP4 Trailer')}
+                    ? (isMobileDevice ? 'Saving Trailer to Photos...' : 'Encoding 9:16 MP4...')
+                    : (isMobileDevice ? 'Save Trailer to Photos' : 'Download 9:16 MP4 Trailer')}
                 </span>
               </button>
             </div>
