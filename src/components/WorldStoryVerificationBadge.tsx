@@ -129,7 +129,7 @@ function drawRoundedRect(
 
 function drawCoverImage(
   ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
+  img: HTMLImageElement | HTMLVideoElement,
   x: number,
   y: number,
   w: number,
@@ -138,19 +138,21 @@ function drawCoverImage(
   panX = 0,
   panY = 0
 ) {
-  const imgRatio = img.width / Math.max(1, img.height);
+  const mediaW = ('videoWidth' in img && img.videoWidth) ? img.videoWidth : img.width || 720;
+  const mediaH = ('videoHeight' in img && img.videoHeight) ? img.videoHeight : img.height || 1280;
+  const imgRatio = mediaW / Math.max(1, mediaH);
   const boxRatio = w / Math.max(1, h);
   let sx = 0;
   let sy = 0;
-  let sw = img.width;
-  let sh = img.height;
+  let sw = mediaW;
+  let sh = mediaH;
 
   if (imgRatio > boxRatio) {
-    sw = img.height * boxRatio;
-    sx = (img.width - sw) / 2;
+    sw = mediaH * boxRatio;
+    sx = (mediaW - sw) / 2;
   } else {
-    sh = img.width / boxRatio;
-    sy = (img.height - sh) / 2;
+    sh = mediaW / boxRatio;
+    sy = (mediaH - sh) / 2;
   }
 
   const zoomedW = sw / zoom;
@@ -558,71 +560,136 @@ export function drawTrailerOverlay(
   logoImg: HTMLImageElement | null,
   activeIdx: number = 0
 ) {
-  // Cinematic top & bottom dark gradient vignettes for crisp HUD legibility
-  const topVignette = ctx.createLinearGradient(0, 0, 0, H * 0.34);
-  topVignette.addColorStop(0, 'rgba(3, 7, 18, 0.92)');
-  topVignette.addColorStop(0.65, 'rgba(3, 7, 18, 0.55)');
-  topVignette.addColorStop(1, 'rgba(3, 7, 18, 0)');
+  const s = W / 1080; // Scale factor relative to 1080x1920
+
+  // 1. Cinematic top & bottom dark gradient vignettes for crisp HUD legibility
+  const topVignette = ctx.createLinearGradient(0, 0, 0, H * 0.36);
+  topVignette.addColorStop(0, 'rgba(2, 6, 16, 0.95)');
+  topVignette.addColorStop(0.65, 'rgba(2, 6, 16, 0.65)');
+  topVignette.addColorStop(1, 'rgba(2, 6, 16, 0)');
   ctx.fillStyle = topVignette;
-  ctx.fillRect(0, 0, W, H * 0.34);
+  ctx.fillRect(0, 0, W, H * 0.36);
 
-  const bottomVignette = ctx.createLinearGradient(0, H * 0.58, 0, H);
-  bottomVignette.addColorStop(0, 'rgba(3, 7, 18, 0)');
-  bottomVignette.addColorStop(0.45, 'rgba(3, 7, 18, 0.78)');
-  bottomVignette.addColorStop(1, 'rgba(2, 5, 12, 0.96)');
+  const bottomVignette = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  bottomVignette.addColorStop(0, 'rgba(2, 6, 16, 0)');
+  bottomVignette.addColorStop(0.45, 'rgba(2, 6, 16, 0.82)');
+  bottomVignette.addColorStop(1, 'rgba(1, 4, 10, 0.98)');
   ctx.fillStyle = bottomVignette;
-  ctx.fillRect(0, H * 0.58, W, H * 0.42);
+  ctx.fillRect(0, H * 0.55, W, H * 0.45);
 
-  // Subtle Sci-Fi Outer Frame
-  const pad = Math.round(W * 0.038);
-  drawRoundedRect(ctx, pad, pad, W - pad * 2, H - pad * 2, Math.round(W * 0.032));
-  ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
-  ctx.lineWidth = Math.max(1.5, W * 0.0022);
+  // 2. Custom Sci-Fi Border Framing with High-Tech Corner Brackets
+  const pad = Math.round(36 * s);
+  const frameW = W - pad * 2;
+  const frameH = H - pad * 2;
+  const cornerR = Math.round(28 * s);
+
+  // Outer glowing border
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 242, 254, 0.35)';
+  ctx.shadowBlur = 14 * s;
+  drawRoundedRect(ctx, pad, pad, frameW, frameH, cornerR);
+  ctx.strokeStyle = 'rgba(0, 242, 254, 0.5)';
+  ctx.lineWidth = Math.max(1.5, 2.5 * s);
+  ctx.stroke();
+  ctx.restore();
+
+  // Inner subtle accent border
+  const innerPad = pad + Math.round(8 * s);
+  drawRoundedRect(ctx, innerPad, innerPad, W - innerPad * 2, H - innerPad * 2, cornerR - Math.round(4 * s));
+  ctx.strokeStyle = 'rgba(245, 158, 11, 0.22)';
+  ctx.lineWidth = 1;
   ctx.stroke();
 
-  const s = W / 1080; // Scale factor relative to 1080x1920
-  const contentX = Math.round(78 * s);
+  // Tech Corner Brackets (Amber Gold)
+  const bracketLen = Math.round(44 * s);
+  ctx.save();
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = Math.max(2, 3.5 * s);
+  ctx.shadowColor = 'rgba(245, 158, 11, 0.6)';
+  ctx.shadowBlur = 8 * s;
+
+  // Top-Left
+  ctx.beginPath();
+  ctx.moveTo(pad, pad + bracketLen);
+  ctx.lineTo(pad, pad);
+  ctx.lineTo(pad + bracketLen, pad);
+  ctx.stroke();
+
+  // Top-Right
+  ctx.beginPath();
+  ctx.moveTo(W - pad - bracketLen, pad);
+  ctx.lineTo(W - pad, pad);
+  ctx.lineTo(W - pad, pad + bracketLen);
+  ctx.stroke();
+
+  // Bottom-Left
+  ctx.beginPath();
+  ctx.moveTo(pad, H - pad - bracketLen);
+  ctx.lineTo(pad, H - pad);
+  ctx.lineTo(pad + bracketLen, H - pad);
+  ctx.stroke();
+
+  // Bottom-Right
+  ctx.beginPath();
+  ctx.moveTo(W - pad - bracketLen, H - pad);
+  ctx.lineTo(W - pad, H - pad);
+  ctx.lineTo(W - pad, H - pad - bracketLen);
+  ctx.stroke();
+  ctx.restore();
+
+  const contentX = Math.round(82 * s);
   const contentW = W - contentX * 2;
 
-  // TOP-LEVEL HEADER: FOUNDING PIONEER / VIP PIONEER STATUS + PLANET NAME + HOLDER
+  // 3. TOP WORLD METADATA BADGE
+  // Top Status Pill
+  const pioneerText = meta.isAmlemi
+    ? '★ FOUNDING PIONEER · GENESIS BENCHMARK'
+    : meta.isVipPioneer
+    ? '★ VIP PIONEER · 9:16 TRAILER'
+    : meta.isPioneer
+    ? '★ FOUNDING PIONEER · 9:16 TRAILER'
+    : '★ FOUNDING PIONEER';
+
+  ctx.save();
+  drawRoundedRect(ctx, contentX, Math.round(86 * s), Math.round(370 * s), Math.round(34 * s), Math.round(10 * s));
+  ctx.fillStyle = 'rgba(245, 158, 11, 0.16)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+
   ctx.fillStyle = '#fbbf24';
-  ctx.font = `bold ${Math.round(20 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(
-    meta.isAmlemi
-      ? '★ FOUNDING PIONEER · GENESIS BENCHMARK'
-      : meta.isVipPioneer
-      ? '★ VIP PIONEER · 9:16 TRAILER'
-      : meta.isPioneer
-      ? '★ FOUNDING PIONEER · 9:16 TRAILER'
-      : '★ FOUNDING PIONEER',
-    contentX,
-    Math.round(112 * s)
-  );
+  ctx.font = `bold ${Math.round(15 * s)}px "JetBrains Mono", monospace`;
+  ctx.fillText(pioneerText, contentX + Math.round(14 * s), Math.round(109 * s));
 
+  // Large Stylized World Name
+  const worldName = (dossier.planetName || 'ÄMLEMI').toUpperCase();
+  ctx.save();
   ctx.fillStyle = '#ffffff';
-  ctx.font = `900 ${Math.round(52 * s)}px "Inter", sans-serif`;
-  ctx.fillText((dossier.planetName || 'ÄMLEMI').toUpperCase(), contentX, Math.round(168 * s));
+  ctx.font = `900 ${Math.round(54 * s)}px "Inter", sans-serif`;
+  ctx.shadowColor = 'rgba(0, 242, 254, 0.6)';
+  ctx.shadowBlur = 18 * s;
+  ctx.fillText(worldName, contentX, Math.round(172 * s));
+  ctx.restore();
 
+  // Holder & Sector Info
+  const holderText = (dossier.authorName || 'ODI SELIS').toUpperCase();
+  const sectorText = (dossier.sectorId || 'SECTOR AKN-01').toUpperCase();
   ctx.fillStyle = '#67e8f9';
-  ctx.font = `bold ${Math.round(18 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(
-    `HOLDER: ${(dossier.authorName || 'ODI SELIS').toUpperCase()} · ${(
-      dossier.sectorId || 'SECTOR AKN-01'
-    ).toUpperCase()}`,
-    contentX,
-    Math.round(202 * s)
-  );
+  ctx.font = `bold ${Math.round(19 * s)}px "JetBrains Mono", monospace`;
+  ctx.fillText(`HOLDER: ${holderText} · ${sectorText}`, contentX, Math.round(208 * s));
 
-  // Top-right Edition Pill
+  // Top-Right Edition Pill
   const badgeW = Math.round(180 * s);
   const badgeH = Math.round(76 * s);
   const badgeX = W - contentX - badgeW;
-  const badgeY = Math.round(78 * s);
+  const badgeY = Math.round(82 * s);
   drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, Math.round(18 * s));
-  ctx.fillStyle = 'rgba(10, 18, 36, 0.78)';
+  ctx.fillStyle = 'rgba(6, 13, 28, 0.88)';
   ctx.fill();
   ctx.strokeStyle = '#fbbf24';
-  ctx.lineWidth = Math.max(1.5, 2 * s);
+  ctx.lineWidth = Math.max(1.5, 2.5 * s);
   ctx.stroke();
 
   ctx.fillStyle = '#fde68a';
@@ -631,7 +698,7 @@ export function drawTrailerOverlay(
   ctx.fillText(`#${meta.worldNumber}`, badgeX + badgeW / 2, badgeY + Math.round(50 * s));
   ctx.textAlign = 'left';
 
-  // Active Archive Slot Telemetry Pill (Bottom-Area above Footer)
+  // 4. ACTIVE ARCHIVE SLOT TELEMETRY PILL (Above Footer)
   const slotCard = photoCards[activeIdx] || photoCards[0];
   const slotLabels = [
     '01_MAIN · ORBITAL HORIZON',
@@ -640,11 +707,11 @@ export function drawTrailerOverlay(
     '04_CANOPY · COCKPIT DESCENT',
     '05_LORE · SACRED MONUMENT',
   ];
-  const telemetryY = Math.round(1450 * s);
-  drawRoundedRect(ctx, contentX, telemetryY, contentW, Math.round(148 * s), Math.round(20 * s));
-  ctx.fillStyle = 'rgba(6, 13, 28, 0.84)';
+  const telemetryY = Math.round(1440 * s);
+  drawRoundedRect(ctx, contentX, telemetryY, contentW, Math.round(152 * s), Math.round(20 * s));
+  ctx.fillStyle = 'rgba(6, 13, 28, 0.88)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(34, 211, 238, 0.42)';
+  ctx.strokeStyle = 'rgba(34, 211, 238, 0.45)';
   ctx.lineWidth = Math.max(1, 1.5 * s);
   ctx.stroke();
 
@@ -656,47 +723,50 @@ export function drawTrailerOverlay(
   ctx.font = `bold ${Math.round(28 * s)}px "Inter", sans-serif`;
   ctx.fillText(slotCard?.title || dossier.planetName, contentX + Math.round(26 * s), telemetryY + Math.round(82 * s));
 
+  const metadataCode = meta.isAmlemi
+    ? 'AKN-WLD-2027-001-GENESIS'
+    : meta.verificationCode || 'AKN-WLD-2027-001-GENESIS';
   ctx.fillStyle = '#fbbf24';
   ctx.font = `bold ${Math.round(18 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(`CODE: ${meta.verificationCode}`, contentX + Math.round(26 * s), telemetryY + Math.round(122 * s));
+  ctx.fillText(`CODE: ${metadataCode}`, contentX + Math.round(26 * s), telemetryY + Math.round(124 * s));
 
   ctx.fillStyle = '#34d399';
   ctx.textAlign = 'right';
-  ctx.fillText('● AUTHENTICATED', contentX + contentW - Math.round(26 * s), telemetryY + Math.round(122 * s));
+  ctx.fillText('● AUTHENTICATED', contentX + contentW - Math.round(26 * s), telemetryY + Math.round(124 * s));
   ctx.textAlign = 'left';
 
   // Progress Bar across bottom of telemetry card
   const barX = contentX + Math.round(26 * s);
-  const barY = telemetryY + Math.round(136 * s);
+  const barY = telemetryY + Math.round(138 * s);
   const barW = contentW - Math.round(52 * s);
   ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
   ctx.fillRect(barX, barY, barW, Math.max(2, Math.round(4 * s)));
   ctx.fillStyle = '#fbbf24';
   ctx.fillRect(barX, barY, barW * progress, Math.max(2, Math.round(4 * s)));
 
-  // BOTTOM-LEFT EMBEDDED SILLOW MILL LOGO & BRAND SIGNATURE
-  const footerY = Math.round(1640 * s);
+  // 5. BOTTOM-LEFT EMBEDDED SILLOW MILL LOGO & METADATA STRING
+  const footerY = Math.round(1630 * s);
   if (logoImg) {
-    const targetH = Math.round(112 * s);
+    const targetH = Math.round(116 * s);
     const targetW = (logoImg.width / Math.max(1, logoImg.height)) * targetH;
     ctx.save();
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.45)';
-    ctx.shadowBlur = 16 * s;
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.55)';
+    ctx.shadowBlur = 18 * s;
     ctx.drawImage(logoImg, contentX, footerY, targetW, targetH);
     ctx.restore();
 
     const textStartX = contentX + targetW + Math.round(24 * s);
     ctx.fillStyle = '#ffffff';
-    ctx.font = `900 ${Math.round(34 * s)}px "Inter", sans-serif`;
+    ctx.font = `900 ${Math.round(36 * s)}px "Inter", sans-serif`;
     ctx.fillText('SILLOW MILL', textStartX, footerY + Math.round(42 * s));
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#67e8f9';
     ctx.font = `bold ${Math.round(18 * s)}px "JetBrains Mono", monospace`;
     ctx.fillText('ÄKINOYA UNIVERSE', textStartX, footerY + Math.round(74 * s));
 
-    ctx.fillStyle = 'rgba(203, 213, 225, 0.82)';
+    ctx.fillStyle = 'rgba(203, 213, 225, 0.9)';
     ctx.font = `500 ${Math.round(17 * s)}px "JetBrains Mono", monospace`;
-    ctx.fillText('sillowmill.com · 9:16 Orbital World Trailer', textStartX, footerY + Math.round(104 * s));
+    ctx.fillText(`sillowmill.com · ${metadataCode}`, textStartX, footerY + Math.round(106 * s));
   }
 }
 
@@ -731,8 +801,11 @@ export async function exportWorldTrailerVideoBlob(
   }
 
   const candidateTypes = [
+    'video/mp4;codecs=avc1,mp4a.40.2',
     'video/mp4;codecs=avc1',
     'video/mp4',
+    'video/webm;codecs=h264',
+    'video/webm;codecs=vp9,opus',
     'video/webm;codecs=vp9',
     'video/webm;codecs=vp8',
     'video/webm',
@@ -756,17 +829,32 @@ export async function exportWorldTrailerVideoBlob(
     dossier.renders?.video_url;
 
   let videoElement: HTMLVideoElement | null = null;
+  let objectUrlToRevoke: string | null = null;
+
   if (targetVideoUrl) {
     try {
       const v = document.createElement('video');
       v.crossOrigin = 'anonymous';
-      v.muted = true;
+      v.muted = false;
       v.playsInline = true;
       v.preload = 'auto';
-      v.src = targetVideoUrl;
+
+      try {
+        const response = await fetch(targetVideoUrl);
+        if (response.ok) {
+          const blob = await response.blob();
+          objectUrlToRevoke = URL.createObjectURL(blob);
+          v.src = objectUrlToRevoke;
+        } else {
+          v.src = targetVideoUrl;
+        }
+      } catch {
+        v.src = targetVideoUrl;
+      }
+
       await new Promise<void>((resolve) => {
-        const timer = setTimeout(() => resolve(), 2500);
-        v.onloadeddata = () => {
+        const timer = setTimeout(() => resolve(), 3500);
+        v.onloadedmetadata = () => {
           clearTimeout(timer);
           resolve();
         };
@@ -775,7 +863,8 @@ export async function exportWorldTrailerVideoBlob(
           resolve();
         };
       });
-      if (v.readyState >= 2) {
+
+      if (v.readyState >= 1) {
         videoElement = v;
       }
     } catch {
@@ -783,8 +872,28 @@ export async function exportWorldTrailerVideoBlob(
     }
   }
 
+  // Audio track routing
+  let audioCtx: AudioContext | null = null;
+  if (videoElement) {
+    try {
+      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtxClass) {
+        audioCtx = new AudioCtxClass();
+        const source = audioCtx.createMediaElementSource(videoElement);
+        const dest = audioCtx.createMediaStreamDestination();
+        source.connect(dest);
+        const tracks = dest.stream.getAudioTracks();
+        if (tracks.length > 0) {
+          stream.addTrack(tracks[0]);
+        }
+      }
+    } catch {
+      // Audio capture fallback
+    }
+  }
+
   const recorder = supportedMime
-    ? new MediaRecorder(stream, { mimeType: supportedMime, videoBitsPerSecond: 6_000_000 })
+    ? new MediaRecorder(stream, { mimeType: supportedMime, videoBitsPerSecond: 8_000_000 })
     : new MediaRecorder(stream);
 
   const chunks: BlobPart[] = [];
@@ -792,14 +901,25 @@ export async function exportWorldTrailerVideoBlob(
     if (e.data && e.data.size > 0) chunks.push(e.data);
   };
 
+  const videoDurationSec =
+    videoElement && Number.isFinite(videoElement.duration) && videoElement.duration > 1
+      ? videoElement.duration
+      : 5;
+  const durationMs = Math.min(10000, Math.max(3500, Math.round(videoDurationSec * 1000)));
+
   return new Promise((resolve) => {
     recorder.onstop = () => {
+      if (objectUrlToRevoke) {
+        URL.revokeObjectURL(objectUrlToRevoke);
+      }
+      if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close().catch(() => {});
+      }
       const finalBlob = new Blob(chunks, { type: supportedMime || 'video/mp4' });
       resolve({ blob: finalBlob, ext: 'mp4' });
     };
 
     recorder.start();
-    const durationMs = 5000;
     const startTime = performance.now();
 
     if (videoElement) {
@@ -814,7 +934,7 @@ export async function exportWorldTrailerVideoBlob(
       if (videoElement && !videoElement.paused && videoElement.readyState >= 2) {
         ctx.fillStyle = '#030712';
         ctx.fillRect(0, 0, W, H);
-        drawCoverImage(ctx, videoElement as unknown as HTMLImageElement, 0, 0, W, H, 1, 0, 0);
+        drawCoverImage(ctx, videoElement, 0, 0, W, H, 1, 0, 0);
         drawTrailerOverlay(ctx, W, H, progress, dossier, meta, photoCards, logoImg, 0);
       } else {
         drawTrailerFrame(ctx, W, H, progress, dossier, meta, photoCards, loadedPhotos, logoImg);
@@ -1252,7 +1372,6 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       .replace(/[^a-z0-9-_]/g, '-');
 
     try {
-      // 1. If dynamic Val.ai production AI video is active, download it directly
       const activeVideoUrl =
         dynamicVideo.videoUrl ||
         dossier.videoUrl ||
@@ -1260,6 +1379,21 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         dossier.renders?.video_url ||
         '';
 
+      // 1. Run integrated canvas-rendering branded marketing composite pipeline
+      const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
+      if (result?.blob) {
+        const url = URL.createObjectURL(result.blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `sillowmill-${safeName}-9x16-trailer.${result.ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      // 2. Direct video fallback if composite generation unavailable
       if (activeVideoUrl) {
         try {
           const response = await fetch(activeVideoUrl);
@@ -1277,19 +1411,6 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
           window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');
           return;
         }
-      }
-
-      // 2. Active Fallback: Automated 5-photo zoom slideshow montage
-      const result = await exportWorldTrailerVideoBlob(dossier, editionRank);
-      if (result?.blob) {
-        const url = URL.createObjectURL(result.blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `sillowmill-${safeName}-9x16-trailer.${result.ext}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
       }
     } finally {
       setIsExportingTrailer(false);

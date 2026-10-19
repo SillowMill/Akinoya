@@ -22,7 +22,7 @@ import {
   copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
-import { useDynamicWorldVideo } from './WorldStoryVerificationBadge';
+import { useDynamicWorldVideo, exportWorldTrailerVideoBlob } from './WorldStoryVerificationBadge';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
 const SLOT_CODES = ['01_main', '02_flora', '03_fauna', '04_atmo', '05_lore'];
@@ -82,16 +82,31 @@ export const MyWorld: React.FC<MyWorldProps> = ({
     soundManager.playTone(740, 0.06);
     if (!videoUrl) return;
     setIsDownloading(true);
+    const safeName = (dossier.planetName || 'akinoya-sector')
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]/g, '-');
     try {
+      // 1. Run integrated canvas-rendering branded marketing composite pipeline
+      const result = await exportWorldTrailerVideoBlob(dossier, undefined, videoUrl);
+      if (result?.blob) {
+        const blobUrl = URL.createObjectURL(result.blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `sillowmill-${safeName}-9x16-trailer.${result.ext}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+        return;
+      }
+
+      // 2. Fallback to direct raw video download only if composite unavailable
       const response = await fetch(videoUrl);
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      const safeName = (dossier.planetName || 'akinoya-sector')
-        .toLowerCase()
-        .replace(/[^a-z0-9-_]/g, '-');
       link.href = blobUrl;
-      link.download = `${safeName}-9x16-trailer.mp4`;
+      link.download = `sillowmill-${safeName}-9x16-trailer.mp4`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

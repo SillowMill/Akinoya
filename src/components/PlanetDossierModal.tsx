@@ -172,7 +172,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
         const blobUrl = URL.createObjectURL(result.blob);
         const link = document.createElement('a');
         link.href = blobUrl;
-        link.download = `${safeName}-9x16-trailer.${result.ext}`;
+        link.download = `sillowmill-${safeName}-9x16-trailer.${result.ext}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
