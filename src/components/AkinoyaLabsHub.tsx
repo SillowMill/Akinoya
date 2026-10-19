@@ -1061,12 +1061,12 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             decoding="async"
                             style={{ willChange: 'opacity, transform' }}
                             className={`relative z-10 w-full h-full object-cover transition-all duration-300 group-hover/banner:scale-105 opacity-90 group-hover/banner:opacity-100 transform-gpu ${
-                              stage.id === 2 ? 'filter blur-[7px] group-hover/banner:blur-[5px]' : ''
+                              stage.id === 2 ? 'filter blur-[13px] group-hover/banner:blur-[10px] scale-[1.04]' : ''
                             }`}
                           />
                           {stage.id === 2 && (
-                            <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-950/80 border border-purple-400/40 text-[9.5px] font-mono font-bold text-purple-200 shadow-md backdrop-blur-sm pointer-events-none">
-                              <ShieldCheck className="w-3 h-3 text-purple-300" />
+                            <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/85 border border-purple-400/50 text-[10px] font-mono font-bold text-purple-200 shadow-lg backdrop-blur-md pointer-events-none">
+                              <ShieldCheck className="w-3.5 h-3.5 text-purple-300" />
                               <span>SECURITY BLUR ACTIVE</span>
                             </div>
                           )}
@@ -1392,8 +1392,18 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     <img
                       src={selectedStageForModal.heroImage}
                       alt={selectedStageForModal.heroImageAlt}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover transition-all duration-300 ${
+                        selectedStageForModal.id === 2 ? 'filter blur-[13px] scale-[1.04]' : ''
+                      }`}
                     />
+                    {selectedStageForModal.id === 2 && (
+                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
+                        <div className="px-4 py-2.5 rounded-xl bg-black/85 border border-purple-500/50 backdrop-blur-md shadow-[0_0_30px_rgba(168,85,247,0.4)] flex items-center gap-2 text-purple-200 font-mono text-xs font-bold uppercase tracking-wider">
+                          <ShieldCheck className="w-4 h-4 text-purple-300" />
+                          <span>PROPRIETARY GENERATION LAYER · PROTECTED</span>
+                        </div>
+                      </div>
+                    )}
                     {/* Desktop-Only Image Gradient & Title Overlay (Hidden on Mobile & iPad <1280px) */}
                     <div className="hidden xl:flex absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent items-end p-5">
                       <div className="space-y-1 w-full">
@@ -1756,7 +1766,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         src={selectedPreviewImage}
                         alt="Enlarged Case Study Asset"
                         className={`w-full h-full object-contain max-h-[85vh] select-none pointer-events-none ${
-                          isCharacterPlate ? 'filter blur-[8px] scale-[1.02]' : ''
+                          isCharacterPlate ? 'filter blur-[13px] scale-[1.04]' : ''
                         }`}
                       />
                       {isCharacterPlate && (

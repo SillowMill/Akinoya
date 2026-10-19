@@ -935,27 +935,31 @@ export async function downloadOrShareFileBlob(
   const isMobile = isMobileOrTabletDevice();
   const file = new File([blob], filename, { type: mimeType });
 
-  if (
-    isMobile &&
-    typeof navigator !== 'undefined' &&
-    typeof navigator.share === 'function' &&
-    navigator.canShare &&
-    navigator.canShare({ files: [file] })
-  ) {
-    try {
-      await navigator.share({
-        files: [file],
-        title,
-        text,
-      });
-      return;
-    } catch (err: any) {
-      if (err?.name === 'AbortError') {
-        // User dismissed the native share sheet
+  if (isMobile) {
+    if (
+      typeof navigator !== 'undefined' &&
+      typeof navigator.share === 'function' &&
+      navigator.canShare &&
+      navigator.canShare({ files: [file] })
+    ) {
+      try {
+        await navigator.share({
+          files: [file],
+          title,
+          text,
+        });
+        return;
+      } catch (err: any) {
+        if (err?.name === 'AbortError') {
+          // User dismissed the native share sheet
+          return;
+        }
+        console.warn('Native mobile share warning:', err);
         return;
       }
-      // If native sharing fails unexpectedly, fall through to anchor download
     }
+    // On mobile devices, prohibit generic anchor download or window.open popups
+    return;
   }
 
   // Desktop or fallback direct anchor download
@@ -1708,25 +1712,25 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
    */
   const renderStoryAfficheCard = (isInsideModal = false) => (
     <div className={`relative w-full ${isInsideModal ? 'max-w-[400px] sm:max-w-[430px]' : 'max-w-[350px] sm:max-w-[375px]'} flex items-center justify-center`}>
-      {/* Sleek Side Chevron Arrow Navigation (Desktop & Mobile) */}
+      {/* Sleek Side Chevron Arrow Navigation (Desktop & Mobile) - Min 44px Touch Targets, Positioned Safely Outside Card */}
       <button
         type="button"
         onClick={handleToggleViewMode}
-        className="absolute -left-3 sm:-left-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#050a18]/90 hover:bg-[#081226] border border-amber-400/50 hover:border-amber-300 text-amber-300 flex items-center justify-center transition-all shadow-[0_0_15px_rgba(0,0,0,0.8),0_0_10px_rgba(245,158,11,0.3)] cursor-pointer"
+        className="absolute -left-4 sm:-left-6 lg:-left-7 top-1/2 -translate-y-1/2 z-30 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-[#050a18]/90 hover:bg-[#081226] border border-cyan-400/60 hover:border-cyan-300 text-cyan-300 flex items-center justify-center transition-all shadow-[0_0_20px_rgba(0,0,0,0.85),0_0_12px_rgba(6,182,212,0.35)] cursor-pointer touch-manipulation active:scale-95 hover:scale-105"
         aria-label="Toggle to Previous / Alternate View"
         title="Toggle between 9:16 Story Card and 9:16 MP4 Trailer"
       >
-        <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
+        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-300" />
       </button>
 
       <button
         type="button"
         onClick={handleToggleViewMode}
-        className="absolute -right-3 sm:-right-5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#050a18]/90 hover:bg-[#081226] border border-cyan-400/50 hover:border-cyan-300 text-cyan-300 flex items-center justify-center transition-all shadow-[0_0_15px_rgba(0,0,0,0.8),0_0_10px_rgba(6,182,212,0.3)] cursor-pointer"
+        className="absolute -right-4 sm:-right-6 lg:-right-7 top-1/2 -translate-y-1/2 z-30 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-[#050a18]/90 hover:bg-[#081226] border border-cyan-400/60 hover:border-cyan-300 text-cyan-300 flex items-center justify-center transition-all shadow-[0_0_20px_rgba(0,0,0,0.85),0_0_12px_rgba(6,182,212,0.35)] cursor-pointer touch-manipulation active:scale-95 hover:scale-105"
         aria-label="Toggle to Next / Alternate View"
         title="Toggle between 9:16 Story Card and 9:16 MP4 Trailer"
       >
-        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-300" />
+        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-300" />
       </button>
 
       <div
@@ -2232,7 +2236,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         typeof document !== 'undefined' &&
         createPortal(
           <div
-            className="fixed inset-0 z-[9999] bg-black/92 backdrop-blur-2xl flex flex-col items-center justify-between p-4 sm:p-6 overflow-y-auto"
+            style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity', overflowAnchor: 'none' }}
+            className="fixed inset-0 z-[9999] bg-black/92 backdrop-blur-2xl flex flex-col items-center justify-between p-4 sm:p-6 overflow-y-auto transform-gpu"
             onClick={() => setIsFullscreenOpen(false)}
           >
             {/* Top Modal Bar: View Switcher & Close */}

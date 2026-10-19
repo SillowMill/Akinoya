@@ -116,7 +116,9 @@ export const MyWorld: React.FC<MyWorldProps> = ({
       const fastStartBlob = await optimizeMp4FastStart(rawBlob);
       await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
     } catch {
-      window.open(videoUrl, '_blank', 'noopener,noreferrer');
+      if (!isMobileDevice) {
+        window.open(videoUrl, '_blank', 'noopener,noreferrer');
+      }
     } finally {
       setIsDownloading(false);
     }

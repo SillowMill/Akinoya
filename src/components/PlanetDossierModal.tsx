@@ -195,7 +195,9 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
           await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
           return;
         } catch {
-          window.open(videoUrl, '_blank', 'noopener,noreferrer');
+          if (!isMobileDevice) {
+            window.open(videoUrl, '_blank', 'noopener,noreferrer');
+          }
           return;
         }
       }
@@ -247,7 +249,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 18 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            style={{ willChange: 'transform, opacity' }}
+            style={{ willChange: 'transform, opacity', overflowAnchor: 'none', transform: 'translate3d(0,0,0)' }}
             className="relative z-10 w-full max-w-6xl h-[100dvh] sm:h-auto sm:max-h-[94dvh] bg-[#050811] border-0 sm:border sm:border-cyan-500/40 rounded-none sm:rounded-3xl shadow-[0_25px_90px_rgba(0,0,0,0.95),0_0_50px_rgba(6,182,212,0.18)] flex flex-col overflow-hidden transform-gpu"
           >
             {/* Top Modal Header Bar */}

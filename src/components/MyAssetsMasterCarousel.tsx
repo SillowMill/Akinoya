@@ -607,10 +607,14 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
         const blob = await res.blob();
         await downloadOrShareFileBlob(blob, filename, 'image/jpeg', shareTitle, shareText);
       } else {
-        window.open(activePhoto.url, '_blank', 'noopener,noreferrer');
+        if (!isMobileDevice) {
+          window.open(activePhoto.url, '_blank', 'noopener,noreferrer');
+        }
       }
     } catch {
-      window.open(activePhoto.url, '_blank', 'noopener,noreferrer');
+      if (!isMobileDevice) {
+        window.open(activePhoto.url, '_blank', 'noopener,noreferrer');
+      }
     } finally {
       setIsDownloadingPhoto(false);
     }
@@ -703,7 +707,9 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
           await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
           return;
         } catch {
-          window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');
+          if (!isMobileDevice) {
+            window.open(activeVideoUrl, '_blank', 'noopener,noreferrer');
+          }
           return;
         }
       }
@@ -1365,7 +1371,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
       {isFullscreenModalOpen &&
         createPortal(
           <div
-            className="fixed inset-0 z-[10000] w-screen h-[100dvh] flex flex-col justify-between bg-black/95 backdrop-blur-2xl p-2.5 sm:p-5 select-none overflow-y-auto"
+            style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity', overflowAnchor: 'none' }}
+            className="fixed inset-0 z-[10000] w-screen h-[100dvh] flex flex-col justify-between bg-black/95 backdrop-blur-2xl p-2.5 sm:p-5 select-none overflow-y-auto transform-gpu"
             onClick={() => {
               setIsFullscreenModalOpen(false);
               setFullscreenPhoto(null);
