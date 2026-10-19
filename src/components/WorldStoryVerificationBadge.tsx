@@ -957,14 +957,11 @@ export async function downloadOrShareFileBlob(
           return;
         }
         console.warn('Native mobile share warning:', err);
-        return;
       }
     }
-    // On mobile devices, prohibit generic anchor download or window.open popups
-    return;
   }
 
-  // Desktop or fallback direct anchor download
+  // Desktop or universal mobile fallback direct anchor download
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -997,13 +994,25 @@ export async function exportWorldTrailerVideoBlob(
   editionRank?: number,
   activeVideoUrl?: string
 ): Promise<{ blob: Blob; ext: string } | null> {
-  const W = 720;
-  const H = 1280;
+  const isMobileOrTablet =
+    typeof navigator !== 'undefined' &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+      /Android|Mobile|Tablet/.test(navigator.userAgent));
+
+  // Ultra-High 4K Resolution on Desktop (2160x3840 UHD 9:16)
+  // Maximum Quality 1080x1920 FHD 9:16 on Mobile / Tablet
+  const W = isMobileOrTablet ? 1080 : 2160;
+  const H = isMobileOrTablet ? 1920 : 3840;
+  const targetBitrate = isMobileOrTablet ? 18_000_000 : 32_000_000;
+
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: false, desynchronized: false });
   if (!ctx) return null;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   const meta = deriveWorldVerificationMeta(dossier, editionRank);
   const photoCards = getPlanetPhotoCards(dossier);
@@ -1059,6 +1068,7 @@ export async function exportWorldTrailerVideoBlob(
       v.muted = false;
       v.playsInline = true;
       v.preload = 'auto';
+      v.loop = true;
 
       const cacheBustedVideoUrl = getCacheBustedUrl(targetVideoUrl);
       try {
@@ -1075,8 +1085,12 @@ export async function exportWorldTrailerVideoBlob(
       }
 
       await new Promise<void>((resolve) => {
-        const timer = setTimeout(() => resolve(), 3500);
+        const timer = setTimeout(() => resolve(), 4000);
         v.onloadedmetadata = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+        v.oncanplay = () => {
           clearTimeout(timer);
           resolve();
         };
@@ -1114,17 +1128,18 @@ export async function exportWorldTrailerVideoBlob(
     }
   }
 
-  const isMobileOrTablet =
-    typeof navigator !== 'undefined' &&
-    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-      /Android|Mobile|Tablet/.test(navigator.userAgent));
-
-  const targetBitrate = isMobileOrTablet ? 6_000_000 : 10_000_000;
-
-  const recorder = supportedMime
-    ? new MediaRecorder(stream, { mimeType: supportedMime, videoBitsPerSecond: targetBitrate })
-    : new MediaRecorder(stream);
+  let recorder: MediaRecorder;
+  try {
+    recorder = supportedMime
+      ? new MediaRecorder(stream, { mimeType: supportedMime, videoBitsPerSecond: targetBitrate })
+      : new MediaRecorder(stream);
+  } catch {
+    try {
+      recorder = supportedMime ? new MediaRecorder(stream, { mimeType: supportedMime }) : new MediaRecorder(stream);
+    } catch {
+      recorder = new MediaRecorder(stream);
+    }
+  }
 
   const chunks: BlobPart[] = [];
   recorder.ondataavailable = (e) => {
@@ -1134,8 +1149,8 @@ export async function exportWorldTrailerVideoBlob(
   const videoDurationSec =
     videoElement && Number.isFinite(videoElement.duration) && videoElement.duration > 1
       ? videoElement.duration
-      : 5;
-  const durationMs = Math.min(10000, Math.max(3500, Math.round(videoDurationSec * 1000)));
+      : 6.5;
+  const durationMs = Math.min(15000, Math.max(3500, Math.round(videoDurationSec * 1000)));
 
   return new Promise((resolve) => {
     recorder.onstop = async () => {
@@ -1155,14 +1170,20 @@ export async function exportWorldTrailerVideoBlob(
 
     if (videoElement) {
       videoElement.currentTime = 0;
-      videoElement.play().catch(() => {});
+      videoElement.loop = true;
+      videoElement.play().catch(() => {
+        try {
+          videoElement!.muted = true;
+          videoElement!.play().catch(() => {});
+        } catch {}
+      });
     }
 
     const step = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(1, elapsed / durationMs);
 
-      if (videoElement && !videoElement.paused && videoElement.readyState >= 2) {
+      if (videoElement && videoElement.readyState >= 2) {
         ctx.fillStyle = '#030712';
         ctx.fillRect(0, 0, W, H);
         drawCoverImage(ctx, videoElement, 0, 0, W, H, 1, 0, 0);
@@ -1177,7 +1198,9 @@ export async function exportWorldTrailerVideoBlob(
         if (videoElement) {
           videoElement.pause();
         }
-        recorder.stop();
+        try {
+          recorder.stop();
+        } catch {}
       }
     };
 
@@ -1654,25 +1677,9 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
 
       const isMobile = isMobileOrTabletDevice();
 
-      // On mobile / tablet, prioritize fetching the pristine MP4 binary Blob directly
-      // so it wraps in a native File object and triggers navigator.share for direct "Save Trailer to Photos"
-      if (isMobile && activeVideoUrl) {
-        try {
-          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
-          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-          if (response.ok) {
-            const rawBlob = await response.blob();
-            const mp4Blob = rawBlob.type.includes('mp4') ? rawBlob : new Blob([rawBlob], { type: 'video/mp4' });
-            const fastStartBlob = await optimizeMp4FastStart(mp4Blob);
-            await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-            return;
-          }
-        } catch (fetchErr) {
-          console.warn('Direct mobile blob fetch warning:', fetchErr);
-        }
-      }
-
       // 1. Run integrated canvas-rendering branded marketing composite pipeline
+      // Burns in official Sillow Mill logo, typography, FOUNDING PIONEER badge,
+      // world name, holder telemetry, and custom border framing at ultra-high fidelity.
       const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
       if (result?.blob) {
         await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);

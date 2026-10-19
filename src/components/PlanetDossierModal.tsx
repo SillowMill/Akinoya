@@ -183,25 +183,9 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
     try {
       const isMobile = isMobileOrTabletDevice();
 
-      // On mobile / tablet, prioritize fetching the pristine MP4 binary Blob directly
-      // so it wraps in a native File object and triggers navigator.share for direct "Save Trailer to Photos"
-      if (isMobile && videoUrl) {
-        try {
-          const cacheBustedUrl = getCacheBustedUrl(videoUrl);
-          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-          if (response.ok) {
-            const rawBlob = await response.blob();
-            const mp4Blob = rawBlob.type.includes('mp4') ? rawBlob : new Blob([rawBlob], { type: 'video/mp4' });
-            const fastStartBlob = await optimizeMp4FastStart(mp4Blob);
-            await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-            return;
-          }
-        } catch (fetchErr) {
-          console.warn('Direct mobile blob fetch warning:', fetchErr);
-        }
-      }
-
       // 1. Attempt official branded template composite export
+      // Burns in official Sillow Mill logo, typography, FOUNDING PIONEER badge,
+      // world name, holder telemetry, and custom border framing at ultra-high fidelity.
       const result = await exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl);
       if (result?.blob) {
         await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
