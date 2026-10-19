@@ -1153,7 +1153,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
   onUnlockSimulation,
   onInspectDossier,
 }) => {
-  const [activeViewMode, setActiveViewMode] = useState<StoryViewMode>('card');
+  const [activeViewMode, setActiveViewMode] = useState<StoryViewMode>('trailer');
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [isExportingBadge, setIsExportingBadge] = useState(false);
   const [isExportingTrailer, setIsExportingTrailer] = useState(false);
@@ -1623,24 +1623,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-center">
           {/* Left Column: Interactive 9:16 View Toggle + Click-to-Fullscreen Card */}
           <div className="lg:col-span-5 flex flex-col items-center space-y-3.5">
-            {/* Interactive 9:16 View Switcher Bar */}
+            {/* Interactive 9:16 View Switcher Bar (Video Trailer First Default) */}
             <div className="w-full max-w-[350px] sm:max-w-[375px] p-1 rounded-xl bg-[#040814]/90 border border-white/15 grid grid-cols-2 gap-1 shadow-lg">
-              <button
-                type="button"
-                onClick={() => {
-                  soundManager.playTone(620, 0.04);
-                  setActiveViewMode('card');
-                }}
-                className={`py-2 px-3 rounded-lg font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  activeViewMode === 'card'
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)]'
-                    : 'text-white/65 hover:text-white'
-                }`}
-              >
-                <Camera className="w-3.5 h-3.5 shrink-0" />
-                <span>9:16 Story Card</span>
-              </button>
-
               <button
                 type="button"
                 onClick={() => {
@@ -1649,12 +1633,28 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 }}
                 className={`py-2 px-3 rounded-lg font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   activeViewMode === 'trailer'
-                    ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-black shadow-[0_0_15px_rgba(6,182,212,0.35)]'
+                    ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-black shadow-[0_0_15px_rgba(6,182,212,0.35)] font-extrabold'
                     : 'text-white/65 hover:text-white'
                 }`}
               >
                 <Play className="w-3.5 h-3.5 shrink-0" />
                 <span>9:16 MP4 Trailer</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  soundManager.playTone(620, 0.04);
+                  setActiveViewMode('card');
+                }}
+                className={`py-2 px-3 rounded-lg font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  activeViewMode === 'card'
+                    ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)] font-extrabold'
+                    : 'text-white/65 hover:text-white'
+                }`}
+              >
+                <Camera className="w-3.5 h-3.5 shrink-0" />
+                <span>9:16 Story Card</span>
               </button>
             </div>
 
@@ -1879,24 +1879,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                 </div>
               </div>
 
-              {/* Seamless 9:16 View Switcher inside Fullscreen Modal */}
+              {/* Seamless 9:16 View Switcher inside Fullscreen Modal (Video Trailer First Default) */}
               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#070d1c] border border-white/15">
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundManager.playTone(620, 0.04);
-                    setActiveViewMode('card');
-                  }}
-                  className={`px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeViewMode === 'card'
-                      ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>9:16 Story Card</span>
-                </button>
-
                 <button
                   type="button"
                   onClick={() => {
@@ -1905,12 +1889,28 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                   }}
                   className={`px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     activeViewMode === 'trailer'
-                      ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                      ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)] font-extrabold'
                       : 'text-white/70 hover:text-white'
                   }`}
                 >
                   <Play className="w-3.5 h-3.5" />
                   <span>9:16 MP4 Trailer</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundManager.playTone(620, 0.04);
+                    setActiveViewMode('card');
+                  }}
+                  className={`px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeViewMode === 'card'
+                      ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)] font-extrabold'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>9:16 Story Card</span>
                 </button>
               </div>
 

@@ -875,10 +875,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         </div>
 
         {/* ======================================================== */}
-        {/* MOBILE STICKY STAGE FAST-JUMP BAR (< 768px)              */}
+        {/* MOBILE & IPAD PORTRAIT STAGE FAST-JUMP BAR (< 1024px)    */}
         {/* ======================================================== */}
-        <div className="md:hidden sticky top-2 z-40 my-2 flex justify-center w-full px-2 pointer-events-none">
-          <div className="pointer-events-auto backdrop-blur-xl bg-black/85 border border-cyan-500/40 rounded-full px-2 py-1 shadow-[0_4px_30px_rgba(0,242,254,0.25)] flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full">
+        <div className="lg:hidden sticky top-2 z-40 my-2 flex justify-center w-full px-2 pointer-events-none">
+          <div className="pointer-events-auto backdrop-blur-md bg-black/85 border border-cyan-500/40 rounded-full px-2 py-1 shadow-[0_4px_25px_rgba(0,242,254,0.2)] flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full transform-gpu">
             {STAGES.map((s) => {
               const isActive = activeStageId === s.id;
               const isLocked = s.isAdvancedLocked && !isMember;
@@ -912,8 +912,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
           {/* MAIN ROADMAP CARDS & WEAVING FOOTSTEPS                  */}
           {/* ====================================================== */}
           <div className="relative space-y-10 sm:space-y-12">
-            {/* Desktop Center Glowing Cyan Guide Line (Hidden on Mobile) */}
-            <div className="hidden md:block absolute left-1/2 top-10 bottom-24 w-1 -translate-x-1/2 bg-gradient-to-b from-cyan-400 via-purple-500 to-cyan-500/40 rounded-full shadow-[0_0_15px_rgba(0,242,254,0.5)] z-0 pointer-events-none" />
+            {/* Desktop Center Glowing Cyan Guide Line (>= 1024px) */}
+            <div className="hidden lg:block absolute left-1/2 top-10 bottom-24 w-1 -translate-x-1/2 bg-gradient-to-b from-cyan-400 via-purple-500 to-cyan-500/40 rounded-full shadow-[0_0_15px_rgba(0,242,254,0.5)] z-0 pointer-events-none" />
 
             {STAGES.map((stage, index) => {
               const isStageLocked = stage.isAdvancedLocked && !isMember;
@@ -927,12 +927,12 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     isStageLocked ? 'group/locked' : 'group/active'
                   }`}
                 >
-                  {/* Desktop Center Node Footstep Marker (Hidden on Mobile) */}
-                  <div className="hidden md:flex absolute left-1/2 top-10 -translate-x-1/2 -translate-y-1/2 z-20 flex-col items-center gap-1">
+                  {/* Desktop Center Node Footstep Marker (>= 1024px) */}
+                  <div className="hidden lg:flex absolute left-1/2 top-10 -translate-x-1/2 -translate-y-1/2 z-20 flex-col items-center gap-1">
                     <button
                       type="button"
                       onClick={() => handleOpenStageModal(stage)}
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all cursor-pointer ${
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all cursor-pointer transform-gpu ${
                         isStageLocked
                           ? 'bg-[#090b14] border-2 border-amber-500/40 shadow-none hover:scale-105'
                           : 'bg-[#090e1c] border-2 border-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.6)] hover:scale-110'
@@ -945,15 +945,15 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         <FootstepIcon className="w-6 h-6" isActive pulse />
                       )}
                     </button>
-                    <span className="hidden md:inline-block px-2 py-0.5 rounded bg-black/80 border border-white/20 text-[10px] font-mono font-bold text-white/60">
+                    <span className="hidden lg:inline-block px-2 py-0.5 rounded bg-black/80 border border-white/20 text-[10px] font-mono font-bold text-white/60">
                       STAGE {stage.stageNumber}
                     </span>
                   </div>
 
-                  {/* Mobile-Only Top Accent Footstep Badge */}
+                  {/* Mobile & iPad Portrait Top Accent Footstep Badge (< 1024px) */}
                   <div
                     onClick={() => handleOpenStageModal(stage)}
-                    className="md:hidden flex items-center justify-between gap-2 p-3 rounded-2xl bg-[#090e1c]/90 border border-cyan-500/40 mb-3 shadow-[0_0_15px_rgba(0,242,254,0.15)] cursor-pointer hover:border-cyan-400 transition-all"
+                    className="lg:hidden flex items-center justify-between gap-2 p-3.5 rounded-2xl bg-[#090e1c]/95 border border-cyan-500/40 mb-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.6)] cursor-pointer hover:border-cyan-400 transition-all transform-gpu"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-xl bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center shrink-0">
@@ -988,17 +988,17 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           e.stopPropagation();
                           handleOpenStageModal(stage);
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-cyan-400 text-black text-[10.5px] font-mono font-bold cursor-pointer shrink-0"
+                        className="px-3 py-1 rounded-lg bg-cyan-400 text-black text-[10.5px] font-mono font-bold cursor-pointer shrink-0 shadow-sm"
                       >
                         Deep Dive →
                       </button>
                     )}
                   </div>
 
-                  {/* Full-Width Mobile Cards & Staggered Desktop Layout */}
-                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-14 items-center">
-                    {/* Visual Card Column (Available Across All Devices) */}
-                    <div className={`space-y-4 ${isEven ? 'md:order-1' : 'md:order-2'}`}>
+                  {/* Responsive Grid: Single-Column for Mobile/iPad Portrait (< 1024px) & Alternating 2-Column Desktop (>= 1024px) */}
+                  <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-14 items-center">
+                    {/* Visual Card Column */}
+                    <div className={`space-y-4 ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
                       <div
                         onClick={() => handleOpenStageModal(stage)}
                         className={`relative rounded-3xl overflow-hidden border transition-all cursor-pointer shadow-[0_4px_35px_rgba(0,0,0,0.7)] ${
@@ -1121,10 +1121,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     </div>
 
                     {/* Narrative & Master Asset Brief Column */}
-                    <div className={`space-y-4 ${isEven ? 'md:order-2' : 'md:order-1'}`}>
+                    <div className={`space-y-4 transform-gpu will-change-transform ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
                       <div
                         onClick={() => handleOpenStageModal(stage)}
-                        className="p-6 rounded-3xl bg-[#0a0f1d]/80 border border-cyan-500/20 hover:border-cyan-500/50 hover:shadow-[0_0_30px_rgba(0,242,254,0.15)] transition-all cursor-pointer space-y-4"
+                        className="p-6 rounded-3xl bg-[#0a0f1d]/80 border border-cyan-500/20 hover:border-cyan-500/50 hover:shadow-[0_0_30px_rgba(0,242,254,0.15)] transition-all cursor-pointer space-y-4 transform-gpu"
                       >
                         <div className="flex items-center gap-2">
                           <img
@@ -1164,7 +1164,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         </div>
 
                         {/* Milestone Card Action Buttons */}
-                        <div className="flex flex-col xs:flex-row sm:flex-col lg:flex-row items-stretch sm:items-stretch lg:items-center gap-2 pt-1 w-full min-w-0">
+                        <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center lg:items-stretch xl:items-center gap-2.5 pt-1 w-full min-w-0">
                           <button
                             type="button"
                             onClick={(e) => {
