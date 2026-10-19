@@ -1018,10 +1018,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                 }}
                 className="space-y-4"
               >
-                {/* Main 4K Cinematic Display Stage */}
+                {/* Main 4K Cinematic Display Stage - Completely Pure, Crisp & Uncluttered Render */}
                 <div
                   onClick={() => openFullscreenViewer('archive_4k')}
-                  className="relative w-full aspect-[16/10] sm:aspect-[16/9] max-h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#02050b] via-[#050b18] to-[#02050b] border border-amber-400/40 shadow-[0_15px_50px_rgba(0,0,0,0.8)] group cursor-pointer hover:border-amber-300/80 transition-all"
+                  className="relative w-full aspect-[16/10] sm:aspect-[16/9] max-h-[520px] rounded-2xl overflow-hidden bg-black border border-amber-400/40 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_30px_rgba(245,158,11,0.15)] group cursor-pointer hover:border-amber-300 transition-all select-none"
+                  title="Click to view 4K master in full screen"
                 >
                   {activePhoto?.url && (
                     <img
@@ -1029,60 +1030,40 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       alt={activePhoto.title}
                       loading="eager"
                       decoding="async"
-                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                      className="w-full h-full object-cover group-hover:scale-[1.015] transition-transform duration-700 select-none pointer-events-none"
                     />
                   )}
+                </div>
 
-                  {/* Top HUD Overlay Telemetry */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/75 pointer-events-none" />
-
-                  <div className="absolute top-3.5 left-4 right-4 flex items-start justify-between gap-3 pointer-events-none">
-                    <div className="space-y-1">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/80 border border-amber-400/50 text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider shadow-md">
-                        <Sparkles className="w-3 h-3 text-amber-300" />
-                        <span>NAJNO BANAJNA 8K PHOTOREALISTIC ENGINE</span>
-                      </div>
-                      <div className="text-xs sm:text-sm font-mono font-bold text-white tracking-wide">
+                {/* Clean Information & Action Bar Below the 4K Render (Zero Overlap on Image) */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-1">
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base sm:text-lg font-display font-black text-white tracking-wide truncate">
+                        {activePhoto.title}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-400/40 text-[9.5px] font-mono font-bold text-amber-300 uppercase tracking-wider">
                         {activePhoto.category}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 pointer-events-auto">
-                      <span className="px-2.5 py-1 rounded-xl bg-black/80 border border-cyan-400/40 text-[10px] font-mono font-extrabold text-cyan-300 tracking-wider">
+                      </span>
+                      <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-400/30 text-[9.5px] font-mono text-cyan-300">
                         3840 × 2160 UHD
                       </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openFullscreenViewer('archive_4k');
-                        }}
-                        className="inline-flex lg:hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/85 hover:bg-black border border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white text-xs font-mono font-bold transition-all cursor-pointer shadow-lg"
-                        title="Inspect in 4K Fullscreen"
-                      >
-                        <Maximize2 className="w-4 h-4 text-cyan-300" />
-                        <span className="hidden sm:inline">FULLSCREEN</span>
-                      </button>
                     </div>
+                    <p className="text-xs font-sans text-white/70 line-clamp-1 leading-relaxed">
+                      {activePhoto.description || 'Synthesized high-detail planetary sector telemetry.'}
+                    </p>
                   </div>
 
-                  {/* Bottom HUD Information & Quick Action Button */}
-                  <div className="absolute bottom-3.5 left-4 right-4 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-                    <div className="space-y-1 max-w-xl">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base sm:text-xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
-                          {activePhoto.title}
-                        </h3>
-                        <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/80 border border-cyan-400/30 text-[9px] font-mono text-cyan-300">
-                          <Sparkles className="w-2.5 h-2.5 text-cyan-300" />
-                          <span>PRISTINE 4K MASTER</span>
-                        </span>
-                      </div>
-                      <p className="text-xs font-sans text-white/80 line-clamp-2 leading-relaxed">
-                        {activePhoto.description || 'Synthesized high-detail planetary sector telemetry.'}
-                      </p>
-                    </div>
-
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => openFullscreenViewer('archive_4k')}
+                      className="inline-flex lg:hidden items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-cyan-300 text-xs font-mono font-bold transition-all cursor-pointer min-h-[42px] touch-manipulation"
+                      title="Inspect in 4K Fullscreen"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5 text-cyan-300" />
+                      <span>FULLSCREEN</span>
+                    </button>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -1090,7 +1071,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         handleDownload4kPhoto();
                       }}
                       disabled={isDownloadingPhoto}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] shrink-0 min-h-[42px]"
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] shrink-0 min-h-[42px] touch-manipulation"
                       title="Download clean original 4K Master with absolute resolution clarity"
                     >
                       <Download className="w-4 h-4 text-black" />

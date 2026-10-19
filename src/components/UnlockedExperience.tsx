@@ -60,6 +60,7 @@ import {
   togglePlanetSubmissionVote,
   fetchPlanetSubmissions,
   subscribeToPlanetSubmissions,
+  INITIAL_SUBMISSIONS,
 } from '../data/contest';
 import { getUserStatusConfig } from '../utils/statusPill';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet, isPreLaunch } from '../utils/pioneer';
@@ -331,7 +332,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
       ) ||
       allCommunityPlanets[0] ||
-      null
+      INITIAL_SUBMISSIONS[0]
     );
   }, [allCommunityPlanets]);
 
@@ -1134,7 +1135,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
           <button
             onClick={() => handleSelectTab('pass')}
-            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'pass'
                 ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                 : 'text-white/60 hover:text-white'
@@ -1145,7 +1146,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           </button>
           <button
             onClick={() => handleSelectTab('edition')}
-            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'edition'
                 ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                 : 'text-white/60 hover:text-white'
@@ -1156,24 +1157,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           </button>
           <button
             onClick={() => handleSelectTab('my-world')}
-            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'my-world'
                 ? 'bg-amber-400 text-black font-bold shadow-[0_0_15px_rgba(245,158,11,0.35)]'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            <Globe2 className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'my-world' ? 'text-black' : 'text-amber-400'}`} />
+            <Globe2 className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">My World</span>
           </button>
           <button
             onClick={() => handleSelectTab('assets')}
-            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] ${
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'assets'
                 ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            <Gem className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
+            <Gem className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">My Assets</span>
           </button>
         </div>
@@ -2037,14 +2038,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           {activeTab === 'my-world' && activeWorldDossier && (
             <motion.div
               key="my-world-view"
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
               style={{
                 transform: 'translateZ(0)',
                 WebkitTransform: 'translateZ(0)',
                 willChange: 'transform, opacity',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
                 overflowAnchor: 'none',
               }}
               className="space-y-6 md:space-y-7"
@@ -2118,7 +2121,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               {/* Active or Simulated Planet Dossier Experience */}
               <div className="space-y-6 md:space-y-7">
                 {/* Top Sector Dossier Header Banner — Supreme Galaxy Vibe Glassmorphism with Pioneer Badging */}
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d1630]/90 via-[#040816]/92 to-[#09152b]/90 backdrop-blur-2xl border border-cyan-400/35 p-5 sm:p-6 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(6,182,212,0.18)]">
+                <div
+                  style={{
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                  }}
+                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d1630]/90 via-[#040816]/92 to-[#09152b]/90 backdrop-blur-md border border-cyan-400/35 p-5 sm:p-6 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(6,182,212,0.18)]"
+                >
                   {/* Multi-layered radial nebula glows */}
                   <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/80 via-amber-300/80 to-transparent pointer-events-none" />
                   <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-[90px] pointer-events-none" />
@@ -2170,20 +2181,28 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="min-w-0 flex flex-col items-center xl:items-start text-center xl:text-left space-y-3 sm:space-y-3.5">
                       {/* Sillow Mill Logo, Stylized ÄMLEMI Title, and Metadata Sector Badge in Clean Vertical Alignment on Portrait Tablet (< xl) */}
                       <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-start gap-3 sm:gap-4 xl:gap-5 min-w-0 w-full">
-                        {/* Official Ämlemi Planetary Thumbnail Render (01_MAIN - ORBITAL HORIZON) */}
+                        {/* Official Ämlemi Planetary Thumbnail Render (Matching Galaxy Navigator Celestial Orb) */}
                         <div className="flex items-center justify-center gap-3">
-                          <div className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-amber-300 to-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.5),0_0_12px_rgba(245,158,11,0.4)] shrink-0 group transform-gpu">
-                            <div className="w-full h-full rounded-full overflow-hidden bg-black/90 relative">
+                          <div className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0 group flex items-center justify-center">
+                            {/* Single Delicate Dotted Ring Structure (Clockwise Rotation) */}
+                            <div
+                              className="absolute -inset-2.5 rounded-full border border-dotted border-amber-300/85 pointer-events-none animate-spin"
+                              style={{ animationDuration: '20s' }}
+                            />
+
+                            {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
+                            <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300">
                               <img
                                 src={amlemiThumbnailUrl}
                                 alt={`${activeWorldDossier.planetName} Planetary Horizon`}
-                                className="w-full h-full object-cover transform scale-105 group-hover:scale-115 transition-transform duration-500"
+                                className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
+                                draggable={false}
                                 loading="eager"
+                                decoding="async"
                               />
-                              <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/25 pointer-events-none" />
+                              {/* Gradient Atmospheric Shell matching Galaxy Navigator (Crystal-Clear Purity) */}
+                              <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
                             </div>
-                            {/* Ambient Radial Nebula Glow */}
-                            <div className="absolute -inset-1 rounded-full bg-cyan-400/25 blur-sm pointer-events-none" />
                           </div>
 
                           {/* Minimalist Reflective Chrome Divider (Only visible on wide desktop xl:block when in horizontal row) */}
@@ -2406,9 +2425,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           {activeTab === 'assets' && (
             <motion.div
               key="assets-view"
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.12 }}
+              style={{
+                transform: 'translateZ(0)',
+                WebkitTransform: 'translateZ(0)',
+                willChange: 'transform, opacity',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                overflowAnchor: 'none',
+              }}
               className="space-y-5 sm:space-y-6 md:space-y-7"
             >
               {/* Asset 01: Differentiated Master Multi-Media Carousel (4K Archive, 9:16 Story Card, 9:16 MP4 Trailer) */}

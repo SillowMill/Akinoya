@@ -172,19 +172,27 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
       {/* Header Bar */}
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4 pb-4 border-b border-white/10">
         <div className="flex items-center gap-x-2.5 sm:gap-x-3 gap-y-1.5 flex-wrap min-w-0">
-          {/* Official Ämlemi Planetary Thumbnail Render (01_MAIN - ORBITAL HORIZON) */}
-          <div className="relative w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full p-[2px] bg-gradient-to-tr from-cyan-400 via-amber-300 to-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.5),0_0_10px_rgba(245,158,11,0.35)] shrink-0 group transform-gpu">
-            <div className="w-full h-full rounded-full overflow-hidden bg-black/90 relative">
+          {/* Official Ämlemi Planetary Thumbnail Render (Matching Official Galaxy Navigator Celestial Orb) */}
+          <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 group flex items-center justify-center">
+            {/* Single Delicate Dotted Ring Structure */}
+            <div
+              className="absolute -inset-2 rounded-full border border-dotted border-amber-300/85 pointer-events-none animate-spin"
+              style={{ animationDuration: '20s' }}
+            />
+
+            {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
+            <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_24px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300">
               <img
                 src={planetThumbnailUrl}
                 alt={`${dossier.planetName || 'Ämlemi'} Planetary Horizon`}
-                className="w-full h-full object-cover transform scale-105 group-hover:scale-115 transition-transform duration-500"
+                className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
+                draggable={false}
                 loading="eager"
+                decoding="async"
               />
-              <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/20 pointer-events-none" />
+              {/* Gradient Atmospheric Shell matching Galaxy Navigator (Crystal-Clear Purity) */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
             </div>
-            {/* Ambient Pulse Glow */}
-            <div className="absolute -inset-0.5 rounded-full bg-cyan-400/20 blur-[2px] pointer-events-none" />
           </div>
           <div className="h-5 sm:h-6 w-[1.5px] bg-gradient-to-b from-white/10 via-white/50 to-white/10 shadow-[0_0_6px_rgba(255,255,255,0.3)] shrink-0" aria-hidden="true" />
           <div className="min-w-0">
