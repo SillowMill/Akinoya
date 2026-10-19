@@ -1591,30 +1591,30 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               Official Proof of World Ownership &amp; 9:16 Verification Affiche
             </h3>
             <p className="text-xs font-sans text-white/70 max-w-2xl leading-relaxed">
-              Click the 9:16 card to launch the Fullscreen Viewer or toggle seamlessly between the <strong>9:16 Story Verification Card</strong> and the <strong>9:16 MP4 Trailer Loop</strong>.
+              Click the 9:16 card to launch the Fullscreen Viewer or toggle seamlessly between the <strong>9:16 MP4 Trailer Loop</strong> and the <strong>9:16 Story Verification Card</strong>.
             </p>
           </div>
 
-          {/* Dual Prominent High-End Action Buttons Side-by-Side */}
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <button
-              type="button"
-              onClick={handleDownloadStoryBadge}
-              disabled={isExportingBadge}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[44px]"
-            >
-              <Download className="w-4 h-4 text-black shrink-0" />
-              <span>{isExportingBadge ? 'Rendering 9:16 PNG...' : 'Download 9:16 Story Badge'}</span>
-            </button>
-
+          {/* Dual Prominent High-End Action Buttons (Video-First Hierarchy) */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full xl:w-auto shrink-0">
             <button
               type="button"
               onClick={handleDownloadTrailerMp4}
               disabled={isExportingTrailer}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-cyan-500 hover:from-cyan-300 hover:to-sky-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.35)] min-h-[44px]"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-cyan-500 hover:from-cyan-300 hover:to-sky-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.35)] min-h-[44px]"
             >
               <Film className="w-4 h-4 text-black shrink-0" />
               <span>{isExportingTrailer ? 'Encoding 9:16 MP4...' : 'Download 9:16 MP4 Trailer'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDownloadStoryBadge}
+              disabled={isExportingBadge}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[44px]"
+            >
+              <Download className="w-4 h-4 text-black shrink-0" />
+              <span>{isExportingBadge ? 'Rendering 9:16 PNG...' : 'Download 9:16 Story Badge'}</span>
             </button>
           </div>
         </div>

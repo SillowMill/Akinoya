@@ -2103,7 +2103,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/12 rounded-full blur-3xl pointer-events-none" />
                   <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4 relative z-10">
+                  <div className="flex flex-wrap items-center justify-center xl:justify-between gap-3 mb-4 relative z-10 text-center xl:text-left">
                     <div className="flex items-center gap-2">
                       <span className="p-1.5 rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 text-black shrink-0 shadow-[0_0_12px_rgba(251,191,36,0.5)]">
                         <Globe2 className="w-4 h-4" />
@@ -2115,7 +2115,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
                       {isPioneerPlanet(activeWorldDossier) && (
                         <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-gradient-to-r from-amber-500/30 via-yellow-500/25 to-amber-600/30 text-amber-200 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_16px_rgba(251,191,36,0.4)]">
                           <Sparkles className="w-3 h-3 text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
@@ -2143,51 +2143,60 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-x-2.5 sm:gap-x-3 gap-y-1 flex-wrap min-w-0">
+                  {/* iPad Portrait & Mobile Centered Branding: Sillow Mill Logo, Stylized ÄMLEMI & Stacked Touch Buttons */}
+                  <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 relative z-10">
+                    <div className="min-w-0 flex flex-col items-center xl:items-start text-center xl:text-left space-y-2.5">
+                      {/* Sillow Mill Logo, Stylized ÄMLEMI Title, and Metadata Sector Badge */}
+                      <div className="flex flex-col sm:flex-row items-center justify-center xl:justify-start gap-3 sm:gap-4 flex-wrap min-w-0">
                         {/* Shimmering Sillow Mill Logo with subtle cinematic glow & glass housing */}
-                        <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-white/[0.12] via-white/[0.04] to-transparent p-1.5 border border-white/20 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-                          <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-white/20 to-transparent pointer-events-none opacity-70" />
-                          <img
-                            src={sillowMillLogoUrl}
-                            alt="Sillow Mill"
-                            className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]"
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="relative w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-2xl bg-gradient-to-br from-white/[0.15] via-white/[0.05] to-transparent p-1.5 sm:p-2 border border-white/20 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(255,255,255,0.25)]">
+                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/25 to-transparent pointer-events-none opacity-80" />
+                            <img
+                              src={sillowMillLogoUrl}
+                              alt="Sillow Mill"
+                              className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                            />
+                          </div>
+
+                          {/* Minimalist Reflective Chrome / Brushed Metal Vertical Divider */}
+                          <div
+                            className="h-6 sm:h-7 md:h-8 w-[2px] bg-gradient-to-b from-white/10 via-white/60 to-white/10 shadow-[0_0_10px_rgba(255,255,255,0.4)] shrink-0"
+                            aria-hidden="true"
                           />
                         </div>
 
-                        {/* Minimalist Reflective Chrome / Brushed Metal Vertical Divider */}
-                        <div
-                          className="h-5 sm:h-6 w-[1.5px] bg-gradient-to-b from-white/10 via-white/50 to-white/10 shadow-[0_0_8px_rgba(255,255,255,0.35)] shrink-0"
-                          aria-hidden="true"
-                        />
-
-                        <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide truncate drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] uppercase">
-                          {activeWorldDossier.planetName}
-                        </h2>
-                        <span className="px-2.5 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-mono text-[10px] font-bold tracking-wider uppercase">
-                          {activeWorldDossier.sectorId || 'SECTOR AKN-01'}
-                        </span>
+                        {/* Large Stylized ÄMLEMI World Name & Sector Badge */}
+                        <div className="flex items-center justify-center gap-2.5 sm:gap-3.5 flex-wrap">
+                          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-black text-white tracking-wider sm:tracking-widest drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)] uppercase">
+                            {activeWorldDossier.planetName}
+                          </h2>
+                          <span className="px-3 py-1 rounded-lg bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 font-mono text-[10.5px] sm:text-xs font-extrabold tracking-widest uppercase shadow-[0_0_14px_rgba(6,182,212,0.35)]">
+                            {activeWorldDossier.sectorId || 'SECTOR AKN-01'}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-xs font-mono text-white/70 mt-1">
-                        Synthesized by <strong className="text-amber-300">{activeWorldDossier.authorName}</strong> ({activeWorldDossier.authorEmail || user?.email || 'Verified Pioneer Account'})
+
+                      <p className="text-xs sm:text-sm font-mono text-white/75 text-center xl:text-left">
+                        Synthesized by <strong className="text-amber-300 font-bold">{activeWorldDossier.authorName}</strong> ({activeWorldDossier.authorEmail || user?.email || 'Verified Pioneer Account'})
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2.5 flex-wrap md:flex-nowrap md:shrink-0">
+                    {/* Stacked Action Buttons: Responsive Column Layout for Touch Interaction on iPad */}
+                    <div className="w-full sm:max-w-md xl:max-w-none xl:w-auto mx-auto xl:mx-0 flex flex-col sm:flex-col xl:flex-row items-stretch xl:items-center gap-3 xl:shrink-0 pt-1 xl:pt-0">
                       <button
                         type="button"
                         onClick={handleShareDossier}
-                        className="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/15 font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer min-h-[44px]"
+                        className="w-full xl:w-auto px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/90 hover:text-white border border-white/20 font-mono text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[48px] shadow-sm active:scale-[0.99]"
                       >
                         {isCopiedDossierLink ? (
                           <>
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
-                            <span className="text-emerald-400">Link Copied!</span>
+                            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <span className="text-emerald-400 font-bold">Link Copied!</span>
                           </>
                         ) : (
                           <>
-                            <Share2 className="w-3.5 h-3.5" />
+                            <Share2 className="w-4 h-4 shrink-0" />
                             <span>Share Dossier</span>
                           </>
                         )}
@@ -2199,11 +2208,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           soundManager.playTone(660, 0.05);
                           setSelectedDossierModal(activeWorldDossier);
                         }}
-                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono text-xs font-bold shadow-[0_0_20px_rgba(245,158,11,0.35)] flex items-center gap-2 transition-all cursor-pointer min-h-[44px]"
+                        className="w-full xl:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black font-mono text-xs sm:text-sm font-extrabold shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2.5 transition-all cursor-pointer min-h-[48px]"
                       >
-                        <Camera className="w-3.5 h-3.5" />
+                        <Camera className="w-4 h-4 shrink-0" />
                         <span>Inspect 5-Photo Dossier</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        <ArrowRight className="w-4 h-4 shrink-0" />
                       </button>
                     </div>
                   </div>
