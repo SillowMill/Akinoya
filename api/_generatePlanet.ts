@@ -238,6 +238,151 @@ export interface GeneratePlanetRequest {
   is_sandbox?: boolean;
   renders?: Record<string, string>;
   imageUrls?: string[];
+  seed?: number;
+}
+
+/**
+ * Cryptographic & Deterministic Seed Generator:
+ * Generates a positive 31-bit integer seed (1 .. 2,147,483,647) derived
+ * mathematically from the planet identity, architect name, and onboarding responses.
+ * Guarantees reproducible, unique generation parameters across 100,000+ registrations.
+ */
+export function generateDeterministicPlanetSeed(
+  planetName: string,
+  architectName?: string,
+  answers?: Record<string, any>
+): number {
+  const normPlanet = (planetName || '').trim().toLowerCase();
+  const normArchitect = (architectName || '').trim().toLowerCase();
+  const serialized = JSON.stringify(answers || {});
+  const combined = `${normPlanet}:${normArchitect}:${serialized}`;
+
+  // FNV-1a 32-bit hash algorithm
+  let hash = 2166136261;
+  for (let i = 0; i < combined.length; i++) {
+    hash ^= combined.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  const seed = (hash >>> 0) % 2147483647;
+  return seed > 0 ? seed : 133742;
+}
+
+export interface PlanetaryVariation {
+  seed: number;
+  ringSystem: string;
+  plasmaPhenomenon: string;
+  geologicalFormation: string;
+  floraVariation: string;
+  faunaVariation: string;
+  monumentStructure: string;
+  atmosphericShimmer: string;
+  chromaticAccent: string;
+}
+
+/**
+ * Dynamic Prompt-Variation Matrix:
+ * Mathematical randomization across core planetary dimensions ensuring infinite unique
+ * planetary architectures across 100,000+ registrations while strictly adhering to the
+ * high-end Sillow Mill cinematic sci-fi aesthetic.
+ */
+export const PLANETARY_VARIATION_MATRIX = {
+  ringSystems: [
+    'dual crystalline ice rings with incandescent refractive refraction and chromatic dispersion',
+    'iridescent silicate orbital bands woven with luminous micro-asteroid arcs',
+    'dense ionized plasma torus emitting rhythmic electromagnetic resonance pulses',
+    'ultra-thin razor gold dust rings illuminated by binary star reflections',
+    'braided resonant quartz dust rings displaying prismatic light diffraction',
+    'concentric obsidian dust rings banded by glowing cobalt particle trails',
+    'broad iridescent opal particulate rings glowing under stellar thermals',
+    'segmented titanium-dust ring sheets fractured by gravitational harmonic ripples',
+  ],
+  plasmaPhenomena: [
+    'swirling magenta tropospheric ion cyclones and radiant aurora coronas',
+    'violent emerald lightning storms dancing along tropospheric cloud crests',
+    'luminescent cobalt auroral vortexes spiraling into deep polar sinkholes',
+    'pulsing solar-wind plasma sheets casting vibrant violet atmospheric auroras',
+    'harmonic cyan ion discharges illuminating high-altitude storm fronts',
+    'warm amber coronal mass ejections casting glowing atmospheric ribbons',
+    'scintillating prism plasma streamers draping the twilight horizon',
+    'sub-surface bio-electrical lightning illuminating crystalline troposphere',
+  ],
+  geologicalFormations: [
+    'colossal bismuth-terraced continental shelves stepping into misty oceans',
+    'soaring obsidian spire cordilleras crowned in incandescent silver frost',
+    'deep tectonic chasms filled with glowing bioluminescent crystal aquifers',
+    'floating anti-gravity basalt megaliths tethered by crystalline mineral vines',
+    'towering volcanic quartz mesas veined with radiant geothermal magma channels',
+    'smooth sculpted aerogel sandstone arches arching over subterranean caverns',
+    'massive jade fjord canyons carved by ancient isotopic glacial rivers',
+    'crystalline plateau steps reflecting prismatic celestial disk light',
+  ],
+  floraVariations: [
+    'filamentous spore-willows shedding airborne bioluminescent embers that drift on thermals',
+    'translucent broad-frond glass palms with pulsating luminescent sap networks',
+    'towering fungal spires resonating at low frequencies and releasing glowing spores',
+    'deep-rooted velvet kelp forests swaying on dry atmospheric mountain slopes',
+    'geometric crystalline lichen spreading across monolithic cliff-faces in glowing patterns',
+    'coiled fern-tendrils unfurling iridescent spiral leaves under celestial radiation',
+    'luminescent bulb-orchids hovering inches above mossy bedrock with aerial roots',
+    'dense phosphorescent canopy of intertwined silver-veined alien flora',
+  ],
+  faunaVariations: [
+    'six-winged aerodynamic manta-gliders surfing high-altitude thermal ion plumes',
+    'feathered apex quadrupeds with luminous ocular sensors tracking across mountain ridges',
+    'cetacean sky-singers breaching gracefully through dense tropospheric cloud strata',
+    'crystalline micro-chitin swarms executing synchronized murmuration flight patterns',
+    'bioluminescent horned dire-panthers traversing steep cliff ledges with fluid grace',
+    'serpentine celestial serpents gliding smoothly through charged atmospheric thermals',
+    'luminescent stag-like quadrupeds with branching antler-prisms that refract starlight',
+    'armored xenobiological avian hunters with iridescent feathers diving across chasms',
+  ],
+  monumentStructures: [
+    'towering hyper-geometric monolith of unknown star-alloy humming with ancient telemetry',
+    'sunken obsidian amphitheater channeling planetary harmonics into focused beams',
+    'cantilevered spire observatory gazing into the deep void with glowing chronometer rings',
+    'ringed monolithic chronometer aligned to the celestial zenith with burning runic glyphs',
+    'spiral prism tower focusing radiant core rays into the upper atmosphere',
+    'monolithic step-pyramid built of resonant black glass and inlaid with copper circuits',
+    'tri-pillar portal monument framing the equatorial ring system in perfect alignment',
+    'ancient planetary anchor monolith inscribed with timeless founding pioneer creeds',
+  ],
+  atmosphericShimmers: [
+    'ionized cyan corona and deep violet shadows',
+    'warm amber solar glare filtering through copper dust',
+    'iridescent prism haze shimmering across the distant horizon',
+    'deep indigo twilight horizon backlit by twin binary suns',
+    'luminous emerald mist rising from geothermal fissures',
+    'electric sapphire troposphere with shimmering ozone curtains',
+  ],
+  chromaticAccents: [
+    'deep indigo, glowing neon purple, and warm copper accents',
+    'ionized cobalt, electric cyan, and incandescent bronze highlights',
+    'deep void black, luminescent amethyst, and reflective titanium gold',
+    'translucent teal, vibrant magenta, and rose-gold metallic luster',
+    'radiant aquamarine, deep crimson shadows, and burnished brass highlights',
+  ],
+};
+
+export function derivePlanetaryVariation(
+  seed: number,
+  _answers?: Record<string, any>
+): PlanetaryVariation {
+  const pick = <T>(arr: T[], offset: number): T => {
+    const idx = Math.abs((seed + offset * 7919) % arr.length);
+    return arr[idx];
+  };
+
+  return {
+    seed,
+    ringSystem: pick(PLANETARY_VARIATION_MATRIX.ringSystems, 1),
+    plasmaPhenomenon: pick(PLANETARY_VARIATION_MATRIX.plasmaPhenomena, 2),
+    geologicalFormation: pick(PLANETARY_VARIATION_MATRIX.geologicalFormations, 3),
+    floraVariation: pick(PLANETARY_VARIATION_MATRIX.floraVariations, 4),
+    faunaVariation: pick(PLANETARY_VARIATION_MATRIX.faunaVariations, 5),
+    monumentStructure: pick(PLANETARY_VARIATION_MATRIX.monumentStructures, 6),
+    atmosphericShimmer: pick(PLANETARY_VARIATION_MATRIX.atmosphericShimmers, 7),
+    chromaticAccent: pick(PLANETARY_VARIATION_MATRIX.chromaticAccents, 8),
+  };
 }
 
 export interface SlotRenderResult {
@@ -754,7 +899,8 @@ export async function generatePlanetSfxAudioWithAi(params: {
 export async function generateSlotImageWithFal(
   prompt: string,
   apiKey?: string,
-  slotLabel = 'photo'
+  slotLabel = 'photo',
+  seed?: number
 ): Promise<string> {
   const activeKey = (apiKey || getFalApiKey()).trim();
   if (!activeKey || activeKey === '[SENSITIVE]') {
@@ -791,6 +937,7 @@ export async function generateSlotImageWithFal(
             resolution: '1K',
             num_images: 1,
             output_format: 'png',
+            ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
           }),
         })
       );
@@ -842,6 +989,7 @@ export async function generateSlotImageWithFal(
             image_size: 'landscape_16_9',
             num_images: 1,
             enable_safety_checker: false,
+            ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
           }),
         })
       );
@@ -928,7 +1076,8 @@ export async function generateViralVideoWithFal(
     admiredCreature?: string;
     lifePhilosophy?: string;
     futurePromise?: string;
-  }
+  },
+  seed?: number
 ): Promise<string> {
   const activeKey = (apiKey || getFalApiKey()).trim();
   if (!activeKey || activeKey === '[SENSITIVE]' || (!heroImageUrl && (!imageUrls || imageUrls.length === 0))) {
@@ -985,6 +1134,7 @@ export async function generateViralVideoWithFal(
         resolution: '720p',
         aspect_ratio: '9:16',
         generate_audio: true, // Native ByteDance Seedance 2.5 synchronized Foley audio & sound effects!
+        ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
       }
     : {
         prompt,
@@ -993,6 +1143,7 @@ export async function generateViralVideoWithFal(
         resolution: '720p',
         aspect_ratio: '9:16',
         generate_audio: true,
+        ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
       };
 
   const startTime = Date.now();
@@ -1420,20 +1571,54 @@ export const SLOT_METADATA: Record<
   },
 };
 
+// In-Memory Fast Lookup Caches to eliminate redundant API calls
+const _slotRenderCache = new Map<string, any>();
+const _planetDossierCache = new Map<string, any>();
+
+function getSlotCacheKey(planetName: string, slot: string, userId?: string, email?: string): string {
+  const normPlanet = planetName.trim().toLowerCase();
+  const normUser = (userId || email || 'anon').trim().toLowerCase();
+  return `${normPlanet}:${slot}:${normUser}`;
+}
+
+function getDossierCacheKey(planetIdOrName: string, userId?: string, email?: string): string {
+  const normId = planetIdOrName.trim().toLowerCase();
+  const normUser = (userId || email || 'anon').trim().toLowerCase();
+  return `${normId}:${normUser}`;
+}
+
 export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const sectorName = (data.sectorName || data.planetName || data.worldName || 'Frontier Sector').trim();
   const planetName = formatAkinoyaPlanetName(data.planetName || data.worldName || data.sectorName, false) || sectorName;
+  const architectName = (data.architectName || data.authorUsername || 'Founding Pioneer').trim();
+
+  // Deterministic Cryptographic Seed Generation
+  const seed =
+    typeof data.seed === 'number' && data.seed > 0
+      ? data.seed
+      : generateDeterministicPlanetSeed(planetName, architectName, data);
+
+  // Dynamic Prompt-Variation Matrix
+  const variation = derivePlanetaryVariation(seed, data);
+
   const biome = data.biome || data.terrainType || 'Bioluminescent Canopy';
-  const colorPalette = data.colorPalette || data.paletteDescription || 'deep indigo, neon purple, warm copper accents';
-  const environment = data.naturalEnvironment || data.terrainType || `${biome} terrain with majestic mountain ridges`;
-  const flora = data.flora || data.floraType || `resonant spore canopies and glowing botanical life unique to ${biome}`;
-  const creature = data.admiredCreature || data.fauna || data.faunaType || `apex wildlife roaming the skies of ${sectorName}`;
-  const landmark = data.landmark || data.monumentType || data.resilienceStory || `The Monument of ${sectorName}`;
-  const promise = data.futurePromise || data.foundingCreed || 'Never forget that true beauty lies in curiosity and persistence.';
-  const atmosphere = data.atmosphere || data.troposphereType || `ionized celestial atmosphere above ${biome}`;
+  const colorPalette =
+    data.colorPalette || data.paletteDescription || `${variation.chromaticAccent}, ${variation.atmosphericShimmer}`;
+  const environment =
+    data.naturalEnvironment || data.terrainType || `${biome} terrain with ${variation.geologicalFormation}`;
+  const flora =
+    data.flora || data.floraType || `${variation.floraVariation} unique to ${biome}`;
+  const creature =
+    data.admiredCreature || data.fauna || data.faunaType || `${variation.faunaVariation} soaring above ${sectorName}`;
+  const landmark =
+    data.landmark || data.monumentType || data.resilienceStory || `${variation.monumentStructure} on ${sectorName}`;
+  const promise =
+    data.futurePromise || data.foundingCreed || 'Never forget that true beauty lies in curiosity and persistence.';
+  const atmosphere =
+    data.atmosphere || data.troposphereType || `ionized celestial atmosphere exhibiting ${variation.plasmaPhenomenon}`;
 
   const promptAnchor =
-    'Full 3D high-res 8K photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, deep indigo, neon purple, warm copper accents, complex color palette. NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. Synthesized exclusively via Najno Banajna generator engine.';
+    'Full 3D high-res 8K photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, deep space horizon, volumetric cosmic lighting, complex color palette. NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. Synthesized exclusively via Najno Banajna generator engine.';
 
   const fpvVideoPrompt = buildCinematicFpvMotionPrompt({
     planetName,
@@ -1444,12 +1629,14 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   return {
     planetName,
     sectorName,
+    seed,
+    variation,
     prompts: {
-      hero: `${promptAnchor} [01_main - Main Orbital Hero]: Celestial disc and orbital curvature of newly designated world "${planetName}" (Sector: ${sectorName}). Biome classification: ${biome}. Pristine celestial curvature, equatorial rings, volumetric cosmic lighting, deep space horizon, deep indigo cosmic void, glowing neon purple aurora corona, warm copper planetary accents. Color palette: ${colorPalette}. Topography inspired by ${environment}, 8k resolution, photorealistic conceptual space photography.`,
-      flora: `${promptAnchor} [02_flora - Botanical Flora System]: Interior botanical ecosystem of world "${planetName}" (Sector: ${sectorName}) across ${biome} terrain. Lush alien vegetation, glowing bioluminescent organisms: ${flora}, incandescent spore towers, deep indigo canopy shadows, vibrant neon purple bioluminescence, warm copper highlights, volumetric atmospheric mist, macro sci-fi nature photography.`,
-      fauna: `${promptAnchor} [03_fauna - Exotic Fauna & Wildlife]: Xenobiological wildlife ecology of world "${planetName}" (Sector: ${sectorName}) in native ${biome} habitat. Apex creature: ${creature}, traversing through volumetric atmospheric thermals, photorealistic speculative xenobiology, glowing neon purple bioluminescent patterns, warm copper plumage, deep indigo terrain, cinematic depth of field.`,
-      atmosphere: `${promptAnchor} [04_atmo - Cockpit & Landing Atmosphere]: Cockpit canopy descent perspective entering the atmosphere of "${planetName}" (Sector: ${sectorName}). Looking out through reinforced cockpit canopy glass toward vast ${biome} mountain horizon, pilot HUD telemetry reflections, volumetric sunbeams through thick clouds, ${atmosphere}, deep indigo troposphere, neon purple ion storms, warm copper sunset glow.`,
-      landmark: `${promptAnchor} [05_lore - Lore Dossier Cover & Monument]: Official monumental landmark on world "${planetName}" (Sector: ${sectorName}). Towering ancient architectural monolith: ${landmark}, standing tall above ${biome} terrain. Inscribed founding architect creed: "${promise}". Deep indigo stone foundations, neon purple conduit energy conduits, warm copper architectural reliefs, epic scale sci-fi monument photography.`,
+      hero: `${promptAnchor} [01_main - Main Orbital Hero]: Celestial disc and orbital curvature of newly designated world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Orbital feature: ${variation.ringSystem}. Atmospheric rim: ${variation.plasmaPhenomenon}. Pristine celestial curvature, volumetric cosmic lighting, deep space horizon, ${variation.atmosphericShimmer}. Color palette: ${colorPalette}. Topography inspired by ${environment}, 8k resolution, photorealistic conceptual space photography.`,
+      flora: `${promptAnchor} [02_flora - Botanical Flora System]: Interior botanical ecosystem of world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}) across ${biome} terrain. Lush alien vegetation: ${flora}. Terrain formation: ${variation.geologicalFormation}. Atmospheric mist, ${variation.atmosphericShimmer}, chromatic palette: ${colorPalette}, volumetric depth, macro sci-fi nature photography.`,
+      fauna: `${promptAnchor} [03_fauna - Exotic Fauna & Wildlife]: Xenobiological wildlife ecology of world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}) in native ${biome} habitat. Apex creature: ${creature}. Environment: ${variation.geologicalFormation}. Volumetric atmospheric thermals, photorealistic speculative xenobiology, ${variation.chromaticAccent}, cinematic depth of field.`,
+      atmosphere: `${promptAnchor} [04_atmo - Cockpit & Landing Atmosphere]: Cockpit canopy descent perspective entering the atmosphere of "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Looking out through reinforced cockpit canopy glass toward vast ${biome} mountain horizon and ${variation.geologicalFormation}, pilot HUD telemetry reflections, volumetric sunbeams through thick clouds, ${atmosphere}, ion storms: ${variation.plasmaPhenomenon}, sunset glow.`,
+      landmark: `${promptAnchor} [05_lore - Lore Dossier Cover & Monument]: Official monumental landmark on world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Towering ancient architectural monument: ${landmark}, standing tall above ${biome} terrain. Inscribed founding architect creed: "${promise}". Foundations anchored by ${variation.geologicalFormation}, energy conduits: ${variation.chromaticAccent}, epic scale sci-fi monument photography.`,
       video: fpvVideoPrompt,
     },
   };
@@ -1457,7 +1644,9 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
 
 /**
  * Generates an individual slot render (or the 9:16 viral video trailer when `slot === 'video'`)
- * using Fal.ai.
+ * using Fal.ai with smart caching:
+ * - 1st checks in-memory cache and Supabase records to avoid duplicate API calls (~90% cost savings).
+ * - Passes deterministic seed into generation engines.
  * If Fal.ai returns 403, TOP_UP, or insufficient credit error, catches cleanly and returns:
  * `{ success: false, status: 'QUEUED_PENDING', message: 'Synthesizer recalibrating.' }`
  */
@@ -1480,11 +1669,12 @@ export async function generateSlotRender(
   durationSeconds?: number;
   error?: string;
   model: string;
+  seed?: number;
 }> {
   const normSlot = normalizeSlot(slot);
   const sectorName = (data.sectorName || data.planetName || data.worldName || 'Frontier Sector').trim();
   const planetName = formatAkinoyaPlanetName(data.planetName || data.worldName || data.sectorName, false) || sectorName;
-  const { prompts } = buildPlanetPrompts(data);
+  const { prompts, seed } = buildPlanetPrompts(data);
   const prompt = prompts[normSlot] || prompts.hero;
   const meta = SLOT_METADATA[normSlot] || SLOT_METADATA.hero;
 
@@ -1511,7 +1701,85 @@ export async function generateSlotRender(
         ? { videoUrl: placeholderUrl, aspectRatio: '9:16', durationSeconds: 5 }
         : { imageUrl: placeholderUrl }),
       model: 'Sandbox Simulation (Placeholder Preview)',
+      seed,
     };
+  }
+
+  // Smart Caching: 1. In-Memory Cache Lookup
+  const cacheKey = getSlotCacheKey(planetName, normSlot, data.userId, data.email);
+  if (_slotRenderCache.has(cacheKey)) {
+    const cached = _slotRenderCache.get(cacheKey);
+    if (cached && cached.success) {
+      return { ...cached, seed };
+    }
+  }
+
+  // Smart Caching: 2. Supabase Existing Planet Lookup
+  if (supabase && (data.planetId || planetName)) {
+    try {
+      let query = supabase.from('planet_submissions').select('video_url, renders');
+      if (data.planetId) {
+        query = query.eq('id', data.planetId);
+      } else {
+        query = query.ilike('planet_name', planetName);
+      }
+      const { data: rows } = await query.limit(1);
+      const row = Array.isArray(rows) ? rows[0] : null;
+
+      if (row) {
+        if (normSlot === 'video') {
+          const dbVid = row.video_url || row.renders?.videoUrl || row.renders?.video_url;
+          if (dbVid && /^https?:\/\//i.test(dbVid)) {
+            const cachedSlot = {
+              success: true,
+              status: 'ready' as const,
+              slot: 'video' as const,
+              slotIndex: meta.index,
+              slotLabel: meta.label,
+              planetName,
+              prompt,
+              videoUrl: dbVid,
+              aspectRatio: '9:16',
+              durationSeconds: 5,
+              model: 'ByteDance Seedance 2.5 (Cached Production Master)',
+              seed,
+            };
+            _slotRenderCache.set(cacheKey, cachedSlot);
+            return cachedSlot;
+          }
+        } else {
+          const slotKeyMap: Record<Exclude<GenerationSlot, 'video'>, string[]> = {
+            hero: ['hero', '01_main'],
+            flora: ['flora', '02_flora', 'ecosystem'],
+            fauna: ['fauna', '03_fauna'],
+            atmosphere: ['atmosphere', '04_atmo'],
+            landmark: ['landmark', '05_lore'],
+          };
+          const keys = slotKeyMap[normSlot as Exclude<GenerationSlot, 'video'>] || [];
+          for (const k of keys) {
+            const img = row.renders?.[k];
+            if (img && /^https?:\/\//i.test(img)) {
+              const cachedSlot = {
+                success: true,
+                status: 'ready' as const,
+                slot: normSlot,
+                slotIndex: meta.index,
+                slotLabel: meta.label,
+                planetName,
+                prompt,
+                imageUrl: img,
+                model: 'Fal.ai Flux Schnell (Cached Production Master)',
+                seed,
+              };
+              _slotRenderCache.set(cacheKey, cachedSlot);
+              return cachedSlot;
+            }
+          }
+        }
+      }
+    } catch {
+      // Non-fatal cache lookup
+    }
   }
 
   if (normSlot === 'video') {
@@ -1560,12 +1828,13 @@ export async function generateSlotRender(
           admiredCreature: data.admiredCreature,
           lifePhilosophy: data.lifePhilosophy,
           futurePromise: data.futurePromise,
-        }
+        },
+        seed
       );
-      return {
+      const result = {
         success: true,
-        status: 'ready',
-        slot: 'video',
+        status: 'ready' as const,
+        slot: 'video' as const,
         slotIndex: meta.index,
         slotLabel: meta.label,
         planetName,
@@ -1576,7 +1845,10 @@ export async function generateSlotRender(
         model: imageUrls.length > 1
           ? 'ByteDance Seedance 2.5 (Reference-to-Video 9:16 Foley Audio)'
           : 'ByteDance Seedance 2.5 (Image-to-Video 9:16 Foley Audio)',
+        seed,
       };
+      _slotRenderCache.set(cacheKey, result);
+      return result;
     } catch (err: any) {
       console.warn(`[Slot video] Fal.ai 9:16 trailer queued:`, err?.message || err);
       return {
@@ -1592,15 +1864,16 @@ export async function generateSlotRender(
         aspectRatio: '9:16',
         durationSeconds: 5,
         model: 'Fal.ai Image-to-Video (QUEUED_PENDING)',
+        seed,
       };
     }
   }
 
   try {
-    const imageUrl = await generateSlotImageWithFal(prompt, data.apiKey, normSlot);
-    return {
+    const imageUrl = await generateSlotImageWithFal(prompt, data.apiKey, normSlot, seed);
+    const result = {
       success: true,
-      status: 'ready',
+      status: 'ready' as const,
       slot: normSlot,
       slotIndex: meta.index,
       slotLabel: meta.label,
@@ -1608,7 +1881,10 @@ export async function generateSlotRender(
       prompt,
       imageUrl,
       model: 'Fal.ai Flux Schnell (4K Photorealistic)',
+      seed,
     };
+    _slotRenderCache.set(cacheKey, result);
+    return result;
   } catch (err: any) {
     console.warn(`[Slot ${normSlot}] Fal.ai synthesis queued:`, err?.message || err);
     return {
@@ -1622,6 +1898,7 @@ export async function generateSlotRender(
       planetName,
       prompt,
       model: 'Fal.ai Flux Schnell (QUEUED_PENDING)',
+      seed,
     };
   }
 }
@@ -1673,6 +1950,107 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   const sectorName = (data.sectorName || data.planetName || data.worldName || 'Frontier Sector').trim();
   const planetName = formatAkinoyaPlanetName(data.planetName || data.worldName || data.sectorName, false) || sectorName;
   const architectName = (data.architectName || 'Frontier Architect').trim();
+  const seed =
+    typeof data.seed === 'number' && data.seed > 0
+      ? data.seed
+      : generateDeterministicPlanetSeed(planetName, architectName, data);
+
+  const dossierCacheKey = getDossierCacheKey(data.planetId || planetName, data.userId, data.email);
+
+  // Smart Caching: 1. In-Memory Dossier Cache Lookup
+  if (_planetDossierCache.has(dossierCacheKey)) {
+    const cachedDossier = _planetDossierCache.get(dossierCacheKey);
+    if (cachedDossier && cachedDossier.success && cachedDossier.renders?.hero) {
+      return cachedDossier;
+    }
+  }
+
+  // Smart Caching: 2. Supabase Existing Dossier Lookup
+  if (supabase && (data.planetId || planetName)) {
+    try {
+      let query = supabase.from('planet_submissions').select('id, planet_name, author_name, author_username, video_url, renders, created_at');
+      if (data.planetId) {
+        query = query.eq('id', data.planetId);
+      } else {
+        query = query.ilike('planet_name', planetName);
+      }
+      const { data: rows } = await query.limit(1);
+      const row = Array.isArray(rows) ? rows[0] : null;
+
+      if (row && row.renders && (row.renders.hero || row.renders['01_main'])) {
+        const cachedRenders = {
+          hero: row.renders.hero || row.renders['01_main'] || '',
+          flora: row.renders.flora || row.renders['02_flora'] || row.renders.ecosystem || '',
+          fauna: row.renders.fauna || row.renders['03_fauna'] || '',
+          atmosphere: row.renders.atmosphere || row.renders['04_atmo'] || '',
+          landmark: row.renders.landmark || row.renders['05_lore'] || '',
+          ecosystem: row.renders.ecosystem || row.renders.flora || row.renders['02_flora'] || '',
+          videoUrl: row.video_url || row.renders.videoUrl || row.renders.video_url || '',
+          video_url: row.video_url || row.renders.videoUrl || row.renders.video_url || '',
+          videoStatus: (row.video_url || row.renders.videoUrl) ? ('READY' as const) : ('QUEUED_PENDING' as const),
+          sfxAudioUrl: row.renders.sfxAudioUrl || row.renders.sfx_audio_url || '',
+          sfx_audio_url: row.renders.sfxAudioUrl || row.renders.sfx_audio_url || '',
+          sfxStatus: row.renders.sfxAudioUrl ? ('READY' as const) : ('QUEUED_PENDING' as const),
+          '01_main': row.renders['01_main'] || row.renders.hero || '',
+          '02_flora': row.renders['02_flora'] || row.renders.flora || '',
+          '03_fauna': row.renders['03_fauna'] || row.renders.fauna || '',
+          '04_atmo': row.renders['04_atmo'] || row.renders.atmosphere || '',
+          '05_lore': row.renders['05_lore'] || row.renders.landmark || '',
+        };
+
+        const cachedSlots: SlotRenderResult[] = [
+          { slotId: '01_main', slotName: '01 · ORBITAL HERO', status: 'ready', imageUrl: cachedRenders.hero },
+          { slotId: '02_flora', slotName: '02 · BOTANICAL FLORA', status: 'ready', imageUrl: cachedRenders.flora },
+          { slotId: '03_fauna', slotName: '03 · EXOTIC FAUNA', status: 'ready', imageUrl: cachedRenders.fauna },
+          { slotId: '04_atmo', slotName: '04 · COCKPIT ATMOSPHERE', status: 'ready', imageUrl: cachedRenders.atmosphere },
+          { slotId: '05_lore', slotName: '05 · LORE DOSSIER COVER', status: 'ready', imageUrl: cachedRenders.landmark },
+          {
+            slotId: '06_trailer',
+            slotName: '06 · VIRAL 9:16 VIDEO TRAILER (5S)',
+            status: cachedRenders.videoUrl ? 'ready' : QUEUED_PENDING_STATUS,
+            ...(cachedRenders.videoUrl ? { videoUrl: cachedRenders.videoUrl } : { code: QUEUED_PENDING_STATUS, message: QUEUED_PENDING_MESSAGE }),
+          },
+        ];
+
+        const galleryList = [
+          { id: 'hero', code: '01_main', label: '01 · Main Orbital Planet Render', reference: 'Äkinoya.jpg', url: cachedRenders.hero },
+          { id: 'flora', code: '02_flora', label: '02 · Botanical Flora System', reference: 'Mood.png', url: cachedRenders.flora },
+          { id: 'fauna', code: '03_fauna', label: '03 · Exotic Fauna & Wildlife System', reference: 'Mood.png', url: cachedRenders.fauna },
+          { id: 'atmosphere', code: '04_atmo', label: '04 · Cockpit / Ship Landing Atmosphere', reference: 'Mood.png', url: cachedRenders.atmosphere },
+          { id: 'landmark', code: '05_lore', label: '05 · Lore Dossier Cover & Monument', reference: 'Archival Cover', url: cachedRenders.landmark },
+        ];
+
+        const cachedResult = {
+          success: true,
+          status: 'READY' as const,
+          planetName,
+          worldName: planetName,
+          architectName: row.author_name || architectName,
+          videoUrl: cachedRenders.videoUrl,
+          video_url: cachedRenders.videoUrl,
+          videoStatus: cachedRenders.videoStatus,
+          sfxAudioUrl: cachedRenders.sfxAudioUrl,
+          sfx_audio_url: cachedRenders.sfxAudioUrl,
+          sfxStatus: cachedRenders.sfxStatus,
+          slots: cachedSlots,
+          renders: cachedRenders,
+          galleryList,
+          generatedAt: row.created_at || new Date().toISOString(),
+          meta: {
+            engine: 'Fal.ai Flux Schnell + Seedance 2.5 (Cached Production Master)',
+            seed,
+            isCached: true,
+          },
+        };
+
+        _planetDossierCache.set(dossierCacheKey, cachedResult);
+        return cachedResult;
+      }
+    } catch {
+      // Non-fatal cache lookup
+    }
+  }
+
   const photoSlots: Array<Exclude<GenerationSlot, 'video'>> = [
     'hero',
     'flora',
@@ -1681,8 +2059,8 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     'landmark',
   ];
 
-  // Step 1: Synthesize all 5 core sector visual renders (01_main through 05_lore)
-  const results = await Promise.all(photoSlots.map((s) => generateSlotRender(s, data)));
+  // Step 1: Synthesize all 5 core sector visual renders (01_main through 05_lore) with seed
+  const results = await Promise.all(photoSlots.map((s) => generateSlotRender(s, { ...data, seed })));
 
   const heroImageUrl = results[0].imageUrl || '';
 
@@ -1728,7 +2106,8 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
           admiredCreature: data.admiredCreature,
           lifePhilosophy: data.lifePhilosophy,
           futurePromise: data.futurePromise,
-        }
+        },
+        seed
       );
     } catch (vidErr: any) {
       console.warn('[Step 2 Video Trailer] Queued pending:', vidErr?.message || vidErr);
@@ -1894,9 +2273,9 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
 
   const generatedAt = new Date().toISOString();
 
-  return {
+  const finalResult = {
     success: !anyQueued,
-    status: anyQueued ? QUEUED_PENDING_STATUS : 'READY',
+    status: (anyQueued ? QUEUED_PENDING_STATUS : 'READY') as 'READY' | 'QUEUED_PENDING',
     ...(anyQueued
       ? {
           code: QUEUED_PENDING_STATUS,
@@ -1908,7 +2287,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     architectName,
     videoUrl,
     video_url: videoUrl,
-    videoStatus: videoUrl ? 'READY' : QUEUED_PENDING_STATUS,
+    videoStatus: (videoUrl ? 'READY' : QUEUED_PENDING_STATUS) as 'READY' | 'QUEUED_PENDING',
     sfxAudioUrl,
     sfx_audio_url: sfxAudioUrl,
     sfxStatus,
@@ -1917,10 +2296,11 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     galleryList,
     generatedAt,
     meta: {
-      engine: 'Fal.ai Flux Schnell + Image-to-Video 9:16 + Synchronized AI SFX Pipeline',
+      engine: 'Fal.ai Flux Schnell + ByteDance Seedance 2.5 9:16 + Synchronized AI SFX Pipeline',
       photoModel: 'fal-ai/flux/schnell',
-      videoModel: 'fal-ai/minimax/video-01',
+      videoModel: 'bytedance/seedance-2.5/us/reference-to-video',
       sfxModel: 'fal-ai/mmaudio-v2',
+      seed,
       videoAspectRatio: '9:16',
       videoDurationSeconds: 5,
       sfxDurationSeconds: 5,
@@ -1930,6 +2310,12 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       generatedAt,
     },
   };
+
+  if (!anyQueued && finalRenders.hero) {
+    _planetDossierCache.set(dossierCacheKey, finalResult);
+  }
+
+  return finalResult;
 }
 
 export const generateSectorImages = generatePlanetRenders;

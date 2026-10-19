@@ -63,18 +63,18 @@ const SLIDE_TABS: {
     icon: Film,
   },
   {
-    id: 'archive_4k',
-    index: '02',
-    label: '4K Planetary Archive',
-    badge: '4K UHD MASTER',
-    icon: Camera,
-  },
-  {
     id: 'story_card',
-    index: '03',
+    index: '02',
     label: '9:16 Story Verification Card',
     badge: 'OFFICIAL AFFICHE',
     icon: ShieldCheck,
+  },
+  {
+    id: 'archive_4k',
+    index: '03',
+    label: '4K Planetary Archive',
+    badge: '4K UHD MASTER',
+    icon: Camera,
   },
 ];
 
@@ -283,8 +283,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = ({
   const activePhoto = photoCards[activePhotoIdx] || photoCards[0];
   const worldNameDisplay = (dossier.planetName || 'ÄMLEMI').toUpperCase();
 
-  // Handle slide transitions circularly: Video Trailer (01) -> 4K Archive (02) -> Story Card (03)
-  const slideOrder: MasterAssetSlideId[] = ['video_trailer', 'archive_4k', 'story_card'];
+  // Handle slide transitions circularly: Video Trailer (01) -> Story Card (02) -> 4K Archive (03)
+  const slideOrder: MasterAssetSlideId[] = ['video_trailer', 'story_card', 'archive_4k'];
 
   const goToSlide = useCallback(
     (target: MasterAssetSlideId, direction?: number) => {

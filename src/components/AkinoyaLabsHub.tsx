@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Sparkles,
@@ -208,6 +209,31 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     }
   }, [activeStageId]);
 
+  // Lock body scroll and handle Escape key when stage modal or lightbox is active
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (selectedStageForModal || selectedPreviewImage) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          if (selectedPreviewImage) {
+            setSelectedPreviewImage(null);
+          } else if (selectedStageForModal) {
+            setSelectedStageForModal(null);
+          }
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [selectedStageForModal, selectedPreviewImage]);
+
   // Auto-scroll to active stage on initial load if stage > 1
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -314,7 +340,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       title: 'Pre-Production & Storyboards',
       subtitle: 'Translating narrative scripts into 2.39:1 anamorphic storyboards',
       vaultFolderMapping: '01 · Storyboards',
-      isAdvancedLocked: true,
+      isAdvancedLocked: false,
       heroImage: stage01Img,
       heroImageAlt: 'Sci-fi cinematic storyboard blueprint under a cosmic teal sky',
       themeDescription: 'Sci-fi cinematic storyboard blueprint under a cosmic teal sky (Gemini/Imagen 3)',
@@ -386,7 +412,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       title: 'Art Direction & Character Locking',
       subtitle: 'Multi-modal conditioning and character turnaround sheets',
       vaultFolderMapping: '02 · Art Direction',
-      isAdvancedLocked: true,
+      isAdvancedLocked: false,
       heroImage: millLockingImg,
       heroImageAlt: 'Character locking hero visual featuring Mill in biological exploration suit (MiLLLL.PNG)',
       themeDescription: 'Master character locking turnaround plate (MiLLLL.PNG)',
@@ -1239,383 +1265,391 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       </div>
 
       {/* ======================================================== */}
-      {/* COMPREHENSIVE STAGE DEEP-DIVE MODAL (NO UPLOADERS)        */}
+      {/* COMPREHENSIVE STAGE DEEP-DIVE MODAL (PORTALED TO BODY)   */}
       {/* ======================================================== */}
-      <AnimatePresence>
-        {selectedStageForModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-            {/* Backdrop Blur */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedStageForModal(null)}
-              style={{ transform: 'translate3d(0,0,0)', willChange: 'opacity' }}
-              className="fixed inset-0 bg-black/85 backdrop-blur-xl z-0"
-            />
-
-            {/* Modal Dialog Window */}
-            <motion.div
-              role="dialog"
-              aria-modal="true"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity' }}
-              className="relative m-auto w-full max-w-4xl max-h-[88vh] overflow-y-auto rounded-3xl bg-[#070b16]/95 border-2 border-cyan-400/60 shadow-[0_20px_70px_rgba(0,0,0,0.9),0_0_50px_rgba(0,242,254,0.3)] z-10 text-white font-sans space-y-6 p-6 sm:p-8"
-            >
-              {/* Sticky Modal Header Bar */}
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <div className="flex items-center gap-3">
-                  <span className="px-3 py-1 rounded-lg bg-cyan-400 text-black font-mono font-extrabold text-xs tracking-wider shadow-[0_0_12px_rgba(0,242,254,0.4)]">
-                    STAGE {selectedStageForModal.stageNumber}
-                  </span>
-                  <span className="text-xs font-mono text-cyan-300 font-bold uppercase tracking-wider">
-                    {selectedStageForModal.tag}
-                  </span>
-                  <span className="hidden sm:inline text-xs font-mono text-white/50">
-                    · {selectedStageForModal.timeframe}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundManager.playTone(440, 0.05);
-                    setSelectedStageForModal(null);
-                  }}
-                  className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer"
-                  title="Close Modal"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Modal Hero Visual & Banner */}
-              <div className="relative rounded-2xl overflow-hidden border border-cyan-500/30 group/hero aspect-[21/9] sm:aspect-[2.39/1] bg-black/90">
-                <img
-                  src={selectedStageForModal.heroImage}
-                  alt={selectedStageForModal.heroImageAlt}
-                  className="w-full h-full object-cover"
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {selectedStageForModal && (
+              <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+                {/* Backdrop Blur */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setSelectedStageForModal(null)}
+                  style={{ transform: 'translate3d(0,0,0)', willChange: 'opacity' }}
+                  className="fixed inset-0 bg-black/85 backdrop-blur-xl z-0"
                 />
-                {/* Desktop-Only Image Gradient & Title Overlay (Hidden on Mobile & iPad <1280px) */}
-                <div className="hidden xl:flex absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent items-end p-5">
-                  <div className="space-y-1 w-full">
+
+                {/* Modal Dialog Window */}
+                <motion.div
+                  role="dialog"
+                  aria-modal="true"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity' }}
+                  className="relative m-auto w-full max-w-4xl max-h-[88vh] overflow-y-auto rounded-3xl bg-[#070b16]/95 border-2 border-cyan-400/60 shadow-[0_20px_70px_rgba(0,0,0,0.9),0_0_50px_rgba(0,242,254,0.3)] z-10 text-white font-sans space-y-6 p-6 sm:p-8"
+                >
+                  {/* Sticky Modal Header Bar */}
+                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 py-1 rounded-lg bg-cyan-400 text-black font-mono font-extrabold text-xs tracking-wider shadow-[0_0_12px_rgba(0,242,254,0.4)]">
+                        STAGE {selectedStageForModal.stageNumber}
+                      </span>
+                      <span className="text-xs font-mono text-cyan-300 font-bold uppercase tracking-wider">
+                        {selectedStageForModal.tag}
+                      </span>
+                      <span className="hidden sm:inline text-xs font-mono text-white/50">
+                        · {selectedStageForModal.timeframe}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundManager.playTone(440, 0.05);
+                        setSelectedStageForModal(null);
+                      }}
+                      className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer"
+                      title="Close Modal"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Modal Hero Visual & Banner */}
+                  <div className="relative rounded-2xl overflow-hidden border border-cyan-500/30 group/hero aspect-[21/9] sm:aspect-[2.39/1] bg-black/90">
+                    <img
+                      src={selectedStageForModal.heroImage}
+                      alt={selectedStageForModal.heroImageAlt}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Desktop-Only Image Gradient & Title Overlay (Hidden on Mobile & iPad <1280px) */}
+                    <div className="hidden xl:flex absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent items-end p-5">
+                      <div className="space-y-1 w-full">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300">
+                          BESPOKE GEMINI / IMAGEN 3 PIPELINE VISUAL
+                        </span>
+                        <h2 className="text-xl sm:text-3xl font-display font-extrabold text-white">
+                          {selectedStageForModal.title}
+                        </h2>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPreviewImage(selectedStageForModal.heroImage)}
+                      className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/70 hover:bg-black/90 border border-white/20 text-white font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5 text-cyan-300" />
+                      <span>Expand Visual</span>
+                    </button>
+                  </div>
+
+                  {/* Mobile & iPad Header Block (Clean Visual Below Imagery for < 1280px) */}
+                  <div className="xl:hidden p-4 rounded-2xl bg-black/60 border border-white/10 space-y-1.5">
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300">
-                      BESPOKE GEMINI / IMAGEN 3 PIPELINE VISUAL
+                      STAGE {selectedStageForModal.stageNumber} · {selectedStageForModal.tag}
                     </span>
-                    <h2 className="text-xl sm:text-3xl font-display font-extrabold text-white">
+                    <h2 className="text-lg sm:text-xl font-display font-extrabold text-white">
                       {selectedStageForModal.title}
                     </h2>
                   </div>
-                </div>
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedPreviewImage(selectedStageForModal.heroImage)}
-                  className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/70 hover:bg-black/90 border border-white/20 text-white font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Maximize2 className="w-3.5 h-3.5 text-cyan-300" />
-                  <span>Expand Visual</span>
-                </button>
-              </div>
-
-              {/* Mobile & iPad Header Block (Clean Visual Below Imagery for < 1280px) */}
-              <div className="xl:hidden p-4 rounded-2xl bg-black/60 border border-white/10 space-y-1.5">
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300">
-                  STAGE {selectedStageForModal.stageNumber} · {selectedStageForModal.tag}
-                </span>
-                <h2 className="text-lg sm:text-xl font-display font-extrabold text-white">
-                  {selectedStageForModal.title}
-                </h2>
-              </div>
-
-              {/* Mill's Dialogue Banner inside Modal */}
-              <div className="p-4 rounded-2xl bg-cyan-950/40 border border-cyan-500/40 flex items-start gap-4">
-                <img
-                  src={millAvatar}
-                  alt="Mill"
-                  className="w-12 h-12 rounded-xl object-cover border-2 border-cyan-400 shrink-0 shadow-[0_0_12px_rgba(0,242,254,0.4)]"
-                />
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold text-cyan-300">
-                      MILL&apos;S DIRECTIVE &amp; PRO TIP
-                    </span>
-                    <FootstepIcon className="w-3.5 h-3.5" isActive />
-                  </div>
-                  <p className="text-xs sm:text-sm text-cyan-100/90 font-sans leading-relaxed">
-                    &ldquo;{selectedStageForModal.millTransmission}&rdquo;
-                  </p>
-                  <p className="text-[11px] text-cyan-300 font-mono">
-                    💡 Pro Tip: {selectedStageForModal.millProTip}
-                  </p>
-                </div>
-              </div>
-
-              {/* Two-Column Deep-Dive Content: Theory vs Case Study */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Column 1: Universal Workflow Theory */}
-                <div className="p-6 rounded-2xl bg-black/60 border border-white/10 space-y-4">
-                  <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-                    <Layers className="w-4 h-4 text-cyan-400" />
-                    <h3 className="text-sm font-mono font-bold text-white tracking-wider uppercase">
-                      Universal Production Theory
-                    </h3>
-                  </div>
-
-                  <h4 className="text-base font-display font-bold text-cyan-200">
-                    {selectedStageForModal.universalTheory.heading}
-                  </h4>
-
-                  <p className="text-xs sm:text-sm text-white/75 font-sans leading-relaxed">
-                    {selectedStageForModal.universalTheory.description}
-                  </p>
-
-                  <div className="space-y-3 pt-2">
-                    {selectedStageForModal.universalTheory.bullets.map((b) => (
-                      <div key={b.title} className="p-3 rounded-xl bg-white/[0.03] border border-white/5 space-y-1">
-                        <span className="text-xs font-mono font-bold text-cyan-300 flex items-center gap-1.5">
-                          <Check className="w-3.5 h-3.5 text-cyan-400" />
-                          {b.title}
+                  {/* Mill's Dialogue Banner inside Modal */}
+                  <div className="p-4 rounded-2xl bg-cyan-950/40 border border-cyan-500/40 flex items-start gap-4">
+                    <img
+                      src={millAvatar}
+                      alt="Mill"
+                      className="w-12 h-12 rounded-xl object-cover border-2 border-cyan-400 shrink-0 shadow-[0_0_12px_rgba(0,242,254,0.4)]"
+                    />
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-cyan-300">
+                          MILL&apos;S DIRECTIVE &amp; PRO TIP
                         </span>
-                        <p className="text-xs text-white/70 font-sans leading-relaxed pl-5">
-                          {b.detail}
-                        </p>
+                        <FootstepIcon className="w-3.5 h-3.5" isActive />
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Column 2: Odi's Practical Case Study */}
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-[#0c1224]/80 to-black/80 border border-purple-500/30 space-y-4">
-                  <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-purple-400" />
-                      <h3 className="text-sm font-mono font-bold text-purple-200 tracking-wider uppercase">
-                        Odi&apos;s Practical Case Study
-                      </h3>
+                      <p className="text-xs sm:text-sm text-cyan-100/90 font-sans leading-relaxed">
+                        &ldquo;{selectedStageForModal.millTransmission}&rdquo;
+                      </p>
+                      <p className="text-[11px] text-cyan-300 font-mono">
+                        💡 Pro Tip: {selectedStageForModal.millProTip}
+                      </p>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-400/30">
-                      DIRECTOR VAULT
-                    </span>
                   </div>
 
-                  <h4 className="text-base font-display font-bold text-white">
-                    {selectedStageForModal.odiCaseStudy.title}
-                  </h4>
-
-                  <p className="text-xs text-white/70 font-sans leading-relaxed">
-                    {selectedStageForModal.odiCaseStudy.summary}
-                  </p>
-
-                  <p className="text-xs sm:text-sm text-white/80 font-sans leading-relaxed bg-black/40 p-3.5 rounded-xl border border-white/5">
-                    {selectedStageForModal.odiCaseStudy.deepDiveNarrative}
-                  </p>
-
-                  {/* Case Study Image Thumbnails */}
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    {selectedStageForModal.odiCaseStudy.previewThumbnails.map((th) => (
-                      <div
-                        key={th.caption}
-                        onClick={() => setSelectedPreviewImage(th.img)}
-                        className="relative rounded-xl overflow-hidden border border-white/10 group/thumb cursor-pointer aspect-[16/9] bg-black/70"
-                      >
-                        <img
-                          src={th.img}
-                          alt={th.caption}
-                          className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
-                          <span className="text-[10px] font-mono text-cyan-200 truncate">
-                            {th.caption}
-                          </span>
-                        </div>
+                  {/* Two-Column Deep-Dive Content: Theory vs Case Study */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Column 1: Universal Workflow Theory */}
+                    <div className="p-6 rounded-2xl bg-black/60 border border-white/10 space-y-4">
+                      <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+                        <Layers className="w-4 h-4 text-cyan-400" />
+                        <h3 className="text-sm font-mono font-bold text-white tracking-wider uppercase">
+                          Universal Production Theory
+                        </h3>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
 
-              {/* Technical Specifications Grid */}
-              <div className="p-4 rounded-2xl bg-black/50 border border-white/10 space-y-2">
-                <span className="text-[11px] font-mono font-bold text-white/60 uppercase tracking-wider">
-                  Technical Specifications &amp; Pipeline Standards
-                </span>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {selectedStageForModal.technicalSpecs.map((spec) => (
-                    <div key={spec.label} className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                      <span className="text-[10px] font-mono text-white/40 block">{spec.label}</span>
-                      <span className="text-xs font-mono font-bold text-cyan-300">{spec.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Character Locking Download Plates (Stage 02 Custom Master Files) */}
-              {selectedStageForModal.characterDownloads && (
-                <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#0e1222]/90 to-black/90 border border-purple-500/40 space-y-4 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
-                  <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Crown className="w-4 h-4 text-purple-400" />
-                      <h4 className="text-sm font-mono font-bold text-purple-200 tracking-wider uppercase">
-                        Character Locking Vault Plates (MiLLLL.PNG · Odi.JPG · Sillow.JPG)
+                      <h4 className="text-base font-display font-bold text-cyan-200">
+                        {selectedStageForModal.universalTheory.heading}
                       </h4>
+
+                      <p className="text-xs sm:text-sm text-white/75 font-sans leading-relaxed">
+                        {selectedStageForModal.universalTheory.description}
+                      </p>
+
+                      <div className="space-y-3 pt-2">
+                        {selectedStageForModal.universalTheory.bullets.map((b) => (
+                          <div key={b.title} className="p-3 rounded-xl bg-white/[0.03] border border-white/5 space-y-1">
+                            <span className="text-xs font-mono font-bold text-cyan-300 flex items-center gap-1.5">
+                              <Check className="w-3.5 h-3.5 text-cyan-400" />
+                              {b.title}
+                            </span>
+                            <p className="text-xs text-white/70 font-sans leading-relaxed pl-5">
+                              {b.detail}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-400/30">
-                      3 MASTER PLATES
-                    </span>
-                  </div>
 
-                  <p className="text-xs text-white/70 font-sans">
-                    Official character turnaround sheets and visual anchors from the Character Locking vault, ready for direct multi-modal conditioning and pipeline study.
-                  </p>
+                    {/* Column 2: Odi's Practical Case Study */}
+                    <div className="p-6 rounded-2xl bg-gradient-to-br from-[#0c1224]/80 to-black/80 border border-purple-500/30 space-y-4">
+                      <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-purple-400" />
+                          <h3 className="text-sm font-mono font-bold text-purple-200 tracking-wider uppercase">
+                            Odi&apos;s Practical Case Study
+                          </h3>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-400/30">
+                          DIRECTOR VAULT
+                        </span>
+                      </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-                    {selectedStageForModal.characterDownloads.map((char) => (
-                      <div
-                        key={char.fileName}
-                        className="p-3.5 rounded-xl bg-black/60 border border-white/10 hover:border-purple-400/40 space-y-3 flex flex-col justify-between transition-all"
-                      >
-                        <div className="space-y-2">
+                      <h4 className="text-base font-display font-bold text-white">
+                        {selectedStageForModal.odiCaseStudy.title}
+                      </h4>
+
+                      <p className="text-xs text-white/70 font-sans leading-relaxed">
+                        {selectedStageForModal.odiCaseStudy.summary}
+                      </p>
+
+                      <p className="text-xs sm:text-sm text-white/80 font-sans leading-relaxed bg-black/40 p-3.5 rounded-xl border border-white/5">
+                        {selectedStageForModal.odiCaseStudy.deepDiveNarrative}
+                      </p>
+
+                      {/* Case Study Image Thumbnails */}
+                      <div className="grid grid-cols-2 gap-3 pt-2">
+                        {selectedStageForModal.odiCaseStudy.previewThumbnails.map((th) => (
                           <div
-                            onClick={() => setSelectedPreviewImage(char.img)}
-                            className="aspect-[4/3] rounded-lg overflow-hidden bg-black/80 border border-white/10 cursor-pointer relative group/char"
+                            key={th.caption}
+                            onClick={() => setSelectedPreviewImage(th.img)}
+                            className="relative rounded-xl overflow-hidden border border-white/10 group/thumb cursor-pointer aspect-[16/9] bg-black/70"
                           >
                             <img
-                              src={char.img}
-                              alt={char.name}
-                              className="w-full h-full object-cover group-hover/char:scale-105 transition-transform"
+                              src={th.img}
+                              alt={th.caption}
+                              className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
-                              <span className="text-[9.5px] font-mono text-purple-300 truncate">
-                                Click to inspect plate
+                              <span className="text-[10px] font-mono text-cyan-200 truncate">
+                                {th.caption}
                               </span>
                             </div>
                           </div>
-
-                          <div>
-                            <div className="flex items-center justify-between text-xs font-mono font-bold text-white">
-                              <span className="truncate">{char.fileName}</span>
-                              <span className="text-[10px] text-purple-300 shrink-0 font-normal">{char.size}</span>
-                            </div>
-                            <span className="text-[10px] font-mono text-white/50 block">{char.name}</span>
-                            <p className="text-[10.5px] text-white/70 font-sans mt-1 line-clamp-2">
-                              {char.description}
-                            </p>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadCustomFile(char.downloadUrl, char.fileName)}
-                          className="w-full py-2 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-                        >
-                          <FolderOpen className="w-3.5 h-3.5" />
-                          <span>VIEW ASSET VAULT →</span>
-                        </button>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Master Archive Download Card (Clean UI - Uploaders Removed) */}
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-black/90 border border-cyan-500/40 space-y-4 shadow-[0_0_30px_rgba(0,242,254,0.15)]">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm sm:text-base font-mono font-extrabold text-white">
-                        {selectedStageForModal.masterAsset.title}
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-400/40 font-bold">
-                        {selectedStageForModal.masterAsset.fileSize} · {selectedStageForModal.masterAsset.fileFormat}
-                      </span>
-                    </div>
-                    <p className="text-xs text-white/70 font-sans">
-                      {selectedStageForModal.masterAsset.description}
-                    </p>
-                    <div className="text-[10.5px] font-mono text-cyan-400 flex items-center gap-1.5 pt-1">
-                      <HardDrive className="w-3 h-3" />
-                      <span>{selectedStageForModal.masterAsset.vaultPath}</span>
-                    </div>
-                    <div className="text-[10.5px] font-mono text-cyan-300/80 flex items-center gap-1.5 pt-0.5">
-                      <FolderDown className="w-3 h-3 text-cyan-400" />
-                      <span>Master archives, 3D rigs, stems &amp; PDFs are organized inside the Sillow Mill Production Vault</span>
                     </div>
                   </div>
 
-                  {/* Download Action Button */}
-                  <div className="shrink-0">
-                    {isMember ? (
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadAsset(selectedStageForModal)}
-                        className="w-full sm:w-auto px-6 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(0,242,254,0.4)] flex items-center justify-center gap-2"
-                      >
-                        <FolderOpen className="w-4 h-4" />
-                        <span>VIEW ASSET VAULT →</span>
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadAsset(selectedStageForModal)}
-                        className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300 font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
-                      >
-                        <Lock className="w-3.5 h-3.5 text-amber-400" />
-                        <span>VAULT LOCKED · PAID SUBSCRIBERS</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* File Specifications Ribbon */}
-                <div className="pt-3 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
-                  {selectedStageForModal.masterAsset.specs.map((sp) => (
-                    <div key={sp.key} className="p-2 rounded-lg bg-black/40 border border-white/5">
-                      <span className="text-white/40 block text-[9.5px] uppercase">{sp.key}</span>
-                      <span className="text-white/90 font-bold">{sp.val}</span>
+                  {/* Technical Specifications Grid */}
+                  <div className="p-4 rounded-2xl bg-black/50 border border-white/10 space-y-2">
+                    <span className="text-[11px] font-mono font-bold text-white/60 uppercase tracking-wider">
+                      Technical Specifications &amp; Pipeline Standards
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {selectedStageForModal.technicalSpecs.map((spec) => (
+                        <div key={spec.label} className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                          <span className="text-[10px] font-mono text-white/40 block">{spec.label}</span>
+                          <span className="text-xs font-mono font-bold text-cyan-300">{spec.value}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+
+                  {/* Character Locking Download Plates (Stage 02 Custom Master Files) */}
+                  {selectedStageForModal.characterDownloads && (
+                    <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#0e1222]/90 to-black/90 border border-purple-500/40 space-y-4 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+                      <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Crown className="w-4 h-4 text-purple-400" />
+                          <h4 className="text-sm font-mono font-bold text-purple-200 tracking-wider uppercase">
+                            Character Locking Vault Plates (MiLLLL.PNG · Odi.JPG · Sillow.JPG)
+                          </h4>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-400/30">
+                          3 MASTER PLATES
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-white/70 font-sans">
+                        Official character turnaround sheets and visual anchors from the Character Locking vault, ready for direct multi-modal conditioning and pipeline study.
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                        {selectedStageForModal.characterDownloads.map((char) => (
+                          <div
+                            key={char.fileName}
+                            className="p-3.5 rounded-xl bg-black/60 border border-white/10 hover:border-purple-400/40 space-y-3 flex flex-col justify-between transition-all"
+                          >
+                            <div className="space-y-2">
+                              <div
+                                onClick={() => setSelectedPreviewImage(char.img)}
+                                className="aspect-[4/3] rounded-lg overflow-hidden bg-black/80 border border-white/10 cursor-pointer relative group/char"
+                              >
+                                <img
+                                  src={char.img}
+                                  alt={char.name}
+                                  className="w-full h-full object-cover group-hover/char:scale-105 transition-transform"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
+                                  <span className="text-[9.5px] font-mono text-purple-300 truncate">
+                                    Click to inspect plate
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div>
+                                <div className="flex items-center justify-between text-xs font-mono font-bold text-white">
+                                  <span className="truncate">{char.fileName}</span>
+                                  <span className="text-[10px] text-purple-300 shrink-0 font-normal">{char.size}</span>
+                                </div>
+                                <span className="text-[10px] font-mono text-white/50 block">{char.name}</span>
+                                <p className="text-[10.5px] text-white/70 font-sans mt-1 line-clamp-2">
+                                  {char.description}
+                                </p>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadCustomFile(char.downloadUrl, char.fileName)}
+                              className="w-full py-2 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                            >
+                              <FolderOpen className="w-3.5 h-3.5" />
+                              <span>VIEW ASSET VAULT →</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Master Archive Download Card (Clean UI - Uploaders Removed) */}
+                  <div className="p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-black/90 border border-cyan-500/40 space-y-4 shadow-[0_0_30px_rgba(0,242,254,0.15)]">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm sm:text-base font-mono font-extrabold text-white">
+                            {selectedStageForModal.masterAsset.title}
+                          </span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-400/40 font-bold">
+                            {selectedStageForModal.masterAsset.fileSize} · {selectedStageForModal.masterAsset.fileFormat}
+                          </span>
+                        </div>
+                        <p className="text-xs text-white/70 font-sans">
+                          {selectedStageForModal.masterAsset.description}
+                        </p>
+                        <div className="text-[10.5px] font-mono text-cyan-400 flex items-center gap-1.5 pt-1">
+                          <HardDrive className="w-3 h-3" />
+                          <span>{selectedStageForModal.masterAsset.vaultPath}</span>
+                        </div>
+                        <div className="text-[10.5px] font-mono text-cyan-300/80 flex items-center gap-1.5 pt-0.5">
+                          <FolderDown className="w-3 h-3 text-cyan-400" />
+                          <span>Master archives, 3D rigs, stems &amp; PDFs are organized inside the Sillow Mill Production Vault</span>
+                        </div>
+                      </div>
+
+                      {/* Download Action Button */}
+                      <div className="shrink-0">
+                        {isMember ? (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadAsset(selectedStageForModal)}
+                            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(0,242,254,0.4)] flex items-center justify-center gap-2"
+                          >
+                            <FolderOpen className="w-4 h-4" />
+                            <span>VIEW ASSET VAULT →</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadAsset(selectedStageForModal)}
+                            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300 font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
+                          >
+                            <Lock className="w-3.5 h-3.5 text-amber-400" />
+                            <span>VAULT LOCKED · PAID SUBSCRIBERS</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* File Specifications Ribbon */}
+                    <div className="pt-3 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
+                      {selectedStageForModal.masterAsset.specs.map((sp) => (
+                        <div key={sp.key} className="p-2 rounded-lg bg-black/40 border border-white/5">
+                          <span className="text-white/40 block text-[9.5px] uppercase">{sp.key}</span>
+                          <span className="text-white/90 font-bold">{sp.val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
 
-      {/* Lightbox Modal for Fullscreen Image Inspection */}
-      <AnimatePresence>
-        {selectedPreviewImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedPreviewImage(null)}
-            style={{ transform: 'translate3d(0,0,0)', willChange: 'opacity' }}
-            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 cursor-zoom-out"
-          >
-            <div
-              style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity' }}
-              className="relative m-auto max-w-5xl max-h-[90vh] rounded-2xl overflow-hidden border border-cyan-500/40 shadow-[0_0_50px_rgba(0,242,254,0.3)]"
-            >
-              <img
-                src={selectedPreviewImage}
-                alt="Enlarged Case Study Asset"
-                className="w-full h-full object-contain max-h-[85vh]"
-              />
-              <button
-                type="button"
+      {/* Lightbox Modal for Fullscreen Image Inspection (PORTALED TO BODY) */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {selectedPreviewImage && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 onClick={() => setSelectedPreviewImage(null)}
-                className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/80 border border-white/20 text-white font-mono text-xs hover:bg-white/20 transition-colors"
+                style={{ transform: 'translate3d(0,0,0)', willChange: 'opacity' }}
+                className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 cursor-zoom-out"
               >
-                Close ✕
-              </button>
-            </div>
-          </motion.div>
+                <div
+                  style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity' }}
+                  className="relative m-auto max-w-5xl max-h-[90vh] rounded-2xl overflow-hidden border border-cyan-500/40 shadow-[0_0_50px_rgba(0,242,254,0.3)]"
+                >
+                  <img
+                    src={selectedPreviewImage}
+                    alt="Enlarged Case Study Asset"
+                    className="w-full h-full object-contain max-h-[85vh]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPreviewImage(null)}
+                    className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/80 border border-white/20 text-white font-mono text-xs hover:bg-white/20 transition-colors"
+                  >
+                    Close ✕
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </div>
   );
 };
