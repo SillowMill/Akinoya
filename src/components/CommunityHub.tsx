@@ -2438,7 +2438,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   🏆 Group's Favorite Planets Leaderboard
                 </h1>
                 <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-                  Explore the community&apos;s top-voted planets and inspect complete 5-photo cinematic sci-fi dossiers.
+                  Explore the community&apos;s top-voted planets and inspect exclusive cinematic trailers, unique verification story cards, and complete 5-photo sci-fi dossiers.
                 </p>
               </div>
             </div>

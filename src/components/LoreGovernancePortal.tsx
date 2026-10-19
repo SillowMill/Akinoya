@@ -119,7 +119,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
             🗳️ Lore &amp; Governance Portal
           </h1>
           <p className="text-xs sm:text-sm text-white/70 font-sans mt-1 max-w-2xl">
-            Cast binding community votes on official planetary territories competing in the 2027 Äkinoya Worldbuilding Contest. Every submission features a complete 5-photo cinematic sci-fi dossier and lore archive.
+            Cast binding community votes on official planetary territories competing in the 2027 Äkinoya Worldbuilding Contest. Every submission features an exclusive cinematic trailer, a unique verification story card, and a complete 5-photo sci-fi dossier and lore archive.
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
             </h2>
           </div>
           <span className="text-[10.5px] font-mono text-white/40">
-            {contestSubmissions.length} Official Worlds · 5-Photo Visual Galleries
+            {contestSubmissions.length} Official Worlds · Trailers, Story Cards &amp; 5-Photo Galleries
           </span>
         </div>
 
@@ -159,7 +159,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
                 No worlds synthesized yet
               </h3>
               <p className="text-xs sm:text-sm font-sans text-white/60 leading-relaxed">
-                No worlds synthesized yet. Be the first creator to claim a world! Answer the 5 personality questions in the Mill Wizard to forge your 5-photo high-resolution cinematic sci-fi dossier.
+                No worlds synthesized yet. Be the first creator to claim a world! Answer the 5 personality questions in the Mill Wizard to forge your cinematic trailer, unique verification story card, and 5-photo sci-fi dossier.
               </p>
             </div>
             <a
