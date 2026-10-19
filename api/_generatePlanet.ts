@@ -210,9 +210,15 @@ export class FalMaintenanceQueueError extends Error {
   }
 }
 
-export const FAL_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
-export const FAL_VIDEO_ENDPOINT = 'https://fal.run/fal-ai/bytedance/seaweed-2.5/image-to-video';
-export const FAL_VIDEO_FALLBACK_ENDPOINT = 'https://fal.run/minimax/h3/image-to-video';
+export const FAL_NANO_BANANA_ENDPOINT = 'https://fal.run/google/nano-banana-2.1';
+export const FAL_NANO_BANANA_FALLBACK_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
+export const FAL_ENDPOINT = FAL_NANO_BANANA_ENDPOINT;
+
+export const FAL_SEEDANCE_VIDEO_ENDPOINT = 'https://fal.run/bytedance/seedance-2.5/us/image-to-video';
+export const FAL_SEEDANCE_FALLBACK_ENDPOINT = 'https://fal.run/minimax/h3/image-to-video';
+export const FAL_VIDEO_ENDPOINT = FAL_SEEDANCE_VIDEO_ENDPOINT;
+export const FAL_VIDEO_FALLBACK_ENDPOINT = FAL_SEEDANCE_FALLBACK_ENDPOINT;
+
 export const FAL_SFX_MMAUDIO_ENDPOINT = 'https://fal.run/fal-ai/mmaudio-v2';
 export const FAL_SFX_STABLE_AUDIO_ENDPOINT = 'https://fal.run/fal-ai/stable-audio';
 
@@ -686,7 +692,7 @@ export async function generateSlotImageWithFal(
   if (!activeKey || activeKey === '[SENSITIVE]') {
     recordFalUsage({
       slot: slotLabel,
-      model: 'fal-ai/flux/schnell',
+      model: 'google/nano-banana-2.1',
       durationMs: 0,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
@@ -696,14 +702,16 @@ export async function generateSlotImageWithFal(
   }
 
   const startTime = Date.now();
-  let response: Response;
+  let response: Response | null = null;
   const maxRetries = 2;
   let attempt = 0;
+  let activeModel = 'google/nano-banana-2.1';
 
-  while (true) {
+  // Primary Attempt: Nano Banana 2.1 (Google 4K photorealistic generator)
+  while (attempt <= maxRetries) {
     try {
       response = await falRequestQueue.run(() =>
-        fetch(FAL_ENDPOINT, {
+        fetch(FAL_NANO_BANANA_ENDPOINT, {
           method: 'POST',
           headers: {
             Authorization: `Key ${activeKey}`,
@@ -711,9 +719,10 @@ export async function generateSlotImageWithFal(
           },
           body: JSON.stringify({
             prompt: prompt,
-            image_size: 'landscape_16_9',
+            aspect_ratio: '16:9',
+            resolution: '1K',
             num_images: 1,
-            enable_safety_checker: false,
+            output_format: 'png',
           }),
         })
       );
@@ -723,11 +732,11 @@ export async function generateSlotImageWithFal(
         attempt++;
         const backoffMs = 1000 * Math.pow(2, attempt) + Math.random() * 400;
         console.warn(
-          `[Fal.ai Rate Limit] HTTP ${response.status} on ${slotLabel}. Backing off for ${Math.round(backoffMs)}ms (attempt ${attempt}/${maxRetries})...`
+          `[Nano Banana Rate Limit] HTTP ${response.status} on ${slotLabel}. Backing off for ${Math.round(backoffMs)}ms (attempt ${attempt}/${maxRetries})...`
         );
         recordFalUsage({
           slot: slotLabel,
-          model: 'fal-ai/flux/schnell',
+          model: 'google/nano-banana-2.1',
           durationMs: Date.now() - startTime,
           estimatedCostUsd: 0,
           status: 'RATE_LIMITED_RETRY',
@@ -741,18 +750,42 @@ export async function generateSlotImageWithFal(
       if (attempt < maxRetries) {
         attempt++;
         const backoffMs = 1200 + Math.random() * 300;
-        console.warn(`[Fal.ai Network Glitch] ${netErr?.message || netErr}. Retrying in ${Math.round(backoffMs)}ms...`);
+        console.warn(`[Nano Banana Network Glitch] ${netErr?.message || netErr}. Retrying in ${Math.round(backoffMs)}ms...`);
         await new Promise((r) => setTimeout(r, backoffMs));
         continue;
       }
+      break;
+    }
+  }
+
+  // Fallback Attempt: Flux Schnell
+  if (!response || !response.ok) {
+    activeModel = 'fal-ai/flux/schnell';
+    try {
+      response = await falRequestQueue.run(() =>
+        fetch(FAL_NANO_BANANA_FALLBACK_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            Authorization: `Key ${activeKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt: prompt,
+            image_size: 'landscape_16_9',
+            num_images: 1,
+            enable_safety_checker: false,
+          }),
+        })
+      );
+    } catch (fbErr: any) {
       const durationMs = Date.now() - startTime;
       recordFalUsage({
         slot: slotLabel,
-        model: 'fal-ai/flux/schnell',
+        model: activeModel,
         durationMs,
         estimatedCostUsd: 0,
         status: 'ERROR',
-        error: netErr?.message || String(netErr),
+        error: fbErr?.message || String(fbErr),
       });
       throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 503);
     }
@@ -762,10 +795,10 @@ export async function generateSlotImageWithFal(
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
-    console.warn(`[Najno Banajna Engine] HTTP ${response.status} notice:`, errorText);
+    console.warn(`[Nano Banana / Flux Engine] HTTP ${response.status} notice:`, errorText);
     recordFalUsage({
       slot: slotLabel,
-      model: 'fal-ai/flux/schnell',
+      model: activeModel,
       durationMs,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
@@ -817,7 +850,7 @@ export async function generateViralVideoWithFal(
   if (!activeKey || activeKey === '[SENSITIVE]' || !heroImageUrl) {
     recordFalUsage({
       slot: 'video',
-      model: 'fal-ai/bytedance/seaweed-2.5',
+      model: 'bytedance/seedance-2.5/us/image-to-video',
       durationMs: 0,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
@@ -832,11 +865,10 @@ export async function generateViralVideoWithFal(
   const payload = {
     prompt,
     image_url: resolvedHeroUrl,
-    aspect_ratio: '9:16',
     duration: '5',
-    prompt_optimizer: true,
-    camera_motion: 'continuous_fpv_drone_orbit',
-    fps: 24,
+    resolution: '720p',
+    aspect_ratio: 'auto',
+    generate_audio: true, // Native ByteDance Seedance 2.5 synchronized Foley audio & sound effects!
   };
 
   const startTime = Date.now();
@@ -847,7 +879,7 @@ export async function generateViralVideoWithFal(
   while (attempt <= maxRetries) {
     try {
       response = await falRequestQueue.run(() =>
-        fetch(FAL_VIDEO_ENDPOINT, {
+        fetch(FAL_SEEDANCE_VIDEO_ENDPOINT, {
           method: 'POST',
           headers: {
             Authorization: `Key ${activeKey}`,
@@ -861,11 +893,11 @@ export async function generateViralVideoWithFal(
         attempt++;
         const backoffMs = 1200 * Math.pow(2, attempt) + Math.random() * 400;
         console.warn(
-          `[Fal.ai Video Rate Limit] HTTP ${response.status}. Backing off for ${Math.round(backoffMs)}ms (attempt ${attempt}/${maxRetries})...`
+          `[Seedance 2.5 Rate Limit] HTTP ${response.status}. Backing off for ${Math.round(backoffMs)}ms (attempt ${attempt}/${maxRetries})...`
         );
         recordFalUsage({
           slot: 'video',
-          model: 'fal-ai/bytedance/seaweed-2.5',
+          model: 'bytedance/seedance-2.5/us/image-to-video',
           durationMs: Date.now() - startTime,
           estimatedCostUsd: 0,
           status: 'RATE_LIMITED_RETRY',
@@ -879,7 +911,7 @@ export async function generateViralVideoWithFal(
       if (attempt < maxRetries) {
         attempt++;
         const backoffMs = 1400 + Math.random() * 400;
-        console.warn(`[Fal.ai Video Primary Network Glitch] ${netErr?.message}. Retrying in ${Math.round(backoffMs)}ms...`);
+        console.warn(`[Seedance 2.5 Video Primary Glitch] ${netErr?.message}. Retrying in ${Math.round(backoffMs)}ms...`);
         await new Promise((r) => setTimeout(r, backoffMs));
         continue;
       }
@@ -927,7 +959,7 @@ export async function generateViralVideoWithFal(
     console.warn(`[Video Pipeline] HTTP ${response.status} notice:`, errorText);
     recordFalUsage({
       slot: 'video',
-      model: 'fal-ai/minimax/video-01',
+      model: 'bytedance/seedance-2.5/us/image-to-video',
       durationMs,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
@@ -947,7 +979,7 @@ export async function generateViralVideoWithFal(
   if (!videoUrl) {
     recordFalUsage({
       slot: 'video',
-      model: 'fal-ai/minimax/video-01',
+      model: 'bytedance/seedance-2.5/us/image-to-video',
       durationMs,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
@@ -958,7 +990,7 @@ export async function generateViralVideoWithFal(
 
   recordFalUsage({
     slot: 'video',
-    model: 'fal-ai/minimax/video-01',
+    model: 'bytedance/seedance-2.5/us/image-to-video',
     durationMs,
     estimatedCostUsd: COST_PER_VIDEO_USD,
     status: 'SUCCESS',

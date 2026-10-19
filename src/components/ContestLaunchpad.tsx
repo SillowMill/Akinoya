@@ -1327,7 +1327,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-1.5">
                   <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-400/40 font-bold uppercase tracking-wider">
-                    Live Dossier Preview · Najno Banajna 8K Photorealistic Engine
+                    Live Dossier Preview · Nano Banana 4K &amp; Seedance 2.5 Engine
                   </span>
                   {isSandboxMode && (
                     <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 font-bold uppercase tracking-wider flex items-center gap-1.5">

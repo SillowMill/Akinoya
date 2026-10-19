@@ -418,7 +418,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         const finalMsg: ChatMessage = {
           id: `mill-done-${Date.now()}`,
           sender: 'mill',
-          text: `Territory protocol complete! All 5 personality dimensions recorded.\n\nDesignated World: ${completeAnswers.planetName}\n\nConnecting to Najno Banajna 8K Photorealistic AI and Val.ai 24fps FPV pipeline to synthesize your 5-photo 4K dossier and registered lore...`,
+          text: `Territory protocol complete! All 5 personality dimensions recorded.\n\nDesignated World: ${completeAnswers.planetName}\n\nConnecting to Nano Banana 4K Photorealistic AI and Seedance 2.5 FPV video pipeline to synthesize your 5-photo dossier, synchronized sound effects, and registered lore...`,
           timestamp: 'Just now',
         };
         setMessages((prev) => [...prev, finalMsg]);
@@ -690,7 +690,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           {isSynthesizing && (
             <div className="flex items-center gap-3 p-4 rounded-xl bg-cyan-950/40 border border-cyan-400/30 text-cyan-300 text-xs font-mono animate-pulse">
               <Sparkles className="w-4 h-4 animate-spin text-cyan-400 shrink-0" />
-              <span>Mill is aligning your 5 personality answers with Najno Banajna 8K AI &amp; Val.ai to synthesize your 5-photo dossier...</span>
+              <span>Mill is aligning your 5 personality answers with Nano Banana 4K AI &amp; Seedance 2.5 to synthesize your 5-photo dossier...</span>
             </div>
           )}
         </div>
