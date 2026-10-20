@@ -170,6 +170,15 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
     '';
   const heroPhotoUrl = photoCards[0]?.url || activePlanet?.renders?.hero || '';
 
+  // Proactively pre-warm exact 5-second 60fps branded trailer in memory when modal is open
+  useEffect(() => {
+    if (!isOpen || !activePlanet || typeof window === 'undefined') return;
+    const timer = setTimeout(() => {
+      exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl).catch(() => {});
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [isOpen, activePlanet?.id, videoUrl]);
+
   const handleDownloadTrailer = async () => {
     if (!activePlanet) return;
     soundManager.playTone(740, 0.06);

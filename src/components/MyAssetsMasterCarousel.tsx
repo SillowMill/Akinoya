@@ -591,6 +591,21 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
     setIsMobileDevice(isMobileOrTabletDevice());
   }, []);
 
+  // Proactively pre-warm exact 5-second 60fps branded trailer in memory for instantaneous Save to Photos
+  useEffect(() => {
+    if (!dossier || typeof window === 'undefined') return;
+    const activeVideoUrl =
+      dynamicVideo.videoUrl ||
+      dossier.videoUrl ||
+      dossier.renders?.videoUrl ||
+      dossier.renders?.video_url ||
+      '';
+    const timer = setTimeout(() => {
+      exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl).catch(() => {});
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [dossier?.id, editionRank, dynamicVideo.videoUrl]);
+
   // Download Pristine High-Resolution 4K Master Photo (Clean Lossless Direct Export)
   const handleDownload4kPhoto = async () => {
     if (!activePhoto?.url) return;

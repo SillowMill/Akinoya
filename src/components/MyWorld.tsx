@@ -99,6 +99,15 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
   const heroPhotoUrl = photoCards[0]?.url || dossier.renders?.hero || '';
   const isVideoReady = Boolean(videoUrl);
 
+  // Proactively pre-warm exact 5-second 60fps branded trailer in memory
+  useEffect(() => {
+    if (!dossier || typeof window === 'undefined') return;
+    const timer = setTimeout(() => {
+      exportWorldTrailerVideoBlob(dossier, undefined, videoUrl).catch(() => {});
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [dossier?.id, videoUrl]);
+
   const handleDownloadTrailer = async () => {
     soundManager.playTone(740, 0.06);
     if (!videoUrl) return;
