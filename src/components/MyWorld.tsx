@@ -99,12 +99,14 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
   const heroPhotoUrl = photoCards[0]?.url || dossier.renders?.hero || '';
   const isVideoReady = Boolean(videoUrl);
 
-  // Proactively pre-warm exact 5-second 60fps branded trailer in memory
+  // Proactively pre-warm exact 5-second branded trailer in memory
+  // On mobile/tablet, delay pre-warming so it never competes with active UI rendering
   useEffect(() => {
     if (!dossier || typeof window === 'undefined') return;
+    const delay = isMobileOrTabletDevice() ? 3500 : 800;
     const timer = setTimeout(() => {
       exportWorldTrailerVideoBlob(dossier, undefined, videoUrl).catch(() => {});
-    }, 800);
+    }, delay);
     return () => clearTimeout(timer);
   }, [dossier?.id, videoUrl]);
 
@@ -248,10 +250,10 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
 
           {/* Strict 9:16 Vertical Viewport */}
           <div
-            className="relative w-full max-w-[260px] md:max-w-[290px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_35px_rgba(6,182,212,0.3)] flex items-center justify-center touch-pan-y-lock"
+            className="video-stage-container video-player-gpu relative w-full max-w-[260px] md:max-w-[290px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_35px_rgba(6,182,212,0.3)] flex items-center justify-center touch-pan-y-lock"
             style={{
-              transform: 'translate3d(0, 0, 0)',
-              WebkitTransform: 'translate3d(0, 0, 0)',
+              transform: 'translateZ(0)',
+              WebkitTransform: 'translateZ(0)',
               willChange: 'transform',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
@@ -277,8 +279,8 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                 } as any)}
                 className="w-full h-full object-cover"
                 style={{
-                  transform: 'translate3d(0, 0, 0)',
-                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  transform: 'translateZ(0)',
+                  WebkitTransform: 'translateZ(0)',
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
                 }}

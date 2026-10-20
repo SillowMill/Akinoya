@@ -394,19 +394,25 @@ div[role="dialog"],
   background-color: #030712;
 }
 
+/* ==========================================================================
+   VIDEO PLAYER GPU HARDWARE ACCELERATION & ZERO-FLICKER TOUCH LOCK
+   Ensures Mobile Safari / iOS renders video players on dedicated GPU layers
+   with transform: translateZ(0) to eliminate frame drops, stutters, and unwanted zoom.
+   ========================================================================== */
+.video-player-gpu,
+.video-stage-container,
+.video-viewport-wrapper,
 video,
 canvas {
-  transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+  -webkit-backface-visibility: hidden !important;
+  backface-visibility: hidden !important;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+  will-change: transform;
 }
 
-/* ==========================================================================
-   MOBILE & TABLET VIDEO PLAYER OPTIMIZATION (JANK-FREE 60FPS)
-   Disables heavy transitions & active transforms during interactions
-   on mobile viewports (iOS Safari / iPhone / iPad) to prevent stutter.
-   ========================================================================== */
 @media (max-width: 768px) {
   .video-viewport-wrapper,
   .video-stage-container,
@@ -418,10 +424,12 @@ canvas {
     -webkit-transition: none !important;
   }
 
+  /* Keep translateZ(0) GPU backing layer permanently locked during active touch/tap */
   .video-stage-container:active,
-  .video-viewport-wrapper:active {
-    transform: none !important;
-    -webkit-transform: none !important;
+  .video-viewport-wrapper:active,
+  video:active {
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
   }
 }
 

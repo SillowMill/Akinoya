@@ -85,15 +85,23 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
   };
 }
 
+const urlCacheBustMap = new Map<string, string>();
+
 /**
- * Appends a dynamic timestamp hash parameter to force mobile browsers (especially iOS Safari)
- * to bypass local caching and fetch the absolute newest asset directly from the server.
+ * Appends a cache-busting token while caching the resolved string in memory
+ * so re-renders (such as audio mute/unmute or play/pause) never re-assign video.src
+ * or flush the hardware decoder buffer on iOS Safari.
  */
-export function getCacheBustedUrl(url: string): string {
+export function getCacheBustedUrl(url: string, forceNew = false): string {
   if (!url) return '';
   if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (!forceNew && urlCacheBustMap.has(url)) {
+    return urlCacheBustMap.get(url)!;
+  }
   const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}v=${Date.now()}`;
+  const busted = `${url}${separator}v=${Date.now()}`;
+  urlCacheBustMap.set(url, busted);
+  return busted;
 }
 
 /**
@@ -1130,11 +1138,17 @@ export async function optimizeMp4FastStart(inputBlob: Blob): Promise<Blob> {
     patchChunkOffsets(0, moovSize);
 
     const parts: BlobPart[] = [];
+    if (ftypOffset > 0) {
+      parts.push(buffer.slice(0, ftypOffset));
+    }
     if (ftypSize > 0) {
       parts.push(buffer.slice(ftypOffset, ftypOffset + ftypSize));
     }
     parts.push(moovBuffer);
-    parts.push(buffer.slice(ftypSize, moovOffset));
+    const middleStart = ftypOffset >= 0 ? ftypOffset + ftypSize : 0;
+    if (moovOffset > middleStart) {
+      parts.push(buffer.slice(middleStart, moovOffset));
+    }
     if (moovOffset + moovSize < totalLen) {
       parts.push(buffer.slice(moovOffset + moovSize));
     }
@@ -1279,12 +1293,12 @@ export async function exportWorldTrailerVideoBlob(
   }
 
   const exportPromise = (async (): Promise<{ blob: Blob; ext: string } | null> => {
-    // High-Definition Visual Fidelity:
-    // Mobile / Tablet: 1080x1920 Full HD (9:16) at 22 Mbps lock
-    // Desktop: 2160x3840 4K UHD (9:16) at 36 Mbps lock
+    // Optimal Visual Fidelity & Mobile Hardware Decoding:
+    // Mobile / Tablet: 1080x1920 Full HD (9:16) with stable 6.5 Mbps bitrate (target 5-8 Mbps)
+    // Desktop: 2160x3840 4K UHD (9:16) at 16 Mbps
     const W = isMobileOrTablet ? 1080 : 2160;
     const H = isMobileOrTablet ? 1920 : 3840;
-    const targetBitrate = isMobileOrTablet ? 22_000_000 : 36_000_000;
+    const targetBitrate = isMobileOrTablet ? 6_500_000 : 16_000_000;
 
     const canvas = document.createElement('canvas');
     canvas.width = W;
@@ -1328,8 +1342,8 @@ export async function exportWorldTrailerVideoBlob(
         }
       }) || '';
 
-    // 60FPS locked stream capture
-    const stream = canvas.captureStream(60);
+    // Stable stream capture: 30fps on mobile to guarantee jank-free hardware encoding; 60fps on desktop
+    const stream = canvas.captureStream(isMobileOrTablet ? 30 : 60);
 
     // If activeVideoUrl or dossier.videoUrl is provided, attempt to composite directly from the video stream
     let videoElement: HTMLVideoElement | null = null;
@@ -1777,23 +1791,31 @@ export const LiveStoryTrailerViewport: React.FC<{
   }, [dossier, meta, photoCards]);
 
   // Background pre-warm branded composite trailer so single-tap Save to Photos is instantaneous
+  // On mobile/tablet, delay pre-warming so it never competes with the active video player's initial playback
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const delay = isMobileOrTabletDevice() ? 3500 : 800;
     const timer = setTimeout(() => {
       exportWorldTrailerVideoBlob(dossier, undefined, videoUrl).catch(() => {});
-    }, 700);
+    }, delay);
     return () => clearTimeout(timer);
   }, [dossier?.id, videoUrl]);
 
-  const posterUrl = photoCards[0]?.url ? getCacheBustedUrl(photoCards[0].url) : undefined;
-  const resolvedVideoSrc = videoUrl ? getCacheBustedUrl(videoUrl) : undefined;
+  const posterUrl = useMemo(
+    () => (photoCards[0]?.url ? getCacheBustedUrl(photoCards[0].url) : undefined),
+    [photoCards[0]?.url]
+  );
+  const resolvedVideoSrc = useMemo(
+    () => (videoUrl ? getCacheBustedUrl(videoUrl) : undefined),
+    [videoUrl]
+  );
 
   return (
     <div
-      className="relative w-full h-full overflow-hidden rounded-[22px] bg-[#030712] select-none"
+      className="video-player-gpu relative w-full h-full overflow-hidden rounded-[22px] bg-[#030712] select-none"
       style={{
-        transform: 'translate3d(0, 0, 0)',
-        WebkitTransform: 'translate3d(0, 0, 0)',
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
         willChange: 'transform',
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
@@ -1810,7 +1832,15 @@ export const LiveStoryTrailerViewport: React.FC<{
       )}
 
       {videoUrl ? (
-        <div className="relative z-10 w-full h-full">
+        <div
+          className="video-viewport-wrapper relative z-10 w-full h-full"
+          style={{
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+        >
           <video
             ref={(el) => {
               videoRef.current = el;
@@ -1841,13 +1871,13 @@ export const LiveStoryTrailerViewport: React.FC<{
               onPlaybackStateChange?.(false);
             }}
             style={{
-              transform: 'translate3d(0, 0, 0)',
-              WebkitTransform: 'translate3d(0, 0, 0)',
+              transform: 'translateZ(0)',
+              WebkitTransform: 'translateZ(0)',
               willChange: 'transform',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
             }}
-            className="w-full h-full object-cover relative z-10"
+            className="w-full h-full object-cover relative z-10 pointer-events-auto"
           />
           {/* Top-level & Bottom-left Branded Overlay on native MP4 */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none z-20" />
@@ -1926,8 +1956,8 @@ export const LiveStoryTrailerViewport: React.FC<{
           width={540}
           height={960}
           style={{
-            transform: 'translate3d(0, 0, 0)',
-            WebkitTransform: 'translate3d(0, 0, 0)',
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
             willChange: 'transform',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
@@ -2020,15 +2050,17 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
     setIsMobileDevice(isMobileOrTabletDevice());
   }, []);
 
-  // Proactively pre-warm exact 5-second 60fps branded trailer in memory
+  // Proactively pre-warm exact 5-second branded trailer in memory
+  // On mobile/tablet, delay pre-warming so it never competes with active card interactions or video initialization
   useEffect(() => {
     if (!dossier || typeof window === 'undefined') return;
     const vUrl = dynamicVideo.videoUrl || dossier.videoUrl || dossier.renders?.videoUrl || dossier.renders?.video_url;
+    const delay = isMobileDevice ? 3500 : 700;
     const timer = setTimeout(() => {
       exportWorldTrailerVideoBlob(dossier, editionRank, vUrl).catch(() => {});
-    }, 700);
+    }, delay);
     return () => clearTimeout(timer);
-  }, [dossier?.id, editionRank, dynamicVideo.videoUrl]);
+  }, [dossier?.id, editionRank, dynamicVideo.videoUrl, isMobileDevice]);
 
   const handleDownloadStoryBadge = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -2174,8 +2206,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         style={{
-          transform: 'translate3d(0, 0, 0)',
-          WebkitTransform: 'translate3d(0, 0, 0)',
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',

@@ -170,12 +170,14 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
     '';
   const heroPhotoUrl = photoCards[0]?.url || activePlanet?.renders?.hero || '';
 
-  // Proactively pre-warm exact 5-second 60fps branded trailer in memory when modal is open
+  // Proactively pre-warm exact 5-second branded trailer in memory when modal is open
+  // On mobile/tablet, delay pre-warming so modal opening and video initialization remain butter-smooth
   useEffect(() => {
     if (!isOpen || !activePlanet || typeof window === 'undefined') return;
+    const delay = isMobileOrTabletDevice() ? 3500 : 700;
     const timer = setTimeout(() => {
       exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl).catch(() => {});
-    }, 700);
+    }, delay);
     return () => clearTimeout(timer);
   }, [isOpen, activePlanet?.id, videoUrl]);
 
@@ -407,10 +409,10 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                   >
                     {/* Strict 9:16 Vertical Video / Trailer Montage Player */}
                     <div
-                      className="relative w-full max-w-[240px] xs:max-w-[270px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center touch-pan-y-lock"
+                      className="video-stage-container video-player-gpu relative w-full max-w-[240px] xs:max-w-[270px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center touch-pan-y-lock"
                       style={{
-                        transform: 'translate3d(0, 0, 0)',
-                        WebkitTransform: 'translate3d(0, 0, 0)',
+                        transform: 'translateZ(0)',
+                        WebkitTransform: 'translateZ(0)',
                         willChange: 'transform',
                         backfaceVisibility: 'hidden',
                         WebkitBackfaceVisibility: 'hidden',

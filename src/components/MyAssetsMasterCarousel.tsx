@@ -600,11 +600,13 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
       dossier.renders?.videoUrl ||
       dossier.renders?.video_url ||
       '';
+    // Delay pre-warming on mobile/tablet to ensure initial page view, transitions and video playback are buttery smooth
+    const delay = isMobileDevice ? 3500 : 800;
     const timer = setTimeout(() => {
       exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl).catch(() => {});
-    }, 800);
+    }, delay);
     return () => clearTimeout(timer);
-  }, [dossier?.id, editionRank, dynamicVideo.videoUrl]);
+  }, [dossier?.id, editionRank, dynamicVideo.videoUrl, isMobileDevice]);
 
   // Download Pristine High-Resolution 4K Master Photo (Clean Lossless Direct Export)
   const handleDownload4kPhoto = async () => {
@@ -1241,14 +1243,14 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                     toggleVideoPlayback(e);
                   }}
                   style={{
-                    transform: 'translate3d(0, 0, 0)',
-                    WebkitTransform: 'translate3d(0, 0, 0)',
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
                     willChange: 'transform',
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                     touchAction: 'pan-y',
                   }}
-                  className="video-stage-container relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none cursor-pointer group md:hover:border-cyan-300 md:hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)] md:transition-all touch-pan-y-lock"
+                  className="video-stage-container video-player-gpu relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none cursor-pointer group md:hover:border-cyan-300 md:hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)] md:transition-all touch-pan-y-lock"
                 >
                   {/* Interactive Fullscreen Tap Badge */}
                   <button
@@ -1542,7 +1544,15 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
 
                 {/* 1. Video Trailer Fullscreen View */}
                 {fullscreenSlide === 'video_trailer' && (
-                  <div className="relative w-full max-w-[340px] sm:max-w-[380px] aspect-[9/16] max-h-[68dvh] rounded-[24px] overflow-hidden bg-black border-2 border-cyan-400/60 shadow-[0_0_40px_rgba(6,182,212,0.3)] flex flex-col justify-between">
+                  <div
+                    style={{
+                      transform: 'translateZ(0)',
+                      WebkitTransform: 'translateZ(0)',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                    }}
+                    className="video-player-gpu relative w-full max-w-[340px] sm:max-w-[380px] aspect-[9/16] max-h-[68dvh] rounded-[24px] overflow-hidden bg-black border-2 border-cyan-400/60 shadow-[0_0_40px_rgba(6,182,212,0.3)] flex flex-col justify-between"
+                  >
                     <LiveStoryTrailerViewport
                       dossier={dossier}
                       meta={meta}
