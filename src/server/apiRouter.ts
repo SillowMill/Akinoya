@@ -594,11 +594,72 @@ apiRouter.all(['/vip/claim'], async (req: Request, res: Response): Promise<void>
 // ─── 12. Direct Google Sheets Sync (VIP GUESTS & Subscribers) ─────────────────
 apiRouter.all(['/sync-sheets', '/auth/sync-sheets'], async (req: Request, res: Response): Promise<void> => {
   try {
-    const { default: syncSheetsHandler } = await import('../../api/_syncSheets.js');
-    await syncSheetsHandler(req, res);
+    const payload = req.body || {};
+    const record = payload.record || payload;
+
+    let firstName = String(record.first_name || record.firstName || '').trim();
+    let lastName = String(record.last_name || record.lastName || '').trim();
+    const rawFullName = String(record.fullName || record.full_name || record.holderName || record.ownerName || '').trim();
+    if (!firstName && rawFullName) {
+      const parts = rawFullName.split(/\s+/);
+      firstName = parts[0] || '';
+      lastName = parts.slice(1).join(' ');
+    }
+    const fullName = [firstName, lastName].filter(Boolean).join(' ') || rawFullName;
+    const email = String(record.email || '').trim().toLowerCase();
+
+    if (!email || !email.includes('@')) {
+      res.status(400).json({ success: false, error: 'Valid email is required for subscriber sync' });
+      return;
+    }
+
+    const isFounder = email === 'odi.selis3@gmail.com';
+    let role = isFounder ? 'CREATOR' : String(record.role || 'FREE').trim().toUpperCase();
+    const rawVipCode = String(record.vip_code_redeemed || record.vipCode || record.passId || record.token || '').trim();
+    const registrationDate = record.timestamp || record.created_at || new Date().toISOString();
+    const claimedSector = String(
+      record.worldName ||
+      record.planetName ||
+      record.claimed_sector ||
+      record.sector ||
+      ''
+    ).trim();
+
+    // 1. Sync to Subscribers tab
+    const subSync = await syncSubscriberRowToGoogleSheets({
+      firstName,
+      lastName,
+      fullName,
+      email,
+      role,
+      vipCode: rawVipCode,
+      claimedSector,
+      registrationDate,
+    });
+
+    // 2. If valid VIP pass code is present, sync and lock VIP GUESTS tab
+    let vipSync = null;
+    const isVipPassCode = rawVipCode && rawVipCode !== 'N/A' && (
+      rawVipCode.toUpperCase().startsWith('AKN-VIP') ||
+      /^#?\d{1,3}$/.test(rawVipCode) ||
+      /^X\d{1,4}$/i.test(rawVipCode)
+    );
+
+    if (isVipPassCode || isFounder) {
+      const passIdToSync = isFounder ? 'AKN-VIP-2027-X0914' : rawVipCode;
+      vipSync = await syncPassClaimToGoogleSheets(passIdToSync, fullName || email.split('@')[0], email);
+    }
+
+    res.status(200).json({
+      success: subSync?.success ?? true,
+      email,
+      subscriberSync: subSync,
+      vipSync,
+      tab: 'Subscribers',
+    });
   } catch (err: any) {
     console.error('[API] sync-sheets error:', err);
-    res.status(500).json({ error: err?.message || 'Internal server error syncing to Google Sheets' });
+    res.status(500).json({ success: false, error: err?.message || 'Internal server error syncing to Google Sheets' });
   }
 });
 
@@ -623,9 +684,12 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
         role: result.profile?.role || role || 'FREE',
         vipCode: result.profile?.vip_code_redeemed || passCode || 'N/A',
         registrationDate: new Date().toISOString(),
-      }).catch(() => {});
+      }).catch((syncErr) => console.warn('[Register] Google Sheets subscriber sync notice:', syncErr));
+
       if (passCode && String(passCode).trim()) {
-        await syncPassClaimToGoogleSheets(String(passCode).trim(), fullName, email).catch(() => {});
+        await syncPassClaimToGoogleSheets(String(passCode).trim(), fullName, email).catch((vipErr) =>
+          console.warn('[Register] Google Sheets VIP claim sync notice:', vipErr)
+        );
       }
     }
     res.status(result.success ? 200 : 400).json(result);

@@ -87,13 +87,18 @@ async function getServiceAccountAccessToken(clientEmail, privateKey) {
   }
 }
 
+function cleanEnvValue(val) {
+  if (!val) return '';
+  return String(val).replace(/^["']|["']$/g, '').trim();
+}
+
 /**
  * Retrieves OAuth credentials from environment variables or local fallback files.
  */
 function getOAuthCredentials() {
-  let clientId = process.env.GOOGLE_SHEETS_CLIENT_ID;
-  let clientSecret = process.env.GOOGLE_SHEETS_CLIENT_SECRET;
-  let refreshToken = process.env.GOOGLE_SHEETS_REFRESH_TOKEN;
+  let clientId = cleanEnvValue(process.env.GOOGLE_SHEETS_CLIENT_ID);
+  let clientSecret = cleanEnvValue(process.env.GOOGLE_SHEETS_CLIENT_SECRET);
+  let refreshToken = cleanEnvValue(process.env.GOOGLE_SHEETS_REFRESH_TOKEN);
 
   if (!clientId || !clientSecret || !refreshToken) {
     const envFiles = [
@@ -110,7 +115,7 @@ function getOAuthCredentials() {
             const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
             if (!match) continue;
             const key = match[1];
-            const val = match[2].replace(/^["']|["']$/g, '').trim();
+            const val = cleanEnvValue(match[2]);
             if (key === 'GOOGLE_SHEETS_CLIENT_ID' && !clientId) clientId = val;
             if (key === 'GOOGLE_SHEETS_CLIENT_SECRET' && !clientSecret) clientSecret = val;
             if (key === 'GOOGLE_SHEETS_REFRESH_TOKEN' && !refreshToken) refreshToken = val;
@@ -130,9 +135,9 @@ function getOAuthCredentials() {
       try {
         if (fs.existsSync(p)) {
           const data = JSON.parse(fs.readFileSync(p, 'utf8'));
-          clientId = clientId || data.client_id;
-          clientSecret = clientSecret || data.client_secret;
-          refreshToken = refreshToken || (data.token && data.token.refresh_token);
+          clientId = clientId || cleanEnvValue(data.client_id);
+          clientSecret = clientSecret || cleanEnvValue(data.client_secret);
+          refreshToken = refreshToken || cleanEnvValue(data.token && data.token.refresh_token);
           if (clientId && clientSecret && refreshToken) break;
         }
       } catch {}

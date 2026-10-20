@@ -472,7 +472,7 @@ export async function registerPassHolder(
   saveStore();
 
   try {
-    const { syncPassClaimToGoogleSheets, appendVipGuestRecordToSheets } = await import('../../api/nfc/_googleSheetsSync.js');
+    const { syncPassClaimToGoogleSheets, appendVipGuestRecordToSheets, syncSubscriberRowToGoogleSheets } = await import('../../api/nfc/_googleSheetsSync.js');
     await syncPassClaimToGoogleSheets(pass.normalizedId, pass.ownerName, pass.ownerEmail || '');
     if (typeof appendVipGuestRecordToSheets === 'function' && pass.ownerEmail) {
       await appendVipGuestRecordToSheets({
@@ -484,6 +484,17 @@ export async function registerPassHolder(
         worldName: 'Unclaimed',
         role: isMaster ? 'CREATOR' : 'VIP_GUEST',
       });
+    }
+    if (pass.ownerEmail) {
+      await syncSubscriberRowToGoogleSheets({
+        firstName: pass.ownerName.split(/\s+/)[0] || pass.ownerName,
+        lastName: pass.ownerName.split(/\s+/).slice(1).join(' '),
+        fullName: pass.ownerName,
+        email: pass.ownerEmail,
+        role: isMaster ? 'CREATOR [PIONEER-2027]' : 'VIP_GUEST [PIONEER-2027]',
+        vipCode: pass.normalizedId,
+        registrationDate: pass.registeredAt || new Date().toISOString(),
+      }).catch((subErr) => console.warn('[Register] Google Sheets subscriber sync notice:', subErr));
     }
   } catch (err) {
     console.warn('[Register] Google Sheets auto-sync notice:', err);

@@ -1076,7 +1076,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             has_vip_pass: serverData.profile.has_vip_pass,
             isPioneer: true,
           }),
-        }).catch(() => {});
+        }).catch((syncErr) => console.warn('[AuthContext] sync-sheets warning:', syncErr));
 
         // Also gracefully register with Supabase in background without blocking the user
         if (isSupabaseConfigured) {
@@ -1123,6 +1123,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(fallbackUser));
       localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(fallbackProf));
       setHasPendingVipInvitation(false);
+
+      // Always guarantee real-time sync to Google Sheets (Subscribers tab) on fallback branch
+      syncToGoogleSheets(fallbackProf, pendingPass || undefined);
 
       soundManager.playUnlockChime();
       closeAuthModal();
