@@ -181,7 +181,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
 
     try {
       const activeVideoUrl = videoUrl || '/assets/videos/amlemi_trailer.mp4';
-      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText);
+      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText, activePlanet || undefined);
     } finally {
       setIsDownloading(false);
     }

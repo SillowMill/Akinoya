@@ -677,7 +677,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
         dossier.renders?.video_url ||
         '/assets/videos/amlemi_trailer.mp4';
 
-      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText);
+      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText, dossier, editionRank);
     } finally {
       setIsExportingTrailer(false);
     }

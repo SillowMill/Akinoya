@@ -109,7 +109,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
     const shareText = `Verified Planetary Dossier: ${dossier.planetName || 'Ämlemi'}`;
 
     try {
-      await downloadOrShareVideoDirect(videoUrl, filename, shareTitle, shareText);
+      await downloadOrShareVideoDirect(videoUrl, filename, shareTitle, shareText, dossier);
     } finally {
       setIsDownloading(false);
     }

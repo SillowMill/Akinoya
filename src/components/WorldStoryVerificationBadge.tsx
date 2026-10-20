@@ -1269,34 +1269,75 @@ export function triggerDirectDownload(url: string, filename: string): void {
 
 /**
  * Direct video download handler:
- * Instantly triggers native system download sheet or camera roll save without blocking or stalling.
+ * Instantly triggers native mobile media saving (iOS Photos / Camera Roll via Web Share sheet)
+ * or direct native download without intermediate widgets or stalling loops.
+ * Links directly to the high-quality, butter-smooth 60fps master export with permanent branding.
  */
 export async function downloadOrShareVideoDirect(
   videoUrl: string,
   filename: string,
   title: string = 'Sillow Mill 9:16 Video Trailer',
-  text: string = 'Verified Genesis World 9:16 Video Trailer · Sillow Mill'
+  text: string = 'Verified Genesis World 9:16 Video Trailer · Sillow Mill',
+  dossier?: PlanetSubmission,
+  editionRank?: number
 ): Promise<void> {
   const isMobile = isMobileOrTabletDevice();
-  const safeUrl = videoUrl || '/assets/videos/amlemi_trailer.mp4';
+  const safePlanet = (dossier?.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+  const safeFilename = filename || `sillowmill-${safePlanet}-9x16-trailer.mp4`;
 
-  if (isMobile && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-    if (brandedTrailerBlobCache.has(safeUrl)) {
+  const isAmlemi =
+    !dossier ||
+    dossier.id === 'amlemi' ||
+    isFoundingPioneerPlanet(dossier) ||
+    !videoUrl ||
+    videoUrl.includes('amlemi');
+
+  // 1. High-Quality Master Branded Source for Ämlemi & Genesis Benchmark:
+  // Pre-rendered 1080x1920 60fps H.264/AAC with Fast Start moov atom and permanent branding.
+  if (isAmlemi) {
+    const masterUrl = '/assets/videos/amlemi_trailer_master.mp4';
+    if (isMobile && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
-        const cachedBlob = brandedTrailerBlobCache.get(safeUrl)!;
-        const file = new File([cachedBlob], filename, { type: 'video/mp4' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title, text });
-          return;
+        const cacheBustedUrl = getCacheBustedUrl(masterUrl);
+        const res = await fetch(cacheBustedUrl);
+        if (res.ok) {
+          const blob = await res.blob();
+          const file = new File([blob], safeFilename, { type: 'video/mp4' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title, text });
+            return;
+          }
         }
       } catch (err: any) {
-        if (err?.name === 'AbortError') return;
+        if (err?.name === 'AbortError') return; // User tapped cancel on iOS native share sheet
       }
     }
+
+    // Direct native browser download of master file
+    triggerDirectDownload(masterUrl, safeFilename);
+    return;
   }
 
-  // Instant direct native download link trigger
-  triggerDirectDownload(safeUrl, filename);
+  // 2. Custom User-Generated World Pipeline:
+  if (dossier) {
+    try {
+      const result = await exportWorldTrailerVideoBlob(dossier, editionRank, videoUrl);
+      if (result?.blob) {
+        if (isMobile && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+          const file = new File([result.blob], safeFilename, { type: 'video/mp4' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title, text });
+            return;
+          }
+        }
+        await downloadOrShareFileBlob(result.blob, safeFilename, 'video/mp4', title, text);
+        return;
+      }
+    } catch {}
+  }
+
+  // Fallback direct download
+  triggerDirectDownload(videoUrl || '/assets/videos/amlemi_trailer_master.mp4', safeFilename);
 }
 
 /**
@@ -1350,6 +1391,25 @@ export async function exportWorldTrailerVideoBlob(
 
   if (inFlightTrailerExports.has(cacheKey)) {
     return inFlightTrailerExports.get(cacheKey)!;
+  }
+
+  // Instant pre-rendered master export for Ämlemi / Genesis Benchmark
+  const isAmlemi =
+    !dossier ||
+    dossier.id === 'amlemi' ||
+    isFoundingPioneerPlanet(dossier) ||
+    (targetVideoUrl && targetVideoUrl.includes('amlemi'));
+
+  if (isAmlemi) {
+    try {
+      const cacheBustedUrl = getCacheBustedUrl('/assets/videos/amlemi_trailer_master.mp4');
+      const res = await fetch(cacheBustedUrl);
+      if (res.ok) {
+        const masterBlob = await res.blob();
+        brandedTrailerBlobCache.set(cacheKey, masterBlob);
+        return { blob: masterBlob, ext: 'mp4' };
+      }
+    } catch {}
   }
 
   const exportPromise = (async (): Promise<{ blob: Blob; ext: string } | null> => {
@@ -2132,7 +2192,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       '/assets/videos/amlemi_trailer.mp4';
 
     try {
-      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText);
+      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText, dossier, editionRank);
     } finally {
       setIsExportingTrailer(false);
     }
