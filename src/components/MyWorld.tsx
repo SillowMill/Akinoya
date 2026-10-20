@@ -24,11 +24,9 @@ import {
 import { soundManager } from '../utils/audio';
 import {
   useDynamicWorldVideo,
-  exportWorldTrailerVideoBlob,
-  downloadOrShareVideoBlob,
-  optimizeMp4FastStart,
   isMobileOrTabletDevice,
   getCacheBustedUrl,
+  downloadOrShareVideoDirect,
 } from './WorldStoryVerificationBadge';
 import { formatTitleCaseUserName } from '../utils/holder';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
@@ -99,17 +97,6 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
   const heroPhotoUrl = photoCards[0]?.url || dossier.renders?.hero || '';
   const isVideoReady = Boolean(videoUrl);
 
-  // Proactively pre-warm exact 5-second branded trailer in memory
-  // On mobile/tablet, delay pre-warming so it never competes with active UI rendering
-  useEffect(() => {
-    if (!dossier || typeof window === 'undefined') return;
-    const delay = isMobileOrTabletDevice() ? 3500 : 800;
-    const timer = setTimeout(() => {
-      exportWorldTrailerVideoBlob(dossier, undefined, videoUrl).catch(() => {});
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [dossier?.id, videoUrl]);
-
   const handleDownloadTrailer = async () => {
     soundManager.playTone(740, 0.06);
     if (!videoUrl) return;
@@ -122,26 +109,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
     const shareText = `Verified Planetary Dossier: ${dossier.planetName || 'Ämlemi'}`;
 
     try {
-      // 1. Official branded template composite export:
-      // Permanently burns in official Sillow Mill logo, typography, FOUNDING PIONEER / VIP badge,
-      // world title, coordinates, and bottom verified watermark.
-      // Resolves in 0ms when cached in memory, triggering instant native Save to Photos on mobile/tablet.
-      const result = await exportWorldTrailerVideoBlob(dossier, undefined, videoUrl);
-      if (result?.blob) {
-        await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
-        return;
-      }
-
-      // Fallback to direct raw video download only if composite unavailable
-      const cacheBustedUrl = getCacheBustedUrl(videoUrl);
-      const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-      const rawBlob = await response.blob();
-      const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-      await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-    } catch {
-      if (!isMobileDevice) {
-        window.open(videoUrl, '_blank', 'noopener,noreferrer');
-      }
+      await downloadOrShareVideoDirect(videoUrl, filename, shareTitle, shareText);
     } finally {
       setIsDownloading(false);
     }

@@ -376,12 +376,18 @@ div[role="dialog"],
 .gpu-accelerated,
 .widget-transition,
 [data-framer-motion],
-.carousel-slide-gpu {
-  transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-  will-change: transform, opacity;
-  backface-visibility: hidden;
+.carousel-slide-gpu,
+.interactive-card,
+.modal-surface,
+.video-player-gpu,
+.video-stage-container,
+.video-viewport-wrapper {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
   -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
   perspective: 1000px;
 }
 
@@ -397,7 +403,7 @@ div[role="dialog"],
 /* ==========================================================================
    VIDEO PLAYER GPU HARDWARE ACCELERATION & ZERO-FLICKER TOUCH LOCK
    Ensures Mobile Safari / iOS renders video players on dedicated GPU layers
-   with transform: translateZ(0) to eliminate frame drops, stutters, and unwanted zoom.
+   with transform: translateZ(0) and touch-action: manipulation.
    ========================================================================== */
 .video-player-gpu,
 .video-stage-container,
@@ -411,9 +417,16 @@ canvas {
   -webkit-perspective: 1000px;
   perspective: 1000px;
   will-change: transform;
+  touch-action: manipulation !important;
 }
 
 @media (max-width: 768px) {
+  /* Zero layout thrashing: disable expensive backdrop-filters on mobile */
+  [class*='backdrop-blur'] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
   .video-viewport-wrapper,
   .video-stage-container,
   .touch-pan-y-lock,
@@ -422,6 +435,7 @@ canvas {
   canvas {
     transition: none !important;
     -webkit-transition: none !important;
+    touch-action: manipulation !important;
   }
 
   /* Keep translateZ(0) GPU backing layer permanently locked during active touch/tap */
@@ -430,6 +444,14 @@ canvas {
   video:active {
     -webkit-transform: translateZ(0) !important;
     transform: translateZ(0) !important;
+  }
+
+  /* Prevent active touch scaling & layout thrashing site-wide */
+  .active\:scale-\[0\.99\]:active,
+  .active\:scale-95:active,
+  .active\:scale-98:active {
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
   }
 }
 

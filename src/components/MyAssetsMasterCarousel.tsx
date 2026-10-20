@@ -34,14 +34,13 @@ import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import {
   deriveWorldVerificationMeta,
   renderWorldStoryBadgeBlob,
-  exportWorldTrailerVideoBlob,
-  downloadOrShareVideoBlob,
   downloadOrShareFileBlob,
-  optimizeMp4FastStart,
   useDynamicWorldVideo,
   LiveStoryTrailerViewport,
   isMobileOrTabletDevice,
   getCacheBustedUrl,
+  triggerDirectDownload,
+  downloadOrShareVideoDirect,
 } from './WorldStoryVerificationBadge';
 
 export type MasterAssetSlideId = 'archive_4k' | 'story_card' | 'video_trailer';
@@ -591,23 +590,6 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
     setIsMobileDevice(isMobileOrTabletDevice());
   }, []);
 
-  // Proactively pre-warm exact 5-second 60fps branded trailer in memory for instantaneous Save to Photos
-  useEffect(() => {
-    if (!dossier || typeof window === 'undefined') return;
-    const activeVideoUrl =
-      dynamicVideo.videoUrl ||
-      dossier.videoUrl ||
-      dossier.renders?.videoUrl ||
-      dossier.renders?.video_url ||
-      '';
-    // Delay pre-warming on mobile/tablet to ensure initial page view, transitions and video playback are buttery smooth
-    const delay = isMobileDevice ? 3500 : 800;
-    const timer = setTimeout(() => {
-      exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl).catch(() => {});
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [dossier?.id, editionRank, dynamicVideo.videoUrl, isMobileDevice]);
-
   // Download Pristine High-Resolution 4K Master Photo (Clean Lossless Direct Export)
   const handleDownload4kPhoto = async () => {
     if (!activePhoto?.url) return;
@@ -616,25 +598,10 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
     const safePlanet = (dossier.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const safeStage = activePhoto.category.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const filename = `sillowmill-${safePlanet}-4k-${safeStage}.jpg`;
-    const shareTitle = `${dossier.planetName || 'Ämlemi'} — 4K Master`;
-    const shareText = `Verified Genesis World: ${activePhoto.title}`;
 
     try {
-      // Direct clean 4K download with absolute resolution clarity (no watermarks)
-      const cacheBustedUrl = getCacheBustedUrl(activePhoto.url);
-      const res = await fetch(cacheBustedUrl, { cache: 'no-store' });
-      if (res.ok) {
-        const blob = await res.blob();
-        await downloadOrShareFileBlob(blob, filename, 'image/jpeg', shareTitle, shareText);
-      } else {
-        if (!isMobileDevice) {
-          window.open(activePhoto.url, '_blank', 'noopener,noreferrer');
-        }
-      }
-    } catch {
-      if (!isMobileDevice) {
-        window.open(activePhoto.url, '_blank', 'noopener,noreferrer');
-      }
+      // Direct instant download without blocking async wrappers or memory stalls
+      triggerDirectDownload(activePhoto.url, filename);
     } finally {
       setIsDownloadingPhoto(false);
     }
@@ -708,27 +675,9 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
         dossier.videoUrl ||
         dossier.renders?.videoUrl ||
         dossier.renders?.video_url ||
-        '';
+        '/assets/videos/amlemi_trailer.mp4';
 
-      // 1. Official branded template composite export:
-      // Permanently burns in official Sillow Mill logo, typography, FOUNDING PIONEER / VIP badge,
-      // world title, coordinates, and bottom verified watermark.
-      // Resolves in 0ms when cached in memory, triggering instant native Save to Photos on mobile/tablet.
-      const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
-      if (result?.blob) {
-        await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
-        return;
-      }
-
-      // 2. Direct video fallback if composite generation unavailable
-      if (activeVideoUrl) {
-        const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
-        const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-        const rawBlob = await response.blob();
-        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-        await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-        return;
-      }
+      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText);
     } finally {
       setIsExportingTrailer(false);
     }

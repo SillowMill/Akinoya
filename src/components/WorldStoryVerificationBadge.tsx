@@ -1240,6 +1240,66 @@ export async function downloadOrShareFileBlob(
 }
 
 /**
+ * Bulletproof direct native download trigger:
+ * Completely removes blocking JavaScript wrappers, heavy async blob logic, or stalling download routines.
+ * Directly triggers the native system download manager on iOS, Android, and Desktop browsers.
+ */
+export function triggerDirectDownload(url: string, filename: string): void {
+  if (!url) return;
+  const safeUrl =
+    url.startsWith('http') || url.startsWith('/') || url.startsWith('blob:') || url.startsWith('data:')
+      ? url
+      : `/${url}`;
+
+  const a = document.createElement('a');
+  a.href = safeUrl;
+  a.download = filename;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    try {
+      if (document.body.contains(a)) {
+        document.body.removeChild(a);
+      }
+    } catch {}
+  }, 350);
+}
+
+/**
+ * Direct video download handler:
+ * Instantly triggers native system download sheet or camera roll save without blocking or stalling.
+ */
+export async function downloadOrShareVideoDirect(
+  videoUrl: string,
+  filename: string,
+  title: string = 'Sillow Mill 9:16 Video Trailer',
+  text: string = 'Verified Genesis World 9:16 Video Trailer · Sillow Mill'
+): Promise<void> {
+  const isMobile = isMobileOrTabletDevice();
+  const safeUrl = videoUrl || '/assets/videos/amlemi_trailer.mp4';
+
+  if (isMobile && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    if (brandedTrailerBlobCache.has(safeUrl)) {
+      try {
+        const cachedBlob = brandedTrailerBlobCache.get(safeUrl)!;
+        const file = new File([cachedBlob], filename, { type: 'video/mp4' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title, text });
+          return;
+        }
+      } catch (err: any) {
+        if (err?.name === 'AbortError') return;
+      }
+    }
+  }
+
+  // Instant direct native download link trigger
+  triggerDirectDownload(safeUrl, filename);
+}
+
+/**
  * Downloads or shares an MP4 video trailer blob with camera roll support on mobile.
  */
 export async function downloadOrShareVideoBlob(
@@ -1720,22 +1780,17 @@ export const LiveStoryTrailerViewport: React.FC<{
   const handleToggleAudio = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    soundManager.playTone(isMuted ? 680 : 440, 0.05);
-    const nextMuted = !isMuted;
-    if (onToggleAudio) {
-      onToggleAudio();
-    } else {
-      setInternalMuted(nextMuted);
-    }
     const video = videoRef.current;
     if (video) {
-      requestAnimationFrame(() => {
-        if (!video) return;
-        video.muted = nextMuted;
-        if (video.paused) {
-          video.play().catch(() => {});
-        }
-      });
+      // Modify ONLY the .muted property directly via JavaScript - zero parent container reflow
+      video.muted = !video.muted;
+      soundManager.playTone(video.muted ? 440 : 680, 0.05);
+      if (video.paused) {
+        video.play().catch(() => {});
+      }
+      setInternalMuted(video.muted);
+    } else {
+      setInternalMuted((prev) => !prev);
     }
   };
 
@@ -1789,17 +1844,6 @@ export const LiveStoryTrailerViewport: React.FC<{
       cancelAnimationFrame(rafId);
     };
   }, [dossier, meta, photoCards]);
-
-  // Background pre-warm branded composite trailer so single-tap Save to Photos is instantaneous
-  // On mobile/tablet, delay pre-warming so it never competes with the active video player's initial playback
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const delay = isMobileOrTabletDevice() ? 3500 : 800;
-    const timer = setTimeout(() => {
-      exportWorldTrailerVideoBlob(dossier, undefined, videoUrl).catch(() => {});
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [dossier?.id, videoUrl]);
 
   const posterUrl = useMemo(
     () => (photoCards[0]?.url ? getCacheBustedUrl(photoCards[0].url) : undefined),
@@ -2050,18 +2094,6 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
     setIsMobileDevice(isMobileOrTabletDevice());
   }, []);
 
-  // Proactively pre-warm exact 5-second branded trailer in memory
-  // On mobile/tablet, delay pre-warming so it never competes with active card interactions or video initialization
-  useEffect(() => {
-    if (!dossier || typeof window === 'undefined') return;
-    const vUrl = dynamicVideo.videoUrl || dossier.videoUrl || dossier.renders?.videoUrl || dossier.renders?.video_url;
-    const delay = isMobileDevice ? 3500 : 700;
-    const timer = setTimeout(() => {
-      exportWorldTrailerVideoBlob(dossier, editionRank, vUrl).catch(() => {});
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [dossier?.id, editionRank, dynamicVideo.videoUrl, isMobileDevice]);
-
   const handleDownloadStoryBadge = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
     soundManager.playTone(780, 0.07);
@@ -2092,33 +2124,15 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
     const shareTitle = `${dossier.planetName || 'Ämlemi'} — Sillow Mill 9:16 Trailer`;
     const shareText = `Verified Planetary Dossier: ${dossier.planetName || 'Ämlemi'} (${meta.verificationCode})`;
 
+    const activeVideoUrl =
+      dynamicVideo.videoUrl ||
+      dossier.videoUrl ||
+      dossier.renders?.videoUrl ||
+      dossier.renders?.video_url ||
+      '/assets/videos/amlemi_trailer.mp4';
+
     try {
-      const activeVideoUrl =
-        dynamicVideo.videoUrl ||
-        dossier.videoUrl ||
-        dossier.renders?.videoUrl ||
-        dossier.renders?.video_url ||
-        '';
-
-      // 1. Official branded template composite export:
-      // Permanently burns in official Sillow Mill logo, typography, FOUNDING PIONEER / VIP badge,
-      // world title, coordinates, and bottom verified watermark.
-      // Resolves in 0ms when cached in memory, triggering instant native Save to Photos on mobile/tablet.
-      const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
-      if (result?.blob) {
-        await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
-        return;
-      }
-
-      // 2. Direct video fallback if composite generation unavailable
-      if (activeVideoUrl) {
-        const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
-        const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-        const rawBlob = await response.blob();
-        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-        await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-        return;
-      }
+      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText);
     } finally {
       setIsExportingTrailer(false);
     }

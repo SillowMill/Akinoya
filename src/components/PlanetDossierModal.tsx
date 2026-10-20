@@ -35,14 +35,12 @@ import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '..
 import { formatTitleCaseUserName } from '../utils/holder';
 import {
   LiveStoryTrailerViewport,
-  exportWorldTrailerVideoBlob,
-  downloadOrShareVideoBlob,
-  downloadOrShareFileBlob,
-  optimizeMp4FastStart,
   useDynamicWorldVideo,
   deriveWorldVerificationMeta,
   isMobileOrTabletDevice,
   getCacheBustedUrl,
+  downloadOrShareVideoDirect,
+  triggerDirectDownload,
 } from './WorldStoryVerificationBadge';
 
 export interface PlanetDossierModalProps {
@@ -170,17 +168,6 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
     '';
   const heroPhotoUrl = photoCards[0]?.url || activePlanet?.renders?.hero || '';
 
-  // Proactively pre-warm exact 5-second branded trailer in memory when modal is open
-  // On mobile/tablet, delay pre-warming so modal opening and video initialization remain butter-smooth
-  useEffect(() => {
-    if (!isOpen || !activePlanet || typeof window === 'undefined') return;
-    const delay = isMobileOrTabletDevice() ? 3500 : 700;
-    const timer = setTimeout(() => {
-      exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl).catch(() => {});
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [isOpen, activePlanet?.id, videoUrl]);
-
   const handleDownloadTrailer = async () => {
     if (!activePlanet) return;
     soundManager.playTone(740, 0.06);
@@ -193,25 +180,8 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
     const shareText = `Verified Planetary Dossier: ${activePlanet.planetName || 'Ämlemi'}`;
 
     try {
-      // 1. Official branded template composite export:
-      // Permanently burns in official Sillow Mill logo, typography, FOUNDING PIONEER / VIP badge,
-      // world title, coordinates, and bottom verified watermark.
-      // Resolves in 0ms when cached in memory, triggering instant native Save to Photos on mobile/tablet.
-      const result = await exportWorldTrailerVideoBlob(activePlanet, undefined, videoUrl);
-      if (result?.blob) {
-        await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
-        return;
-      }
-
-      // 2. Direct video fallback if composite generation unavailable
-      if (videoUrl) {
-        const cacheBustedUrl = getCacheBustedUrl(videoUrl);
-        const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-        const rawBlob = await response.blob();
-        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-        await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-        return;
-      }
+      const activeVideoUrl = videoUrl || '/assets/videos/amlemi_trailer.mp4';
+      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText);
     } finally {
       setIsDownloading(false);
     }
@@ -224,16 +194,9 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
     const safePlanet = (activePlanet.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const safeTitle = (photo.title || 'photo').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const filename = `sillowmill-${safePlanet}-${safeTitle}.jpg`;
-    const shareTitle = `${activePlanet.planetName || 'Ämlemi'} — ${photo.title}`;
-    const shareText = `Verified Genesis World: ${photo.title}`;
 
     try {
-      const cacheBustedUrl = getCacheBustedUrl(photo.url);
-      const res = await fetch(cacheBustedUrl, { cache: 'no-store' });
-      if (res.ok) {
-        const blob = await res.blob();
-        await downloadOrShareFileBlob(blob, filename, 'image/jpeg', shareTitle, shareText);
-      }
+      triggerDirectDownload(photo.url, filename);
     } finally {
       setIsDownloading(false);
     }
