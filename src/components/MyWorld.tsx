@@ -262,11 +262,19 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
               <video
                 src={getCacheBustedUrl(videoUrl)}
                 poster={heroPhotoUrl ? getCacheBustedUrl(heroPhotoUrl) : undefined}
-                controls
                 autoPlay
                 loop
                 muted
                 playsInline
+                preload="auto"
+                disablePictureInPicture
+                disableRemotePlayback
+                controlsList="nodownload nofullscreen noremoteplayback"
+                {...({
+                  'webkit-playsinline': 'true',
+                  'x5-playsinline': 'true',
+                  playsinline: 'true',
+                } as any)}
                 className="w-full h-full object-cover"
                 style={{
                   transform: 'translate3d(0, 0, 0)',

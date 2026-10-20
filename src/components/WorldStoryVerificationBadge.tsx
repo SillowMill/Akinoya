@@ -1341,6 +1341,8 @@ export async function exportWorldTrailerVideoBlob(
         v.crossOrigin = 'anonymous';
         v.muted = false;
         v.playsInline = true;
+        v.setAttribute('webkit-playsinline', 'true');
+        v.setAttribute('playsinline', 'true');
         v.preload = 'auto';
         v.loop = true;
 
@@ -1676,20 +1678,29 @@ export const LiveStoryTrailerViewport: React.FC<{
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = isMuted;
-    }
+    const video = videoRef.current;
+    if (!video) return;
+    const rafId = requestAnimationFrame(() => {
+      if (video) {
+        video.muted = isMuted;
+      }
+    });
+    return () => cancelAnimationFrame(rafId);
   }, [isMuted]);
 
-  // Sync video play/pause status when controlled externally
+  // Sync video play/pause status when controlled externally (wrapped in RAF for 60fps smoothness)
   useEffect(() => {
-    if (videoRef.current && isPlaying !== undefined) {
-      if (isPlaying && videoRef.current.paused) {
-        videoRef.current.play().catch(() => {});
-      } else if (!isPlaying && !videoRef.current.paused) {
-        videoRef.current.pause();
+    const video = videoRef.current;
+    if (!video || isPlaying === undefined) return;
+    const rafId = requestAnimationFrame(() => {
+      if (!video) return;
+      if (isPlaying && video.paused) {
+        video.play().catch(() => {});
+      } else if (!isPlaying && !video.paused) {
+        video.pause();
       }
-    }
+    });
+    return () => cancelAnimationFrame(rafId);
   }, [isPlaying]);
 
   const handleToggleAudio = (e: React.MouseEvent) => {
@@ -1702,11 +1713,15 @@ export const LiveStoryTrailerViewport: React.FC<{
     } else {
       setInternalMuted(nextMuted);
     }
-    if (videoRef.current) {
-      videoRef.current.muted = nextMuted;
-      if (videoRef.current.paused) {
-        videoRef.current.play().catch(() => {});
-      }
+    const video = videoRef.current;
+    if (video) {
+      requestAnimationFrame(() => {
+        if (!video) return;
+        video.muted = nextMuted;
+        if (video.paused) {
+          video.play().catch(() => {});
+        }
+      });
     }
   };
 
@@ -1808,6 +1823,14 @@ export const LiveStoryTrailerViewport: React.FC<{
             muted={isMuted}
             playsInline
             preload="auto"
+            disablePictureInPicture
+            disableRemotePlayback
+            controlsList="nodownload nofullscreen noremoteplayback"
+            {...({
+              'webkit-playsinline': 'true',
+              'x5-playsinline': 'true',
+              playsinline: 'true',
+            } as any)}
             onPlay={() => {
               onPlaybackStateChange?.(true);
             }}
@@ -2056,14 +2079,6 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       }
 
       // 2. Direct video fallback if composite generation unavailable
-      if (activeVideoUrl) {
-        const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
-        const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-        const rawBlob = await response.blob();
-        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-        await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-        return;
-      }
       if (activeVideoUrl) {
         const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
         const response = await fetch(cacheBustedUrl, { cache: 'no-store' });

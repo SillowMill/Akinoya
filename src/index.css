@@ -402,3 +402,26 @@ canvas {
   -webkit-backface-visibility: hidden;
 }
 
+/* ==========================================================================
+   MOBILE & TABLET VIDEO PLAYER OPTIMIZATION (JANK-FREE 60FPS)
+   Disables heavy transitions & active transforms during interactions
+   on mobile viewports (iOS Safari / iPhone / iPad) to prevent stutter.
+   ========================================================================== */
+@media (max-width: 768px) {
+  .video-viewport-wrapper,
+  .video-stage-container,
+  .touch-pan-y-lock,
+  .touch-control-lock,
+  video,
+  canvas {
+    transition: none !important;
+    -webkit-transition: none !important;
+  }
+
+  .video-stage-container:active,
+  .video-viewport-wrapper:active {
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+}
+

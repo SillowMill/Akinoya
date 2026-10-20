@@ -742,16 +742,19 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
         e.preventDefault();
       }
     }
-    if (videoElementRef.current) {
-      if (videoElementRef.current.paused) {
-        soundManager.playTone(660, 0.05);
-        videoElementRef.current.play().catch(() => {});
-        setIsPlayingVideo(true);
-      } else {
-        soundManager.playTone(440, 0.05);
-        videoElementRef.current.pause();
-        setIsPlayingVideo(false);
-      }
+    const video = videoElementRef.current;
+    if (video) {
+      const willPlay = video.paused;
+      soundManager.playTone(willPlay ? 660 : 440, 0.05);
+      requestAnimationFrame(() => {
+        if (!video) return;
+        if (willPlay) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+        setIsPlayingVideo(willPlay);
+      });
     } else {
       soundManager.playTone(isPlayingVideo ? 440 : 660, 0.05);
       setIsPlayingVideo((prev) => !prev);
@@ -765,11 +768,15 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
         e.preventDefault();
       }
     }
-    if (videoElementRef.current) {
-      const nextMuted = !videoElementRef.current.muted;
+    const video = videoElementRef.current;
+    if (video) {
+      const nextMuted = !video.muted;
       soundManager.playTone(nextMuted ? 440 : 680, 0.05);
-      videoElementRef.current.muted = nextMuted;
-      setIsMuted(nextMuted);
+      requestAnimationFrame(() => {
+        if (!video) return;
+        video.muted = nextMuted;
+        setIsMuted(nextMuted);
+      });
     } else {
       soundManager.playTone(isMuted ? 680 : 440, 0.05);
       setIsMuted((prev) => !prev);
@@ -1227,9 +1234,12 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                 }}
                 className="flex flex-col lg:flex-row items-center justify-center gap-6 md:gap-8 py-2"
               >
-                {/* 9:16 Animated Video Trailer Stage with Fullscreen Click Handler */}
+                {/* 9:16 Animated Video Trailer Stage */}
                 <div
-                  onClick={() => openFullscreenViewer('video_trailer')}
+                  onClick={(e) => {
+                    // Tap on stage toggles playback cleanly without triggering fullscreen takeover
+                    toggleVideoPlayback(e);
+                  }}
                   style={{
                     transform: 'translate3d(0, 0, 0)',
                     WebkitTransform: 'translate3d(0, 0, 0)',
@@ -1238,15 +1248,24 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                     WebkitBackfaceVisibility: 'hidden',
                     touchAction: 'pan-y',
                   }}
-                  className="relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none cursor-pointer group active:scale-[0.99] transition-all hover:border-cyan-300 hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)] touch-pan-y-lock"
+                  className="video-stage-container relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none cursor-pointer group md:hover:border-cyan-300 md:hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)] md:transition-all touch-pan-y-lock"
                 >
-                  {/* Interactive Fullscreen Tap Badge - Exclusively Mobile/Tablet (lg:hidden) */}
-                  <div className="absolute top-3.5 right-3.5 z-30 pointer-events-none lg:hidden">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/85 border border-cyan-400/70 text-[9px] font-mono font-bold text-cyan-300 tracking-wider shadow-lg backdrop-blur-md group-hover:scale-105 group-hover:bg-cyan-950/90 transition-all">
+                  {/* Interactive Fullscreen Tap Badge */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openFullscreenViewer('video_trailer');
+                    }}
+                    className="absolute top-3.5 right-3.5 z-30 pointer-events-auto cursor-pointer focus:outline-none"
+                    title="Open Fullscreen 9:16"
+                    aria-label="Open Fullscreen 9:16"
+                  >
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/85 border border-cyan-400/70 text-[9px] font-mono font-bold text-cyan-300 tracking-wider shadow-lg backdrop-blur-md hover:bg-cyan-950/90 hover:scale-105 transition-all">
                       <Maximize2 className="w-3 h-3 text-cyan-300" />
                       <span>FULLSCREEN 9:16</span>
                     </div>
-                  </div>
+                  </button>
 
                   <LiveStoryTrailerViewport
                     dossier={dossier}
