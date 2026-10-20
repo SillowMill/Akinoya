@@ -211,16 +211,28 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/95">
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/95"
+        style={{ overscrollBehavior: 'contain' }}
+      >
         {/* Backdrop click to dismiss */}
-        <div className="fixed inset-0 pointer-events-auto" onClick={handleClose} />
+        <div
+          className="fixed inset-0 pointer-events-auto touch-none"
+          style={{ touchAction: 'none' }}
+          onClick={handleClose}
+        />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.94, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 16 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 max-w-2xl w-full bg-[#050812] border border-white/15 rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-7 md:p-8 shadow-[0_0_60px_rgba(245,158,11,0.25)] overflow-hidden my-auto max-h-[92dvh] overflow-y-auto"
+          className="relative z-10 max-w-2xl w-full bg-[#050812] border border-white/15 rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-7 md:p-8 shadow-[0_0_60px_rgba(245,158,11,0.25)] overflow-hidden my-auto max-h-[92dvh] overflow-y-auto touch-pan-y-lock"
+          style={{
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y',
+            WebkitOverflowScrolling: 'touch',
+          }}
         >
           {/* Subtle Ambient Gold Accents */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -230,10 +242,6 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
           <button
             type="button"
             onClick={handleClose}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              handleClose();
-            }}
             className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer z-30 touch-manipulation select-none border border-white/15 shadow-md active:scale-95"
             aria-label="Close modal"
           >

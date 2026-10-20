@@ -127,11 +127,40 @@
   }
 }
 
-/* Root-level horizontal guard (does not affect sticky) */
+/* Root-level horizontal guard & universal touch stabilization */
 html,
 body {
   overflow-x: clip;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Universal touch stabilization: eliminate double-tap zoom delay */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-pan-y-lock,
+.video-viewport-wrapper,
+.carousel-card-touch {
+  touch-action: pan-y !important;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.touch-control-lock {
+  touch-action: none !important;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Fixed background layer sized to the LARGEST viewport so iPad Safari toolbar

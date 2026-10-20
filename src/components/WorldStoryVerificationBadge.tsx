@@ -2158,7 +2158,15 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className={`relative w-full aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/60 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none group transition-transform duration-300 ${
+        style={{
+          transform: 'translate3d(0, 0, 0)',
+          WebkitTransform: 'translate3d(0, 0, 0)',
+          willChange: 'transform',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          touchAction: 'pan-y',
+        }}
+        className={`relative w-full aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/60 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none group transition-transform duration-300 touch-pan-y-lock ${
           !isInsideModal ? 'cursor-pointer hover:scale-[1.01] hover:border-amber-300' : ''
         }`}
         title={!isInsideModal ? 'Click to open Fullscreen 9:16 Card & Trailer Viewer (Swipe or click arrows to toggle)' : undefined}
@@ -2652,8 +2660,15 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         typeof document !== 'undefined' &&
         createPortal(
           <div
-            style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity', overflowAnchor: 'none' }}
-            className="fixed inset-0 z-[9999] bg-black/92 backdrop-blur-2xl flex flex-col items-center justify-between p-4 sm:p-6 overflow-y-auto transform-gpu"
+            style={{
+              transform: 'translate3d(0,0,0)',
+              WebkitTransform: 'translate3d(0,0,0)',
+              willChange: 'transform, opacity',
+              overflowAnchor: 'none',
+              overscrollBehavior: 'contain',
+              touchAction: 'pan-y',
+            }}
+            className="fixed inset-0 z-[9999] bg-black/92 backdrop-blur-2xl flex flex-col items-center justify-between p-4 sm:p-6 overflow-y-auto transform-gpu touch-pan-y-lock"
             onClick={() => setIsFullscreenOpen(false)}
           >
             {/* Top Modal Bar: View Switcher & Close */}

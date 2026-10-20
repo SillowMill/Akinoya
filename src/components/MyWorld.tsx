@@ -247,7 +247,17 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
           </div>
 
           {/* Strict 9:16 Vertical Viewport */}
-          <div className="relative w-full max-w-[260px] md:max-w-[290px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_35px_rgba(6,182,212,0.3)] flex items-center justify-center">
+          <div
+            className="relative w-full max-w-[260px] md:max-w-[290px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_35px_rgba(6,182,212,0.3)] flex items-center justify-center touch-pan-y-lock"
+            style={{
+              transform: 'translate3d(0, 0, 0)',
+              WebkitTransform: 'translate3d(0, 0, 0)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              touchAction: 'pan-y',
+            }}
+          >
             {isVideoReady ? (
               <video
                 src={getCacheBustedUrl(videoUrl)}
@@ -258,6 +268,12 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                 muted
                 playsInline
                 className="w-full h-full object-cover"
+                style={{
+                  transform: 'translate3d(0, 0, 0)',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                }}
               />
             ) : (
               <div className="relative w-full h-full flex flex-col items-center justify-center p-4 text-center overflow-hidden">

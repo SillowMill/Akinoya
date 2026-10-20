@@ -398,12 +398,25 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                 {/* Main Viewport: Either 9:16 Vertical Trailer or 16:9 Photo */}
                 {isTrailerTab ? (
                   <div
-                    className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#070d1e] via-[#050813] to-black border border-amber-400/40 shadow-[0_0_40px_rgba(245,158,11,0.18)] p-4 sm:p-6 flex flex-col items-center space-y-4"
+                    className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#070d1e] via-[#050813] to-black border border-amber-400/40 shadow-[0_0_40px_rgba(245,158,11,0.18)] p-4 sm:p-6 flex flex-col items-center space-y-4 touch-pan-y-lock"
+                    style={{
+                      touchAction: 'pan-y',
+                    }}
                     onTouchStart={handleTouchStartStage}
                     onTouchEnd={handleTouchEndStage}
                   >
                     {/* Strict 9:16 Vertical Video / Trailer Montage Player */}
-                    <div className="relative w-full max-w-[240px] xs:max-w-[270px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center">
+                    <div
+                      className="relative w-full max-w-[240px] xs:max-w-[270px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center touch-pan-y-lock"
+                      style={{
+                        transform: 'translate3d(0, 0, 0)',
+                        WebkitTransform: 'translate3d(0, 0, 0)',
+                        willChange: 'transform',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        touchAction: 'pan-y',
+                      }}
+                    >
                       {meta && (
                         <LiveStoryTrailerViewport
                           dossier={activePlanet}
@@ -472,7 +485,8 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                   </div>
                 ) : (
                   <div
-                    className="relative aspect-[16/10] sm:aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden bg-black/95 border border-cyan-500/40 shadow-[0_0_40px_rgba(56,189,248,0.15)] group"
+                    className="relative aspect-[16/10] sm:aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden bg-black/95 border border-cyan-500/40 shadow-[0_0_40px_rgba(56,189,248,0.15)] group touch-pan-y-lock"
+                    style={{ touchAction: 'pan-y' }}
                     onTouchStart={handleTouchStartStage}
                     onTouchEnd={handleTouchEndStage}
                   >

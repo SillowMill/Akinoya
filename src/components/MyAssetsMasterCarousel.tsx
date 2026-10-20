@@ -738,22 +738,22 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
   const toggleVideoPlayback = (e?: React.SyntheticEvent) => {
     if (e) {
       e.stopPropagation();
-      if (e.type === 'touchend') {
-        lastTouchTimeRef.current = Date.now();
-      } else if (e.type === 'click' && Date.now() - lastTouchTimeRef.current < 450) {
-        return;
+      if ('preventDefault' in e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
       }
     }
-    soundManager.playTone(isPlayingVideo ? 440 : 660, 0.05);
     if (videoElementRef.current) {
       if (videoElementRef.current.paused) {
+        soundManager.playTone(660, 0.05);
         videoElementRef.current.play().catch(() => {});
         setIsPlayingVideo(true);
       } else {
+        soundManager.playTone(440, 0.05);
         videoElementRef.current.pause();
         setIsPlayingVideo(false);
       }
     } else {
+      soundManager.playTone(isPlayingVideo ? 440 : 660, 0.05);
       setIsPlayingVideo((prev) => !prev);
     }
   };
@@ -761,17 +761,17 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
   const toggleAudio = (e?: React.SyntheticEvent) => {
     if (e) {
       e.stopPropagation();
-      if (e.type === 'touchend') {
-        lastAudioTouchTimeRef.current = Date.now();
-      } else if (e.type === 'click' && Date.now() - lastAudioTouchTimeRef.current < 450) {
-        return;
+      if ('preventDefault' in e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
       }
     }
-    soundManager.playTone(isMuted ? 680 : 440, 0.05);
     if (videoElementRef.current) {
-      videoElementRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
+      const nextMuted = !videoElementRef.current.muted;
+      soundManager.playTone(nextMuted ? 440 : 680, 0.05);
+      videoElementRef.current.muted = nextMuted;
+      setIsMuted(nextMuted);
     } else {
+      soundManager.playTone(isMuted ? 680 : 440, 0.05);
       setIsMuted((prev) => !prev);
     }
   };
@@ -987,7 +987,10 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
         </button>
 
         {/* Dynamic Multi-Media Carousel Slides Container */}
-        <div className="w-full px-2 sm:px-8 lg:px-10">
+        <div
+          className="w-full px-2 sm:px-8 lg:px-10 touch-pan-y-lock"
+          style={{ touchAction: 'pan-y' }}
+        >
           <AnimatePresence mode="wait" custom={slideDirection}>
             {/* ══════════════════════════════════════════════════════════════════
                 SLIDE 1: 4K PLANETARY RENDER ARCHIVE (Image 4 format)
@@ -1227,7 +1230,15 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                 {/* 9:16 Animated Video Trailer Stage with Fullscreen Click Handler */}
                 <div
                   onClick={() => openFullscreenViewer('video_trailer')}
-                  className="relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none cursor-pointer group active:scale-[0.99] transition-all hover:border-cyan-300 hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)]"
+                  style={{
+                    transform: 'translate3d(0, 0, 0)',
+                    WebkitTransform: 'translate3d(0, 0, 0)',
+                    willChange: 'transform',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    touchAction: 'pan-y',
+                  }}
+                  className="relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none cursor-pointer group active:scale-[0.99] transition-all hover:border-cyan-300 hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)] touch-pan-y-lock"
                 >
                   {/* Interactive Fullscreen Tap Badge - Exclusively Mobile/Tablet (lg:hidden) */}
                   <div className="absolute top-3.5 right-3.5 z-30 pointer-events-none lg:hidden">
@@ -1253,12 +1264,14 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                   />
 
                   {/* Playback Controls Floating Bar */}
-                  <div className="absolute bottom-14 left-3 right-3 z-30 flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-black/85 border border-white/20 backdrop-blur-md">
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute bottom-14 left-3 right-3 z-30 flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-black/85 border border-white/20 backdrop-blur-md touch-control-lock"
+                  >
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={toggleVideoPlayback}
-                        onTouchEnd={toggleVideoPlayback}
                         className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
                         title={isPlayingVideo ? 'Pause Video' : 'Play Video'}
                       >
@@ -1267,7 +1280,6 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       <button
                         type="button"
                         onClick={toggleAudio}
-                        onTouchEnd={toggleAudio}
                         className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
                         title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
                       >
@@ -1526,12 +1538,14 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         videoElementRef.current = el;
                       }}
                     />
-                    <div className="absolute bottom-3 left-3 right-3 z-30 flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-black/85 border border-white/20 backdrop-blur-md">
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute bottom-3 left-3 right-3 z-30 flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-black/85 border border-white/20 backdrop-blur-md touch-control-lock"
+                    >
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={toggleVideoPlayback}
-                          onTouchEnd={toggleVideoPlayback}
                           className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
                           title={isPlayingVideo ? 'Pause Video' : 'Play Video'}
                         >
@@ -1540,7 +1554,6 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         <button
                           type="button"
                           onClick={toggleAudio}
-                          onTouchEnd={toggleAudio}
                           className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
                           title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
                         >
