@@ -111,22 +111,10 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
     const shareText = `Verified Planetary Dossier: ${dossier.planetName || 'Ämlemi'}`;
 
     try {
-      const isMobile = isMobileOrTabletDevice();
-
-      // MOBILE & TABLET DIRECT-TO-PHOTOS PIPELINE:
-      // High-speed fetch preserves user gesture token for single-tap native Save-to-Photos.
-      // Bypasses generic browser download dialogs so media saves directly to native gallery ("Foto's").
-      if (isMobile) {
-        const cacheBustedUrl = getCacheBustedUrl(videoUrl);
-        const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-        const rawBlob = await response.blob();
-        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-        await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-        return;
-      }
-
-      // DESKTOP PIPELINE:
-      // Run full-fidelity 4K canvas composite generation with burned-in branding straight to Downloads
+      // 1. Official branded template composite export:
+      // Permanently burns in official Sillow Mill logo, typography, FOUNDING PIONEER / VIP badge,
+      // world title, coordinates, and bottom verified watermark.
+      // Resolves in 0ms when cached in memory, triggering instant native Save to Photos on mobile/tablet.
       const result = await exportWorldTrailerVideoBlob(dossier, undefined, videoUrl);
       if (result?.blob) {
         await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);

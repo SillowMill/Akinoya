@@ -43,7 +43,7 @@ export const SoundtrackButton: React.FC = () => {
 
       {/* Track Label — compact on iPad portrait (md) so header navigation never clips */}
       <div className="hidden sm:flex items-center gap-1.5 overflow-hidden min-w-0">
-        <span className="font-medium tracking-wide truncate max-w-[110px] lg:max-w-[140px]">
+        <span className="font-medium tracking-wide truncate max-w-[75px] md:max-w-[85px] lg:max-w-[130px]">
           Bingäa
         </span>
         <span

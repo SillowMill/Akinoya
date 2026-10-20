@@ -606,23 +606,26 @@ export function recordFalUsage(entry: {
 export const getFalApiKey = (): string => {
   let key = (
     process.env.FAL_KEY ||
+    process.env.VAULT_AI_KEY ||
     process.env.VAL_AI_KEY ||
     process.env.VITE_FAL_KEY ||
+    process.env.VITE_VAULT_AI_KEY ||
     process.env.VITE_VAL_AI_KEY ||
     process.env.FAL_API_KEY ||
     process.env.VAL_API_KEY ||
+    process.env.VAULT_API_KEY ||
     ''
   ).trim();
 
   // If not yet in process.env, inspect dotenv files safely without hardcoding
   if (!key) {
-    const envCandidates = ['.env.local', '.env.production.local', '.env'];
+    const envCandidates = ['.env.production.local', '.env.local', '.env'];
     for (const envFile of envCandidates) {
       try {
         const fullPath = path.resolve(process.cwd(), envFile);
         if (fs.existsSync(fullPath)) {
           const raw = fs.readFileSync(fullPath, 'utf8');
-          const match = raw.match(/^(?:FAL_KEY|VAL_AI_KEY|VITE_FAL_KEY)\s*=\s*["']?([^"'\r\n]+)["']?/m);
+          const match = raw.match(/^(?:FAL_KEY|VAULT_AI_KEY|VAL_AI_KEY|VITE_FAL_KEY|VITE_VAULT_AI_KEY)\s*=\s*["']?([^"'\r\n]+)["']?/m);
           if (match && match[1]) {
             key = match[1].trim();
             process.env.FAL_KEY = key;

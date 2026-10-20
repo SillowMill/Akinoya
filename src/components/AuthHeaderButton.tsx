@@ -205,11 +205,11 @@ export const AuthHeaderButton: React.FC = () => {
 
         {/* Greeting + Role Badge (Hidden on mobile <640px, compact on iPad portrait md) */}
         <div className="hidden sm:flex flex-col text-left min-w-0">
-          <div className="text-[10.5px] lg:text-[11px] font-sans font-semibold text-white group-hover:text-cyan-200 transition-colors leading-tight truncate max-w-[90px] lg:max-w-[140px]">
-            <span className="hidden lg:inline">Welcome, </span>{displayName}
+          <div className="text-[10.5px] lg:text-[11px] font-sans font-semibold text-white group-hover:text-cyan-200 transition-colors leading-tight truncate max-w-[85px] md:max-w-[95px] lg:max-w-[130px] xl:max-w-[160px]">
+            <span className="hidden xl:inline">Welcome, </span>{displayName}
           </div>
           <div className="flex items-center gap-1 mt-0.5">
-            <span className={`text-[8px] lg:text-[8.5px] font-mono px-1.5 py-0.2 rounded font-semibold uppercase truncate max-w-[96px] lg:max-w-none ${roleBadge.className}`}>
+            <span className={`text-[8px] lg:text-[8.5px] font-mono px-1.5 py-0.2 rounded font-semibold uppercase truncate max-w-[80px] md:max-w-[85px] lg:max-w-none ${roleBadge.className}`}>
               {roleBadge.label}
             </span>
           </div>

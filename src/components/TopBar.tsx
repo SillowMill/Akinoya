@@ -121,7 +121,8 @@ export const TopBar: React.FC<TopBarProps> = ({
             className="inline-flex items-center gap-1 lg:gap-1.5 text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
           >
             <Orbit className="w-3 h-3 lg:w-3.5 lg:h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-            <span>Galaxy Navigator</span>
+            <span className="hidden xl:inline">Galaxy Navigator</span>
+            <span className="xl:hidden">Galaxy</span>
           </a>
 
           <span className="text-white/20 select-none text-[10px] lg:text-[11px]" aria-hidden="true">|</span>
@@ -142,7 +143,8 @@ export const TopBar: React.FC<TopBarProps> = ({
             className="inline-flex items-center gap-1 lg:gap-1.5 text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
           >
             <Users className="w-3 h-3 lg:w-3.5 lg:h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-            <span>Community Hub</span>
+            <span className="hidden xl:inline">Community Hub</span>
+            <span className="xl:hidden">Community</span>
           </a>
         </nav>
 

@@ -1185,10 +1185,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               {passSubView === 'overview' ? (
                 <motion.div
                   key="pass-overview-view"
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.4 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.14 }}
+                  style={{
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                    willChange: 'transform, opacity',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    overflowAnchor: 'none',
+                  }}
                   className="space-y-4 lg:space-y-6"
                 >
                   {/* Visualizer Hub Showcase Widget with 16:9 Cinematic Thumbnail */}
@@ -1425,10 +1433,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 /* Unlocked Visualizer Hub View */
                 <motion.div
                   key="pass-hub-view"
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.14 }}
+                  style={{
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                    willChange: 'transform, opacity',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    overflowAnchor: 'none',
+                  }}
                   className="space-y-4"
                 >
                   <div className="bg-[#060a14] border border-cyan-500/30 rounded-2xl p-5 sm:p-6 lg:p-7 xl:p-8 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)]">
@@ -1602,7 +1618,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
           {/* Tab 2: Limited Comic Drop Showcase & Pre-Order */}
           {activeTab === 'edition' && (
-            <div className="space-y-4 lg:space-y-6">
+            <motion.div
+              key="edition-view"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+              style={{
+                transform: 'translateZ(0)',
+                WebkitTransform: 'translateZ(0)',
+                willChange: 'transform, opacity',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                overflowAnchor: 'none',
+              }}
+              className="space-y-4 lg:space-y-6"
+            >
               <div className="bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-7 lg:p-8 xl:p-9 relative overflow-hidden shadow-xl">
                 {/* Ambient Twinkling White Stars Across Product Showcase Container (CSS-Only, GPU-Composited) */}
                 <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
@@ -2031,7 +2062,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* Tab 3: My World — User's 5-Photo Cinematic Sci-Fi Dossier, 9:16 Story Verification Badge & Guest Simulation Mode */}

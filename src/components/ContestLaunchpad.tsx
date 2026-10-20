@@ -192,13 +192,14 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   });
   const [adminResetNotice, setAdminResetNotice] = useState<string | null>(null);
 
-  // Risk-Free Sandbox / Preview Mode for Mill's 5-Question Flow (Defaults to true when Fal.ai key is not active)
+  // Live Production Vault.ai / Fal.ai 5-Question Synthesis Flow
+  // Sandbox test mode is strictly opt-in via ?sandbox=true or explicit dev toggle
   const [isSandboxMode, setIsSandboxMode] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
+    if (typeof window === 'undefined') return false;
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('sandbox') === 'true' || urlParams.get('test') === 'true') return true;
     const stored = localStorage.getItem('akinoya_mill_sandbox_mode');
-    return stored !== null ? stored === 'true' : true;
+    return stored === 'true';
   });
   const [sandboxSuccessDossier, setSandboxSuccessDossier] = useState<PlanetSubmission | null>(null);
 

@@ -693,30 +693,10 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
         dossier.renders?.video_url ||
         '';
 
-      const isMobile = isMobileOrTabletDevice();
-
-      // MOBILE & TABLET DIRECT-TO-PHOTOS PIPELINE:
-      // High-speed fetch preserves the active user gesture token for single-tap native Save-to-Photos.
-      // Bypasses generic browser download dialogs so media saves directly to native gallery ("Foto's").
-      if (isMobile) {
-        if (activeVideoUrl) {
-          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
-          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-          const rawBlob = await response.blob();
-          const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-          await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-          return;
-        }
-
-        const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
-        if (result?.blob) {
-          await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
-        }
-        return;
-      }
-
-      // DESKTOP PIPELINE:
-      // Run full-fidelity 4K canvas composite generation with burned-in branding straight to Downloads
+      // 1. Official branded template composite export:
+      // Permanently burns in official Sillow Mill logo, typography, FOUNDING PIONEER / VIP badge,
+      // world title, coordinates, and bottom verified watermark.
+      // Resolves in 0ms when cached in memory, triggering instant native Save to Photos on mobile/tablet.
       const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
       if (result?.blob) {
         await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);

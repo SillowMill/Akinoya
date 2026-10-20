@@ -994,6 +994,13 @@ export async function downloadOrShareVideoBlob(
 }
 
 /**
+ * In-memory cache for synthesized branded trailer video blobs.
+ * Enables 0ms instantaneous exports on mobile & tablet devices, eliminating wait times
+ * and preserving transient user gestures for frictionless "Save to Photos" sheets.
+ */
+const brandedTrailerBlobCache = new Map<string, Blob>();
+
+/**
  * Generates and downloads a 9:16 video trailer loop with the official Sillow Mill template
  * and logo embedded in the exported file. Supports compositing either an active MP4 video
  * loop (with audio tracks when available) or the 5-photo Ken Burns montage.
@@ -1003,11 +1010,19 @@ export async function exportWorldTrailerVideoBlob(
   editionRank?: number,
   activeVideoUrl?: string
 ): Promise<{ blob: Blob; ext: string } | null> {
-  const isMobileOrTablet =
-    typeof navigator !== 'undefined' &&
-    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-      /Android|Mobile|Tablet/.test(navigator.userAgent));
+  const isMobileOrTablet = isMobileOrTabletDevice();
+
+  const targetVideoUrl =
+    activeVideoUrl ||
+    dossier.videoUrl ||
+    dossier.renders?.videoUrl ||
+    dossier.renders?.video_url;
+
+  const cacheKey = `${dossier.id || ''}_${dossier.planetName || ''}_${isMobileOrTablet ? 'm' : 'd'}_${targetVideoUrl || ''}`;
+  if (brandedTrailerBlobCache.has(cacheKey)) {
+    const cachedBlob = brandedTrailerBlobCache.get(cacheKey)!;
+    return { blob: cachedBlob, ext: 'mp4' };
+  }
 
   // Ultra-High 4K Resolution on Desktop (2160x3840 UHD 9:16)
   // Maximum Quality 1080x1920 FHD 9:16 on Mobile / Tablet
@@ -1061,12 +1076,6 @@ export async function exportWorldTrailerVideoBlob(
   const stream = canvas.captureStream(60);
 
   // If activeVideoUrl or dossier.videoUrl is provided, attempt to composite directly from the video stream
-  const targetVideoUrl =
-    activeVideoUrl ||
-    dossier.videoUrl ||
-    dossier.renders?.videoUrl ||
-    dossier.renders?.video_url;
-
   let videoElement: HTMLVideoElement | null = null;
   let objectUrlToRevoke: string | null = null;
 
@@ -1158,8 +1167,11 @@ export async function exportWorldTrailerVideoBlob(
   const videoDurationSec =
     videoElement && Number.isFinite(videoElement.duration) && videoElement.duration > 1
       ? videoElement.duration
-      : 6.5;
-  const durationMs = Math.min(15000, Math.max(3500, Math.round(videoDurationSec * 1000)));
+      : 5.0;
+  // On mobile & tablet, optimize loop duration to 2.8s for blistering-fast export without gesture expiration
+  const durationMs = isMobileOrTablet
+    ? Math.min(3000, Math.max(2500, Math.round(videoDurationSec * 1000)))
+    : Math.min(12000, Math.max(3500, Math.round(videoDurationSec * 1000)));
 
   return new Promise((resolve) => {
     recorder.onstop = async () => {
@@ -1171,6 +1183,7 @@ export async function exportWorldTrailerVideoBlob(
       }
       const rawBlob = new Blob(chunks, { type: supportedMime || 'video/mp4' });
       const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+      brandedTrailerBlobCache.set(cacheKey, fastStartBlob);
       resolve({ blob: fastStartBlob, ext: 'mp4' });
     };
 
@@ -1418,6 +1431,15 @@ export const LiveStoryTrailerViewport: React.FC<{
       cancelAnimationFrame(rafId);
     };
   }, [dossier, meta, photoCards]);
+
+  // Background pre-warm branded composite trailer so single-tap Save to Photos is instantaneous
+  useEffect(() => {
+    if (!videoUrl || typeof window === 'undefined') return;
+    const timer = setTimeout(() => {
+      exportWorldTrailerVideoBlob(dossier, undefined, videoUrl).catch(() => {});
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [dossier?.id, videoUrl]);
 
   const posterUrl = photoCards[0]?.url ? getCacheBustedUrl(photoCards[0].url) : undefined;
   const resolvedVideoSrc = videoUrl ? getCacheBustedUrl(videoUrl) : undefined;
@@ -1684,30 +1706,10 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         dossier.renders?.video_url ||
         '';
 
-      const isMobile = isMobileOrTabletDevice();
-
-      // MOBILE & TABLET DIRECT-TO-PHOTOS PIPELINE:
-      // Fast fetch preserves transient user gesture token for single-tap native Save-to-Photos.
-      // Bypasses generic browser download dialogs so media saves directly to native gallery ("Foto's").
-      if (isMobile) {
-        if (activeVideoUrl) {
-          const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
-          const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
-          const rawBlob = await response.blob();
-          const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-          await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
-          return;
-        }
-
-        const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
-        if (result?.blob) {
-          await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
-        }
-        return;
-      }
-
-      // DESKTOP PIPELINE:
-      // Run full-fidelity 4K canvas composite generation with burned-in branding straight to Downloads
+      // 1. Official branded template composite export:
+      // Permanently burns in official Sillow Mill logo, typography, FOUNDING PIONEER / VIP badge,
+      // world title, coordinates, and bottom verified watermark.
+      // Resolves in 0ms when cached in memory, triggering instant native Save to Photos on mobile/tablet.
       const result = await exportWorldTrailerVideoBlob(dossier, editionRank, activeVideoUrl);
       if (result?.blob) {
         await downloadOrShareVideoBlob(result.blob, filename, shareTitle, shareText);
@@ -1715,6 +1717,14 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
       }
 
       // 2. Direct video fallback if composite generation unavailable
+      if (activeVideoUrl) {
+        const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
+        const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
+        const rawBlob = await response.blob();
+        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+        await downloadOrShareVideoBlob(fastStartBlob, filename, shareTitle, shareText);
+        return;
+      }
       if (activeVideoUrl) {
         const cacheBustedUrl = getCacheBustedUrl(activeVideoUrl);
         const response = await fetch(cacheBustedUrl, { cache: 'no-store' });
