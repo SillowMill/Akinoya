@@ -6,6 +6,7 @@ import { planetSoundtrack } from '../utils/soundtrack';
 import { KeyRound, Sparkles, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff, Globe2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { openClaimWorldModal } from '../utils/pioneer';
+import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
 
 interface ComingSoonGateProps {
   onUnlockSuccess: () => void;
@@ -97,6 +98,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
         // Audio does NOT auto-play — user must press Play manually in the header widget.
 
         try {
+          localStorage.setItem('akinoya_public_unlocked', 'true');
           sessionStorage.setItem('akinoya_public_unlocked', 'true');
         } catch {
           // fallback
@@ -114,7 +116,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
         // Trigger unlock transition
         setTimeout(() => {
           onUnlockSuccess();
-        }, 850);
+        }, 700);
       } else {
         setIsVerifying(false);
         setHasError(true);
@@ -122,6 +124,32 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
         soundManager.playDenyTone();
       }
     }, 450);
+  };
+
+  const handleExploreGuestPreview = () => {
+    if (isVerifying || isSuccess) return;
+    setIsSuccess(true);
+    soundManager.playUnlockChime();
+
+    try {
+      localStorage.setItem('akinoya_public_unlocked', 'true');
+      sessionStorage.setItem('akinoya_public_unlocked', 'true');
+      sessionStorage.setItem('akinoya_portal_active_tab', 'my-world');
+    } catch {
+      // fallback
+    }
+
+    confetti({
+      particleCount: 75,
+      spread: 75,
+      origin: { y: 0.6 },
+      colors: ['#67e8f9', '#38bdf8', '#3b82f6', '#c084fc', '#ffffff'],
+      disableForReducedMotion: true,
+    });
+
+    setTimeout(() => {
+      onUnlockSuccess();
+    }, 600);
   };
 
   const handleQuickFill = () => {
@@ -232,9 +260,62 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
             </div>
           </div>
 
-          <p className="text-xs sm:text-sm text-white/70 font-sans max-w-xs md:max-w-sm leading-relaxed mb-6">
-            Enter your Äkinoya access code to unlock the portal.
+          <p className="text-xs sm:text-sm text-white/70 font-sans max-w-xs md:max-w-sm leading-relaxed mb-5">
+            Explore the Ämlemi guest world or enter your Äkinoya access code to unlock the full portal.
           </p>
+
+          {/* Primary Direct Entry: Explore Guest Preview (Ämlemi) */}
+          <div className="w-full mb-5">
+            <button
+              type="button"
+              onClick={handleExploreGuestPreview}
+              disabled={isVerifying || isSuccess}
+              className="w-full relative group overflow-hidden rounded-2xl p-[1.5px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer shadow-[0_0_25px_rgba(6,182,212,0.25)] hover:shadow-[0_0_40px_rgba(6,182,212,0.45)] hover:scale-[1.01] active:scale-[0.99]"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-500 opacity-90 group-hover:opacity-100 blur-[1px] transition-opacity" />
+              <div className="relative h-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-[#081526] via-[#091b30] to-[#06101c] p-4 sm:p-4.5 rounded-2xl border border-cyan-300/40 group-hover:border-cyan-300/80 transition-all text-left">
+                <div className="flex items-center gap-3.5 w-full sm:w-auto">
+                  <div className="relative w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-cyan-400 to-blue-600 shadow-[0_0_15px_rgba(34,211,238,0.5)] shrink-0">
+                    <img
+                      src={amlemiOrbitalImg}
+                      alt="Ämlemi Planet"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#081526] animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-mono font-bold tracking-widest text-cyan-300 uppercase">
+                        GUEST BENCHMARK PREVIEW
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded bg-cyan-400/20 text-cyan-200 text-[9px] font-mono font-semibold">
+                        INSTANT
+                      </span>
+                    </div>
+                    <h3 className="text-sm sm:text-base font-display font-extrabold text-white tracking-wide group-hover:text-cyan-200 transition-colors">
+                      EXPLORE GUEST PREVIEW (ÄMLEMI)
+                    </h3>
+                    <p className="text-[11px] text-white/60 font-sans">
+                      Orbit 3D World · Sci-Fi Dossier · 4K 9:16 Trailer
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/20 group-hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/40 text-xs font-mono font-bold tracking-wider shrink-0 transition-colors">
+                  <span>EXPLORE</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Divider between Guest Preview and Access Key */}
+          <div className="flex items-center gap-3 w-full mb-5">
+            <div className="h-px bg-white/10 flex-1" />
+            <span className="text-[10px] font-mono text-white/40 uppercase tracking-widest">
+              OR UNLOCK WITH ACCESS KEY
+            </span>
+            <div className="h-px bg-white/10 flex-1" />
+          </div>
 
           {/* Code Gate Form */}
           <form onSubmit={handleSubmit} className="w-full space-y-4">

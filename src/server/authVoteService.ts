@@ -321,8 +321,8 @@ export async function registerUserCredentials(params: {
   if (!cleanEmail || !cleanEmail.includes('@')) {
     return { success: false, error: 'Please enter a valid email address.' };
   }
-  if (!params.password || params.password.length < 8) {
-    return { success: false, error: 'Password must be at least 8 characters.' };
+  if (!params.password || params.password.length < 6) {
+    return { success: false, error: 'Password must be at least 6 characters.' };
   }
   if (!cleanFirst) {
     return { success: false, error: 'First name is required.' };
@@ -435,17 +435,41 @@ export async function updateUserPassword(
   if (!cleanEmail || !cleanEmail.includes('@')) {
     return { success: false, error: 'Please enter a valid email address.' };
   }
-  if (!newPassword || newPassword.length < 8) {
-    return { success: false, error: 'Password must be at least 8 characters.' };
+  if (!newPassword || newPassword.length < 6) {
+    return { success: false, error: 'Password must be at least 6 characters.' };
   }
 
   _userStore = loadUsersStore();
   const existing = _userStore.users[cleanEmail];
-  if (!existing) {
-    return { success: false, error: 'User record not found.' };
-  }
 
   const { salt, hash } = hashPassword(newPassword);
+
+  if (!existing) {
+    const isFounder = isFounderEmail(cleanEmail);
+    const role: UserRole = isFounder ? 'CREATOR' : 'FREE';
+    const now = new Date().toISOString();
+    const userId = `usr_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const newRecord: AuthUserRecord = {
+      id: userId,
+      email: cleanEmail,
+      firstName: cleanEmail.split('@')[0],
+      lastName: '',
+      fullName: cleanEmail.split('@')[0],
+      salt,
+      passwordHash: hash,
+      role,
+      hasVipPass: isFounder,
+      subscriptionStatus: isFounder ? 'active' : 'inactive',
+      isPioneer: true,
+      pioneerBadge: isFounder ? '[VIP-PIONEER-2027]' : '[PIONEER-2027]',
+      createdAt: now,
+      updatedAt: now,
+    };
+    _userStore.users[cleanEmail] = newRecord;
+    saveUsersStore(_userStore);
+    return { success: true };
+  }
+
   existing.salt = salt;
   existing.passwordHash = hash;
   existing.updatedAt = new Date().toISOString();

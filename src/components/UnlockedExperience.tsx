@@ -271,7 +271,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     };
   }, []);
 
-  const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
+  const { user, isVip: authIsVip, profile, role, isAuthenticated, openAuthModal } = useAuth();
   const [userDossier, setUserDossier] = useState<PlanetSubmission | null>(null);
   const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);
   const [isCopiedDossierLink, setIsCopiedDossierLink] = useState(false);
@@ -2132,11 +2132,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           type="button"
                           onClick={() => {
                             soundManager.playTone(580, 0.05);
-                            if (onNavigateToPassport) {
-                              onNavigateToPassport();
-                            } else if (typeof window !== 'undefined') {
-                              window.location.href = '/passport';
-                            }
+                            openAuthModal('signin');
                           }}
                           className="px-4 py-3.5 rounded-xl bg-cyan-950/85 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[46px]"
                         >

@@ -98,7 +98,11 @@ export default function App() {
   // Safe fallback if user state transitions to unauthenticated
   useEffect(() => {
     if (!isAuthenticated && !user && publicUnlocked) {
-      if (typeof window !== 'undefined' && !localStorage.getItem('akinoya_public_unlocked')) {
+      if (
+        typeof window !== 'undefined' &&
+        !localStorage.getItem('akinoya_public_unlocked') &&
+        !sessionStorage.getItem('akinoya_public_unlocked')
+      ) {
         setPublicUnlocked(false);
       }
     }
@@ -108,7 +112,10 @@ export default function App() {
     (isAuthenticated && Boolean(user || profile)) ||
     (role && role !== 'FREE') ||
     isUserVip ||
-    (publicUnlocked && typeof window !== 'undefined' && localStorage.getItem('akinoya_public_unlocked') === 'true')
+    (publicUnlocked &&
+      typeof window !== 'undefined' &&
+      (localStorage.getItem('akinoya_public_unlocked') === 'true' ||
+        sessionStorage.getItem('akinoya_public_unlocked') === 'true'))
   );
 
   const [viewMode, setViewMode] = useState<'orbit' | 'surface'>('orbit');

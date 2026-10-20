@@ -738,6 +738,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Step 2: Unblocked Supabase session retrieval & OTP/Magic Link exchange
         if (isSupabaseConfigured) {
+          // If returning with PKCE code parameter
+          const authCode = searchParams?.get('code');
+          if (authCode) {
+            try {
+              await supabase.auth.exchangeCodeForSession(authCode);
+            } catch (codeErr) {
+              console.warn('[AuthContext] exchangeCodeForSession notice:', codeErr);
+            }
+          }
+
           // If returning from Email Magic Link / Signup OTP with token_hash & type
           const tokenHash = searchParams?.get('token_hash');
           const otpType = searchParams?.get('type') as any;
@@ -991,13 +1001,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!cleanEmail || !cleanEmail.includes('@')) {
       return { success: false, error: 'Please enter a valid email address.' };
     }
-    if (!password || password.length < 8) {
-      return { success: false, error: 'Password must be at least 8 characters.' };
-    }
-    const hasSpecial =
-      /[!@#$%^&*()_+\-=[\]{}|;:,.<>?~`'"/\\]/.test(password) || /[^A-Za-z0-9\s]/.test(password);
-    if (!hasSpecial) {
-      return { success: false, error: 'Password must contain at least 1 special character.' };
+    if (!password || password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters.' };
     }
     if (!cleanFirst) {
       return { success: false, error: 'First name is required.' };
@@ -1039,6 +1044,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(serverData.profile));
         localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(serverData.user));
         setHasPendingVipInvitation(false);
+        try {
+          localStorage.setItem('akinoya_public_unlocked', 'true');
+          sessionStorage.setItem('akinoya_public_unlocked', 'true');
+        } catch {}
 
         // Store in local auth vault for resilient offline and cold-start fallback
         try {
@@ -1152,6 +1161,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(serverData.profile));
         localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(serverData.user));
         setHasPendingVipInvitation(false);
+        try {
+          localStorage.setItem('akinoya_public_unlocked', 'true');
+          sessionStorage.setItem('akinoya_public_unlocked', 'true');
+        } catch {}
 
         // Update local auth vault
         try {
@@ -1188,6 +1201,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(resolvedProf));
           localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify({ id: authUser.id, email: authUser.email }));
           setHasPendingVipInvitation(false);
+          try {
+            localStorage.setItem('akinoya_public_unlocked', 'true');
+            sessionStorage.setItem('akinoya_public_unlocked', 'true');
+          } catch {}
+
+          // Resiliently sync credentials to server store
+          fetch('/api/auth/update-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: cleanEmail, password }),
+          }).catch(() => {});
 
           soundManager.playUnlockChime();
           closeAuthModal();
@@ -1211,6 +1235,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify(cachedEntry.profile));
             localStorage.setItem(LOCAL_SESSION_USER_KEY, JSON.stringify(cachedEntry.user));
             setHasPendingVipInvitation(false);
+            try {
+              localStorage.setItem('akinoya_public_unlocked', 'true');
+              sessionStorage.setItem('akinoya_public_unlocked', 'true');
+            } catch {}
             soundManager.playUnlockChime();
             closeAuthModal();
             return { success: true };
@@ -1286,13 +1314,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updatePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
-    if (!newPassword || newPassword.length < 8) {
-      return { success: false, error: 'Password must be at least 8 characters.' };
-    }
-    const hasSpecial =
-      /[!@#$%^&*()_+\-=[\]{}|;:,.<>?~`'"/\\]/.test(newPassword) || /[^A-Za-z0-9\s]/.test(newPassword);
-    if (!hasSpecial) {
-      return { success: false, error: 'Password must contain at least 1 special character.' };
+    if (!newPassword || newPassword.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters.' };
     }
 
     let supaSuccess = false;
@@ -1312,7 +1335,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Also update server auth credentials store if user email is known
-    const targetEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+    let targetEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+    if (!targetEmail && isSupabaseConfigured) {
+      try {
+        const supaUserRes = await supabase.auth.getUser();
+        if (supaUserRes?.data?.user?.email) {
+          targetEmail = supaUserRes.data.user.email.trim().toLowerCase();
+        }
+      } catch {}
+    }
+
     if (targetEmail) {
       try {
         await fetch('/api/auth/update-password', {
@@ -1326,6 +1358,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (supaSuccess || !isSupabaseConfigured) {
+      try {
+        localStorage.setItem('akinoya_public_unlocked', 'true');
+        sessionStorage.setItem('akinoya_public_unlocked', 'true');
+        if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+          window.history.replaceState({}, '', '/');
+        }
+      } catch {}
       soundManager.playUnlockChime();
       return { success: true };
     }

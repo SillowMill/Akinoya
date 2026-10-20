@@ -46,10 +46,8 @@ export const AuthModal: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Real-time password validation criteria
-  const hasMinLength = password.length >= 8;
-  const hasSpecialChar =
-    /[!@#$%^&*()_+\-=[\]{}|;:,.<>?~`'"/\\]/.test(password) || /[^A-Za-z0-9\s]/.test(password);
+  // Real-time password validation criteria (matches Supabase minimum 6 characters requirement)
+  const hasMinLength = password.length >= 6;
   const passwordsMatch = Boolean(password && confirmPassword && password === confirmPassword);
 
   // Sync mode with context
@@ -88,12 +86,7 @@ export const AuthModal: React.FC = () => {
 
     if (mode === 'signup' || mode === 'update_password') {
       if (!hasMinLength) {
-        setError('Password must contain at least 8 characters.');
-        soundManager.playError();
-        return;
-      }
-      if (!hasSpecialChar) {
-        setError('Password must contain at least 1 special character (e.g. !@#$%^&*).');
+        setError('Password must contain at least 6 characters.');
         soundManager.playError();
         return;
       }
@@ -312,7 +305,7 @@ export const AuthModal: React.FC = () => {
                 <span>Establish New Credentials</span>
               </div>
               <p className="text-xs font-sans text-white/70 leading-relaxed">
-                Create a secure new password for your Sillow Mill profile. Minimum 8 characters with at least one special character.
+                Create a secure new password for your Sillow Mill profile. Minimum 6 characters.
               </p>
             </div>
           )}
@@ -589,24 +582,7 @@ export const AuthModal: React.FC = () => {
                         ) : (
                           <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
                         )}
-                        <span>• At least 8 characters</span>
-                      </div>
-
-                      <div
-                        className={`flex items-center gap-2 transition-colors ${
-                          hasSpecialChar
-                            ? 'text-emerald-400 font-medium'
-                            : password.length > 0
-                            ? 'text-white/60'
-                            : 'text-white/40'
-                        }`}
-                      >
-                        {hasSpecialChar ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        ) : (
-                          <span className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0 ml-1 mr-1" />
-                        )}
-                        <span>• At least 1 special character</span>
+                        <span>• At least 6 characters</span>
                       </div>
 
                       <div
