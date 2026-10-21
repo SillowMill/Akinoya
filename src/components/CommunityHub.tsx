@@ -1087,7 +1087,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     if (annualChannelIds.includes(currentChannel?.id || '') && !userHasAnnual) {
       soundManager.playTone(330, 0.08);
       alert(
-        '🔒 ANNUAL PASS REQUIRED — Messaging and asset vault access unlock for Annual Members on January 9, 2027 (€60/year).'
+        'ANNUAL PASS REQUIRED — Messaging and asset vault access unlock for Annual Members on January 9, 2027 (€60/year).'
       );
       setUpgradeModalReason(
         'Messaging and asset vault access unlock for Annual Members on January 9, 2027 (€60/year).'
@@ -1187,7 +1187,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     if (annualChannelIds.includes(postChannel?.id || '') && !userHasAnnual) {
       soundManager.playTone(330, 0.08);
       alert(
-        '🔒 ANNUAL PASS REQUIRED — Messaging and asset vault access unlock for Annual Members on January 9, 2027 (€60/year).'
+        'ANNUAL PASS REQUIRED — Messaging and asset vault access unlock for Annual Members on January 9, 2027 (€60/year).'
       );
       setUpgradeModalReason(
         'Messaging and asset vault access unlock for Annual Members on January 9, 2027 (€60/year).'
@@ -2352,7 +2352,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                           <div className="flex items-center gap-2.5 text-xs font-mono text-cyan-300">
                             <Lock className="w-4 h-4 text-cyan-400 shrink-0" />
                             <span className="whitespace-normal break-words leading-relaxed font-semibold">
-                              🔒 READ-ONLY PREVIEW — Sign in or create a free account to participate in discussion.
+                              READ-ONLY PREVIEW — Sign in or create a free account to participate in discussion.
                             </span>
                           </div>
                           <button
@@ -2370,7 +2370,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                           <div className="flex items-center gap-2.5 text-xs font-mono text-amber-300">
                             <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
                             <span className="whitespace-normal break-words leading-relaxed font-semibold">
-                              🔒 ANNUAL PASS REQUIRED — Messaging and asset vault access unlock for Annual Members on January 9, 2027 (€60/year).
+                              ANNUAL PASS REQUIRED — Messaging and asset vault access unlock for Annual Members on January 9, 2027 (€60/year).
                             </span>
                           </div>
                           <button
@@ -2708,7 +2708,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-[11px] font-mono text-cyan-300 flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5">
                           <Lock className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                          🔒 READ-ONLY PREVIEW — Sign in or create a free account to participate in discussion.
+                          READ-ONLY PREVIEW — Sign in or create a free account to participate in discussion.
                         </span>
                         <button
                           type="button"
@@ -2724,7 +2724,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-[11px] font-mono text-amber-300 flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5">
                           <Lock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                          🔒 ANNUAL PASS REQUIRED — Messaging and asset vault access unlock for Annual Members on January 9, 2027 (€60/year).
+                          ANNUAL PASS REQUIRED — Messaging and asset vault access unlock for Annual Members on January 9, 2027 (€60/year).
                         </span>
                         <button
                           type="button"

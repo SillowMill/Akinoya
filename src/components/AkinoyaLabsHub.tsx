@@ -481,13 +481,13 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       characterDownloads: [
         {
           name: 'Mill',
-          role: 'Alien Bio-Analyst',
+          role: 'Bio-Biologist',
           fileName: 'Mill — Master Character Plate',
           size: '6.7 MB',
           format: '4K Lossless Plate',
           img: millLockingImg,
           downloadUrl: '',
-          description: 'The alien bio-analyst in her environmental suit with the mushroom helmet archetype.',
+          description: 'The alien bio-biologist in her environmental suit with the mushroom helmet archetype.',
         },
         {
           name: 'Odi',
@@ -896,7 +896,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
           <div className="flex items-center gap-2.5 min-w-0">
             <Lock className="w-4 h-4 text-amber-400 shrink-0" />
             <span className="font-bold tracking-wide">
-              🔒 ANNUAL PASS REQUIRED — Downloads unlock for Paid Annual Members on January 9, 2027 (€60/year).
+              ANNUAL PASS REQUIRED — Downloads unlock for Paid Annual Members on January 9, 2027 (€60/year).
             </span>
           </div>
           <span className="text-[10px] text-amber-400/90 font-bold tracking-wider shrink-0 uppercase">
@@ -1575,7 +1575,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
                   {/* Character Locking Download Plates (Stage 02 Custom Master Files) */}
                   {selectedStageForModal.characterDownloads && (
-                    <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#0e1222]/90 to-black/90 border border-purple-500/40 space-y-4 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+                    <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#0e1222]/90 to-black/90 border border-purple-500/40 space-y-4 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
                       <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
                         <div className="flex items-center gap-2">
                           <Crown className="w-4 h-4 text-purple-400" />
@@ -1592,23 +1592,33 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         Official character turnaround sheets and visual anchors from the Character Locking vault, ready for direct multi-modal conditioning and pipeline study.
                       </p>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
-                        {selectedStageForModal.characterDownloads.map((char) => (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 pt-1">
+                        {selectedStageForModal.characterDownloads.map((char, index) => (
                           <div
                             key={char.name}
-                            className="p-3.5 rounded-2xl bg-black/70 border border-purple-500/25 hover:border-purple-400/50 space-y-3 flex flex-col justify-between transition-all"
+                            className={`p-4 sm:p-5 rounded-2xl bg-[#080d1c]/90 border border-purple-500/30 hover:border-purple-400/60 flex flex-col justify-between transition-all shadow-lg hover:shadow-[0_0_25px_rgba(168,85,247,0.2)] ${
+                              index === 2 ? 'sm:col-span-2 sm:max-w-md sm:mx-auto sm:w-full lg:col-span-1 lg:max-w-none' : ''
+                            }`}
                           >
-                            <div className="space-y-3">
+                            <div className="space-y-3.5 flex-1 flex flex-col">
                               {/* Preview Image with Stylish Asset Security Blur */}
                               <div
                                 onClick={() => setSelectedPreviewImage(char.img)}
-                                className="aspect-[4/3] rounded-xl overflow-hidden bg-black/90 border border-white/10 hover:border-purple-400/60 cursor-pointer relative group/char select-none"
+                                className="aspect-[4/3] rounded-xl overflow-hidden bg-black/90 border border-white/10 hover:border-purple-400/60 cursor-pointer relative group/char select-none shrink-0"
                               >
                                 <img
                                   src={char.img}
                                   alt={`${char.name} — ${char.role || ''}`}
                                   className="w-full h-full object-cover filter blur-[8px] group-hover/char:blur-[5px] scale-105 transition-all duration-300 pointer-events-none select-none"
                                 />
+
+                                {/* Standardized Security Badge Placement - Top Right */}
+                                <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none">
+                                  <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-black/80 border border-purple-400/40 text-purple-300 backdrop-blur-md flex items-center gap-1 font-bold shadow-sm">
+                                    <ShieldCheck className="w-3 h-3 text-purple-400" />
+                                    LOCKED
+                                  </span>
+                                </div>
 
                                 {/* Anti-Screenshot Security Overlay */}
                                 <div className="absolute inset-0 bg-black/40 group-hover/char:bg-black/20 transition-colors flex flex-col items-center justify-center p-3 text-center pointer-events-none">
@@ -1623,44 +1633,46 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                                   </span>
                                 </div>
 
-                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2 flex items-center justify-between pointer-events-none">
+                                {/* Bottom Bar: Inspect Plate & Format */}
+                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2.5 flex items-center justify-between pointer-events-none">
                                   <span className="text-[9.5px] font-mono text-cyan-300 flex items-center gap-1 font-semibold">
                                     <Eye className="w-3 h-3 text-cyan-400" /> Inspect Plate
                                   </span>
-                                  <span className="text-[8.5px] font-mono px-1.5 py-0.5 rounded-full bg-purple-900/80 border border-purple-400/30 text-purple-200">
+                                  <span className="text-[8.5px] font-mono px-2 py-0.5 rounded-full bg-purple-900/80 border border-purple-400/30 text-purple-200 font-semibold">
                                     {char.format}
                                   </span>
                                 </div>
                               </div>
 
-                              {/* Character Details (No Technical Filenames) */}
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between">
-                                  <h5 className="text-sm font-display font-bold text-white tracking-wide">
+                              {/* Character Details */}
+                              <div className="space-y-1.5 flex-1 flex flex-col">
+                                <div className="flex items-center justify-between gap-2">
+                                  <h5 className="text-sm sm:text-base font-display font-bold text-white tracking-wide">
                                     {char.name}
                                   </h5>
-                                  <span className="text-[10px] font-mono text-purple-300 px-2 py-0.5 rounded bg-purple-950/80 border border-purple-500/30 font-semibold">
+                                  <span className="text-[10px] font-mono text-purple-300 px-2.5 py-0.5 rounded-md bg-purple-950/80 border border-purple-500/30 font-semibold shrink-0">
                                     {char.size}
                                   </span>
                                 </div>
                                 {char.role && (
-                                  <span className="text-[11px] font-mono font-bold text-cyan-300 block">
+                                  <span className="text-xs font-mono font-bold text-cyan-300 block">
                                     {char.role}
                                   </span>
                                 )}
-                                <p className="text-[11px] text-white/75 font-sans leading-relaxed pt-0.5">
+                                <p className="text-xs text-white/70 font-sans leading-relaxed pt-1">
                                   {char.description}
                                 </p>
                               </div>
                             </div>
 
+                            {/* Standardized Asset Action Button */}
                             <button
                               type="button"
                               onClick={() => {
                                 soundManager.playTone(580, 0.05);
                                 if (onNavigateToVault) onNavigateToVault('folder-02');
                               }}
-                              className="w-full py-2 px-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                              className="w-full min-h-[42px] py-2.5 px-4 mt-4 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm shrink-0"
                             >
                               <FolderOpen className="w-3.5 h-3.5" />
                               <span>VIEW ASSET VAULT →</span>

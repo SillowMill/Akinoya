@@ -568,7 +568,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
   const handleDownloadFile = (file: DriveFile) => {
     soundManager.playTone(330, 0.08);
     alert(
-      `🔒 ANNUAL PASS REQUIRED — Downloads unlock for Paid Annual Members on January 9, 2027 (€60/year).\n\nFile: ${file.name} (${file.size})`
+      `ANNUAL PASS REQUIRED — Downloads unlock for Paid Annual Members on January 9, 2027 (€60/year).\n\nFile: ${file.name} (${file.size})`
     );
     if (!isMember && onOpenAuthModal) {
       onOpenAuthModal();
@@ -671,7 +671,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           <div className="flex items-center gap-2 min-w-0">
             <Lock className="w-4 h-4 text-amber-400 shrink-0" />
             <span className="font-bold tracking-wide truncate">
-              🔒 ANNUAL PASS REQUIRED — Downloads unlock for Paid Annual Members on January 9, 2027 (€60/year).
+              ANNUAL PASS REQUIRED — Downloads unlock for Paid Annual Members on January 9, 2027 (€60/year).
             </span>
           </div>
           <span className="text-[10px] text-amber-400/90 font-bold tracking-wider shrink-0 uppercase">
@@ -1065,7 +1065,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                   className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300 font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-2"
                 >
                   <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>🔒 ANNUAL PASS REQUIRED (€60/YEAR)</span>
+                  <span>ANNUAL PASS REQUIRED (€60/YEAR)</span>
                 </button>
               </div>
             </motion.div>
