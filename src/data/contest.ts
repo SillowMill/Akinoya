@@ -48,7 +48,7 @@ export const CONSTELLATION_ARMS: ConstellationArm[] = [
   { id: 'arm-centauri', name: 'CENTAURI STREAM', baseAngle: BASE_CONSTELLATION_OFFSET + (8 * Math.PI) / 5, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.45)' },
 ];
 
-export type ConstellationLayoutMode = 'spiral' | 'matrix' | 'cluster';
+export type ConstellationLayoutMode = 'spiral' | 'matrix';
 
 export interface ConstellationVariantConfig {
   mode: ConstellationLayoutMode;
@@ -60,7 +60,6 @@ export interface ConstellationVariantConfig {
 export const CONSTELLATION_LAYOUT_VARIANTS: ConstellationVariantConfig[] = [
   { mode: 'spiral', name: '5-Arm Spiral', badge: '🌀 5-ARM SPIRAL', description: 'Logarithmic tentacle filaments radiating outward' },
   { mode: 'matrix', name: 'Oval Matrix', badge: '🪐 OVAL MATRIX', description: 'Symmetrical concentric elliptical orbital highways' },
-  { mode: 'cluster', name: 'Quantum Cluster', badge: '🌌 QUANTUM CLUSTER', description: 'Asymmetric regional star clusters with quantum web connectors' },
 ];
 
 // 1. Variant A (5-Arm Spiral) constants
@@ -127,29 +126,9 @@ export const OVAL_MATRIX_TRACKS: OvalMatrixTrack[] = [
   { id: 'track-6', name: 'DEEP VOID PERIMETER', a: 3720, b: 2400, slots: 16, color: '#f43f5e', glowColor: 'rgba(244, 63, 94, 0.25)' },
 ];
 
-// 3. Variant C (Fractal / Quantum Cluster) constants
-export interface QuantumClusterHub {
-  id: string;
-  name: string;
-  cx: number;
-  cy: number;
-  color: string;
-  glowColor: string;
-  slots: number;
-}
-
-export const QUANTUM_CLUSTER_HUBS: QuantumClusterHub[] = [
-  { id: 'cluster-orion', name: 'ORION GATEWAY', cx: 940, cy: -680, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.35)', slots: 8 },
-  { id: 'cluster-cygnus', name: 'CYGNUS RIFT', cx: 1420, cy: 980, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.35)', slots: 8 },
-  { id: 'cluster-solaris', name: 'SOLARIS NEBULA', cx: -1280, cy: 1100, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.35)', slots: 8 },
-  { id: 'cluster-aurelia', name: 'AURELIA DEEP VAULT', cx: -1620, cy: -680, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.35)', slots: 8 },
-  { id: 'cluster-centauri', name: 'CENTAURI DRIFT', cx: -380, cy: -1580, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.35)', slots: 8 },
-  { id: 'cluster-deep', name: 'DEEP STELLAR REACH', cx: 2050, cy: -1650, color: '#f43f5e', glowColor: 'rgba(244, 63, 94, 0.3)', slots: 8 },
-];
-
 /**
  * Deterministically derives 2D celestial coordinates and sector ID relative to Äkinoya (0,0)
- * Works across all 3 constellation variants with permanent master anchoring for Ämlemi
+ * Works across both constellation variants (Spiral, Matrix) with permanent master anchoring for Ämlemi
  */
 export function getDeterministicPlanetCoordinates(
   planetId: string,
@@ -175,17 +154,6 @@ export function getDeterministicPlanetCoordinates(
         sectorId: 'SECTOR MATRIX-T00 (CAPITAL APEX)',
         armId: tr.id,
         armName: tr.name,
-      };
-    }
-
-    if (mode === 'cluster') {
-      const hub = QUANTUM_CLUSTER_HUBS[0];
-      return {
-        x: Math.round(hub.cx + 280),
-        y: Math.round(hub.cy),
-        sectorId: 'SECTOR ORION-01 (FOUNDING ANCHOR)',
-        armId: hub.id,
-        armName: hub.name,
       };
     }
 
@@ -218,20 +186,6 @@ export function getDeterministicPlanetCoordinates(
     return { x, y, sectorId, armId: track.id, armName: track.name };
   }
 
-  if (mode === 'cluster') {
-    const hubIdx = absHash % QUANTUM_CLUSTER_HUBS.length;
-    const hub = QUANTUM_CLUSTER_HUBS[hubIdx];
-    const slotIdx = absHash % hub.slots;
-    const isOuter = slotIdx >= 4;
-    const satR = isOuter ? 560 : 280;
-    const baseAngle = isOuter ? Math.PI / 4 : 0;
-    const angle = baseAngle + ((slotIdx % 4) * Math.PI) / 2;
-    const x = Math.round(hub.cx + satR * Math.cos(angle));
-    const y = Math.round(hub.cy + satR * Math.sin(angle));
-    const sectorId = `SECTOR ${hub.name.split(' ')[0]}-0${slotIdx + 1}`;
-    return { x, y, sectorId, armId: hub.id, armName: hub.name };
-  }
-
   // Default: Variant A (5-Arm Spiral)
   const armIndex = absHash % CONSTELLATION_ARMS.length;
   const arm = CONSTELLATION_ARMS[armIndex];
@@ -252,9 +206,9 @@ export function getDeterministicPlanetCoordinates(
 
 /**
  * Universal Overlap-Free Dynamic Equilibrium Engine:
- * Supports 3 architectural constellation modes (Spiral, Oval Matrix, Quantum Cluster).
+ * Supports 2 architectural constellation modes (5-Arm Spiral and Oval Matrix).
  * Enforces a strict pairwise distance check (Math.hypot(dx, dy) >= 250px) across all active nodes.
- * Cascades gracefully to alternate arms/tracks/clusters and expansion horizons to prevent crowding.
+ * Cascades gracefully to alternate arms/tracks and expansion horizons to prevent crowding.
  */
 export function assignMultiVariantCoordinates(
   planets: PlanetSubmission[],
@@ -279,15 +233,6 @@ export function assignMultiVariantCoordinates(
       armId: tr.id,
       armName: tr.name,
     };
-  } else if (mode === 'cluster') {
-    const hub = QUANTUM_CLUSTER_HUBS[0];
-    amlemiCoord = {
-      x: Math.round(hub.cx + 280),
-      y: Math.round(hub.cy),
-      sectorId: 'SECTOR ORION-01 (FOUNDING ANCHOR)',
-      armId: hub.id,
-      armName: hub.name,
-    };
   }
 
   // Hard pairwise distance tracking: Äkinoya Core (0, 0) and dynamic Ämlemi anchor are pre-registered
@@ -298,8 +243,6 @@ export function assignMultiVariantCoordinates(
   const occupiedSlots = new Set<string>();
   if (mode === 'matrix') {
     occupiedSlots.add('matrix_tr_0_slot_foundational');
-  } else if (mode === 'cluster') {
-    occupiedSlots.add('cluster_hub_0_slot_0');
   } else {
     occupiedSlots.add('arm_0_tier_foundational');
   }
@@ -429,97 +372,6 @@ export function assignMultiVariantCoordinates(
         sectorId,
         armId: tr.id,
         armName: tr.name,
-      };
-    }
-
-    // =========================================================================
-    // VARIANT C: QUANTUM CLUSTER (6 Regional Star Clusters & Satellite Rings)
-    // =========================================================================
-    if (mode === 'cluster') {
-      const numHubs = QUANTUM_CLUSTER_HUBS.length;
-      const prefHub = absHash % numHubs;
-      let chosenHub = prefHub;
-      let chosenSlot = 0;
-      let chosenX = 0;
-      let chosenY = 0;
-      let found = false;
-
-      // Primary Search: Inner ring (280 AU) & Outer ring (560 AU) satellite slots
-      for (let h = 0; h < numHubs && !found; h++) {
-        const hubIdx = (prefHub + h) % numHubs;
-        const hub = QUANTUM_CLUSTER_HUBS[hubIdx];
-        const prefSlot = absHash % hub.slots;
-
-        for (let s = 0; s < hub.slots && !found; s++) {
-          const slotIdx = (prefSlot + s) % hub.slots;
-          const key = `cluster_hub_${hubIdx}_slot_${slotIdx}`;
-          if (occupiedSlots.has(key)) continue;
-
-          const isOuter = slotIdx >= 4;
-          const satR = isOuter ? 560 : 280;
-          const baseAngle = isOuter ? Math.PI / 4 : 0;
-          const angle = baseAngle + ((slotIdx % 4) * Math.PI) / 2;
-          const candX = Math.round(hub.cx + satR * Math.cos(angle));
-          const candY = Math.round(hub.cy + satR * Math.sin(angle));
-
-          if (isPositionCollisionFree(candX, candY, placedNodes, MIN_COLLISION_BUFFER_PX)) {
-            occupiedSlots.add(key);
-            chosenHub = hubIdx;
-            chosenSlot = slotIdx;
-            chosenX = candX;
-            chosenY = candY;
-            found = true;
-          }
-        }
-      }
-
-      // Dynamic Overflow Expansion: Outer Satellite Rings (Tier 3+)
-      if (!found) {
-        let ringTier = 2;
-        while (!found && ringTier < 12) {
-          ringTier++;
-          const satR = ringTier * 280;
-          const ringSlots = 8;
-          const baseAngle = (ringTier % 2 === 1) ? Math.PI / 8 : 0;
-
-          for (let h = 0; h < numHubs && !found; h++) {
-            const hubIdx = (prefHub + h) % numHubs;
-            const hub = QUANTUM_CLUSTER_HUBS[hubIdx];
-
-            for (let s = 0; s < ringSlots && !found; s++) {
-              const key = `cluster_hub_${hubIdx}_ring_${ringTier}_slot_${s}`;
-              if (occupiedSlots.has(key)) continue;
-
-              const angle = baseAngle + (s * 2 * Math.PI) / ringSlots;
-              const candX = Math.round(hub.cx + satR * Math.cos(angle));
-              const candY = Math.round(hub.cy + satR * Math.sin(angle));
-
-              if (isPositionCollisionFree(candX, candY, placedNodes, MIN_COLLISION_BUFFER_PX)) {
-                occupiedSlots.add(key);
-                chosenHub = hubIdx;
-                chosenSlot = s;
-                chosenX = candX;
-                chosenY = candY;
-                found = true;
-              }
-            }
-          }
-        }
-      }
-
-      placedNodes.push({ id: sub.id, x: chosenX, y: chosenY });
-      const hub = QUANTUM_CLUSTER_HUBS[chosenHub];
-      const sectorId = `SECTOR ${hub.name.split(' ')[0]}-0${chosenSlot + 1}`;
-
-      return {
-        ...sub,
-        coordX: chosenX,
-        coordY: chosenY,
-        coord_x: chosenX,
-        coord_y: chosenY,
-        sectorId,
-        armId: hub.id,
-        armName: hub.name,
       };
     }
 

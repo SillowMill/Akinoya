@@ -29,7 +29,6 @@ import {
   ConstellationLayoutMode,
   CONSTELLATION_LAYOUT_VARIANTS,
   OVAL_MATRIX_TRACKS,
-  QUANTUM_CLUSTER_HUBS,
   assignMultiVariantCoordinates,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
@@ -114,7 +113,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('akinoya_constellation_layout_mode');
-        if (saved === 'spiral' || saved === 'matrix' || saved === 'cluster') return saved;
+        if (saved === 'spiral' || saved === 'matrix') return saved;
       } catch {}
     }
     return 'spiral';
@@ -746,68 +745,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           }
           ctx.restore();
         }
-      } else if (activeMode === 'cluster') {
-        // Quantum Cluster Star Hubs - Delicate Ghost Blueprint Filaments
-        for (const hub of QUANTUM_CLUSTER_HUBS) {
-          ctx.save();
-          const hubScreenX = coreScreenX + hub.cx * curZoom;
-          const hubScreenY = coreScreenY + hub.cy * curZoom;
-
-          // Regional nebular glow gradient (subtle deep celestial mist)
-          const nebGrad = ctx.createRadialGradient(
-            hubScreenX,
-            hubScreenY,
-            10 * curZoom,
-            hubScreenX,
-            hubScreenY,
-            640 * curZoom
-          );
-          nebGrad.addColorStop(0, hub.glowColor.replace(/[\d.]+\)$/, '0.08)'));
-          nebGrad.addColorStop(0.5, hub.glowColor.replace(/[\d.]+\)$/, '0.02)'));
-          nebGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-          ctx.fillStyle = nebGrad;
-          ctx.beginPath();
-          ctx.arc(hubScreenX, hubScreenY, 640 * curZoom, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Delicate Ghost Blueprint Satellite Orbital Rings (Inner: 280 AU, Outer: 560 AU)
-          ctx.strokeStyle = hub.color;
-          ctx.globalAlpha = 0.05;
-          ctx.lineWidth = 0.75;
-          ctx.setLineDash([4 * curZoom, 8 * curZoom]);
-          ctx.beginPath();
-          ctx.arc(hubScreenX, hubScreenY, 280 * curZoom, 0, Math.PI * 2);
-          ctx.arc(hubScreenX, hubScreenY, 560 * curZoom, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          // Soft quantum umbilical filament beam from Core to Cluster Hub center
-          ctx.strokeStyle = hub.glowColor.replace(/[\d.]+\)$/, '0.06)');
-          ctx.lineWidth = 0.75;
-          ctx.setLineDash([6 * curZoom, 10 * curZoom]);
-          ctx.beginPath();
-          ctx.moveTo(coreScreenX, coreScreenY);
-          ctx.lineTo(hubScreenX, hubScreenY);
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          // Faint Hub Center Pip
-          ctx.fillStyle = hub.color;
-          ctx.globalAlpha = 0.45;
-          ctx.beginPath();
-          ctx.arc(hubScreenX, hubScreenY, Math.max(2.5, 3.5 * curZoom), 0, Math.PI * 2);
-          ctx.fill();
-
-          // Faint Hub Name Badge
-          if (curZoom > 0.38) {
-            ctx.font = `bold ${Math.max(8.5, Math.min(10, 9 * curZoom))}px monospace`;
-            ctx.fillStyle = hub.color;
-            ctx.globalAlpha = 0.35;
-            ctx.textAlign = 'center';
-            ctx.fillText(`🌌 ${hub.name}`, hubScreenX, hubScreenY - 14 * curZoom);
-          }
-          ctx.restore();
-        }
       }
 
       // 5c. Constellation Lattice Connections between Charted Nodes
@@ -934,66 +871,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               ctx.lineWidth = isHighlighted ? 1.5 : 0.75;
               ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 6 * curZoom]);
               ctx.stroke();
-            }
-            ctx.setLineDash([]);
-            ctx.restore();
-          }
-        } else if (activeMode === 'cluster') {
-          const hubGroups = new Map<string, Array<{ x: number; y: number; angle: number; id: string }>>();
-          for (const hub of QUANTUM_CLUSTER_HUBS) {
-            hubGroups.set(hub.id, []);
-          }
-
-          for (const p of currentPlanets) {
-            const pos = getNodePos(p);
-            if (pos.x === 0 && pos.y === 0) continue;
-            const hubId = p.armId || QUANTUM_CLUSTER_HUBS[0].id;
-            const hub = QUANTUM_CLUSTER_HUBS.find((h) => h.id === hubId) || QUANTUM_CLUSTER_HUBS[0];
-            const angle = Math.atan2(pos.y - hub.cy, pos.x - hub.cx);
-            if (hubGroups.has(hubId)) {
-              hubGroups.get(hubId)!.push({ x: pos.x, y: pos.y, angle, id: p.id });
-            }
-          }
-
-          for (const hub of QUANTUM_CLUSTER_HUBS) {
-            const nodes = hubGroups.get(hub.id);
-            if (!nodes || nodes.length === 0) continue;
-            nodes.sort((a, b) => a.angle - b.angle);
-
-            const hubScreenX = coreScreenX + hub.cx * curZoom;
-            const hubScreenY = coreScreenY + hub.cy * curZoom;
-
-            ctx.save();
-            for (let i = 0; i < nodes.length; i++) {
-              const node = nodes[i];
-              const isHighlighted =
-                node.id === activeHoveredId || node.id === activeSelectedId;
-
-              const nx = coreScreenX + node.x * curZoom;
-              const ny = coreScreenY + node.y * curZoom;
-
-              ctx.beginPath();
-              ctx.moveTo(hubScreenX, hubScreenY);
-              ctx.lineTo(nx, ny);
-              ctx.strokeStyle = isHighlighted ? hub.color : hub.glowColor.replace(/[\d.]+\)$/, '0.06)');
-              ctx.lineWidth = isHighlighted ? 1.5 : 0.75;
-              ctx.setLineDash([2 * curZoom, 4 * curZoom]);
-              ctx.stroke();
-
-              if (nodes.length >= 2) {
-                const nextNode = nodes[(i + 1) % nodes.length];
-                if (nodes.length === 2 && i === 1) continue;
-                const nextX = coreScreenX + nextNode.x * curZoom;
-                const nextY = coreScreenY + nextNode.y * curZoom;
-
-                ctx.beginPath();
-                ctx.moveTo(nx, ny);
-                ctx.lineTo(nextX, nextY);
-                ctx.strokeStyle = isHighlighted ? hub.color : hub.glowColor.replace(/[\d.]+\)$/, '0.06)');
-                ctx.lineWidth = isHighlighted ? 1.5 : 0.75;
-                ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 6 * curZoom]);
-                ctx.stroke();
-              }
             }
             ctx.setLineDash([]);
             ctx.restore();
@@ -1693,10 +1570,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         <div className="flex flex-col items-center gap-1.5">
           {CONSTELLATION_LAYOUT_VARIANTS.map((variant) => {
             const isActive = layoutMode === variant.mode;
-            const icon =
-              variant.mode === 'spiral' ? '🌀' : variant.mode === 'matrix' ? '🪐' : '🌌';
-            const shortName =
-              variant.mode === 'spiral' ? 'Spiral' : variant.mode === 'matrix' ? 'Matrix' : 'Cluster';
+            const icon = variant.mode === 'spiral' ? '🌀' : '🪐';
+            const shortName = variant.mode === 'spiral' ? 'Spiral' : 'Matrix';
 
             return (
               <button
@@ -1782,11 +1657,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           </span>
           <span>CONSTELLATION:</span>
           <span className="text-amber-300 font-extrabold text-right uppercase drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]">
-            {layoutMode === 'spiral'
-              ? '5-ARM SPIRAL'
-              : layoutMode === 'matrix'
-              ? 'OVAL MATRIX'
-              : 'QUANTUM CLUSTER'}
+            {layoutMode === 'spiral' ? '5-ARM SPIRAL' : 'OVAL MATRIX'}
           </span>
           <span>CHARTED WORLDS:</span>
           <span className="text-cyan-300 font-extrabold text-right drop-shadow-[0_0_6px_rgba(34,211,238,0.5)]">
