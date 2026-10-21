@@ -7,6 +7,8 @@ import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import moodboardImg from '../assets/images/Mood.png';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
+import dontNeedVideo from '../assets/videos/Dontneed.mov';
+import bingaaLoopVideo from '../assets/videos/Bingaaloop.mov';
 import {
   Lock,
   Unlock,
@@ -96,11 +98,28 @@ export interface VisualizerTrack {
   code: string;
   defaultUnlocked?: boolean;
   artworkUrl?: string;
+  videoUrl?: string;
 }
 
+export const DONT_NEED_VIDEO_URL = dontNeedVideo || '/videos/Don\'tneed.mov';
+export const BINGAA_LOOP_VIDEO_URL = bingaaLoopVideo || '/videos/Bingaaloop.mov';
+
 const VISUALIZER_TRACKS: VisualizerTrack[] = [
-  { id: '01', title: "Don't Need", code: 'DONTNEED', artworkUrl: visualizerThumbnailImg },
-  { id: '02', title: "Bingäa", code: 'BINGAA', defaultUnlocked: true, artworkUrl: moodboardImg },
+  {
+    id: '01',
+    title: "Don't Need",
+    code: 'DONTNEED',
+    artworkUrl: visualizerThumbnailImg,
+    videoUrl: DONT_NEED_VIDEO_URL,
+  },
+  {
+    id: '02',
+    title: "Bingäa",
+    code: 'BINGAA',
+    defaultUnlocked: true,
+    artworkUrl: moodboardImg,
+    videoUrl: BINGAA_LOOP_VIDEO_URL,
+  },
   { id: '03', title: "Memories", code: 'MEMORIES' },
   { id: '04', title: "Hurry", code: 'HURRY' },
   { id: '05', title: "Know Me", code: 'KNOWME' },
@@ -1219,7 +1238,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
                     <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
-                      {/* 16:9 Cinematic Thumbnail Container */}
+                      {/* 16:9 Cinematic Thumbnail / Video Container */}
                       <div
                         onClick={() => {
                           if (isVipMode || isVisualizerUnlocked) {
@@ -1231,10 +1250,30 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         }}
                         className="w-full md:w-[360px] lg:w-[420px] aspect-video shrink-0 rounded-xl overflow-hidden relative group border border-cyan-500/40 shadow-[0_0_25px_rgba(56,189,248,0.2)] bg-black/80 cursor-pointer"
                       >
-                        <img
-                          src={visualizerThumbnailImg}
-                          alt="Don't Need — Official Visualizer Preview"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                        <video
+                          ref={(el) => {
+                            if (el) {
+                              el.muted = true;
+                              el.defaultMuted = true;
+                              el.play().catch(() => {});
+                            }
+                          }}
+                          src={DONT_NEED_VIDEO_URL}
+                          poster={visualizerThumbnailImg}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          preload="auto"
+                          disablePictureInPicture
+                          disableRemotePlayback
+                          controlsList="nodownload nofullscreen noremoteplayback"
+                          {...({
+                            'webkit-playsinline': 'true',
+                            'x5-playsinline': 'true',
+                            playsinline: 'true',
+                          } as any)}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out pointer-events-none"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
@@ -1247,8 +1286,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                         {/* Top Left Badge on Thumbnail */}
                         <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md border border-cyan-400/40 text-[10px] font-mono text-cyan-300">
-                          <Sparkles className="w-3 h-3 text-cyan-400" />
-                          <span>TRACK 01 · DON'T NEED</span>
+                          <Film className="w-3 h-3 text-cyan-400 animate-pulse" />
+                          <span>TRACK 01 · DON'T NEED (MUTED LOOP)</span>
                         </div>
 
                         {/* Bottom Right Duration / 4K Pill */}
@@ -1513,10 +1552,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </button>
                     </div>
 
-                    {/* Visualizer Track Cards: 16:9 Artwork Previews (Tracks 01 & 02) followed by Compact Scheduled Tracks */}
+                    {/* Visualizer Track Cards: 16:9 Artwork/Video Previews (Tracks 01 & 02) followed by Compact Scheduled Tracks */}
                     {(() => {
-                      const tracksWithArtwork = VISUALIZER_TRACKS.filter((t) => Boolean(t.artworkUrl));
-                      const scheduledTracks = VISUALIZER_TRACKS.filter((t) => !t.artworkUrl);
+                      const tracksWithArtwork = VISUALIZER_TRACKS.filter((t) => Boolean(t.artworkUrl || t.videoUrl));
+                      const scheduledTracks = VISUALIZER_TRACKS.filter((t) => !t.artworkUrl && !t.videoUrl);
 
                       const renderTrackCard = (track: VisualizerTrack, index: number, hasArtwork: boolean) => {
                         const isTrack01 = track.id === '01';
@@ -1571,16 +1610,53 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               )}
                             </div>
 
-                            {/* Active 16:9 Artwork Preview Container (Only rendered when artwork is attached) */}
-                            {hasArtwork && track.artworkUrl && (
-                              <div className="w-full aspect-video rounded-lg overflow-hidden my-2.5 relative group/thumb border border-cyan-500/30">
-                                <img
-                                  src={track.artworkUrl}
-                                  alt={`${track.title} Visualizer Preview`}
-                                  className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                            {/* Active 16:9 Artwork Preview / Video Loop Container */}
+                            {hasArtwork && (track.videoUrl || track.artworkUrl) && (
+                              <div className="w-full aspect-video rounded-lg overflow-hidden my-2.5 relative group/thumb border border-cyan-500/30 bg-black/80 shadow-[0_0_20px_rgba(56,189,248,0.15)]">
+                                {track.videoUrl ? (
+                                  <video
+                                    ref={(el) => {
+                                      if (el) {
+                                        el.muted = true;
+                                        el.defaultMuted = true;
+                                        el.play().catch(() => {});
+                                      }
+                                    }}
+                                    src={track.videoUrl}
+                                    poster={track.artworkUrl}
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                    preload="auto"
+                                    disablePictureInPicture
+                                    disableRemotePlayback
+                                    controlsList="nodownload nofullscreen noremoteplayback"
+                                    {...({
+                                      'webkit-playsinline': 'true',
+                                      'x5-playsinline': 'true',
+                                      playsinline: 'true',
+                                    } as any)}
+                                    className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500 pointer-events-none"
+                                  />
+                                ) : (
+                                  <img
+                                    src={track.artworkUrl}
+                                    alt={`${track.title} Visualizer Preview`}
+                                    className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
+                                  />
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+
+                                {/* Video Loop Badge Indicator */}
+                                {track.videoUrl && (
+                                  <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/85 backdrop-blur-md border border-cyan-400/40 text-[9px] font-mono text-cyan-300 pointer-events-none shadow-[0_0_10px_rgba(56,189,248,0.3)]">
+                                    <Film className="w-2.5 h-2.5 text-cyan-400 animate-pulse" />
+                                    <span>MUTED LOOP</span>
+                                  </div>
+                                )}
+
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity pointer-events-none">
                                   <div className="w-10 h-10 rounded-full bg-cyan-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.4)]">
                                     <Play className="w-4 h-4 ml-0.5 fill-current" />
                                   </div>
@@ -1592,12 +1668,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               {isTrack01 ? (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
                                   <Unlock className="w-3 h-3 text-emerald-400 shrink-0" />
-                                  <span>ARTWORK UNLOCKED</span>
+                                  <span>MUTED LOOP ACTIVE</span>
                                 </span>
                               ) : isTrack02 ? (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
                                   <Unlock className="w-3 h-3 text-emerald-400 shrink-0" />
-                                  <span>EARLY ACCESS PREVIEW</span>
+                                  <span>MUTED LOOP ACTIVE</span>
                                 </span>
                               ) : (
                                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-400/30 text-amber-300/90 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(245,158,11,0.15)]">
@@ -2900,15 +2976,43 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
               {/* Main Visualizer Stage */}
               <div className="relative min-h-[270px] xs:min-h-[300px] sm:min-h-0 sm:aspect-video w-full bg-slate-950 overflow-hidden flex items-center justify-center">
-                {/* Background cosmic vista with glowing ambient motion */}
-                <img
-                  src={akinoyaVistaImg}
-                  alt="Äkinoya Vista"
-                  className="absolute inset-0 w-full h-full object-cover object-center opacity-60 scale-105 animate-pulse"
-                  style={{ animationDuration: '8s' }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,black_80%)]" />
+                {activePlayingTrack.videoUrl ? (
+                  <video
+                    ref={(el) => {
+                      if (el) {
+                        el.muted = true;
+                        el.defaultMuted = true;
+                        el.play().catch(() => {});
+                      }
+                    }}
+                    src={activePlayingTrack.videoUrl}
+                    poster={activePlayingTrack.artworkUrl || akinoyaVistaImg}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    disablePictureInPicture
+                    disableRemotePlayback
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    {...({
+                      'webkit-playsinline': 'true',
+                      'x5-playsinline': 'true',
+                      playsinline: 'true',
+                    } as any)}
+                    className="absolute inset-0 w-full h-full object-cover object-center opacity-70 scale-105 pointer-events-none"
+                  />
+                ) : (
+                  /* Background cosmic vista with glowing ambient motion */
+                  <img
+                    src={akinoyaVistaImg}
+                    alt="Äkinoya Vista"
+                    className="absolute inset-0 w-full h-full object-cover object-center opacity-60 scale-105 animate-pulse"
+                    style={{ animationDuration: '8s' }}
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,black_80%)] pointer-events-none" />
 
                 {/* Animated holographic audio telemetry overlay */}
                 <div className="relative z-10 flex flex-col items-center text-center p-3.5 xs:p-4 sm:p-6 space-y-2.5 sm:space-y-4 w-full max-w-lg mx-auto">
