@@ -67,8 +67,40 @@ export const CONSTELLATION_LAYOUT_VARIANTS: ConstellationVariantConfig[] = [
 export const SPIRAL_B = 0.62;
 export const SPIRAL_R0 = 300;
 export const AMLEMI_FOUNDATIONAL_RADIUS = 300;
-// 7 Quantized Harmonic Radial Tiers (540 AU to 3400 AU) with guaranteed >220px spatial clearance
-export const SPIRAL_RADIAL_TIERS = [540, 1000, 1480, 1960, 2440, 2920, 3400];
+// Universal Minimum Collision-Free Spacing Guarantee across all variants (> 250px buffer)
+export const MIN_COLLISION_BUFFER_PX = 250;
+
+export interface PlacedNode {
+  id: string;
+  x: number;
+  y: number;
+}
+
+/**
+ * Validates that candidate position (candX, candY) maintains at least
+ * minBuffer px distance from all previously placed active nodes (including Core and Ämlemi).
+ */
+export function isPositionCollisionFree(
+  candX: number,
+  candY: number,
+  placedNodes: PlacedNode[],
+  minBuffer: number = MIN_COLLISION_BUFFER_PX
+): boolean {
+  for (const node of placedNodes) {
+    const dx = candX - node.x;
+    const dy = candY - node.y;
+    // Fast bounding box pre-rejection before hypotenuse calculation
+    if (Math.abs(dx) < minBuffer && Math.abs(dy) < minBuffer) {
+      if (Math.hypot(dx, dy) < minBuffer) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// 7 Quantized Harmonic Radial Tiers (560 AU to 3440 AU) with guaranteed >280px spatial clearance
+export const SPIRAL_RADIAL_TIERS = [560, 1040, 1520, 2000, 2480, 2960, 3440];
 
 export function getSpiralArmAngle(baseAngle: number, radius: number): number {
   return baseAngle + SPIRAL_B * Math.log(Math.max(radius, SPIRAL_R0) / SPIRAL_R0);
@@ -87,12 +119,12 @@ export interface OvalMatrixTrack {
 
 export const OVAL_MATRIX_TRACKS: OvalMatrixTrack[] = [
   { id: 'track-0', name: 'FOUNDATIONAL CAPITAL OVAL', a: 320, b: 220, slots: 4, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.45)' },
-  { id: 'track-1', name: 'INNER CORE MATRIX', a: 680, b: 440, slots: 6, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.35)' },
-  { id: 'track-2', name: 'PIONEER HIGHWAY', a: 1180, b: 780, slots: 8, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.35)' },
-  { id: 'track-3', name: 'IONIZATION BELT', a: 1740, b: 1140, slots: 10, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.35)' },
-  { id: 'track-4', name: 'OUTER EXPEDITIONS', a: 2360, b: 1540, slots: 12, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.35)' },
-  { id: 'track-5', name: 'STELLAR MATRIX HORIZON', a: 3040, b: 1980, slots: 14, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.3)' },
-  { id: 'track-6', name: 'DEEP VOID PERIMETER', a: 3720, b: 2420, slots: 16, color: '#f43f5e', glowColor: 'rgba(244, 63, 94, 0.25)' },
+  { id: 'track-1', name: 'INNER CORE MATRIX', a: 720, b: 480, slots: 6, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.35)' },
+  { id: 'track-2', name: 'PIONEER HIGHWAY', a: 1240, b: 820, slots: 8, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.35)' },
+  { id: 'track-3', name: 'IONIZATION BELT', a: 1800, b: 1180, slots: 10, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.35)' },
+  { id: 'track-4', name: 'OUTER EXPEDITIONS', a: 2400, b: 1560, slots: 12, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.35)' },
+  { id: 'track-5', name: 'STELLAR MATRIX HORIZON', a: 3040, b: 1960, slots: 14, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.3)' },
+  { id: 'track-6', name: 'DEEP VOID PERIMETER', a: 3720, b: 2400, slots: 16, color: '#f43f5e', glowColor: 'rgba(244, 63, 94, 0.25)' },
 ];
 
 // 3. Variant C (Fractal / Quantum Cluster) constants
@@ -107,12 +139,12 @@ export interface QuantumClusterHub {
 }
 
 export const QUANTUM_CLUSTER_HUBS: QuantumClusterHub[] = [
-  { id: 'cluster-orion', name: 'ORION GATEWAY', cx: 880, cy: -640, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.35)', slots: 8 },
-  { id: 'cluster-cygnus', name: 'CYGNUS RIFT', cx: 1350, cy: 980, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.35)', slots: 8 },
-  { id: 'cluster-solaris', name: 'SOLARIS NEBULA', cx: -1250, cy: 1050, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.35)', slots: 8 },
-  { id: 'cluster-aurelia', name: 'AURELIA DEEP VAULT', cx: -1580, cy: -650, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.35)', slots: 8 },
-  { id: 'cluster-centauri', name: 'CENTAURI DRIFT', cx: -360, cy: -1520, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.35)', slots: 8 },
-  { id: 'cluster-deep', name: 'DEEP STELLAR REACH', cx: 1950, cy: -1600, color: '#f43f5e', glowColor: 'rgba(244, 63, 94, 0.3)', slots: 8 },
+  { id: 'cluster-orion', name: 'ORION GATEWAY', cx: 940, cy: -680, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.35)', slots: 8 },
+  { id: 'cluster-cygnus', name: 'CYGNUS RIFT', cx: 1420, cy: 980, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.35)', slots: 8 },
+  { id: 'cluster-solaris', name: 'SOLARIS NEBULA', cx: -1280, cy: 1100, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.35)', slots: 8 },
+  { id: 'cluster-aurelia', name: 'AURELIA DEEP VAULT', cx: -1620, cy: -680, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.35)', slots: 8 },
+  { id: 'cluster-centauri', name: 'CENTAURI DRIFT', cx: -380, cy: -1580, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.35)', slots: 8 },
+  { id: 'cluster-deep', name: 'DEEP STELLAR REACH', cx: 2050, cy: -1650, color: '#f43f5e', glowColor: 'rgba(244, 63, 94, 0.3)', slots: 8 },
 ];
 
 /**
@@ -169,7 +201,7 @@ export function getDeterministicPlanetCoordinates(
     const hub = QUANTUM_CLUSTER_HUBS[hubIdx];
     const slotIdx = absHash % hub.slots;
     const isOuter = slotIdx >= 4;
-    const satR = isOuter ? 540 : 270;
+    const satR = isOuter ? 560 : 280;
     const baseAngle = isOuter ? Math.PI / 4 : 0;
     const angle = baseAngle + ((slotIdx % 4) * Math.PI) / 2;
     const x = Math.round(hub.cx + satR * Math.cos(angle));
@@ -184,7 +216,7 @@ export function getDeterministicPlanetCoordinates(
   const tierIndex = Math.floor(absHash / CONSTELLATION_ARMS.length) % SPIRAL_RADIAL_TIERS.length;
   const baseRadius = SPIRAL_RADIAL_TIERS[tierIndex];
   const subSlot = Math.floor(absHash / (CONSTELLATION_ARMS.length * SPIRAL_RADIAL_TIERS.length)) % 2;
-  const radius = baseRadius + (subSlot === 1 ? 235 : 0);
+  const radius = baseRadius + (subSlot === 1 ? 240 : 0);
   const baseSpiralAngle = getSpiralArmAngle(arm.baseAngle, radius);
   const finalAngle = baseSpiralAngle + (subSlot === 1 ? 0.05 : -0.03);
   const x = Math.round(radius * Math.cos(finalAngle));
@@ -197,21 +229,31 @@ export function getDeterministicPlanetCoordinates(
 }
 
 /**
- * Multi-Variant Dynamic Equilibrium Engine:
+ * Universal Overlap-Free Dynamic Equilibrium Engine:
  * Supports 3 architectural constellation modes (Spiral, Oval Matrix, Quantum Cluster).
- * Enforces a strict repulsive buffer (> 220px) across all variants.
- * Cascades gracefully to alternate arms/tracks/clusters to prevent crowding.
+ * Enforces a strict pairwise distance check (Math.hypot(dx, dy) >= 250px) across all active nodes.
+ * Cascades gracefully to alternate arms/tracks/clusters and expansion horizons to prevent crowding.
  */
 export function assignMultiVariantCoordinates(
   planets: PlanetSubmission[],
   mode: ConstellationLayoutMode = 'spiral',
   seed: number = 0
 ): PlanetSubmission[] {
+  // Hard pairwise distance tracking: Äkinoya Core (0, 0) and Ämlemi (243, -176) are pre-registered
+  const placedNodes: PlacedNode[] = [
+    { id: 'akinoya-core', x: 0, y: 0 },
+    { id: 'planet-amlemi-genesis-01', x: 243, y: -176 },
+  ];
   const occupiedSlots = new Set<string>();
   occupiedSlots.add('arm_0_tier_foundational'); // Permanently locked for Ämlemi
+  occupiedSlots.add('matrix_tr_0_slot_foundational'); // Track 0 permanently locked for Ämlemi
 
   return planets.map((sub) => {
-    const isCore = sub.id === 'akinoya-core' || sub.planetName === 'Äkinoya Prime' || sub.planetName === 'Äkinoya';
+    // 1. Äkinoya Core Check
+    const isCore =
+      sub.id === 'akinoya-core' ||
+      sub.planetName === 'Äkinoya Prime' ||
+      sub.planetName === 'Äkinoya';
     if (isCore) {
       return {
         ...sub,
@@ -223,7 +265,10 @@ export function assignMultiVariantCoordinates(
       };
     }
 
-    const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
+    // 2. Ämlemi Master Anchor Check (Permanently locked at 243, -176)
+    const isAmlemi =
+      sub.id === 'planet-amlemi-genesis-01' ||
+      sub.planetName === 'Ämlemi';
     if (isAmlemi) {
       const arm = CONSTELLATION_ARMS[0]; // Orion Meridian
       return {
@@ -238,6 +283,7 @@ export function assignMultiVariantCoordinates(
       };
     }
 
+    // 3. Deterministic Hash for Candidate Placement
     const str = `${sub.id}_${sub.planetName || ''}`;
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -246,144 +292,272 @@ export function assignMultiVariantCoordinates(
     }
     const absHash = Math.abs(hash + seed * 7919);
 
+    // =========================================================================
+    // VARIANT B: OVAL MATRIX (Concentric Elliptical Highways)
+    // =========================================================================
     if (mode === 'matrix') {
-      const prefTrack = 1 + (absHash % (OVAL_MATRIX_TRACKS.length - 1));
+      const numTracks = OVAL_MATRIX_TRACKS.length - 1; // Tracks 1 to 6
+      const prefTrack = 1 + (absHash % numTracks);
       let chosenTrack = prefTrack;
       let chosenSlot = 0;
+      let chosenX = 0;
+      let chosenY = 0;
       let found = false;
 
-      for (let t = 0; t < OVAL_MATRIX_TRACKS.length - 1 && !found; t++) {
-        const trackIdx = 1 + ((prefTrack - 1 + t) % (OVAL_MATRIX_TRACKS.length - 1));
+      // Primary Search: Staggered slots along tracks 1..6
+      for (let t = 0; t < numTracks && !found; t++) {
+        const trackIdx = 1 + ((prefTrack - 1 + t) % numTracks);
         const track = OVAL_MATRIX_TRACKS[trackIdx];
         const prefSlot = absHash % track.slots;
+
         for (let s = 0; s < track.slots && !found; s++) {
           const slotIdx = (prefSlot + s) % track.slots;
           const key = `matrix_tr_${trackIdx}_slot_${slotIdx}`;
-          if (!occupiedSlots.has(key)) {
+          if (occupiedSlots.has(key)) continue;
+
+          const angle = (slotIdx / track.slots) * 2 * Math.PI + (trackIdx % 2 === 1 ? 0.2 : 0);
+          const candX = Math.round(track.a * Math.cos(angle));
+          const candY = Math.round(track.b * Math.sin(angle));
+
+          if (isPositionCollisionFree(candX, candY, placedNodes, MIN_COLLISION_BUFFER_PX)) {
             occupiedSlots.add(key);
             chosenTrack = trackIdx;
             chosenSlot = slotIdx;
+            chosenX = candX;
+            chosenY = candY;
             found = true;
           }
         }
       }
 
+      // Dynamic Overflow Expansion: Outer elliptical orbits
+      if (!found) {
+        let overflowTier = 0;
+        while (!found && overflowTier < 25) {
+          overflowTier++;
+          const a = 3720 + overflowTier * 600;
+          const b = 2400 + overflowTier * 400;
+          const totalSlots = 16 + overflowTier * 2;
+          const prefSlot = absHash % totalSlots;
+
+          for (let s = 0; s < totalSlots && !found; s++) {
+            const slotIdx = (prefSlot + s) % totalSlots;
+            const key = `matrix_overflow_${overflowTier}_slot_${slotIdx}`;
+            if (occupiedSlots.has(key)) continue;
+
+            const angle = (slotIdx / totalSlots) * 2 * Math.PI + (overflowTier % 2 === 1 ? 0.2 : 0);
+            const candX = Math.round(a * Math.cos(angle));
+            const candY = Math.round(b * Math.sin(angle));
+
+            if (isPositionCollisionFree(candX, candY, placedNodes, MIN_COLLISION_BUFFER_PX)) {
+              occupiedSlots.add(key);
+              chosenTrack = OVAL_MATRIX_TRACKS.length - 1;
+              chosenSlot = slotIdx;
+              chosenX = candX;
+              chosenY = candY;
+              found = true;
+            }
+          }
+        }
+      }
+
+      placedNodes.push({ id: sub.id, x: chosenX, y: chosenY });
       const tr = OVAL_MATRIX_TRACKS[chosenTrack];
-      const angle = (chosenSlot / tr.slots) * 2 * Math.PI + (chosenTrack % 2 === 1 ? 0.2 : 0);
-      const x = Math.round(tr.a * Math.cos(angle));
-      const y = Math.round(tr.b * Math.sin(angle));
       const sectorId = `SECTOR MATRIX-T0${chosenTrack}`;
 
       return {
         ...sub,
-        coordX: x,
-        coordY: y,
-        coord_x: x,
-        coord_y: y,
+        coordX: chosenX,
+        coordY: chosenY,
+        coord_x: chosenX,
+        coord_y: chosenY,
         sectorId,
         armId: tr.id,
         armName: tr.name,
       };
     }
 
+    // =========================================================================
+    // VARIANT C: QUANTUM CLUSTER (6 Regional Star Clusters & Satellite Rings)
+    // =========================================================================
     if (mode === 'cluster') {
-      const prefHub = absHash % QUANTUM_CLUSTER_HUBS.length;
+      const numHubs = QUANTUM_CLUSTER_HUBS.length;
+      const prefHub = absHash % numHubs;
       let chosenHub = prefHub;
       let chosenSlot = 0;
+      let chosenX = 0;
+      let chosenY = 0;
       let found = false;
 
-      for (let h = 0; h < QUANTUM_CLUSTER_HUBS.length && !found; h++) {
-        const hubIdx = (prefHub + h) % QUANTUM_CLUSTER_HUBS.length;
+      // Primary Search: Inner ring (280 AU) & Outer ring (560 AU) satellite slots
+      for (let h = 0; h < numHubs && !found; h++) {
+        const hubIdx = (prefHub + h) % numHubs;
         const hub = QUANTUM_CLUSTER_HUBS[hubIdx];
         const prefSlot = absHash % hub.slots;
+
         for (let s = 0; s < hub.slots && !found; s++) {
           const slotIdx = (prefSlot + s) % hub.slots;
           const key = `cluster_hub_${hubIdx}_slot_${slotIdx}`;
-          if (!occupiedSlots.has(key)) {
+          if (occupiedSlots.has(key)) continue;
+
+          const isOuter = slotIdx >= 4;
+          const satR = isOuter ? 560 : 280;
+          const baseAngle = isOuter ? Math.PI / 4 : 0;
+          const angle = baseAngle + ((slotIdx % 4) * Math.PI) / 2;
+          const candX = Math.round(hub.cx + satR * Math.cos(angle));
+          const candY = Math.round(hub.cy + satR * Math.sin(angle));
+
+          if (isPositionCollisionFree(candX, candY, placedNodes, MIN_COLLISION_BUFFER_PX)) {
             occupiedSlots.add(key);
             chosenHub = hubIdx;
             chosenSlot = slotIdx;
+            chosenX = candX;
+            chosenY = candY;
             found = true;
           }
         }
       }
 
+      // Dynamic Overflow Expansion: Outer Satellite Rings (Tier 3+)
+      if (!found) {
+        let ringTier = 2;
+        while (!found && ringTier < 12) {
+          ringTier++;
+          const satR = ringTier * 280;
+          const ringSlots = 8;
+          const baseAngle = (ringTier % 2 === 1) ? Math.PI / 8 : 0;
+
+          for (let h = 0; h < numHubs && !found; h++) {
+            const hubIdx = (prefHub + h) % numHubs;
+            const hub = QUANTUM_CLUSTER_HUBS[hubIdx];
+
+            for (let s = 0; s < ringSlots && !found; s++) {
+              const key = `cluster_hub_${hubIdx}_ring_${ringTier}_slot_${s}`;
+              if (occupiedSlots.has(key)) continue;
+
+              const angle = baseAngle + (s * 2 * Math.PI) / ringSlots;
+              const candX = Math.round(hub.cx + satR * Math.cos(angle));
+              const candY = Math.round(hub.cy + satR * Math.sin(angle));
+
+              if (isPositionCollisionFree(candX, candY, placedNodes, MIN_COLLISION_BUFFER_PX)) {
+                occupiedSlots.add(key);
+                chosenHub = hubIdx;
+                chosenSlot = s;
+                chosenX = candX;
+                chosenY = candY;
+                found = true;
+              }
+            }
+          }
+        }
+      }
+
+      placedNodes.push({ id: sub.id, x: chosenX, y: chosenY });
       const hub = QUANTUM_CLUSTER_HUBS[chosenHub];
-      const isOuter = chosenSlot >= 4;
-      const satR = isOuter ? 540 : 270;
-      const baseAngle = isOuter ? Math.PI / 4 : 0;
-      const angle = baseAngle + ((chosenSlot % 4) * Math.PI) / 2;
-      const x = Math.round(hub.cx + satR * Math.cos(angle));
-      const y = Math.round(hub.cy + satR * Math.sin(angle));
       const sectorId = `SECTOR ${hub.name.split(' ')[0]}-0${chosenSlot + 1}`;
 
       return {
         ...sub,
-        coordX: x,
-        coordY: y,
-        coord_x: x,
-        coord_y: y,
+        coordX: chosenX,
+        coordY: chosenY,
+        coord_x: chosenX,
+        coord_y: chosenY,
         sectorId,
         armId: hub.id,
         armName: hub.name,
       };
     }
 
-    // Default: Variant A (5-Arm Spiral)
-    const prefArm = absHash % CONSTELLATION_ARMS.length;
-    const prefTier = Math.floor(absHash / CONSTELLATION_ARMS.length) % SPIRAL_RADIAL_TIERS.length;
-    const prefSub = Math.floor(absHash / (CONSTELLATION_ARMS.length * SPIRAL_RADIAL_TIERS.length)) % 2;
+    // =========================================================================
+    // VARIANT A: 5-ARM SPIRAL (DEFAULT)
+    // =========================================================================
+    const numArms = CONSTELLATION_ARMS.length;
+    const numTiers = SPIRAL_RADIAL_TIERS.length;
+    const prefArm = absHash % numArms;
+    const prefTier = Math.floor(absHash / numArms) % numTiers;
+    const prefSub = Math.floor(absHash / (numArms * numTiers)) % 2;
 
     let chosenArm = prefArm;
     let chosenTier = prefTier;
     let chosenSub = prefSub;
+    let chosenX = 0;
+    let chosenY = 0;
     let found = false;
 
+    // Search through sub-slots, tiers, and arms systematically
     for (let subOffset = 0; subOffset < 2 && !found; subOffset++) {
       const s = (prefSub + subOffset) % 2;
-      for (let tOffset = 0; tOffset < SPIRAL_RADIAL_TIERS.length && !found; tOffset++) {
-        const t = (prefTier + tOffset) % SPIRAL_RADIAL_TIERS.length;
-        for (let aOffset = 0; aOffset < CONSTELLATION_ARMS.length && !found; aOffset++) {
-          const a = (prefArm + aOffset) % CONSTELLATION_ARMS.length;
+      for (let tOffset = 0; tOffset < numTiers && !found; tOffset++) {
+        const t = (prefTier + tOffset) % numTiers;
+        for (let aOffset = 0; aOffset < numArms && !found; aOffset++) {
+          const a = (prefArm + aOffset) % numArms;
           const key = `arm_${a}_tier_${t}_sub_${s}`;
-          if (!occupiedSlots.has(key)) {
+          if (occupiedSlots.has(key)) continue;
+
+          const arm = CONSTELLATION_ARMS[a];
+          const baseR = SPIRAL_RADIAL_TIERS[t];
+          const radius = baseR + (s === 1 ? 240 : 0);
+          const theta = getSpiralArmAngle(arm.baseAngle, radius) + (s === 1 ? 0.05 : -0.03);
+          const candX = Math.round(radius * Math.cos(theta));
+          const candY = Math.round(radius * Math.sin(theta));
+
+          if (isPositionCollisionFree(candX, candY, placedNodes, MIN_COLLISION_BUFFER_PX)) {
             occupiedSlots.add(key);
             chosenArm = a;
             chosenTier = t;
             chosenSub = s;
+            chosenX = candX;
+            chosenY = candY;
             found = true;
           }
         }
       }
     }
 
+    // Dynamic Overflow Expansion: Outer Spiral Tiers
     if (!found) {
-      const extTier = SPIRAL_RADIAL_TIERS.length + Math.floor(occupiedSlots.size / 5);
-      chosenTier = extTier;
-      chosenArm = absHash % CONSTELLATION_ARMS.length;
-      chosenSub = 0;
+      let extTier = numTiers;
+      while (!found && extTier < numTiers + 25) {
+        for (let s = 0; s < 2 && !found; s++) {
+          for (let aOffset = 0; aOffset < numArms && !found; aOffset++) {
+            const a = (prefArm + aOffset) % numArms;
+            const key = `arm_${a}_ext_tier_${extTier}_sub_${s}`;
+            if (occupiedSlots.has(key)) continue;
+
+            const arm = CONSTELLATION_ARMS[a];
+            const baseR = 3440 + (extTier - numTiers + 1) * 480;
+            const radius = baseR + (s === 1 ? 240 : 0);
+            const theta = getSpiralArmAngle(arm.baseAngle, radius) + (s === 1 ? 0.05 : -0.03);
+            const candX = Math.round(radius * Math.cos(theta));
+            const candY = Math.round(radius * Math.sin(theta));
+
+            if (isPositionCollisionFree(candX, candY, placedNodes, MIN_COLLISION_BUFFER_PX)) {
+              occupiedSlots.add(key);
+              chosenArm = a;
+              chosenTier = extTier;
+              chosenSub = s;
+              chosenX = candX;
+              chosenY = candY;
+              found = true;
+            }
+          }
+        }
+        extTier++;
+      }
     }
 
+    placedNodes.push({ id: sub.id, x: chosenX, y: chosenY });
     const arm = CONSTELLATION_ARMS[chosenArm];
-    const baseR = chosenTier < SPIRAL_RADIAL_TIERS.length
-      ? SPIRAL_RADIAL_TIERS[chosenTier]
-      : 3400 + (chosenTier - SPIRAL_RADIAL_TIERS.length + 1) * 480;
-    const radius = baseR + (chosenSub === 1 ? 235 : 0);
-    const theta = getSpiralArmAngle(arm.baseAngle, radius) + (chosenSub === 1 ? 0.05 : -0.03);
-
-    const x = Math.round(radius * Math.cos(theta));
-    const y = Math.round(radius * Math.sin(theta));
-
     const sectorPrefix = arm.name.split(' ')[0];
     const sectorNum = String((absHash % 89) + 10).padStart(2, '0');
     const sectorId = `SECTOR ${sectorPrefix}-${sectorNum}`;
 
     return {
       ...sub,
-      coordX: x,
-      coordY: y,
-      coord_x: x,
-      coord_y: y,
+      coordX: chosenX,
+      coordY: chosenY,
+      coord_x: chosenX,
+      coord_y: chosenY,
       sectorId,
       armId: arm.id,
       armName: arm.name,

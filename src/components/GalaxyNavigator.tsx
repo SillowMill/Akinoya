@@ -760,15 +760,26 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             10 * curZoom,
             hubScreenX,
             hubScreenY,
-            460 * curZoom
+            640 * curZoom
           );
           nebGrad.addColorStop(0, hub.glowColor.replace(/[\d.]+\)$/, '0.08)'));
           nebGrad.addColorStop(0.5, hub.glowColor.replace(/[\d.]+\)$/, '0.02)'));
           nebGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = nebGrad;
           ctx.beginPath();
-          ctx.arc(hubScreenX, hubScreenY, 460 * curZoom, 0, Math.PI * 2);
+          ctx.arc(hubScreenX, hubScreenY, 640 * curZoom, 0, Math.PI * 2);
           ctx.fill();
+
+          // Delicate Ghost Blueprint Satellite Orbital Rings (Inner: 280 AU, Outer: 560 AU)
+          ctx.strokeStyle = hub.color;
+          ctx.globalAlpha = 0.05;
+          ctx.lineWidth = 0.75;
+          ctx.setLineDash([4 * curZoom, 8 * curZoom]);
+          ctx.beginPath();
+          ctx.arc(hubScreenX, hubScreenY, 280 * curZoom, 0, Math.PI * 2);
+          ctx.arc(hubScreenX, hubScreenY, 560 * curZoom, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
 
           // Soft quantum umbilical filament beam from Core to Cluster Hub center
           ctx.strokeStyle = hub.glowColor.replace(/[\d.]+\)$/, '0.06)');
