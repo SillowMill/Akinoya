@@ -167,7 +167,29 @@ export function getDeterministicPlanetCoordinates(
     planetId === 'planet-amlemi-genesis-01' ||
     planetName === 'Ämlemi';
   if (isAmlemi) {
-    // Ämlemi is permanently anchored precisely on the foundational node of Orion Meridian at R = 300 AU
+    if (mode === 'matrix') {
+      const tr = OVAL_MATRIX_TRACKS[0];
+      return {
+        x: 0,
+        y: -tr.b,
+        sectorId: 'SECTOR MATRIX-T00 (CAPITAL APEX)',
+        armId: tr.id,
+        armName: tr.name,
+      };
+    }
+
+    if (mode === 'cluster') {
+      const hub = QUANTUM_CLUSTER_HUBS[0];
+      return {
+        x: Math.round(hub.cx + 280),
+        y: Math.round(hub.cy),
+        sectorId: 'SECTOR ORION-01 (FOUNDING ANCHOR)',
+        armId: hub.id,
+        armName: hub.name,
+      };
+    }
+
+    // Default: Variant A (5-Arm Spiral) - Foundational node along Orion Meridian (~300 AU)
     return {
       x: 243,
       y: -176,
@@ -239,14 +261,48 @@ export function assignMultiVariantCoordinates(
   mode: ConstellationLayoutMode = 'spiral',
   seed: number = 0
 ): PlanetSubmission[] {
-  // Hard pairwise distance tracking: Äkinoya Core (0, 0) and Ämlemi (243, -176) are pre-registered
+  // Resolve mode-aware coordinates for Ämlemi foundational master anchor
+  let amlemiCoord = {
+    x: 243,
+    y: -176,
+    sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)',
+    armId: 'arm-orion',
+    armName: 'ORION MERIDIAN',
+  };
+
+  if (mode === 'matrix') {
+    const tr = OVAL_MATRIX_TRACKS[0];
+    amlemiCoord = {
+      x: 0,
+      y: -tr.b,
+      sectorId: 'SECTOR MATRIX-T00 (CAPITAL APEX)',
+      armId: tr.id,
+      armName: tr.name,
+    };
+  } else if (mode === 'cluster') {
+    const hub = QUANTUM_CLUSTER_HUBS[0];
+    amlemiCoord = {
+      x: Math.round(hub.cx + 280),
+      y: Math.round(hub.cy),
+      sectorId: 'SECTOR ORION-01 (FOUNDING ANCHOR)',
+      armId: hub.id,
+      armName: hub.name,
+    };
+  }
+
+  // Hard pairwise distance tracking: Äkinoya Core (0, 0) and dynamic Ämlemi anchor are pre-registered
   const placedNodes: PlacedNode[] = [
     { id: 'akinoya-core', x: 0, y: 0 },
-    { id: 'planet-amlemi-genesis-01', x: 243, y: -176 },
+    { id: 'planet-amlemi-genesis-01', x: amlemiCoord.x, y: amlemiCoord.y },
   ];
   const occupiedSlots = new Set<string>();
-  occupiedSlots.add('arm_0_tier_foundational'); // Permanently locked for Ämlemi
-  occupiedSlots.add('matrix_tr_0_slot_foundational'); // Track 0 permanently locked for Ämlemi
+  if (mode === 'matrix') {
+    occupiedSlots.add('matrix_tr_0_slot_foundational');
+  } else if (mode === 'cluster') {
+    occupiedSlots.add('cluster_hub_0_slot_0');
+  } else {
+    occupiedSlots.add('arm_0_tier_foundational');
+  }
 
   return planets.map((sub) => {
     // 1. Äkinoya Core Check
@@ -265,21 +321,20 @@ export function assignMultiVariantCoordinates(
       };
     }
 
-    // 2. Ämlemi Master Anchor Check (Permanently locked at 243, -176)
+    // 2. Ämlemi Master Anchor Check (Dynamically resolved per active constellation mode)
     const isAmlemi =
       sub.id === 'planet-amlemi-genesis-01' ||
       sub.planetName === 'Ämlemi';
     if (isAmlemi) {
-      const arm = CONSTELLATION_ARMS[0]; // Orion Meridian
       return {
         ...sub,
-        coordX: 243,
-        coordY: -176,
-        coord_x: 243,
-        coord_y: -176,
-        sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)',
-        armId: arm.id,
-        armName: arm.name,
+        coordX: amlemiCoord.x,
+        coordY: amlemiCoord.y,
+        coord_x: amlemiCoord.x,
+        coord_y: amlemiCoord.y,
+        sectorId: amlemiCoord.sectorId,
+        armId: amlemiCoord.armId,
+        armName: amlemiCoord.armName,
       };
     }
 

@@ -736,8 +736,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Faint Track Designation Badge at vertical apex
-          if (curZoom > 0.38) {
+          // Faint Track Designation Badge at vertical apex (suppressed on track-0 to keep Ämlemi's apex crown clean)
+          if (track.id !== 'track-0' && curZoom > 0.38) {
             ctx.font = `bold ${Math.max(8.5, Math.min(10, 9 * curZoom))}px monospace`;
             ctx.fillStyle = track.color;
             ctx.globalAlpha = 0.3;
