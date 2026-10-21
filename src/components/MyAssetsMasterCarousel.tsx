@@ -42,7 +42,8 @@ import {
   triggerDirectDownload,
   downloadOrShareVideoDirect,
 } from './WorldStoryVerificationBadge';
-import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
+import { watermarkAndSavePhoto, renderWatermarkedPhotoBlob } from '../utils/watermarkPhoto';
+import { PlanetPhoto4kOverlayWidget } from './PlanetPhoto4kOverlayWidget';
 
 export type MasterAssetSlideId = 'archive_4k' | 'story_card' | 'video_trailer';
 
@@ -140,115 +141,10 @@ export async function renderWatermarkedImageBlob(
     authorName?: string;
   }
 ): Promise<Blob | null> {
-  try {
-    let sourceBlob: Blob | null = null;
-    let localBlobUrl: string | null = null;
-    try {
-      const res = await fetch(sourceUrl);
-      if (res.ok) {
-        sourceBlob = await res.blob();
-        localBlobUrl = URL.createObjectURL(sourceBlob);
-      }
-    } catch {
-      // Fallback to direct URL if fetch is blocked
-    }
-
-    const imgUrlToLoad = localBlobUrl || sourceUrl;
-    const [baseImg, logoImg] = await Promise.all([
-      loadImageForCanvas(imgUrlToLoad),
-      loadImageForCanvas(sillowMillLogoUrl),
-    ]);
-
-    if (localBlobUrl) {
-      URL.revokeObjectURL(localBlobUrl);
-    }
-
-    if (!baseImg) return null;
-
-    const W = baseImg.naturalWidth || baseImg.width || 1920;
-    const H = baseImg.naturalHeight || baseImg.height || 1080;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = W;
-    canvas.height = H;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-
-    // 1. Draw base high-resolution render
-    ctx.drawImage(baseImg, 0, 0, W, H);
-
-    // 2. Proportional scale factor relative to 1920px standard width
-    const s = Math.max(0.65, Math.min(2.5, W / 1920));
-
-    // 3. Subtle bottom-left watermark badge placement
-    const pad = Math.round(36 * s);
-    const badgeH = Math.round(76 * s);
-    const badgeW = Math.round(390 * s);
-    const badgeX = pad;
-    const badgeY = H - pad - badgeH;
-
-    // Dark glassmorphic backing in bottom-left corner
-    ctx.save();
-    drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, Math.round(18 * s));
-    ctx.fillStyle = 'rgba(4, 9, 20, 0.82)';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.88)';
-    ctx.shadowBlur = Math.round(20 * s);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-    ctx.lineWidth = Math.max(1, 1.5 * s);
-    ctx.stroke();
-    ctx.restore();
-
-    // Sillowmilllogo.png watermark emblem inside bottom-left badge
-    if (logoImg) {
-      const padLogo = Math.round(10 * s);
-      const drawLogoSize = badgeH - padLogo * 2;
-      const lx = badgeX + padLogo;
-      const ly = badgeY + padLogo;
-
-      ctx.save();
-      ctx.shadowColor = 'rgba(255, 255, 255, 0.55)';
-      ctx.shadowBlur = Math.round(12 * s);
-      ctx.drawImage(logoImg, lx, ly, drawLogoSize, drawLogoSize);
-      ctx.restore();
-
-      // Divider inside watermark badge
-      const divX = lx + drawLogoSize + Math.round(10 * s);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-      ctx.lineWidth = Math.max(1, 1 * s);
-      ctx.beginPath();
-      ctx.moveTo(divX, badgeY + Math.round(14 * s));
-      ctx.lineTo(divX, badgeY + badgeH - Math.round(14 * s));
-      ctx.stroke();
-
-      // Telemetry typography
-      const textX = divX + Math.round(12 * s);
-
-      // SILLOW MILL brand
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `900 ${Math.round(17 * s)}px "Inter", sans-serif`;
-      ctx.fillText('SILLOW MILL', textX, badgeY + Math.round(28 * s));
-
-      // Universe & World Name
-      ctx.fillStyle = '#67e8f9';
-      ctx.font = `bold ${Math.round(11 * s)}px "JetBrains Mono", monospace`;
-      const worldLabel = `ÄKINOYA · ${(meta.planetName || 'ÄMLEMI').toUpperCase()}`;
-      ctx.fillText(worldLabel, textX, badgeY + Math.round(46 * s));
-
-      // Provenance / Verification code
-      ctx.fillStyle = 'rgba(254, 243, 199, 0.85)';
-      ctx.font = `600 ${Math.round(9.5 * s)}px "JetBrains Mono", monospace`;
-      const provLine = meta.verificationCode || 'OFFICIAL PLANETARY ARCHIVE';
-      ctx.fillText(provLine, textX, badgeY + Math.round(62 * s));
-    }
-
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.96);
-    });
-  } catch (err) {
-    console.warn('[Watermark] Failed to render watermark canvas:', err);
-    return null;
-  }
+  return renderWatermarkedPhotoBlob(sourceUrl, {
+    planetName: meta.planetName,
+    category: meta.stageCategory,
+  });
 }
 
 /**
@@ -608,6 +504,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
         photoTitle: activePhoto.title,
         category: activePhoto.category,
         worldNumber: meta.worldNumber,
+        slotIndex: activePhotoIdx,
+        dossier,
       });
     } finally {
       setIsDownloadingPhoto(false);
@@ -992,6 +890,18 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       className="w-full h-full object-cover group-hover:scale-[1.015] transition-transform duration-700 select-none pointer-events-none"
                     />
                   )}
+
+                  {/* Pre-Download Visible Trademark, Branding & Dynamic Planet Widget */}
+                  <PlanetPhoto4kOverlayWidget
+                    planetName={dossier.planetName}
+                    slotIndex={activePhotoIdx}
+                    category={activePhoto.category}
+                    photoTitle={activePhoto.title}
+                    dossier={dossier}
+                    onDownload={handleDownload4kPhoto}
+                    isDownloading={isDownloadingPhoto}
+                    showSaveButton={true}
+                  />
                 </div>
 
                 {/* Clean Information & Action Bar Below the 4K Render (Zero Overlap on Image) */}
@@ -1573,6 +1483,18 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       <div className="absolute top-3 left-4 px-2.5 py-1 rounded bg-black/80 border border-amber-400/50 text-[10px] font-mono font-bold text-amber-300 uppercase">
                         {activePhoto.category} · {activePhoto.title}
                       </div>
+
+                      {/* Pre-Download Visible Trademark, Branding & Dynamic Planet Widget in Fullscreen */}
+                      <PlanetPhoto4kOverlayWidget
+                        planetName={dossier.planetName}
+                        slotIndex={activePhotoIdx}
+                        category={activePhoto.category}
+                        photoTitle={activePhoto.title}
+                        dossier={dossier}
+                        onDownload={handleDownload4kPhoto}
+                        isDownloading={isDownloadingPhoto}
+                        showSaveButton={true}
+                      />
                     </div>
                     {/* 5-Photo Strip in Fullscreen */}
                     <div className="flex items-center gap-2 overflow-x-auto py-1 max-w-full">

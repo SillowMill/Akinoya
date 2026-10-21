@@ -2041,11 +2041,14 @@ export const LiveStoryTrailerViewport: React.FC<{
                 className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
               />
               <div>
-                <div className="text-[10px] font-display font-black text-white tracking-wider uppercase">
-                  SILLOW MILL
+                <div className="text-[10.5px] font-display font-black text-white tracking-wider uppercase">
+                  {(dossier.planetName || 'ÄMLEMI').toUpperCase()}
                 </div>
                 <div className="text-[7.5px] font-mono text-cyan-300 font-bold">
-                  {meta.verificationCode}
+                  ÄKINOYA UNIVERSE · 01 / TYPE: CELESTIAL NUCLEUS
+                </div>
+                <div className="text-[6.5px] font-mono text-slate-300/80 tracking-wider">
+                  ™ &amp; © SILLOW MILL · sillowmill.com
                 </div>
               </div>
             </div>
@@ -2940,5 +2943,5 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
   );
 });
 
-export { renderWatermarkedPhotoBlob, watermarkAndSavePhoto } from '../utils/watermarkPhoto';
+export { renderWatermarkedPhotoBlob, watermarkAndSavePhoto, getPlanetSlotCharacteristics } from '../utils/watermarkPhoto';
 export default WorldStoryVerificationBadge;

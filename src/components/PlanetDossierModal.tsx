@@ -43,6 +43,7 @@ import {
   triggerDirectDownload,
 } from './WorldStoryVerificationBadge';
 import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
+import { PlanetPhoto4kOverlayWidget } from './PlanetPhoto4kOverlayWidget';
 
 export interface PlanetDossierModalProps {
   planet: PlanetSubmission | null;
@@ -203,6 +204,8 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
         planetName: activePlanet.planetName,
         photoTitle: photo.title,
         category: photo.category,
+        slotIndex: Math.max(0, activePhotoIdx - 1),
+        dossier: activePlanet,
       });
     } finally {
       setIsDownloading(false);
@@ -484,12 +487,17 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                       </div>
                     )}
 
-                    {/* Bottom-center subtle slide badge on photo stage */}
-                    <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full bg-[#040915]/85 border border-white/15 text-[10px] font-mono text-cyan-200 flex items-center gap-2 shadow-lg">
-                      <span className="font-bold text-amber-300">0{activePhotoIdx} / 05</span>
-                      <span className="text-white/40">·</span>
-                      <span className="truncate max-w-[160px] sm:max-w-[260px]">{currentPhoto.title}</span>
-                    </div>
+                    {/* Pre-Download Visible Trademark, Branding & Dynamic Planet Widget */}
+                    <PlanetPhoto4kOverlayWidget
+                      planetName={activePlanet.planetName}
+                      slotIndex={Math.max(0, activePhotoIdx - 1)}
+                      category={currentPhoto.category}
+                      photoTitle={currentPhoto.title}
+                      dossier={activePlanet}
+                      onDownload={() => handleDownloadPhoto(currentPhoto)}
+                      isDownloading={isDownloading}
+                      showSaveButton={true}
+                    />
 
                     {/* Sleek Left/Right Navigation Arrows (Always visible on mobile/tablet & desktop) */}
                     <button

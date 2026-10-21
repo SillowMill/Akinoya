@@ -1,4 +1,5 @@
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
+import { PlanetSubmission } from '../types/contest';
 import {
   loadImageForCanvas,
   isMobileOrTabletDevice,
@@ -22,9 +23,49 @@ function drawRoundedRect(
   ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
   ctx.lineTo(x + r, y + h);
   ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x + r, y + r);
+  ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
+}
+
+export interface SlotCharacteristics {
+  slotNum: string;
+  typeName: string;
+  subtitle: string;
+}
+
+/**
+ * Returns dynamic slot number and characteristics classification matching the universe benchmark.
+ * (e.g. 01 / TYPE: CELESTIAL NUCLEUS, 02 / TYPE: BOTANICAL BIOME, etc.)
+ */
+export function getPlanetSlotCharacteristics(
+  slotIndex: number = 0,
+  dossier?: PlanetSubmission,
+  category?: string
+): SlotCharacteristics {
+  const slotNum = String(slotIndex + 1).padStart(2, '0');
+  let typeName = 'CELESTIAL NUCLEUS';
+
+  if (slotIndex === 0) {
+    typeName = 'CELESTIAL NUCLEUS';
+  } else if (slotIndex === 1) {
+    typeName = dossier?.biome ? dossier.biome.toUpperCase() : 'BOTANICAL BIOME';
+  } else if (slotIndex === 2) {
+    typeName = 'APEX SPECIMEN';
+  } else if (slotIndex === 3) {
+    typeName = 'ATMOSPHERIC ENTRY';
+  } else if (slotIndex === 4) {
+    typeName = 'SACRED MONUMENT';
+  } else if (category) {
+    const rawCategory = category.includes('·') ? category.split('·')[1].trim() : category;
+    typeName = rawCategory.toUpperCase();
+  }
+
+  return {
+    slotNum,
+    typeName,
+    subtitle: `ÄKINOYA UNIVERSE · ${slotNum} / TYPE: ${typeName}`,
+  };
 }
 
 export interface WatermarkPhotoOptions {
@@ -32,12 +73,18 @@ export interface WatermarkPhotoOptions {
   photoTitle?: string;
   category?: string;
   worldNumber?: string | number;
+  slotIndex?: number;
+  dossier?: PlanetSubmission;
+  subtitle?: string;
 }
 
 /**
- * Composites the official Sillow Mill luxury logo and trademark typography
- * subtly and elegantly in the bottom-left corner of any 4K/high-res planetary photo.
- * Returns a high-definition JPEG Blob (0.96 quality) ready for native saving into Photos.
+ * Composites the official Sillow Mill luxury logo, dynamic planet name, slot characteristics,
+ * and trademark typography in the bottom-left corner of any 4K/high-res planetary photo.
+ * 
+ * Enforces native 4K canvas initialization (min 3840px width) so typography and branding
+ * are razor-sharp with zero blurriness on high-density Retina and mobile displays.
+ * Returns a crystal-clear JPEG Blob (0.98 quality) ready for native saving into Photos.
  */
 export async function renderWatermarkedPhotoBlob(
   imageUrl: string,
@@ -54,8 +101,13 @@ export async function renderWatermarkedPhotoBlob(
 
     if (!img) return null;
 
-    const W = img.naturalWidth || img.width || 1920;
-    const H = img.naturalHeight || img.height || 1080;
+    const sourceW = img.naturalWidth || img.width || 3840;
+    const sourceH = img.naturalHeight || img.height || 2160;
+    const aspect = sourceW / Math.max(1, sourceH);
+
+    // Enforce full native 4K minimum resolution (3840px width minimum)
+    const W = Math.max(3840, sourceW);
+    const H = Math.round(W / aspect);
 
     const canvas = document.createElement('canvas');
     canvas.width = W;
@@ -66,58 +118,78 @@ export async function renderWatermarkedPhotoBlob(
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // 1. Draw base photo
+    // 1. Draw base photo scaled to full 4K canvas
     ctx.drawImage(img, 0, 0, W, H);
 
-    // 2. Dynamic scale factor relative to 1080p/4K
-    const s = Math.max(0.65, Math.min(2.5, W / 1920));
+    // 2. Scale factor relative to 1920 (at 3840 UHD 4K, s = 2.0; at 8K, s = 4.0)
+    const s = W / 1920;
 
-    // 3. Subtle bottom-left ambient vignette for clean contrast
-    const vigW = Math.round(620 * s);
-    const vigH = Math.round(220 * s);
+    // 3. Subtle bottom-left ambient vignette for clean HUD contrast
+    const vigW = Math.round(750 * s);
+    const vigH = Math.round(280 * s);
     const vigGrad = ctx.createRadialGradient(0, H, 0, 0, H, vigW);
-    vigGrad.addColorStop(0, 'rgba(2, 6, 16, 0.78)');
-    vigGrad.addColorStop(0.5, 'rgba(2, 6, 16, 0.42)');
+    vigGrad.addColorStop(0, 'rgba(2, 6, 16, 0.88)');
+    vigGrad.addColorStop(0.55, 'rgba(2, 6, 16, 0.45)');
     vigGrad.addColorStop(1, 'rgba(2, 6, 16, 0)');
     ctx.fillStyle = vigGrad;
     ctx.fillRect(0, H - vigH, vigW, vigH);
 
-    // 4. Elegant Bottom-Left Sillow Mill Trademark Capsule
-    const padX = Math.round(36 * s);
-    const padY = Math.round(36 * s);
-    const cardH = Math.round(84 * s);
-    const cardW = Math.round(450 * s);
+    // 4. Resolve dynamic planet name and characteristics
+    const planetName = (options?.planetName || options?.dossier?.planetName || 'ÄMLEMI').toUpperCase();
+    const slotIdx = options?.slotIndex ?? 0;
+    const characteristics = getPlanetSlotCharacteristics(slotIdx, options?.dossier, options?.category);
+    const subtitleText = (options?.subtitle || characteristics.subtitle).toUpperCase();
+    const trademarkText = '™ & © SILLOW MILL · sillowmill.com';
+
+    // 5. Measure text dimensions to ensure dynamic sizing
+    ctx.font = `900 ${Math.round(24 * s)}px "Inter", -apple-system, BlinkMacSystemFont, sans-serif`;
+    const titleMetrics = ctx.measureText(planetName);
+
+    ctx.font = `bold ${Math.round(11.5 * s)}px "JetBrains Mono", monospace`;
+    const subtitleMetrics = ctx.measureText(subtitleText);
+
+    ctx.font = `600 ${Math.round(10 * s)}px "JetBrains Mono", monospace`;
+    const tmMetrics = ctx.measureText(trademarkText);
+
+    const maxTextW = Math.max(titleMetrics.width, subtitleMetrics.width, tmMetrics.width, Math.round(300 * s));
+
+    // 6. Bottom-Left Trademark Capsule Sizing
+    const padX = Math.round(44 * s);
+    const padY = Math.round(44 * s);
+    const cardH = Math.round(92 * s);
+    const logoFrameSize = Math.round(68 * s);
+    const textGap = Math.round(16 * s);
+    const cardW = Math.round(padX * 0.4 + logoFrameSize + textGap + maxTextW + padX * 0.6);
     const cardX = padX;
     const cardY = H - padY - cardH;
-    const cardR = Math.round(18 * s);
+    const cardR = Math.round(20 * s);
 
     // Capsule dark glass surface
     drawRoundedRect(ctx, cardX, cardY, cardW, cardH, cardR);
-    ctx.fillStyle = 'rgba(4, 9, 22, 0.80)';
+    ctx.fillStyle = 'rgba(4, 9, 22, 0.88)';
     ctx.fill();
 
     // Specular border
-    ctx.strokeStyle = 'rgba(34, 211, 238, 0.45)';
-    ctx.lineWidth = Math.max(1, 1.5 * s);
+    ctx.strokeStyle = 'rgba(34, 211, 238, 0.55)';
+    ctx.lineWidth = Math.max(2, Math.round(2 * s));
     ctx.stroke();
 
-    // Top specular highlight line
+    // Top specular highlight hairline
     ctx.save();
     ctx.beginPath();
     drawRoundedRect(ctx, cardX, cardY, cardW, cardH, cardR);
     ctx.clip();
     const topSpec = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY);
     topSpec.addColorStop(0, 'rgba(34, 211, 238, 0)');
-    topSpec.addColorStop(0.3, 'rgba(34, 211, 238, 0.7)');
-    topSpec.addColorStop(0.7, 'rgba(245, 158, 11, 0.7)');
+    topSpec.addColorStop(0.3, 'rgba(34, 211, 238, 0.85)');
+    topSpec.addColorStop(0.7, 'rgba(245, 158, 11, 0.85)');
     topSpec.addColorStop(1, 'rgba(245, 158, 11, 0)');
     ctx.fillStyle = topSpec;
-    ctx.fillRect(cardX, cardY, cardW, Math.max(2, Math.round(2.5 * s)));
+    ctx.fillRect(cardX, cardY, cardW, Math.max(3, Math.round(3 * s)));
     ctx.restore();
 
-    // 5. Official Sillow Mill Logo
-    const logoFrameSize = Math.round(62 * s);
-    const logoFrameX = cardX + Math.round(12 * s);
+    // 7. Official Sillow Mill Insignia
+    const logoFrameX = cardX + Math.round(14 * s);
     const logoFrameY = cardY + (cardH - logoFrameSize) / 2;
 
     if (logoImg) {
@@ -135,36 +207,59 @@ export async function renderWatermarkedPhotoBlob(
       const dy = logoFrameY + (logoFrameSize - drawH) / 2;
 
       ctx.save();
-      ctx.shadowColor = 'rgba(255, 255, 255, 0.65)';
-      ctx.shadowBlur = Math.round(14 * s);
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.7)';
+      ctx.shadowBlur = Math.round(16 * s);
       ctx.drawImage(logoImg, dx, dy, drawW, drawH);
       ctx.restore();
     }
 
-    // 6. Trademark & Brand Typography
-    const textX = logoFrameX + logoFrameSize + Math.round(14 * s);
+    // 8. Vertical Chrome / Specular Divider
+    const divX = logoFrameX + logoFrameSize + Math.round(12 * s);
+    ctx.save();
+    const divGrad = ctx.createLinearGradient(
+      divX,
+      cardY + Math.round(14 * s),
+      divX,
+      cardY + cardH - Math.round(14 * s)
+    );
+    divGrad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
+    divGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.65)');
+    divGrad.addColorStop(1, 'rgba(255, 255, 255, 0.15)');
+    ctx.strokeStyle = divGrad;
+    ctx.lineWidth = Math.max(1.5, Math.round(1.5 * s));
+    ctx.beginPath();
+    ctx.moveTo(divX, cardY + Math.round(14 * s));
+    ctx.lineTo(divX, cardY + cardH - Math.round(14 * s));
+    ctx.stroke();
+    ctx.restore();
 
-    // Line 1: SILLOW MILL
+    // 9. Trademark & Brand Typography Stack
+    const textX = divX + Math.round(14 * s);
+
+    // Line 1: Dynamically Generated Planet Name (Bold, Crisp White)
+    ctx.save();
     ctx.fillStyle = '#ffffff';
-    ctx.font = `900 ${Math.round(22 * s)}px "Inter", sans-serif`;
-    ctx.fillText('SILLOW MILL', textX, cardY + Math.round(30 * s));
+    ctx.font = `900 ${Math.round(24 * s)}px "Inter", -apple-system, BlinkMacSystemFont, sans-serif`;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = Math.round(6 * s);
+    ctx.fillText(planetName, textX, cardY + Math.round(32 * s));
+    ctx.restore();
 
-    // Line 2: ÄKINOYA UNIVERSE · 4K ARCHIVE
-    const categoryText = (options?.category || '4K ARCHIVE').toUpperCase();
+    // Line 2: Synchronized Planet Characteristics & Slot Type (Cyan Monospace)
     ctx.fillStyle = '#67e8f9';
-    ctx.font = `bold ${Math.round(11 * s)}px "JetBrains Mono", monospace`;
-    ctx.fillText(`ÄKINOYA UNIVERSE · ${categoryText}`, textX, cardY + Math.round(50 * s));
+    ctx.font = `bold ${Math.round(11.5 * s)}px "JetBrains Mono", monospace`;
+    ctx.fillText(subtitleText, textX, cardY + Math.round(54 * s));
 
-    // Line 3: Trademark & Web Verification String
-    ctx.fillStyle = 'rgba(203, 213, 225, 0.85)';
-    ctx.font = `500 ${Math.round(9.5 * s)}px "JetBrains Mono", monospace`;
-    ctx.fillText('TM & © SILLOW MILL · sillowmill.com', textX, cardY + Math.round(68 * s));
+    // Line 3: Official Trademark & Copyright
+    ctx.fillStyle = 'rgba(203, 213, 225, 0.95)';
+    ctx.font = `600 ${Math.round(10 * s)}px "JetBrains Mono", monospace`;
+    ctx.fillText(trademarkText, textX, cardY + Math.round(74 * s));
 
     return new Promise<Blob | null>((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.96);
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.98);
     });
   } catch (err) {
-    console.error('Failed to composite watermark onto photo:', err);
+    console.error('Failed to composite 4K watermark onto photo:', err);
     return null;
   }
 }
