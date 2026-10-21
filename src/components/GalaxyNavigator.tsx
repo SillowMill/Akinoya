@@ -63,11 +63,13 @@ interface CameraTarget {
 }
 
 const ORBITAL_RINGS = [
-  { radius: 500, label: '500 AU · INNER CORE RING', color: 'rgba(245, 158, 11, 0.25)' },
-  { radius: 1000, label: '1000 AU · PIONEER ORBIT', color: 'rgba(251, 191, 36, 0.22)' },
-  { radius: 1650, label: '1650 AU · IONIZATION REEF', color: 'rgba(245, 158, 11, 0.2)' },
-  { radius: 2400, label: '2400 AU · OUTER COMMUNITY EXPEDITIONS', color: 'rgba(251, 191, 36, 0.18)' },
-  { radius: 3300, label: '3300 AU · DEEP STELLAR HORIZON', color: 'rgba(255, 255, 255, 0.12)' },
+  { radius: 300, label: '300 AU · FOUNDATIONAL CAPITAL ORBIT (ÄMLEMI)', color: 'rgba(251, 191, 36, 0.32)' },
+  { radius: 540, label: '540 AU · INNER CORE HARMONIC RING', color: 'rgba(245, 158, 11, 0.22)' },
+  { radius: 1000, label: '1000 AU · PIONEER ORBIT', color: 'rgba(251, 191, 36, 0.2)' },
+  { radius: 1480, label: '1480 AU · IONIZATION REEF', color: 'rgba(56, 189, 248, 0.18)' },
+  { radius: 1960, label: '1960 AU · SOLAR FLARE BELT', color: 'rgba(245, 158, 11, 0.16)' },
+  { radius: 2440, label: '2440 AU · OUTER COMMUNITY EXPEDITIONS', color: 'rgba(168, 85, 247, 0.15)' },
+  { radius: 3400, label: '3400 AU · DEEP STELLAR HORIZON', color: 'rgba(255, 255, 255, 0.12)' },
 ];
 
 export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
@@ -520,7 +522,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         ctx.lineWidth = Math.max(3, 5 * curZoom);
         ctx.beginPath();
         let isFirst = true;
-        for (let r = 360; r <= 3100; r += 35) {
+        for (let r = 240; r <= 3500; r += 30) {
           const theta = getSpiralArmAngle(arm.baseAngle, r);
           const sx = coreScreenX + r * Math.cos(theta) * curZoom;
           const sy = coreScreenY + r * Math.sin(theta) * curZoom;
@@ -540,7 +542,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         ctx.setLineDash([4 * curZoom, 8 * curZoom]);
         ctx.beginPath();
         isFirst = true;
-        for (let r = 360; r <= 3100; r += 35) {
+        for (let r = 240; r <= 3500; r += 30) {
           const theta = getSpiralArmAngle(arm.baseAngle, r);
           const sx = coreScreenX + r * Math.cos(theta) * curZoom;
           const sy = coreScreenY + r * Math.sin(theta) * curZoom;
@@ -556,7 +558,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
         // Sci-Fi Arm Name Badge at outer extremity
         if (curZoom > 0.42) {
-          const labelRadius = 2920;
+          const labelRadius = 3450;
           const labelTheta = getSpiralArmAngle(arm.baseAngle, labelRadius);
           const lx = coreScreenX + labelRadius * Math.cos(labelTheta) * curZoom;
           const ly = coreScreenY + labelRadius * Math.sin(labelTheta) * curZoom;
@@ -591,6 +593,30 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
         const activeHoveredId = hoveredPlanetRef.current?.id;
         const activeSelectedId = selectedPlanetRef.current?.id;
+
+        // Foundational Master Anchor: Golden genesis link from Äkinoya Core (0,0) to Ämlemi (243, -176)
+        const amlemiNode = currentPlanets.find(
+          (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+        );
+        if (amlemiNode) {
+          const amX = centerX + (curPan.x + (amlemiNode.coordX ?? 243)) * curZoom;
+          const amY = centerY + (curPan.y + (amlemiNode.coordY ?? -176)) * curZoom;
+          const isAmlemiActive =
+            amlemiNode.id === activeHoveredId || amlemiNode.id === activeSelectedId;
+
+          ctx.save();
+          ctx.strokeStyle = isAmlemiActive
+            ? 'rgba(251, 191, 36, 0.95)'
+            : 'rgba(245, 158, 11, 0.45)';
+          ctx.lineWidth = isAmlemiActive ? 2.2 : 1.2;
+          ctx.setLineDash([4 * curZoom, 4 * curZoom]);
+          ctx.beginPath();
+          ctx.moveTo(coreScreenX, coreScreenY);
+          ctx.lineTo(amX, amY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
 
         for (const arm of CONSTELLATION_ARMS) {
           const nodes = armGroups.get(arm.id);
@@ -1494,6 +1520,11 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                       </span>
                     )}
                   </div>
+                )}
+
+                {/* Ämlemi Master Anchor Radiant Pulsing Halo */}
+                {isAmlemi && (
+                  <div className="absolute -inset-4 rounded-full bg-gradient-to-tr from-amber-500/25 via-yellow-400/15 to-transparent blur-md animate-pulse pointer-events-none" />
                 )}
 
                 {/* Single Delicate Dotted Ring Structure */}

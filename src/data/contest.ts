@@ -38,19 +38,22 @@ export interface ConstellationArm {
   glowColor: string;
 }
 
+const BASE_CONSTELLATION_OFFSET = -Math.PI / 5; // -36 deg: Balanced North-East diagonal orientation
+
 export const CONSTELLATION_ARMS: ConstellationArm[] = [
-  { id: 'arm-orion', name: 'ORION MERIDIAN', baseAngle: 0, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.45)' },
-  { id: 'arm-cygnus', name: 'CYGNUS FILAMENT', baseAngle: (2 * Math.PI) / 5, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.45)' },
-  { id: 'arm-solaris', name: 'SOLARIS TENDRIL', baseAngle: (4 * Math.PI) / 5, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.45)' },
-  { id: 'arm-aurelia', name: 'AURELIA CLUSTER', baseAngle: (6 * Math.PI) / 5, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.45)' },
-  { id: 'arm-centauri', name: 'CENTAURI STREAM', baseAngle: (8 * Math.PI) / 5, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.45)' },
+  { id: 'arm-orion', name: 'ORION MERIDIAN', baseAngle: BASE_CONSTELLATION_OFFSET, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.45)' },
+  { id: 'arm-cygnus', name: 'CYGNUS FILAMENT', baseAngle: BASE_CONSTELLATION_OFFSET + (2 * Math.PI) / 5, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.45)' },
+  { id: 'arm-solaris', name: 'SOLARIS TENDRIL', baseAngle: BASE_CONSTELLATION_OFFSET + (4 * Math.PI) / 5, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.45)' },
+  { id: 'arm-aurelia', name: 'AURELIA CLUSTER', baseAngle: BASE_CONSTELLATION_OFFSET + (6 * Math.PI) / 5, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.45)' },
+  { id: 'arm-centauri', name: 'CENTAURI STREAM', baseAngle: BASE_CONSTELLATION_OFFSET + (8 * Math.PI) / 5, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.45)' },
 ];
 
 export const SPIRAL_B = 0.62;
-export const SPIRAL_R0 = 400;
+export const SPIRAL_R0 = 300;
+export const AMLEMI_FOUNDATIONAL_RADIUS = 300;
 
-// 7 Quantized Radial Tiers (520 AU to 2800 AU) with guaranteed >200px spatial clearance
-export const SPIRAL_RADIAL_TIERS = [520, 900, 1280, 1660, 2040, 2420, 2800];
+// 7 Quantized Harmonic Radial Tiers (540 AU to 3400 AU) with guaranteed >220px spatial clearance
+export const SPIRAL_RADIAL_TIERS = [540, 1000, 1480, 1960, 2440, 2920, 3400];
 
 export function getSpiralArmAngle(baseAngle: number, radius: number): number {
   return baseAngle + SPIRAL_B * Math.log(Math.max(radius, SPIRAL_R0) / SPIRAL_R0);
@@ -58,7 +61,7 @@ export function getSpiralArmAngle(baseAngle: number, radius: number): number {
 
 /**
  * Deterministically derives 2D celestial coordinates and sector ID relative to Äkinoya (0,0)
- * Uses a 5-arm logarithmic spiral constellation network with guaranteed spatial clearance (>200px)
+ * Uses a 5-arm logarithmic spiral constellation network with guaranteed spatial clearance (>220px)
  */
 export function getDeterministicPlanetCoordinates(
   planetId: string,
@@ -75,7 +78,14 @@ export function getDeterministicPlanetCoordinates(
     planetId === 'planet-amlemi-genesis-01' ||
     planetName === 'Ämlemi';
   if (isAmlemi) {
-    return { x: 280, y: -260, sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)', armId: 'arm-orion', armName: 'ORION MERIDIAN' };
+    // Ämlemi is anchored precisely on the foundational node of Orion Meridian at R = 300 AU
+    return {
+      x: 243,
+      y: -176,
+      sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)',
+      armId: 'arm-orion',
+      armName: 'ORION MERIDIAN',
+    };
   }
 
   const str = `${planetId}_${planetName || ''}`;
@@ -90,20 +100,20 @@ export function getDeterministicPlanetCoordinates(
   const armIndex = absHash % CONSTELLATION_ARMS.length;
   const arm = CONSTELLATION_ARMS[armIndex];
 
-  // 2. Quantized radial tier (7 structural tiers from 520 AU to 2800 AU)
+  // 2. Quantized radial tier (7 structural tiers from 540 AU to 3400 AU)
   const tierIndex = Math.floor(absHash / CONSTELLATION_ARMS.length) % SPIRAL_RADIAL_TIERS.length;
   const baseRadius = SPIRAL_RADIAL_TIERS[tierIndex];
 
-  // 3. Staggered sub-slot along filament (+/- radial step) to ensure absolute >200px spatial clearance
+  // 3. Staggered sub-slot along filament (+/- radial step) to ensure absolute >220px spatial clearance
   const subSlot = Math.floor(absHash / (CONSTELLATION_ARMS.length * SPIRAL_RADIAL_TIERS.length)) % 2;
-  const radiusOffset = subSlot === 1 ? 205 : 0;
+  const radiusOffset = subSlot === 1 ? 235 : 0;
   const radius = baseRadius + radiusOffset;
 
-  // 4. Spiral logarithmic curvature angle: theta(r) = theta_0 + 0.62 * ln(r / 400)
+  // 4. Spiral logarithmic curvature angle: theta(r) = theta_0 + 0.62 * ln(r / 300)
   const baseSpiralAngle = getSpiralArmAngle(arm.baseAngle, radius);
 
   // Stagger angle slightly for sub-slot along filament
-  const angleOffset = subSlot === 1 ? 0.05 : -0.04;
+  const angleOffset = subSlot === 1 ? 0.05 : -0.03;
   const finalAngle = baseSpiralAngle + angleOffset;
 
   const x = Math.round(radius * Math.cos(finalAngle));
@@ -114,6 +124,116 @@ export function getDeterministicPlanetCoordinates(
   const sectorId = `SECTOR ${sectorPrefix}-${sectorNum}`;
 
   return { x, y, sectorId, armId: arm.id, armName: arm.name };
+}
+
+/**
+ * Dynamic Proportional Equilibrium Engine:
+ * Guarantees that every charted planet snaps into a balanced, proportional position
+ * across the 5 logarithmic spiral arms and 7 radial tiers.
+ * Enforces a strict repulsive buffer (> 220px screen distance) between all nodes.
+ * If a sector slot fills up, gracefully cascades to alternate spiral arms and outer tiers.
+ */
+export function assignEquilibriumCoordinates(planets: PlanetSubmission[]): PlanetSubmission[] {
+  const occupiedSlots = new Set<string>();
+  occupiedSlots.add('arm_0_tier_foundational'); // Permanently locked for Ämlemi
+
+  return planets.map((sub) => {
+    const isCore = sub.id === 'akinoya-core' || sub.planetName === 'Äkinoya Prime' || sub.planetName === 'Äkinoya';
+    if (isCore) {
+      return {
+        ...sub,
+        coordX: 0,
+        coordY: 0,
+        coord_x: 0,
+        coord_y: 0,
+        sectorId: 'SECTOR AKN-00 (CORE)',
+      };
+    }
+
+    const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
+    if (isAmlemi) {
+      const arm = CONSTELLATION_ARMS[0]; // Orion Meridian
+      return {
+        ...sub,
+        coordX: 243,
+        coordY: -176,
+        coord_x: 243,
+        coord_y: -176,
+        sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)',
+        armId: arm.id,
+        armName: arm.name,
+      };
+    }
+
+    // Determine deterministic slot hash
+    const str = `${sub.id}_${sub.planetName || ''}`;
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash |= 0;
+    }
+    const absHash = Math.abs(hash);
+
+    const prefArm = absHash % CONSTELLATION_ARMS.length;
+    const prefTier = Math.floor(absHash / CONSTELLATION_ARMS.length) % SPIRAL_RADIAL_TIERS.length;
+    const prefSub = Math.floor(absHash / (CONSTELLATION_ARMS.length * SPIRAL_RADIAL_TIERS.length)) % 2;
+
+    let chosenArm = prefArm;
+    let chosenTier = prefTier;
+    let chosenSub = prefSub;
+    let found = false;
+
+    // Graceful Equilibrium Cascade across arms and tiers to prevent clumping
+    for (let subOffset = 0; subOffset < 2 && !found; subOffset++) {
+      const s = (prefSub + subOffset) % 2;
+      for (let tOffset = 0; tOffset < SPIRAL_RADIAL_TIERS.length && !found; tOffset++) {
+        const t = (prefTier + tOffset) % SPIRAL_RADIAL_TIERS.length;
+        for (let aOffset = 0; aOffset < CONSTELLATION_ARMS.length && !found; aOffset++) {
+          const a = (prefArm + aOffset) % CONSTELLATION_ARMS.length;
+          const key = `arm_${a}_tier_${t}_sub_${s}`;
+          if (!occupiedSlots.has(key)) {
+            occupiedSlots.add(key);
+            chosenArm = a;
+            chosenTier = t;
+            chosenSub = s;
+            found = true;
+          }
+        }
+      }
+    }
+
+    if (!found) {
+      const extTier = SPIRAL_RADIAL_TIERS.length + Math.floor(occupiedSlots.size / 5);
+      chosenTier = extTier;
+      chosenArm = absHash % CONSTELLATION_ARMS.length;
+      chosenSub = 0;
+    }
+
+    const arm = CONSTELLATION_ARMS[chosenArm];
+    const baseR = chosenTier < SPIRAL_RADIAL_TIERS.length
+      ? SPIRAL_RADIAL_TIERS[chosenTier]
+      : 3400 + (chosenTier - SPIRAL_RADIAL_TIERS.length + 1) * 480;
+    const radius = baseR + (chosenSub === 1 ? 235 : 0);
+    const theta = getSpiralArmAngle(arm.baseAngle, radius) + (chosenSub === 1 ? 0.05 : -0.03);
+
+    const x = Math.round(radius * Math.cos(theta));
+    const y = Math.round(radius * Math.sin(theta));
+
+    const sectorPrefix = arm.name.split(' ')[0];
+    const sectorNum = String((absHash % 89) + 10).padStart(2, '0');
+    const sectorId = `SECTOR ${sectorPrefix}-${sectorNum}`;
+
+    return {
+      ...sub,
+      coordX: x,
+      coordY: y,
+      coord_x: x,
+      coord_y: y,
+      sectorId,
+      armId: arm.id,
+      armName: arm.name,
+    };
+  });
 }
 
 export const getPlanetGalaxyLink = (planetId: string): string => {
@@ -363,11 +483,13 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     isPioneer: true,
     pioneerBadge: 'FOUNDING PIONEER · #01',
     status: 'PUBLISHED',
-    coordX: 280,
-    coordY: -260,
-    coord_x: 280,
-    coord_y: -260,
+    coordX: 243,
+    coordY: -176,
+    coord_x: 243,
+    coord_y: -176,
     sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)',
+    armId: 'arm-orion',
+    armName: 'ORION MERIDIAN',
     createdAt: '2026-10-14T12:00:00.000Z',
     votingDeadline: 'June 30, 2027',
   },
@@ -497,13 +619,15 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
           cleaned.unshift(INITIAL_SUBMISSIONS[0]);
         }
 
+        const equilibriumCleaned = assignEquilibriumCoordinates(cleaned);
+
         if (cleaned.length !== parsed.length) {
           try {
-            localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(cleaned));
+            localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(equilibriumCleaned));
           } catch {}
         }
 
-        if (cleaned.length > 0) return cleaned;
+        if (equilibriumCleaned.length > 0) return equilibriumCleaned;
       }
     }
   } catch (err) {
@@ -736,7 +860,8 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
           live.unshift(INITIAL_SUBMISSIONS[0]);
         }
 
-        const sortedLive = [...live].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+        const equilibriumLive = assignEquilibriumCoordinates(live);
+        const sortedLive = [...equilibriumLive].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
 
         if (typeof window !== 'undefined') {
           try {
