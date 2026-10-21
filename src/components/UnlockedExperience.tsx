@@ -2235,25 +2235,63 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       {/* Sillow Mill Logo, Stylized ÄMLEMI Title, and Metadata Sector Badge in Clean Vertical Alignment on Portrait Tablet (< xl) */}
                       <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-start gap-3 sm:gap-4 xl:gap-5 min-w-0 w-full">
                         {/* Official Ämlemi Planetary Thumbnail Render (Matching Galaxy Navigator Celestial Orb) */}
-                        <div className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0 group flex items-center justify-center">
-                          {/* Single Delicate Dotted Ring Structure (Clockwise Rotation) */}
+                        <div
+                          className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0 group flex items-center justify-center rounded-full"
+                          style={{
+                            borderRadius: '50%',
+                            WebkitBorderRadius: '50%',
+                          }}
+                        >
+                          {/* 1. Radiant Pulsing Golden Halo */}
                           <div
-                            className="absolute -inset-2.5 rounded-full border border-dotted border-amber-300/85 pointer-events-none animate-spin"
-                            style={{ animationDuration: '20s' }}
+                            className="absolute -inset-3.5 rounded-full bg-gradient-to-tr from-amber-500/30 via-yellow-400/20 to-transparent blur-md animate-pulse pointer-events-none"
+                            style={{ borderRadius: '50%' }}
                           />
 
+                          {/* 2. Outer Rotating Dashed Orbit Ring (Counter-Clockwise Rotation) */}
+                          <div
+                            className="absolute -inset-3 rounded-full border border-dashed border-amber-400/40 pointer-events-none animate-spin-reverse"
+                            style={{ animationDuration: '28s', borderRadius: '50%' }}
+                          />
+
+                          {/* 3. Inner Continuous Rotating Dashed Orbit Ring (Clockwise Rotation) */}
+                          <div
+                            className="absolute -inset-1.5 rounded-full border border-dashed border-amber-300/90 shadow-[0_0_14px_rgba(251,191,36,0.5)] pointer-events-none animate-spin"
+                            style={{ animationDuration: '18s', borderRadius: '50%' }}
+                          >
+                            <span
+                              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-[0_0_8px_#fbbf24]"
+                              style={{ borderRadius: '50%' }}
+                            />
+                          </div>
+
                           {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
-                          <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300">
+                          <div
+                            className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300"
+                            style={{
+                              borderRadius: '50%',
+                              WebkitBorderRadius: '50%',
+                              overflow: 'hidden',
+                              WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                            }}
+                          >
                             <img
                               src={amlemiThumbnailUrl}
                               alt={`${activeWorldDossier.planetName} Planetary Horizon`}
-                              className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
+                              className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700 pointer-events-none select-none"
+                              style={{
+                                borderRadius: '50%',
+                                WebkitBorderRadius: '50%',
+                              }}
                               draggable={false}
                               loading="eager"
                               decoding="async"
                             />
                             {/* Gradient Atmospheric Shell matching Galaxy Navigator (Crystal-Clear Purity) */}
-                            <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none" />
+                            <div
+                              className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none"
+                              style={{ borderRadius: '50%' }}
+                            />
                           </div>
                         </div>
 
