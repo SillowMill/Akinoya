@@ -7,12 +7,22 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, Globe2, X, Clock } from 'lucide-react';
 import { calculateLaunchCountdown, CountdownTime, openClaimWorldModal } from '../utils/pioneer';
 import { soundManager } from '../utils/audio';
+import { useAuth } from '../context/AuthContext';
 
 interface PioneerCampaignBannerProps {
   onOpenClaimModal?: () => void;
+  isUnlocked?: boolean;
 }
 
-export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ onOpenClaimModal }) => {
+export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ onOpenClaimModal, isUnlocked }) => {
+  const { isAuthenticated, user, profile } = useAuth();
+  const isAuthed = Boolean(isUnlocked ?? (isAuthenticated || user || profile));
+
+  // Global Visibility Guard: Universally removed on pre-auth landing across all responsive breakpoints
+  if (!isAuthed) {
+    return null;
+  }
+
   const [countdown, setCountdown] = useState<CountdownTime>(calculateLaunchCountdown);
   const [isDismissed, setIsDismissed] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {

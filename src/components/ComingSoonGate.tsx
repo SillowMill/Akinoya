@@ -3,9 +3,8 @@ import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
-import { KeyRound, Sparkles, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff, Globe2, ClipboardPaste } from 'lucide-react';
+import { KeyRound, Sparkles, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff, ClipboardPaste } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { openClaimWorldModal } from '../utils/pioneer';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
 
 interface ComingSoonGateProps {
@@ -485,23 +484,6 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
             </button>
           </form>
 
-          {/* Claim Your World / Pioneer Early Access Action Card */}
-          <div className="mt-4 pt-4 border-t border-white/10 w-full space-y-2 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                soundManager.playTone(520, 0.05);
-                openClaimWorldModal();
-              }}
-              className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/25 to-amber-500/20 hover:from-amber-500/30 hover:to-yellow-500/35 border border-amber-400/50 text-amber-300 font-mono text-[11px] sm:text-xs font-bold tracking-wider flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(245,158,11,0.2)] transition-all cursor-pointer hover:scale-[1.02]"
-            >
-              <Globe2 className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span>CREATE YOUR FREE WORLD BEFORE 09/01/2027 →</span>
-            </button>
-            <p className="text-[10px] text-white/50 font-sans">
-              Official Launch: Jan 9, 2027 · Create your free world before 09/01/2027.
-            </p>
-          </div>
 
           {/* Book Reference */}
           <div className="mt-2 pt-3 border-t border-white/10 w-full flex items-center justify-between text-[11px] text-white/50 font-mono">

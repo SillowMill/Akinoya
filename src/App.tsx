@@ -387,9 +387,12 @@ export default function App() {
 
   return (
     <main className="app-shell relative min-h-[100dvh] w-full bg-[#050505] text-white flex flex-col justify-between selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Official Pioneer Launch Countdown Announcement Banner (unmounted on the fullscreen Galaxy view) */}
-      {route !== 'galaxy' && (
-        <PioneerCampaignBanner onOpenClaimModal={() => setIsClaimWorldOpen(true)} />
+      {/* Official Pioneer Launch Countdown Announcement Banner (Strictly post-auth dashboard across all devices) */}
+      {isSiteUnlocked && route !== 'galaxy' && (
+        <PioneerCampaignBanner
+          isUnlocked={isSiteUnlocked}
+          onOpenClaimModal={() => setIsClaimWorldOpen(true)}
+        />
       )}
 
       {/* Global VIP Referral Invitation Top Banner */}
