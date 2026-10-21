@@ -41,8 +41,8 @@ const TELEMETRY_STAGES: TelemetryStage[] = [
   },
   {
     threshold: 60,
-    stageName: 'SIMULATING COCKPIT ATMOSPHERE (4/5)...',
-    details: 'Framing cockpit descent canopy, pilot HUD reflections, and atmospheric cloud density via Najno Banajna...',
+    stageName: 'SIMULATING ATMOSPHERIC TROPOSPHERE (4/5)...',
+    details: 'Framing high-altitude troposphere, cloud density, and auroral sky phenomena via Najno Banajna...',
     icon: Layers,
   },
   {
@@ -142,7 +142,7 @@ export const AkinoyaSciFiLoader: React.FC<AkinoyaSciFiLoaderProps> = ({
             <span className={progress >= 20 ? 'text-cyan-300 font-bold' : ''}>01 · ORBITAL</span>
             <span className={progress >= 40 ? 'text-cyan-300 font-bold' : ''}>02 · FLORA</span>
             <span className={progress >= 60 ? 'text-cyan-300 font-bold' : ''}>03 · FAUNA</span>
-            <span className={progress >= 80 ? 'text-cyan-300 font-bold' : ''}>04 · COCKPIT</span>
+            <span className={progress >= 80 ? 'text-cyan-300 font-bold' : ''}>04 · TROPOSPHERE</span>
             <span className={progress >= 100 ? 'text-amber-300 font-bold' : ''}>05 · MONUMENT</span>
           </div>
         </div>

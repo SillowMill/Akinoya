@@ -126,11 +126,11 @@ const DEFAULT_SLOT_STREAM: SlotStreamItem[] = [
   },
   {
     id: 'atmosphere',
-    alias: 'cockpit',
+    alias: 'atmosphere',
     stepNumber: '04',
-    title: 'COCKPIT ATMOSPHERE',
-    subtitle: 'Cockpit canopy descent & planetary horizon',
-    category: 'Troposphere & Canopy',
+    title: 'ATMOSPHERIC TROPOSPHERE',
+    subtitle: 'Tropospheric cloud canyons & planetary sky phenomena',
+    category: 'Troposphere & Horizon',
     status: 'PENDING',
     url: null,
   },
@@ -1870,7 +1870,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                     { key: 'hero', label: '01 Orbital', img: sandboxSuccessDossier.renders.hero || amlemiOrbitalImg },
                     { key: 'flora', label: '02 Flora', img: sandboxSuccessDossier.renders.flora || amlemiBotanicalImg },
                     { key: 'fauna', label: '03 Fauna', img: sandboxSuccessDossier.renders.fauna || amlemiFaunaImg },
-                    { key: 'atmosphere', label: '04 Canopy', img: sandboxSuccessDossier.renders.atmosphere || amlemiCockpitImg },
+                    { key: 'atmosphere', label: '04 Troposphere', img: sandboxSuccessDossier.renders.atmosphere || amlemiCockpitImg },
                     { key: 'landmark', label: '05 Lore', img: sandboxSuccessDossier.renders.landmark || amlemiMonumentImg },
                   ].map((stage) => (
                     <div

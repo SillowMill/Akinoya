@@ -377,7 +377,7 @@ export async function renderWorldStoryBadgeBlob(
   const slotLabels = [
     '02 · BOTANICAL FLORA',
     '03 · APEX FAUNA',
-    '04 · COCKPIT CANOPY',
+    meta.isAmlemi ? '04 · COCKPIT CANOPY' : '04 · ATMOSPHERIC TROPOSPHERE',
     '05 · SACRED MONUMENT',
   ];
 
@@ -737,7 +737,7 @@ export function createCachedTrailerOverlayCanvas(
     '01_MAIN · ORBITAL HORIZON',
     '02_FLORA · BOTANICAL BIOME',
     '03_FAUNA · APEX SPECIMEN',
-    '04_CANOPY · COCKPIT DESCENT',
+    meta.isAmlemi ? '04_CANOPY · COCKPIT DESCENT' : '04_ATMO · ATMOSPHERIC TROPOSPHERE',
     '05_LORE · SACRED MONUMENT',
   ];
   const telemetryY = Math.round(1440 * s);
@@ -963,7 +963,7 @@ export function drawTrailerOverlay(
     '01_MAIN · ORBITAL HORIZON',
     '02_FLORA · BOTANICAL BIOME',
     '03_FAUNA · APEX SPECIMEN',
-    '04_CANOPY · COCKPIT DESCENT',
+    meta.isAmlemi ? '04_CANOPY · COCKPIT DESCENT' : '04_ATMO · ATMOSPHERIC TROPOSPHERE',
     '05_LORE · SACRED MONUMENT',
   ];
   const telemetryY = Math.round(1440 * s);

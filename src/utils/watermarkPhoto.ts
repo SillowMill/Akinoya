@@ -53,7 +53,11 @@ export function getPlanetSlotCharacteristics(
   } else if (slotIndex === 2) {
     typeName = 'APEX SPECIMEN';
   } else if (slotIndex === 3) {
-    typeName = 'ATMOSPHERIC ENTRY';
+    const isAmlemi =
+      dossier?.id === 'planet-amlemi-genesis-01' ||
+      dossier?.planetName === 'Ämlemi' ||
+      Boolean(dossier?.planetName?.toLowerCase().includes('amlemi'));
+    typeName = isAmlemi ? 'COCKPIT ATMOSPHERE' : 'ATMOSPHERIC TROPOSPHERE';
   } else if (slotIndex === 4) {
     typeName = 'SACRED MONUMENT';
   } else if (category) {

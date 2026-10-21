@@ -44,6 +44,16 @@ export const UI_RECALIBRATING_STATUS_TEXT =
   'Äkinoya Core is currently recalibrating generator nodes. Your slot is safely reserved.';
 
 /**
+ * Strict Global Negative Prompt Guardrail (Non-Human & Non-Cockpit Enforcement):
+ * Mandated across the entire planetary generation pipeline for all user worlds.
+ * Permanently bars human figures, astronauts, pilots, characters, faces, cockpits,
+ * dashboards, control panels, and industrial robotics from appearing in user assets.
+ * Human pilot presence is reserved exclusively for the founder's Ämlemi profile.
+ */
+export const STRICT_NON_HUMAN_NEGATIVE_PROMPT =
+  'human, person, man, woman, astronaut, pilot, character, face, figures, human body, cockpit, spaceship cockpit, flight deck, cockpit interior, spacecraft interior, control panels, dials, gauges, steering console, dashboards, futuristic machinery, mechanical electronics, robotic crew, android, robot, cyborg, artificial technology, industrial metal, modern clothing, helmets, spacesuit (unless explicitly native organic biological lore architecture)';
+
+/**
  * Advanced Cinematic FPV Drone Motion Prompt Engine:
  * Generates tailored motion prompts for Seedance 2.5 / Val.ai video pipelines with:
  * continuous low-altitude FPV drone movement, aggressive close-proximity orbits,
@@ -54,10 +64,14 @@ export function buildCinematicFpvMotionPrompt(params?: {
   planetName?: string;
   biome?: string;
   slotType?: 'hero' | 'flora' | 'fauna' | 'atmosphere' | 'landmark' | string;
+  isAmlemi?: boolean;
 }): string {
   const planet = params?.planetName || 'Äkinoya Sector';
   const biome = params?.biome || 'bioluminescent alien landscape';
   const slot = params?.slotType || 'hero';
+  const isAmlemi =
+    params?.isAmlemi ??
+    (planet.toLowerCase().includes('ämlemi') || planet.toLowerCase().includes('amlemi'));
 
   const cinematicPhysics =
     'continuous low-altitude FPV drone movement, aggressive close-proximity orbits, rapid vertical climbs, natural shutter motion blur, strong parallax separation, energetic 24fps camera motion, viral 5-second video loop, photorealistic cinema render, volumetric sci-fi depth.';
@@ -69,7 +83,10 @@ export function buildCinematicFpvMotionPrompt(params?: {
       return `Cinematic pursuit FPV drone diving alongside soaring xenobiological wildlife across ${planet}. Continuous low-altitude terrain-hugging flight, aggressive close-proximity flyby matching creature speed, explosive rapid vertical climb banking over jagged mountain ridges, extreme parallax separation, natural shutter motion blur, energetic 24fps camera motion, seamless 5-second viral video loop. ${cinematicPhysics}`;
     case 'atmosphere':
     case 'cockpit':
-      return `Visceral FPV camera flight bursting forward through cockpit canopy into ${planet} troposphere. Continuous high-velocity descent diving through turbulent ionized cloud decks, aggressive low-altitude canyon run skimming atmospheric ridges, rapid vertical climb banking into radiant aurora, intense cockpit HUD reflection parallax, natural shutter motion blur, energetic 24fps camera motion, seamless 5-second viral video loop. ${cinematicPhysics}`;
+      if (isAmlemi) {
+        return `Visceral FPV camera flight bursting forward through cockpit canopy into ${planet} troposphere. Continuous high-velocity descent diving through turbulent ionized cloud decks, aggressive low-altitude canyon run skimming atmospheric ridges, rapid vertical climb banking into radiant aurora, intense cockpit HUD reflection parallax, natural shutter motion blur, energetic 24fps camera motion, seamless 5-second viral video loop. ${cinematicPhysics}`;
+      }
+      return `Visceral FPV camera flight bursting forward into ${planet} high-altitude troposphere. Continuous high-velocity descent diving through turbulent ionized cloud decks, aggressive low-altitude canyon run skimming atmospheric ridges and towering cloud canyons, rapid vertical climb banking into radiant aurora and atmospheric vapor sheets, natural shutter motion blur, energetic 24fps camera motion, seamless 5-second viral video loop. ${cinematicPhysics}`;
     case 'landmark':
     case 'monument':
       return `Aggressive close-proximity spiral FPV drone orbit wrapping around towering ancient monument on ${planet}. Continuous low-altitude banking skimming along incandescent runic stone conduits, explosive rapid vertical climb straight up the monolith spire to reveal vast planetary horizon, extreme multi-plane parallax separation, natural shutter motion blur, energetic 24fps camera motion, seamless 5-second viral video loop. ${cinematicPhysics}`;
@@ -114,7 +131,6 @@ export function buildUniversalAssetAlignedFpvPrompt(params?: {
     return AMLEMI_CINEMATIC_FPV_PROMPT;
   }
 
-  const author = params?.authorName || 'Founding Pioneer';
   const horizonVibe = params?.atmosphere || params?.naturalEnvironment || 'a radiant misty horizon with deep glowing hues';
   const floraVibe = params?.flora || params?.naturalEnvironment || 'dense exotic alien flora with broad iridescent leaves';
   const faunaVibe = params?.fauna || params?.admiredCreature || 'native celestial wildlife standing naturally in their habitat';
@@ -125,8 +141,8 @@ export function buildUniversalAssetAlignedFpvPrompt(params?: {
     `Single continuous FPV drone shot, no cuts. The camera begins inches above a dark textured planetary ledge beside ${horizonVibe} under skies bathed in ${palette} on ${planet}. ` +
     `It races forward along the rugged terrain, weaving past ${floraVibe} with glowing tendrils and dense leaves sweeping millimetres close to the lens. ` +
     `The drone banks aggressively left around a colossal weathered cliff formation, skimming past ${faunaVibe} moving naturally among the rocks. ` +
-    `Accelerating into a vertical climb, the camera bursts through ionized atmospheric cloud decks and cockpit canopy reflections, staying extremely close to textured stone face. ` +
-    `The drone spirals tightly around ${landmarkVibe}, briefly revealing the pioneering explorer ${author} calmly observing the horizon, before pulling up into a breathtaking reveal of the dramatic planetary drop, vast curvature, and stellar expanse behind. ` +
+    `Accelerating into a vertical climb, the camera bursts through ionized atmospheric cloud decks and towering vapor crests, staying extremely close to textured stone face. ` +
+    `The drone spirals tightly around ${landmarkVibe}, soaring past incandescent energy glyphs and natural crystal fissures, before pulling up into a breathtaking reveal of the dramatic planetary drop, vast curvature, and stellar expanse behind. ` +
     `14mm ultra-wide FPV lens, photorealistic 24fps cinematic motion blur, natural lighting, deep atmospheric depth, seamless 5-second vertical 9:16 loop, synchronized Foley sound effects.`
   );
 }
@@ -903,7 +919,8 @@ export async function generateSlotImageWithFal(
   prompt: string,
   apiKey?: string,
   slotLabel = 'photo',
-  seed?: number
+  seed?: number,
+  negativePrompt?: string
 ): Promise<string> {
   const activeKey = (apiKey || getFalApiKey()).trim();
   if (!activeKey || activeKey === '[SENSITIVE]') {
@@ -940,6 +957,7 @@ export async function generateSlotImageWithFal(
             resolution: '1K',
             num_images: 1,
             output_format: 'png',
+            ...(negativePrompt ? { negative_prompt: negativePrompt } : {}),
             ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
           }),
         })
@@ -992,6 +1010,7 @@ export async function generateSlotImageWithFal(
             image_size: 'landscape_16_9',
             num_images: 1,
             enable_safety_checker: false,
+            ...(negativePrompt ? { negative_prompt: negativePrompt } : {}),
             ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
           }),
         })
@@ -1080,7 +1099,8 @@ export async function generateViralVideoWithFal(
     lifePhilosophy?: string;
     futurePromise?: string;
   },
-  seed?: number
+  seed?: number,
+  negativePrompt?: string
 ): Promise<string> {
   const activeKey = (apiKey || getFalApiKey()).trim();
   if (!activeKey || activeKey === '[SENSITIVE]' || (!heroImageUrl && (!imageUrls || imageUrls.length === 0))) {
@@ -1129,6 +1149,8 @@ export async function generateViralVideoWithFal(
     ? 'bytedance/seedance-2.5/us/reference-to-video'
     : 'bytedance/seedance-2.5/us/image-to-video';
 
+  const effectiveNegativePrompt = !isAmlemi ? (negativePrompt || STRICT_NON_HUMAN_NEGATIVE_PROMPT) : undefined;
+
   const payload: any = useReferenceEndpoint
     ? {
         prompt,
@@ -1137,6 +1159,7 @@ export async function generateViralVideoWithFal(
         resolution: '720p',
         aspect_ratio: '9:16',
         generate_audio: true, // Native ByteDance Seedance 2.5 synchronized Foley audio & sound effects!
+        ...(effectiveNegativePrompt ? { negative_prompt: effectiveNegativePrompt } : {}),
         ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
       }
     : {
@@ -1146,6 +1169,7 @@ export async function generateViralVideoWithFal(
         resolution: '720p',
         aspect_ratio: '9:16',
         generate_audio: true,
+        ...(effectiveNegativePrompt ? { negative_prompt: effectiveNegativePrompt } : {}),
         ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
       };
 
@@ -1215,6 +1239,7 @@ export async function generateViralVideoWithFal(
             resolution: '720p',
             aspect_ratio: '9:16',
             generate_audio: true,
+            ...(effectiveNegativePrompt ? { negative_prompt: effectiveNegativePrompt } : {}),
           }),
         })
       );
@@ -1238,6 +1263,7 @@ export async function generateViralVideoWithFal(
             image_url: resolvedHeroUrl,
             duration: 5,
             resolution: '768P',
+            ...(effectiveNegativePrompt ? { negative_prompt: effectiveNegativePrompt } : {}),
           }),
         })
       );
@@ -1556,9 +1582,9 @@ export const SLOT_METADATA: Record<
   },
   atmosphere: {
     index: 4,
-    label: '04 · Cockpit / Ship Landing Atmosphere (04_atmo)',
-    actionText: 'SIMULATING COCKPIT ATMOSPHERE (4/5)...',
-    detailText: 'Framing cockpit descent perspective, cloud density, and pilot HUD reflections via Najno Banajna...',
+    label: '04 · Atmospheric Troposphere & Sky Phenomena (04_atmo)',
+    actionText: 'SIMULATING ATMOSPHERIC TROPOSPHERE (4/5)...',
+    detailText: 'Synthesizing high-altitude troposphere, ionized cloud canyons, and auroral sky phenomena via Najno Banajna...',
   },
   landmark: {
     index: 5,
@@ -1595,6 +1621,14 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const planetName = formatAkinoyaPlanetName(data.planetName || data.worldName || data.sectorName, false) || sectorName;
   const architectName = (data.architectName || data.authorUsername || 'Founding Pioneer').trim();
 
+  const isAmlemi =
+    planetName.toLowerCase().includes('ämlemi') ||
+    planetName.toLowerCase().includes('amlemi') ||
+    sectorName.toLowerCase().includes('ämlemi') ||
+    sectorName.toLowerCase().includes('amlemi') ||
+    data.id === 'planet-amlemi-genesis-01' ||
+    data.planetId === 'planet-amlemi-genesis-01';
+
   // Deterministic Cryptographic Seed Generation
   const seed =
     typeof data.seed === 'number' && data.seed > 0
@@ -1620,26 +1654,36 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
   const atmosphere =
     data.atmosphere || data.troposphereType || `ionized celestial atmosphere exhibiting ${variation.plasmaPhenomenon}`;
 
-  const promptAnchor =
+  const basePromptAnchor =
     'Full 3D high-res 8K photorealistic cinematic sci-fi render, volumetric lighting, rich textures, atmospheric depth, deep space horizon, volumetric cosmic lighting, complex color palette. NO vector art, NO wireframes, NO minimalist sketches, NO storyboard lines. Sillow Mill high-resolution cinematic aesthetic. Synthesized exclusively via Najno Banajna generator engine.';
+
+  const promptAnchor = isAmlemi
+    ? basePromptAnchor
+    : `${basePromptAnchor} STRICT NON-HUMAN GUARDRAIL: ABSOLUTELY NO humans, NO astronauts, NO pilots, NO people, NO cockpits, NO dashboards, NO spacecraft interiors, NO control panels, NO machinery. Pristine untamed wild alien nature only.`;
 
   const fpvVideoPrompt = buildCinematicFpvMotionPrompt({
     planetName,
     biome,
     slotType: 'hero',
+    isAmlemi,
   });
+
+  const atmospherePrompt = isAmlemi
+    ? `${promptAnchor} [04_atmo - Cockpit & Landing Atmosphere]: Cockpit canopy descent perspective entering the atmosphere of "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Looking out through reinforced cockpit canopy glass toward vast ${biome} mountain horizon and ${variation.geologicalFormation}, pilot HUD telemetry reflections, volumetric sunbeams through thick clouds, ${atmosphere}, ion storms: ${variation.plasmaPhenomenon}, sunset glow.`
+    : `${promptAnchor} [04_atmo - Atmospheric Troposphere & Sky Phenomena]: High-altitude volumetric tropospheric descent above world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Soaring through turbulent ionized cloud decks, sweeping auroral filaments, and towering atmospheric vapor canyons overlooking vast ${biome} terrain and ${variation.geologicalFormation}. Volumetric sunbeams piercing through thick storm clouds, ${atmosphere}, radiant ion storm phenomena: ${variation.plasmaPhenomenon}, sunset glow. Pristine natural sky panorama, wide-angle cinematic nature photography, absolutely zero cockpit, zero glass, zero machinery.`;
 
   return {
     planetName,
     sectorName,
+    isAmlemi,
     seed,
     variation,
     prompts: {
-      hero: `${promptAnchor} [01_main - Main Orbital Hero]: Celestial disc and orbital curvature of newly designated world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Orbital feature: ${variation.ringSystem}. Atmospheric rim: ${variation.plasmaPhenomenon}. Pristine celestial curvature, volumetric cosmic lighting, deep space horizon, ${variation.atmosphericShimmer}. Color palette: ${colorPalette}. Topography inspired by ${environment}, 8k resolution, photorealistic conceptual space photography.`,
-      flora: `${promptAnchor} [02_flora - Botanical Flora System]: Interior botanical ecosystem of world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}) across ${biome} terrain. Lush alien vegetation: ${flora}. Terrain formation: ${variation.geologicalFormation}. Atmospheric mist, ${variation.atmosphericShimmer}, chromatic palette: ${colorPalette}, volumetric depth, macro sci-fi nature photography.`,
-      fauna: `${promptAnchor} [03_fauna - Exotic Fauna & Wildlife]: Xenobiological wildlife ecology of world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}) in native ${biome} habitat. Apex creature: ${creature}. Environment: ${variation.geologicalFormation}. Volumetric atmospheric thermals, photorealistic speculative xenobiology, ${variation.chromaticAccent}, cinematic depth of field.`,
-      atmosphere: `${promptAnchor} [04_atmo - Cockpit & Landing Atmosphere]: Cockpit canopy descent perspective entering the atmosphere of "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Looking out through reinforced cockpit canopy glass toward vast ${biome} mountain horizon and ${variation.geologicalFormation}, pilot HUD telemetry reflections, volumetric sunbeams through thick clouds, ${atmosphere}, ion storms: ${variation.plasmaPhenomenon}, sunset glow.`,
-      landmark: `${promptAnchor} [05_lore - Lore Dossier Cover & Monument]: Official monumental landmark on world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Towering ancient architectural monument: ${landmark}, standing tall above ${biome} terrain. Inscribed founding architect creed: "${promise}". Foundations anchored by ${variation.geologicalFormation}, energy conduits: ${variation.chromaticAccent}, epic scale sci-fi monument photography.`,
+      hero: `${promptAnchor} [01_main - Main Orbital Hero]: Celestial disc and orbital curvature of newly designated world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Orbital feature: ${variation.ringSystem}. Atmospheric rim: ${variation.plasmaPhenomenon}. Pristine celestial curvature, volumetric cosmic lighting, deep space horizon, ${variation.atmosphericShimmer}. Color palette: ${colorPalette}. Topography inspired by ${environment}, 8k resolution, photorealistic conceptual space photography.${isAmlemi ? '' : ' Pristine uninhabited cosmic sphere.'}`,
+      flora: `${promptAnchor} [02_flora - Botanical Flora System]: Interior botanical ecosystem of world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}) across ${biome} terrain. Lush alien vegetation: ${flora}. Terrain formation: ${variation.geologicalFormation}. Atmospheric mist, ${variation.atmosphericShimmer}, chromatic palette: ${colorPalette}, volumetric depth, macro sci-fi nature photography.${isAmlemi ? '' : ' Untamed alien flora, zero human presence.'}`,
+      fauna: `${promptAnchor} [03_fauna - Exotic Fauna & Wildlife]: Xenobiological wildlife ecology of world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}) in native ${biome} habitat. Apex creature: ${creature}. Environment: ${variation.geologicalFormation}. Volumetric atmospheric thermals, photorealistic speculative xenobiology, ${variation.chromaticAccent}, cinematic depth of field.${isAmlemi ? '' : ' Native non-human planetary wildlife, zero human presence.'}`,
+      atmosphere: atmospherePrompt,
+      landmark: `${promptAnchor} [05_lore - Lore Dossier Cover & Monument]: Official monumental landmark on world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Towering ancient architectural monument: ${landmark}, standing tall above ${biome} terrain. Inscribed founding architect creed: "${promise}". Foundations anchored by ${variation.geologicalFormation}, energy conduits: ${variation.chromaticAccent}, epic scale sci-fi monument photography.${isAmlemi ? '' : ' Ancient organic alien architecture, no human figures.'}`,
       video: fpvVideoPrompt,
     },
   };
@@ -1677,7 +1721,7 @@ export async function generateSlotRender(
   const normSlot = normalizeSlot(slot);
   const sectorName = (data.sectorName || data.planetName || data.worldName || 'Frontier Sector').trim();
   const planetName = formatAkinoyaPlanetName(data.planetName || data.worldName || data.sectorName, false) || sectorName;
-  const { prompts, seed } = buildPlanetPrompts(data);
+  const { prompts, seed, isAmlemi } = buildPlanetPrompts(data);
   const prompt = prompts[normSlot] || prompts.hero;
   const meta = SLOT_METADATA[normSlot] || SLOT_METADATA.hero;
 
@@ -1832,7 +1876,8 @@ export async function generateSlotRender(
           lifePhilosophy: data.lifePhilosophy,
           futurePromise: data.futurePromise,
         },
-        seed
+        seed,
+        isAmlemi ? undefined : STRICT_NON_HUMAN_NEGATIVE_PROMPT
       );
       const result = {
         success: true,
@@ -1873,7 +1918,13 @@ export async function generateSlotRender(
   }
 
   try {
-    const imageUrl = await generateSlotImageWithFal(prompt, data.apiKey, normSlot, seed);
+    const imageUrl = await generateSlotImageWithFal(
+      prompt,
+      data.apiKey,
+      normSlot,
+      seed,
+      isAmlemi ? undefined : STRICT_NON_HUMAN_NEGATIVE_PROMPT
+    );
     const result = {
       success: true,
       status: 'ready' as const,
@@ -1953,6 +2004,14 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   const sectorName = (data.sectorName || data.planetName || data.worldName || 'Frontier Sector').trim();
   const planetName = formatAkinoyaPlanetName(data.planetName || data.worldName || data.sectorName, false) || sectorName;
   const architectName = (data.architectName || 'Frontier Architect').trim();
+  const isAmlemi =
+    planetName.toLowerCase().includes('ämlemi') ||
+    planetName.toLowerCase().includes('amlemi') ||
+    sectorName.toLowerCase().includes('ämlemi') ||
+    sectorName.toLowerCase().includes('amlemi') ||
+    data.id === 'planet-amlemi-genesis-01' ||
+    data.planetId === 'planet-amlemi-genesis-01';
+
   const seed =
     typeof data.seed === 'number' && data.seed > 0
       ? data.seed
@@ -2005,7 +2064,12 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
           { slotId: '01_main', slotName: '01 · ORBITAL HERO', status: 'ready', imageUrl: cachedRenders.hero },
           { slotId: '02_flora', slotName: '02 · BOTANICAL FLORA', status: 'ready', imageUrl: cachedRenders.flora },
           { slotId: '03_fauna', slotName: '03 · EXOTIC FAUNA', status: 'ready', imageUrl: cachedRenders.fauna },
-          { slotId: '04_atmo', slotName: '04 · COCKPIT ATMOSPHERE', status: 'ready', imageUrl: cachedRenders.atmosphere },
+          {
+            slotId: '04_atmo',
+            slotName: isAmlemi ? '04 · COCKPIT ATMOSPHERE' : '04 · ATMOSPHERIC TROPOSPHERE',
+            status: 'ready',
+            imageUrl: cachedRenders.atmosphere,
+          },
           { slotId: '05_lore', slotName: '05 · LORE DOSSIER COVER', status: 'ready', imageUrl: cachedRenders.landmark },
           {
             slotId: '06_trailer',
@@ -2019,7 +2083,13 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
           { id: 'hero', code: '01_main', label: '01 · Main Orbital Planet Render', reference: 'Äkinoya.jpg', url: cachedRenders.hero },
           { id: 'flora', code: '02_flora', label: '02 · Botanical Flora System', reference: 'Mood.png', url: cachedRenders.flora },
           { id: 'fauna', code: '03_fauna', label: '03 · Exotic Fauna & Wildlife System', reference: 'Mood.png', url: cachedRenders.fauna },
-          { id: 'atmosphere', code: '04_atmo', label: '04 · Cockpit / Ship Landing Atmosphere', reference: 'Mood.png', url: cachedRenders.atmosphere },
+          {
+            id: 'atmosphere',
+            code: '04_atmo',
+            label: isAmlemi ? '04 · Cockpit / Ship Landing Atmosphere' : '04 · Atmospheric Troposphere & Sky Phenomena',
+            reference: isAmlemi ? 'Mood.png (Cockpit Canopy Camera Perspective)' : 'Mood.png (Atmospheric Tropospheric Perspective)',
+            url: cachedRenders.atmosphere,
+          },
           { id: 'landmark', code: '05_lore', label: '05 · Lore Dossier Cover & Monument', reference: 'Archival Cover', url: cachedRenders.landmark },
         ];
 
@@ -2110,7 +2180,8 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
           lifePhilosophy: data.lifePhilosophy,
           futurePromise: data.futurePromise,
         },
-        seed
+        seed,
+        isAmlemi ? undefined : STRICT_NON_HUMAN_NEGATIVE_PROMPT
       );
     } catch (vidErr: any) {
       console.warn('[Step 2 Video Trailer] Queued pending:', vidErr?.message || vidErr);
@@ -2124,7 +2195,10 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     hero: { id: '01_main', name: '01 · ORBITAL HERO' },
     flora: { id: '02_flora', name: '02 · BOTANICAL FLORA' },
     fauna: { id: '03_fauna', name: '03 · EXOTIC FAUNA' },
-    atmosphere: { id: '04_atmo', name: '04 · COCKPIT ATMOSPHERE' },
+    atmosphere: {
+      id: '04_atmo',
+      name: isAmlemi ? '04 · COCKPIT ATMOSPHERE' : '04 · ATMOSPHERIC TROPOSPHERE',
+    },
     landmark: { id: '05_lore', name: '05 · LORE DOSSIER COVER' },
   };
 
@@ -2261,8 +2335,12 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     {
       id: 'atmosphere',
       code: '04_atmo',
-      label: '04 · Cockpit / Ship Landing Atmosphere',
-      reference: 'Mood.png (Cockpit Canopy Camera Perspective)',
+      label: isAmlemi
+        ? '04 · Cockpit / Ship Landing Atmosphere'
+        : '04 · Atmospheric Troposphere & Sky Phenomena',
+      reference: isAmlemi
+        ? 'Mood.png (Cockpit Canopy Camera Perspective)'
+        : 'Mood.png (Atmospheric Tropospheric Perspective)',
       url: finalRenders.atmosphere,
     },
     {

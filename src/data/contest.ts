@@ -1194,11 +1194,13 @@ export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] =>
     },
     {
       id: 'photo-atmosphere',
-      title: 'Cockpit / Ship Landing Atmosphere Detail',
-      category: '04 · COCKPIT ATMOSPHERE',
+      title: isAmlemi ? 'Cockpit / Ship Landing Atmosphere Detail' : 'Atmospheric Troposphere & Sky Phenomena Detail',
+      category: isAmlemi ? '04 · COCKPIT ATMOSPHERE' : '04 · ATMOSPHERIC TROPOSPHERE',
       url: atmoUrl,
       description: sub.atmosphere,
-      styleAnchor: 'Cockpit View Reference: Mood.png (Photorealistic cockpit canopy, pilot HUD reflections, volumetric light shafts)',
+      styleAnchor: isAmlemi
+        ? 'Cockpit View Reference: Mood.png (Photorealistic cockpit canopy, pilot HUD reflections, volumetric light shafts)'
+        : 'Atmospheric Reference: Mood.png (Photorealistic volumetric troposphere, ionized cloud canyons, auroral sky phenomena)',
     },
     {
       id: 'photo-landmark',
