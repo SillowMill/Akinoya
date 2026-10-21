@@ -425,16 +425,15 @@ export class FalMaintenanceQueueError extends Error {
   }
 }
 
-export const FAL_NANO_BANANA_ENDPOINT = 'https://fal.run/google/nano-banana-2.1';
-export const FAL_NANO_BANANA_FALLBACK_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
-export const FAL_ENDPOINT = FAL_NANO_BANANA_ENDPOINT;
+export const FAL_FLUX_SCHNELL_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
+export const FAL_IMAGE_ENDPOINT = FAL_FLUX_SCHNELL_ENDPOINT;
+export const FAL_ENDPOINT = FAL_FLUX_SCHNELL_ENDPOINT;
 
-export const FAL_SEEDANCE_REF_VIDEO_ENDPOINT = 'https://fal.run/bytedance/seedance-2.5/us/reference-to-video';
 export const FAL_SEEDANCE_IMAGE_VIDEO_ENDPOINT = 'https://fal.run/bytedance/seedance-2.5/us/image-to-video';
-export const FAL_SEEDANCE_VIDEO_ENDPOINT = FAL_SEEDANCE_REF_VIDEO_ENDPOINT;
-export const FAL_SEEDANCE_FALLBACK_ENDPOINT = 'https://fal.run/minimax/h3/image-to-video';
-export const FAL_VIDEO_ENDPOINT = FAL_SEEDANCE_VIDEO_ENDPOINT;
-export const FAL_VIDEO_FALLBACK_ENDPOINT = FAL_SEEDANCE_FALLBACK_ENDPOINT;
+export const FAL_SEEDANCE_REF_VIDEO_ENDPOINT = 'https://fal.run/bytedance/seedance-2.5/us/reference-to-video';
+export const FAL_MINIMAX_VIDEO_ENDPOINT = 'https://fal.run/minimax/h3/image-to-video';
+export const FAL_VIDEO_ENDPOINT = FAL_SEEDANCE_IMAGE_VIDEO_ENDPOINT;
+export const FAL_VIDEO_FALLBACK_ENDPOINT = FAL_MINIMAX_VIDEO_ENDPOINT;
 
 export const FAL_SFX_MMAUDIO_ENDPOINT = 'https://fal.run/fal-ai/mmaudio-v2';
 export const FAL_SFX_STABLE_AUDIO_ENDPOINT = 'https://fal.run/fal-ai/stable-audio';
@@ -924,28 +923,31 @@ export async function generateSlotImageWithFal(
 ): Promise<string> {
   const activeKey = (apiKey || getFalApiKey()).trim();
   if (!activeKey || activeKey === '[SENSITIVE]') {
+    const errMsg = 'FAL_KEY missing or invalid in environment. Generation requires an active fal.ai API key.';
+    console.error(`[fal.ai Direct Execution Error] ${errMsg}`);
     recordFalUsage({
       slot: slotLabel,
-      model: 'google/nano-banana-2.1',
+      model: 'fal-ai/flux/schnell',
       durationMs: 0,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
-      error: 'Unauthenticated / FAL_KEY missing',
+      error: errMsg,
     });
-    throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 403);
+    throw new FalMaintenanceQueueError(errMsg, 401);
   }
 
   const startTime = Date.now();
-  let response: Response | null = null;
+  console.log(`[fal.ai Direct Execution] Synthesizing ${slotLabel} via fal-ai/flux/schnell (4 inference steps, cost-optimized at ~$0.0035/photo)...`);
+
   const maxRetries = 2;
   let attempt = 0;
-  let activeModel = 'google/nano-banana-2.1';
+  let response: Response | null = null;
+  const activeModel = 'fal-ai/flux/schnell';
 
-  // Primary Attempt: Nano Banana 2.1 (Google 4K photorealistic generator)
   while (attempt <= maxRetries) {
     try {
       response = await falRequestQueue.run(() =>
-        fetch(FAL_NANO_BANANA_ENDPOINT, {
+        fetch(FAL_FLUX_SCHNELL_ENDPOINT, {
           method: 'POST',
           headers: {
             Authorization: `Key ${activeKey}`,
@@ -953,9 +955,10 @@ export async function generateSlotImageWithFal(
           },
           body: JSON.stringify({
             prompt: prompt,
-            aspect_ratio: '16:9',
-            resolution: '1K',
+            image_size: 'landscape_16_9',
+            num_inference_steps: 4,
             num_images: 1,
+            enable_safety_checker: false,
             output_format: 'png',
             ...(negativePrompt ? { negative_prompt: negativePrompt } : {}),
             ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
@@ -968,11 +971,11 @@ export async function generateSlotImageWithFal(
         attempt++;
         const backoffMs = 1000 * Math.pow(2, attempt) + Math.random() * 400;
         console.warn(
-          `[Nano Banana Rate Limit] HTTP ${response.status} on ${slotLabel}. Backing off for ${Math.round(backoffMs)}ms (attempt ${attempt}/${maxRetries})...`
+          `[fal.ai Rate Limit] HTTP ${response.status} on ${slotLabel}. Backing off for ${Math.round(backoffMs)}ms (attempt ${attempt}/${maxRetries})...`
         );
         recordFalUsage({
           slot: slotLabel,
-          model: 'google/nano-banana-2.1',
+          model: activeModel,
           durationMs: Date.now() - startTime,
           estimatedCostUsd: 0,
           status: 'RATE_LIMITED_RETRY',
@@ -986,83 +989,63 @@ export async function generateSlotImageWithFal(
       if (attempt < maxRetries) {
         attempt++;
         const backoffMs = 1200 + Math.random() * 300;
-        console.warn(`[Nano Banana Network Glitch] ${netErr?.message || netErr}. Retrying in ${Math.round(backoffMs)}ms...`);
+        console.warn(`[fal.ai Network Glitch] ${netErr?.message || netErr}. Retrying in ${Math.round(backoffMs)}ms...`);
         await new Promise((r) => setTimeout(r, backoffMs));
         continue;
       }
-      break;
-    }
-  }
-
-  // Fallback Attempt: Flux Schnell
-  if (!response || !response.ok) {
-    activeModel = 'fal-ai/flux/schnell';
-    try {
-      response = await falRequestQueue.run(() =>
-        fetch(FAL_NANO_BANANA_FALLBACK_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            Authorization: `Key ${activeKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: prompt,
-            image_size: 'landscape_16_9',
-            num_images: 1,
-            enable_safety_checker: false,
-            ...(negativePrompt ? { negative_prompt: negativePrompt } : {}),
-            ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
-          }),
-        })
-      );
-    } catch (fbErr: any) {
       const durationMs = Date.now() - startTime;
+      console.error(`[fal.ai Direct Error] Failed connecting to ${FAL_FLUX_SCHNELL_ENDPOINT}:`, netErr?.message || netErr);
       recordFalUsage({
         slot: slotLabel,
         model: activeModel,
         durationMs,
         estimatedCostUsd: 0,
         status: 'ERROR',
-        error: fbErr?.message || String(fbErr),
+        error: netErr?.message || String(netErr),
       });
-      throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 503);
+      throw new FalMaintenanceQueueError(`fal.ai connection failed: ${netErr?.message || netErr}`, 503);
     }
   }
 
   const durationMs = Date.now() - startTime;
 
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => '');
-    console.warn(`[Nano Banana / Flux Engine] HTTP ${response.status} notice:`, errorText);
+  if (!response || !response.ok) {
+    const errorText = response ? await response.text().catch(() => '') : 'No response from fal.ai';
+    console.error(`[fal.ai Direct Error] HTTP ${response?.status || 500} on ${slotLabel}:`, errorText);
     recordFalUsage({
       slot: slotLabel,
       model: activeModel,
       durationMs,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
-      error: `HTTP ${response.status}: ${errorText.slice(0, 100)}`,
+      error: `HTTP ${response?.status || 500}: ${errorText.slice(0, 150)}`,
     });
-    throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, response.status);
+    throw new FalMaintenanceQueueError(
+      `fal.ai image generation error (HTTP ${response?.status || 500}): ${errorText.slice(0, 200)}`,
+      response?.status || 500
+    );
   }
 
   const data = await response.json().catch(() => ({}));
   const imageUrl = data?.images?.[0]?.url;
 
   if (!imageUrl) {
+    console.error('[fal.ai Error] Empty image URL in response payload:', JSON.stringify(data).slice(0, 200));
     recordFalUsage({
       slot: slotLabel,
-      model: 'fal-ai/flux/schnell',
+      model: activeModel,
       durationMs,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
       error: 'Empty image URL returned',
     });
-    throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 502);
+    throw new FalMaintenanceQueueError('fal.ai returned empty image URL in response payload.', 502);
   }
 
+  console.log(`[fal.ai Success] Synthesized ${slotLabel} in ${durationMs}ms: ${imageUrl}`);
   recordFalUsage({
     slot: slotLabel,
-    model: 'fal-ai/flux/schnell',
+    model: activeModel,
     durationMs,
     estimatedCostUsd: COST_PER_IMAGE_USD,
     status: 'SUCCESS',
@@ -1104,15 +1087,19 @@ export async function generateViralVideoWithFal(
 ): Promise<string> {
   const activeKey = (apiKey || getFalApiKey()).trim();
   if (!activeKey || activeKey === '[SENSITIVE]' || (!heroImageUrl && (!imageUrls || imageUrls.length === 0))) {
+    const errMsg = !activeKey || activeKey === '[SENSITIVE]'
+      ? 'FAL_KEY missing or invalid in environment. Video generation requires an active fal.ai API key.'
+      : 'No input image URLs provided for video generation.';
+    console.error(`[fal.ai Video Direct Error] ${errMsg}`);
     recordFalUsage({
       slot: 'video',
       model: 'bytedance/seedance-2.5/us/reference-to-video',
       durationMs: 0,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
-      error: 'Unauthenticated / FAL_KEY missing or empty heroImageUrl',
+      error: errMsg,
     });
-    throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 403);
+    throw new FalMaintenanceQueueError(errMsg, 401);
   }
 
   const rawUrls = (imageUrls && imageUrls.length > 0) ? imageUrls : [heroImageUrl];
@@ -1173,6 +1160,7 @@ export async function generateViralVideoWithFal(
         ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
       };
 
+  console.log(`[fal.ai Video Execution] Synthesizing 9:16 viral video trailer via ${primaryModel} (5s duration, 720p, 9:16 aspect ratio, Foley audio)...`);
   const startTime = Date.now();
   let response: Response | null = null;
   const maxRetries = 2;
@@ -1284,18 +1272,19 @@ export async function generateViralVideoWithFal(
 
   const durationMs = Date.now() - startTime;
 
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => '');
-    console.warn(`[Video Pipeline] HTTP ${response.status} notice:`, errorText);
+  if (!response || !response.ok) {
+    const errorText = response ? await response.text().catch(() => '') : 'No response from fal.ai video endpoint';
+    const directErrMsg = `fal.ai video generation error (HTTP ${response?.status || 500}): ${errorText.slice(0, 200) || 'Unknown error'}`;
+    console.error(`[fal.ai Video Direct Error] HTTP ${response?.status || 500}:`, errorText);
     recordFalUsage({
       slot: 'video',
       model: primaryModel,
       durationMs,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
-      error: `HTTP ${response.status}: ${errorText.slice(0, 100)}`,
+      error: `HTTP ${response?.status || 500}: ${errorText.slice(0, 150)}`,
     });
-    throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, response.status);
+    throw new FalMaintenanceQueueError(directErrMsg, response?.status || 500);
   }
 
   const data = await response.json().catch(() => ({}));
@@ -1307,17 +1296,20 @@ export async function generateViralVideoWithFal(
     '';
 
   if (!videoUrl) {
+    const emptyErrMsg = 'fal.ai returned empty video URL in response payload.';
+    console.error('[fal.ai Video Direct Error] Empty video URL in response payload:', JSON.stringify(data).slice(0, 200));
     recordFalUsage({
       slot: 'video',
       model: primaryModel,
       durationMs,
       estimatedCostUsd: 0,
       status: 'QUEUED_PENDING',
-      error: 'Empty video URL returned',
+      error: emptyErrMsg,
     });
-    throw new FalMaintenanceQueueError(QUEUED_PENDING_MESSAGE, 502);
+    throw new FalMaintenanceQueueError(emptyErrMsg, 502);
   }
 
+  console.log(`[fal.ai Video Success] Synthesized 9:16 trailer in ${durationMs}ms: ${videoUrl}`);
   recordFalUsage({
     slot: 'video',
     model: primaryModel,
@@ -1604,6 +1596,10 @@ export const SLOT_METADATA: Record<
 const _slotRenderCache = new Map<string, any>();
 const _planetDossierCache = new Map<string, any>();
 
+// In-Flight Request Deduplication to prevent simultaneous duplicate API credit burn
+const _inFlightSlotRequests = new Map<string, Promise<any>>();
+const _inFlightDossierRequests = new Map<string, Promise<any>>();
+
 function getSlotCacheKey(planetName: string, slot: string, userId?: string, email?: string): string {
   const normPlanet = planetName.trim().toLowerCase();
   const normUser = (userId || email || 'anon').trim().toLowerCase();
@@ -1829,131 +1825,147 @@ export async function generateSlotRender(
     }
   }
 
-  if (normSlot === 'video') {
-    const allRenders = (data.renders || {}) as Record<string, string>;
-    const candidateUrls: string[] = [
-      (data.heroImageUrl || '').trim() || allRenders.hero || allRenders['01_main'],
-      allRenders.flora || allRenders['02_flora'] || allRenders.ecosystem,
-      allRenders.fauna || allRenders['03_fauna'],
-      allRenders.atmosphere || allRenders['04_atmo'],
-      allRenders.landmark || allRenders['05_lore'],
-    ].filter(Boolean) as string[];
+  // Smart In-Flight Deduplication: Check if identical slot synthesis is already running
+  const inFlightSlot = _inFlightSlotRequests.get(cacheKey);
+  if (inFlightSlot) {
+    console.log(`[fal.ai Deduplication] Reusing active in-flight request for slot "${normSlot}" (${planetName})`);
+    return await inFlightSlot;
+  }
 
-    const rawUrls = (data.imageUrls && data.imageUrls.length > 0) ? data.imageUrls : candidateUrls;
-    const imageUrls = Array.from(new Set(rawUrls.map(resolveAbsoluteImageUrl))).filter(Boolean);
-    const heroImageUrl = imageUrls[0] || (data.heroImageUrl || '').trim();
+  const slotExecutionPromise = (async () => {
+    if (normSlot === 'video') {
+      const allRenders = (data.renders || {}) as Record<string, string>;
+      const candidateUrls: string[] = [
+        (data.heroImageUrl || '').trim() || allRenders.hero || allRenders['01_main'],
+        allRenders.flora || allRenders['02_flora'] || allRenders.ecosystem,
+        allRenders.fauna || allRenders['03_fauna'],
+        allRenders.atmosphere || allRenders['04_atmo'],
+        allRenders.landmark || allRenders['05_lore'],
+      ].filter(Boolean) as string[];
 
-    const dynamicPrompt = buildUniversalAssetAlignedFpvPrompt({
-      planetName,
-      authorName: data.authorUsername || data.architectName,
-      atmosphere: data.atmosphere,
-      flora: data.flora,
-      fauna: data.fauna,
-      landmark: data.landmark,
-      colorPalette: data.colorPalette,
-      naturalEnvironment: data.naturalEnvironment,
-      admiredCreature: data.admiredCreature,
-      lifePhilosophy: data.lifePhilosophy,
-      futurePromise: data.futurePromise,
-    });
+      const rawUrls = (data.imageUrls && data.imageUrls.length > 0) ? data.imageUrls : candidateUrls;
+      const imageUrls = Array.from(new Set(rawUrls.map(resolveAbsoluteImageUrl))).filter(Boolean);
+      const heroImageUrl = imageUrls[0] || (data.heroImageUrl || '').trim();
+
+      const dynamicPrompt = buildUniversalAssetAlignedFpvPrompt({
+        planetName,
+        authorName: data.authorUsername || data.architectName,
+        atmosphere: data.atmosphere,
+        flora: data.flora,
+        fauna: data.fauna,
+        landmark: data.landmark,
+        colorPalette: data.colorPalette,
+        naturalEnvironment: data.naturalEnvironment,
+        admiredCreature: data.admiredCreature,
+        lifePhilosophy: data.lifePhilosophy,
+        futurePromise: data.futurePromise,
+      });
+
+      try {
+        const videoUrl = await generateViralVideoWithFal(
+          heroImageUrl,
+          data.apiKey,
+          dynamicPrompt,
+          imageUrls,
+          {
+            planetName,
+            authorName: data.authorUsername || data.architectName,
+            atmosphere: data.atmosphere,
+            flora: data.flora,
+            fauna: data.fauna,
+            landmark: data.landmark,
+            colorPalette: data.colorPalette,
+            naturalEnvironment: data.naturalEnvironment,
+            admiredCreature: data.admiredCreature,
+            lifePhilosophy: data.lifePhilosophy,
+            futurePromise: data.futurePromise,
+          },
+          seed,
+          isAmlemi ? undefined : STRICT_NON_HUMAN_NEGATIVE_PROMPT
+        );
+        const result = {
+          success: true,
+          status: 'ready' as const,
+          slot: 'video' as const,
+          slotIndex: meta.index,
+          slotLabel: meta.label,
+          planetName,
+          prompt: dynamicPrompt,
+          videoUrl,
+          aspectRatio: '9:16',
+          durationSeconds: 5,
+          model: imageUrls.length > 1
+            ? 'ByteDance Seedance 2.5 (Reference-to-Video 9:16 Foley Audio)'
+            : 'ByteDance Seedance 2.5 (Image-to-Video 9:16 Foley Audio)',
+          seed,
+        };
+        _slotRenderCache.set(cacheKey, result);
+        return result;
+      } catch (err: any) {
+        console.warn(`[Slot video] Fal.ai 9:16 trailer queued:`, err?.message || err);
+        return {
+          success: false,
+          code: QUEUED_PENDING_STATUS,
+          status: QUEUED_PENDING_STATUS,
+          message: QUEUED_PENDING_MESSAGE,
+          slot: 'video' as const,
+          slotIndex: meta.index,
+          slotLabel: meta.label,
+          planetName,
+          prompt: dynamicPrompt,
+          aspectRatio: '9:16',
+          durationSeconds: 5,
+          model: 'Fal.ai Image-to-Video (QUEUED_PENDING)',
+          seed,
+        };
+      }
+    }
 
     try {
-      const videoUrl = await generateViralVideoWithFal(
-        heroImageUrl,
+      const imageUrl = await generateSlotImageWithFal(
+        prompt,
         data.apiKey,
-        dynamicPrompt,
-        imageUrls,
-        {
-          planetName,
-          authorName: data.authorUsername || data.architectName,
-          atmosphere: data.atmosphere,
-          flora: data.flora,
-          fauna: data.fauna,
-          landmark: data.landmark,
-          colorPalette: data.colorPalette,
-          naturalEnvironment: data.naturalEnvironment,
-          admiredCreature: data.admiredCreature,
-          lifePhilosophy: data.lifePhilosophy,
-          futurePromise: data.futurePromise,
-        },
+        normSlot,
         seed,
         isAmlemi ? undefined : STRICT_NON_HUMAN_NEGATIVE_PROMPT
       );
       const result = {
         success: true,
         status: 'ready' as const,
-        slot: 'video' as const,
+        slot: normSlot,
         slotIndex: meta.index,
         slotLabel: meta.label,
         planetName,
-        prompt: dynamicPrompt,
-        videoUrl,
-        aspectRatio: '9:16',
-        durationSeconds: 5,
-        model: imageUrls.length > 1
-          ? 'ByteDance Seedance 2.5 (Reference-to-Video 9:16 Foley Audio)'
-          : 'ByteDance Seedance 2.5 (Image-to-Video 9:16 Foley Audio)',
+        prompt,
+        imageUrl,
+        model: 'Fal.ai Flux Schnell (4K Photorealistic)',
         seed,
       };
       _slotRenderCache.set(cacheKey, result);
       return result;
     } catch (err: any) {
-      console.warn(`[Slot video] Fal.ai 9:16 trailer queued:`, err?.message || err);
+      console.warn(`[Slot ${normSlot}] Fal.ai synthesis queued:`, err?.message || err);
       return {
         success: false,
         code: QUEUED_PENDING_STATUS,
         status: QUEUED_PENDING_STATUS,
         message: QUEUED_PENDING_MESSAGE,
-        slot: 'video',
+        slot: normSlot,
         slotIndex: meta.index,
         slotLabel: meta.label,
         planetName,
-        prompt: dynamicPrompt,
-        aspectRatio: '9:16',
-        durationSeconds: 5,
-        model: 'Fal.ai Image-to-Video (QUEUED_PENDING)',
+        prompt,
+        model: 'Fal.ai Flux Schnell (QUEUED_PENDING)',
         seed,
       };
     }
-  }
+  })();
 
+  _inFlightSlotRequests.set(cacheKey, slotExecutionPromise);
   try {
-    const imageUrl = await generateSlotImageWithFal(
-      prompt,
-      data.apiKey,
-      normSlot,
-      seed,
-      isAmlemi ? undefined : STRICT_NON_HUMAN_NEGATIVE_PROMPT
-    );
-    const result = {
-      success: true,
-      status: 'ready' as const,
-      slot: normSlot,
-      slotIndex: meta.index,
-      slotLabel: meta.label,
-      planetName,
-      prompt,
-      imageUrl,
-      model: 'Fal.ai Flux Schnell (4K Photorealistic)',
-      seed,
-    };
-    _slotRenderCache.set(cacheKey, result);
-    return result;
-  } catch (err: any) {
-    console.warn(`[Slot ${normSlot}] Fal.ai synthesis queued:`, err?.message || err);
-    return {
-      success: false,
-      code: QUEUED_PENDING_STATUS,
-      status: QUEUED_PENDING_STATUS,
-      message: QUEUED_PENDING_MESSAGE,
-      slot: normSlot,
-      slotIndex: meta.index,
-      slotLabel: meta.label,
-      planetName,
-      prompt,
-      model: 'Fal.ai Flux Schnell (QUEUED_PENDING)',
-      seed,
-    };
+    return await slotExecutionPromise;
+  } finally {
+    _inFlightSlotRequests.delete(cacheKey);
   }
 }
 
@@ -2124,13 +2136,21 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
     }
   }
 
-  const photoSlots: Array<Exclude<GenerationSlot, 'video'>> = [
-    'hero',
-    'flora',
-    'fauna',
-    'atmosphere',
-    'landmark',
-  ];
+  // Smart In-Flight Deduplication: Check if identical planet dossier synthesis is already running
+  const inFlightDossier = _inFlightDossierRequests.get(dossierCacheKey);
+  if (inFlightDossier) {
+    console.log(`[fal.ai Deduplication] Reusing active in-flight dossier request for "${planetName}"`);
+    return await inFlightDossier;
+  }
+
+  const dossierPromise = (async () => {
+    const photoSlots: Array<Exclude<GenerationSlot, 'video'>> = [
+      'hero',
+      'flora',
+      'fauna',
+      'atmosphere',
+      'landmark',
+    ];
 
   // Step 1: Synthesize all 5 core sector visual renders (01_main through 05_lore) with seed
   const results = await Promise.all(photoSlots.map((s) => generateSlotRender(s, { ...data, seed })));
@@ -2397,6 +2417,14 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
   }
 
   return finalResult;
+  })();
+
+  _inFlightDossierRequests.set(dossierCacheKey, dossierPromise);
+  try {
+    return await dossierPromise;
+  } finally {
+    _inFlightDossierRequests.delete(dossierCacheKey);
+  }
 }
 
 export const generateSectorImages = generatePlanetRenders;
