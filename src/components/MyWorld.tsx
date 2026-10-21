@@ -29,7 +29,6 @@ import {
   downloadOrShareVideoDirect,
 } from './WorldStoryVerificationBadge';
 import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
-import { PlanetPhoto4kOverlayWidget } from './PlanetPhoto4kOverlayWidget';
 import { formatTitleCaseUserName } from '../utils/holder';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
@@ -252,7 +251,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
               willChange: 'transform',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
-              touchAction: 'pan-y',
+              touchAction: 'manipulation',
             }}
           >
             {isVideoReady ? (
@@ -449,18 +448,6 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
               <div className="absolute top-3 right-3 z-20 pointer-events-none px-2.5 py-0.5 rounded-full bg-[#040915]/85 border border-white/15 text-[10px] font-mono font-bold text-cyan-300 shrink-0">
                 0{safeIdx + 1} / 0{photoCards.length}
               </div>
-
-              {/* Pre-Download Visible Trademark, Branding & Dynamic Planet Widget */}
-              <PlanetPhoto4kOverlayWidget
-                planetName={dossier.planetName}
-                slotIndex={safeIdx}
-                category={activeCard?.category}
-                photoTitle={activeCard?.title}
-                dossier={dossier}
-                onDownload={() => activeCard && handleDownloadPhoto(activeCard)}
-                isDownloading={isDownloadingPhoto}
-                showSaveButton={true}
-              />
             </div>
 
             {/* Direct Save-to-Photos Action for Active Photo (Mobile & Tablet) */}
@@ -588,20 +575,6 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                       <span className="text-[9.5px] font-mono font-bold text-cyan-200 uppercase">QUEUED_PENDING</span>
                       <p className="text-[9.5px] font-sans text-white/75 leading-snug">{UI_RECALIBRATING_STATUS_TEXT}</p>
                     </div>
-                  )}
-
-                  {index === 0 && hasPhoto && (
-                    <PlanetPhoto4kOverlayWidget
-                      planetName={dossier.planetName}
-                      slotIndex={0}
-                      category={photo.category}
-                      photoTitle={photo.title}
-                      dossier={dossier}
-                      onDownload={() => handleDownloadPhoto(photo)}
-                      isDownloading={isDownloadingPhoto}
-                      showSaveButton={true}
-                      className="bottom-16 left-3.5 hidden sm:block"
-                    />
                   )}
 
                   <div className="relative z-10 flex items-center justify-between gap-1">

@@ -30,18 +30,40 @@ export const COMMUNITY_SHARE_VIDEO_MESSAGE =
 export const VIRAL_VIDEO_MOTION_PROMPT =
   'High-speed dynamic orbital zoom-in, cinematic volumetric lighting, photorealistic sci-fi aesthetics, immersive depth, seamless loop transition, sharp focus on planetary core and rings.';
 
-const SECTOR_PREFIXES = [
-  'ALPHA', 'BETA', 'CYGNUS', 'ORION', 'VEGA', 'DRACO', 'LYRA',
-  'SOLARIS', 'AURELIA', 'HYDRA', 'PHOENIX', 'CENTAURI', 'ANDROMEDA', 'CELESTIA'
+export interface ConstellationArm {
+  id: string;
+  name: string;
+  baseAngle: number;
+  color: string;
+  glowColor: string;
+}
+
+export const CONSTELLATION_ARMS: ConstellationArm[] = [
+  { id: 'arm-orion', name: 'ORION MERIDIAN', baseAngle: 0, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.45)' },
+  { id: 'arm-cygnus', name: 'CYGNUS FILAMENT', baseAngle: (2 * Math.PI) / 5, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.45)' },
+  { id: 'arm-solaris', name: 'SOLARIS TENDRIL', baseAngle: (4 * Math.PI) / 5, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.45)' },
+  { id: 'arm-aurelia', name: 'AURELIA CLUSTER', baseAngle: (6 * Math.PI) / 5, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.45)' },
+  { id: 'arm-centauri', name: 'CENTAURI STREAM', baseAngle: (8 * Math.PI) / 5, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.45)' },
 ];
+
+export const SPIRAL_B = 0.62;
+export const SPIRAL_R0 = 400;
+
+// 7 Quantized Radial Tiers (520 AU to 2800 AU) with guaranteed >200px spatial clearance
+export const SPIRAL_RADIAL_TIERS = [520, 900, 1280, 1660, 2040, 2420, 2800];
+
+export function getSpiralArmAngle(baseAngle: number, radius: number): number {
+  return baseAngle + SPIRAL_B * Math.log(Math.max(radius, SPIRAL_R0) / SPIRAL_R0);
+}
 
 /**
  * Deterministically derives 2D celestial coordinates and sector ID relative to Äkinoya (0,0)
+ * Uses a 5-arm logarithmic spiral constellation network with guaranteed spatial clearance (>200px)
  */
 export function getDeterministicPlanetCoordinates(
   planetId: string,
   planetName?: string
-): { x: number; y: number; sectorId: string } {
+): { x: number; y: number; sectorId: string; armId?: string; armName?: string } {
   const isCapitalCore =
     planetName === 'Äkinoya Prime' ||
     planetName === 'Äkinoya';
@@ -53,7 +75,7 @@ export function getDeterministicPlanetCoordinates(
     planetId === 'planet-amlemi-genesis-01' ||
     planetName === 'Ämlemi';
   if (isAmlemi) {
-    return { x: 280, y: -260, sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)' };
+    return { x: 280, y: -260, sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)', armId: 'arm-orion', armName: 'ORION MERIDIAN' };
   }
 
   const str = `${planetId}_${planetName || ''}`;
@@ -64,25 +86,34 @@ export function getDeterministicPlanetCoordinates(
   }
   const absHash = Math.abs(hash);
 
-  // Concentric orbital dispersal: Ring 1 (450px), Ring 2 (950px), Ring 3 (1550px), Ring 4 (2200px)
-  const baseRadii = [480, 980, 1580, 2250];
-  const ringIndex = absHash % baseRadii.length;
-  const radiusJitter = (absHash % 160) - 80;
-  const radius = baseRadii[ringIndex] + radiusJitter;
+  // 1. Arm assignment (5 logarithmic spiral arms)
+  const armIndex = absHash % CONSTELLATION_ARMS.length;
+  const arm = CONSTELLATION_ARMS[armIndex];
 
-  // Golden angle distribution ensures optimal aesthetic dispersion without clustering
-  const goldenAngle = 137.50776405003785;
-  const angleDeg = (absHash * goldenAngle) % 360;
-  const angleRad = (angleDeg * Math.PI) / 180;
+  // 2. Quantized radial tier (7 structural tiers from 520 AU to 2800 AU)
+  const tierIndex = Math.floor(absHash / CONSTELLATION_ARMS.length) % SPIRAL_RADIAL_TIERS.length;
+  const baseRadius = SPIRAL_RADIAL_TIERS[tierIndex];
 
-  const x = Math.round(radius * Math.cos(angleRad));
-  const y = Math.round(radius * Math.sin(angleRad));
+  // 3. Staggered sub-slot along filament (+/- radial step) to ensure absolute >200px spatial clearance
+  const subSlot = Math.floor(absHash / (CONSTELLATION_ARMS.length * SPIRAL_RADIAL_TIERS.length)) % 2;
+  const radiusOffset = subSlot === 1 ? 205 : 0;
+  const radius = baseRadius + radiusOffset;
 
-  const prefix = SECTOR_PREFIXES[absHash % SECTOR_PREFIXES.length];
+  // 4. Spiral logarithmic curvature angle: theta(r) = theta_0 + 0.62 * ln(r / 400)
+  const baseSpiralAngle = getSpiralArmAngle(arm.baseAngle, radius);
+
+  // Stagger angle slightly for sub-slot along filament
+  const angleOffset = subSlot === 1 ? 0.05 : -0.04;
+  const finalAngle = baseSpiralAngle + angleOffset;
+
+  const x = Math.round(radius * Math.cos(finalAngle));
+  const y = Math.round(radius * Math.sin(finalAngle));
+
+  const sectorPrefix = arm.name.split(' ')[0];
   const sectorNum = String((absHash % 89) + 10).padStart(2, '0');
-  const sectorId = `SECTOR ${prefix}-${sectorNum}`;
+  const sectorId = `SECTOR ${sectorPrefix}-${sectorNum}`;
 
-  return { x, y, sectorId };
+  return { x, y, sectorId, armId: arm.id, armName: arm.name };
 }
 
 export const getPlanetGalaxyLink = (planetId: string): string => {
@@ -372,9 +403,9 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
               sub.renders?.sfx_audio_url ||
               '';
             const coords = (sub.coordX !== undefined && sub.coordY !== undefined)
-              ? { x: sub.coordX, y: sub.coordY, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+              ? { x: sub.coordX, y: sub.coordY, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01'), armId: sub.armId, armName: sub.armName }
               : (sub.coord_x !== undefined && sub.coord_y !== undefined)
-              ? { x: sub.coord_x, y: sub.coord_y, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+              ? { x: sub.coord_x, y: sub.coord_y, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01'), armId: sub.armId, armName: sub.armName }
               : getDeterministicPlanetCoordinates(sub.id, sub.planetName);
             const isPreRelease = !sub.createdAt || new Date(sub.createdAt).getTime() < new Date('2027-01-09T00:00:00Z').getTime();
             const isVip = Boolean(
@@ -410,6 +441,8 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
               coord_x: coords.x,
               coord_y: coords.y,
               sectorId: coords.sectorId,
+              armId: coords.armId,
+              armName: coords.armName,
               renders: (() => {
                 if (isAmlemi) {
                   return {
@@ -573,9 +606,9 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
               d.human_answers?.video_url ||
               (isAmlemi ? '/assets/videos/amlemi_trailer.mp4' : '');
             const coords = (d.coord_x !== undefined && d.coord_y !== undefined)
-              ? { x: d.coord_x, y: d.coord_y, sectorId: d.sector_id || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+              ? { x: d.coord_x, y: d.coord_y, sectorId: d.sector_id || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01'), armId: d.arm_id || d.armId, armName: d.arm_name || d.armName }
               : (d.coordX !== undefined && d.coordY !== undefined)
-              ? { x: d.coordX, y: d.coordY, sectorId: d.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+              ? { x: d.coordX, y: d.coordY, sectorId: d.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01'), armId: d.arm_id || d.armId, armName: d.arm_name || d.armName }
               : getDeterministicPlanetCoordinates(d.id, d.planet_name);
             return {
               id: d.id,
@@ -601,6 +634,8 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
               coord_x: coords.x,
               coord_y: coords.y,
               sectorId: coords.sectorId,
+              armId: coords.armId,
+              armName: coords.armName,
               renders: (() => {
                 if (isAmlemi) {
                   return {
@@ -839,9 +874,9 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           '';
 
         const coords = (data.coord_x !== undefined && data.coord_y !== undefined)
-          ? { x: data.coord_x, y: data.coord_y, sectorId: data.sector_id || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+          ? { x: data.coord_x, y: data.coord_y, sectorId: data.sector_id || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01'), armId: data.arm_id || data.armId, armName: data.arm_name || data.armName }
           : (data.coordX !== undefined && data.coordY !== undefined)
-          ? { x: data.coordX, y: data.coordY, sectorId: data.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01') }
+          ? { x: data.coordX, y: data.coordY, sectorId: data.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01'), armId: data.arm_id || data.armId, armName: data.arm_name || data.armName }
           : getDeterministicPlanetCoordinates(data.id, data.planet_name);
 
         const sub: PlanetSubmission = {
@@ -870,6 +905,8 @@ export const fetchUserContestSubmission = async (userId?: string, email?: string
           coord_x: coords.x,
           coord_y: coords.y,
           sectorId: coords.sectorId,
+          armId: coords.armId,
+          armName: coords.armName,
           renders: (() => {
             if (isAmlemi) {
               return {
@@ -1230,9 +1267,9 @@ export const savePlanetSubmission = async (
       '';
 
     const coords = (submission.coordX !== undefined && submission.coordY !== undefined)
-      ? { x: submission.coordX, y: submission.coordY, sectorId: submission.sectorId || 'SECTOR ALPHA-01' }
+      ? { x: submission.coordX, y: submission.coordY, sectorId: submission.sectorId || 'SECTOR ALPHA-01', armId: submission.armId, armName: submission.armName }
       : (submission.coord_x !== undefined && submission.coord_y !== undefined)
-      ? { x: submission.coord_x, y: submission.coord_y, sectorId: submission.sectorId || 'SECTOR ALPHA-01' }
+      ? { x: submission.coord_x, y: submission.coord_y, sectorId: submission.sectorId || 'SECTOR ALPHA-01', armId: submission.armId, armName: submission.armName }
       : getDeterministicPlanetCoordinates(submission.id, submission.planetName);
 
     const isVip = Boolean(
@@ -1259,6 +1296,8 @@ export const savePlanetSubmission = async (
       coord_x: coords.x,
       coord_y: coords.y,
       sectorId: coords.sectorId,
+      armId: coords.armId,
+      armName: coords.armName,
       renders: {
         ...submission.renders,
         '01_main': submission.renders.hero,

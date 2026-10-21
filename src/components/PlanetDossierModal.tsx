@@ -43,7 +43,6 @@ import {
   triggerDirectDownload,
 } from './WorldStoryVerificationBadge';
 import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
-import { PlanetPhoto4kOverlayWidget } from './PlanetPhoto4kOverlayWidget';
 
 export interface PlanetDossierModalProps {
   planet: PlanetSubmission | null;
@@ -487,17 +486,6 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                       </div>
                     )}
 
-                    {/* Pre-Download Visible Trademark, Branding & Dynamic Planet Widget */}
-                    <PlanetPhoto4kOverlayWidget
-                      planetName={activePlanet.planetName}
-                      slotIndex={Math.max(0, activePhotoIdx - 1)}
-                      category={currentPhoto.category}
-                      photoTitle={currentPhoto.title}
-                      dossier={activePlanet}
-                      onDownload={() => handleDownloadPhoto(currentPhoto)}
-                      isDownloading={isDownloading}
-                      showSaveButton={true}
-                    />
 
                     {/* Sleek Left/Right Navigation Arrows (Always visible on mobile/tablet & desktop) */}
                     <button

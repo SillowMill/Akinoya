@@ -22,6 +22,8 @@ import {
   subscribeToPlanetSubmissions,
   togglePlanetSubmissionVote,
   getPlanetPhotoCards,
+  CONSTELLATION_ARMS,
+  getSpiralArmAngle,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
@@ -508,6 +510,120 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         }
       }
       ctx.setLineDash([]);
+
+      // 5b. Logarithmic Spiral Constellation Arms radiating from Äkinoya Core (0, 0)
+      for (const arm of CONSTELLATION_ARMS) {
+        ctx.save();
+
+        // Atmospheric spiral filament glow
+        ctx.strokeStyle = arm.glowColor.replace('0.45', '0.08');
+        ctx.lineWidth = Math.max(3, 5 * curZoom);
+        ctx.beginPath();
+        let isFirst = true;
+        for (let r = 360; r <= 3100; r += 35) {
+          const theta = getSpiralArmAngle(arm.baseAngle, r);
+          const sx = coreScreenX + r * Math.cos(theta) * curZoom;
+          const sy = coreScreenY + r * Math.sin(theta) * curZoom;
+          if (isFirst) {
+            ctx.moveTo(sx, sy);
+            isFirst = false;
+          } else {
+            ctx.lineTo(sx, sy);
+          }
+        }
+        ctx.stroke();
+
+        // Crisp dashed structural filament
+        ctx.strokeStyle = arm.color;
+        ctx.globalAlpha = 0.28;
+        ctx.lineWidth = Math.max(0.8, 1.2 * curZoom);
+        ctx.setLineDash([4 * curZoom, 8 * curZoom]);
+        ctx.beginPath();
+        isFirst = true;
+        for (let r = 360; r <= 3100; r += 35) {
+          const theta = getSpiralArmAngle(arm.baseAngle, r);
+          const sx = coreScreenX + r * Math.cos(theta) * curZoom;
+          const sy = coreScreenY + r * Math.sin(theta) * curZoom;
+          if (isFirst) {
+            ctx.moveTo(sx, sy);
+            isFirst = false;
+          } else {
+            ctx.lineTo(sx, sy);
+          }
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Sci-Fi Arm Name Badge at outer extremity
+        if (curZoom > 0.42) {
+          const labelRadius = 2920;
+          const labelTheta = getSpiralArmAngle(arm.baseAngle, labelRadius);
+          const lx = coreScreenX + labelRadius * Math.cos(labelTheta) * curZoom;
+          const ly = coreScreenY + labelRadius * Math.sin(labelTheta) * curZoom;
+          ctx.font = `bold ${Math.max(8.5, Math.min(10.5, 9.5 * curZoom))}px monospace`;
+          ctx.fillStyle = arm.color;
+          ctx.globalAlpha = 0.7;
+          ctx.textAlign = 'center';
+          ctx.fillText(`✦ ${arm.name}`, lx, ly);
+        }
+
+        ctx.restore();
+      }
+
+      // 5c. Constellation Lattice Connections between adjacent charted nodes along each arm
+      const currentPlanets = planetsRef.current;
+      if (currentPlanets && currentPlanets.length > 0) {
+        const armGroups = new Map<string, Array<{ x: number; y: number; r: number; id: string }>>();
+        for (const arm of CONSTELLATION_ARMS) {
+          armGroups.set(arm.id, []);
+        }
+
+        for (const p of currentPlanets) {
+          const px = p.coordX ?? 0;
+          const py = p.coordY ?? 0;
+          if (px === 0 && py === 0) continue;
+          const r = Math.hypot(px, py);
+          const armId = p.armId || CONSTELLATION_ARMS[0].id;
+          if (armGroups.has(armId)) {
+            armGroups.get(armId)!.push({ x: px, y: py, r, id: p.id });
+          }
+        }
+
+        const activeHoveredId = hoveredPlanetRef.current?.id;
+        const activeSelectedId = selectedPlanetRef.current?.id;
+
+        for (const arm of CONSTELLATION_ARMS) {
+          const nodes = armGroups.get(arm.id);
+          if (!nodes || nodes.length < 2) continue;
+          nodes.sort((a, b) => a.r - b.r);
+
+          ctx.save();
+          for (let i = 0; i < nodes.length - 1; i++) {
+            const n1 = nodes[i];
+            const n2 = nodes[i + 1];
+            const isHighlighted =
+              n1.id === activeHoveredId ||
+              n2.id === activeHoveredId ||
+              n1.id === activeSelectedId ||
+              n2.id === activeSelectedId;
+
+            const s1x = centerX + (curPan.x + n1.x) * curZoom;
+            const s1y = centerY + (curPan.y + n1.y) * curZoom;
+            const s2x = centerX + (curPan.x + n2.x) * curZoom;
+            const s2y = centerY + (curPan.y + n2.y) * curZoom;
+
+            ctx.beginPath();
+            ctx.moveTo(s1x, s1y);
+            ctx.lineTo(s2x, s2y);
+            ctx.strokeStyle = isHighlighted ? arm.color : arm.glowColor.replace('0.45', '0.22');
+            ctx.lineWidth = isHighlighted ? 1.8 : 1.0;
+            ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 5 * curZoom]);
+            ctx.stroke();
+          }
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+      }
 
       // 6. Subtle Coordinate Crosshair Rays from Core
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
@@ -1271,7 +1387,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               } as PlanetSubmission);
             }}
             onPointerLeave={() => setHoveredPlanet(null)}
-            className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none"
+            className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none touch-manipulation p-2.5"
             style={{ left: 0, top: 0, width: 72, height: 72 }}
           >
             {/* 1. Volumetric Golden Corona & Core Flare */}
@@ -1358,7 +1474,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   setHoveredPlanet(planet);
                 }}
                 onPointerLeave={() => setHoveredPlanet(null)}
-                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10 flex items-center justify-center select-none"
+                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10 flex items-center justify-center select-none touch-manipulation p-2.5"
                 style={{ left: posX, top: posY, width: 48, height: 48 }}
               >
                 {/* Pioneer Status Floating Marker Above Orb */}

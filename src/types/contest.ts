@@ -72,6 +72,8 @@ export interface PlanetSubmission {
   coord_x?: number;
   coord_y?: number;
   sectorId?: string;
+  armId?: string;
+  armName?: string;
   votesCount: number;
   hasVoted?: boolean;
   isPioneer?: boolean;

@@ -43,7 +43,6 @@ import {
   downloadOrShareVideoDirect,
 } from './WorldStoryVerificationBadge';
 import { watermarkAndSavePhoto, renderWatermarkedPhotoBlob } from '../utils/watermarkPhoto';
-import { PlanetPhoto4kOverlayWidget } from './PlanetPhoto4kOverlayWidget';
 
 export type MasterAssetSlideId = 'archive_4k' | 'story_card' | 'video_trailer';
 
@@ -890,18 +889,6 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       className="w-full h-full object-cover group-hover:scale-[1.015] transition-transform duration-700 select-none pointer-events-none"
                     />
                   )}
-
-                  {/* Pre-Download Visible Trademark, Branding & Dynamic Planet Widget */}
-                  <PlanetPhoto4kOverlayWidget
-                    planetName={dossier.planetName}
-                    slotIndex={activePhotoIdx}
-                    category={activePhoto.category}
-                    photoTitle={activePhoto.title}
-                    dossier={dossier}
-                    onDownload={handleDownload4kPhoto}
-                    isDownloading={isDownloadingPhoto}
-                    showSaveButton={true}
-                  />
                 </div>
 
                 {/* Clean Information & Action Bar Below the 4K Render (Zero Overlap on Image) */}
@@ -1483,18 +1470,6 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       <div className="absolute top-3 left-4 px-2.5 py-1 rounded bg-black/80 border border-amber-400/50 text-[10px] font-mono font-bold text-amber-300 uppercase">
                         {activePhoto.category} · {activePhoto.title}
                       </div>
-
-                      {/* Pre-Download Visible Trademark, Branding & Dynamic Planet Widget in Fullscreen */}
-                      <PlanetPhoto4kOverlayWidget
-                        planetName={dossier.planetName}
-                        slotIndex={activePhotoIdx}
-                        category={activePhoto.category}
-                        photoTitle={activePhoto.title}
-                        dossier={dossier}
-                        onDownload={handleDownload4kPhoto}
-                        isDownloading={isDownloadingPhoto}
-                        showSaveButton={true}
-                      />
                     </div>
                     {/* 5-Photo Strip in Fullscreen */}
                     <div className="flex items-center gap-2 overflow-x-auto py-1 max-w-full">
