@@ -7,6 +7,8 @@ import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import moodboardImg from '../assets/images/Mood.png';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
+import dnVideo from '../assets/videos/DN.mp4';
+import dnThumbnailImg from '../assets/images/dn_thumbnail.png';
 import dontNeedVideo from '../assets/videos/Dontneed.mov';
 import bingaaLoopVideo from '../assets/videos/Bingaaloop.mov';
 import {
@@ -101,7 +103,8 @@ export interface VisualizerTrack {
   videoUrl?: string;
 }
 
-export const DONT_NEED_VIDEO_URL = dontNeedVideo || '/videos/Don\'tneed.mov';
+export const DN_VIDEO_URL = dnVideo || '/videos/DN.mp4';
+export const DONT_NEED_VIDEO_URL = DN_VIDEO_URL;
 export const BINGAA_LOOP_VIDEO_URL = bingaaLoopVideo || '/videos/Bingaaloop.mov';
 
 const VISUALIZER_TRACKS: VisualizerTrack[] = [
@@ -109,8 +112,8 @@ const VISUALIZER_TRACKS: VisualizerTrack[] = [
     id: '01',
     title: "Don't Need",
     code: 'DONTNEED',
-    artworkUrl: visualizerThumbnailImg,
-    videoUrl: DONT_NEED_VIDEO_URL,
+    artworkUrl: dnThumbnailImg || visualizerThumbnailImg,
+    videoUrl: DN_VIDEO_URL,
   },
   {
     id: '02',
@@ -1258,8 +1261,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               el.play().catch(() => {});
                             }
                           }}
-                          src={DONT_NEED_VIDEO_URL}
-                          poster={visualizerThumbnailImg}
+                          src={DN_VIDEO_URL}
+                          poster={dnThumbnailImg || visualizerThumbnailImg}
                           autoPlay
                           loop
                           muted
@@ -1277,22 +1280,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
-                        {/* Play button overlay with hover glow */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-cyan-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-300 shadow-[0_0_20px_rgba(56,189,248,0.4)] group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-black transition-all">
-                            <Play className="w-5 h-5 sm:w-6 sm:h-6 ml-0.5 fill-current" />
-                          </div>
-                        </div>
-
                         {/* Top Left Badge on Thumbnail */}
-                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md border border-cyan-400/40 text-[10px] font-mono text-cyan-300">
+                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md border border-cyan-400/40 text-[10px] font-mono text-cyan-300 pointer-events-none shadow-[0_0_10px_rgba(56,189,248,0.3)]">
                           <Film className="w-3 h-3 text-cyan-400 animate-pulse" />
                           <span>TRACK 01 · DON'T NEED (MUTED LOOP)</span>
                         </div>
 
                         {/* Bottom Right Duration / 4K Pill */}
-                        <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-black/80 backdrop-blur-md border border-white/20 text-[9px] font-mono text-white/80">
-                          4K CINEMATIC
+                        <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-black/80 backdrop-blur-md border border-white/20 text-[9px] font-mono text-white/80 pointer-events-none flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>4K VIDEO LOOP</span>
                         </div>
                       </div>
 
@@ -1656,11 +1653,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                   </div>
                                 )}
 
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity pointer-events-none">
-                                  <div className="w-10 h-10 rounded-full bg-cyan-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.4)]">
-                                    <Play className="w-4 h-4 ml-0.5 fill-current" />
+                                {!track.videoUrl && (
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity pointer-events-none">
+                                    <div className="w-10 h-10 rounded-full bg-cyan-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.4)]">
+                                      <Play className="w-4 h-4 ml-0.5 fill-current" />
+                                    </div>
                                   </div>
-                                </div>
+                                )}
                               </div>
                             )}
 
