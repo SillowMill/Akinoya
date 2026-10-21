@@ -48,10 +48,25 @@ export const CONSTELLATION_ARMS: ConstellationArm[] = [
   { id: 'arm-centauri', name: 'CENTAURI STREAM', baseAngle: BASE_CONSTELLATION_OFFSET + (8 * Math.PI) / 5, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.45)' },
 ];
 
+export type ConstellationLayoutMode = 'spiral' | 'matrix' | 'cluster';
+
+export interface ConstellationVariantConfig {
+  mode: ConstellationLayoutMode;
+  name: string;
+  badge: string;
+  description: string;
+}
+
+export const CONSTELLATION_LAYOUT_VARIANTS: ConstellationVariantConfig[] = [
+  { mode: 'spiral', name: '5-Arm Spiral', badge: '🌀 5-ARM SPIRAL', description: 'Logarithmic tentacle filaments radiating outward' },
+  { mode: 'matrix', name: 'Oval Matrix', badge: '🪐 OVAL MATRIX', description: 'Symmetrical concentric elliptical orbital highways' },
+  { mode: 'cluster', name: 'Quantum Cluster', badge: '🌌 QUANTUM CLUSTER', description: 'Asymmetric regional star clusters with quantum web connectors' },
+];
+
+// 1. Variant A (5-Arm Spiral) constants
 export const SPIRAL_B = 0.62;
 export const SPIRAL_R0 = 300;
 export const AMLEMI_FOUNDATIONAL_RADIUS = 300;
-
 // 7 Quantized Harmonic Radial Tiers (540 AU to 3400 AU) with guaranteed >220px spatial clearance
 export const SPIRAL_RADIAL_TIERS = [540, 1000, 1480, 1960, 2440, 2920, 3400];
 
@@ -59,13 +74,55 @@ export function getSpiralArmAngle(baseAngle: number, radius: number): number {
   return baseAngle + SPIRAL_B * Math.log(Math.max(radius, SPIRAL_R0) / SPIRAL_R0);
 }
 
+// 2. Variant B (Elliptical Oval Matrix) constants
+export interface OvalMatrixTrack {
+  id: string;
+  name: string;
+  a: number; // semi-major axis (horizontal)
+  b: number; // semi-minor axis (vertical)
+  slots: number;
+  color: string;
+  glowColor: string;
+}
+
+export const OVAL_MATRIX_TRACKS: OvalMatrixTrack[] = [
+  { id: 'track-0', name: 'FOUNDATIONAL CAPITAL OVAL', a: 320, b: 220, slots: 4, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.45)' },
+  { id: 'track-1', name: 'INNER CORE MATRIX', a: 680, b: 440, slots: 6, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.35)' },
+  { id: 'track-2', name: 'PIONEER HIGHWAY', a: 1180, b: 780, slots: 8, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.35)' },
+  { id: 'track-3', name: 'IONIZATION BELT', a: 1740, b: 1140, slots: 10, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.35)' },
+  { id: 'track-4', name: 'OUTER EXPEDITIONS', a: 2360, b: 1540, slots: 12, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.35)' },
+  { id: 'track-5', name: 'STELLAR MATRIX HORIZON', a: 3040, b: 1980, slots: 14, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.3)' },
+  { id: 'track-6', name: 'DEEP VOID PERIMETER', a: 3720, b: 2420, slots: 16, color: '#f43f5e', glowColor: 'rgba(244, 63, 94, 0.25)' },
+];
+
+// 3. Variant C (Fractal / Quantum Cluster) constants
+export interface QuantumClusterHub {
+  id: string;
+  name: string;
+  cx: number;
+  cy: number;
+  color: string;
+  glowColor: string;
+  slots: number;
+}
+
+export const QUANTUM_CLUSTER_HUBS: QuantumClusterHub[] = [
+  { id: 'cluster-orion', name: 'ORION GATEWAY', cx: 880, cy: -640, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.35)', slots: 8 },
+  { id: 'cluster-cygnus', name: 'CYGNUS RIFT', cx: 1350, cy: 980, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.35)', slots: 8 },
+  { id: 'cluster-solaris', name: 'SOLARIS NEBULA', cx: -1250, cy: 1050, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.35)', slots: 8 },
+  { id: 'cluster-aurelia', name: 'AURELIA DEEP VAULT', cx: -1580, cy: -650, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.35)', slots: 8 },
+  { id: 'cluster-centauri', name: 'CENTAURI DRIFT', cx: -360, cy: -1520, color: '#22d3ee', glowColor: 'rgba(34, 211, 238, 0.35)', slots: 8 },
+  { id: 'cluster-deep', name: 'DEEP STELLAR REACH', cx: 1950, cy: -1600, color: '#f43f5e', glowColor: 'rgba(244, 63, 94, 0.3)', slots: 8 },
+];
+
 /**
  * Deterministically derives 2D celestial coordinates and sector ID relative to Äkinoya (0,0)
- * Uses a 5-arm logarithmic spiral constellation network with guaranteed spatial clearance (>220px)
+ * Works across all 3 constellation variants with permanent master anchoring for Ämlemi
  */
 export function getDeterministicPlanetCoordinates(
   planetId: string,
-  planetName?: string
+  planetName?: string,
+  mode: ConstellationLayoutMode = 'spiral'
 ): { x: number; y: number; sectorId: string; armId?: string; armName?: string } {
   const isCapitalCore =
     planetName === 'Äkinoya Prime' ||
@@ -78,7 +135,7 @@ export function getDeterministicPlanetCoordinates(
     planetId === 'planet-amlemi-genesis-01' ||
     planetName === 'Ämlemi';
   if (isAmlemi) {
-    // Ämlemi is anchored precisely on the foundational node of Orion Meridian at R = 300 AU
+    // Ämlemi is permanently anchored precisely on the foundational node of Orion Meridian at R = 300 AU
     return {
       x: 243,
       y: -176,
@@ -96,29 +153,42 @@ export function getDeterministicPlanetCoordinates(
   }
   const absHash = Math.abs(hash);
 
-  // 1. Arm assignment (5 logarithmic spiral arms)
+  if (mode === 'matrix') {
+    const trackIdx = 1 + (absHash % (OVAL_MATRIX_TRACKS.length - 1));
+    const track = OVAL_MATRIX_TRACKS[trackIdx];
+    const slotIdx = absHash % track.slots;
+    const angle = (slotIdx / track.slots) * 2 * Math.PI + (trackIdx % 2 === 1 ? 0.2 : 0);
+    const x = Math.round(track.a * Math.cos(angle));
+    const y = Math.round(track.b * Math.sin(angle));
+    const sectorId = `SECTOR MATRIX-T0${trackIdx}`;
+    return { x, y, sectorId, armId: track.id, armName: track.name };
+  }
+
+  if (mode === 'cluster') {
+    const hubIdx = absHash % QUANTUM_CLUSTER_HUBS.length;
+    const hub = QUANTUM_CLUSTER_HUBS[hubIdx];
+    const slotIdx = absHash % hub.slots;
+    const isOuter = slotIdx >= 4;
+    const satR = isOuter ? 540 : 270;
+    const baseAngle = isOuter ? Math.PI / 4 : 0;
+    const angle = baseAngle + ((slotIdx % 4) * Math.PI) / 2;
+    const x = Math.round(hub.cx + satR * Math.cos(angle));
+    const y = Math.round(hub.cy + satR * Math.sin(angle));
+    const sectorId = `SECTOR ${hub.name.split(' ')[0]}-0${slotIdx + 1}`;
+    return { x, y, sectorId, armId: hub.id, armName: hub.name };
+  }
+
+  // Default: Variant A (5-Arm Spiral)
   const armIndex = absHash % CONSTELLATION_ARMS.length;
   const arm = CONSTELLATION_ARMS[armIndex];
-
-  // 2. Quantized radial tier (7 structural tiers from 540 AU to 3400 AU)
   const tierIndex = Math.floor(absHash / CONSTELLATION_ARMS.length) % SPIRAL_RADIAL_TIERS.length;
   const baseRadius = SPIRAL_RADIAL_TIERS[tierIndex];
-
-  // 3. Staggered sub-slot along filament (+/- radial step) to ensure absolute >220px spatial clearance
   const subSlot = Math.floor(absHash / (CONSTELLATION_ARMS.length * SPIRAL_RADIAL_TIERS.length)) % 2;
-  const radiusOffset = subSlot === 1 ? 235 : 0;
-  const radius = baseRadius + radiusOffset;
-
-  // 4. Spiral logarithmic curvature angle: theta(r) = theta_0 + 0.62 * ln(r / 300)
+  const radius = baseRadius + (subSlot === 1 ? 235 : 0);
   const baseSpiralAngle = getSpiralArmAngle(arm.baseAngle, radius);
-
-  // Stagger angle slightly for sub-slot along filament
-  const angleOffset = subSlot === 1 ? 0.05 : -0.03;
-  const finalAngle = baseSpiralAngle + angleOffset;
-
+  const finalAngle = baseSpiralAngle + (subSlot === 1 ? 0.05 : -0.03);
   const x = Math.round(radius * Math.cos(finalAngle));
   const y = Math.round(radius * Math.sin(finalAngle));
-
   const sectorPrefix = arm.name.split(' ')[0];
   const sectorNum = String((absHash % 89) + 10).padStart(2, '0');
   const sectorId = `SECTOR ${sectorPrefix}-${sectorNum}`;
@@ -127,13 +197,16 @@ export function getDeterministicPlanetCoordinates(
 }
 
 /**
- * Dynamic Proportional Equilibrium Engine:
- * Guarantees that every charted planet snaps into a balanced, proportional position
- * across the 5 logarithmic spiral arms and 7 radial tiers.
- * Enforces a strict repulsive buffer (> 220px screen distance) between all nodes.
- * If a sector slot fills up, gracefully cascades to alternate spiral arms and outer tiers.
+ * Multi-Variant Dynamic Equilibrium Engine:
+ * Supports 3 architectural constellation modes (Spiral, Oval Matrix, Quantum Cluster).
+ * Enforces a strict repulsive buffer (> 220px) across all variants.
+ * Cascades gracefully to alternate arms/tracks/clusters to prevent crowding.
  */
-export function assignEquilibriumCoordinates(planets: PlanetSubmission[]): PlanetSubmission[] {
+export function assignMultiVariantCoordinates(
+  planets: PlanetSubmission[],
+  mode: ConstellationLayoutMode = 'spiral',
+  seed: number = 0
+): PlanetSubmission[] {
   const occupiedSlots = new Set<string>();
   occupiedSlots.add('arm_0_tier_foundational'); // Permanently locked for Ämlemi
 
@@ -165,15 +238,98 @@ export function assignEquilibriumCoordinates(planets: PlanetSubmission[]): Plane
       };
     }
 
-    // Determine deterministic slot hash
     const str = `${sub.id}_${sub.planetName || ''}`;
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       hash = (hash << 5) - hash + str.charCodeAt(i);
       hash |= 0;
     }
-    const absHash = Math.abs(hash);
+    const absHash = Math.abs(hash + seed * 7919);
 
+    if (mode === 'matrix') {
+      const prefTrack = 1 + (absHash % (OVAL_MATRIX_TRACKS.length - 1));
+      let chosenTrack = prefTrack;
+      let chosenSlot = 0;
+      let found = false;
+
+      for (let t = 0; t < OVAL_MATRIX_TRACKS.length - 1 && !found; t++) {
+        const trackIdx = 1 + ((prefTrack - 1 + t) % (OVAL_MATRIX_TRACKS.length - 1));
+        const track = OVAL_MATRIX_TRACKS[trackIdx];
+        const prefSlot = absHash % track.slots;
+        for (let s = 0; s < track.slots && !found; s++) {
+          const slotIdx = (prefSlot + s) % track.slots;
+          const key = `matrix_tr_${trackIdx}_slot_${slotIdx}`;
+          if (!occupiedSlots.has(key)) {
+            occupiedSlots.add(key);
+            chosenTrack = trackIdx;
+            chosenSlot = slotIdx;
+            found = true;
+          }
+        }
+      }
+
+      const tr = OVAL_MATRIX_TRACKS[chosenTrack];
+      const angle = (chosenSlot / tr.slots) * 2 * Math.PI + (chosenTrack % 2 === 1 ? 0.2 : 0);
+      const x = Math.round(tr.a * Math.cos(angle));
+      const y = Math.round(tr.b * Math.sin(angle));
+      const sectorId = `SECTOR MATRIX-T0${chosenTrack}`;
+
+      return {
+        ...sub,
+        coordX: x,
+        coordY: y,
+        coord_x: x,
+        coord_y: y,
+        sectorId,
+        armId: tr.id,
+        armName: tr.name,
+      };
+    }
+
+    if (mode === 'cluster') {
+      const prefHub = absHash % QUANTUM_CLUSTER_HUBS.length;
+      let chosenHub = prefHub;
+      let chosenSlot = 0;
+      let found = false;
+
+      for (let h = 0; h < QUANTUM_CLUSTER_HUBS.length && !found; h++) {
+        const hubIdx = (prefHub + h) % QUANTUM_CLUSTER_HUBS.length;
+        const hub = QUANTUM_CLUSTER_HUBS[hubIdx];
+        const prefSlot = absHash % hub.slots;
+        for (let s = 0; s < hub.slots && !found; s++) {
+          const slotIdx = (prefSlot + s) % hub.slots;
+          const key = `cluster_hub_${hubIdx}_slot_${slotIdx}`;
+          if (!occupiedSlots.has(key)) {
+            occupiedSlots.add(key);
+            chosenHub = hubIdx;
+            chosenSlot = slotIdx;
+            found = true;
+          }
+        }
+      }
+
+      const hub = QUANTUM_CLUSTER_HUBS[chosenHub];
+      const isOuter = chosenSlot >= 4;
+      const satR = isOuter ? 540 : 270;
+      const baseAngle = isOuter ? Math.PI / 4 : 0;
+      const angle = baseAngle + ((chosenSlot % 4) * Math.PI) / 2;
+      const x = Math.round(hub.cx + satR * Math.cos(angle));
+      const y = Math.round(hub.cy + satR * Math.sin(angle));
+      const sectorId = `SECTOR ${hub.name.split(' ')[0]}-0${chosenSlot + 1}`;
+
+      return {
+        ...sub,
+        coordX: x,
+        coordY: y,
+        coord_x: x,
+        coord_y: y,
+        sectorId,
+        armId: hub.id,
+        armName: hub.name,
+      };
+    }
+
+    // Default: Variant A (5-Arm Spiral)
     const prefArm = absHash % CONSTELLATION_ARMS.length;
     const prefTier = Math.floor(absHash / CONSTELLATION_ARMS.length) % SPIRAL_RADIAL_TIERS.length;
     const prefSub = Math.floor(absHash / (CONSTELLATION_ARMS.length * SPIRAL_RADIAL_TIERS.length)) % 2;
@@ -183,7 +339,6 @@ export function assignEquilibriumCoordinates(planets: PlanetSubmission[]): Plane
     let chosenSub = prefSub;
     let found = false;
 
-    // Graceful Equilibrium Cascade across arms and tiers to prevent clumping
     for (let subOffset = 0; subOffset < 2 && !found; subOffset++) {
       const s = (prefSub + subOffset) % 2;
       for (let tOffset = 0; tOffset < SPIRAL_RADIAL_TIERS.length && !found; tOffset++) {
@@ -234,6 +389,17 @@ export function assignEquilibriumCoordinates(planets: PlanetSubmission[]): Plane
       armName: arm.name,
     };
   });
+}
+
+/**
+ * Backwards-compatible alias for assignMultiVariantCoordinates
+ */
+export function assignEquilibriumCoordinates(
+  planets: PlanetSubmission[],
+  mode: ConstellationLayoutMode = 'spiral',
+  seed: number = 0
+): PlanetSubmission[] {
+  return assignMultiVariantCoordinates(planets, mode, seed);
 }
 
 export const getPlanetGalaxyLink = (planetId: string): string => {
@@ -524,10 +690,12 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
               sub.renders?.sfxAudioUrl ||
               sub.renders?.sfx_audio_url ||
               '';
-            const coords = (sub.coordX !== undefined && sub.coordY !== undefined)
-              ? { x: sub.coordX, y: sub.coordY, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01'), armId: sub.armId, armName: sub.armName }
+            const coords = isAmlemi
+              ? { x: 243, y: -176, sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)', armId: 'arm-0', armName: 'ORION MERIDIAN' }
+              : (sub.coordX !== undefined && sub.coordY !== undefined)
+              ? { x: sub.coordX, y: sub.coordY, sectorId: sub.sectorId || 'SECTOR ALPHA-01', armId: sub.armId, armName: sub.armName }
               : (sub.coord_x !== undefined && sub.coord_y !== undefined)
-              ? { x: sub.coord_x, y: sub.coord_y, sectorId: sub.sectorId || (isAmlemi ? 'SECTOR AKN-00 (CORE)' : 'SECTOR ALPHA-01'), armId: sub.armId, armName: sub.armName }
+              ? { x: sub.coord_x, y: sub.coord_y, sectorId: sub.sectorId || 'SECTOR ALPHA-01', armId: sub.armId, armName: sub.armName }
               : getDeterministicPlanetCoordinates(sub.id, sub.planetName);
             const isPreRelease = !sub.createdAt || new Date(sub.createdAt).getTime() < new Date('2027-01-09T00:00:00Z').getTime();
             const isVip = Boolean(

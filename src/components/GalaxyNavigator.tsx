@@ -14,6 +14,8 @@ import {
   ArrowLeft,
   ChevronRight,
   Globe2,
+  RefreshCw,
+  Layers,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
 import {
@@ -24,6 +26,11 @@ import {
   getPlanetPhotoCards,
   CONSTELLATION_ARMS,
   getSpiralArmAngle,
+  ConstellationLayoutMode,
+  CONSTELLATION_LAYOUT_VARIANTS,
+  OVAL_MATRIX_TRACKS,
+  QUANTUM_CLUSTER_HUBS,
+  assignMultiVariantCoordinates,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
@@ -102,15 +109,98 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
 
+  // Constellation Architectural Layout & Restructure Engine
+  const [layoutMode, setLayoutMode] = useState<ConstellationLayoutMode>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('akinoya_constellation_layout_mode');
+        if (saved === 'spiral' || saved === 'matrix' || saved === 'cluster') return saved;
+      } catch {}
+    }
+    return 'spiral';
+  });
+  const [restructureSeed, setRestructureSeed] = useState<number>(0);
+  const [isMorphing, setIsMorphing] = useState<boolean>(false);
+
+  const layoutModeRef = useRef<ConstellationLayoutMode>(layoutMode);
+  layoutModeRef.current = layoutMode;
+
+  const animatingRef = useRef<boolean>(false);
+  const morphStartTimeRef = useRef<number>(0);
+  const nodePositionsRef = useRef<
+    Map<
+      string,
+      {
+        currentX: number;
+        currentY: number;
+        startX: number;
+        startY: number;
+        targetX: number;
+        targetY: number;
+      }
+    >
+  >(new Map());
+
+  // Dynamically compute equilibrium coordinates across active layout mode & seed
+  const layoutPlanets = useMemo(() => {
+    return assignMultiVariantCoordinates(planets, layoutMode, restructureSeed);
+  }, [planets, layoutMode, restructureSeed]);
+
   const filteredPlanets = useMemo(() => {
-    const base = mapFilter === 'pioneer' ? planets.filter((p) => isPioneerPlanet(p)) : planets;
+    const base = mapFilter === 'pioneer' ? layoutPlanets.filter((p) => isPioneerPlanet(p)) : layoutPlanets;
     return [...base].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
-  }, [planets, mapFilter]);
+  }, [layoutPlanets, mapFilter]);
 
   const pioneerPlanetsCount = useMemo(
-    () => planets.filter((p) => isPioneerPlanet(p)).length,
-    [planets]
+    () => layoutPlanets.filter((p) => isPioneerPlanet(p)).length,
+    [layoutPlanets]
   );
+
+  // Dual-Synchronized 60+ FPS Interpolation Coordinator
+  useEffect(() => {
+    const isFirstRun = nodePositionsRef.current.size === 0;
+    const now = performance.now();
+
+    if (!isFirstRun) {
+      morphStartTimeRef.current = now;
+      animatingRef.current = true;
+      setIsMorphing(true);
+    }
+
+    filteredPlanets.forEach((p) => {
+      const targetX = p.coordX ?? 0;
+      const targetY = p.coordY ?? 0;
+      const existing = nodePositionsRef.current.get(p.id);
+
+      if (existing && !isFirstRun) {
+        nodePositionsRef.current.set(p.id, {
+          currentX: existing.currentX,
+          currentY: existing.currentY,
+          startX: existing.currentX,
+          startY: existing.currentY,
+          targetX,
+          targetY,
+        });
+      } else {
+        nodePositionsRef.current.set(p.id, {
+          currentX: targetX,
+          currentY: targetY,
+          startX: targetX,
+          startY: targetY,
+          targetX,
+          targetY,
+        });
+      }
+    });
+
+    if (!isFirstRun) {
+      const timer = setTimeout(() => {
+        setIsMorphing(false);
+        animatingRef.current = false;
+      }, 660);
+      return () => clearTimeout(timer);
+    }
+  }, [layoutMode, restructureSeed, filteredPlanets]);
 
   // High-frequency Pan, Zoom & Rotation Refs (60fps GPU pipeline without React re-render lag)
   const initialZoom = typeof window !== 'undefined' && window.innerWidth < 768 ? 0.65 : 0.85;
@@ -407,6 +497,23 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         }
       }
 
+      // Interpolate planet coordinates during restructure / layout morphing
+      if (animatingRef.current) {
+        const elapsed = time - morphStartTimeRef.current;
+        const progress = Math.min(1, Math.max(0, elapsed / 650));
+        // Match CSS cubic-bezier(0.16, 1, 0.3, 1) closely
+        const ease = 1 - Math.pow(1 - progress, 3.5);
+
+        nodePositionsRef.current.forEach((node) => {
+          node.currentX = node.startX + (node.targetX - node.startX) * ease;
+          node.currentY = node.startY + (node.targetY - node.startY) * ease;
+        });
+
+        if (progress >= 1) {
+          animatingRef.current = false;
+        }
+      }
+
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
@@ -513,84 +620,171 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       }
       ctx.setLineDash([]);
 
-      // 5b. Logarithmic Spiral Constellation Arms radiating from Äkinoya Core (0, 0)
-      for (const arm of CONSTELLATION_ARMS) {
-        ctx.save();
+      // Helper: get current interpolated position of a planet node
+      const getNodePos = (p: PlanetSubmission) => {
+        const interp = nodePositionsRef.current.get(p.id);
+        if (interp) {
+          return { x: interp.currentX, y: interp.currentY };
+        }
+        return { x: p.coordX ?? 0, y: p.coordY ?? 0 };
+      };
 
-        // Atmospheric spiral filament glow
-        ctx.strokeStyle = arm.glowColor.replace('0.45', '0.08');
-        ctx.lineWidth = Math.max(3, 5 * curZoom);
-        ctx.beginPath();
-        let isFirst = true;
-        for (let r = 240; r <= 3500; r += 30) {
-          const theta = getSpiralArmAngle(arm.baseAngle, r);
-          const sx = coreScreenX + r * Math.cos(theta) * curZoom;
-          const sy = coreScreenY + r * Math.sin(theta) * curZoom;
-          if (isFirst) {
-            ctx.moveTo(sx, sy);
-            isFirst = false;
-          } else {
-            ctx.lineTo(sx, sy);
+      const activeMode = layoutModeRef.current;
+
+      // 5b. Constellation Architectural Infrastructure (Spiral / Oval Matrix / Quantum Cluster)
+      if (activeMode === 'spiral') {
+        // 5-Arm Logarithmic Spiral Constellation Arms radiating from Äkinoya Core (0, 0)
+        for (const arm of CONSTELLATION_ARMS) {
+          ctx.save();
+
+          // Atmospheric spiral filament glow
+          ctx.strokeStyle = arm.glowColor.replace('0.45', '0.08');
+          ctx.lineWidth = Math.max(3, 5 * curZoom);
+          ctx.beginPath();
+          let isFirst = true;
+          for (let r = 240; r <= 3500; r += 30) {
+            const theta = getSpiralArmAngle(arm.baseAngle, r);
+            const sx = coreScreenX + r * Math.cos(theta) * curZoom;
+            const sy = coreScreenY + r * Math.sin(theta) * curZoom;
+            if (isFirst) {
+              ctx.moveTo(sx, sy);
+              isFirst = false;
+            } else {
+              ctx.lineTo(sx, sy);
+            }
           }
-        }
-        ctx.stroke();
+          ctx.stroke();
 
-        // Crisp dashed structural filament
-        ctx.strokeStyle = arm.color;
-        ctx.globalAlpha = 0.28;
-        ctx.lineWidth = Math.max(0.8, 1.2 * curZoom);
-        ctx.setLineDash([4 * curZoom, 8 * curZoom]);
-        ctx.beginPath();
-        isFirst = true;
-        for (let r = 240; r <= 3500; r += 30) {
-          const theta = getSpiralArmAngle(arm.baseAngle, r);
-          const sx = coreScreenX + r * Math.cos(theta) * curZoom;
-          const sy = coreScreenY + r * Math.sin(theta) * curZoom;
-          if (isFirst) {
-            ctx.moveTo(sx, sy);
-            isFirst = false;
-          } else {
-            ctx.lineTo(sx, sy);
+          // Crisp dashed structural filament
+          ctx.strokeStyle = arm.color;
+          ctx.globalAlpha = 0.28;
+          ctx.lineWidth = Math.max(0.8, 1.2 * curZoom);
+          ctx.setLineDash([4 * curZoom, 8 * curZoom]);
+          ctx.beginPath();
+          isFirst = true;
+          for (let r = 240; r <= 3500; r += 30) {
+            const theta = getSpiralArmAngle(arm.baseAngle, r);
+            const sx = coreScreenX + r * Math.cos(theta) * curZoom;
+            const sy = coreScreenY + r * Math.sin(theta) * curZoom;
+            if (isFirst) {
+              ctx.moveTo(sx, sy);
+              isFirst = false;
+            } else {
+              ctx.lineTo(sx, sy);
+            }
           }
-        }
-        ctx.stroke();
-        ctx.setLineDash([]);
+          ctx.stroke();
+          ctx.setLineDash([]);
 
-        // Sci-Fi Arm Name Badge at outer extremity
-        if (curZoom > 0.42) {
-          const labelRadius = 3450;
-          const labelTheta = getSpiralArmAngle(arm.baseAngle, labelRadius);
-          const lx = coreScreenX + labelRadius * Math.cos(labelTheta) * curZoom;
-          const ly = coreScreenY + labelRadius * Math.sin(labelTheta) * curZoom;
-          ctx.font = `bold ${Math.max(8.5, Math.min(10.5, 9.5 * curZoom))}px monospace`;
-          ctx.fillStyle = arm.color;
-          ctx.globalAlpha = 0.7;
-          ctx.textAlign = 'center';
-          ctx.fillText(`✦ ${arm.name}`, lx, ly);
-        }
+          // Sci-Fi Arm Name Badge at outer extremity
+          if (curZoom > 0.42) {
+            const labelRadius = 3450;
+            const labelTheta = getSpiralArmAngle(arm.baseAngle, labelRadius);
+            const lx = coreScreenX + labelRadius * Math.cos(labelTheta) * curZoom;
+            const ly = coreScreenY + labelRadius * Math.sin(labelTheta) * curZoom;
+            ctx.font = `bold ${Math.max(8.5, Math.min(10.5, 9.5 * curZoom))}px monospace`;
+            ctx.fillStyle = arm.color;
+            ctx.globalAlpha = 0.7;
+            ctx.textAlign = 'center';
+            ctx.fillText(`✦ ${arm.name}`, lx, ly);
+          }
 
-        ctx.restore();
+          ctx.restore();
+        }
+      } else if (activeMode === 'matrix') {
+        // Concentric Elliptical Oval Matrix Highways radiating from Core
+        for (const track of OVAL_MATRIX_TRACKS) {
+          ctx.save();
+          const rx = track.a * curZoom;
+          const ry = track.b * curZoom;
+          if (rx < 10) {
+            ctx.restore();
+            continue;
+          }
+
+          // Oval halo glow
+          ctx.strokeStyle = track.glowColor.replace(/[\d.]+\)$/, '0.12)');
+          ctx.lineWidth = Math.max(3, 5 * curZoom);
+          ctx.beginPath();
+          ctx.ellipse(coreScreenX, coreScreenY, rx, ry, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Crisp dashed structural elliptical highway
+          ctx.strokeStyle = track.color;
+          ctx.globalAlpha = 0.32;
+          ctx.lineWidth = Math.max(0.8, 1.2 * curZoom);
+          ctx.setLineDash([5 * curZoom, 8 * curZoom]);
+          ctx.beginPath();
+          ctx.ellipse(coreScreenX, coreScreenY, rx, ry, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Track Designation Badge at vertical apex
+          if (curZoom > 0.38) {
+            ctx.font = `bold ${Math.max(8.5, Math.min(10.5, 9 * curZoom))}px monospace`;
+            ctx.fillStyle = track.color;
+            ctx.globalAlpha = 0.75;
+            ctx.textAlign = 'center';
+            ctx.fillText(`🪐 ${track.name}`, coreScreenX, coreScreenY - ry - 8 * curZoom);
+          }
+          ctx.restore();
+        }
+      } else if (activeMode === 'cluster') {
+        // Quantum Cluster Star Hubs & Radiant Umbilical Beams
+        for (const hub of QUANTUM_CLUSTER_HUBS) {
+          ctx.save();
+          const hubScreenX = coreScreenX + hub.cx * curZoom;
+          const hubScreenY = coreScreenY + hub.cy * curZoom;
+
+          // Regional nebular glow gradient
+          const nebGrad = ctx.createRadialGradient(
+            hubScreenX,
+            hubScreenY,
+            10 * curZoom,
+            hubScreenX,
+            hubScreenY,
+            460 * curZoom
+          );
+          nebGrad.addColorStop(0, hub.glowColor.replace(/[\d.]+\)$/, '0.22)'));
+          nebGrad.addColorStop(0.45, hub.glowColor.replace(/[\d.]+\)$/, '0.07)'));
+          nebGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = nebGrad;
+          ctx.beginPath();
+          ctx.arc(hubScreenX, hubScreenY, 460 * curZoom, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Quantum umbilical filament beam from Äkinoya Core to Cluster Hub center
+          ctx.strokeStyle = hub.glowColor.replace(/[\d.]+\)$/, '0.35)');
+          ctx.lineWidth = Math.max(1, 1.4 * curZoom);
+          ctx.setLineDash([6 * curZoom, 10 * curZoom]);
+          ctx.beginPath();
+          ctx.moveTo(coreScreenX, coreScreenY);
+          ctx.lineTo(hubScreenX, hubScreenY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Luminous Hub Center Diamond Pip
+          ctx.fillStyle = hub.color;
+          ctx.globalAlpha = 0.85;
+          ctx.beginPath();
+          ctx.arc(hubScreenX, hubScreenY, Math.max(3, 4.5 * curZoom), 0, Math.PI * 2);
+          ctx.fill();
+
+          // Hub Name Badge
+          if (curZoom > 0.38) {
+            ctx.font = `bold ${Math.max(8.5, Math.min(11, 9.5 * curZoom))}px monospace`;
+            ctx.fillStyle = hub.color;
+            ctx.globalAlpha = 0.85;
+            ctx.textAlign = 'center';
+            ctx.fillText(`🌌 ${hub.name}`, hubScreenX, hubScreenY - 14 * curZoom);
+          }
+          ctx.restore();
+        }
       }
 
-      // 5c. Constellation Lattice Connections between adjacent charted nodes along each arm
+      // 5c. Constellation Lattice Connections between Charted Nodes
       const currentPlanets = planetsRef.current;
       if (currentPlanets && currentPlanets.length > 0) {
-        const armGroups = new Map<string, Array<{ x: number; y: number; r: number; id: string }>>();
-        for (const arm of CONSTELLATION_ARMS) {
-          armGroups.set(arm.id, []);
-        }
-
-        for (const p of currentPlanets) {
-          const px = p.coordX ?? 0;
-          const py = p.coordY ?? 0;
-          if (px === 0 && py === 0) continue;
-          const r = Math.hypot(px, py);
-          const armId = p.armId || CONSTELLATION_ARMS[0].id;
-          if (armGroups.has(armId)) {
-            armGroups.get(armId)!.push({ x: px, y: py, r, id: p.id });
-          }
-        }
-
         const activeHoveredId = hoveredPlanetRef.current?.id;
         const activeSelectedId = selectedPlanetRef.current?.id;
 
@@ -599,15 +793,16 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
         );
         if (amlemiNode) {
-          const amX = centerX + (curPan.x + (amlemiNode.coordX ?? 243)) * curZoom;
-          const amY = centerY + (curPan.y + (amlemiNode.coordY ?? -176)) * curZoom;
+          const amPos = getNodePos(amlemiNode);
+          const amX = coreScreenX + amPos.x * curZoom;
+          const amY = coreScreenY + amPos.y * curZoom;
           const isAmlemiActive =
             amlemiNode.id === activeHoveredId || amlemiNode.id === activeSelectedId;
 
           ctx.save();
           ctx.strokeStyle = isAmlemiActive
             ? 'rgba(251, 191, 36, 0.95)'
-            : 'rgba(245, 158, 11, 0.45)';
+            : 'rgba(245, 158, 11, 0.5)';
           ctx.lineWidth = isAmlemiActive ? 2.2 : 1.2;
           ctx.setLineDash([4 * curZoom, 4 * curZoom]);
           ctx.beginPath();
@@ -618,36 +813,163 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           ctx.restore();
         }
 
-        for (const arm of CONSTELLATION_ARMS) {
-          const nodes = armGroups.get(arm.id);
-          if (!nodes || nodes.length < 2) continue;
-          nodes.sort((a, b) => a.r - b.r);
-
-          ctx.save();
-          for (let i = 0; i < nodes.length - 1; i++) {
-            const n1 = nodes[i];
-            const n2 = nodes[i + 1];
-            const isHighlighted =
-              n1.id === activeHoveredId ||
-              n2.id === activeHoveredId ||
-              n1.id === activeSelectedId ||
-              n2.id === activeSelectedId;
-
-            const s1x = centerX + (curPan.x + n1.x) * curZoom;
-            const s1y = centerY + (curPan.y + n1.y) * curZoom;
-            const s2x = centerX + (curPan.x + n2.x) * curZoom;
-            const s2y = centerY + (curPan.y + n2.y) * curZoom;
-
-            ctx.beginPath();
-            ctx.moveTo(s1x, s1y);
-            ctx.lineTo(s2x, s2y);
-            ctx.strokeStyle = isHighlighted ? arm.color : arm.glowColor.replace('0.45', '0.22');
-            ctx.lineWidth = isHighlighted ? 1.8 : 1.0;
-            ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 5 * curZoom]);
-            ctx.stroke();
+        // Mode-Specific Lattice Filaments
+        if (activeMode === 'spiral') {
+          const armGroups = new Map<string, Array<{ x: number; y: number; r: number; id: string }>>();
+          for (const arm of CONSTELLATION_ARMS) {
+            armGroups.set(arm.id, []);
           }
-          ctx.setLineDash([]);
-          ctx.restore();
+
+          for (const p of currentPlanets) {
+            const pos = getNodePos(p);
+            if (pos.x === 0 && pos.y === 0) continue;
+            const r = Math.hypot(pos.x, pos.y);
+            const armId = p.armId || CONSTELLATION_ARMS[0].id;
+            if (armGroups.has(armId)) {
+              armGroups.get(armId)!.push({ x: pos.x, y: pos.y, r, id: p.id });
+            }
+          }
+
+          for (const arm of CONSTELLATION_ARMS) {
+            const nodes = armGroups.get(arm.id);
+            if (!nodes || nodes.length < 2) continue;
+            nodes.sort((a, b) => a.r - b.r);
+
+            ctx.save();
+            for (let i = 0; i < nodes.length - 1; i++) {
+              const n1 = nodes[i];
+              const n2 = nodes[i + 1];
+              const isHighlighted =
+                n1.id === activeHoveredId ||
+                n2.id === activeHoveredId ||
+                n1.id === activeSelectedId ||
+                n2.id === activeSelectedId;
+
+              const s1x = coreScreenX + n1.x * curZoom;
+              const s1y = coreScreenY + n1.y * curZoom;
+              const s2x = coreScreenX + n2.x * curZoom;
+              const s2y = coreScreenY + n2.y * curZoom;
+
+              ctx.beginPath();
+              ctx.moveTo(s1x, s1y);
+              ctx.lineTo(s2x, s2y);
+              ctx.strokeStyle = isHighlighted ? arm.color : arm.glowColor.replace('0.45', '0.22');
+              ctx.lineWidth = isHighlighted ? 1.8 : 1.0;
+              ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 5 * curZoom]);
+              ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            ctx.restore();
+          }
+        } else if (activeMode === 'matrix') {
+          const trackGroups = new Map<string, Array<{ x: number; y: number; angle: number; id: string }>>();
+          for (const track of OVAL_MATRIX_TRACKS) {
+            trackGroups.set(track.id, []);
+          }
+
+          for (const p of currentPlanets) {
+            const pos = getNodePos(p);
+            if (pos.x === 0 && pos.y === 0) continue;
+            const angle = Math.atan2(pos.y, pos.x);
+            const trackId = p.armId || OVAL_MATRIX_TRACKS[1].id;
+            if (trackGroups.has(trackId)) {
+              trackGroups.get(trackId)!.push({ x: pos.x, y: pos.y, angle, id: p.id });
+            }
+          }
+
+          for (const track of OVAL_MATRIX_TRACKS) {
+            const nodes = trackGroups.get(track.id);
+            if (!nodes || nodes.length < 2) continue;
+            nodes.sort((a, b) => a.angle - b.angle);
+
+            ctx.save();
+            for (let i = 0; i < nodes.length; i++) {
+              const n1 = nodes[i];
+              const n2 = nodes[(i + 1) % nodes.length];
+              if (nodes.length === 2 && i === 1) break;
+
+              const isHighlighted =
+                n1.id === activeHoveredId ||
+                n2.id === activeHoveredId ||
+                n1.id === activeSelectedId ||
+                n2.id === activeSelectedId;
+
+              const s1x = coreScreenX + n1.x * curZoom;
+              const s1y = coreScreenY + n1.y * curZoom;
+              const s2x = coreScreenX + n2.x * curZoom;
+              const s2y = coreScreenY + n2.y * curZoom;
+
+              ctx.beginPath();
+              ctx.moveTo(s1x, s1y);
+              ctx.lineTo(s2x, s2y);
+              ctx.strokeStyle = isHighlighted ? track.color : track.glowColor.replace(/[\d.]+\)$/, '0.25)');
+              ctx.lineWidth = isHighlighted ? 1.8 : 1.0;
+              ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 5 * curZoom]);
+              ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            ctx.restore();
+          }
+        } else if (activeMode === 'cluster') {
+          const hubGroups = new Map<string, Array<{ x: number; y: number; angle: number; id: string }>>();
+          for (const hub of QUANTUM_CLUSTER_HUBS) {
+            hubGroups.set(hub.id, []);
+          }
+
+          for (const p of currentPlanets) {
+            const pos = getNodePos(p);
+            if (pos.x === 0 && pos.y === 0) continue;
+            const hubId = p.armId || QUANTUM_CLUSTER_HUBS[0].id;
+            const hub = QUANTUM_CLUSTER_HUBS.find((h) => h.id === hubId) || QUANTUM_CLUSTER_HUBS[0];
+            const angle = Math.atan2(pos.y - hub.cy, pos.x - hub.cx);
+            if (hubGroups.has(hubId)) {
+              hubGroups.get(hubId)!.push({ x: pos.x, y: pos.y, angle, id: p.id });
+            }
+          }
+
+          for (const hub of QUANTUM_CLUSTER_HUBS) {
+            const nodes = hubGroups.get(hub.id);
+            if (!nodes || nodes.length === 0) continue;
+            nodes.sort((a, b) => a.angle - b.angle);
+
+            const hubScreenX = coreScreenX + hub.cx * curZoom;
+            const hubScreenY = coreScreenY + hub.cy * curZoom;
+
+            ctx.save();
+            for (let i = 0; i < nodes.length; i++) {
+              const node = nodes[i];
+              const isHighlighted =
+                node.id === activeHoveredId || node.id === activeSelectedId;
+
+              const nx = coreScreenX + node.x * curZoom;
+              const ny = coreScreenY + node.y * curZoom;
+
+              ctx.beginPath();
+              ctx.moveTo(hubScreenX, hubScreenY);
+              ctx.lineTo(nx, ny);
+              ctx.strokeStyle = isHighlighted ? hub.color : hub.glowColor.replace(/[\d.]+\)$/, '0.22)');
+              ctx.lineWidth = isHighlighted ? 1.6 : 0.9;
+              ctx.setLineDash([2 * curZoom, 4 * curZoom]);
+              ctx.stroke();
+
+              if (nodes.length >= 2) {
+                const nextNode = nodes[(i + 1) % nodes.length];
+                if (nodes.length === 2 && i === 1) continue;
+                const nextX = coreScreenX + nextNode.x * curZoom;
+                const nextY = coreScreenY + nextNode.y * curZoom;
+
+                ctx.beginPath();
+                ctx.moveTo(nx, ny);
+                ctx.lineTo(nextX, nextY);
+                ctx.strokeStyle = isHighlighted ? hub.color : hub.glowColor.replace(/[\d.]+\)$/, '0.28)');
+                ctx.lineWidth = isHighlighted ? 1.8 : 1.0;
+                ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 5 * curZoom]);
+                ctx.stroke();
+              }
+            }
+            ctx.setLineDash([]);
+            ctx.restore();
+          }
         }
       }
 
@@ -664,9 +986,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       // 7. Hovered Connection Vector Line (from Core to hovered node)
       const hoveredNode = hoveredPlanetRef.current;
       if (hoveredNode && (hoveredNode.coordX !== 0 || hoveredNode.coordY !== 0)) {
-        const px = centerX + (curPan.x + (hoveredNode.coordX ?? 0)) * curZoom;
-        const py = centerY + (curPan.y + (hoveredNode.coordY ?? 0)) * curZoom;
-        const distAU = Math.round(Math.hypot(hoveredNode.coordX ?? 0, hoveredNode.coordY ?? 0));
+        const hPos = getNodePos(hoveredNode);
+        const px = coreScreenX + hPos.x * curZoom;
+        const py = coreScreenY + hPos.y * curZoom;
+        const distAU = Math.round(Math.hypot(hPos.x, hPos.y));
 
         ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
         ctx.lineWidth = 1.5;
@@ -944,7 +1267,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const searchResults = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return [];
-    return planets
+    return filteredPlanets
       .filter(
         (p) =>
           p.planetName.toLowerCase().includes(q) ||
@@ -953,7 +1276,37 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           p.authorUsername.toLowerCase().includes(q)
       )
       .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
-  }, [planets, searchQuery]);
+  }, [filteredPlanets, searchQuery]);
+
+  const handleSwitchLayout = useCallback(
+    (mode: ConstellationLayoutMode) => {
+      if (mode === layoutMode) {
+        handleTriggerRestructure();
+        return;
+      }
+      soundManager.playTone(740, 0.08);
+      setLayoutMode(mode);
+      try {
+        localStorage.setItem('akinoya_constellation_layout_mode', mode);
+      } catch {}
+    },
+    [layoutMode]
+  );
+
+  const handleTriggerRestructure = useCallback(() => {
+    soundManager.playTone(880, 0.09);
+    setRestructureSeed((prev) => prev + 1);
+  }, []);
+
+  // Synchronize selectedPlanet coordinates when layout mode or restructure changes
+  useEffect(() => {
+    if (selectedPlanet) {
+      const updated = filteredPlanets.find((p) => p.id === selectedPlanet.id);
+      if (updated && (updated.coordX !== selectedPlanet.coordX || updated.coordY !== selectedPlanet.coordY)) {
+        setSelectedPlanet(updated);
+      }
+    }
+  }, [filteredPlanets, selectedPlanet]);
 
   const handleSelectSearchResult = (planet: PlanetSubmission) => {
     soundManager.playTone(740, 0.06);
@@ -1273,7 +1626,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             }`}
           >
             <Globe2 className="w-3 h-3 text-cyan-400" />
-            <span>All Worlds ({planets.length})</span>
+            <span>All Worlds ({layoutPlanets.length})</span>
           </button>
 
           <button
@@ -1291,6 +1644,45 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           >
             <Sparkles className={`w-3 h-3 ${mapFilter === 'pioneer' ? 'text-black' : 'text-amber-300'}`} />
             <span>⚡ Pioneer Worlds ({pioneerPlanetsCount})</span>
+          </button>
+        </div>
+
+        {/* Constellation Architectural Multi-Variant Controller & Fluid Restructure Engine */}
+        <div className="flex items-center justify-center gap-1 sm:gap-1.5 p-1 rounded-2xl bg-gradient-to-r from-[#060a16]/95 via-[#071026]/95 to-[#060a16]/95 backdrop-blur-xl border border-cyan-500/35 shadow-[0_4px_25px_rgba(0,0,0,0.6),0_0_15px_rgba(6,182,212,0.18)] flex-wrap">
+          {CONSTELLATION_LAYOUT_VARIANTS.map((variant) => {
+            const isActive = layoutMode === variant.mode;
+            return (
+              <button
+                key={variant.mode}
+                type="button"
+                onClick={() => handleSwitchLayout(variant.mode)}
+                disabled={isMorphing}
+                className={`px-2.5 py-1 rounded-xl font-mono text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-black shadow-[0_0_14px_rgba(251,191,36,0.6)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
+                } ${isMorphing ? 'opacity-70 pointer-events-none' : ''}`}
+                title={variant.description}
+              >
+                <span>{variant.badge}</span>
+              </button>
+            );
+          })}
+
+          <div className="h-4 w-px bg-white/15 mx-0.5 hidden xs:block" />
+
+          {/* 60+ FPS Fluid Restructure Action */}
+          <button
+            type="button"
+            onClick={handleTriggerRestructure}
+            disabled={isMorphing}
+            className={`px-2.5 py-1 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white font-mono text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_12px_rgba(6,182,212,0.25)] ${
+              isMorphing ? 'opacity-60 pointer-events-none' : ''
+            }`}
+            title="Restructure cosmic web and re-equilibrate node coordinates (60fps fluid morph)"
+          >
+            <RefreshCw className={`w-3 h-3 text-cyan-300 ${isMorphing ? 'animate-spin' : ''}`} />
+            <span>Restructure</span>
           </button>
         </div>
       </div>
@@ -1314,6 +1706,14 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           <span ref={hudZoomRef} className="text-white font-bold text-right">
             {(initialZoom * 100).toFixed(0)}%
           </span>
+          <span>CONSTELLATION:</span>
+          <span className="text-amber-300 font-extrabold text-right uppercase drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]">
+            {layoutMode === 'spiral'
+              ? '5-ARM SPIRAL'
+              : layoutMode === 'matrix'
+              ? 'OVAL MATRIX'
+              : 'QUANTUM CLUSTER'}
+          </span>
           <span>CHARTED WORLDS:</span>
           <span className="text-cyan-300 font-extrabold text-right drop-shadow-[0_0_6px_rgba(34,211,238,0.5)]">
             {filteredPlanets.length} WORLDS
@@ -1327,6 +1727,17 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
       {/* FLOATING ACTION CONTROLS (Bottom Right) */}
       <div className="interactive-hud-element absolute bottom-4 right-4 z-30 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleTriggerRestructure}
+          disabled={isMorphing}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_18px_rgba(6,182,212,0.25)] min-h-[42px]"
+          title="Restructure Constellation (60fps Fluid Morph)"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isMorphing ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Restructure</span>
+        </button>
+
         <button
           type="button"
           onClick={handleCenterAkinoya}
@@ -1500,8 +1911,19 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   setHoveredPlanet(planet);
                 }}
                 onPointerLeave={() => setHoveredPlanet(null)}
-                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10 flex items-center justify-center select-none touch-manipulation p-2.5"
-                style={{ left: posX, top: posY, width: 48, height: 48 }}
+                className="absolute cursor-pointer group z-10 flex items-center justify-center select-none touch-manipulation p-2.5"
+                style={{
+                  left: 0,
+                  top: 0,
+                  width: 48,
+                  height: 48,
+                  transform: `translate3d(${posX}px, ${posY}px, 0) translate(-50%, -50%)`,
+                  transition: isMorphing
+                    ? 'transform 650ms cubic-bezier(0.16, 1, 0.3, 1)'
+                    : 'none',
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden',
+                }}
               >
                 {/* Pioneer Status Floating Marker Above Orb */}
                 {isPioneer && (
