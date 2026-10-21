@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import passCardImg from '../assets/images/akinoya_pass_card_1790852652003.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
@@ -39,6 +39,7 @@ import {
   Vote,
   Package,
   Volume2,
+  VolumeX,
   CreditCard,
   ShoppingBag,
   CheckCircle2,
@@ -761,6 +762,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   }, [isVipMode]);
 
+  // DN Video audio toggle state & ref for the Pass Perks preview card
+  const [isDnVideoMuted, setIsDnVideoMuted] = useState<boolean>(true);
+  const dnVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  const toggleDnVideoAudio = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextMuted = !isDnVideoMuted;
+    setIsDnVideoMuted(nextMuted);
+    if (dnVideoRef.current) {
+      dnVideoRef.current.muted = nextMuted;
+      if (!nextMuted) {
+        dnVideoRef.current.play().catch(() => {});
+      }
+    }
+  };
+
   // Track specific unlock state
   const [unlockedTracks, setUnlockedTracks] = useState<Record<string, boolean>>(() => {
     if (typeof window === 'undefined') return { '02': true };
@@ -1241,7 +1258,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
                     <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
-                      {/* 16:9 Cinematic Thumbnail / Video Container */}
+                      {/* 16:9 Cinematic Video Container */}
                       <div
                         onClick={() => {
                           if (isVipMode || isVisualizerUnlocked) {
@@ -1255,8 +1272,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       >
                         <video
                           ref={(el) => {
+                            dnVideoRef.current = el;
                             if (el) {
-                              el.muted = true;
+                              el.muted = isDnVideoMuted;
                               el.defaultMuted = true;
                               el.play().catch(() => {});
                             }
@@ -1265,7 +1283,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           poster={dnThumbnailImg || visualizerThumbnailImg}
                           autoPlay
                           loop
-                          muted
+                          muted={isDnVideoMuted}
                           playsInline
                           preload="auto"
                           disablePictureInPicture
@@ -1276,21 +1294,31 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             'x5-playsinline': 'true',
                             playsinline: 'true',
                           } as any)}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out pointer-events-none"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
-                        {/* Top Left Badge on Thumbnail */}
-                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md border border-cyan-400/40 text-[10px] font-mono text-cyan-300 pointer-events-none shadow-[0_0_10px_rgba(56,189,248,0.3)]">
-                          <Film className="w-3 h-3 text-cyan-400 animate-pulse" />
-                          <span>TRACK 01 · DON'T NEED (MUTED LOOP)</span>
+                        {/* Top Left Clean Minimal Track Title ("Don't Need") */}
+                        <div className="absolute top-3 left-3 pointer-events-none">
+                          <span className="text-xs sm:text-sm font-display font-bold tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                            Don't Need
+                          </span>
                         </div>
 
-                        {/* Bottom Right Duration / 4K Pill */}
-                        <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-black/80 backdrop-blur-md border border-white/20 text-[9px] font-mono text-white/80 pointer-events-none flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          <span>4K VIDEO LOOP</span>
-                        </div>
+                        {/* Audio Mute/Unmute Toggle Button */}
+                        <button
+                          type="button"
+                          onClick={toggleDnVideoAudio}
+                          aria-label={isDnVideoMuted ? "Unmute audio" : "Mute audio"}
+                          title={isDnVideoMuted ? "Unmute audio" : "Mute audio"}
+                          className="absolute bottom-3 right-3 p-2 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 hover:border-cyan-400 text-white hover:text-cyan-300 transition-all shadow-[0_0_12px_rgba(0,0,0,0.6)] cursor-pointer z-10 flex items-center justify-center group/audio"
+                        >
+                          {isDnVideoMuted ? (
+                            <VolumeX className="w-4 h-4 text-white/80 group-hover/audio:text-cyan-300 transition-colors" />
+                          ) : (
+                            <Volume2 className="w-4 h-4 text-emerald-400 group-hover/audio:text-emerald-300 transition-colors" />
+                          )}
+                        </button>
                       </div>
 
                       {/* Track Metadata & Action Controls */}
