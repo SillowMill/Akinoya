@@ -42,6 +42,7 @@ import {
   downloadOrShareVideoDirect,
   triggerDirectDownload,
 } from './WorldStoryVerificationBadge';
+import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
 
 export interface PlanetDossierModalProps {
   planet: PlanetSubmission | null;
@@ -194,9 +195,15 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
     const safePlanet = (activePlanet.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const safeTitle = (photo.title || 'photo').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const filename = `sillowmill-${safePlanet}-${safeTitle}.jpg`;
+    const shareTitle = `${activePlanet.planetName || 'Ämlemi'} — ${photo.title}`;
+    const shareText = `Verified 4K Genesis World: ${photo.title}`;
 
     try {
-      triggerDirectDownload(photo.url, filename);
+      await watermarkAndSavePhoto(photo.url, filename, shareTitle, shareText, {
+        planetName: activePlanet.planetName,
+        photoTitle: photo.title,
+        category: photo.category,
+      });
     } finally {
       setIsDownloading(false);
     }
@@ -520,12 +527,13 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                       onClick={() => handleDownloadPhoto(currentPhoto)}
                       disabled={isDownloading}
                       className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer"
+                      title="Save picture to Photos"
                     >
                       <Download className="w-3.5 h-3.5 text-black" />
                       <span>
                         {isDownloading
-                          ? (isMobileDevice ? 'Saving Photo to Photos...' : 'Downloading Photo...')
-                          : (isMobileDevice ? 'Save Photo to Photos' : '⬇ Download Master Photo')}
+                          ? 'Saving picture to Photos...'
+                          : 'Save picture to Photos'}
                       </span>
                     </button>
                   </div>

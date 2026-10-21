@@ -2940,4 +2940,5 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
   );
 });
 
+export { renderWatermarkedPhotoBlob, watermarkAndSavePhoto } from '../utils/watermarkPhoto';
 export default WorldStoryVerificationBadge;

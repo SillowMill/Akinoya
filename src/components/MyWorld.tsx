@@ -28,6 +28,7 @@ import {
   getCacheBustedUrl,
   downloadOrShareVideoDirect,
 } from './WorldStoryVerificationBadge';
+import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
 import { formatTitleCaseUserName } from '../utils/holder';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
@@ -51,6 +52,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
   onNavigateToGalaxy,
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingPhoto, setIsDownloadingPhoto] = useState(false);
   const [isCopiedGalaxyLink, setIsCopiedGalaxyLink] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() =>
     typeof window !== 'undefined' ? isMobileOrTabletDevice() : false
@@ -112,6 +114,27 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
       await downloadOrShareVideoDirect(videoUrl, filename, shareTitle, shareText, dossier);
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadPhoto = async (photo: (typeof photoCards)[0]) => {
+    if (!photo?.url || !dossier) return;
+    soundManager.playTone(740, 0.06);
+    setIsDownloadingPhoto(true);
+    const safePlanet = (dossier.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+    const safeTitle = (photo.title || 'photo').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+    const filename = `sillowmill-${safePlanet}-${safeTitle}.jpg`;
+    const shareTitle = `${dossier.planetName || 'Ämlemi'} — ${photo.title}`;
+    const shareText = `Verified 4K Genesis World: ${photo.title}`;
+
+    try {
+      await watermarkAndSavePhoto(photo.url, filename, shareTitle, shareText, {
+        planetName: dossier.planetName,
+        photoTitle: photo.title,
+        category: photo.category,
+      });
+    } finally {
+      setIsDownloadingPhoto(false);
     }
   };
 
@@ -432,6 +455,22 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
               </div>
             </div>
 
+            {/* Direct Save-to-Photos Action for Active Photo (Mobile & Tablet) */}
+            {activeCard?.url && (
+              <button
+                type="button"
+                onClick={() => handleDownloadPhoto(activeCard)}
+                disabled={isDownloadingPhoto}
+                className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer touch-manipulation min-h-[42px]"
+                title="Save picture to Photos"
+              >
+                <Download className="w-3.5 h-3.5 text-black" />
+                <span>
+                  {isDownloadingPhoto ? 'Saving picture to Photos...' : 'Save picture to Photos'}
+                </span>
+              </button>
+            )}
+
             {/* Mobile & Tablet Quick-Cycle Control Bar */}
             <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[#070d1b] border border-cyan-500/25">
               <button
@@ -552,7 +591,23 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                         {photo.title}
                       </h4>
                     </div>
-                    {hasPhoto && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                    {hasPhoto && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadPhoto(photo);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-black/80 hover:bg-amber-400 text-cyan-300 hover:text-black border border-white/20 hover:border-amber-400 cursor-pointer shadow-md"
+                          title="Save picture to Photos"
+                          aria-label="Save picture to Photos"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      </div>
+                    )}
                   </div>
                 </div>
               );

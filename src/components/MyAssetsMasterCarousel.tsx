@@ -42,6 +42,7 @@ import {
   triggerDirectDownload,
   downloadOrShareVideoDirect,
 } from './WorldStoryVerificationBadge';
+import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
 
 export type MasterAssetSlideId = 'archive_4k' | 'story_card' | 'video_trailer';
 
@@ -590,7 +591,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
     setIsMobileDevice(isMobileOrTabletDevice());
   }, []);
 
-  // Download Pristine High-Resolution 4K Master Photo (Clean Lossless Direct Export)
+  // Save High-Resolution 4K Picture with Sillow Mill Trademark Watermark to Photos
   const handleDownload4kPhoto = async () => {
     if (!activePhoto?.url) return;
     soundManager.playTone(740, 0.06);
@@ -598,10 +599,16 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
     const safePlanet = (dossier.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const safeStage = activePhoto.category.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
     const filename = `sillowmill-${safePlanet}-4k-${safeStage}.jpg`;
+    const shareTitle = `${dossier.planetName || 'Ämlemi'} — 4K Master Picture`;
+    const shareText = `Verified Genesis World: ${activePhoto.title}`;
 
     try {
-      // Direct instant download without blocking async wrappers or memory stalls
-      triggerDirectDownload(activePhoto.url, filename);
+      await watermarkAndSavePhoto(activePhoto.url, filename, shareTitle, shareText, {
+        planetName: dossier.planetName,
+        photoTitle: activePhoto.title,
+        category: activePhoto.category,
+        worldNumber: meta.worldNumber,
+      });
     } finally {
       setIsDownloadingPhoto(false);
     }
@@ -1024,13 +1031,13 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       }}
                       disabled={isDownloadingPhoto}
                       className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] shrink-0 min-h-[42px] touch-manipulation"
-                      title="Download clean original 4K Master with absolute resolution clarity"
+                      title="Save watermarked 4K Master Picture directly to device Photos"
                     >
                       <Download className="w-4 h-4 text-black" />
                       <span>
                         {isDownloadingPhoto
-                          ? (isMobileDevice ? 'SAVING PICTURE...' : 'DOWNLOADING...')
-                          : (isMobileDevice ? 'SAVE PICTURE' : 'DOWNLOAD 4K MASTER')}
+                          ? 'Saving picture to Photos...'
+                          : 'Save picture to Photos'}
                       </span>
                     </button>
                   </div>
@@ -1640,8 +1647,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       <Download className="w-4 h-4 text-black" />
                       <span>
                         {isDownloadingPhoto
-                          ? (isMobileDevice ? 'SAVING PICTURE...' : 'DOWNLOADING...')
-                          : (isMobileDevice ? 'SAVE PICTURE' : 'DOWNLOAD 4K MASTER')}
+                          ? 'Saving picture to Photos...'
+                          : 'Save picture to Photos'}
                       </span>
                     </button>
                   )}
