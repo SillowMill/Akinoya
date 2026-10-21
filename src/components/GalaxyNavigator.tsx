@@ -70,13 +70,13 @@ interface CameraTarget {
 }
 
 const ORBITAL_RINGS = [
-  { radius: 300, label: '300 AU · FOUNDATIONAL CAPITAL ORBIT (ÄMLEMI)', color: 'rgba(251, 191, 36, 0.32)' },
-  { radius: 540, label: '540 AU · INNER CORE HARMONIC RING', color: 'rgba(245, 158, 11, 0.22)' },
-  { radius: 1000, label: '1000 AU · PIONEER ORBIT', color: 'rgba(251, 191, 36, 0.2)' },
-  { radius: 1480, label: '1480 AU · IONIZATION REEF', color: 'rgba(56, 189, 248, 0.18)' },
-  { radius: 1960, label: '1960 AU · SOLAR FLARE BELT', color: 'rgba(245, 158, 11, 0.16)' },
-  { radius: 2440, label: '2440 AU · OUTER COMMUNITY EXPEDITIONS', color: 'rgba(168, 85, 247, 0.15)' },
-  { radius: 3400, label: '3400 AU · DEEP STELLAR HORIZON', color: 'rgba(255, 255, 255, 0.12)' },
+  { radius: 300, label: '300 AU · FOUNDATIONAL CAPITAL ORBIT (ÄMLEMI)', color: 'rgba(251, 191, 36, 0.05)' },
+  { radius: 540, label: '540 AU · INNER CORE HARMONIC RING', color: 'rgba(255, 255, 255, 0.04)' },
+  { radius: 1000, label: '1000 AU · PIONEER ORBIT', color: 'rgba(255, 255, 255, 0.04)' },
+  { radius: 1480, label: '1480 AU · IONIZATION REEF', color: 'rgba(255, 255, 255, 0.035)' },
+  { radius: 1960, label: '1960 AU · SOLAR FLARE BELT', color: 'rgba(255, 255, 255, 0.035)' },
+  { radius: 2440, label: '2440 AU · OUTER COMMUNITY EXPEDITIONS', color: 'rgba(255, 255, 255, 0.03)' },
+  { radius: 3400, label: '3400 AU · DEEP STELLAR HORIZON', color: 'rgba(255, 255, 255, 0.03)' },
 ];
 
 export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
@@ -388,23 +388,29 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     };
   }, [user?.id, user?.email]);
 
-  // Initialize deterministic Starfield
+  // Initialize rich, deep-space Starfield with high density and magnitude variation
   useEffect(() => {
     const stars: Star[] = [];
-    const count = isMobile ? 320 : 650;
-    const colors = ['#ffffff', '#bae6fd', '#fef08a', '#e9d5ff', '#67e8f9'];
+    const count = isMobile ? 600 : 1250;
+    const colors = ['#ffffff', '#bae6fd', '#fef08a', '#e9d5ff', '#67e8f9', '#f0f9ff'];
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const distance = Math.pow(Math.random(), 0.55) * 4200;
-      const layer = Math.random() < 0.6 ? 0 : Math.random() < 0.88 ? 1 : 2;
-      const radius = layer === 0 ? Math.random() * 0.9 + 0.3 : layer === 1 ? Math.random() * 1.3 + 0.8 : Math.random() * 2.2 + 1.2;
+      const distance = Math.pow(Math.random(), 0.52) * 4400;
+      const layer = Math.random() < 0.62 ? 0 : Math.random() < 0.88 ? 1 : 2;
+      const radius =
+        layer === 0
+          ? Math.random() * 0.75 + 0.25
+          : layer === 1
+          ? Math.random() * 1.25 + 0.75
+          : Math.random() * 2.2 + 1.4;
+
       stars.push({
         x: Math.cos(angle) * distance,
         y: Math.sin(angle) * distance,
         radius,
-        baseAlpha: Math.random() * 0.6 + 0.25,
-        twinkleSpeed: Math.random() * 0.03 + 0.008,
+        baseAlpha: layer === 0 ? Math.random() * 0.45 + 0.15 : Math.random() * 0.55 + 0.3,
+        twinkleSpeed: Math.random() * 0.035 + 0.008,
         color: colors[Math.floor(Math.random() * colors.length)],
         layer,
       });
@@ -575,20 +581,31 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       ctx.arc(coreScreenX, coreScreenY, 380 * curZoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // 4. Parallax Starfield
+      // 4. Parallax Starfield with Multilayer Depth & Twinkling
       const stars = starsRef.current;
       const boundMargin = Math.max(width, height) * 0.45;
       for (let i = 0; i < stars.length; i++) {
         const star = stars[i];
-        const parallaxFactor = star.layer === 0 ? 0.08 : star.layer === 1 ? 0.25 : 0.65;
+        const parallaxFactor = star.layer === 0 ? 0.06 : star.layer === 1 ? 0.22 : 0.6;
         const sx = centerX + (star.x + curPan.x * parallaxFactor) * (curZoom * 0.85 + 0.15);
         const sy = centerY + (star.y + curPan.y * parallaxFactor) * (curZoom * 0.85 + 0.15);
 
         // Bounds culling (expanded for rotation)
         if (sx < -boundMargin || sx > width + boundMargin || sy < -boundMargin || sy > height + boundMargin) continue;
 
-        const twinkle = Math.sin(time * star.twinkleSpeed + i) * 0.25;
-        const alpha = Math.max(0.1, Math.min(1, star.baseAlpha + twinkle));
+        const twinkle =
+          Math.sin(time * star.twinkleSpeed + i) * 0.32 +
+          Math.cos(time * star.twinkleSpeed * 0.6 + i * 1.7) * 0.12;
+        const alpha = Math.max(0.08, Math.min(1, star.baseAlpha + twinkle));
+
+        // Soft radiant glow for foreground stellar beacons
+        if (star.layer === 2 && alpha > 0.55) {
+          ctx.fillStyle = star.color;
+          ctx.globalAlpha = alpha * 0.2;
+          ctx.beginPath();
+          ctx.arc(sx, sy, star.radius * 2.4 * Math.min(1.4, Math.max(0.7, curZoom)), 0, Math.PI * 2);
+          ctx.fill();
+        }
 
         ctx.fillStyle = star.color;
         ctx.globalAlpha = alpha;
@@ -598,24 +615,24 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       }
       ctx.globalAlpha = 1.0;
 
-      // 5. Orbital Distance Rings centered at Äkinoya (0, 0)
-      ctx.lineWidth = 1;
+      // 5. Orbital Distance Rings centered at Äkinoya (0, 0) - Faint Ghost Rings
+      ctx.lineWidth = 0.75;
       for (const ring of ORBITAL_RINGS) {
         const ringRadius = ring.radius * curZoom;
         if (ringRadius < 5) continue;
 
         ctx.strokeStyle = ring.color;
-        ctx.setLineDash([4 * curZoom, 8 * curZoom]);
+        ctx.setLineDash([3 * curZoom, 8 * curZoom]);
         ctx.beginPath();
         ctx.arc(coreScreenX, coreScreenY, ringRadius, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Ring distance label badge
-        if (ringRadius > 80 && curZoom > 0.4) {
-          ctx.font = `${Math.max(9, Math.min(11, 10 * curZoom))}px monospace`;
-          ctx.fillStyle = ring.color.replace(/[\d.]+\)$/, '0.75)');
+        // Ring distance label badge - faint ghost text
+        if (ringRadius > 80 && curZoom > 0.45) {
+          ctx.font = `${Math.max(8, Math.min(9.5, 9 * curZoom))}px monospace`;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
           ctx.textAlign = 'left';
-          ctx.fillText(ring.label, coreScreenX + 10, coreScreenY - ringRadius + 14);
+          ctx.fillText(ring.label, coreScreenX + 10, coreScreenY - ringRadius + 12);
         }
       }
       ctx.setLineDash([]);
@@ -631,15 +648,15 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
       const activeMode = layoutModeRef.current;
 
-      // 5b. Constellation Architectural Infrastructure (Spiral / Oval Matrix / Quantum Cluster)
+      // 5b. Constellation Architectural Infrastructure - Delicate Ghost Blueprint Vectors
       if (activeMode === 'spiral') {
-        // 5-Arm Logarithmic Spiral Constellation Arms radiating from Äkinoya Core (0, 0)
+        // 5-Arm Logarithmic Spiral Constellation Arms - Soft Ghost Blueprint Filaments
         for (const arm of CONSTELLATION_ARMS) {
           ctx.save();
 
-          // Atmospheric spiral filament glow
-          ctx.strokeStyle = arm.glowColor.replace('0.45', '0.08');
-          ctx.lineWidth = Math.max(3, 5 * curZoom);
+          // Subtle atmospheric spiral filament glow
+          ctx.strokeStyle = arm.glowColor.replace(/[\d.]+\)$/, '0.025)');
+          ctx.lineWidth = Math.max(1.5, 2.5 * curZoom);
           ctx.beginPath();
           let isFirst = true;
           for (let r = 240; r <= 3500; r += 30) {
@@ -655,10 +672,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           }
           ctx.stroke();
 
-          // Crisp dashed structural filament
+          // Crisp ghost-line structural filament
           ctx.strokeStyle = arm.color;
-          ctx.globalAlpha = 0.28;
-          ctx.lineWidth = Math.max(0.8, 1.2 * curZoom);
+          ctx.globalAlpha = 0.06;
+          ctx.lineWidth = 0.75;
           ctx.setLineDash([4 * curZoom, 8 * curZoom]);
           ctx.beginPath();
           isFirst = true;
@@ -676,15 +693,15 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Sci-Fi Arm Name Badge at outer extremity
+          // Faint Sci-Fi Arm Name Badge at outer extremity
           if (curZoom > 0.42) {
             const labelRadius = 3450;
             const labelTheta = getSpiralArmAngle(arm.baseAngle, labelRadius);
             const lx = coreScreenX + labelRadius * Math.cos(labelTheta) * curZoom;
             const ly = coreScreenY + labelRadius * Math.sin(labelTheta) * curZoom;
-            ctx.font = `bold ${Math.max(8.5, Math.min(10.5, 9.5 * curZoom))}px monospace`;
+            ctx.font = `bold ${Math.max(8.5, Math.min(10, 9 * curZoom))}px monospace`;
             ctx.fillStyle = arm.color;
-            ctx.globalAlpha = 0.7;
+            ctx.globalAlpha = 0.3;
             ctx.textAlign = 'center';
             ctx.fillText(`✦ ${arm.name}`, lx, ly);
           }
@@ -692,7 +709,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           ctx.restore();
         }
       } else if (activeMode === 'matrix') {
-        // Concentric Elliptical Oval Matrix Highways radiating from Core
+        // Concentric Elliptical Oval Matrix Highways - Soft Ghost Highway Tracks
         for (const track of OVAL_MATRIX_TRACKS) {
           ctx.save();
           const rx = track.a * curZoom;
@@ -702,41 +719,41 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             continue;
           }
 
-          // Oval halo glow
-          ctx.strokeStyle = track.glowColor.replace(/[\d.]+\)$/, '0.12)');
-          ctx.lineWidth = Math.max(3, 5 * curZoom);
+          // Subtle oval halo glow
+          ctx.strokeStyle = track.glowColor.replace(/[\d.]+\)$/, '0.025)');
+          ctx.lineWidth = Math.max(1.5, 2.5 * curZoom);
           ctx.beginPath();
           ctx.ellipse(coreScreenX, coreScreenY, rx, ry, 0, 0, Math.PI * 2);
           ctx.stroke();
 
-          // Crisp dashed structural elliptical highway
+          // Crisp ghost-line structural elliptical highway
           ctx.strokeStyle = track.color;
-          ctx.globalAlpha = 0.32;
-          ctx.lineWidth = Math.max(0.8, 1.2 * curZoom);
+          ctx.globalAlpha = 0.06;
+          ctx.lineWidth = 0.75;
           ctx.setLineDash([5 * curZoom, 8 * curZoom]);
           ctx.beginPath();
           ctx.ellipse(coreScreenX, coreScreenY, rx, ry, 0, 0, Math.PI * 2);
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Track Designation Badge at vertical apex
+          // Faint Track Designation Badge at vertical apex
           if (curZoom > 0.38) {
-            ctx.font = `bold ${Math.max(8.5, Math.min(10.5, 9 * curZoom))}px monospace`;
+            ctx.font = `bold ${Math.max(8.5, Math.min(10, 9 * curZoom))}px monospace`;
             ctx.fillStyle = track.color;
-            ctx.globalAlpha = 0.75;
+            ctx.globalAlpha = 0.3;
             ctx.textAlign = 'center';
             ctx.fillText(`🪐 ${track.name}`, coreScreenX, coreScreenY - ry - 8 * curZoom);
           }
           ctx.restore();
         }
       } else if (activeMode === 'cluster') {
-        // Quantum Cluster Star Hubs & Radiant Umbilical Beams
+        // Quantum Cluster Star Hubs - Delicate Ghost Blueprint Filaments
         for (const hub of QUANTUM_CLUSTER_HUBS) {
           ctx.save();
           const hubScreenX = coreScreenX + hub.cx * curZoom;
           const hubScreenY = coreScreenY + hub.cy * curZoom;
 
-          // Regional nebular glow gradient
+          // Regional nebular glow gradient (subtle deep celestial mist)
           const nebGrad = ctx.createRadialGradient(
             hubScreenX,
             hubScreenY,
@@ -745,17 +762,17 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             hubScreenY,
             460 * curZoom
           );
-          nebGrad.addColorStop(0, hub.glowColor.replace(/[\d.]+\)$/, '0.22)'));
-          nebGrad.addColorStop(0.45, hub.glowColor.replace(/[\d.]+\)$/, '0.07)'));
+          nebGrad.addColorStop(0, hub.glowColor.replace(/[\d.]+\)$/, '0.08)'));
+          nebGrad.addColorStop(0.5, hub.glowColor.replace(/[\d.]+\)$/, '0.02)'));
           nebGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = nebGrad;
           ctx.beginPath();
           ctx.arc(hubScreenX, hubScreenY, 460 * curZoom, 0, Math.PI * 2);
           ctx.fill();
 
-          // Quantum umbilical filament beam from Äkinoya Core to Cluster Hub center
-          ctx.strokeStyle = hub.glowColor.replace(/[\d.]+\)$/, '0.35)');
-          ctx.lineWidth = Math.max(1, 1.4 * curZoom);
+          // Soft quantum umbilical filament beam from Core to Cluster Hub center
+          ctx.strokeStyle = hub.glowColor.replace(/[\d.]+\)$/, '0.06)');
+          ctx.lineWidth = 0.75;
           ctx.setLineDash([6 * curZoom, 10 * curZoom]);
           ctx.beginPath();
           ctx.moveTo(coreScreenX, coreScreenY);
@@ -763,18 +780,18 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Luminous Hub Center Diamond Pip
+          // Faint Hub Center Pip
           ctx.fillStyle = hub.color;
-          ctx.globalAlpha = 0.85;
+          ctx.globalAlpha = 0.45;
           ctx.beginPath();
-          ctx.arc(hubScreenX, hubScreenY, Math.max(3, 4.5 * curZoom), 0, Math.PI * 2);
+          ctx.arc(hubScreenX, hubScreenY, Math.max(2.5, 3.5 * curZoom), 0, Math.PI * 2);
           ctx.fill();
 
-          // Hub Name Badge
+          // Faint Hub Name Badge
           if (curZoom > 0.38) {
-            ctx.font = `bold ${Math.max(8.5, Math.min(11, 9.5 * curZoom))}px monospace`;
+            ctx.font = `bold ${Math.max(8.5, Math.min(10, 9 * curZoom))}px monospace`;
             ctx.fillStyle = hub.color;
-            ctx.globalAlpha = 0.85;
+            ctx.globalAlpha = 0.35;
             ctx.textAlign = 'center';
             ctx.fillText(`🌌 ${hub.name}`, hubScreenX, hubScreenY - 14 * curZoom);
           }
@@ -802,8 +819,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           ctx.save();
           ctx.strokeStyle = isAmlemiActive
             ? 'rgba(251, 191, 36, 0.95)'
-            : 'rgba(245, 158, 11, 0.5)';
-          ctx.lineWidth = isAmlemiActive ? 2.2 : 1.2;
+            : 'rgba(245, 158, 11, 0.45)';
+          ctx.lineWidth = isAmlemiActive ? 2.0 : 1.0;
           ctx.setLineDash([4 * curZoom, 4 * curZoom]);
           ctx.beginPath();
           ctx.moveTo(coreScreenX, coreScreenY);
@@ -813,7 +830,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           ctx.restore();
         }
 
-        // Mode-Specific Lattice Filaments
+        // Mode-Specific Lattice Filaments (Soft Ghost Blueprint Connectors)
         if (activeMode === 'spiral') {
           const armGroups = new Map<string, Array<{ x: number; y: number; r: number; id: string }>>();
           for (const arm of CONSTELLATION_ARMS) {
@@ -853,9 +870,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               ctx.beginPath();
               ctx.moveTo(s1x, s1y);
               ctx.lineTo(s2x, s2y);
-              ctx.strokeStyle = isHighlighted ? arm.color : arm.glowColor.replace('0.45', '0.22');
-              ctx.lineWidth = isHighlighted ? 1.8 : 1.0;
-              ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 5 * curZoom]);
+              ctx.strokeStyle = isHighlighted ? arm.color : arm.glowColor.replace(/[\d.]+\)$/, '0.06)');
+              ctx.lineWidth = isHighlighted ? 1.5 : 0.75;
+              ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 6 * curZoom]);
               ctx.stroke();
             }
             ctx.setLineDash([]);
@@ -902,9 +919,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               ctx.beginPath();
               ctx.moveTo(s1x, s1y);
               ctx.lineTo(s2x, s2y);
-              ctx.strokeStyle = isHighlighted ? track.color : track.glowColor.replace(/[\d.]+\)$/, '0.25)');
-              ctx.lineWidth = isHighlighted ? 1.8 : 1.0;
-              ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 5 * curZoom]);
+              ctx.strokeStyle = isHighlighted ? track.color : track.glowColor.replace(/[\d.]+\)$/, '0.06)');
+              ctx.lineWidth = isHighlighted ? 1.5 : 0.75;
+              ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 6 * curZoom]);
               ctx.stroke();
             }
             ctx.setLineDash([]);
@@ -947,8 +964,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               ctx.beginPath();
               ctx.moveTo(hubScreenX, hubScreenY);
               ctx.lineTo(nx, ny);
-              ctx.strokeStyle = isHighlighted ? hub.color : hub.glowColor.replace(/[\d.]+\)$/, '0.22)');
-              ctx.lineWidth = isHighlighted ? 1.6 : 0.9;
+              ctx.strokeStyle = isHighlighted ? hub.color : hub.glowColor.replace(/[\d.]+\)$/, '0.06)');
+              ctx.lineWidth = isHighlighted ? 1.5 : 0.75;
               ctx.setLineDash([2 * curZoom, 4 * curZoom]);
               ctx.stroke();
 
@@ -961,9 +978,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 ctx.beginPath();
                 ctx.moveTo(nx, ny);
                 ctx.lineTo(nextX, nextY);
-                ctx.strokeStyle = isHighlighted ? hub.color : hub.glowColor.replace(/[\d.]+\)$/, '0.28)');
-                ctx.lineWidth = isHighlighted ? 1.8 : 1.0;
-                ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 5 * curZoom]);
+                ctx.strokeStyle = isHighlighted ? hub.color : hub.glowColor.replace(/[\d.]+\)$/, '0.06)');
+                ctx.lineWidth = isHighlighted ? 1.5 : 0.75;
+                ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 6 * curZoom]);
                 ctx.stroke();
               }
             }
@@ -973,9 +990,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         }
       }
 
-      // 6. Subtle Coordinate Crosshair Rays from Core
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-      ctx.lineWidth = 1;
+      // 6. Subtle Coordinate Crosshair Rays from Core - Extremely faint alpha
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.lineWidth = 0.75;
       ctx.beginPath();
       ctx.moveTo(coreScreenX - 3500 * curZoom, coreScreenY);
       ctx.lineTo(coreScreenX + 3500 * curZoom, coreScreenY);
@@ -1646,46 +1663,92 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             <span>⚡ Pioneer Worlds ({pioneerPlanetsCount})</span>
           </button>
         </div>
+      </div>
 
-        {/* Constellation Architectural Multi-Variant Controller & Fluid Restructure Engine */}
-        <div className="flex items-center justify-center gap-1 sm:gap-1.5 p-1 rounded-2xl bg-gradient-to-r from-[#060a16]/95 via-[#071026]/95 to-[#060a16]/95 backdrop-blur-xl border border-cyan-500/35 shadow-[0_4px_25px_rgba(0,0,0,0.6),0_0_15px_rgba(6,182,212,0.18)] flex-wrap">
+      {/* ========================================================================= */}
+      {/* LEFT-HAND VERTICAL ARCHITECTURE & RESTRUCTURE CONTROL DOCK               */}
+      {/* Sleek, minimalist vertical glassmorphic dock for mobile, tablet & desktop */}
+      {/* ========================================================================= */}
+      <nav
+        aria-label="Constellation Architectural Layout Dock"
+        className="interactive-hud-element absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1.5 p-1.5 rounded-2xl bg-gradient-to-b from-[#060a16]/92 via-[#071026]/92 to-[#060a16]/92 backdrop-blur-2xl border border-cyan-500/35 shadow-[0_8px_32px_rgba(0,0,0,0.75),0_0_20px_rgba(6,182,212,0.18)] select-none"
+        style={{ touchAction: 'manipulation' }}
+      >
+        <div className="text-[7.5px] font-mono font-bold tracking-widest text-cyan-400/60 uppercase px-1 py-0.5 text-center hidden sm:block">
+          ARCH
+        </div>
+
+        {/* Constellation Layout Variant Buttons */}
+        <div className="flex flex-col items-center gap-1.5">
           {CONSTELLATION_LAYOUT_VARIANTS.map((variant) => {
             const isActive = layoutMode === variant.mode;
+            const icon =
+              variant.mode === 'spiral' ? '🌀' : variant.mode === 'matrix' ? '🪐' : '🌌';
+            const shortName =
+              variant.mode === 'spiral' ? 'Spiral' : variant.mode === 'matrix' ? 'Matrix' : 'Cluster';
+
             return (
               <button
                 key={variant.mode}
                 type="button"
                 onClick={() => handleSwitchLayout(variant.mode)}
                 disabled={isMorphing}
-                className={`px-2.5 py-1 rounded-xl font-mono text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1 ${
+                className={`relative group flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-black shadow-[0_0_14px_rgba(251,191,36,0.6)]'
-                    : 'text-white/70 hover:text-white hover:bg-white/5 border border-transparent'
-                } ${isMorphing ? 'opacity-70 pointer-events-none' : ''}`}
-                title={variant.description}
+                    ? 'bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 text-black shadow-[0_0_16px_rgba(251,191,36,0.6)] font-extrabold scale-105'
+                    : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10'
+                } ${isMorphing ? 'opacity-60 pointer-events-none' : ''}`}
+                title={`${variant.name} (${variant.description})`}
+                aria-label={`Switch to ${variant.name}`}
               >
-                <span>{variant.badge}</span>
+                <span className="text-base sm:text-lg leading-none">{icon}</span>
+                <span
+                  className={`text-[7.5px] sm:text-[8px] font-mono tracking-tighter uppercase mt-0.5 leading-none ${
+                    isActive ? 'text-black font-black' : 'text-white/60 group-hover:text-white'
+                  }`}
+                >
+                  {shortName}
+                </span>
+
+                {/* Active Indicator Pip on Left Border */}
+                {isActive && (
+                  <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-4 rounded-r-full bg-amber-300 shadow-[0_0_8px_#fbbf24]" />
+                )}
+
+                {/* Floating Glassmorphic Tooltip on Desktop hover */}
+                <span className="pointer-events-none absolute left-full ml-3 hidden sm:group-hover:flex items-center px-2.5 py-1 rounded-lg bg-[#060c18]/95 border border-cyan-500/40 text-cyan-200 text-[10px] font-mono font-semibold whitespace-nowrap shadow-xl z-50">
+                  {variant.name}
+                </span>
               </button>
             );
           })}
-
-          <div className="h-4 w-px bg-white/15 mx-0.5 hidden xs:block" />
-
-          {/* 60+ FPS Fluid Restructure Action */}
-          <button
-            type="button"
-            onClick={handleTriggerRestructure}
-            disabled={isMorphing}
-            className={`px-2.5 py-1 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white font-mono text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_12px_rgba(6,182,212,0.25)] ${
-              isMorphing ? 'opacity-60 pointer-events-none' : ''
-            }`}
-            title="Restructure cosmic web and re-equilibrate node coordinates (60fps fluid morph)"
-          >
-            <RefreshCw className={`w-3 h-3 text-cyan-300 ${isMorphing ? 'animate-spin' : ''}`} />
-            <span>Restructure</span>
-          </button>
         </div>
-      </div>
+
+        {/* Sleek Hairline Divider */}
+        <div className="w-6 h-px bg-white/15 my-0.5" />
+
+        {/* 60+ FPS Fluid Restructure Action Button */}
+        <button
+          type="button"
+          onClick={handleTriggerRestructure}
+          disabled={isMorphing}
+          className={`relative group flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white transition-all duration-200 cursor-pointer shadow-[0_0_14px_rgba(6,182,212,0.25)] active:scale-95 ${
+            isMorphing ? 'opacity-60 pointer-events-none' : ''
+          }`}
+          title="Restructure Constellation (60fps Fluid Morph)"
+          aria-label="Restructure Constellation"
+        >
+          <RefreshCw className={`w-4 h-4 text-cyan-300 ${isMorphing ? 'animate-spin' : ''}`} />
+          <span className="text-[7.5px] sm:text-[8px] font-mono tracking-tighter uppercase text-cyan-300/80 group-hover:text-cyan-200 mt-0.5 leading-none">
+            Morph
+          </span>
+
+          {/* Floating Glassmorphic Tooltip on Desktop hover */}
+          <span className="pointer-events-none absolute left-full ml-3 hidden sm:group-hover:flex items-center px-2.5 py-1 rounded-lg bg-[#060c18]/95 border border-cyan-500/40 text-cyan-200 text-[10px] font-mono font-semibold whitespace-nowrap shadow-xl z-50">
+            Restructure Constellation
+          </span>
+        </button>
+      </nav>
 
       {/* ASTROGATION COORDINATES HUD (Bottom Left) — Direct-DOM 60fps Refs */}
       <div className="interactive-hud-element absolute bottom-4 left-4 z-30 hidden sm:flex flex-col gap-1.5 p-3.5 rounded-2xl bg-gradient-to-br from-cyan-950/45 via-[#060a14]/90 to-[#040812]/95 backdrop-blur-xl border border-cyan-500/30 font-mono text-[10.5px] text-white/70 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(34,211,238,0.12)]">
