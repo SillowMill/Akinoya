@@ -290,20 +290,12 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                     <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-400 border-2 border-[#081526] animate-pulse" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] sm:text-[10px] font-mono font-bold tracking-widest text-cyan-300 uppercase">
-                        GUEST BENCHMARK PREVIEW
-                      </span>
-                      <span className="px-1.5 py-0.2 sm:py-0.5 rounded bg-cyan-400/20 text-cyan-200 text-[8.5px] sm:text-[9px] font-mono font-semibold">
-                        INSTANT
-                      </span>
-                    </div>
-                    <h3 className="text-xs sm:text-base font-display font-extrabold text-white tracking-wide truncate">
-                      EXPLORE GUEST PREVIEW (ÄMLEMI)
+                    <span className="text-[9.5px] sm:text-[11px] font-mono font-bold tracking-widest text-cyan-300 uppercase block">
+                      GUEST BENCHMARK PREVIEW
+                    </span>
+                    <h3 className="text-sm sm:text-lg font-display font-extrabold text-white tracking-wide mt-0.5">
+                      Ämlemi
                     </h3>
-                    <p className="text-[10px] sm:text-[11px] text-white/60 font-sans truncate sm:whitespace-normal">
-                      3D World Sci-Fi · Sci-Fi Dossier · 4K 9:16 Trailer
-                    </p>
                   </div>
                 </div>
               </div>
