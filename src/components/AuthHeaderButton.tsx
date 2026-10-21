@@ -22,17 +22,56 @@ export const AuthHeaderButton: React.FC = () => {
   const { user, profile, role, isAuthenticated, isVip, hasVipPass, isSubscriber, openAuthModal, signOut } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const desktopDropdownRef = useRef<HTMLDivElement>(null);
+  const portalModalRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click or touch
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    if (!isDropdownOpen) return;
+
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+
+      // Don't close if clicked inside trigger button in header
+      if (dropdownRef.current && dropdownRef.current.contains(target)) {
+        return;
+      }
+
+      // Don't close if clicked inside desktop dropdown menu
+      if (desktopDropdownRef.current && desktopDropdownRef.current.contains(target)) {
+        return;
+      }
+
+      // Don't close if clicked inside mobile portal modal card
+      if (portalModalRef.current && portalModalRef.current.contains(target)) {
+        return;
+      }
+
+      // Safeguard check for any element marked with data-profile-modal
+      if ((target as Element)?.closest?.('[data-profile-modal]')) {
+        return;
+      }
+
+      setIsDropdownOpen(false);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         setIsDropdownOpen(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isDropdownOpen]);
 
   const isUserVip = Boolean(
     role !== 'FREE' &&
@@ -77,6 +116,39 @@ export const AuthHeaderButton: React.FC = () => {
       </button>
     );
   }
+
+  const handleClaimWorld = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    soundManager.playTone(540, 0.05);
+    openClaimWorldModal();
+    setIsDropdownOpen(false);
+  };
+
+  const handleCommunityNav = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    soundManager.playTone(600, 0.04);
+    setIsDropdownOpen(false);
+    try {
+      window.history.pushState({}, '', '/community');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    } catch {
+      window.location.assign('/community');
+    }
+  };
+
+  const handleSignOut = async (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    soundManager.playTone(330, 0.08);
+    setIsDropdownOpen(false);
+    try {
+      await signOut();
+    } catch (err) {
+      console.error('Failed to sign out:', err);
+    }
+  };
 
   const renderMenuContent = () => (
     <>
@@ -146,11 +218,8 @@ export const AuthHeaderButton: React.FC = () => {
       {/* Direct Claim Your Free World Modal Trigger */}
       <button
         type="button"
-        onClick={() => {
-          setIsDropdownOpen(false);
-          openClaimWorldModal();
-        }}
-        className="w-full p-2.5 rounded-xl bg-amber-950/40 hover:bg-amber-950/60 border border-amber-500/30 text-amber-300 font-mono text-[11px] font-semibold transition-colors cursor-pointer flex items-center justify-between min-h-[48px]"
+        onClick={handleClaimWorld}
+        className="w-full p-2.5 rounded-xl bg-amber-950/40 hover:bg-amber-950/60 active:bg-amber-900/80 border border-amber-500/30 text-amber-300 font-mono text-[11px] font-semibold transition-colors cursor-pointer flex items-center justify-between min-h-[48px] select-none"
       >
         <span className="flex items-center gap-2">
           <Globe2 className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
@@ -164,7 +233,8 @@ export const AuthHeaderButton: React.FC = () => {
       {/* Quick Link to Community Hub */}
       <a
         href="/community"
-        className="w-full p-2.5 rounded-xl hover:bg-white/5 text-white/80 hover:text-white font-mono text-[11px] transition-colors cursor-pointer flex items-center justify-between min-h-[48px]"
+        onClick={handleCommunityNav}
+        className="w-full p-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 text-white/80 hover:text-white font-mono text-[11px] transition-colors cursor-pointer flex items-center justify-between min-h-[48px] select-none"
       >
         <span className="flex items-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
@@ -176,11 +246,8 @@ export const AuthHeaderButton: React.FC = () => {
       {/* Sign Out */}
       <button
         type="button"
-        onClick={async () => {
-          setIsDropdownOpen(false);
-          await signOut();
-        }}
-        className="w-full p-2.5 rounded-xl hover:bg-red-950/30 text-red-300 font-mono text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-2 min-h-[48px]"
+        onClick={handleSignOut}
+        className="w-full p-2.5 rounded-xl hover:bg-red-950/30 active:bg-red-950/50 text-red-300 font-mono text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-2 min-h-[48px] select-none"
       >
         <LogOut className="w-3.5 h-3.5 text-red-400" />
         <span>Sign Out</span>
@@ -192,8 +259,9 @@ export const AuthHeaderButton: React.FC = () => {
     <div className={`relative shrink-0 ${isDropdownOpen ? 'z-[100]' : 'z-20'}`} ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => {
-          setIsDropdownOpen(!isDropdownOpen);
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsDropdownOpen((prev) => !prev);
           soundManager.playTone(600, 0.04);
         }}
         className="min-h-[40px] sm:min-h-[42px] lg:min-h-[46px] px-2 sm:px-2.5 lg:px-3 py-1 lg:py-1.5 rounded-xl bg-black/60 hover:bg-black/80 border border-cyan-500/30 hover:border-cyan-400/60 transition-all cursor-pointer flex items-center gap-1.5 lg:gap-2 group shadow-lg"
@@ -226,10 +294,16 @@ export const AuthHeaderButton: React.FC = () => {
       <AnimatePresence>
         {!isMobile && isDropdownOpen && (
           <motion.div
+            ref={desktopDropdownRef}
+            data-profile-modal="true"
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.18 }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             className="absolute right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] origin-top-right rounded-2xl bg-[#0b0f17] border border-white/10 p-3 sm:p-3.5 shadow-2xl z-50 space-y-2 text-xs font-sans backdrop-blur-xl ring-1 ring-white/5 overflow-y-auto max-h-[85vh]"
           >
             {renderMenuContent()}
@@ -242,20 +316,32 @@ export const AuthHeaderButton: React.FC = () => {
         createPortal(
           <div
             className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
-            onClick={() => setIsDropdownOpen(false)}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsDropdownOpen(false);
+              }
+            }}
           >
             <motion.div
+              ref={portalModalRef}
+              data-profile-modal="true"
               initial={{ opacity: 0, scale: 0.94, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 16 }}
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
               className="relative w-full max-w-sm rounded-2xl bg-[#0b0f17] border border-cyan-500/40 p-4 shadow-2xl space-y-3 text-xs font-sans ring-1 ring-white/10 overflow-y-auto max-h-[86vh]"
             >
               {/* Close Button */}
               <button
                 type="button"
-                onClick={() => setIsDropdownOpen(false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDropdownOpen(false);
+                }}
                 className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white/70 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                 aria-label="Close profile modal"
               >
