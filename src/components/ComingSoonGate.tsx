@@ -273,7 +273,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
           </div>
 
           <p className="text-xs sm:text-sm text-white/70 font-sans max-w-xs md:max-w-sm leading-relaxed mb-5">
-            Explore the Ämlemi guest world or enter your Äkinoya access code to unlock the full portal.
+            Explore Äkinoya via our guest world Ämlemi, or enter your access code to unlock the full portal.
           </p>
 
           {/* Visual Indicator: Guest Preview (Ämlemi) */}
