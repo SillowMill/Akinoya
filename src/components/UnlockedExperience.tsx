@@ -81,6 +81,7 @@ import {
 } from '../utils/certificate';
 import { CertificateOfAuthenticity } from './CertificateOfAuthenticity';
 import { isFounderEmail } from '../lib/vipTokens';
+import { scrollToVisualizerHub } from '../utils/scroll';
 
 // pdf.js is heavy — only fetch the reader chunk when a verified holder opens the comic
 const BingaaComicReader = lazy(() => import('./BingaaComicReader'));
@@ -248,7 +249,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     window.addEventListener('beforeunload', handleInstantSaveScroll);
     window.addEventListener('pagehide', handleInstantSaveScroll);
 
-    const savedY = sessionStorage.getItem('akinoya_portal_scroll_y');
+    const searchParams = new URLSearchParams(window.location.search);
+    const isTargetingHub =
+      searchParams.get('subview') === 'hub' ||
+      searchParams.get('tab') === 'visualizers' ||
+      sessionStorage.getItem('akinoya_portal_pass_subview') === 'hub';
+
+    const savedY = !isTargetingHub ? sessionStorage.getItem('akinoya_portal_scroll_y') : null;
     if (savedY) {
       const targetY = parseFloat(savedY);
       if (!isNaN(targetY) && targetY > 50) {
@@ -449,7 +456,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     const handleOpenHub = () => {
       setActiveTab('pass');
       setPassSubView('hub');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToVisualizerHub(true);
     };
 
     const handleNavigatePassperksHome = () => {
@@ -480,6 +487,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           if (params.get('subview') === 'hub') {
             setActiveTab('pass');
             setPassSubView('hub');
+            scrollToVisualizerHub(true, 80);
           } else {
             setActiveTab('pass');
             setPassSubView('overview');
@@ -493,6 +501,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         } else if (params.get('tab') === 'visualizers') {
           setActiveTab('pass');
           setPassSubView('hub');
+          scrollToVisualizerHub(true, 80);
         }
       }
     };
@@ -792,9 +801,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     setActiveTab('pass');
     setPassSubView('hub');
     soundManager.playUnlockChime();
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    scrollToVisualizerHub(true);
   };
 
   const handleSelectTab = (tab: 'pass' | 'edition' | 'my-world' | 'assets') => {
@@ -1217,6 +1224,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         onClick={() => {
                           if (isVipMode || isVisualizerUnlocked) {
                             setPassSubView('hub');
+                            scrollToVisualizerHub(true);
                           } else {
                             handleDirectGuestUnlockHub();
                           }
@@ -1274,7 +1282,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         <div className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
                           {(isVipMode || isVisualizerUnlocked) ? (
                             <button
-                              onClick={() => setPassSubView('hub')}
+                              onClick={() => {
+                                setPassSubView('hub');
+                                scrollToVisualizerHub(true);
+                              }}
                               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
                             >
                               <AudioWaveform className="w-4 h-4 text-black shrink-0" />
@@ -1441,6 +1452,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 /* Unlocked Visualizer Hub View */
                 <motion.div
                   key="pass-hub-view"
+                  id="akinoya-visualizer-hub-view"
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
@@ -1455,11 +1467,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   }}
                   className="space-y-4"
                 >
-                  <div className="bg-[#060a14] border border-cyan-500/30 rounded-2xl p-5 sm:p-6 lg:p-7 xl:p-8 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)]">
+                  <div
+                    id="akinoya-visualizer-archive"
+                    className="bg-[#060a14] border border-cyan-500/30 rounded-2xl p-5 sm:p-6 lg:p-7 xl:p-8 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)] scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
+                  >
                     <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
                     {/* Navigation Bar: Back to Pass Overview button & Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4 mb-5">
+                    <div
+                      id="akinoya-visualizer-archive-header"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4 mb-5 scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
+                    >
                       <div>
                         {/* Navigation Back Button (Seamless without losing state) */}
                         <button

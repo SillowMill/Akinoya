@@ -29,6 +29,7 @@ import { useAuth } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { hasAnyStoredCertificate } from './utils/certificate';
 import { soundManager } from './utils/audio';
+import { scrollToVisualizerHub } from './utils/scroll';
 
 export default function App() {
   const { user, profile, role, isAuthenticated, isVip, hasPendingVipInvitation, openAuthModal, isLoading } = useAuth();
@@ -264,10 +265,19 @@ export default function App() {
         setRoute('success');
       } else if (path === '/unlocked' || path.startsWith('/unlocked')) {
         handlePublicUnlockSuccess();
+        if (typeof window !== 'undefined') {
+          try {
+            sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+            sessionStorage.setItem('akinoya_portal_pass_subview', 'hub');
+            sessionStorage.removeItem('akinoya_portal_scroll_y');
+            sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+          } catch {}
+        }
         setRoute('home');
         if (typeof window !== 'undefined') {
           setTimeout(() => {
             window.dispatchEvent(new CustomEvent('akinoya-open-visualizer-hub'));
+            scrollToVisualizerHub(true);
           }, 50);
         }
       } else if (
@@ -372,10 +382,19 @@ export default function App() {
 
   const handleOpenVisualizerHub = () => {
     handlePublicUnlockSuccess();
-    navigateTo('home', '/?tab=pass&subview=hub');
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+        sessionStorage.setItem('akinoya_portal_pass_subview', 'hub');
+        sessionStorage.removeItem('akinoya_portal_scroll_y');
+        sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+      } catch {}
+    }
+    navigateTo('home', '/?tab=pass&subview=hub#pass');
     if (typeof window !== 'undefined') {
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('akinoya-open-visualizer-hub'));
+        scrollToVisualizerHub(true);
       }, 50);
     }
   };

@@ -35,6 +35,7 @@ import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
+import { scrollToVisualizerHub } from '../utils/scroll';
 import akinoyaHeroBg from '../assets/images/akinoya_hero_bg-CiYAZVRx.jpg';
 
 interface GalaxyNavigatorProps {
@@ -1330,6 +1331,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 type="button"
                 onClick={() => {
                   setIsAkinoyaModalOpen(false);
+                  scrollToVisualizerHub(true, 50);
                   if (onNavigateToVisualizerHub) {
                     onNavigateToVisualizerHub();
                   } else if (typeof window !== 'undefined') {
