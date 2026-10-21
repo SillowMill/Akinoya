@@ -180,6 +180,102 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     [layoutPlanets]
   );
 
+  interface LatticeEdge {
+    nodeA: PlanetSubmission;
+    nodeB: PlanetSubmission;
+    color: string;
+    glowColor: string;
+  }
+
+  // Precomputed Constellation Lattice Edges (100% allocation-free and sort-free 60fps render loop)
+  const latticeEdges = useMemo<LatticeEdge[]>(() => {
+    if (!filteredPlanets || filteredPlanets.length < 2) return [];
+
+    const edges: LatticeEdge[] = [];
+
+    if (layoutMode === 'spiral') {
+      const armGroups = new Map<string, PlanetSubmission[]>();
+      for (const arm of CONSTELLATION_ARMS) {
+        armGroups.set(arm.id, []);
+      }
+      for (const p of filteredPlanets) {
+        if ((p.coordX ?? 0) === 0 && (p.coordY ?? 0) === 0) continue;
+        const armId = p.armId || CONSTELLATION_ARMS[0].id;
+        if (armGroups.has(armId)) {
+          armGroups.get(armId)!.push(p);
+        }
+      }
+      for (const arm of CONSTELLATION_ARMS) {
+        const nodes = armGroups.get(arm.id);
+        if (!nodes || nodes.length < 2) continue;
+        nodes.sort((a, b) => {
+          const rA = Math.hypot(a.coordX ?? 0, a.coordY ?? 0);
+          const rB = Math.hypot(b.coordX ?? 0, b.coordY ?? 0);
+          return rA - rB;
+        });
+        for (let i = 0; i < nodes.length - 1; i++) {
+          edges.push({
+            nodeA: nodes[i],
+            nodeB: nodes[i + 1],
+            color: arm.color,
+            glowColor: arm.glowColor,
+          });
+        }
+      }
+    } else if (layoutMode === 'matrix') {
+      const trackGroups = new Map<string, PlanetSubmission[]>();
+      for (const track of OVAL_MATRIX_TRACKS) {
+        trackGroups.set(track.id, []);
+      }
+      for (const p of filteredPlanets) {
+        if ((p.coordX ?? 0) === 0 && (p.coordY ?? 0) === 0) continue;
+        const trackId = p.armId || OVAL_MATRIX_TRACKS[1].id;
+        if (trackGroups.has(trackId)) {
+          trackGroups.get(trackId)!.push(p);
+        }
+      }
+      for (const track of OVAL_MATRIX_TRACKS) {
+        const nodes = trackGroups.get(track.id);
+        if (!nodes || nodes.length < 2) continue;
+        nodes.sort((a, b) => {
+          const angA = Math.atan2(a.coordY ?? 0, a.coordX ?? 0);
+          const angB = Math.atan2(b.coordY ?? 0, b.coordX ?? 0);
+          return angA - angB;
+        });
+        for (let i = 0; i < nodes.length - 1; i++) {
+          edges.push({
+            nodeA: nodes[i],
+            nodeB: nodes[i + 1],
+            color: track.color,
+            glowColor: track.glowColor,
+          });
+        }
+        // Connect perimeter loop only if well-distributed along track
+        if (nodes.length >= 4) {
+          const first = nodes[0];
+          const last = nodes[nodes.length - 1];
+          const angFirst = Math.atan2(first.coordY ?? 0, first.coordX ?? 0);
+          const angLast = Math.atan2(last.coordY ?? 0, last.coordX ?? 0);
+          let diff = Math.abs(angLast - angFirst);
+          if (diff > Math.PI) diff = 2 * Math.PI - diff;
+          if (diff <= 1.85) {
+            edges.push({
+              nodeA: last,
+              nodeB: first,
+              color: track.color,
+              glowColor: track.glowColor,
+            });
+          }
+        }
+      }
+    }
+
+    return edges;
+  }, [filteredPlanets, layoutMode]);
+
+  const latticeEdgesRef = useRef<LatticeEdge[]>(latticeEdges);
+  latticeEdgesRef.current = latticeEdges;
+
   // Dual-Synchronized 60+ FPS Interpolation Coordinator
   useEffect(() => {
     const isFirstRun = nodePositionsRef.current.size === 0;
@@ -239,6 +335,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const hoveredPlanetRef = useRef(hoveredPlanet);
   hoveredPlanetRef.current = hoveredPlanet;
 
+  // DOM Node Recycling & Virtualization Refs (Direct GPU Visibility Management)
+  const planetNodeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
   // Multi-Touch, Inertia & Gesture Tracking Refs
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -262,6 +361,59 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   // Starfield Simulation State
   const starsRef = useRef<Star[]>([]);
 
+  // Spatial Viewport Culling & DOM Node Recycling Engine (Eliminates off-screen DOM overhead)
+  const updateNodeVisibility = useCallback(() => {
+    if (isMorphing) return;
+
+    const width = canvasDimsRef.current.width || window.innerWidth;
+    const height = canvasDimsRef.current.height || window.innerHeight;
+    const curPan = panRef.current;
+    const curZoom = zoomRef.current;
+    const curRot = rotationRef.current;
+
+    // Viewport buffer margin so nodes are restored before crossing the edge
+    const margin = 200;
+    const cosR = curRot === 0 ? 1 : Math.cos(curRot);
+    const sinR = curRot === 0 ? 0 : Math.sin(curRot);
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    const hoveredId = hoveredPlanetRef.current?.id;
+    const selectedId = selectedPlanetRef.current?.id;
+
+    for (const [id, el] of planetNodeRefs.current.entries()) {
+      if (!el) continue;
+      // Always keep active/selected/hovered/founding nodes visible
+      if (id === hoveredId || id === selectedId || id === 'planet-amlemi-genesis-01') {
+        if (el.style.display === 'none') el.style.display = '';
+        continue;
+      }
+
+      const pos = nodePositionsRef.current.get(id);
+      const px = pos ? pos.currentX : 0;
+      const py = pos ? pos.currentY : 0;
+
+      // Project world coordinate to screen space
+      const sxWorld = (px + curPan.x) * curZoom;
+      const syWorld = (py + curPan.y) * curZoom;
+      const screenX = centerX + (sxWorld * cosR - syWorld * sinR);
+      const screenY = centerY + (sxWorld * sinR + syWorld * cosR);
+
+      // Fast AABB intersection test with viewport + margin
+      const isVisible =
+        screenX >= -margin &&
+        screenX <= width + margin &&
+        screenY >= -margin &&
+        screenY <= height + margin;
+
+      if (isVisible) {
+        if (el.style.display === 'none') el.style.display = '';
+      } else {
+        if (el.style.display !== 'none') el.style.display = 'none';
+      }
+    }
+  }, [isMorphing]);
+
   // Direct GPU DOM Transform & HUD Synchronizer (Runs in <0.1ms with zero React overhead)
   const syncWorldTransformAndHud = useCallback(() => {
     const curPan = panRef.current;
@@ -284,7 +436,24 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     if (hudZoomRef.current) {
       hudZoomRef.current.textContent = `${(curZoom * 100).toFixed(0)}%`;
     }
-  }, []);
+
+    // Spatial Viewport Culling & DOM Node Recycling (Skips off-screen rendering)
+    updateNodeVisibility();
+  }, [updateNodeVisibility]);
+
+  // Re-evaluate node visibility once morph completes
+  useEffect(() => {
+    if (!isMorphing) {
+      updateNodeVisibility();
+    } else {
+      // During morph, ensure all nodes are visible for the sci-fi transition
+      for (const el of planetNodeRefs.current.values()) {
+        if (el && el.style.display === 'none') {
+          el.style.display = '';
+        }
+      }
+    }
+  }, [isMorphing, updateNodeVisibility]);
 
   // Ensure initial transform is applied on mount
   useEffect(() => {
@@ -358,7 +527,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     };
   }, []);
 
-  // Viewport scroll stabilization: Prevent virtual keyboard from shifting the screen or leaving persistent black bars
+  // Viewport scroll stabilization: Decoupled via requestAnimationFrame (Zero layout thrashing)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -370,17 +539,29 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100dvh';
 
+    let scrollRafId: number | null = null;
     const handleScrollLock = () => {
-      if (window.scrollY !== 0 || window.scrollX !== 0) {
-        window.scrollTo(0, 0);
-      }
+      if (scrollRafId !== null) return;
+      scrollRafId = requestAnimationFrame(() => {
+        scrollRafId = null;
+        if (window.scrollY !== 0 || window.scrollX !== 0) {
+          window.scrollTo(0, 0);
+        }
+      });
     };
 
     window.addEventListener('scroll', handleScrollLock, { passive: true });
 
     const visualViewport = window.visualViewport;
+    let viewportRafId: number | null = null;
     const handleViewportResize = () => {
-      window.scrollTo(0, 0);
+      if (viewportRafId !== null) return;
+      viewportRafId = requestAnimationFrame(() => {
+        viewportRafId = null;
+        if (window.scrollY !== 0 || window.scrollX !== 0) {
+          window.scrollTo(0, 0);
+        }
+      });
     };
 
     if (visualViewport) {
@@ -389,6 +570,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     }
 
     return () => {
+      if (scrollRafId !== null) cancelAnimationFrame(scrollRafId);
+      if (viewportRafId !== null) cancelAnimationFrame(viewportRafId);
       document.body.style.overflow = prevOverflow;
       document.body.style.position = prevPosition;
       document.body.style.width = prevWidth;
@@ -798,52 +981,95 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           ctx.restore();
         }
       } else if (activeMode === 'matrix') {
-        // Concentric Elliptical Oval Matrix Highways - Soft Ghost Highway Tracks
+        // Concentric Elliptical Oval Matrix Highways - Optimized Viewport Culling & Single-Pass Rasterization
+        const screenMargin = 120;
+        const isUltra = perfTierRef.current === 'high';
+
         for (const track of OVAL_MATRIX_TRACKS) {
-          ctx.save();
           const rx = track.a * curZoom;
           const ry = track.b * curZoom;
-          if (rx < 10) {
-            ctx.restore();
+          if (rx < 10) continue;
+
+          // 1. Fast AABB intersection test with viewport
+          const minX = coreScreenX - rx;
+          const maxX = coreScreenX + rx;
+          const minY = coreScreenY - ry;
+          const maxY = coreScreenY + ry;
+
+          // Completely outside viewport bounds
+          if (maxX < -screenMargin || minX > width + screenMargin || maxY < -screenMargin || minY > height + screenMargin) {
             continue;
           }
 
-          // Subtle oval halo glow
-          ctx.strokeStyle = track.glowColor.replace(/[\d.]+\)$/, '0.025)');
-          ctx.lineWidth = Math.max(1.5, 2.5 * curZoom);
-          ctx.beginPath();
-          ctx.ellipse(coreScreenX, coreScreenY, rx, ry, 0, 0, Math.PI * 2);
-          ctx.stroke();
+          // 2. Enclosing test: If screen viewport is entirely inside the ellipse, the border does not cross the screen
+          if (
+            minX < -screenMargin &&
+            maxX > width + screenMargin &&
+            minY < -screenMargin &&
+            maxY > height + screenMargin
+          ) {
+            const rx2 = rx * rx;
+            const ry2 = ry * ry;
+            const c1 = ((-screenMargin - coreScreenX) ** 2) / rx2 + ((-screenMargin - coreScreenY) ** 2) / ry2;
+            const c2 = ((width + screenMargin - coreScreenX) ** 2) / rx2 + ((-screenMargin - coreScreenY) ** 2) / ry2;
+            const c3 = ((-screenMargin - coreScreenX) ** 2) / rx2 + ((height + screenMargin - coreScreenY) ** 2) / ry2;
+            const c4 = ((width + screenMargin - coreScreenX) ** 2) / rx2 + ((height + screenMargin - coreScreenY) ** 2) / ry2;
+            if (c1 < 0.95 && c2 < 0.95 && c3 < 0.95 && c4 < 0.95) {
+              continue;
+            }
+          }
 
-          // Crisp ghost-line structural elliptical highway
+          ctx.save();
+
+          // Adaptive dash optimization: On large ellipses (rx > 2200) or low tier, use ultra-crisp hairline to avoid thousands of dash calculations
+          const useSolidHairline = isLite || rx > 2200;
+
+          if (isUltra && !useSolidHairline) {
+            // Subtle oval halo glow (Ultra tier only)
+            ctx.strokeStyle = track.glowColor.replace(/[\d.]+\)$/, '0.025)');
+            ctx.lineWidth = Math.max(1.5, 2.2 * curZoom);
+            ctx.beginPath();
+            ctx.ellipse(coreScreenX, coreScreenY, rx, ry, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          // Structural elliptical highway line
           ctx.strokeStyle = track.color;
-          ctx.globalAlpha = 0.06;
-          ctx.lineWidth = 0.75;
-          ctx.setLineDash([5 * curZoom, 8 * curZoom]);
+          ctx.globalAlpha = 0.07;
+          ctx.lineWidth = 0.8;
+          if (!useSolidHairline) {
+            const dashLen = Math.max(6, Math.min(16, 5 * curZoom));
+            const gapLen = Math.max(8, Math.min(22, 8 * curZoom));
+            ctx.setLineDash([dashLen, gapLen]);
+          }
           ctx.beginPath();
           ctx.ellipse(coreScreenX, coreScreenY, rx, ry, 0, 0, Math.PI * 2);
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Faint Track Designation Badge at vertical apex (suppressed on track-0 to keep Ämlemi's apex crown clean)
+          // Faint Track Designation Badge at vertical apex (suppressed on track-0 to keep Ämlemi's apex clean)
           if (track.id !== 'track-0' && curZoom > 0.38) {
-            ctx.font = `bold ${Math.max(8.5, Math.min(10, 9 * curZoom))}px monospace`;
-            ctx.fillStyle = track.color;
-            ctx.globalAlpha = 0.3;
-            ctx.textAlign = 'center';
-            ctx.fillText(`🪐 ${track.name}`, coreScreenX, coreScreenY - ry - 8 * curZoom);
+            const badgeY = coreScreenY - ry - 8 * curZoom;
+            if (badgeY >= -50 && badgeY <= height + 50 && coreScreenX >= -100 && coreScreenX <= width + 100) {
+              ctx.font = `bold ${Math.max(8.5, Math.min(10, 9 * curZoom))}px monospace`;
+              ctx.fillStyle = track.color;
+              ctx.globalAlpha = 0.32;
+              ctx.textAlign = 'center';
+              ctx.fillText(`🪐 ${track.name}`, coreScreenX, badgeY);
+            }
           }
+
           ctx.restore();
         }
       }
 
-      // 5c. Constellation Lattice Connections between Charted Nodes
+      // 5c. Constellation Lattice Connections between Charted Nodes (Batched GPU Render)
       const currentPlanets = planetsRef.current;
       if (currentPlanets && currentPlanets.length > 0) {
         const activeHoveredId = hoveredPlanetRef.current?.id;
         const activeSelectedId = selectedPlanetRef.current?.id;
 
-        // Foundational Master Anchor: Golden genesis link from Äkinoya Core (0,0) to Ämlemi (243, -176)
+        // Foundational Master Anchor: Golden genesis link from Äkinoya Core (0,0) to Ämlemi
         const amlemiNode = currentPlanets.find(
           (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
         );
@@ -868,101 +1094,83 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           ctx.restore();
         }
 
-        // Mode-Specific Lattice Filaments (Soft Ghost Blueprint Connectors)
-        if (activeMode === 'spiral') {
-          const armGroups = new Map<string, Array<{ x: number; y: number; r: number; id: string }>>();
-          for (const arm of CONSTELLATION_ARMS) {
-            armGroups.set(arm.id, []);
-          }
+        // Precomputed Edges: 100% allocation-free & zero-sort batched GPU pipeline
+        const edges = latticeEdgesRef.current;
+        if (edges && edges.length > 0) {
+          const defaultEdgesByColor = new Map<string, Array<{ x1: number; y1: number; x2: number; y2: number }>>();
+          const highlightedEdges: Array<{ x1: number; y1: number; x2: number; y2: number; color: string }> = [];
 
-          for (const p of currentPlanets) {
-            const pos = getNodePos(p);
-            if (pos.x === 0 && pos.y === 0) continue;
-            const r = Math.hypot(pos.x, pos.y);
-            const armId = p.armId || CONSTELLATION_ARMS[0].id;
-            if (armGroups.has(armId)) {
-              armGroups.get(armId)!.push({ x: pos.x, y: pos.y, r, id: p.id });
+          for (let i = 0; i < edges.length; i++) {
+            const edge = edges[i];
+            const p1 = getNodePos(edge.nodeA);
+            const p2 = getNodePos(edge.nodeB);
+
+            const s1x = coreScreenX + p1.x * curZoom;
+            const s1y = coreScreenY + p1.y * curZoom;
+            const s2x = coreScreenX + p2.x * curZoom;
+            const s2y = coreScreenY + p2.y * curZoom;
+
+            // Viewport edge culling
+            const edgeBound = boundMargin;
+            if (
+              (s1x < -edgeBound && s2x < -edgeBound) ||
+              (s1x > width + edgeBound && s2x > width + edgeBound) ||
+              (s1y < -edgeBound && s2y < -edgeBound) ||
+              (s1y > height + edgeBound && s2y > height + edgeBound)
+            ) {
+              continue;
+            }
+
+            const isHighlighted =
+              edge.nodeA.id === activeHoveredId ||
+              edge.nodeB.id === activeHoveredId ||
+              edge.nodeA.id === activeSelectedId ||
+              edge.nodeB.id === activeSelectedId;
+
+            if (isHighlighted) {
+              highlightedEdges.push({ x1: s1x, y1: s1y, x2: s2x, y2: s2y, color: edge.color });
+            } else {
+              let group = defaultEdgesByColor.get(edge.color);
+              if (!group) {
+                group = [];
+                defaultEdgesByColor.set(edge.color, group);
+              }
+              group.push({ x1: s1x, y1: s1y, x2: s2x, y2: s2y });
             }
           }
 
-          for (const arm of CONSTELLATION_ARMS) {
-            const nodes = armGroups.get(arm.id);
-            if (!nodes || nodes.length < 2) continue;
-            nodes.sort((a, b) => a.r - b.r);
+          // 1. Batched Non-Highlighted Filaments
+          ctx.save();
+          ctx.lineWidth = 0.75;
+          if (!isLite) {
+            ctx.setLineDash([3 * curZoom, 6 * curZoom]);
+          }
+          for (const [color, segs] of defaultEdgesByColor.entries()) {
+            ctx.strokeStyle = color;
+            ctx.globalAlpha = 0.12;
+            ctx.beginPath();
+            for (let j = 0; j < segs.length; j++) {
+              ctx.moveTo(segs[j].x1, segs[j].y1);
+              ctx.lineTo(segs[j].x2, segs[j].y2);
+            }
+            ctx.stroke();
+          }
+          ctx.setLineDash([]);
+          ctx.restore();
 
+          // 2. High-Priority Highlighted Lattice Connectors
+          if (highlightedEdges.length > 0) {
             ctx.save();
-            for (let i = 0; i < nodes.length - 1; i++) {
-              const n1 = nodes[i];
-              const n2 = nodes[i + 1];
-              const isHighlighted =
-                n1.id === activeHoveredId ||
-                n2.id === activeHoveredId ||
-                n1.id === activeSelectedId ||
-                n2.id === activeSelectedId;
-
-              const s1x = coreScreenX + n1.x * curZoom;
-              const s1y = coreScreenY + n1.y * curZoom;
-              const s2x = coreScreenX + n2.x * curZoom;
-              const s2y = coreScreenY + n2.y * curZoom;
-
+            ctx.lineWidth = 1.75;
+            ctx.globalAlpha = 0.95;
+            for (let k = 0; k < highlightedEdges.length; k++) {
+              const h = highlightedEdges[k];
+              ctx.strokeStyle = h.color;
               ctx.beginPath();
-              ctx.moveTo(s1x, s1y);
-              ctx.lineTo(s2x, s2y);
-              ctx.strokeStyle = isHighlighted ? arm.color : arm.glowColor.replace(/[\d.]+\)$/, '0.06)');
-              ctx.lineWidth = isHighlighted ? 1.5 : 0.75;
-              ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 6 * curZoom]);
+              ctx.moveTo(h.x1, h.y1);
+              ctx.lineTo(h.y2, h.y2);
               ctx.stroke();
             }
-            ctx.setLineDash([]);
-            ctx.restore();
-          }
-        } else if (activeMode === 'matrix') {
-          const trackGroups = new Map<string, Array<{ x: number; y: number; angle: number; id: string }>>();
-          for (const track of OVAL_MATRIX_TRACKS) {
-            trackGroups.set(track.id, []);
-          }
-
-          for (const p of currentPlanets) {
-            const pos = getNodePos(p);
-            if (pos.x === 0 && pos.y === 0) continue;
-            const angle = Math.atan2(pos.y, pos.x);
-            const trackId = p.armId || OVAL_MATRIX_TRACKS[1].id;
-            if (trackGroups.has(trackId)) {
-              trackGroups.get(trackId)!.push({ x: pos.x, y: pos.y, angle, id: p.id });
-            }
-          }
-
-          for (const track of OVAL_MATRIX_TRACKS) {
-            const nodes = trackGroups.get(track.id);
-            if (!nodes || nodes.length < 2) continue;
-            nodes.sort((a, b) => a.angle - b.angle);
-
-            ctx.save();
-            for (let i = 0; i < nodes.length; i++) {
-              const n1 = nodes[i];
-              const n2 = nodes[(i + 1) % nodes.length];
-              if (nodes.length === 2 && i === 1) break;
-
-              const isHighlighted =
-                n1.id === activeHoveredId ||
-                n2.id === activeHoveredId ||
-                n1.id === activeSelectedId ||
-                n2.id === activeSelectedId;
-
-              const s1x = coreScreenX + n1.x * curZoom;
-              const s1y = coreScreenY + n1.y * curZoom;
-              const s2x = coreScreenX + n2.x * curZoom;
-              const s2y = coreScreenY + n2.y * curZoom;
-
-              ctx.beginPath();
-              ctx.moveTo(s1x, s1y);
-              ctx.lineTo(s2x, s2y);
-              ctx.strokeStyle = isHighlighted ? track.color : track.glowColor.replace(/[\d.]+\)$/, '0.06)');
-              ctx.lineWidth = isHighlighted ? 1.5 : 0.75;
-              ctx.setLineDash(isHighlighted ? [] : [3 * curZoom, 6 * curZoom]);
-              ctx.stroke();
-            }
-            ctx.setLineDash([]);
             ctx.restore();
           }
         }
@@ -1963,6 +2171,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             return (
               <div
                 key={planet.id}
+                ref={(el) => {
+                  if (el) planetNodeRefs.current.set(planet.id, el);
+                  else planetNodeRefs.current.delete(planet.id);
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   handlePlanetClick(planet);
@@ -1983,7 +2195,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                     ? 'transform 650ms cubic-bezier(0.16, 1, 0.3, 1)'
                     : 'none',
                   contain: 'layout style',
-                  willChange: 'transform',
+                  contentVisibility: 'auto',
+                  containIntrinsicSize: '48px 48px',
+                  willChange: isMorphing ? 'transform' : 'auto',
                   backfaceVisibility: 'hidden',
                 }}
               >
