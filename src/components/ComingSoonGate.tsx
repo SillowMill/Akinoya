@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
-import { KeyRound, Sparkles, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff, Globe2 } from 'lucide-react';
+import { KeyRound, Sparkles, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff, Globe2, ClipboardPaste } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { openClaimWorldModal } from '../utils/pioneer';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
@@ -72,6 +72,74 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
     return () => clearInterval(timer);
   }, []);
 
+  const triggerUnlockSuccess = (code: string) => {
+    setAccessCode(code);
+    setIsSuccess(true);
+    setIsVerifying(false);
+    setHasError(false);
+    setErrorMessage('');
+    soundManager.playUnlockChime(); // Crisp celebratory "Ching!"
+
+    try {
+      localStorage.setItem('akinoya_public_unlocked', 'true');
+      sessionStorage.setItem('akinoya_public_unlocked', 'true');
+    } catch {
+      // fallback
+    }
+
+    // Fire celebratory celestial particles
+    confetti({
+      particleCount: 85,
+      spread: 75,
+      origin: { y: 0.6 },
+      colors: ['#34d399', '#67e8f9', '#38bdf8', '#c084fc', '#ffffff'],
+      disableForReducedMotion: true,
+    });
+
+    // Trigger unlock transition
+    setTimeout(() => {
+      onUnlockSuccess();
+    }, 700);
+  };
+
+  const handleUseCode = () => {
+    if (isVerifying || isSuccess) return;
+    soundManager.playTone(840, 0.04);
+    triggerUnlockSuccess('SillowMill2027');
+  };
+
+  const handlePasteCode = async () => {
+    if (isVerifying || isSuccess) return;
+    soundManager.playTone(720, 0.03);
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        const trimmed = (text || '').trim();
+        if (trimmed) {
+          if (trimmed === 'SillowMill2027') {
+            triggerUnlockSuccess('SillowMill2027');
+            return;
+          } else {
+            setAccessCode(trimmed);
+            setHasError(true);
+            setErrorMessage(`Key "${trimmed.slice(0, 18)}" not recognized. Tap "Use Code" to enter.`);
+            soundManager.playDenyTone();
+            return;
+          }
+        }
+      }
+      setHasError(true);
+      setErrorMessage('Clipboard is empty. Tap "Use Code" for instant access.');
+      soundManager.playDenyTone();
+    } catch (err) {
+      console.warn('Clipboard read error:', err);
+      setHasError(true);
+      setErrorMessage('Clipboard access blocked. Tap "Use Code" for instant access.');
+      soundManager.playDenyTone();
+    }
+  };
+
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (isVerifying || isSuccess) return;
@@ -80,7 +148,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
 
     if (!trimmed) {
       setHasError(true);
-      setErrorMessage('Please enter an access code.');
+      setErrorMessage('Please enter an access code or tap "Use Code".');
       soundManager.playDenyTone();
       return;
     }
@@ -92,38 +160,14 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
     // Verification check
     setTimeout(() => {
       if (trimmed === 'SillowMill2027') {
-        setIsSuccess(true);
-        setIsVerifying(false);
-        soundManager.playUnlockChime();
-        // Audio does NOT auto-play — user must press Play manually in the header widget.
-
-        try {
-          localStorage.setItem('akinoya_public_unlocked', 'true');
-          sessionStorage.setItem('akinoya_public_unlocked', 'true');
-        } catch {
-          // fallback
-        }
-
-        // Fire celebratory celestial particles
-        confetti({
-          particleCount: 70,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#67e8f9', '#38bdf8', '#3b82f6', '#c084fc', '#ffffff'],
-          disableForReducedMotion: true,
-        });
-
-        // Trigger unlock transition
-        setTimeout(() => {
-          onUnlockSuccess();
-        }, 700);
+        triggerUnlockSuccess('SillowMill2027');
       } else {
         setIsVerifying(false);
         setHasError(true);
-        setErrorMessage('Access Denied. Check the back of your book.');
+        setErrorMessage('Access Denied. Check the back of your book or tap "Use Code".');
         soundManager.playDenyTone();
       }
-    }, 450);
+    }, 400);
   };
 
   const handleExploreGuestPreview = () => {
@@ -150,12 +194,6 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
     setTimeout(() => {
       onUnlockSuccess();
     }, 600);
-  };
-
-  const handleQuickFill = () => {
-    setAccessCode('SillowMill2027');
-    setHasError(false);
-    setErrorMessage('');
   };
 
   if (backdropOnly) {
@@ -296,7 +334,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                       EXPLORE GUEST PREVIEW (ÄMLEMI)
                     </h3>
                     <p className="text-[11px] text-white/60 font-sans">
-                      Orbit 3D World · Sci-Fi Dossier · 4K 9:16 Trailer
+                      3D World Sci-Fi · Sci-Fi Dossier · 4K 9:16 Trailer
                     </p>
                   </div>
                 </div>
@@ -317,23 +355,42 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
             <div className="h-px bg-white/10 flex-1" />
           </div>
 
-          {/* Code Gate Form */}
+          {/* Code Gate Form / Multi-Way CTA Stimulator */}
           <form onSubmit={handleSubmit} className="w-full space-y-4">
             <div className="relative text-left">
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center justify-between mb-2">
                 <label
                   htmlFor="accessCodeInput"
-                  className="text-[11px] sm:text-xs font-mono text-white/60 tracking-wider uppercase"
+                  className="text-[11px] sm:text-xs font-mono text-white/60 tracking-wider uppercase flex items-center gap-1.5"
                 >
-                  Access Key
+                  <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>ACCESS KEY</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={handleQuickFill}
-                  className="text-[11px] font-mono text-cyan-300 hover:text-cyan-200 underline underline-offset-2 cursor-pointer"
-                >
-                  Use 'SillowMill2027'
-                </button>
+
+                {/* Multi-Way Instant CTA Stimulator Buttons */}
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <button
+                    type="button"
+                    onClick={handleUseCode}
+                    disabled={isVerifying || isSuccess}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/25 via-sky-500/30 to-blue-500/25 hover:from-cyan-500/40 hover:via-sky-500/45 hover:to-blue-500/40 border border-cyan-400/60 hover:border-cyan-300 text-[11px] font-mono font-bold text-cyan-200 hover:text-white shadow-[0_0_14px_rgba(6,182,212,0.35)] hover:shadow-[0_0_22px_rgba(6,182,212,0.6)] hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer"
+                    title="Auto-fill SillowMill2027 and enter immediately"
+                  >
+                    <Sparkles className="w-3 h-3 text-cyan-300 animate-pulse" />
+                    <span>Use Code</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handlePasteCode}
+                    disabled={isVerifying || isSuccess}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/12 border border-white/20 hover:border-cyan-400/50 text-[11px] font-mono font-medium text-white/80 hover:text-white shadow-sm hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer"
+                    title="Paste code from clipboard and enter immediately"
+                  >
+                    <ClipboardPaste className="w-3 h-3 text-cyan-300" />
+                    <span>Paste Code</span>
+                  </button>
+                </div>
               </div>
 
               <div className="relative flex items-center">
@@ -350,7 +407,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                     if (hasError) setHasError(false);
                   }}
                   disabled={isVerifying || isSuccess}
-                  placeholder="Enter code (e.g. SillowMill2027)"
+                  placeholder="Enter code (or tap 'Use Code')"
                   autoComplete="off"
                   autoCapitalize="none"
                   spellCheck="false"
@@ -359,17 +416,19 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                     hasError
                       ? 'border-red-500 focus:border-red-400 focus:ring-red-500/20'
                       : isSuccess
-                      ? 'border-emerald-500 focus:border-emerald-400'
+                      ? 'border-emerald-400 focus:border-emerald-400 ring-2 ring-emerald-500/40 shadow-[0_0_25px_rgba(52,211,153,0.4)]'
                       : 'border-white/20 focus:border-cyan-400 focus:ring-cyan-400/25'
-                  } rounded-xl py-3 pl-10 pr-24 text-base sm:text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-all font-mono tracking-wide`}
+                  } rounded-xl py-3 pl-10 pr-28 text-base sm:text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-all font-mono tracking-wide`}
                 />
 
                 <button
                   type="button"
-                  onClick={handleQuickFill}
-                  className="absolute right-2 px-2.5 py-1.5 text-[11px] font-mono font-medium text-cyan-300 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-700/50 rounded-lg transition-colors cursor-pointer"
+                  onClick={handleUseCode}
+                  disabled={isVerifying || isSuccess}
+                  className="absolute right-2 px-3 py-1.5 text-[11px] font-mono font-bold text-cyan-200 bg-gradient-to-r from-cyan-950/90 to-blue-950/90 hover:from-cyan-900 hover:to-blue-900 border border-cyan-500/50 hover:border-cyan-400 rounded-lg shadow-[0_0_10px_rgba(6,182,212,0.2)] transition-all cursor-pointer hover:scale-105 active:scale-95 flex items-center gap-1"
                 >
-                  Code
+                  <Sparkles className="w-3 h-3 text-cyan-400" />
+                  <span>USE CODE</span>
                 </button>
               </div>
 
@@ -447,7 +506,15 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
           {/* Book Reference */}
           <div className="mt-2 pt-3 border-t border-white/10 w-full flex items-center justify-between text-[11px] text-white/50 font-mono">
             <span>BOOK CODE: Back cover</span>
-            <span className="text-cyan-400/80">SillowMill2027</span>
+            <button
+              type="button"
+              onClick={handleUseCode}
+              disabled={isVerifying || isSuccess}
+              className="text-cyan-400 hover:text-cyan-200 underline underline-offset-2 transition-colors cursor-pointer font-bold flex items-center gap-1.5"
+            >
+              <span>SillowMill2027</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-semibold">1-TAP</span>
+            </button>
           </div>
         </div>
       </motion.div>
