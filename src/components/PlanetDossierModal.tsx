@@ -258,27 +258,27 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
             className="relative z-10 w-full max-w-6xl h-[100dvh] sm:h-auto sm:max-h-[94dvh] bg-[#050811] border-0 sm:border sm:border-cyan-500/40 rounded-none sm:rounded-3xl shadow-[0_25px_90px_rgba(0,0,0,0.95),0_0_50px_rgba(6,182,212,0.18)] flex flex-col overflow-hidden transform-gpu"
           >
             {/* Top Modal Header Bar */}
-            <header className="px-3.5 sm:px-6 py-3 sm:py-4 bg-[#070c18] border-b border-white/10 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
-              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <header className="px-3 sm:px-6 py-2 sm:py-4 bg-[#070c18] border-b border-white/10 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 <div
-                  className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-tr ${
                     activePlanet.authorAvatarGradient || 'from-amber-400 to-yellow-600'
-                  } flex items-center justify-center font-bold text-black text-sm shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.3)]`}
+                  } flex items-center justify-center font-bold text-black text-xs sm:text-sm shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.3)]`}
                 >
                   {activePlanet.authorName.slice(0, 1)}
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-x-2 gap-y-1 flex-wrap min-w-0">
-                    <h2 className="text-base sm:text-lg font-display font-extrabold text-white tracking-wide truncate max-w-full">
+                  <div className="flex items-center gap-x-1.5 sm:gap-x-2 gap-y-0.5 flex-wrap min-w-0">
+                    <h2 className="text-sm sm:text-lg font-display font-extrabold text-white tracking-wide truncate max-w-full">
                       {activePlanet.planetName}
                     </h2>
                     {isPioneerPlanet(activePlanet) && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-600/25 border border-amber-400/65 text-amber-200 text-[9.5px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(251,191,36,0.35)]">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 rounded-full bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-600/25 border border-amber-400/65 text-amber-200 text-[8.5px] sm:text-[9.5px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(251,191,36,0.35)]">
                         <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
                         <span>
                           {isFoundingPioneerPlanet(activePlanet)
-                            ? '👑 FOUNDING PIONEER · #01'
+                            ? '👑 FOUNDING PIONEER'
                             : isVipPioneerPlanet(activePlanet)
                             ? '👑 VIP PIONEER'
                             : activePlanet.pioneerBadge || '⚡ PIONEER 2027'}
@@ -286,17 +286,17 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap text-xs font-mono text-white/50 min-w-0">
-                    <span>By {formatTitleCaseUserName(activePlanet.authorName)}</span>
-                    <span>·</span>
-                    <span className="text-cyan-400">@{activePlanet.authorUsername}</span>
+                  <div className="flex items-center gap-x-1.5 sm:gap-x-2 gap-y-0.5 flex-wrap text-[10.5px] sm:text-xs font-mono text-white/50 min-w-0">
+                    <span className="truncate">By {formatTitleCaseUserName(activePlanet.authorName)}</span>
+                    <span className="hidden xs:inline text-white/30">·</span>
+                    <span className="text-cyan-400 truncate">@{activePlanet.authorUsername}</span>
                     {onOpenCreator && (
                       <button
                         type="button"
                         onClick={() => onOpenCreator(activePlanet.authorUsername)}
-                        className="text-[10px] text-white/60 hover:text-white underline cursor-pointer ml-1 inline-flex items-center gap-1"
+                        className="text-[10px] text-white/60 hover:text-white underline cursor-pointer inline-flex items-center gap-0.5 ml-0.5"
                       >
-                        <span>Creator Portfolio</span>
+                        <span className="hidden xs:inline">Portfolio</span>
                         <ExternalLink className="w-2.5 h-2.5" />
                       </button>
                     )}
@@ -304,7 +304,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={handleCopyGalaxyLink}
@@ -339,40 +339,40 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                 <button
                   type="button"
                   onClick={onClose}
-                  className="min-w-[40px] min-h-[40px] w-10 h-10 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
+                  className="min-w-[36px] min-h-[36px] w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
                   title="Close Dossier"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </header>
 
             {/* Modal Scrollable Body */}
-            <div className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-6 space-y-5 sm:space-y-6">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-2.5 sm:p-6 space-y-3 sm:space-y-6">
               {/* 1. 5-PHOTO ARCHIVE + 🎥 9:16 TRAILER INTERACTIVE GALLERY */}
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                     {isTrailerTab ? (
-                      <Video className="w-4 h-4 text-amber-400" />
+                      <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
                     ) : (
-                      <Camera className="w-4 h-4 text-cyan-400" />
+                      <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 shrink-0" />
                     )}
-                    <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                    <h3 className="text-[11px] sm:text-xs font-mono font-bold text-white uppercase tracking-wider truncate">
                       {isTrailerTab
-                        ? `🎥 9:16 Viral Video Trailer · ${activePlanet.planetName} (5s Vertical Loop)`
+                        ? `🎥 9:16 Trailer · ${activePlanet.planetName} (5s Loop)`
                         : `${currentPhoto.title} · Photo 0${activePhotoIdx} of 05`}
                     </h3>
                   </div>
-                  <span className="text-[10px] font-mono text-cyan-400/80">
-                    {isTrailerTab ? '01 · VIRAL 9:16 TRAILER (5.0S)' : currentPhoto.category}
+                  <span className="text-[9px] sm:text-[10px] font-mono text-cyan-400/80 shrink-0">
+                    {isTrailerTab ? 'VIRAL 9:16 (5.0S)' : currentPhoto.category}
                   </span>
                 </div>
 
                 {/* Main Viewport: Either 9:16 Vertical Trailer or 16:9 Photo */}
                 {isTrailerTab ? (
                   <div
-                    className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#070d1e] via-[#050813] to-black border border-amber-400/40 shadow-[0_0_40px_rgba(245,158,11,0.18)] p-4 sm:p-6 flex flex-col items-center space-y-4 touch-pan-y-lock"
+                    className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#070d1e] via-[#050813] to-black border border-amber-400/40 shadow-[0_0_40px_rgba(245,158,11,0.18)] p-2 xs:p-2.5 sm:p-6 flex flex-col items-center space-y-2 sm:space-y-4 touch-pan-y-lock"
                     style={{
                       touchAction: 'pan-y',
                     }}
@@ -381,8 +381,9 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                   >
                     {/* Strict 9:16 Vertical Video / Trailer Montage Player */}
                     <div
-                      className="video-stage-container video-player-gpu relative w-full max-w-[240px] xs:max-w-[270px] aspect-[9/16] rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center touch-pan-y-lock"
+                      className="video-stage-container video-player-gpu relative w-full max-w-[240px] xs:max-w-[270px] sm:max-w-[300px] aspect-[9/16] rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center touch-pan-y-lock"
                       style={{
+                        maxHeight: 'min(58vh, 480px)',
                         transform: 'translateZ(0)',
                         WebkitTransform: 'translateZ(0)',
                         willChange: 'transform',
@@ -402,17 +403,17 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                     </div>
 
                     {/* Download Button + Genuine Community Message */}
-                    <div className="w-full max-w-md flex flex-col items-center space-y-2.5">
+                    <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center space-y-1.5 sm:space-y-2.5">
                       <button
                         type="button"
                         onClick={handleDownloadTrailer}
                         disabled={isDownloading}
-                        className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer"
+                        className="w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl font-mono text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>
                           {isDownloading
-                            ? (isMobileDevice ? 'Saving Trailer to Photos...' : 'Preparing MP4...')
+                            ? (isMobileDevice ? 'Saving Trailer...' : 'Preparing MP4...')
                             : (isMobileDevice
                                 ? 'Save Trailer to Photos'
                                 : dynamicVideo.isAiVideo
@@ -421,12 +422,12 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                         </span>
                       </button>
 
-                      <p className="text-xs font-sans text-cyan-100/85 text-center leading-relaxed italic flex items-center justify-center gap-1.5">
-                        <Heart className="w-3.5 h-3.5 text-amber-400 shrink-0 fill-amber-400/30" />
+                      <p className="text-[10px] sm:text-xs font-sans text-cyan-100/85 text-center leading-tight sm:leading-relaxed italic flex items-center justify-center gap-1.5">
+                        <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0 fill-amber-400/30" />
                         <span>{COMMUNITY_SHARE_VIDEO_MESSAGE}</span>
                       </p>
 
-                      <p className="text-[10px] font-mono text-white/45 text-center">
+                      <p className="text-[9px] sm:text-[10px] font-mono text-white/45 text-center hidden xs:block">
                         Motion Prompt: "{VIRAL_VIDEO_MOTION_PROMPT}"
                       </p>
                     </div>
@@ -750,68 +751,138 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
               )}
             </div>
 
-            {/* Modal Sticky Bottom Action Footer (Sleek Compact Glassmorphic Bar) */}
-            <footer className="px-3 sm:px-4 py-2 sm:py-2.5 bg-[#050914]/92 backdrop-blur-xl border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0">
-              <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-start">
-                <div className="flex items-center gap-1.5 text-[11px] font-mono text-white/70">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span className="truncate">One Golden Ticket Verified</span>
+            {/* Modal Sticky Bottom Action Footer (Streamlined & Ultra-compact on mobile) */}
+            <footer className="px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-[#050914]/95 backdrop-blur-xl border-t border-white/10 shrink-0">
+              {/* --- MOBILE COMPACT DOCK (< 640px) --- */}
+              <div className="flex sm:hidden flex-col gap-1.5 w-full">
+                {/* Micro status strip */}
+                <div className="flex items-center justify-between text-[10px] font-mono text-white/70 px-0.5">
+                  <div className="flex items-center gap-1 text-emerald-400">
+                    <ShieldCheck className="w-3 h-3 shrink-0" />
+                    <span>Golden Ticket Verified</span>
+                  </div>
+                  <span className="font-bold text-amber-300 bg-amber-950/70 border border-amber-400/40 px-1.5 py-[1px] rounded-full">
+                    ★ {activePlanet.votesCount} Votes
+                  </span>
                 </div>
-                <span className="text-[11px] font-mono font-extrabold text-amber-300 bg-amber-950/70 border border-amber-400/40 px-2 py-0.5 rounded-full shrink-0 shadow-[0_0_10px_rgba(251,191,36,0.2)]">
-                  ★ {activePlanet.votesCount} Community Votes
-                </span>
+
+                {/* Single-row action bar */}
+                <div className="flex items-center gap-1.5 w-full">
+                  <button
+                    type="button"
+                    onClick={handleCopyGalaxyLink}
+                    className="h-[34px] px-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/80 border border-white/10 font-mono text-[10.5px] transition-colors cursor-pointer flex items-center justify-center gap-1 shrink-0"
+                    title="Copy Shareable Planet Link"
+                  >
+                    <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
+                    <span>{isCopiedGalaxyLink ? 'Copied' : 'Link'}</span>
+                  </button>
+
+                  {onNavigateToGalaxy && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onNavigateToGalaxy(activePlanet.id);
+                      }}
+                      className="h-[34px] px-2.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-[10.5px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 shrink-0"
+                    >
+                      <Globe2 className="w-3 h-3 text-cyan-400 shrink-0" />
+                      <span>Galaxy</span>
+                    </button>
+                  )}
+
+                  {onVote && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundManager.playTone(740, 0.08);
+                        onVote(activePlanet.id);
+                      }}
+                      className={`h-[34px] flex-1 px-3 rounded-lg text-[10.5px] font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm ${
+                        activePlanet.hasVoted
+                          ? 'bg-amber-400 text-black shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                          : 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black'
+                      }`}
+                    >
+                      <ThumbsUp className={`w-3 h-3 ${activePlanet.hasVoted ? 'fill-black' : ''}`} />
+                      <span className="truncate">{activePlanet.hasVoted ? 'Voted' : 'Vote'}</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="h-[34px] px-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 font-mono text-[10.5px] transition-colors cursor-pointer shrink-0"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end flex-wrap">
-                <button
-                  type="button"
-                  onClick={handleCopyGalaxyLink}
-                  className="min-h-[36px] px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-[11px] transition-colors cursor-pointer flex items-center gap-1.5"
-                  title="Copy Shareable Planet Link"
-                >
-                  <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Link'}</span>
-                </button>
+              {/* --- DESKTOP / TABLET DUAL-ZONE DOCK (>= 640px) --- */}
+              <div className="hidden sm:flex items-center justify-between gap-2.5 w-full">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-mono text-white/70">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span className="truncate">One Golden Ticket Verified</span>
+                  </div>
+                  <span className="text-[11px] font-mono font-extrabold text-amber-300 bg-amber-950/70 border border-amber-400/40 px-2 py-0.5 rounded-full shrink-0 shadow-[0_0_10px_rgba(251,191,36,0.2)]">
+                    ★ {activePlanet.votesCount} Community Votes
+                  </span>
+                </div>
 
-                {onNavigateToGalaxy && (
+                <div className="flex items-center gap-1.5 justify-end">
                   <button
                     type="button"
-                    onClick={() => {
-                      onClose();
-                      onNavigateToGalaxy(activePlanet.id);
-                    }}
-                    className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+                    onClick={handleCopyGalaxyLink}
+                    className="min-h-[36px] px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-[11px] transition-colors cursor-pointer flex items-center gap-1.5"
+                    title="Copy Shareable Planet Link"
                   >
-                    <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>View in Galaxy</span>
+                    <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Link'}</span>
                   </button>
-                )}
 
-                {onVote && (
+                  {onNavigateToGalaxy && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onNavigateToGalaxy(activePlanet.id);
+                      }}
+                      className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+                    >
+                      <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>View in Galaxy</span>
+                    </button>
+                  )}
+
+                  {onVote && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundManager.playTone(740, 0.08);
+                        onVote(activePlanet.id);
+                      }}
+                      className={`min-h-[36px] px-4 py-1.5 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md ${
+                        activePlanet.hasVoted
+                          ? 'bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+                          : 'bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black'
+                      }`}
+                    >
+                      <ThumbsUp className={`w-3.5 h-3.5 ${activePlanet.hasVoted ? 'fill-black' : ''}`} />
+                      <span>{activePlanet.hasVoted ? 'Voted for World' : 'Vote for World'}</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
-                    onClick={() => {
-                      soundManager.playTone(740, 0.08);
-                      onVote(activePlanet.id);
-                    }}
-                    className={`min-h-[36px] px-4 py-1.5 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md ${
-                      activePlanet.hasVoted
-                        ? 'bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]'
-                        : 'bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black'
-                    }`}
+                    onClick={onClose}
+                    className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-[11px] transition-colors cursor-pointer"
                   >
-                    <ThumbsUp className={`w-3.5 h-3.5 ${activePlanet.hasVoted ? 'fill-black' : ''}`} />
-                    <span>{activePlanet.hasVoted ? 'Voted for World' : 'Vote for World'}</span>
+                    Close Dossier
                   </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 font-mono text-[11px] transition-colors cursor-pointer"
-                >
-                  Close Dossier
-                </button>
+                </div>
               </div>
             </footer>
           </motion.div>
