@@ -82,6 +82,16 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
     try {
       localStorage.setItem('akinoya_public_unlocked', 'true');
       sessionStorage.setItem('akinoya_public_unlocked', 'true');
+      sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+      sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        if (url.hash === '#my-world' || url.searchParams.get('tab') === 'my-world' || url.searchParams.get('tab') === 'pass-perks') {
+          url.hash = 'pass';
+          url.searchParams.delete('tab');
+          window.history.replaceState(null, '', url.toString());
+        }
+      }
     } catch {
       // fallback
     }

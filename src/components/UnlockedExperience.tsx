@@ -198,10 +198,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       const savedTab = sessionStorage.getItem('akinoya_portal_active_tab') as any;
 
       const candidate = params.get('tab') || hash || savedTab;
+      if (candidate === 'pass' || candidate === 'pass-perks') return 'pass';
       if (candidate === 'assets') return 'assets';
-      if (candidate === 'my-world') return 'my-world';
       if (candidate === 'edition' || candidate === 'comic') return 'edition';
-      if (candidate === 'pass') return 'pass';
+      if (candidate === 'my-world') return 'my-world';
     }
     return 'pass';
   });
@@ -471,20 +471,28 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const hash = window.location.hash.toLowerCase().replace('#', '');
-        if (params.get('tab') === 'assets' || hash === 'assets') {
+        if (
+          params.get('tab') === 'pass-perks' ||
+          params.get('tab') === 'pass' ||
+          hash === 'pass-perks' ||
+          hash === 'pass'
+        ) {
+          if (params.get('subview') === 'hub') {
+            setActiveTab('pass');
+            setPassSubView('hub');
+          } else {
+            setActiveTab('pass');
+            setPassSubView('overview');
+          }
+        } else if (params.get('tab') === 'assets' || hash === 'assets') {
           setActiveTab('assets');
         } else if (params.get('tab') === 'my-world' || hash === 'my-world') {
           setActiveTab('my-world');
         } else if (params.get('tab') === 'edition' || hash === 'edition' || hash === 'comic') {
           setActiveTab('edition');
-        } else if (params.get('tab') === 'pass' && params.get('subview') === 'hub') {
-          setActiveTab('pass');
-          setPassSubView('hub');
         } else if (params.get('tab') === 'visualizers') {
           setActiveTab('pass');
           setPassSubView('hub');
-        } else if (params.get('tab') === 'pass' || hash === 'pass') {
-          setActiveTab('pass');
         }
       }
     };
@@ -1137,7 +1145,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             onClick={() => handleSelectTab('pass')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'pass'
-                ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                ? 'bg-amber-400 text-black font-bold shadow-[0_0_15px_rgba(245,158,11,0.35)]'
                 : 'text-white/60 hover:text-white'
             }`}
           >
@@ -1159,7 +1167,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             onClick={() => handleSelectTab('my-world')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'my-world'
-                ? 'bg-amber-400 text-black font-bold shadow-[0_0_15px_rgba(245,158,11,0.35)]'
+                ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                 : 'text-white/60 hover:text-white'
             }`}
           >

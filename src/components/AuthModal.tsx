@@ -107,6 +107,10 @@ export const AuthModal: React.FC = () => {
           soundManager.playError();
         } else {
           setSuccess('Account created successfully! Welcome to Sillow Mill.');
+          try {
+            sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+            sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
+          } catch {}
           if (typeof window !== 'undefined' && window.location.pathname !== '/') {
             window.history.pushState({}, '', '/');
             window.dispatchEvent(new CustomEvent('akinoya-navigate-home'));
@@ -132,6 +136,10 @@ export const AuthModal: React.FC = () => {
           soundManager.playUnlockChime();
           setSuccess('Password updated successfully! Redirecting...');
           setTimeout(() => {
+            try {
+              sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+              sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
+            } catch {}
             if (typeof window !== 'undefined' && window.location.pathname !== '/') {
               window.history.pushState({}, '', '/');
               window.dispatchEvent(new CustomEvent('akinoya-navigate-home'));
@@ -148,6 +156,10 @@ export const AuthModal: React.FC = () => {
           soundManager.playError();
         } else {
           setSuccess('Signed in successfully! Loading your session...');
+          try {
+            sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+            sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
+          } catch {}
           if (typeof window !== 'undefined' && window.location.pathname !== '/') {
             window.history.pushState({}, '', '/');
             window.dispatchEvent(new CustomEvent('akinoya-navigate-home'));
