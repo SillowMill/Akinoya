@@ -16,6 +16,7 @@ import {
   Globe2,
   RefreshCw,
   Layers,
+  Monitor,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
 import {
@@ -110,10 +111,16 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const [isMobile, setIsMobile] = useState<boolean>(() =>
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
+  const [isDesktop, setIsDesktop] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
+  );
+  const [showDesktopOnlyToast, setShowDesktopOnlyToast] = useState<boolean>(false);
 
   // Constellation Architectural Layout & Restructure Engine
+  // Matrix View is exclusively available on desktop viewports (>= 1024px)
   const [layoutMode, setLayoutMode] = useState<ConstellationLayoutMode>(() => {
     if (typeof window !== 'undefined') {
+      if (window.innerWidth < 1024) return 'spiral';
       try {
         const saved = localStorage.getItem('akinoya_constellation_layout_mode');
         if (saved === 'spiral' || saved === 'matrix') return saved;
@@ -460,11 +467,19 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     syncWorldTransformAndHud();
   }, [syncWorldTransformAndHud]);
 
-  // Mobile detection & Layout-thrash-free Canvas size cache
+  // Mobile & Desktop detection & Layout-thrash-free Canvas size cache
   useEffect(() => {
     const handleResize = rafThrottle(() => {
       const mobile = window.innerWidth < 768;
+      const desktop = window.innerWidth >= 1024;
       setIsMobile(mobile);
+      setIsDesktop(desktop);
+      if (!desktop && layoutModeRef.current === 'matrix') {
+        setLayoutMode('spiral');
+        try {
+          localStorage.setItem('akinoya_constellation_layout_mode', 'spiral');
+        } catch {}
+      }
       if (canvasRef.current) {
         canvasDimsRef.current = {
           width: canvasRef.current.clientWidth || window.innerWidth,
@@ -1493,6 +1508,14 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
   const handleSwitchLayout = useCallback(
     (mode: ConstellationLayoutMode) => {
+      if (mode === 'matrix') {
+        const isDesktopViewport = typeof window !== 'undefined' && window.innerWidth >= 1024;
+        if (!isDesktopViewport) {
+          soundManager.playTone(420, 0.08);
+          setShowDesktopOnlyToast(true);
+          return;
+        }
+      }
       if (mode === layoutMode) {
         handleTriggerRestructure();
         return;
@@ -1505,6 +1528,15 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     },
     [layoutMode]
   );
+
+  // Auto-dismiss desktop restriction toast after 4.2s
+  useEffect(() => {
+    if (!showDesktopOnlyToast) return;
+    const timer = setTimeout(() => {
+      setShowDesktopOnlyToast(false);
+    }, 4200);
+    return () => clearTimeout(timer);
+  }, [showDesktopOnlyToast]);
 
   const handleTriggerRestructure = useCallback(() => {
     soundManager.playAcousticSweep(460, 880, 0.16);
@@ -1654,6 +1686,72 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               </button>
             </div>
           </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  // Desktop-Only Matrix View Restriction Notification Widget
+  const desktopToastNode = (
+    <AnimatePresence>
+      {showDesktopOnlyToast && (
+        <motion.div
+          key="desktop-only-matrix-toast"
+          initial={{ opacity: 0, y: -24, scale: 0.94 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.94 }}
+          transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+          className="interactive-hud-element fixed top-5 sm:top-7 left-1/2 -translate-x-1/2 z-[10000] w-[92%] max-w-sm p-4 rounded-2xl bg-gradient-to-b from-[#080e22]/98 via-[#060a18]/98 to-[#030610]/98 backdrop-blur-2xl border border-cyan-400/50 shadow-[0_20px_60px_rgba(0,0,0,0.95),0_0_35px_rgba(6,182,212,0.35)] select-none pointer-events-auto"
+          onClick={() => setShowDesktopOnlyToast(false)}
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-950/90 border border-cyan-400/60 text-cyan-300 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(6,182,212,0.45)]">
+              <Monitor className="w-5 h-5 text-cyan-300" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 font-mono text-[9px] font-extrabold tracking-widest uppercase shadow-[0_0_8px_rgba(34,211,238,0.3)]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  <span>DESKTOP PROTOCOL</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDesktopOnlyToast(false);
+                  }}
+                  className="p-1 rounded-lg text-white/50 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <h3 className="text-sm font-display font-extrabold text-white tracking-wide mt-1.5 flex items-center gap-1.5">
+                <span>Only for desktop devices.</span>
+              </h3>
+
+              <p className="text-[11px] font-sans text-white/75 leading-relaxed mt-1">
+                The Matrix Galaxy architecture requires a wide desktop viewport for orbital highway navigation. Spiral view remains active for full mobile &amp; tablet exploration.
+              </p>
+
+              <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-white/10">
+                <span className="text-[9.5px] font-mono text-amber-300/90 font-semibold">
+                  🌀 Spiral View Active · 60 FPS
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDesktopOnlyToast(false);
+                  }}
+                  className="px-3 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-200 font-mono text-[10px] font-bold transition-all cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -1912,7 +2010,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
                 {/* Floating Glassmorphic Tooltip on Desktop hover */}
                 <span className="pointer-events-none absolute left-full ml-3 hidden sm:group-hover:flex items-center px-2.5 py-1 rounded-lg bg-[#060c18]/95 border border-cyan-500/40 text-cyan-200 text-[10px] font-mono font-semibold whitespace-nowrap shadow-xl z-50">
-                  {variant.name}
+                  {variant.mode === 'matrix' ? 'Oval Matrix (Desktop View)' : variant.name}
                 </span>
               </button>
             );
@@ -2307,6 +2405,11 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       {/* 4. PORTALED CAPITAL CORE ÄKINOYA MODAL (z-[9999])                         */}
       {/* ========================================================================= */}
       {typeof document !== 'undefined' ? createPortal(akinoyaModalNode, document.body) : akinoyaModalNode}
+
+      {/* ========================================================================= */}
+      {/* 5. PORTALED DESKTOP RESTRICTION TOAST WIDGET (z-[10000])                  */}
+      {/* ========================================================================= */}
+      {typeof document !== 'undefined' ? createPortal(desktopToastNode, document.body) : desktopToastNode}
     </div>
   );
 };
