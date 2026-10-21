@@ -1692,6 +1692,13 @@ export const savePlanetSubmission = async (
     const updated = [enrichedSubmission, ...existing.filter((s) => s.id !== enrichedSubmission.id)];
     localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(updated));
 
+    // Instant Map Registration: Broadcast local event to live Galaxy Navigator and listening components
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('akinoya_planet_submissions_updated', { detail: updated }));
+      } catch {}
+    }
+
     // Step 2.5: Dedicated server-side submission persistence to data/submissions_store.json
     try {
       await fetch('/api/dossier/submission', {

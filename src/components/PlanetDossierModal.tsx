@@ -383,10 +383,10 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                     <div
                       className="video-stage-container video-player-gpu relative mx-auto rounded-2xl overflow-hidden bg-black border border-cyan-400/60 shadow-[0_0_40px_rgba(6,182,212,0.35),0_20px_50px_rgba(0,0,0,0.9)] flex items-center justify-center touch-pan-y-lock"
                       style={{
-                        height: 'min(56vh, 480px)',
+                        height: 'min(58vh, 520px)',
                         aspectRatio: '9 / 16',
                         width: 'auto',
-                        maxWidth: 'calc(min(56vh, 480px) * 9 / 16)',
+                        maxWidth: 'calc(min(58vh, 520px) * 9 / 16)',
                         transform: 'translateZ(0)',
                         WebkitTransform: 'translateZ(0)',
                         willChange: 'transform',
