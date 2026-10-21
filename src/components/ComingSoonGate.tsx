@@ -169,31 +169,6 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
     }, 400);
   };
 
-  const handleExploreGuestPreview = () => {
-    if (isVerifying || isSuccess) return;
-    setIsSuccess(true);
-    soundManager.playUnlockChime();
-
-    try {
-      localStorage.setItem('akinoya_public_unlocked', 'true');
-      sessionStorage.setItem('akinoya_public_unlocked', 'true');
-      sessionStorage.setItem('akinoya_portal_active_tab', 'my-world');
-    } catch {
-      // fallback
-    }
-
-    confetti({
-      particleCount: 75,
-      spread: 75,
-      origin: { y: 0.6 },
-      colors: ['#67e8f9', '#38bdf8', '#3b82f6', '#c084fc', '#ffffff'],
-      disableForReducedMotion: true,
-    });
-
-    setTimeout(() => {
-      onUnlockSuccess();
-    }, 600);
-  };
 
   if (backdropOnly) {
     return (
@@ -301,17 +276,12 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
             Explore the Ämlemi guest world or enter your Äkinoya access code to unlock the full portal.
           </p>
 
-          {/* Primary Direct Entry: Explore Guest Preview (Ämlemi) */}
-          <div className="w-full mb-5">
-            <button
-              type="button"
-              onClick={handleExploreGuestPreview}
-              disabled={isVerifying || isSuccess}
-              className="w-full relative group overflow-hidden rounded-2xl p-[1.5px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 cursor-pointer shadow-[0_0_25px_rgba(6,182,212,0.25)] hover:shadow-[0_0_40px_rgba(6,182,212,0.45)] hover:scale-[1.01] active:scale-[0.99]"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-500 opacity-90 group-hover:opacity-100 blur-[1px] transition-opacity" />
-              <div className="relative h-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-gradient-to-r from-[#081526] via-[#091b30] to-[#06101c] p-4 sm:p-4.5 rounded-2xl border border-cyan-300/40 group-hover:border-cyan-300/80 transition-all text-left">
-                <div className="flex items-center gap-3.5 w-full sm:w-auto">
+          {/* Visual Indicator: Guest Preview (Ämlemi) */}
+          <div className="w-full mb-5 select-none">
+            <div className="w-full relative overflow-hidden rounded-2xl p-[1.5px] shadow-[0_0_25px_rgba(6,182,212,0.2)]">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-500 opacity-80 blur-[1px]" />
+              <div className="relative h-full flex items-center justify-between gap-3 bg-gradient-to-r from-[#081526] via-[#091b30] to-[#06101c] p-4 sm:p-4.5 rounded-2xl border border-cyan-300/40 text-left">
+                <div className="flex items-center gap-3.5 w-full">
                   <div className="relative w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-cyan-400 to-blue-600 shadow-[0_0_15px_rgba(34,211,238,0.5)] shrink-0">
                     <img
                       src={amlemiOrbitalImg}
@@ -329,7 +299,7 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                         INSTANT
                       </span>
                     </div>
-                    <h3 className="text-sm sm:text-base font-display font-extrabold text-white tracking-wide group-hover:text-cyan-200 transition-colors">
+                    <h3 className="text-sm sm:text-base font-display font-extrabold text-white tracking-wide">
                       EXPLORE GUEST PREVIEW (ÄMLEMI)
                     </h3>
                     <p className="text-[11px] text-white/60 font-sans">
@@ -337,12 +307,8 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/20 group-hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/40 text-xs font-mono font-bold tracking-wider shrink-0 transition-colors">
-                  <span>EXPLORE</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
               </div>
-            </button>
+            </div>
           </div>
 
           {/* Divider between Guest Preview and Access Key */}
