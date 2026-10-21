@@ -2349,7 +2349,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   </div>
                 )}
 
-                {/* 1. Radiant Pulsing Golden Halo (Ämlemi Master Anchor or Selected) */}
+                {/* 1. Radiant Pulsing Golden Halo (Ämlemi Master Anchor or Selected Planet) */}
                 {(isAmlemi || isSelected) && (
                   <div
                     className="absolute -inset-4 rounded-full bg-gradient-to-tr from-amber-500/30 via-yellow-400/20 to-transparent blur-md animate-pulse pointer-events-none"
@@ -2357,29 +2357,42 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   />
                 )}
 
-                {/* 2. Outer Rotating Dashed Orbit Ring (Counter-Clockwise Rotation, matching Äkinoya Core) */}
-                <div
-                  className="absolute -inset-3.5 rounded-full border border-dashed border-amber-400/40 animate-spin-reverse pointer-events-none"
-                  style={{
-                    animationDuration: isAmlemi ? '28s' : '38s',
-                    borderRadius: '50%',
-                  }}
-                />
+                {/* 2. Outer Counter-Clockwise Orbit Ring (Exclusively for #01 Founding Pioneer Ämlemi) */}
+                {isAmlemi && (
+                  <div
+                    className="absolute -inset-3.5 rounded-full border border-dashed border-amber-400/40 animate-spin-reverse pointer-events-none"
+                    style={{
+                      animationDuration: '28s',
+                      borderRadius: '50%',
+                      WebkitBorderRadius: '50%',
+                      willChange: 'transform',
+                    }}
+                  />
+                )}
 
-                {/* 3. Inner Continuous Rotating Dashed Orbit Ring (Clockwise Rotation, matching Äkinoya Core) */}
+                {/* 3. Single Orbit Ring Standard: Concentric Rotating Dashed Orbit Ring */}
+                {/* For all newly generated / community planet nodes: Exactly ONE single rotating dashed orbit ring (Minimalist & Uncluttered) */}
                 <div
-                  className={`absolute -inset-1.5 rounded-full border border-dashed pointer-events-none animate-spin ${
-                    isAmlemi || isSelected || isHovered
+                  className={`absolute ${
+                    isAmlemi ? '-inset-1.5' : '-inset-2.5'
+                  } rounded-full border border-dashed pointer-events-none animate-spin ${
+                    isAmlemi
                       ? 'border-amber-300/90 shadow-[0_0_14px_rgba(251,191,36,0.5)]'
-                      : 'border-amber-400/65'
+                      : isSelected
+                      ? 'border-amber-300/95 shadow-[0_0_14px_rgba(251,191,36,0.6)]'
+                      : isHovered
+                      ? 'border-amber-300/85 shadow-[0_0_10px_rgba(245,158,11,0.4)]'
+                      : 'border-amber-400/60'
                   }`}
                   style={{
-                    animationDuration: isAmlemi ? '18s' : '26s',
+                    animationDuration: isAmlemi ? '18s' : '24s',
                     borderRadius: '50%',
+                    WebkitBorderRadius: '50%',
+                    willChange: 'transform',
                   }}
                 >
-                  {/* Satellite Navigation Node on the Orbit Ring */}
-                  {(isAmlemi || isSelected) && (
+                  {/* Cardinal Satellite Pip (Exclusively for #01 Founding Pioneer Ämlemi) */}
+                  {isAmlemi && (
                     <span
                       className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-[0_0_8px_#fbbf24]"
                       style={{ borderRadius: '50%' }}

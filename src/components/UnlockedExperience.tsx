@@ -2248,21 +2248,37 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             style={{ borderRadius: '50%' }}
                           />
 
-                          {/* 2. Outer Rotating Dashed Orbit Ring (Counter-Clockwise Rotation) */}
-                          <div
-                            className="absolute -inset-3 rounded-full border border-dashed border-amber-400/40 pointer-events-none animate-spin-reverse"
-                            style={{ animationDuration: '28s', borderRadius: '50%' }}
-                          />
-
-                          {/* 3. Inner Continuous Rotating Dashed Orbit Ring (Clockwise Rotation) */}
-                          <div
-                            className="absolute -inset-1.5 rounded-full border border-dashed border-amber-300/90 shadow-[0_0_14px_rgba(251,191,36,0.5)] pointer-events-none animate-spin"
-                            style={{ animationDuration: '18s', borderRadius: '50%' }}
-                          >
-                            <span
-                              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-[0_0_8px_#fbbf24]"
-                              style={{ borderRadius: '50%' }}
+                          {/* 2. Outer Rotating Dashed Orbit Ring (Exclusively for #01 Founding Pioneer Ämlemi) */}
+                          {isFoundingPioneerPlanet(activeWorldDossier) && (
+                            <div
+                              className="absolute -inset-3 rounded-full border border-dashed border-amber-400/40 pointer-events-none animate-spin-reverse"
+                              style={{
+                                animationDuration: '28s',
+                                borderRadius: '50%',
+                                WebkitBorderRadius: '50%',
+                                willChange: 'transform',
+                              }}
                             />
+                          )}
+
+                          {/* 3. Single Orbit Ring Standard: Concentric Rotating Dashed Orbit Ring */}
+                          <div
+                            className={`absolute ${
+                              isFoundingPioneerPlanet(activeWorldDossier) ? '-inset-1.5' : '-inset-2.5'
+                            } rounded-full border border-dashed border-amber-300/90 shadow-[0_0_14px_rgba(251,191,36,0.5)] pointer-events-none animate-spin`}
+                            style={{
+                              animationDuration: isFoundingPioneerPlanet(activeWorldDossier) ? '18s' : '24s',
+                              borderRadius: '50%',
+                              WebkitBorderRadius: '50%',
+                              willChange: 'transform',
+                            }}
+                          >
+                            {isFoundingPioneerPlanet(activeWorldDossier) && (
+                              <span
+                                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-[0_0_8px_#fbbf24]"
+                                style={{ borderRadius: '50%' }}
+                              />
+                            )}
                           </div>
 
                           {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
