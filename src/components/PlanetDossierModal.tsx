@@ -372,18 +372,21 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                 {/* Main Viewport: Either 9:16 Vertical Trailer or 16:9 Photo */}
                 {isTrailerTab ? (
                   <div
-                    className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#070d1e] via-[#050813] to-black border border-amber-400/40 shadow-[0_0_40px_rgba(245,158,11,0.18)] p-2 xs:p-2.5 sm:p-6 flex flex-col items-center space-y-2 sm:space-y-4 touch-pan-y-lock"
+                    className="relative w-full flex flex-col items-center justify-center space-y-2.5 sm:space-y-4 touch-pan-y-lock py-1"
                     style={{
                       touchAction: 'pan-y',
                     }}
                     onTouchStart={handleTouchStartStage}
                     onTouchEnd={handleTouchEndStage}
                   >
-                    {/* Strict 9:16 Vertical Video / Trailer Montage Player */}
+                    {/* Clean Strict 9:16 Vertical Video / Cinematic Trailer Player Stage */}
                     <div
-                      className="video-stage-container video-player-gpu relative w-full max-w-[240px] xs:max-w-[270px] sm:max-w-[300px] aspect-[9/16] rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-cyan-400/50 shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center justify-center touch-pan-y-lock"
+                      className="video-stage-container video-player-gpu relative mx-auto rounded-2xl overflow-hidden bg-black border border-cyan-400/60 shadow-[0_0_40px_rgba(6,182,212,0.35),0_20px_50px_rgba(0,0,0,0.9)] flex items-center justify-center touch-pan-y-lock"
                       style={{
-                        maxHeight: 'min(58vh, 480px)',
+                        height: 'min(56vh, 480px)',
+                        aspectRatio: '9 / 16',
+                        width: 'auto',
+                        maxWidth: 'calc(min(56vh, 480px) * 9 / 16)',
                         transform: 'translateZ(0)',
                         WebkitTransform: 'translateZ(0)',
                         willChange: 'transform',
@@ -403,12 +406,12 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                     </div>
 
                     {/* Download Button + Genuine Community Message */}
-                    <div className="w-full max-w-sm sm:max-w-md flex flex-col items-center space-y-1.5 sm:space-y-2.5">
+                    <div className="w-full max-w-sm flex flex-col items-center space-y-1.5 sm:space-y-2 pt-0.5">
                       <button
                         type="button"
                         onClick={handleDownloadTrailer}
                         disabled={isDownloading}
-                        className="w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl font-mono text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer"
+                        className="w-full py-2.5 px-4 rounded-xl font-mono text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>
@@ -440,7 +443,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                         handlePrevPhoto();
                       }}
                       aria-label="Previous Archive Slide"
-                      className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#040916]/90 hover:bg-cyan-950/95 active:scale-95 text-white border border-cyan-400/40 flex items-center justify-center transition-all hover:scale-105 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.25)] touch-manipulation"
+                      className="absolute left-1.5 sm:left-4 top-1/3 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#040916]/90 hover:bg-cyan-950/95 active:scale-95 text-white border border-cyan-400/40 flex items-center justify-center transition-all hover:scale-105 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.25)] touch-manipulation"
                       title="Previous Slide"
                     >
                       <ChevronLeft className="w-6 h-6 text-cyan-300" />
@@ -452,7 +455,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                         handleNextPhoto();
                       }}
                       aria-label="Next Archive Slide"
-                      className="absolute right-2.5 sm:right-4 top-1/2 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#040916]/90 hover:bg-cyan-950/95 active:scale-95 text-white border border-cyan-400/40 flex items-center justify-center transition-all hover:scale-105 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.25)] touch-manipulation"
+                      className="absolute right-1.5 sm:right-4 top-1/3 -translate-y-1/2 z-20 min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#040916]/90 hover:bg-cyan-950/95 active:scale-95 text-white border border-cyan-400/40 flex items-center justify-center transition-all hover:scale-105 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_15px_rgba(6,182,212,0.25)] touch-manipulation"
                       title="Next Slide"
                     >
                       <ChevronRight className="w-6 h-6 text-cyan-300" />

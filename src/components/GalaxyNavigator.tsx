@@ -2191,8 +2191,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               } as PlanetSubmission);
             }}
             onPointerLeave={() => setHoveredPlanet(null)}
-            className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none touch-manipulation p-2.5"
-            style={{ left: 0, top: 0, width: 72, height: 72, contain: 'layout style', backfaceVisibility: 'hidden' }}
+            className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none touch-manipulation"
+            style={{ left: 0, top: 0, width: 72, height: 72, backfaceVisibility: 'hidden' }}
           >
             {/* 1. Volumetric Golden Corona & Core Flare */}
             <div className="absolute -inset-10 rounded-full bg-gradient-to-tr from-amber-500/25 via-yellow-400/15 to-transparent blur-2xl animate-pulse pointer-events-none" />
@@ -2210,20 +2210,42 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               <span className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
             </div>
 
-            {/* 3. Tier 2: Mid Segmented Energy Crest (Counter-Clockwise Rotation) */}
+            {/* 3. Tier 2: Mid Segmented Energy Crest (Counter-Clockwise Rotation) via SVG */}
             <div
-              className="absolute -inset-5 rounded-full border border-dashed border-amber-300/60 animate-spin-reverse pointer-events-none"
+              className="absolute -inset-5 animate-spin-reverse pointer-events-none flex items-center justify-center"
               style={{ animationDuration: '32s' }}
-            />
+            >
+              <svg className="w-full h-full overflow-visible" viewBox="0 0 112 112" fill="none">
+                <circle
+                  cx="56"
+                  cy="56"
+                  r="46"
+                  stroke="rgba(252, 211, 77, 0.65)"
+                  strokeWidth="1.2"
+                  strokeDasharray="6 8"
+                />
+              </svg>
+            </div>
 
             {/* 4. Tier 3: Concentric Geometric Hairline Resonator */}
             <div className="absolute -inset-3 rounded-full border border-amber-400/25 pointer-events-none" />
 
-            {/* 5. Tier 4: Inner High-Precision Dotted Orbital Halo (Clockwise Rotation) */}
+            {/* 5. Tier 4: Inner High-Precision Dotted Orbital Halo (Clockwise Rotation) via SVG */}
             <div
-              className="absolute -inset-1.5 rounded-full border border-dotted border-amber-200/90 animate-spin pointer-events-none"
+              className="absolute -inset-1.5 animate-spin pointer-events-none flex items-center justify-center"
               style={{ animationDuration: '18s' }}
-            />
+            >
+              <svg className="w-full h-full overflow-visible" viewBox="0 0 84 84" fill="none">
+                <circle
+                  cx="42"
+                  cy="42"
+                  r="38"
+                  stroke="rgba(254, 240, 138, 0.9)"
+                  strokeWidth="1.1"
+                  strokeDasharray="2 5"
+                />
+              </svg>
+            </div>
 
             {/* 6. Capital Core Planet Orb: Refined 72px Scale with Luminous Gold Border */}
             <div className="relative w-[70px] h-[70px] sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden border-2 border-amber-300 shadow-[0_0_40px_rgba(245,158,11,0.9),0_0_80px_rgba(251,191,36,0.4),inset_0_0_24px_rgba(245,158,11,0.5)] group-hover:scale-108 transition-all duration-300 bg-black flex items-center justify-center shrink-0">
@@ -2282,7 +2304,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   setHoveredPlanet(planet);
                 }}
                 onPointerLeave={() => setHoveredPlanet(null)}
-                className="absolute cursor-pointer group z-10 flex items-center justify-center select-none touch-manipulation p-2.5"
+                className="absolute cursor-pointer group z-10 flex items-center justify-center select-none touch-manipulation"
                 style={{
                   left: 0,
                   top: 0,
@@ -2292,9 +2314,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   transition: isMorphing
                     ? 'transform 650ms cubic-bezier(0.16, 1, 0.3, 1)'
                     : 'none',
-                  contain: 'layout style',
-                  contentVisibility: 'auto',
-                  containIntrinsicSize: '48px 48px',
                   willChange: isMorphing ? 'transform' : 'auto',
                   backfaceVisibility: 'hidden',
                 }}
@@ -2318,20 +2337,77 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   </div>
                 )}
 
-                {/* Ämlemi Master Anchor Radiant Pulsing Halo */}
-                {isAmlemi && (
-                  <div className="absolute -inset-4 rounded-full bg-gradient-to-tr from-amber-500/25 via-yellow-400/15 to-transparent blur-md animate-pulse pointer-events-none" />
-                )}
+                {/* Smooth Concentric Circular Dashed Orbit Rings (Guaranteed Circular SVG Vector Rings) */}
+                <div className="absolute -inset-5 pointer-events-none flex items-center justify-center select-none">
+                  {/* Radiant Pulsing Golden Halo (Ämlemi Master Anchor or Selected) */}
+                  {(isAmlemi || isSelected) && (
+                    <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-amber-500/30 via-yellow-400/20 to-transparent blur-md animate-pulse pointer-events-none" />
+                  )}
 
-                {/* Single Delicate Dotted Ring Structure */}
-                <div
-                  className={`absolute -inset-2 rounded-full border border-dotted pointer-events-none animate-spin ${
-                    isAmlemi || isSelected || isHovered
-                      ? 'border-amber-300/85'
-                      : 'border-amber-400/65'
-                  }`}
-                  style={{ animationDuration: isAmlemi ? '20s' : '28s' }}
-                />
+                  {/* Concentric Orbit Ring 1: Inner Smooth Rotating Dashed Orbit (Clockwise) */}
+                  <div
+                    className="absolute inset-0 animate-spin flex items-center justify-center"
+                    style={{ animationDuration: isAmlemi ? '20s' : '28s' }}
+                  >
+                    <svg className="w-full h-full overflow-visible" viewBox="0 0 88 88" fill="none">
+                      <circle
+                        cx="44"
+                        cy="44"
+                        r="29"
+                        stroke={
+                          isAmlemi
+                            ? 'rgba(251, 191, 36, 0.95)'
+                            : isSelected || isHovered
+                            ? 'rgba(251, 191, 36, 0.88)'
+                            : 'rgba(245, 158, 11, 0.65)'
+                        }
+                        strokeWidth={isAmlemi || isSelected ? '1.4' : '1.1'}
+                        strokeDasharray="4 5"
+                      />
+                      {(isAmlemi || isSelected || isHovered) && (
+                        <circle
+                          cx="44"
+                          cy="15"
+                          r="1.6"
+                          fill="#fef08a"
+                          className="drop-shadow-[0_0_6px_#fbbf24]"
+                        />
+                      )}
+                    </svg>
+                  </div>
+
+                  {/* Concentric Orbit Ring 2: Outer Smooth Rotating Dashed Orbit (Counter-Clockwise) */}
+                  <div
+                    className="absolute inset-0 animate-spin-reverse flex items-center justify-center"
+                    style={{ animationDuration: isAmlemi ? '28s' : '38s' }}
+                  >
+                    <svg className="w-full h-full overflow-visible" viewBox="0 0 88 88" fill="none">
+                      <circle
+                        cx="44"
+                        cy="44"
+                        r="35"
+                        stroke={
+                          isAmlemi
+                            ? 'rgba(251, 191, 36, 0.65)'
+                            : isSelected || isHovered
+                            ? 'rgba(251, 191, 36, 0.52)'
+                            : 'rgba(245, 158, 11, 0.35)'
+                        }
+                        strokeWidth={isAmlemi ? '1.1' : '0.9'}
+                        strokeDasharray="3 7"
+                      />
+                      {isAmlemi && (
+                        <circle
+                          cx="79"
+                          cy="44"
+                          r="1.4"
+                          fill="#fbbf24"
+                          className="drop-shadow-[0_0_5px_#fbbf24]"
+                        />
+                      )}
+                    </svg>
+                  </div>
+                </div>
 
                 {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
                 <div

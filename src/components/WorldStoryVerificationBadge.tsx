@@ -1916,7 +1916,7 @@ export const LiveStoryTrailerViewport: React.FC<{
 
   return (
     <div
-      className="video-player-gpu relative w-full h-full overflow-hidden rounded-[22px] bg-[#030712] select-none"
+      className="video-player-gpu relative w-full h-full overflow-hidden rounded-[inherit] bg-[#030712] select-none"
       style={{
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',

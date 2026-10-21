@@ -396,7 +396,7 @@ div[role="dialog"],
 .aspect-\[16\/9\],
 .aspect-\[16\/10\],
 .aspect-square {
-  contain: layout paint;
+  contain: paint;
   background-color: #030712;
 }
 
