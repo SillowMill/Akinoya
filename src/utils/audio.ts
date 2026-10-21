@@ -106,6 +106,35 @@ class PortalEffectsAudio {
   public playError() {
     this.playDenyTone();
   }
+
+  // Play smooth sci-fi frequency sweep (dual-tone acoustic feedback)
+  public playAcousticSweep(fromFreq: number = 540, toFreq: number = 780, duration: number = 0.14) {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(Math.max(20, fromFreq), now);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, toFreq), now + duration);
+
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + duration + 0.05);
+    } catch {
+      // Audio fallback
+    }
+  }
 }
 
 export const soundManager = new PortalEffectsAudio();
