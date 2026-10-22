@@ -6,6 +6,16 @@
       "baselineVotes": 3,
       "votesCount": 3,
       "updatedAt": "2026-10-16T20:00:00.000Z"
+    },
+    "planet-felix-test-01": {
+      "submissionId": "planet-felix-test-01",
+      "voters": [],
+      "baselineVotes": 1,
+      "votesCount": 2,
+      "authorId": "user-esther-vip-001",
+      "authorEmail": "estherphilippen@msn.com",
+      "authorUsername": "estherphilippen",
+      "updatedAt": "2026-10-22T09:37:18.655Z"
     }
   }
 }

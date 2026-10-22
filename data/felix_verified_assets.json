@@ -1,0 +1,40 @@
+{
+  "planetId": "planet-felix-test-01",
+  "planetName": "Felix",
+  "holder": "Esther Philippen",
+  "email": "estherphilippen@msn.com",
+  "passId": "AKN-VIP-2027-X001",
+  "renders": {
+    "hero": "https://v3b.fal.media/files/b/0aaf6281/8ftPLlXaAFOWad6X8r1uE.png",
+    "flora": "https://v3b.fal.media/files/b/0aaf6281/zsXeOVyGO55jcoZUABxf4.png",
+    "fauna": "https://v3b.fal.media/files/b/0aaf6281/w5USWGj747LWKNgF4BNIQ.png",
+    "atmosphere": "https://v3b.fal.media/files/b/0aaf6281/uTahjYS2vOJ-I8APGqGLI.png",
+    "landmark": "https://v3b.fal.media/files/b/0aaf6281/dTCZDzH1FqS1_IzWwR8ZJ.png",
+    "ecosystem": "https://v3b.fal.media/files/b/0aaf6281/zsXeOVyGO55jcoZUABxf4.png",
+    "videoUrl": "https://v3b.fal.media/files/b/0aaf623d/z1ql8Ve-M6NIe96OK1chO_video.mp4",
+    "video_url": "https://v3b.fal.media/files/b/0aaf623d/z1ql8Ve-M6NIe96OK1chO_video.mp4",
+    "videoStatus": "READY",
+    "01_main": "https://v3b.fal.media/files/b/0aaf6281/8ftPLlXaAFOWad6X8r1uE.png",
+    "02_flora": "https://v3b.fal.media/files/b/0aaf6281/zsXeOVyGO55jcoZUABxf4.png",
+    "03_fauna": "https://v3b.fal.media/files/b/0aaf6281/w5USWGj747LWKNgF4BNIQ.png",
+    "04_atmo": "https://v3b.fal.media/files/b/0aaf6281/uTahjYS2vOJ-I8APGqGLI.png",
+    "05_lore": "https://v3b.fal.media/files/b/0aaf6281/dTCZDzH1FqS1_IzWwR8ZJ.png"
+  },
+  "videoUrl": "https://v3b.fal.media/files/b/0aaf623d/z1ql8Ve-M6NIe96OK1chO_video.mp4",
+  "coordinates": {
+    "spiral": {
+      "x": 382,
+      "y": 288,
+      "sectorId": "SECTOR CYGNUS-01 (COMMUNITY MERIDIAN)",
+      "armId": "arm-cygnus",
+      "armName": "CYGNUS FILAMENT"
+    },
+    "matrix": {
+      "x": 509,
+      "y": 339,
+      "sectorId": "SECTOR MATRIX-T01 (COMMUNITY MERIDIAN)",
+      "trackId": "track-1",
+      "trackName": "INNER CORE MATRIX"
+    }
+  }
+}

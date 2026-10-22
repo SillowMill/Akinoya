@@ -9,6 +9,7 @@ import {
 import {
   getPassRecord,
   resetPassRecord,
+  resetAllPassRecords,
   verifyDnaCipher,
   generateAuthenticDnaCipher,
   registerPassHolder,
@@ -36,7 +37,7 @@ import {
   verifyFalApiConnection,
   loadFalLedger,
 } from '../../api/_generatePlanet';
-import { checkVipTokenStatus, claimVipTokenForUser } from '../lib/vipTokens';
+import { checkVipTokenStatus, claimVipTokenForUser, resetAllVipTokens, isFounderEmail } from '../lib/vipTokens';
 import {
   registerUserCredentials,
   loginUserCredentials,
@@ -419,6 +420,43 @@ apiRouter.all('/nfc/reset-pass', async (req: Request, res: Response): Promise<vo
   });
 });
 
+// ─── 6.6. Reset All VIP Passes (Non-Founder Reissuance) ───────────────────────
+apiRouter.all('/nfc/reset-all-passes', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const adminKey = req.body?.adminKey || req.query?.adminKey;
+    const email = req.body?.email || req.query?.email;
+    const isFounder = (adminKey && adminKey === process.env.ADMIN_KEY) || isFounderEmail(email as string);
+
+    if (!isFounder) {
+      res.status(403).json({ success: false, error: 'UNAUTHORIZED', message: 'Restricted to founder credentials.' });
+      return;
+    }
+
+    // Reset local/tmp pass store for all guest tokens X001..X100
+    resetAllPassRecords();
+
+    // Re-initialize Founder Pass #0
+    const founderPass = getPassRecord('AKN-VIP-2027-X0914');
+    founderPass.ownerName = 'Odi Selis';
+    founderPass.ownerEmail = 'odi.selis3@gmail.com';
+    founderPass.isClaimed = true;
+    founderPass.status = 'MASTER FOUNDER ORIGINAL';
+
+    // In Supabase, reset guest tokens and preserve founder
+    const supabaseReset = await resetAllVipTokens().catch((e: any) => ({ success: false, error: e?.message }));
+
+    res.status(200).json({
+      success: true,
+      message: 'All non-founder VIP tokens have been reset and re-issued. Founder Pass (#0) remains active.',
+      founderPass,
+      supabaseReset,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Reset failed' });
+  }
+});
+
 // ─── 7. Whitelist Subscription (Automated Google Sheets Capture) ─────────────
 apiRouter.post('/whitelist/subscribe', async (req: Request, res: Response): Promise<void> => {
   const rawEmail = ((req.body?.email as string) || '').trim().toLowerCase();
@@ -667,6 +705,21 @@ apiRouter.all(['/sync-sheets', '/auth/sync-sheets'], async (req: Request, res: R
 apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, firstName, lastName, role, passCode } = req.body || {};
+
+    // Validate VIP pass if provided
+    if (passCode && String(passCode).trim()) {
+      const cleanPass = String(passCode).trim().toUpperCase();
+      const tokenStatus = await checkVipTokenStatus(cleanPass, null, email);
+      if (tokenStatus.isAlreadyClaimed && !tokenStatus.isClaimedByMe) {
+        res.status(400).json({
+          success: false,
+          error: 'Ai! Deze VIP-pas is al geclaimd.',
+          message: 'Ai! Deze VIP-pas is al geclaimd.',
+        });
+        return;
+      }
+    }
+
     const result = await registerUserCredentials({
       email,
       password,
@@ -687,7 +740,10 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
       }).catch((syncErr) => console.warn('[Register] Google Sheets subscriber sync notice:', syncErr));
 
       if (passCode && String(passCode).trim()) {
-        await syncPassClaimToGoogleSheets(String(passCode).trim(), fullName, email).catch((vipErr) =>
+        const cleanPass = String(passCode).trim().toUpperCase();
+        await claimVipTokenForUser(cleanPass, result.user.id, fullName, email).catch(() => {});
+        await registerPassHolder(cleanPass, fullName, email).catch(() => {});
+        await syncPassClaimToGoogleSheets(cleanPass, fullName, email).catch((vipErr) =>
           console.warn('[Register] Google Sheets VIP claim sync notice:', vipErr)
         );
       }

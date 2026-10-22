@@ -105,7 +105,7 @@ export interface VisualizerTrack {
 }
 
 export const DN_VIDEO_URL = dnVideo || '/videos/DN.mp4';
-export const DONT_NEED_VIDEO_URL = DN_VIDEO_URL;
+export const DONT_NEED_VIDEO_URL = dontNeedVideo || "/videos/Don'tneed.mov";
 export const BINGAA_LOOP_VIDEO_URL = bingaaLoopVideo || '/videos/Bingaaloop.mov';
 
 const VISUALIZER_TRACKS: VisualizerTrack[] = [
@@ -113,8 +113,9 @@ const VISUALIZER_TRACKS: VisualizerTrack[] = [
     id: '01',
     title: "Don't Need",
     code: 'DONTNEED',
+    defaultUnlocked: true,
     artworkUrl: dnThumbnailImg || visualizerThumbnailImg,
-    videoUrl: DN_VIDEO_URL,
+    videoUrl: DONT_NEED_VIDEO_URL,
   },
   {
     id: '02',
@@ -798,13 +799,35 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [trackUnlockError, setTrackUnlockError] = useState('');
   const [activePlayingTrack, setActivePlayingTrack] = useState<VisualizerTrack | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const streamVideoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const unsub = planetSoundtrack.subscribe((playing) => {
-      setIsPlayingAudio(playing);
+      if (!activePlayingTrack || activePlayingTrack.id === '02') {
+        setIsPlayingAudio(playing);
+      }
     });
     return () => unsub();
-  }, []);
+  }, [activePlayingTrack]);
+
+  useEffect(() => {
+    const videoEl = streamVideoRef.current;
+    if (!videoEl || !activePlayingTrack?.videoUrl) return;
+    const shouldMute = activePlayingTrack.id === '02';
+    videoEl.muted = shouldMute;
+    videoEl.defaultMuted = shouldMute;
+    if (!shouldMute) {
+      videoEl.volume = 1.0;
+    }
+    videoEl
+      .play()
+      .then(() => {
+        if (activePlayingTrack.id !== '02') {
+          setIsPlayingAudio(true);
+        }
+      })
+      .catch(() => {});
+  }, [activePlayingTrack]);
 
   const handleUnlockVisualizers = (e: React.FormEvent) => {
     e.preventDefault();
@@ -859,13 +882,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
+  const startTrackStream = (track: VisualizerTrack) => {
+    if (dnVideoRef.current) {
+      dnVideoRef.current.muted = true;
+    }
+    setIsDnVideoMuted(true);
+    setActivePlayingTrack(track);
+    if (track.id === '02') {
+      planetSoundtrack.play();
+    } else {
+      planetSoundtrack.pause();
+      setIsPlayingAudio(true);
+    }
+  };
+
   const handleTrackCardClick = (track: VisualizerTrack) => {
-    const isUnlocked = isVipMode || unlockedTracks[track.id] || track.defaultUnlocked;
+    const isUnlocked = isVipMode || isVisualizerUnlocked || unlockedTracks[track.id] || track.defaultUnlocked;
     if (isUnlocked) {
-      setActivePlayingTrack(track);
-      if (track.id === '02') {
-        planetSoundtrack.play();
-      }
+      startTrackStream(track);
     } else {
       setSelectedTrackForUnlock(track);
       setTrackUnlockInput('');
@@ -891,7 +925,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       setSelectedTrackForUnlock(null);
       setTrackUnlockInput('');
       setTrackUnlockError('');
-      setActivePlayingTrack(trackToPlay);
+      startTrackStream(trackToPlay);
     } else {
       setTrackUnlockError(`Incorrect cipher. Hint: enter ${selectedTrackForUnlock.code} or SillowMill2027`);
       soundManager.playError();
@@ -1670,15 +1704,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                     alt={`${track.title} Visualizer Preview`}
                                     className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-500"
                                   />
-                                )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
-
-                                {/* Video Loop Badge Indicator */}
-                                {track.videoUrl && (
-                                  <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/85 backdrop-blur-md border border-cyan-400/40 text-[9px] font-mono text-cyan-300 pointer-events-none shadow-[0_0_10px_rgba(56,189,248,0.3)]">
-                                    <Film className="w-2.5 h-2.5 text-cyan-400 animate-pulse" />
-                                    <span>MUTED LOOP</span>
-                                  </div>
                                 )}
 
                                 {!track.videoUrl && (
@@ -2990,7 +3015,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                 <button
                   onClick={() => {
+                    if (streamVideoRef.current) {
+                      streamVideoRef.current.pause();
+                    }
                     setActivePlayingTrack(null);
+                    setIsPlayingAudio(false);
                     if (activePlayingTrack.id === '02') {
                       planetSoundtrack.pause();
                     }
@@ -3002,78 +3031,80 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               </div>
 
               {/* Main Visualizer Stage */}
-              <div className="relative min-h-[270px] xs:min-h-[300px] sm:min-h-0 sm:aspect-video w-full bg-slate-950 overflow-hidden flex items-center justify-center">
+              <div className="relative min-h-[270px] xs:min-h-[300px] sm:min-h-0 sm:aspect-video w-full bg-black overflow-hidden flex items-center justify-center">
                 {activePlayingTrack.videoUrl ? (
                   <video
-                    ref={(el) => {
-                      if (el) {
-                        el.muted = true;
-                        el.defaultMuted = true;
-                        el.play().catch(() => {});
-                      }
-                    }}
+                    ref={streamVideoRef}
                     src={activePlayingTrack.videoUrl}
                     poster={activePlayingTrack.artworkUrl || akinoyaVistaImg}
                     autoPlay
                     loop
-                    muted
+                    muted={activePlayingTrack.id === '02'}
                     playsInline
                     preload="auto"
                     disablePictureInPicture
                     disableRemotePlayback
                     controlsList="nodownload nofullscreen noremoteplayback"
+                    onPlay={() => setIsPlayingAudio(true)}
+                    onPause={() => {
+                      if (activePlayingTrack.id !== '02') {
+                        setIsPlayingAudio(false);
+                      }
+                    }}
                     {...({
                       'webkit-playsinline': 'true',
                       'x5-playsinline': 'true',
                       playsinline: 'true',
                     } as any)}
-                    className="absolute inset-0 w-full h-full object-cover object-center opacity-70 scale-105 pointer-events-none"
+                    className="w-full h-full object-cover object-center"
                   />
                 ) : (
-                  /* Background cosmic vista with glowing ambient motion */
-                  <img
-                    src={akinoyaVistaImg}
-                    alt="Äkinoya Vista"
-                    className="absolute inset-0 w-full h-full object-cover object-center opacity-60 scale-105 animate-pulse"
-                    style={{ animationDuration: '8s' }}
-                  />
+                  <>
+                    {/* Background cosmic vista with glowing ambient motion */}
+                    <img
+                      src={akinoyaVistaImg}
+                      alt="Äkinoya Vista"
+                      className="absolute inset-0 w-full h-full object-cover object-center opacity-60 scale-105 animate-pulse"
+                      style={{ animationDuration: '8s' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,black_80%)] pointer-events-none" />
+
+                    {/* Animated holographic audio telemetry overlay */}
+                    <div className="relative z-10 flex flex-col items-center text-center p-3.5 xs:p-4 sm:p-6 space-y-2.5 sm:space-y-4 w-full max-w-lg mx-auto">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_30px_rgba(56,189,248,0.4)] shrink-0">
+                        <AudioWaveform className="w-5 h-5 sm:w-7 sm:h-7 text-cyan-400 animate-pulse" />
+                      </div>
+
+                      <div>
+                        <span className="text-[9px] sm:text-[10px] font-mono px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-950/90 border border-emerald-400/40 text-emerald-300 font-semibold tracking-wider uppercase">
+                          ● TRANSMISSION ACTIVE · HQ AUDIO FEED
+                        </span>
+                        <h2 className="text-lg xs:text-xl sm:text-2xl font-display font-extrabold text-white mt-1.5 sm:mt-2">
+                          {activePlayingTrack.title}
+                        </h2>
+                        <p className="text-[10px] xs:text-xs font-mono text-cyan-300/80 mt-1 max-w-xs sm:max-w-none mx-auto leading-tight sm:leading-normal">
+                          AUDIO MATRIX FREQUENCY · TRANSMISSION STREAM
+                        </p>
+                      </div>
+
+                      {/* Pulsing Audio Telemetry Waveform Bars */}
+                      <div className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-12 pt-1 sm:pt-2">
+                        {[35, 60, 90, 45, 80, 100, 75, 40, 65, 85, 55, 95, 70, 50, 85, 60, 40, 75].map((h, i) => (
+                          <div
+                            key={i}
+                            className="w-0.5 sm:w-1 rounded-full bg-gradient-to-t from-cyan-500 to-emerald-400 transition-all duration-300"
+                            style={{
+                              height: `${isPlayingAudio || activePlayingTrack.id !== '02' ? h : 15}%`,
+                              animation: 'pulse 1.2s ease-in-out infinite alternate',
+                              animationDelay: `${i * 0.08}s`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,black_80%)] pointer-events-none" />
-
-                {/* Animated holographic audio telemetry overlay */}
-                <div className="relative z-10 flex flex-col items-center text-center p-3.5 xs:p-4 sm:p-6 space-y-2.5 sm:space-y-4 w-full max-w-lg mx-auto">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_30px_rgba(56,189,248,0.4)] shrink-0">
-                    <AudioWaveform className="w-5 h-5 sm:w-7 sm:h-7 text-cyan-400 animate-pulse" />
-                  </div>
-
-                  <div>
-                    <span className="text-[9px] sm:text-[10px] font-mono px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-950/90 border border-emerald-400/40 text-emerald-300 font-semibold tracking-wider uppercase">
-                      ● TRANSMISSION ACTIVE · HQ AUDIO FEED
-                    </span>
-                    <h2 className="text-lg xs:text-xl sm:text-2xl font-display font-extrabold text-white mt-1.5 sm:mt-2">
-                      {activePlayingTrack.title}
-                    </h2>
-                    <p className="text-[10px] xs:text-xs font-mono text-cyan-300/80 mt-1 max-w-xs sm:max-w-none mx-auto leading-tight sm:leading-normal">
-                      AUDIO MATRIX FREQUENCY · TRANSMISSION STREAM
-                    </p>
-                  </div>
-
-                  {/* Pulsing Audio Telemetry Waveform Bars */}
-                  <div className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-12 pt-1 sm:pt-2">
-                    {[35, 60, 90, 45, 80, 100, 75, 40, 65, 85, 55, 95, 70, 50, 85, 60, 40, 75].map((h, i) => (
-                      <div
-                        key={i}
-                        className="w-0.5 sm:w-1 rounded-full bg-gradient-to-t from-cyan-500 to-emerald-400 transition-all duration-300"
-                        style={{
-                          height: `${isPlayingAudio || activePlayingTrack.id !== '02' ? h : 15}%`,
-                          animation: 'pulse 1.2s ease-in-out infinite alternate',
-                          animationDelay: `${i * 0.08}s`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
               </div>
 
               {/* Player Controls Bar */}
@@ -3083,6 +3114,23 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     onClick={() => {
                       if (activePlayingTrack.id === '02') {
                         planetSoundtrack.togglePlay();
+                        if (streamVideoRef.current) {
+                          if (isPlayingAudio) {
+                            streamVideoRef.current.pause();
+                          } else {
+                            streamVideoRef.current.play().catch(() => {});
+                          }
+                        }
+                      } else if (streamVideoRef.current) {
+                        if (!streamVideoRef.current.paused) {
+                          streamVideoRef.current.pause();
+                          setIsPlayingAudio(false);
+                        } else {
+                          streamVideoRef.current.muted = false;
+                          streamVideoRef.current.volume = 1.0;
+                          streamVideoRef.current.play().catch(() => {});
+                          setIsPlayingAudio(true);
+                        }
                       } else {
                         setIsPlayingAudio(!isPlayingAudio);
                         soundManager.playTone(520, 0.1);

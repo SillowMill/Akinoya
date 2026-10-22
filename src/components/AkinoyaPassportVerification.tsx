@@ -339,8 +339,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           // Matches original owner
         } else {
           setIsDnaAuthentic(false);
-          setStatusText('Pass already claimed');
-          setDnaError('Pass already claimed');
+          setStatusText('Ai! Deze VIP-pas is al geclaimd.');
+          setDnaError('Ai! Deze VIP-pas is al geclaimd.');
           soundManager.playError();
           setIsValidating(false);
           return;
@@ -391,8 +391,8 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             pass.ownerEmail.trim().toLowerCase() !== currentUserEmail
           ) {
             setIsDnaAuthentic(false);
-            setStatusText('Pass already claimed');
-            setDnaError('Pass already claimed');
+            setStatusText('Ai! Deze VIP-pas is al geclaimd.');
+            setDnaError('Ai! Deze VIP-pas is al geclaimd.');
             soundManager.playError();
             setIsValidating(false);
             return;
@@ -531,7 +531,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
       if (isMaster) {
         const isFounder = isFounderEmail(cleanEmail);
         if (!isFounder) {
-          setClaimError('Pass already claimed');
+          setClaimError('Ai! Deze VIP-pas is al geclaimd.');
           soundManager.playError();
           setIsClaiming(false);
           return;
@@ -544,7 +544,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             setIsClaiming(false);
             return;
           }
-          setClaimError('Pass already claimed');
+          setClaimError('Ai! Deze VIP-pas is al geclaimd.');
           soundManager.playError();
           setIsClaiming(false);
           return;
@@ -735,7 +735,12 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             </button>
           </div>
         </motion.div>
-      ) : dnaError && (dnaError === 'ALREADY CLAIMED VIP LINK' || dnaError === OTHER_ACCOUNT_VIP_ERROR) ? (
+      ) : (dnaError && (
+        dnaError === 'Ai! Deze VIP-pas is al geclaimd.' ||
+        dnaError === 'ALREADY CLAIMED VIP LINK' ||
+        dnaError === OTHER_ACCOUNT_VIP_ERROR ||
+        dnaError === 'Pass already claimed'
+      )) ? (
         <motion.div
           key="already-claimed-card"
           initial={{ opacity: 0, y: 12 }}
@@ -748,18 +753,18 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold text-rose-300 bg-rose-950/70 border border-rose-500/40 shadow-[0_0_12px_rgba(239,68,68,0.2)]">
                 <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                <span>THIS VIP LINK BELONGS TO ANOTHER ACCOUNT</span>
+                <span>AI! DEZE VIP-PAS IS AL GECLAIMD</span>
               </span>
               <span className="text-[10px] font-mono text-rose-400/90 font-bold tracking-wider">
-                LOCKED
+                GEBLOKKEERD
               </span>
             </div>
 
             <h1 className="text-xl sm:text-2xl font-display font-bold text-white tracking-wide">
-              VIP Pass Belongs to Another Account
+              Ai! Deze VIP-pas is al geclaimd.
             </h1>
             <p className="text-xs font-mono text-rose-200/95 leading-relaxed font-semibold">
-              THIS VIP LINK BELONGS TO ANOTHER ACCOUNT. Logging in here will create a standard Free account.
+              Ai! Deze VIP-pas is al geclaimd. Deze unieke VIP-pas is permanent gekoppeld aan een ander e-mailaccount.
             </p>
           </div>
 
@@ -959,17 +964,17 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                   type="button"
                   disabled={isClaiming || isValidating}
                   onClick={() => executeClaimForUser(user, profile)}
-                  className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
+                  className="w-full py-4 px-6 rounded-xl font-mono text-sm sm:text-base font-extrabold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-[0_0_30px_rgba(245,158,11,0.5)] hover:shadow-[0_0_40px_rgba(245,158,11,0.7)] disabled:opacity-50 disabled:cursor-not-allowed min-h-[52px]"
                 >
                   {isClaiming ? (
                     <>
-                      <Sparkles className="w-4 h-4 animate-spin text-black shrink-0" />
-                      <span>CLAIMING VIP INVITATION...</span>
+                      <Sparkles className="w-5 h-5 animate-spin text-black shrink-0" />
+                      <span>BEZIG MET CLAIMEN...</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 text-black shrink-0" />
-                      <span>CLAIM VIP INVITATION →</span>
+                      <Sparkles className="w-5 h-5 text-black shrink-0" />
+                      <span>Claim nu!</span>
                     </>
                   )}
                 </button>
@@ -981,14 +986,24 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
             ) : (
               /* User is unauthenticated: Direct CTAs to Register or Sign In */
               <div className="space-y-3">
+                <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/60 to-yellow-950/40 border border-amber-500/40 text-amber-200 text-xs font-mono space-y-1 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                  <div className="font-bold text-amber-300 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>Maak een account aan om te claimen</span>
+                  </div>
+                  <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                    Heb je nog geen account? Maak er eerst een aan om deze VIP-pas automatisch te claimen en permanent te koppelen aan je nieuwe profiel.
+                  </p>
+                </div>
+
                 <button
                   type="button"
                   disabled={isValidating}
                   onClick={handleClaimVipInvitation}
-                  className="w-full py-3.5 px-4 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] min-h-[48px]"
+                  className="w-full py-4 px-6 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] min-h-[50px]"
                 >
                   <Sparkles className="w-4 h-4 text-black shrink-0" />
-                  <span>CLAIM VIP INVITATION →</span>
+                  <span>MAAK ACCOUNT &amp; CLAIM VIP-PAS →</span>
                 </button>
 
                 <button
@@ -1004,7 +1019,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                   className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 hover:border-amber-400/40 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
                 >
                   <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>SIGN IN TO CLAIM</span>
+                  <span>AL EEN ACCOUNT? INLOGGEN OM TE CLAIMEN</span>
                 </button>
 
                 <p className="text-[10px] font-mono text-white/40 text-center leading-relaxed pt-1">

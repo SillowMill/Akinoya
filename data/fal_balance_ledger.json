@@ -1,0 +1,184 @@
+{
+  "initialPoolUsd": 25,
+  "totalEstimatedCostUsd": 0.056,
+  "remainingBalanceUsd": 24.944,
+  "totalRequests": 17,
+  "successfulRequests": 16,
+  "failedRequests": 1,
+  "sandboxRequests": 0,
+  "averageLatencyMs": 2915,
+  "lastUpdated": "2026-10-22T09:37:15.377Z",
+  "recentLogs": [
+    {
+      "id": "log_1792661835377_oxod1",
+      "timestamp": "2026-10-22T09:37:15.377Z",
+      "slot": "sfx",
+      "model": "fal-ai/mmaudio-v2",
+      "durationMs": 6006,
+      "estimatedCostUsd": 0,
+      "remainingPoolUsd": 24.944,
+      "status": "ERROR",
+      "error": "The operation was aborted due to timeout"
+    },
+    {
+      "id": "log_1792661829368_428zd",
+      "timestamp": "2026-10-22T09:37:09.368Z",
+      "slot": "flora",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 3334,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.944,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792661829358_stgmq",
+      "timestamp": "2026-10-22T09:37:09.358Z",
+      "slot": "landmark",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 3324,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.9475,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792661829301_ui1dm",
+      "timestamp": "2026-10-22T09:37:09.301Z",
+      "slot": "atmosphere",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 3272,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.951,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792661828439_5go89",
+      "timestamp": "2026-10-22T09:37:08.439Z",
+      "slot": "fauna",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2385,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.9545,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792661828396_119qj",
+      "timestamp": "2026-10-22T09:37:08.395Z",
+      "slot": "hero",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2511,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.958,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792661609733_plkgi",
+      "timestamp": "2026-10-22T09:33:29.733Z",
+      "slot": "fauna",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 4035,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.9615,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792661608448_ozkca",
+      "timestamp": "2026-10-22T09:33:28.448Z",
+      "slot": "atmosphere",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2790,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.965,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792661608145_6yfp4",
+      "timestamp": "2026-10-22T09:33:28.145Z",
+      "slot": "landmark",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2474,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.9685,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792661608015_dqge1",
+      "timestamp": "2026-10-22T09:33:28.015Z",
+      "slot": "flora",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2343,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.972,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792661608005_3gwl3",
+      "timestamp": "2026-10-22T09:33:28.004Z",
+      "slot": "hero",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2693,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.9755,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792660897116_big2z",
+      "timestamp": "2026-10-22T09:21:37.116Z",
+      "slot": "flora",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2650,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.979,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792660896822_iidqs",
+      "timestamp": "2026-10-22T09:21:36.822Z",
+      "slot": "fauna",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2325,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.9825,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792660896712_8sm7n",
+      "timestamp": "2026-10-22T09:21:36.712Z",
+      "slot": "landmark",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2243,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.986,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792660896657_32l3m",
+      "timestamp": "2026-10-22T09:21:36.657Z",
+      "slot": "atmosphere",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2212,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.9895,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792660896574_0am4x",
+      "timestamp": "2026-10-22T09:21:36.571Z",
+      "slot": "hero",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2192,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.993,
+      "status": "SUCCESS"
+    },
+    {
+      "id": "log_1792658929602_1jdxi",
+      "timestamp": "2026-10-22T08:48:49.602Z",
+      "slot": "test-cat",
+      "model": "fal-ai/flux/schnell",
+      "durationMs": 2764,
+      "estimatedCostUsd": 0.0035,
+      "remainingPoolUsd": 24.9965,
+      "status": "SUCCESS"
+    }
+  ]
+}

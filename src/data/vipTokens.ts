@@ -4,9 +4,9 @@ import { isValidPassId } from '../utils/holder';
 export const PRIMARY_FOUNDER_EMAIL = 'odi.selis3@gmail.com';
 export const FOUNDER_PASS_TOKEN = 'AKN-VIP-2027-X0914';
 
-export const PASS_ALREADY_CLAIMED_ERROR = 'Pass already claimed';
-export const ALREADY_CLAIMED_VIP_ERROR = 'Pass already claimed';
-export const OTHER_ACCOUNT_VIP_ERROR = 'Pass already claimed';
+export const PASS_ALREADY_CLAIMED_ERROR = 'Ai! Deze VIP-pas is al geclaimd.';
+export const ALREADY_CLAIMED_VIP_ERROR = 'Ai! Deze VIP-pas is al geclaimd.';
+export const OTHER_ACCOUNT_VIP_ERROR = 'Ai! Deze VIP-pas is al geclaimd.';
 
 export interface VipTokenCheckResult {
   valid: boolean;
@@ -38,7 +38,7 @@ export interface VipRegistryEntry {
 
 const LOCAL_STORAGE_CLAIMED_KEY = 'sillow_claimed_vip_tokens';
 const VIP_REGISTRY_REFRESH_VERSION_KEY = 'sillow_vip_registry_refresh_version';
-const CURRENT_VIP_REFRESH_VERSION = '2026-10-16-v3-clean-1to1';
+const CURRENT_VIP_REFRESH_VERSION = '2027-vip-reset-v4-clean-email-bind';
 
 /**
  * Generates the clean 100-pass registry + Founder Pass (#0).

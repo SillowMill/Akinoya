@@ -429,12 +429,12 @@ export async function registerPassHolder(
   if (isMaster && cleanEmail && cleanEmail !== 'odi.selis3@gmail.com') {
     return {
       success: false,
-      error: 'Pass already claimed',
-      message: 'Pass already claimed',
+      error: 'Ai! Deze VIP-pas is al geclaimd.',
+      message: 'Ai! Deze VIP-pas is al geclaimd.',
     };
   }
 
-  // Enforce strict 1-to-1 email binding: if already bound to a different email, reject with "Pass already claimed"
+  // Enforce strict 1-to-1 email binding: if already bound to a different email, reject with "Ai! Deze VIP-pas is al geclaimd."
   if (
     pass.isClaimed &&
     pass.ownerEmail &&
@@ -443,8 +443,8 @@ export async function registerPassHolder(
   ) {
     return {
       success: false,
-      error: 'Pass already claimed',
-      message: 'Pass already claimed',
+      error: 'Ai! Deze VIP-pas is al geclaimd.',
+      message: 'Ai! Deze VIP-pas is al geclaimd.',
     };
   }
 

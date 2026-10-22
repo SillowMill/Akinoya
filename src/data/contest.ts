@@ -167,6 +167,35 @@ export function getDeterministicPlanetCoordinates(
     };
   }
 
+  const isFelix =
+    planetId === 'planet-felix-test-01' ||
+    planetName === 'Felix';
+  if (isFelix) {
+    if (mode === 'matrix') {
+      const tr = OVAL_MATRIX_TRACKS[1];
+      const angle = Math.PI / 4;
+      return {
+        x: Math.round(tr.a * Math.cos(angle)),
+        y: Math.round(tr.b * Math.sin(angle)),
+        sectorId: 'SECTOR MATRIX-T01 (COMMUNITY MERIDIAN)',
+        armId: tr.id,
+        armName: tr.name,
+      };
+    }
+
+    // Default: Variant A (5-Arm Spiral) - Cygnus Filament (~620 AU)
+    const arm = CONSTELLATION_ARMS[1];
+    const radius = 620;
+    const theta = getSpiralArmAngle(arm.baseAngle, radius);
+    return {
+      x: Math.round(radius * Math.cos(theta)),
+      y: Math.round(radius * Math.sin(theta)),
+      sectorId: 'SECTOR CYGNUS-01 (COMMUNITY MERIDIAN)',
+      armId: arm.id,
+      armName: arm.name,
+    };
+  }
+
   const str = `${planetId}_${planetName || ''}`;
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -235,16 +264,43 @@ export function assignMultiVariantCoordinates(
     };
   }
 
-  // Hard pairwise distance tracking: Äkinoya Core (0, 0) and dynamic Ämlemi anchor are pre-registered
+  // Resolve mode-aware coordinates for Felix test creation
+  const cygnusArm = CONSTELLATION_ARMS[1];
+  const felixSpiralRadius = 620;
+  const felixTheta = getSpiralArmAngle(cygnusArm.baseAngle, felixSpiralRadius);
+  let felixCoord = {
+    x: Math.round(felixSpiralRadius * Math.cos(felixTheta)),
+    y: Math.round(felixSpiralRadius * Math.sin(felixTheta)),
+    sectorId: 'SECTOR CYGNUS-01 (COMMUNITY MERIDIAN)',
+    armId: cygnusArm.id,
+    armName: cygnusArm.name,
+  };
+
+  if (mode === 'matrix') {
+    const tr1 = OVAL_MATRIX_TRACKS[1];
+    const angle = Math.PI / 4;
+    felixCoord = {
+      x: Math.round(tr1.a * Math.cos(angle)),
+      y: Math.round(tr1.b * Math.sin(angle)),
+      sectorId: 'SECTOR MATRIX-T01 (COMMUNITY MERIDIAN)',
+      armId: tr1.id,
+      armName: tr1.name,
+    };
+  }
+
+  // Hard pairwise distance tracking: Äkinoya Core (0, 0), Ämlemi anchor, and Felix are pre-registered
   const placedNodes: PlacedNode[] = [
     { id: 'akinoya-core', x: 0, y: 0 },
     { id: 'planet-amlemi-genesis-01', x: amlemiCoord.x, y: amlemiCoord.y },
+    { id: 'planet-felix-test-01', x: felixCoord.x, y: felixCoord.y },
   ];
   const occupiedSlots = new Set<string>();
   if (mode === 'matrix') {
     occupiedSlots.add('matrix_tr_0_slot_foundational');
+    occupiedSlots.add('matrix_tr_1_slot_felix');
   } else {
     occupiedSlots.add('arm_0_tier_foundational');
+    occupiedSlots.add('arm_1_tier_felix');
   }
 
   return planets.map((sub) => {
@@ -278,6 +334,23 @@ export function assignMultiVariantCoordinates(
         sectorId: amlemiCoord.sectorId,
         armId: amlemiCoord.armId,
         armName: amlemiCoord.armName,
+      };
+    }
+
+    // 2b. Felix Test Creation Check (Dynamically resolved per active constellation mode)
+    const isFelix =
+      sub.id === 'planet-felix-test-01' ||
+      sub.planetName === 'Felix';
+    if (isFelix) {
+      return {
+        ...sub,
+        coordX: felixCoord.x,
+        coordY: felixCoord.y,
+        coord_x: felixCoord.x,
+        coord_y: felixCoord.y,
+        sectorId: felixCoord.sectorId,
+        armId: felixCoord.armId,
+        armName: felixCoord.armName,
       };
     }
 
@@ -664,11 +737,16 @@ export const isForbiddenSubmission = (sub: any): boolean => {
   const author = String(sub.authorName || sub.author_name || '').toLowerCase().trim();
   const email = String(sub.authorEmail || sub.author_email || '').toLowerCase().trim();
 
+  // Explicitly permit Felix by Esther Philippen (active community test creation)
+  if (id === 'planet-felix-test-01' || (name === 'felix' && (author.includes('esther') || email.includes('esther')))) {
+    return false;
+  }
+
   if (MOCK_PLANET_IDS.has(id)) return true;
-  if (name === 'arbitron' || name === 'lucina' || name === 'elysia' || name === 'felix') return true;
+  if (name === 'arbitron' || name === 'lucina' || name === 'elysia') return true;
   if (author.includes('kaat') || author.includes('jansen')) return true;
   if (email.includes('kaat.jansen') || email.includes('hannah.jansen')) return true;
-  if (id.toLowerCase().includes('felix') || id.toLowerCase().includes('kaat')) return true;
+  if (id.toLowerCase().includes('kaat')) return true;
   return false;
 };
 
@@ -738,6 +816,74 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     armId: 'arm-orion',
     armName: 'ORION MERIDIAN',
     createdAt: '2026-10-14T12:00:00.000Z',
+    votingDeadline: 'June 30, 2027',
+  },
+  {
+    id: 'planet-felix-test-01',
+    userId: 'user-esther-vip-001',
+    authorName: 'Esther Philippen',
+    authorUsername: 'estherphilippen',
+    authorEmail: 'estherphilippen@msn.com',
+    authorAvatarGradient: 'from-pink-500 via-rose-500 to-amber-500',
+    planetName: 'Felix',
+    atmosphere: 'Dense ionized magenta atmosphere radiating with warm orange sunbeams and feline constellation auroras.',
+    flora: 'Bioluminescent pink whisker-ferns and glowing feline spore canopies.',
+    fauna: 'Celestial winged pink-and-orange felines and apex saber-toothed panthers gliding through ionized thermals.',
+    sonicVibe: 'Warm analog synthesizer purr, 432Hz ambient chime, and rhythmic cosmic heartbeat.',
+    visualAesthetic: 'High-resolution cinematic sci-fi render, photorealistic conceptual space art (Sillow Mill aesthetic).',
+    landmark: 'The Great Sphinx of Felix: Colossal ancient feline monolith carved from rose quartz and copper energy channels.',
+    additionalNotes: 'Active community test creation for Esther Philippen.',
+    humanAnswers: {
+      planetName: 'Felix',
+      relaxation: 'Listening to celestial purring under warm sunset skies with glowing feline companions.',
+      creativeExpression: 'Bioluminescent organic sculpture, feline constellation cartography, and analog harmonics.',
+      naturalEnvironment: 'Misty canyon plateaus surrounded by bioluminescent cat-grass and orange quartz spires.',
+      lifePhilosophy: 'Curiosity, grace, and relentless playfulness illuminate the cosmic unknown.',
+      admiredCreature: 'The celestial winged feline and luminous six-legged saber-toothed panther.',
+      colorPalette: 'Vibrant neon pink, incandescent warm orange, and luminous feline auroras.',
+      resilienceStory: 'Carving a vibrant metropolis of feline light out of the deep void.',
+      futurePromise: 'With curiosity and grace, the feline cosmos opens its infinite horizons.',
+      atmosphere: 'Dense ionized magenta atmosphere radiating with warm orange sunbeams and feline constellation auroras.',
+      flora: 'Bioluminescent pink whisker-ferns and glowing feline spore canopies.',
+      fauna: 'Celestial winged pink-and-orange felines and apex saber-toothed panthers gliding through ionized thermals.',
+      sonicVibe: 'Warm analog synthesizer purr, 432Hz ambient chime, and rhythmic cosmic heartbeat.',
+      visualAesthetic: 'High-resolution cinematic sci-fi render, photorealistic conceptual space art.',
+      landmark: 'The Great Sphinx of Felix.',
+      additionalNotes: 'Active community test creation for Esther Philippen.',
+    },
+    futurePromise: 'With curiosity and grace, the feline cosmos opens its infinite horizons.',
+    generatedLore: `Classified by world architect Esther Philippen, Felix is an official VIP frontier sector situated within the Äkinoya celestial sphere. Anchored by shimmering neon pink and warm orange auroras, this cosmic feline metropolis thrives with bioluminescent whisker-ferns and soaring winged celestial cats.\n\nAcross the canyon plateaus stands the Great Sphinx of Felix, a colossal rose quartz monument channeling planetary harmonics at 432Hz.\n\nFOUNDING CREED:\n"With curiosity and grace, the feline cosmos opens its infinite horizons."`,
+    renders: {
+      hero: 'https://v3b.fal.media/files/b/0aaf6281/8ftPLlXaAFOWad6X8r1uE.png',
+      flora: 'https://v3b.fal.media/files/b/0aaf6281/zsXeOVyGO55jcoZUABxf4.png',
+      fauna: 'https://v3b.fal.media/files/b/0aaf6281/w5USWGj747LWKNgF4BNIQ.png',
+      atmosphere: 'https://v3b.fal.media/files/b/0aaf6281/uTahjYS2vOJ-I8APGqGLI.png',
+      landmark: 'https://v3b.fal.media/files/b/0aaf6281/dTCZDzH1FqS1_IzWwR8ZJ.png',
+      ecosystem: 'https://v3b.fal.media/files/b/0aaf6281/zsXeOVyGO55jcoZUABxf4.png',
+      videoUrl: 'https://v3b.fal.media/files/b/0aaf623d/z1ql8Ve-M6NIe96OK1chO_video.mp4',
+      '01_main': 'https://v3b.fal.media/files/b/0aaf6281/8ftPLlXaAFOWad6X8r1uE.png',
+      '02_flora': 'https://v3b.fal.media/files/b/0aaf6281/zsXeOVyGO55jcoZUABxf4.png',
+      '03_fauna': 'https://v3b.fal.media/files/b/0aaf6281/w5USWGj747LWKNgF4BNIQ.png',
+      '04_atmo': 'https://v3b.fal.media/files/b/0aaf6281/uTahjYS2vOJ-I8APGqGLI.png',
+      '05_lore': 'https://v3b.fal.media/files/b/0aaf6281/dTCZDzH1FqS1_IzWwR8ZJ.png',
+    },
+    videoUrl: 'https://v3b.fal.media/files/b/0aaf623d/z1ql8Ve-M6NIe96OK1chO_video.mp4',
+    videoStatus: 'READY',
+    votesCount: 2,
+    hasVoted: false,
+    isPioneer: true,
+    isVipPioneer: true,
+    pioneerBadge: 'VIP PIONEER · #02',
+    pioneer_badge: 'VIP PIONEER · #02',
+    status: 'PUBLISHED',
+    coordX: 382,
+    coordY: 288,
+    coord_x: 382,
+    coord_y: 288,
+    sectorId: 'SECTOR CYGNUS-01 (COMMUNITY MERIDIAN)',
+    armId: 'arm-cygnus',
+    armName: 'CYGNUS FILAMENT',
+    createdAt: '2026-10-22T09:20:00.000Z',
     votingDeadline: 'June 30, 2027',
   },
 ];
@@ -866,6 +1012,11 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
         // Ensure Ämlemi is always present as the benchmark
         if (!cleaned.some((p) => p.planetName === 'Ämlemi' || p.id === 'planet-amlemi-genesis-01')) {
           cleaned.unshift(INITIAL_SUBMISSIONS[0]);
+        }
+        // Ensure Felix is present as the active community test creation
+        if (!cleaned.some((p) => p.id === 'planet-felix-test-01')) {
+          const felixSub = INITIAL_SUBMISSIONS.find((p) => p.id === 'planet-felix-test-01');
+          if (felixSub) cleaned.push(felixSub);
         }
 
         const equilibriumCleaned = assignEquilibriumCoordinates(cleaned);
@@ -1104,9 +1255,13 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
             };
           });
 
-        // Always ensure canonical Ämlemi is included
+        // Always ensure canonical Ämlemi and Felix test planet are included
         if (!live.some((p) => p.planetName === 'Ämlemi' || p.id === 'planet-amlemi-genesis-01')) {
           live.unshift(INITIAL_SUBMISSIONS[0]);
+        }
+        if (!live.some((p) => p.id === 'planet-felix-test-01')) {
+          const felixSub = INITIAL_SUBMISSIONS.find((p) => p.id === 'planet-felix-test-01');
+          if (felixSub) live.push(felixSub);
         }
 
         const equilibriumLive = assignEquilibriumCoordinates(live);

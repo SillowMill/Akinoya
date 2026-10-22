@@ -220,7 +220,7 @@ export const AuthModal: React.FC = () => {
               </div>
               <div className="text-left flex-1 min-w-0">
                 <div className="text-xs font-mono font-bold tracking-wider uppercase text-red-400">
-                  Pass already claimed
+                  Ai! Deze VIP-pas is al geclaimd.
                 </div>
                 <p className="text-xs text-red-200 font-sans mt-1 leading-relaxed font-semibold">
                   {vipLinkError}
@@ -246,8 +246,8 @@ export const AuthModal: React.FC = () => {
                 </div>
                 <p className="text-xs text-cyan-100/90 font-sans mt-1 leading-relaxed">
                   {(typeof window !== 'undefined' && localStorage.getItem('akinoya_pending_vip_pass'))
-                    ? `Founding Pass #${localStorage.getItem('akinoya_pending_vip_pass')} detected. Sign in or create an account to permanently claim VIP ownership and generate your Certificate of Authenticity.`
-                    : 'You were invited as a VIP Guest. Continue with Google or register to claim instant access to Creator Lab channels, exclusive audio masters & visualizers.'}
+                    ? `VIP-pas #${localStorage.getItem('akinoya_pending_vip_pass')} gedetecteerd. Maak een nieuw account aan of log in om deze VIP-pas direct automatisch te claimen en te koppelen.`
+                    : 'Je bent uitgenodigd als VIP-gast. Maak een account aan of log in om direct toegang te krijgen.'}
                 </p>
               </div>
             </div>

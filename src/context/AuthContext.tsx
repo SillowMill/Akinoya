@@ -686,7 +686,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else {
               clearPendingVipStorage();
               if (mounted) {
-                setVipLinkError('Pass already claimed');
+                setVipLinkError('Ai! Deze VIP-pas is al geclaimd.');
                 setHasPendingVipInvitation(false);
                 soundManager.playError();
               }
@@ -1414,17 +1414,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const tokenStatus = await checkVipTokenStatus(pendingPass, user.id, userEmail);
       if (tokenStatus.isAlreadyClaimed && !tokenStatus.isClaimedByMe) {
         clearPendingVipStorage();
-        setVipLinkError('Pass already claimed');
+        setVipLinkError('Ai! Deze VIP-pas is al geclaimd.');
         soundManager.playError();
-        return { success: false, message: 'Pass already claimed' };
+        return { success: false, message: 'Ai! Deze VIP-pas is al geclaimd.' };
       }
 
       const claimRes = await claimVipTokenForUser(pendingPass, user.id, holderName, userEmail);
       if (!claimRes.success) {
         clearPendingVipStorage();
-        setVipLinkError('Pass already claimed');
+        setVipLinkError('Ai! Deze VIP-pas is al geclaimd.');
         soundManager.playError();
-        return { success: false, message: claimRes.error || 'Pass already claimed' };
+        return { success: false, message: claimRes.error || 'Ai! Deze VIP-pas is al geclaimd.' };
       }
     }
 
@@ -1473,10 +1473,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
       soundManager.playError();
-      setVipLinkError('Pass already claimed');
+      setVipLinkError('Ai! Deze VIP-pas is al geclaimd.');
       return {
         success: false,
-        message: 'Pass already claimed',
+        message: 'Ai! Deze VIP-pas is al geclaimd.',
       };
     }
 
@@ -1496,10 +1496,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const claimRes = await claimVipTokenForUser(clean, targetUser.id, holderName, userEmail);
       if (!claimRes.success) {
         soundManager.playError();
-        setVipLinkError('Pass already claimed');
+        setVipLinkError('Ai! Deze VIP-pas is al geclaimd.');
         return {
           success: false,
-          message: claimRes.error || 'Pass already claimed',
+          message: claimRes.error || 'Ai! Deze VIP-pas is al geclaimd.',
         };
       }
 
