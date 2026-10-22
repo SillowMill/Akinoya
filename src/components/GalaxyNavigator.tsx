@@ -233,7 +233,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       }
       for (const p of filteredPlanets) {
         if ((p.coordX ?? 0) === 0 && (p.coordY ?? 0) === 0) continue;
-        const trackId = p.armId || OVAL_MATRIX_TRACKS[1].id;
+        const trackId = p.armId || OVAL_MATRIX_TRACKS[0].id;
         if (trackGroups.has(trackId)) {
           trackGroups.get(trackId)!.push(p);
         }

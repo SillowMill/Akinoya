@@ -23,18 +23,18 @@
   "videoUrl": "https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4",
   "coordinates": {
     "spiral": {
-      "x": 382,
-      "y": 288,
-      "sectorId": "SECTOR CYGNUS-01 (COMMUNITY MERIDIAN)",
+      "x": 309,
+      "y": 467,
+      "sectorId": "SECTOR CYGNUS-00 (CORE MERIDIAN)",
       "armId": "arm-cygnus",
       "armName": "CYGNUS FILAMENT"
     },
     "matrix": {
-      "x": 509,
-      "y": 339,
-      "sectorId": "SECTOR MATRIX-T01 (COMMUNITY MERIDIAN)",
-      "trackId": "track-1",
-      "trackName": "INNER CORE MATRIX"
+      "x": 0,
+      "y": 220,
+      "sectorId": "SECTOR MATRIX-T00 (CAPITAL MERIDIAN)",
+      "trackId": "track-0",
+      "trackName": "FOUNDATIONAL CAPITAL OVAL"
     }
   }
 }

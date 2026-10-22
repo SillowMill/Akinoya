@@ -86,11 +86,14 @@ export function isPositionCollisionFree(
   minBuffer: number = MIN_COLLISION_BUFFER_PX
 ): boolean {
   for (const node of placedNodes) {
+    const isCore = node.id === 'akinoya-core';
+    // Core visual radius is ~36px (72px diameter); 160px buffer ensures inner capital oval (b=220px) is collision-free
+    const requiredBuffer = isCore ? Math.min(minBuffer, 160) : minBuffer;
     const dx = candX - node.x;
     const dy = candY - node.y;
     // Fast bounding box pre-rejection before hypotenuse calculation
-    if (Math.abs(dx) < minBuffer && Math.abs(dy) < minBuffer) {
-      if (Math.hypot(dx, dy) < minBuffer) {
+    if (Math.abs(dx) < requiredBuffer && Math.abs(dy) < requiredBuffer) {
+      if (Math.hypot(dx, dy) < requiredBuffer) {
         return false;
       }
     }
@@ -172,25 +175,24 @@ export function getDeterministicPlanetCoordinates(
     planetName === 'Felix';
   if (isFelix) {
     if (mode === 'matrix') {
-      const tr = OVAL_MATRIX_TRACKS[1];
-      const angle = Math.PI / 4;
+      const tr = OVAL_MATRIX_TRACKS[0];
       return {
-        x: Math.round(tr.a * Math.cos(angle)),
-        y: Math.round(tr.b * Math.sin(angle)),
-        sectorId: 'SECTOR MATRIX-T01 (COMMUNITY MERIDIAN)',
+        x: 0,
+        y: tr.b,
+        sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)',
         armId: tr.id,
         armName: tr.name,
       };
     }
 
-    // Default: Variant A (5-Arm Spiral) - Cygnus Filament (~620 AU)
+    // Default: Variant A (5-Arm Spiral) - Cygnus Filament Tier 0 (~560 AU)
     const arm = CONSTELLATION_ARMS[1];
-    const radius = 620;
-    const theta = getSpiralArmAngle(arm.baseAngle, radius);
+    const radius = SPIRAL_RADIAL_TIERS[0];
+    const theta = getSpiralArmAngle(arm.baseAngle, radius) - 0.03;
     return {
       x: Math.round(radius * Math.cos(theta)),
       y: Math.round(radius * Math.sin(theta)),
-      sectorId: 'SECTOR CYGNUS-01 (COMMUNITY MERIDIAN)',
+      sectorId: 'SECTOR CYGNUS-00 (CORE MERIDIAN)',
       armId: arm.id,
       armName: arm.name,
     };
@@ -205,11 +207,11 @@ export function getDeterministicPlanetCoordinates(
   const absHash = Math.abs(hash);
 
   if (mode === 'matrix') {
-    // Inside-Out Expansion Protocol: Prioritize inner harmonic tracks (Track 1 & 2) before outer perimeters
-    const trackIdx = 1 + (absHash % 2);
+    // Inside-Out Expansion Protocol: Prioritize inner harmonic tracks (Track 0, Track 1, Track 2) before outer perimeters
+    const trackIdx = Math.min(OVAL_MATRIX_TRACKS.length - 1, absHash % 3);
     const track = OVAL_MATRIX_TRACKS[trackIdx];
     const slotIdx = absHash % track.slots;
-    const angle = (slotIdx / track.slots) * 2 * Math.PI + (trackIdx % 2 === 1 ? 0.2 : 0);
+    const angle = (slotIdx / track.slots) * 2 * Math.PI + (trackIdx % 2 === 1 ? 0.2 : 0) - Math.PI / 2;
     const x = Math.round(track.a * Math.cos(angle));
     const y = Math.round(track.b * Math.sin(angle));
     const sectorId = `SECTOR MATRIX-T0${trackIdx}`;
@@ -268,25 +270,24 @@ export function assignMultiVariantCoordinates(
 
   // Resolve mode-aware coordinates for Felix test creation
   const cygnusArm = CONSTELLATION_ARMS[1];
-  const felixSpiralRadius = 620;
-  const felixTheta = getSpiralArmAngle(cygnusArm.baseAngle, felixSpiralRadius);
+  const felixSpiralRadius = SPIRAL_RADIAL_TIERS[0]; // 560 AU (Tier 0 inner core)
+  const felixTheta = getSpiralArmAngle(cygnusArm.baseAngle, felixSpiralRadius) - 0.03;
   let felixCoord = {
-    x: Math.round(felixSpiralRadius * Math.cos(felixTheta)),
-    y: Math.round(felixSpiralRadius * Math.sin(felixTheta)),
-    sectorId: 'SECTOR CYGNUS-01 (COMMUNITY MERIDIAN)',
+    x: Math.round(felixSpiralRadius * Math.cos(felixTheta)), // 309
+    y: Math.round(felixSpiralRadius * Math.sin(felixTheta)), // 467
+    sectorId: 'SECTOR CYGNUS-00 (CORE MERIDIAN)',
     armId: cygnusArm.id,
     armName: cygnusArm.name,
   };
 
   if (mode === 'matrix') {
-    const tr1 = OVAL_MATRIX_TRACKS[1];
-    const angle = Math.PI / 4;
+    const tr0 = OVAL_MATRIX_TRACKS[0];
     felixCoord = {
-      x: Math.round(tr1.a * Math.cos(angle)),
-      y: Math.round(tr1.b * Math.sin(angle)),
-      sectorId: 'SECTOR MATRIX-T01 (COMMUNITY MERIDIAN)',
-      armId: tr1.id,
-      armName: tr1.name,
+      x: 0,
+      y: tr0.b, // 220
+      sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)',
+      armId: tr0.id,
+      armName: tr0.name,
     };
   }
 
@@ -298,11 +299,13 @@ export function assignMultiVariantCoordinates(
   ];
   const occupiedSlots = new Set<string>();
   if (mode === 'matrix') {
-    occupiedSlots.add('matrix_tr_0_slot_foundational');
-    occupiedSlots.add('matrix_tr_1_slot_felix');
+    // Track 0 slots: Slot 0 (top apex 0, -220) occupied by Ämlemi; Slot 2 (bottom meridian 0, 220) occupied by Felix
+    occupiedSlots.add('matrix_tr_0_slot_0');
+    occupiedSlots.add('matrix_tr_0_slot_2');
   } else {
+    // Spiral: Ämlemi foundational anchor; Felix occupies Arm 1 Tier 0 sub-slot 0
     occupiedSlots.add('arm_0_tier_foundational');
-    occupiedSlots.add('arm_1_tier_felix');
+    occupiedSlots.add('arm_1_tier_0_sub_0');
   }
 
   return planets.map((sub) => {
@@ -367,34 +370,33 @@ export function assignMultiVariantCoordinates(
 
     // =========================================================================
     // VARIANT B: OVAL MATRIX (Concentric Elliptical Highways)
+    // Strict Inner-Ring Exhaustion Rule: Track 0 must reach 100% saturation
+    // before any slots on Track 1 are allocated, etc.
     // =========================================================================
     if (mode === 'matrix') {
-      const numTracks = OVAL_MATRIX_TRACKS.length - 1; // Tracks 1 to 6
-      const prefTrack = 1 + (absHash % numTracks);
-      let chosenTrack = prefTrack;
+      let chosenTrack = 0;
       let chosenSlot = 0;
       let chosenX = 0;
       let chosenY = 0;
       let found = false;
 
-      // Primary Search: Inside-Out Sequential Expansion (Track 1 -> Track 6)
-      for (let trackIdx = 1; trackIdx < OVAL_MATRIX_TRACKS.length && !found; trackIdx++) {
+      // Primary Search: Strict Sequential Inside-Out Exhaustion (Track 0 -> Track 6)
+      for (let trackIdx = 0; trackIdx < OVAL_MATRIX_TRACKS.length && !found; trackIdx++) {
         const track = OVAL_MATRIX_TRACKS[trackIdx];
-        const prefSlot = absHash % track.slots;
 
         for (let s = 0; s < track.slots && !found; s++) {
-          const slotIdx = (prefSlot + s) % track.slots;
-          const key = `matrix_tr_${trackIdx}_slot_${slotIdx}`;
+          const key = `matrix_tr_${trackIdx}_slot_${s}`;
           if (occupiedSlots.has(key)) continue;
 
-          const angle = (slotIdx / track.slots) * 2 * Math.PI + (trackIdx % 2 === 1 ? 0.2 : 0);
+          // Slot angle starting at -PI/2 (top apex) with alternating track phase offset
+          const angle = (s / track.slots) * 2 * Math.PI + (trackIdx % 2 === 1 ? 0.2 : 0) - Math.PI / 2;
           const candX = Math.round(track.a * Math.cos(angle));
           const candY = Math.round(track.b * Math.sin(angle));
 
           if (isPositionCollisionFree(candX, candY, placedNodes, MIN_COLLISION_BUFFER_PX)) {
             occupiedSlots.add(key);
             chosenTrack = trackIdx;
-            chosenSlot = slotIdx;
+            chosenSlot = s;
             chosenX = candX;
             chosenY = candY;
             found = true;
@@ -402,7 +404,7 @@ export function assignMultiVariantCoordinates(
         }
       }
 
-      // Dynamic Overflow Expansion: Outer elliptical orbits
+      // Dynamic Overflow Expansion: Outer elliptical orbits if all standard tracks saturated
       if (!found) {
         let overflowTier = 0;
         while (!found && overflowTier < 25) {
@@ -410,21 +412,19 @@ export function assignMultiVariantCoordinates(
           const a = 3720 + overflowTier * 600;
           const b = 2400 + overflowTier * 400;
           const totalSlots = 16 + overflowTier * 2;
-          const prefSlot = absHash % totalSlots;
 
           for (let s = 0; s < totalSlots && !found; s++) {
-            const slotIdx = (prefSlot + s) % totalSlots;
-            const key = `matrix_overflow_${overflowTier}_slot_${slotIdx}`;
+            const key = `matrix_overflow_${overflowTier}_slot_${s}`;
             if (occupiedSlots.has(key)) continue;
 
-            const angle = (slotIdx / totalSlots) * 2 * Math.PI + (overflowTier % 2 === 1 ? 0.2 : 0);
+            const angle = (s / totalSlots) * 2 * Math.PI + (overflowTier % 2 === 1 ? 0.2 : 0) - Math.PI / 2;
             const candX = Math.round(a * Math.cos(angle));
             const candY = Math.round(b * Math.sin(angle));
 
             if (isPositionCollisionFree(candX, candY, placedNodes, MIN_COLLISION_BUFFER_PX)) {
               occupiedSlots.add(key);
               chosenTrack = OVAL_MATRIX_TRACKS.length - 1;
-              chosenSlot = slotIdx;
+              chosenSlot = s;
               chosenX = candX;
               chosenY = candY;
               found = true;
@@ -451,26 +451,25 @@ export function assignMultiVariantCoordinates(
 
     // =========================================================================
     // VARIANT A: 5-ARM SPIRAL (DEFAULT)
+    // Strict Inner-Tier Sequential Cascading Engine:
+    // Core radial tier (Tier 0: 560 AU) must be fully populated arm-by-arm
+    // before cascading outward to Tier 1, Tier 2, etc.
     // =========================================================================
     const numArms = CONSTELLATION_ARMS.length;
     const numTiers = SPIRAL_RADIAL_TIERS.length;
-    const prefArm = absHash % numArms;
-    const prefTier = Math.floor(absHash / numArms) % numTiers;
-    const prefSub = Math.floor(absHash / (numArms * numTiers)) % 2;
 
-    let chosenArm = prefArm;
+    let chosenArm = 0;
     let chosenTier = 0;
-    let chosenSub = prefSub;
+    let chosenSub = 0;
     let chosenX = 0;
     let chosenY = 0;
     let found = false;
 
-    // Primary Search: Inside-Out Sequential Expansion (Tier 0 -> Tier numTiers - 1)
+    // Primary Search: Strict Sequential Inside-Out Cascading (Tier 0 -> Tier numTiers - 1)
+    // Arm 0 -> Arm 1 -> Arm 2 -> Arm 3 -> Arm 4 across sub-slots at current radial tier
     for (let t = 0; t < numTiers && !found; t++) {
-      for (let subOffset = 0; subOffset < 2 && !found; subOffset++) {
-        const s = (prefSub + subOffset) % 2;
-        for (let aOffset = 0; aOffset < numArms && !found; aOffset++) {
-          const a = (prefArm + aOffset) % numArms;
+      for (let a = 0; a < numArms && !found; a++) {
+        for (let s = 0; s < 2 && !found; s++) {
           const key = `arm_${a}_tier_${t}_sub_${s}`;
           if (occupiedSlots.has(key)) continue;
 
@@ -494,13 +493,12 @@ export function assignMultiVariantCoordinates(
       }
     }
 
-    // Dynamic Overflow Expansion: Outer Spiral Tiers
+    // Dynamic Overflow Expansion: Outer Spiral Tiers if all standard tiers saturated
     if (!found) {
       let extTier = numTiers;
       while (!found && extTier < numTiers + 25) {
-        for (let s = 0; s < 2 && !found; s++) {
-          for (let aOffset = 0; aOffset < numArms && !found; aOffset++) {
-            const a = (prefArm + aOffset) % numArms;
+        for (let a = 0; a < numArms && !found; a++) {
+          for (let s = 0; s < 2 && !found; s++) {
             const key = `arm_${a}_ext_tier_${extTier}_sub_${s}`;
             if (occupiedSlots.has(key)) continue;
 
@@ -876,11 +874,11 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     pioneerBadge: 'VIP PIONEER · #02',
     pioneer_badge: 'VIP PIONEER · #02',
     status: 'PUBLISHED',
-    coordX: 382,
-    coordY: 288,
-    coord_x: 382,
-    coord_y: 288,
-    sectorId: 'SECTOR CYGNUS-01 (COMMUNITY MERIDIAN)',
+    coordX: 309,
+    coordY: 467,
+    coord_x: 309,
+    coord_y: 467,
+    sectorId: 'SECTOR CYGNUS-00 (CORE MERIDIAN)',
     armId: 'arm-cygnus',
     armName: 'CYGNUS FILAMENT',
     createdAt: '2026-10-22T09:20:00.000Z',

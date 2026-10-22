@@ -3842,11 +3842,11 @@ async function syncPlanetToSupabaseAtomic(params) {
         pioneer_badge: "VIP PIONEER \xB7 #02",
         status: "PUBLISHED",
         createdAt: baseRecord.created_at,
-        coordX: 382,
-        coordY: 288,
-        coord_x: 382,
-        coord_y: 288,
-        sectorId: "SECTOR CYGNUS-01 (COMMUNITY MERIDIAN)",
+        coordX: 309,
+        coordY: 467,
+        coord_x: 309,
+        coord_y: 467,
+        sectorId: "SECTOR CYGNUS-00 (CORE MERIDIAN)",
         armId: "arm-cygnus",
         armName: "CYGNUS FILAMENT"
       });
