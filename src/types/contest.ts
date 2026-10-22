@@ -7,6 +7,7 @@ export interface PlanetSubmissionRenders {
   ecosystem?: string; // backwards compatibility alias
   videoUrl?: string; // 9:16 Vertical Viral Video Trailer (5s)
   video_url?: string;
+  falVideoUrl?: string;
   videoStatus?: 'READY' | 'QUEUED_PENDING';
   sfxAudioUrl?: string; // Synchronized 5-Second AI Sound Effects Track (~$0.01-$0.03/gen)
   sfx_audio_url?: string;

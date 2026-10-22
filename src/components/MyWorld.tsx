@@ -22,11 +22,13 @@ import {
   copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
+import { getPioneerMasterVideoUrl } from '../utils/pioneer';
 import {
   useDynamicWorldVideo,
   isMobileOrTabletDevice,
   getCacheBustedUrl,
   downloadOrShareVideoDirect,
+  prewarmTrailerFastStartBlob,
 } from './WorldStoryVerificationBadge';
 import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
 import { formatTitleCaseUserName } from '../utils/holder';
@@ -90,7 +92,9 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
     }
   };
   const dynamicVideo = useDynamicWorldVideo(dossier);
+  const pioneerVideo = getPioneerMasterVideoUrl(dossier);
   const videoUrl =
+    pioneerVideo ||
     dynamicVideo.videoUrl ||
     dossier.videoUrl ||
     dossier.renders?.videoUrl ||
@@ -98,6 +102,13 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
     '';
   const heroPhotoUrl = photoCards[0]?.url || dossier.renders?.hero || '';
   const isVideoReady = Boolean(videoUrl);
+
+  // Prewarm FastStart MP4 trailer blob for 0ms instantaneous saving/sharing to iOS Photos & Desktop
+  useEffect(() => {
+    if (dossier && videoUrl) {
+      prewarmTrailerFastStartBlob(videoUrl, dossier);
+    }
+  }, [dossier, videoUrl]);
 
   const handleDownloadTrailer = async () => {
     soundManager.playTone(740, 0.06);

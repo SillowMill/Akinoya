@@ -24,7 +24,7 @@
         "creativeExpression": "Bioluminescent Avatar-style alien mountain landscape with fluffy ginger domestic cats and striking pink sci-fi cats"
       },
       "futurePromise": "With curiosity and grace, the feline cosmos opens its infinite horizons.",
-      "generatedLore": "Classified by world architect Esther P., Felix is an official VIP frontier sector (#02) situated within the Äkinoya celestial sphere. Cascading across bioluminescent mountain ranges and floating quartz arches reminiscent of an Avatar-style alien paradise, its skies radiate with vibrant neon pink and warm incandescent auroras.\n\nAcross the canyon plateaus roam charming, fluffy rossenhuiskatten (ginger domestic cats) and striking bioluminescent pink sci-fi cats playing amidst glowing whisker-ferns that react to touch. At the planetary meridian stands the colossal Great Sphinx of Felix, an ancient feline monolith carved from rose quartz and copper conduits humming at 432Hz.\n\nFOUNDING CREED:\n\"With curiosity and grace, the feline cosmos opens its infinite horizons.\"",
+      "generatedLore": "Classified by world architect Esther P., Felix is an official VIP frontier sector (#02) situated within the \u00c4kinoya celestial sphere. Cascading across bioluminescent mountain ranges and floating quartz arches reminiscent of an Avatar-style alien paradise, its skies radiate with vibrant neon pink and warm incandescent auroras.\n\nAcross the canyon plateaus roam charming, fluffy rossenhuiskatten (ginger domestic cats) and striking bioluminescent pink sci-fi cats playing amidst glowing whisker-ferns that react to touch. At the planetary meridian stands the colossal Great Sphinx of Felix, an ancient feline monolith carved from rose quartz and copper conduits humming at 432Hz.\n\nFOUNDING CREED:\n\"With curiosity and grace, the feline cosmos opens its infinite horizons.\"",
       "renders": {
         "hero": "https://v3b.fal.media/files/b/0aaf67e3/QCNr60F4WXHza0PgpPzkm_FpQcg8tP.png",
         "flora": "https://v3b.fal.media/files/b/0aaf67e5/seICefAuMBvzKL611nP6b_uzsXKplx.png",
@@ -38,16 +38,17 @@
         "04_atmo": "https://v3b.fal.media/files/b/0aaf67e8/iSmEn2NslRpLLvBpxK97H_UFxeKMkO.png",
         "05_lore": "https://v3b.fal.media/files/b/0aaf67ea/7BY1x9xCPX1WHrnp7i7nT_5vJ41dxC.png",
         "video_url": "https://v3b.fal.media/files/b/0aaf6d23/O9RBWYVGrZNiF9ppfJDsx_video.mp4",
-        "videoUrl": "https://v3b.fal.media/files/b/0aaf6d23/O9RBWYVGrZNiF9ppfJDsx_video.mp4"
+        "videoUrl": "/assets/videos/felix_trailer.mp4",
+        "falVideoUrl": "https://v3b.fal.media/files/b/0aaf6d23/O9RBWYVGrZNiF9ppfJDsx_video.mp4"
       },
-      "videoUrl": "https://v3b.fal.media/files/b/0aaf6d23/O9RBWYVGrZNiF9ppfJDsx_video.mp4",
+      "videoUrl": "/assets/videos/felix_trailer.mp4",
       "videoStatus": "READY",
       "votesCount": 2,
       "hasVoted": false,
       "isPioneer": true,
       "isVipPioneer": true,
-      "pioneerBadge": "VIP PIONEER · #02",
-      "pioneer_badge": "VIP PIONEER · #02",
+      "pioneerBadge": "VIP PIONEER \u00b7 #02",
+      "pioneer_badge": "VIP PIONEER \u00b7 #02",
       "status": "PUBLISHED",
       "coordX": 243,
       "coordY": 176,
@@ -91,7 +92,7 @@
         "creativeExpression": "Dark, cool, crazy, trippy, and surreal dreamscape featuring flying/floating trees and abstract anti-gravity physics"
       },
       "futurePromise": "Across inverted horizons, imagination reshapes the laws of reality.",
-      "generatedLore": "Classified by world architect Nathan R., Ankrau is an official VIP frontier sector (#03) situated within the Äkinoya celestial sphere. Defying conventional celestial mechanics, Ankrau exists within an inverted gravitational vortex where colossal bioluminescent trees float upside down in mid-air and levitating obsidian shards orbit in zero gravity under violet and electric cyan auroras.\n\nEthereal sky manta rays and fractal shadow-cats glide effortlessly between hovering moss islands. Anchoring the planetary vortex stands the Monolith of Inverted Physics, a shattered, perpetually levitating cubist obelisk channeling cosmic anti-gravity energy.\n\nFOUNDING CREED:\n\"Across inverted horizons, imagination reshapes the laws of reality.\"",
+      "generatedLore": "Classified by world architect Nathan R., Ankrau is an official VIP frontier sector (#03) situated within the \u00c4kinoya celestial sphere. Defying conventional celestial mechanics, Ankrau exists within an inverted gravitational vortex where colossal bioluminescent trees float upside down in mid-air and levitating obsidian shards orbit in zero gravity under violet and electric cyan auroras.\n\nEthereal sky manta rays and fractal shadow-cats glide effortlessly between hovering moss islands. Anchoring the planetary vortex stands the Monolith of Inverted Physics, a shattered, perpetually levitating cubist obelisk channeling cosmic anti-gravity energy.\n\nFOUNDING CREED:\n\"Across inverted horizons, imagination reshapes the laws of reality.\"",
       "renders": {
         "hero": "https://v3b.fal.media/files/b/0aaf680b/abVXKSJD21rsIkKAINQUP_DMkQXa60.png",
         "flora": "https://v3b.fal.media/files/b/0aaf680d/NB87mCoA8EG2dU1qtb2ri_rozLGKjR.png",
@@ -105,16 +106,17 @@
         "04_atmo": "https://v3b.fal.media/files/b/0aaf6811/VbHaEEq81S156sf-2H_g-_D23i1FuO.png",
         "05_lore": "https://v3b.fal.media/files/b/0aaf6813/Txn-nAVGcZlb_Y4DuyTS__tHA0X6eE.png",
         "video_url": "https://v3b.fal.media/files/b/0aaf6d21/2RmE9WRG5uB4JE9DrJ3kh_video.mp4",
-        "videoUrl": "https://v3b.fal.media/files/b/0aaf6d21/2RmE9WRG5uB4JE9DrJ3kh_video.mp4"
+        "videoUrl": "/assets/videos/ankrau_trailer.mp4",
+        "falVideoUrl": "https://v3b.fal.media/files/b/0aaf6d21/2RmE9WRG5uB4JE9DrJ3kh_video.mp4"
       },
-      "videoUrl": "https://v3b.fal.media/files/b/0aaf6d21/2RmE9WRG5uB4JE9DrJ3kh_video.mp4",
+      "videoUrl": "/assets/videos/ankrau_trailer.mp4",
       "videoStatus": "READY",
       "votesCount": 2,
       "hasVoted": false,
       "isPioneer": true,
       "isVipPioneer": true,
-      "pioneerBadge": "VIP PIONEER · #03",
-      "pioneer_badge": "VIP PIONEER · #03",
+      "pioneerBadge": "VIP PIONEER \u00b7 #03",
+      "pioneer_badge": "VIP PIONEER \u00b7 #03",
       "status": "PUBLISHED",
       "coordX": -93,
       "coordY": 285,
@@ -158,7 +160,7 @@
         "creativeExpression": "Sleek, cool, stylish, and masculine urban energy reflecting Leuven-by-night, modern architecture, and subtle deep-blue/white stadium/soccer lighting (OHL vibe), matching a great 28-year-old personality. Zero cat assets."
       },
       "futurePromise": "Style, passion, and modern architectural vision illuminate every night horizon.",
-      "generatedLore": "Classified by world architect Florian H., Florium is an official VIP frontier sector (#04) situated within the Äkinoya celestial sphere. Conceived as a sleek, masculine neo-noir urban wonderworld inspired by Leuven-by-night, Florium merges modern architectural glasslines and reflecting river canals with electric sapphire blue and crisp white stadium floodlights (OHL energy).\n\nVertical bio-forests and illuminated rooftop gardens climb geometric steel towers, while dynamic cybernetic companions walk through pedestrian plazas reflecting floodlit skies. Towering above the water canals is the Stadium of Florium (The King Power Concord), a colossal architectural amphitheater forged from brushed titanium and illuminated glass.\n\nFOUNDING CREED:\n\"Style, passion, and modern architectural vision illuminate every night horizon.\"",
+      "generatedLore": "Classified by world architect Florian H., Florium is an official VIP frontier sector (#04) situated within the \u00c4kinoya celestial sphere. Conceived as a sleek, masculine neo-noir urban wonderworld inspired by Leuven-by-night, Florium merges modern architectural glasslines and reflecting river canals with electric sapphire blue and crisp white stadium floodlights (OHL energy).\n\nVertical bio-forests and illuminated rooftop gardens climb geometric steel towers, while dynamic cybernetic companions walk through pedestrian plazas reflecting floodlit skies. Towering above the water canals is the Stadium of Florium (The King Power Concord), a colossal architectural amphitheater forged from brushed titanium and illuminated glass.\n\nFOUNDING CREED:\n\"Style, passion, and modern architectural vision illuminate every night horizon.\"",
       "renders": {
         "hero": "https://v3b.fal.media/files/b/0aaf698b/27kxKI6v8phTiLmYnxq3c_au3ooi6U.png",
         "flora": "https://v3b.fal.media/files/b/0aaf698d/m5M5nw2MGGpCiJKgrwDeR_4q0Kj3qa.png",
@@ -172,16 +174,17 @@
         "04_atmo": "https://v3b.fal.media/files/b/0aaf6991/TfW5CN0GOxdviStakgbNI_YYQ4up7x.png",
         "05_lore": "https://v3b.fal.media/files/b/0aaf6993/NWFOuBxgb2Hg-tC4w5pB5_KI51BOmF.png",
         "video_url": "https://v3b.fal.media/files/b/0aaf6ac4/D2auzhOcimbCYZC5umTeM_video.mp4",
-        "videoUrl": "https://v3b.fal.media/files/b/0aaf6ac4/D2auzhOcimbCYZC5umTeM_video.mp4"
+        "videoUrl": "/assets/videos/florium_trailer.mp4",
+        "falVideoUrl": "https://v3b.fal.media/files/b/0aaf6ac4/D2auzhOcimbCYZC5umTeM_video.mp4"
       },
-      "videoUrl": "https://v3b.fal.media/files/b/0aaf6ac4/D2auzhOcimbCYZC5umTeM_video.mp4",
+      "videoUrl": "/assets/videos/florium_trailer.mp4",
       "videoStatus": "READY",
       "votesCount": 2,
       "hasVoted": false,
       "isPioneer": true,
       "isVipPioneer": true,
-      "pioneerBadge": "VIP PIONEER · #04",
-      "pioneer_badge": "VIP PIONEER · #04",
+      "pioneerBadge": "VIP PIONEER \u00b7 #04",
+      "pioneer_badge": "VIP PIONEER \u00b7 #04",
       "status": "PUBLISHED",
       "coordX": -300,
       "coordY": 0,
@@ -225,7 +228,7 @@
         "creativeExpression": "Hyper-structured, brilliant, geometric, and flawlessly engineered masterwork of pure analytical elegance and strategic precision"
       },
       "futurePromise": "Absolute clarity and precision conquer the deepest cosmic frontiers.",
-      "generatedLore": "Classified by world architect Seppe G., Sepplon is an official VIP frontier sector (#05) situated within the Äkinoya celestial sphere. Engineered as a masterpiece of mathematical perfection and analytical elegance, its ionized nitrogen atmosphere is mapped by razor-sharp cyan laser meridians and geometric auroral lattices.\n\nTessellated hexagonal silicon crystal groves and fiber-optic pulse trees self-assemble across the surface, patrolled by chrome and obsidian cybernetic falcon sentinels with sapphire optic cores. At the core of the grid pulsates the Grand Calculation Matrix, a colossal hyper-symmetric planetary hypercube constructed from polished platinum and cobalt quantum circuitry.\n\nFOUNDING CREED:\n\"Absolute clarity and precision conquer the deepest cosmic frontiers.\"",
+      "generatedLore": "Classified by world architect Seppe G., Sepplon is an official VIP frontier sector (#05) situated within the \u00c4kinoya celestial sphere. Engineered as a masterpiece of mathematical perfection and analytical elegance, its ionized nitrogen atmosphere is mapped by razor-sharp cyan laser meridians and geometric auroral lattices.\n\nTessellated hexagonal silicon crystal groves and fiber-optic pulse trees self-assemble across the surface, patrolled by chrome and obsidian cybernetic falcon sentinels with sapphire optic cores. At the core of the grid pulsates the Grand Calculation Matrix, a colossal hyper-symmetric planetary hypercube constructed from polished platinum and cobalt quantum circuitry.\n\nFOUNDING CREED:\n\"Absolute clarity and precision conquer the deepest cosmic frontiers.\"",
       "renders": {
         "hero": "https://v3b.fal.media/files/b/0aaf6863/fTRjYgpPsxLtYE5rkxzCH_imKRu1DN.png",
         "flora": "https://v3b.fal.media/files/b/0aaf6865/0JTHOCwSvlzSDHzK_oJCS_VO54kUyl.png",
@@ -239,16 +242,17 @@
         "04_atmo": "https://v3b.fal.media/files/b/0aaf6869/KZcqGlmdpfYJbh59dM81N_tUw4eCG9.png",
         "05_lore": "https://v3b.fal.media/files/b/0aaf686a/F2W0jCmJVs-f0nP_41N59_tjkY7BlY.png",
         "video_url": "https://v3b.fal.media/files/b/0aaf6d23/dE0_HEXLkGCMwR-A5XTkb_video.mp4",
-        "videoUrl": "https://v3b.fal.media/files/b/0aaf6d23/dE0_HEXLkGCMwR-A5XTkb_video.mp4"
+        "videoUrl": "/assets/videos/sepplon_trailer.mp4",
+        "falVideoUrl": "https://v3b.fal.media/files/b/0aaf6d23/dE0_HEXLkGCMwR-A5XTkb_video.mp4"
       },
-      "videoUrl": "https://v3b.fal.media/files/b/0aaf6d23/dE0_HEXLkGCMwR-A5XTkb_video.mp4",
+      "videoUrl": "/assets/videos/sepplon_trailer.mp4",
       "videoStatus": "READY",
       "votesCount": 2,
       "hasVoted": false,
       "isPioneer": true,
       "isVipPioneer": true,
-      "pioneerBadge": "VIP PIONEER · #05",
-      "pioneer_badge": "VIP PIONEER · #05",
+      "pioneerBadge": "VIP PIONEER \u00b7 #05",
+      "pioneer_badge": "VIP PIONEER \u00b7 #05",
       "status": "PUBLISHED",
       "coordX": -93,
       "coordY": -285,

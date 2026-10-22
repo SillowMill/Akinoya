@@ -34,7 +34,12 @@ import {
   copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
-import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
+import {
+  isFoundingPioneerPlanet,
+  isPioneerPlanet,
+  isVipPioneerPlanet,
+  getPioneerMasterVideoUrl,
+} from '../utils/pioneer';
 import { formatTitleCaseUserName, formatAuthorName } from '../utils/holder';
 import {
   LiveStoryTrailerViewport,
@@ -47,6 +52,7 @@ import {
   getCacheBustedUrl,
   downloadOrShareVideoDirect,
   triggerDirectDownload,
+  prewarmTrailerFastStartBlob,
 } from './WorldStoryVerificationBadge';
 import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
 
@@ -167,17 +173,27 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
     [activePlanet, editionRank]
   );
 
-  const isTrailerTab = activeTab === 'trailer';
-  const isStoryCardTab = activeTab === 'story_card';
-  const isPhotoTab = typeof activeTab === 'number';
-  const currentPhoto = isPhotoTab ? photoCards[activeTab] || photoCards[0] : photoCards[0];
+  const pioneerVideo = getPioneerMasterVideoUrl(activePlanet);
   const videoUrl =
+    pioneerVideo ||
     dynamicVideo.videoUrl ||
     activePlanet?.videoUrl ||
     activePlanet?.renders?.videoUrl ||
     activePlanet?.renders?.video_url ||
     (activePlanet?.humanAnswers as any)?.video_url ||
     '';
+
+  // Prewarm FastStart MP4 trailer blob for 0ms instantaneous saving/sharing to iOS Photos & Desktop
+  useEffect(() => {
+    if (isOpen && activePlanet) {
+      prewarmTrailerFastStartBlob(videoUrl, activePlanet);
+    }
+  }, [isOpen, activePlanet, videoUrl]);
+
+  const isTrailerTab = activeTab === 'trailer';
+  const isStoryCardTab = activeTab === 'story_card';
+  const isPhotoTab = typeof activeTab === 'number';
+  const currentPhoto = isPhotoTab ? photoCards[activeTab] || photoCards[0] : photoCards[0];
   const heroPhotoUrl = photoCards[0]?.url || activePlanet?.renders?.hero || '';
 
   const handleCopyCode = () => {

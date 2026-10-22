@@ -27,7 +27,12 @@ import {
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { PlanetSubmission } from '../types/contest';
 import { getPlanetPhotoCards } from '../data/contest';
-import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
+import {
+  isFoundingPioneerPlanet,
+  isPioneerPlanet,
+  isVipPioneerPlanet,
+  getPioneerMasterVideoUrl,
+} from '../utils/pioneer';
 import { formatTitleCaseUserName } from '../utils/holder';
 import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
@@ -41,6 +46,7 @@ import {
   getCacheBustedUrl,
   triggerDirectDownload,
   downloadOrShareVideoDirect,
+  prewarmTrailerFastStartBlob,
 } from './WorldStoryVerificationBadge';
 import { watermarkAndSavePhoto, renderWatermarkedPhotoBlob } from '../utils/watermarkPhoto';
 
@@ -358,6 +364,21 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
   // Dynamic Val.ai / Fal.ai Video Pipeline check & automatic promotion
   const dynamicVideo = useDynamicWorldVideo(dossier);
 
+  // Prewarm FastStart MP4 trailer blob for 0ms instantaneous saving/sharing to iOS Photos & Desktop
+  useEffect(() => {
+    if (dossier) {
+      const activeVideoUrl =
+        getPioneerMasterVideoUrl(dossier) ||
+        dynamicVideo.videoUrl ||
+        dossier.videoUrl ||
+        dossier.renders?.videoUrl ||
+        dossier.renders?.video_url;
+      if (activeVideoUrl) {
+        prewarmTrailerFastStartBlob(activeVideoUrl, dossier);
+      }
+    }
+  }, [dossier, dynamicVideo.videoUrl]);
+
   const photoCards = useMemo(() => getPlanetPhotoCards(dossier), [dossier]);
   const meta = useMemo(
     () => deriveWorldVerificationMeta(dossier, editionRank),
@@ -575,6 +596,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
 
     try {
       const activeVideoUrl =
+        getPioneerMasterVideoUrl(dossier) ||
         dynamicVideo.videoUrl ||
         dossier.videoUrl ||
         dossier.renders?.videoUrl ||

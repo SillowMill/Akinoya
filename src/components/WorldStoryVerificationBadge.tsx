@@ -21,7 +21,12 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { PlanetSubmission } from '../types/contest';
 import { getPlanetPhotoCards } from '../data/contest';
-import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
+import {
+  isFoundingPioneerPlanet,
+  isPioneerPlanet,
+  isVipPioneerPlanet,
+  getPioneerMasterVideoUrl,
+} from '../utils/pioneer';
 import { formatTitleCaseUserName, formatAuthorName } from '../utils/holder';
 import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
@@ -1324,10 +1329,64 @@ export function triggerDirectDownload(url: string, filename: string): void {
 }
 
 /**
+ * In-memory cache for faststart MP4 trailer video blobs.
+ * Enables 0ms instantaneous exports on mobile & tablet devices, eliminating wait times
+ * and preserving transient user gestures for frictionless "Save to Photos" sheets.
+ */
+const brandedTrailerBlobCache = new Map<string, Blob>();
+
+/**
+ * Builds a deterministic cache key for a given video trailer.
+ */
+export function getTrailerCacheKey(targetUrl: string, dossier?: PlanetSubmission): string {
+  const planetKey = dossier?.id || dossier?.planetName || 'general';
+  return `trailer_blob_${planetKey}_${targetUrl}`;
+}
+
+/**
+ * Pre-fetches and validates/optimizes the faststart MP4 trailer blob in the background
+ * as soon as a dossier or modal opens.
+ * Populates `brandedTrailerBlobCache` so that when the user taps "Save Trailer to Photos",
+ * the operation is 100% instantaneous (0ms), completely preserving the mobile Safari user gesture!
+ */
+export async function prewarmTrailerFastStartBlob(
+  videoUrl?: string,
+  dossier?: PlanetSubmission
+): Promise<Blob | null> {
+  const pioneerUrl = getPioneerMasterVideoUrl(dossier, true);
+  const targetUrl =
+    pioneerUrl ||
+    videoUrl ||
+    dossier?.videoUrl ||
+    dossier?.renders?.videoUrl ||
+    dossier?.renders?.video_url;
+
+  if (!targetUrl) return null;
+
+  const cacheKey = getTrailerCacheKey(targetUrl, dossier);
+  if (brandedTrailerBlobCache.has(cacheKey)) {
+    return brandedTrailerBlobCache.get(cacheKey)!;
+  }
+
+  try {
+    const cacheBustedUrl = getCacheBustedUrl(targetUrl);
+    const res = await fetch(cacheBustedUrl);
+    if (!res.ok) return null;
+    const rawBlob = await res.blob();
+    const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+    brandedTrailerBlobCache.set(cacheKey, fastStartBlob);
+    return fastStartBlob;
+  } catch (err) {
+    console.warn('Prewarm trailer faststart failed:', err);
+    return null;
+  }
+}
+
+/**
  * Direct video download handler:
  * Instantly triggers native mobile media saving (iOS Photos / Camera Roll via Web Share sheet)
  * or direct native download without intermediate widgets or stalling loops.
- * Links directly to the high-quality, butter-smooth 60fps master export with permanent branding.
+ * Links directly to the high-quality, butter-smooth 60fps master export with FastStart headers.
  */
 export async function downloadOrShareVideoDirect(
   videoUrl: string,
@@ -1341,59 +1400,80 @@ export async function downloadOrShareVideoDirect(
   const safePlanet = (dossier?.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
   const safeFilename = filename || `sillowmill-${safePlanet}-9x16-trailer.mp4`;
 
-  const isAmlemi =
-    !dossier ||
-    dossier.id === 'amlemi' ||
-    isFoundingPioneerPlanet(dossier) ||
-    !videoUrl ||
-    videoUrl.includes('amlemi');
+  // 1. Resolve Target Video URL (Pioneers 1-5 point strictly to high-speed local FastStart masters)
+  const pioneerUrl = getPioneerMasterVideoUrl(dossier, true);
+  const targetUrl =
+    pioneerUrl ||
+    videoUrl ||
+    dossier?.videoUrl ||
+    dossier?.renders?.videoUrl ||
+    dossier?.renders?.video_url ||
+    '/assets/videos/amlemi_trailer_master.mp4';
 
-  // 1. High-Quality Master Branded Source for Ämlemi & Genesis Benchmark:
-  // Pre-rendered 1080x1920 60fps H.264/AAC with Fast Start moov atom and permanent branding.
-  if (isAmlemi) {
-    const masterUrl = '/assets/videos/amlemi_trailer_master.mp4';
-    if (isMobile && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-      try {
-        const cacheBustedUrl = getCacheBustedUrl(masterUrl);
-        const res = await fetch(cacheBustedUrl);
-        if (res.ok) {
-          const blob = await res.blob();
-          const file = new File([blob], safeFilename, { type: 'video/mp4' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title, text });
-            return;
-          }
-        }
-      } catch (err: any) {
-        if (err?.name === 'AbortError') return; // User tapped cancel on iOS native share sheet
+  const cacheKey = getTrailerCacheKey(targetUrl, dossier);
+
+  // 2. Check in-memory faststart blob cache for 0ms instantaneous share/download
+  let videoBlob: Blob | null = brandedTrailerBlobCache.get(cacheKey) || null;
+
+  if (!videoBlob) {
+    try {
+      const cacheBustedUrl = getCacheBustedUrl(targetUrl);
+      const res = await fetch(cacheBustedUrl);
+      if (res.ok) {
+        const rawBlob = await res.blob();
+        videoBlob = await optimizeMp4FastStart(rawBlob);
+        brandedTrailerBlobCache.set(cacheKey, videoBlob);
       }
+    } catch (err) {
+      console.warn('Direct fetch/faststart failed, checking fallback:', err);
+    }
+  }
+
+  // 3. If blob resolved (from cache or fast fetch), trigger native share sheet (mobile) or instant download (desktop)
+  if (videoBlob) {
+    const file = new File([videoBlob], safeFilename, { type: 'video/mp4' });
+    if (isMobile) {
+      if (
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title,
+            text,
+          });
+          return;
+        } catch (err: any) {
+          if (err?.name === 'AbortError') return; // User tapped cancel on iOS native share sheet
+          console.warn('Mobile native share failed:', err);
+        }
+      }
+      // Mobile fallback: direct anchor download of the faststart blob
+      await downloadOrShareFileBlob(videoBlob, safeFilename, 'video/mp4', title, text);
+      return;
     }
 
-    // Direct native browser download of master file
-    triggerDirectDownload(masterUrl, safeFilename);
+    // Desktop: direct anchor download of the faststart blob
+    await downloadOrShareFileBlob(videoBlob, safeFilename, 'video/mp4', title, text);
     return;
   }
 
-  // 2. Custom User-Generated World Pipeline:
+  // 4. Fallback for custom user submissions without pre-rendered video files
   if (dossier) {
     try {
-      const result = await exportWorldTrailerVideoBlob(dossier, editionRank, videoUrl);
+      const result = await exportWorldTrailerVideoBlob(dossier, editionRank, targetUrl);
       if (result?.blob) {
-        if (isMobile && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-          const file = new File([result.blob], safeFilename, { type: 'video/mp4' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title, text });
-            return;
-          }
-        }
         await downloadOrShareFileBlob(result.blob, safeFilename, 'video/mp4', title, text);
         return;
       }
     } catch {}
   }
 
-  // Fallback direct download
-  triggerDirectDownload(videoUrl || '/assets/videos/amlemi_trailer_master.mp4', safeFilename);
+  // 5. Ultimate browser-level direct download trigger
+  triggerDirectDownload(targetUrl, safeFilename);
 }
 
 /**
@@ -1407,13 +1487,6 @@ export async function downloadOrShareVideoBlob(
 ): Promise<void> {
   return downloadOrShareFileBlob(blob, filename, 'video/mp4', title, text);
 }
-
-/**
- * In-memory cache for synthesized branded trailer video blobs.
- * Enables 0ms instantaneous exports on mobile & tablet devices, eliminating wait times
- * and preserving transient user gestures for frictionless "Save to Photos" sheets.
- */
-const brandedTrailerBlobCache = new Map<string, Blob>();
 
 /**
  * In-flight promise tracker to deduplicate concurrent export requests and share background synthesis.
@@ -1449,21 +1522,17 @@ export async function exportWorldTrailerVideoBlob(
     return inFlightTrailerExports.get(cacheKey)!;
   }
 
-  // Instant pre-rendered master export for Ämlemi / Genesis Benchmark
-  const isAmlemi =
-    !dossier ||
-    dossier.id === 'amlemi' ||
-    isFoundingPioneerPlanet(dossier) ||
-    (targetVideoUrl && targetVideoUrl.includes('amlemi'));
-
-  if (isAmlemi) {
+  // Instant pre-rendered master export for Pioneer Worlds (Ämlemi, Felix, Ankrau, Florium, Sepplon)
+  const pioneerMasterUrl = getPioneerMasterVideoUrl(dossier, true);
+  if (pioneerMasterUrl) {
     try {
-      const cacheBustedUrl = getCacheBustedUrl('/assets/videos/amlemi_trailer_master.mp4');
+      const cacheBustedUrl = getCacheBustedUrl(pioneerMasterUrl);
       const res = await fetch(cacheBustedUrl);
       if (res.ok) {
-        const masterBlob = await res.blob();
-        brandedTrailerBlobCache.set(cacheKey, masterBlob);
-        return { blob: masterBlob, ext: 'mp4' };
+        const rawBlob = await res.blob();
+        const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+        brandedTrailerBlobCache.set(cacheKey, fastStartBlob);
+        return { blob: fastStartBlob, ext: 'mp4' };
       }
     } catch {}
   }
@@ -1758,7 +1827,9 @@ export async function exportWorldTrailerVideoBlob(
  *   automatically promotes the production AI video across all dossier views and downloads.
  */
 export function useDynamicWorldVideo(dossier: PlanetSubmission | null | undefined) {
+  const pioneerUrl = getPioneerMasterVideoUrl(dossier);
   const initialUrl =
+    pioneerUrl ||
     dossier?.videoUrl ||
     dossier?.renders?.videoUrl ||
     dossier?.renders?.video_url ||
@@ -1772,7 +1843,9 @@ export function useDynamicWorldVideo(dossier: PlanetSubmission | null | undefine
   const [isChecking, setIsChecking] = useState<boolean>(false);
 
   useEffect(() => {
+    const pioneerUrl = getPioneerMasterVideoUrl(dossier);
     const currentInit =
+      pioneerUrl ||
       dossier?.videoUrl ||
       dossier?.renders?.videoUrl ||
       dossier?.renders?.video_url ||

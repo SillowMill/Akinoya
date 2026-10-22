@@ -285,3 +285,86 @@ export const isVipPioneerPlanet = (planet?: {
 
   return false;
 };
+
+/**
+ * Resolves the canonical high-definition FastStart MP4 video trailer path for any pioneer world.
+ * Guarantees zero-stutter playback, instant streaming, and 1-tap saving to iOS Photos and Android.
+ */
+export const getPioneerMasterVideoUrl = (
+  planet?: {
+    id?: string | null;
+    planetName?: string | null;
+    authorName?: string | null;
+    authorUsername?: string | null;
+    authorEmail?: string | null;
+    userId?: string | null;
+  } | null,
+  useMasterOverlay = false
+): string | null => {
+  if (!planet) return null;
+  const id = (planet.id || '').toLowerCase();
+  const name = (planet.planetName || '').toLowerCase();
+  const author = (planet.authorName || '').toLowerCase();
+  const username = (planet.authorUsername || '').toLowerCase();
+
+  // #1 Ämlemi (Odi S.)
+  if (
+    id === 'planet-amlemi-genesis-01' ||
+    name === 'ämlemi' ||
+    name === 'amlemi' ||
+    author.includes('odi') ||
+    username.includes('odi') ||
+    isFoundingPioneerPlanet(planet)
+  ) {
+    return useMasterOverlay ? '/assets/videos/amlemi_trailer_master.mp4' : '/assets/videos/amlemi_trailer.mp4';
+  }
+
+  // #2 Felix (Esther P.)
+  if (
+    id === 'planet-felix-test-01' ||
+    name === 'felix' ||
+    author.includes('esther') ||
+    username.includes('esther')
+  ) {
+    return '/assets/videos/felix_trailer.mp4';
+  }
+
+  // #3 Ankrau (Nathan R.)
+  if (
+    id === 'planet-nathan-pioneer-03' ||
+    name === 'ankrau' ||
+    name === 'nathos' ||
+    name === 'natharia' ||
+    name === 'nathan' ||
+    author.includes('nathan') ||
+    username.includes('nathan')
+  ) {
+    return '/assets/videos/ankrau_trailer.mp4';
+  }
+
+  // #4 Florium (Florian H.)
+  if (
+    id === 'planet-florian-pioneer-04' ||
+    name === 'florium' ||
+    name === 'floriana' ||
+    name === 'florian' ||
+    author.includes('florian') ||
+    username.includes('florian')
+  ) {
+    return '/assets/videos/florium_trailer.mp4';
+  }
+
+  // #5 Sepplon (Seppe G.)
+  if (
+    id === 'planet-seppe-pioneer-05' ||
+    name === 'sepplon' ||
+    name === 'seppion' ||
+    name === 'seppe' ||
+    author.includes('seppe') ||
+    username.includes('seppe')
+  ) {
+    return '/assets/videos/sepplon_trailer.mp4';
+  }
+
+  return null;
+};

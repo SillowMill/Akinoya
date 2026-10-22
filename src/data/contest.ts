@@ -1,5 +1,6 @@
 import { PlanetSubmission, WizardAnswers } from '../types/contest';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { getPioneerMasterVideoUrl } from '../utils/pioneer';
 
 // Visual Assets (Sillow Mill High-Resolution Cinematic Sci-Fi Aesthetics)
 import planetHeroImg from '../assets/images/planet_akinoya_1790852629401.jpg';
@@ -1004,14 +1005,15 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       atmosphere: 'https://v3b.fal.media/files/b/0aaf67e8/iSmEn2NslRpLLvBpxK97H_UFxeKMkO.png',
       landmark: 'https://v3b.fal.media/files/b/0aaf67ea/7BY1x9xCPX1WHrnp7i7nT_5vJ41dxC.png',
       ecosystem: 'https://v3b.fal.media/files/b/0aaf67e5/seICefAuMBvzKL611nP6b_uzsXKplx.png',
-      videoUrl: 'https://v3b.fal.media/files/b/0aaf6d23/O9RBWYVGrZNiF9ppfJDsx_video.mp4',
+      videoUrl: '/assets/videos/felix_trailer.mp4',
+      falVideoUrl: 'https://v3b.fal.media/files/b/0aaf6d23/O9RBWYVGrZNiF9ppfJDsx_video.mp4',
       '01_main': 'https://v3b.fal.media/files/b/0aaf67e3/QCNr60F4WXHza0PgpPzkm_FpQcg8tP.png',
       '02_flora': 'https://v3b.fal.media/files/b/0aaf67e5/seICefAuMBvzKL611nP6b_uzsXKplx.png',
       '03_fauna': 'https://v3b.fal.media/files/b/0aaf67e7/eZc38kitmkVPAAx-omyyR_m9gbfeX5.png',
       '04_atmo': 'https://v3b.fal.media/files/b/0aaf67e8/iSmEn2NslRpLLvBpxK97H_UFxeKMkO.png',
       '05_lore': 'https://v3b.fal.media/files/b/0aaf67ea/7BY1x9xCPX1WHrnp7i7nT_5vJ41dxC.png',
     },
-    videoUrl: 'https://v3b.fal.media/files/b/0aaf6d23/O9RBWYVGrZNiF9ppfJDsx_video.mp4',
+    videoUrl: '/assets/videos/felix_trailer.mp4',
     videoStatus: 'READY',
     votesCount: 2,
     hasVoted: false,
@@ -1065,14 +1067,15 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       atmosphere: 'https://v3b.fal.media/files/b/0aaf6811/VbHaEEq81S156sf-2H_g-_D23i1FuO.png',
       landmark: 'https://v3b.fal.media/files/b/0aaf6813/Txn-nAVGcZlb_Y4DuyTS__tHA0X6eE.png',
       ecosystem: 'https://v3b.fal.media/files/b/0aaf680d/NB87mCoA8EG2dU1qtb2ri_rozLGKjR.png',
-      videoUrl: 'https://v3b.fal.media/files/b/0aaf6d21/2RmE9WRG5uB4JE9DrJ3kh_video.mp4',
+      videoUrl: '/assets/videos/ankrau_trailer.mp4',
+      falVideoUrl: 'https://v3b.fal.media/files/b/0aaf6d21/2RmE9WRG5uB4JE9DrJ3kh_video.mp4',
       '01_main': 'https://v3b.fal.media/files/b/0aaf680b/abVXKSJD21rsIkKAINQUP_DMkQXa60.png',
       '02_flora': 'https://v3b.fal.media/files/b/0aaf680d/NB87mCoA8EG2dU1qtb2ri_rozLGKjR.png',
       '03_fauna': 'https://v3b.fal.media/files/b/0aaf680f/lF1OMXjKS6OV0w46cRnFI_RQFYB9wW.png',
       '04_atmo': 'https://v3b.fal.media/files/b/0aaf6811/VbHaEEq81S156sf-2H_g-_D23i1FuO.png',
       '05_lore': 'https://v3b.fal.media/files/b/0aaf6813/Txn-nAVGcZlb_Y4DuyTS__tHA0X6eE.png',
     },
-    videoUrl: 'https://v3b.fal.media/files/b/0aaf6d21/2RmE9WRG5uB4JE9DrJ3kh_video.mp4',
+    videoUrl: '/assets/videos/ankrau_trailer.mp4',
     videoStatus: 'READY',
     votesCount: 2,
     hasVoted: false,
@@ -1126,14 +1129,15 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       atmosphere: 'https://v3b.fal.media/files/b/0aaf6991/TfW5CN0GOxdviStakgbNI_YYQ4up7x.png',
       landmark: 'https://v3b.fal.media/files/b/0aaf6993/NWFOuBxgb2Hg-tC4w5pB5_KI51BOmF.png',
       ecosystem: 'https://v3b.fal.media/files/b/0aaf698d/m5M5nw2MGGpCiJKgrwDeR_4q0Kj3qa.png',
-      videoUrl: 'https://v3b.fal.media/files/b/0aaf6ac4/D2auzhOcimbCYZC5umTeM_video.mp4',
+      videoUrl: '/assets/videos/florium_trailer.mp4',
+      falVideoUrl: 'https://v3b.fal.media/files/b/0aaf6ac4/D2auzhOcimbCYZC5umTeM_video.mp4',
       '01_main': 'https://v3b.fal.media/files/b/0aaf698b/27kxKI6v8phTiLmYnxq3c_au3ooi6U.png',
       '02_flora': 'https://v3b.fal.media/files/b/0aaf698d/m5M5nw2MGGpCiJKgrwDeR_4q0Kj3qa.png',
       '03_fauna': 'https://v3b.fal.media/files/b/0aaf698f/pUpRHv_QQrBhGTrRh0po8_F4gtyXNm.png',
       '04_atmo': 'https://v3b.fal.media/files/b/0aaf6991/TfW5CN0GOxdviStakgbNI_YYQ4up7x.png',
       '05_lore': 'https://v3b.fal.media/files/b/0aaf6993/NWFOuBxgb2Hg-tC4w5pB5_KI51BOmF.png',
     },
-    videoUrl: 'https://v3b.fal.media/files/b/0aaf6ac4/D2auzhOcimbCYZC5umTeM_video.mp4',
+    videoUrl: '/assets/videos/florium_trailer.mp4',
     videoStatus: 'READY',
     votesCount: 2,
     hasVoted: false,
@@ -1187,14 +1191,15 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       atmosphere: 'https://v3b.fal.media/files/b/0aaf6869/KZcqGlmdpfYJbh59dM81N_tUw4eCG9.png',
       landmark: 'https://v3b.fal.media/files/b/0aaf686a/F2W0jCmJVs-f0nP_41N59_tjkY7BlY.png',
       ecosystem: 'https://v3b.fal.media/files/b/0aaf6865/0JTHOCwSvlzSDHzK_oJCS_VO54kUyl.png',
-      videoUrl: 'https://v3b.fal.media/files/b/0aaf6d23/dE0_HEXLkGCMwR-A5XTkb_video.mp4',
+      videoUrl: '/assets/videos/sepplon_trailer.mp4',
+      falVideoUrl: 'https://v3b.fal.media/files/b/0aaf6d23/dE0_HEXLkGCMwR-A5XTkb_video.mp4',
       '01_main': 'https://v3b.fal.media/files/b/0aaf6863/fTRjYgpPsxLtYE5rkxzCH_imKRu1DN.png',
       '02_flora': 'https://v3b.fal.media/files/b/0aaf6865/0JTHOCwSvlzSDHzK_oJCS_VO54kUyl.png',
       '03_fauna': 'https://v3b.fal.media/files/b/0aaf6867/WLJOKi6BlgnYV0ZMOaDrx_FDy1JgDw.png',
       '04_atmo': 'https://v3b.fal.media/files/b/0aaf6869/KZcqGlmdpfYJbh59dM81N_tUw4eCG9.png',
       '05_lore': 'https://v3b.fal.media/files/b/0aaf686a/F2W0jCmJVs-f0nP_41N59_tjkY7BlY.png',
     },
-    videoUrl: 'https://v3b.fal.media/files/b/0aaf6d23/dE0_HEXLkGCMwR-A5XTkb_video.mp4',
+    videoUrl: '/assets/videos/sepplon_trailer.mp4',
     videoStatus: 'READY',
     votesCount: 2,
     hasVoted: false,
@@ -1233,7 +1238,9 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
             if (isAmlemi) {
               votesCount = userVoted ? 4 : 3;
             }
+            const pioneerTrailer = getPioneerMasterVideoUrl(sub);
             const resolvedVideoUrl =
+              pioneerTrailer ||
               sub.videoUrl ||
               sub.renders?.videoUrl ||
               sub.renders?.video_url ||
@@ -1447,7 +1454,14 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
             if (isAmlemi && serverCounts[d.id] === undefined) {
               votesCount = userVoted ? 4 : 3;
             }
+            const pioneerTrailer = getPioneerMasterVideoUrl({
+              id: d.id,
+              planetName: d.planet_name,
+              authorName: d.author_name,
+              authorUsername: d.author_username,
+            });
             const resolvedVideoUrl =
+              pioneerTrailer ||
               d.video_url ||
               d.renders?.videoUrl ||
               d.renders?.video_url ||
