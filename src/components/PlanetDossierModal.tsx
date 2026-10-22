@@ -419,7 +419,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                             : (isMobileDevice
                                 ? 'Save Trailer to Photos'
                                 : dynamicVideo.isAiVideo
-                                ? '⬇ Download Val.ai 9:16 MP4 Trailer'
+                                ? '⬇ Download Fal.ai 9:16 MP4 Trailer'
                                 : '⬇ Download 9:16 MP4 Trailer')}
                         </span>
                       </button>
@@ -622,7 +622,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                         🎥 9:16 Trailer
                       </span>
                       <span className="text-[8px] font-mono text-cyan-300/90 uppercase">
-                        VAL.AI FPV
+                        FAL.AI FPV 1080P
                       </span>
                     </div>
                   </button>
@@ -663,46 +663,105 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                 </div>
               </div>
 
-              {/* 2. SYNTHESIZED PLANETARY LORE */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-[#080d1a] border border-white/10 space-y-2.5">
-                <div className="flex items-center gap-2 text-cyan-400">
-                  <Sparkles className="w-4 h-4" />
-                  <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-                    Official Lore Dossier · 2027 Governance Archive
-                  </h3>
+              {/* 2. DYNAMIC STORY CARD & ACTIVE ASSET CONTEXT (Dynamically driven by activePhotoIdx) */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#080e22] via-[#050916] to-[#02050e] border border-cyan-500/30 shadow-[0_4px_24px_rgba(0,0,0,0.6)] space-y-3 transition-all duration-300">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-extrabold uppercase tracking-wider border shadow-sm ${
+                      isTrailerTab
+                        ? 'bg-amber-500/20 border-amber-400/60 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
+                        : 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
+                    }`}>
+                      {isTrailerTab ? <Video className="w-3 h-3 text-amber-300" /> : <Camera className="w-3 h-3 text-cyan-300" />}
+                      <span>
+                        {isTrailerTab
+                          ? '🎥 9:16 CINEMATIC TRAILER · FPV DRONE'
+                          : `${currentPhoto.category} · ARCHIVE 0${activePhotoIdx}/05`}
+                      </span>
+                    </span>
+                    <span className="text-[10px] font-mono text-white/40 hidden sm:inline">
+                      {isTrailerTab ? 'PRIMARY FOCAL TRAILER' : `SLOT 0${activePhotoIdx} OF 05`}
+                    </span>
+                  </div>
+
+                  <span className="text-[10px] font-mono text-cyan-300/80">
+                    {isTrailerTab
+                      ? '5.0S CONTINUOUS LOOP'
+                      : (activePlanet.sectorId || 'SECTOR AKN-01').toUpperCase()}
+                  </span>
                 </div>
-                <p className="text-xs sm:text-sm text-white/80 font-sans leading-relaxed whitespace-pre-line">
-                  {activePlanet.generatedLore}
-                </p>
+
+                <div className="space-y-1.5">
+                  <h4 className="text-sm sm:text-base font-display font-bold text-white tracking-wide">
+                    {isTrailerTab
+                      ? `🎥 ${activePlanet.planetName} · 9:16 Continuous FPV Drone Trailer`
+                      : `0${activePhotoIdx} · ${currentPhoto.title}`}
+                  </h4>
+
+                  <p className="text-xs sm:text-sm text-white/85 font-sans leading-relaxed whitespace-pre-line">
+                    {isTrailerTab
+                      ? activePlanet.generatedLore
+                      : currentPhoto.description || activePlanet.generatedLore}
+                  </p>
+
+                  {isTrailerTab && (
+                    <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-[11px] font-mono text-amber-200/90 leading-relaxed">
+                      <span className="font-bold text-amber-300">FPV Drone Blueprint:</span> "Single continuous FPV drone shot, no cuts, ultra-wide 14mm lens, aggressive low-altitude acceleration, close-proximity orbit."
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* 3. ENVIRONMENTAL SPECIFICATIONS GRID */}
+              {/* 3. ENVIRONMENTAL SPECIFICATIONS GRID (With dynamic spotlight on active category) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
+                {/* Atmosphere */}
+                <div className={`p-3.5 rounded-xl bg-[#090e1d] border transition-all ${
+                  activePhotoIdx === 4
+                    ? 'border-cyan-400 ring-2 ring-cyan-400/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                    : 'border-white/10 hover:border-white/20'
+                } space-y-1`}>
                   <div className="flex items-center gap-1.5 text-xs font-mono text-cyan-300 font-semibold">
                     <Globe2 className="w-3.5 h-3.5" />
                     <span>Atmosphere &amp; Spectra</span>
+                    {activePhotoIdx === 4 && <span className="ml-auto text-[9px] font-mono text-cyan-400">● ACTIVE SLOT</span>}
                   </div>
                   <p className="text-xs text-white/70 font-sans">{activePlanet.atmosphere}</p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
+                {/* Flora */}
+                <div className={`p-3.5 rounded-xl bg-[#090e1d] border transition-all ${
+                  activePhotoIdx === 2
+                    ? 'border-emerald-400 ring-2 ring-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                    : 'border-white/10 hover:border-white/20'
+                } space-y-1`}>
                   <div className="flex items-center gap-1.5 text-xs font-mono text-emerald-300 font-semibold">
                     <Trees className="w-3.5 h-3.5" />
                     <span>Flora Ecosystem</span>
+                    {activePhotoIdx === 2 && <span className="ml-auto text-[9px] font-mono text-emerald-400">● ACTIVE SLOT</span>}
                   </div>
                   <p className="text-xs text-white/70 font-sans">{activePlanet.flora}</p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
+                {/* Fauna */}
+                <div className={`p-3.5 rounded-xl bg-[#090e1d] border transition-all ${
+                  activePhotoIdx === 3
+                    ? 'border-purple-400 ring-2 ring-purple-400/40 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
+                    : 'border-white/10 hover:border-white/20'
+                } space-y-1`}>
                   <div className="flex items-center gap-1.5 text-xs font-mono text-purple-300 font-semibold">
                     <Compass className="w-3.5 h-3.5" />
                     <span>Fauna &amp; Wildlife</span>
+                    {activePhotoIdx === 3 && <span className="ml-auto text-[9px] font-mono text-purple-400">● ACTIVE SLOT</span>}
                   </div>
                   <p className="text-xs text-white/70 font-sans">{activePlanet.fauna}</p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
+                {/* Sonic Vibe */}
+                <div className={`p-3.5 rounded-xl bg-[#090e1d] border transition-all ${
+                  isTrailerTab
+                    ? 'border-amber-400/70 ring-1 ring-amber-400/30'
+                    : 'border-white/10 hover:border-white/20'
+                } space-y-1`}>
                   <div className="flex items-center gap-1.5 text-xs font-mono text-amber-300 font-semibold">
                     <Volume2 className="w-3.5 h-3.5" />
                     <span>Sonic Vibe &amp; Acoustic Style</span>
@@ -710,18 +769,30 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                   <p className="text-xs text-white/70 font-sans">{activePlanet.sonicVibe}</p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
+                {/* Visual Aesthetic */}
+                <div className={`p-3.5 rounded-xl bg-[#090e1d] border transition-all ${
+                  activePhotoIdx === 1 || isTrailerTab
+                    ? 'border-cyan-400 ring-2 ring-cyan-400/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                    : 'border-white/10 hover:border-white/20'
+                } space-y-1`}>
                   <div className="flex items-center gap-1.5 text-xs font-mono text-pink-300 font-semibold">
                     <Layers className="w-3.5 h-3.5" />
                     <span>Visual Aesthetic Pipeline</span>
+                    {activePhotoIdx === 1 && <span className="ml-auto text-[9px] font-mono text-cyan-400">● ACTIVE SLOT</span>}
                   </div>
                   <p className="text-xs text-white/70 font-sans">{activePlanet.visualAesthetic}</p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#090e1d] border border-white/10 space-y-1">
+                {/* Landmark */}
+                <div className={`p-3.5 rounded-xl bg-[#090e1d] border transition-all ${
+                  activePhotoIdx === 5
+                    ? 'border-yellow-400 ring-2 ring-yellow-400/40 shadow-[0_0_15px_rgba(250,204,21,0.3)]'
+                    : 'border-white/10 hover:border-white/20'
+                } space-y-1`}>
                   <div className="flex items-center gap-1.5 text-xs font-mono text-yellow-300 font-semibold">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Iconic Planet Landmark</span>
+                    {activePhotoIdx === 5 && <span className="ml-auto text-[9px] font-mono text-yellow-400">● ACTIVE SLOT</span>}
                   </div>
                   <p className="text-xs text-white/70 font-sans">{activePlanet.landmark}</p>
                 </div>

@@ -53,6 +53,7 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
     dossier.id === 'planet-nathan-pioneer-03' ||
     dossier.authorName?.toLowerCase().includes('nathan') ||
     dossier.authorUsername?.toLowerCase().includes('nathan') ||
+    dossier.planetName?.toLowerCase() === 'ankrau' ||
     dossier.planetName?.toLowerCase() === 'nathos' ||
     dossier.planetName?.toLowerCase() === 'natharia' ||
     dossier.planetName?.toLowerCase() === 'nathan';

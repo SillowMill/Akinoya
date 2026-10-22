@@ -87,7 +87,7 @@ const PIONEER_PLANS: PlanetPlan[] = [
   {
     id: 'planet-nathan-pioneer-03',
     rank: 3,
-    planetName: 'Nathos',
+    planetName: 'Ankrau',
     authorName: 'Nathan R.',
     authorUsername: 'nathanr',
     authorEmail: 'nathan.r@akinoya.universe',

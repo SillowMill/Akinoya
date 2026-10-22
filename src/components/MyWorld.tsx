@@ -250,7 +250,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
               </div>
             </div>
             <span className="shrink-0 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider whitespace-nowrap">
-              WORLD WILL BE REVEALED 9 JANUARI
+              WORLD WILL BE REVEALED 9 JANUARI 2027
             </span>
           </div>
         </div>
