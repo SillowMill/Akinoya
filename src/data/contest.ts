@@ -205,7 +205,8 @@ export function getDeterministicPlanetCoordinates(
   const absHash = Math.abs(hash);
 
   if (mode === 'matrix') {
-    const trackIdx = 1 + (absHash % (OVAL_MATRIX_TRACKS.length - 1));
+    // Inside-Out Expansion Protocol: Prioritize inner harmonic tracks (Track 1 & 2) before outer perimeters
+    const trackIdx = 1 + (absHash % 2);
     const track = OVAL_MATRIX_TRACKS[trackIdx];
     const slotIdx = absHash % track.slots;
     const angle = (slotIdx / track.slots) * 2 * Math.PI + (trackIdx % 2 === 1 ? 0.2 : 0);
@@ -215,12 +216,13 @@ export function getDeterministicPlanetCoordinates(
     return { x, y, sectorId, armId: track.id, armName: track.name };
   }
 
-  // Default: Variant A (5-Arm Spiral)
+  // Default: Variant A (5-Arm Spiral) - Inside-Out Expansion Protocol
   const armIndex = absHash % CONSTELLATION_ARMS.length;
   const arm = CONSTELLATION_ARMS[armIndex];
-  const tierIndex = Math.floor(absHash / CONSTELLATION_ARMS.length) % SPIRAL_RADIAL_TIERS.length;
+  // Prioritize inner harmonic rings (Tier 0 & 1: 560 AU & 1040 AU) near core
+  const tierIndex = (absHash >> 3) % 2;
   const baseRadius = SPIRAL_RADIAL_TIERS[tierIndex];
-  const subSlot = Math.floor(absHash / (CONSTELLATION_ARMS.length * SPIRAL_RADIAL_TIERS.length)) % 2;
+  const subSlot = Math.floor(absHash / (CONSTELLATION_ARMS.length * 2)) % 2;
   const radius = baseRadius + (subSlot === 1 ? 240 : 0);
   const baseSpiralAngle = getSpiralArmAngle(arm.baseAngle, radius);
   const finalAngle = baseSpiralAngle + (subSlot === 1 ? 0.05 : -0.03);
@@ -375,9 +377,8 @@ export function assignMultiVariantCoordinates(
       let chosenY = 0;
       let found = false;
 
-      // Primary Search: Staggered slots along tracks 1..6
-      for (let t = 0; t < numTracks && !found; t++) {
-        const trackIdx = 1 + ((prefTrack - 1 + t) % numTracks);
+      // Primary Search: Inside-Out Sequential Expansion (Track 1 -> Track 6)
+      for (let trackIdx = 1; trackIdx < OVAL_MATRIX_TRACKS.length && !found; trackIdx++) {
         const track = OVAL_MATRIX_TRACKS[trackIdx];
         const prefSlot = absHash % track.slots;
 
@@ -458,17 +459,16 @@ export function assignMultiVariantCoordinates(
     const prefSub = Math.floor(absHash / (numArms * numTiers)) % 2;
 
     let chosenArm = prefArm;
-    let chosenTier = prefTier;
+    let chosenTier = 0;
     let chosenSub = prefSub;
     let chosenX = 0;
     let chosenY = 0;
     let found = false;
 
-    // Search through sub-slots, tiers, and arms systematically
-    for (let subOffset = 0; subOffset < 2 && !found; subOffset++) {
-      const s = (prefSub + subOffset) % 2;
-      for (let tOffset = 0; tOffset < numTiers && !found; tOffset++) {
-        const t = (prefTier + tOffset) % numTiers;
+    // Primary Search: Inside-Out Sequential Expansion (Tier 0 -> Tier numTiers - 1)
+    for (let t = 0; t < numTiers && !found; t++) {
+      for (let subOffset = 0; subOffset < 2 && !found; subOffset++) {
+        const s = (prefSub + subOffset) % 2;
         for (let aOffset = 0; aOffset < numArms && !found; aOffset++) {
           const a = (prefArm + aOffset) % numArms;
           const key = `arm_${a}_tier_${t}_sub_${s}`;
@@ -826,48 +826,48 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     authorEmail: 'estherphilippen@msn.com',
     authorAvatarGradient: 'from-pink-500 via-rose-500 to-amber-500',
     planetName: 'Felix',
-    atmosphere: 'Dense ionized magenta atmosphere radiating with warm orange sunbeams and feline constellation auroras.',
-    flora: 'Bioluminescent pink whisker-ferns and glowing feline spore canopies.',
-    fauna: 'Celestial winged pink-and-orange felines and apex saber-toothed panthers gliding through ionized thermals.',
+    atmosphere: 'Bioluminescent Avatar-style twilight troposphere illuminated by vibrant neon pink and warm orange auroras, floating rock arches, and ethereal glowing mists.',
+    flora: 'Breathtaking Avatar-inspired bioluminescent flora, giant luminous spore trees, and glowing magenta whisker-ferns that react to feline touch.',
+    fauna: 'Charming, fluffy rossenhuiskatten (ginger domestic cats) and striking bioluminescent pink sci-fi cats roaming freely across floating mossy plateaus.',
     sonicVibe: 'Warm analog synthesizer purr, 432Hz ambient chime, and rhythmic cosmic heartbeat.',
-    visualAesthetic: 'High-resolution cinematic sci-fi render, photorealistic conceptual space art (Sillow Mill aesthetic).',
+    visualAesthetic: 'High-resolution cinematic Avatar-style sci-fi render, 8K bioluminescent alien landscape (Sillow Mill aesthetic).',
     landmark: 'The Great Sphinx of Felix: Colossal ancient feline monolith carved from rose quartz and copper energy channels.',
     additionalNotes: 'Active community test creation for Esther Philippen.',
     humanAnswers: {
       planetName: 'Felix',
       relaxation: 'Listening to celestial purring under warm sunset skies with glowing feline companions.',
       creativeExpression: 'Bioluminescent organic sculpture, feline constellation cartography, and analog harmonics.',
-      naturalEnvironment: 'Misty canyon plateaus surrounded by bioluminescent cat-grass and orange quartz spires.',
+      naturalEnvironment: 'Misty canyon plateaus surrounded by bioluminescent cat-grass, floating moss islands, and orange quartz spires.',
       lifePhilosophy: 'Curiosity, grace, and relentless playfulness illuminate the cosmic unknown.',
-      admiredCreature: 'The celestial winged feline and luminous six-legged saber-toothed panther.',
+      admiredCreature: 'Fluffy rossenhuiskatten (ginger domestic cats) and bioluminescent pink sci-fi cats.',
       colorPalette: 'Vibrant neon pink, incandescent warm orange, and luminous feline auroras.',
       resilienceStory: 'Carving a vibrant metropolis of feline light out of the deep void.',
       futurePromise: 'With curiosity and grace, the feline cosmos opens its infinite horizons.',
-      atmosphere: 'Dense ionized magenta atmosphere radiating with warm orange sunbeams and feline constellation auroras.',
-      flora: 'Bioluminescent pink whisker-ferns and glowing feline spore canopies.',
-      fauna: 'Celestial winged pink-and-orange felines and apex saber-toothed panthers gliding through ionized thermals.',
+      atmosphere: 'Bioluminescent Avatar-style twilight troposphere illuminated by vibrant neon pink and warm orange auroras, floating rock arches, and ethereal glowing mists.',
+      flora: 'Breathtaking Avatar-inspired bioluminescent flora, giant luminous spore trees, and glowing magenta whisker-ferns that react to feline touch.',
+      fauna: 'Charming, fluffy rossenhuiskatten (ginger domestic cats) and striking bioluminescent pink sci-fi cats roaming freely across floating mossy plateaus.',
       sonicVibe: 'Warm analog synthesizer purr, 432Hz ambient chime, and rhythmic cosmic heartbeat.',
-      visualAesthetic: 'High-resolution cinematic sci-fi render, photorealistic conceptual space art.',
+      visualAesthetic: 'High-resolution cinematic Avatar-style sci-fi render, 8K bioluminescent alien landscape.',
       landmark: 'The Great Sphinx of Felix.',
       additionalNotes: 'Active community test creation for Esther Philippen.',
     },
     futurePromise: 'With curiosity and grace, the feline cosmos opens its infinite horizons.',
-    generatedLore: `Classified by world architect Esther Philippen, Felix is an official VIP frontier sector situated within the Äkinoya celestial sphere. Anchored by shimmering neon pink and warm orange auroras, this cosmic feline metropolis thrives with bioluminescent whisker-ferns and soaring winged celestial cats.\n\nAcross the canyon plateaus stands the Great Sphinx of Felix, a colossal rose quartz monument channeling planetary harmonics at 432Hz.\n\nFOUNDING CREED:\n"With curiosity and grace, the feline cosmos opens its infinite horizons."`,
+    generatedLore: `Classified by world architect Esther Philippen, Felix is an official VIP frontier sector situated within the Äkinoya celestial sphere. Styled after breathtaking Avatar-like bioluminescent landscapes, this feline haven thrives with adorable fluffy rossenhuiskatten (ginger domestic cats) and striking neon pink cats roaming among floating rock formations and glowing whisker-ferns.\n\nAcross the canyon plateaus stands the Great Sphinx of Felix, a colossal rose quartz monument channeling planetary harmonics at 432Hz.\n\nFOUNDING CREED:\n"With curiosity and grace, the feline cosmos opens its infinite horizons."`,
     renders: {
-      hero: 'https://v3b.fal.media/files/b/0aaf6281/8ftPLlXaAFOWad6X8r1uE.png',
-      flora: 'https://v3b.fal.media/files/b/0aaf6281/zsXeOVyGO55jcoZUABxf4.png',
-      fauna: 'https://v3b.fal.media/files/b/0aaf6281/w5USWGj747LWKNgF4BNIQ.png',
-      atmosphere: 'https://v3b.fal.media/files/b/0aaf6281/uTahjYS2vOJ-I8APGqGLI.png',
-      landmark: 'https://v3b.fal.media/files/b/0aaf6281/dTCZDzH1FqS1_IzWwR8ZJ.png',
-      ecosystem: 'https://v3b.fal.media/files/b/0aaf6281/zsXeOVyGO55jcoZUABxf4.png',
-      videoUrl: 'https://v3b.fal.media/files/b/0aaf623d/z1ql8Ve-M6NIe96OK1chO_video.mp4',
-      '01_main': 'https://v3b.fal.media/files/b/0aaf6281/8ftPLlXaAFOWad6X8r1uE.png',
-      '02_flora': 'https://v3b.fal.media/files/b/0aaf6281/zsXeOVyGO55jcoZUABxf4.png',
-      '03_fauna': 'https://v3b.fal.media/files/b/0aaf6281/w5USWGj747LWKNgF4BNIQ.png',
-      '04_atmo': 'https://v3b.fal.media/files/b/0aaf6281/uTahjYS2vOJ-I8APGqGLI.png',
-      '05_lore': 'https://v3b.fal.media/files/b/0aaf6281/dTCZDzH1FqS1_IzWwR8ZJ.png',
+      hero: 'https://v3b.fal.media/files/b/0aaf64a2/7a69vjml1kGOV6cGyaQIO.jpg',
+      flora: 'https://v3b.fal.media/files/b/0aaf64a2/46K7Ne74qqz3oCZqxbory.jpg',
+      fauna: 'https://v3b.fal.media/files/b/0aaf64a2/Do90KXx4R8AbUvNycoM7-.jpg',
+      atmosphere: 'https://v3b.fal.media/files/b/0aaf64a2/k-uciLSTiYQmf4XzNUOrX.jpg',
+      landmark: 'https://v3b.fal.media/files/b/0aaf64a2/esQ5s2FrNjYjF5i4P6NpF.jpg',
+      ecosystem: 'https://v3b.fal.media/files/b/0aaf64a2/46K7Ne74qqz3oCZqxbory.jpg',
+      videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+      '01_main': 'https://v3b.fal.media/files/b/0aaf64a2/7a69vjml1kGOV6cGyaQIO.jpg',
+      '02_flora': 'https://v3b.fal.media/files/b/0aaf64a2/46K7Ne74qqz3oCZqxbory.jpg',
+      '03_fauna': 'https://v3b.fal.media/files/b/0aaf64a2/Do90KXx4R8AbUvNycoM7-.jpg',
+      '04_atmo': 'https://v3b.fal.media/files/b/0aaf64a2/k-uciLSTiYQmf4XzNUOrX.jpg',
+      '05_lore': 'https://v3b.fal.media/files/b/0aaf64a2/esQ5s2FrNjYjF5i4P6NpF.jpg',
     },
-    videoUrl: 'https://v3b.fal.media/files/b/0aaf623d/z1ql8Ve-M6NIe96OK1chO_video.mp4',
+    videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
     videoStatus: 'READY',
     votesCount: 2,
     hasVoted: false,

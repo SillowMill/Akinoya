@@ -20,6 +20,7 @@ import {
   Download,
   Heart,
   MapPin,
+  Play,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
 import {
@@ -31,6 +32,7 @@ import {
   copyPlanetGalaxyLink,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
+import { planetSoundtrack } from '../utils/soundtrack';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
 import { formatTitleCaseUserName } from '../utils/holder';
 import {
@@ -76,10 +78,20 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
   const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() =>
     typeof window !== 'undefined' ? isMobileOrTabletDevice() : false
   );
+  const [isPlayingAcoustic, setIsPlayingAcoustic] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? planetSoundtrack.isPlaying : false
+  );
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     setIsMobileDevice(isMobileOrTabletDevice());
+  }, []);
+
+  useEffect(() => {
+    const unsub = planetSoundtrack.subscribe((playing) => {
+      setIsPlayingAcoustic(playing);
+    });
+    return unsub;
   }, []);
 
   const handleCopyGalaxyLink = async () => {
@@ -379,6 +391,57 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                     onTouchStart={handleTouchStartStage}
                     onTouchEnd={handleTouchEndStage}
                   >
+                    {/* Seamless Acoustic Vibe & Listening Experience Module */}
+                    <div className="w-full max-w-sm mx-auto p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/80 via-[#070f22]/90 to-amber-950/70 border border-cyan-400/40 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_15px_rgba(6,182,212,0.2)]">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              soundManager.playTone(660, 0.05);
+                              planetSoundtrack.togglePlay();
+                            }}
+                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-md ${
+                              isPlayingAcoustic
+                                ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-black shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                                : 'bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 hover:text-white hover:border-cyan-300'
+                            }`}
+                            title={isPlayingAcoustic ? "Pause Acoustic Vibe" : "Listen to Acoustic Vibe"}
+                          >
+                            {isPlayingAcoustic ? (
+                              <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
+                            ) : (
+                              <Play className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5 fill-current" />
+                            )}
+                          </button>
+                          <div className="min-w-0">
+                            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              <span>ACOUSTIC LISTENING EXPERIENCE</span>
+                            </span>
+                            <h4 className="text-xs sm:text-sm font-display font-bold text-white truncate">
+                              {activePlanet.sonicVibe || 'Cosmic Harmonic Resonance · 432Hz'}
+                            </h4>
+                          </div>
+                        </div>
+
+                        {/* Animated waveform bars when playing */}
+                        <div className="flex items-center gap-0.5 sm:gap-1 h-5 shrink-0">
+                          {[40, 75, 100, 60, 85, 45, 90, 70].map((h, i) => (
+                            <div
+                              key={i}
+                              className="w-0.5 sm:w-1 rounded-full bg-gradient-to-t from-cyan-400 to-amber-300 transition-all duration-200"
+                              style={{
+                                height: `${isPlayingAcoustic ? h : 20}%`,
+                                animation: isPlayingAcoustic ? 'pulse 0.9s ease-in-out infinite alternate' : 'none',
+                                animationDelay: `${i * 0.1}s`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Clean Strict 9:16 Vertical Video / Cinematic Trailer Player Stage */}
                     <div
                       className="video-stage-container video-player-gpu relative mx-auto rounded-2xl overflow-hidden bg-black border border-cyan-400/60 shadow-[0_0_40px_rgba(6,182,212,0.35),0_20px_50px_rgba(0,0,0,0.9)] flex items-center justify-center touch-pan-y-lock"

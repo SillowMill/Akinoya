@@ -1831,13 +1831,31 @@ export function buildPlanetPrompts(data: GeneratePlanetRequest) {
     ? `${promptAnchor} [04_atmo - Cockpit & Landing Atmosphere]: Cockpit canopy descent perspective entering the atmosphere of "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Looking out through reinforced cockpit canopy glass toward vast ${biome} mountain horizon and ${variation.geologicalFormation}, pilot HUD telemetry reflections, volumetric sunbeams through thick clouds, ${atmosphere}, ion storms: ${variation.plasmaPhenomenon}, sunset glow.`
     : `${promptAnchor} [04_atmo - Atmospheric Troposphere & Sky Phenomena]: High-altitude volumetric tropospheric descent above world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Soaring through turbulent ionized cloud decks, sweeping auroral filaments, and towering atmospheric vapor canyons overlooking vast ${biome} terrain and ${variation.geologicalFormation}. Volumetric sunbeams piercing through thick storm clouds, ${atmosphere}, radiant ion storm phenomena: ${variation.plasmaPhenomenon}, sunset glow. Pristine natural sky panorama, wide-angle cinematic nature photography, absolutely zero cockpit, zero glass, zero machinery.`;
 
+  const isFelix =
+    planetName.toLowerCase() === 'felix' ||
+    sectorName.toLowerCase() === 'felix' ||
+    data.id === 'planet-felix-test-01' ||
+    data.planetId === 'planet-felix-test-01';
+
+  const felixPrompts = isFelix
+    ? {
+        hero: `${promptAnchor} [01_main - Main Orbital Hero]: Celestial disc and orbital curvature of newly designated feline world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Breathtaking Avatar-style alien planetary sphere glowing with bioluminescent neon pink and warm orange continents, radiant cyan planetary oceans, and shimmering stardust rings. Ionized magenta and orange auroras crowning the atmospheric rim. Pristine celestial sphere, volumetric cosmic lighting, deep space horizon, 8k resolution, photorealistic conceptual space photography.`,
+        flora: `${promptAnchor} [02_flora - Botanical Flora System]: Interior botanical ecosystem of world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Unique, bioluminescent, breathtaking alien environment styled like Avatar (Pandora). Glowing giant neon spore trees, luminous pink and orange whisker-ferns that react to touch, floating moss-covered celestial rock formations, ethereal atmospheric twilight lighting, cascading waterfalls of liquid light, volumetric mist, macro sci-fi nature photography.`,
+        fauna: `${promptAnchor} [03_fauna - Exotic Fauna & Wildlife]: Xenobiological feline wildlife ecology of world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Adorable, charming, fluffy rossenhuiskatten (ginger domestic tabby cats) and striking glowing pink sci-fi cats playing playfully and interacting with futuristic glowing elements and bioluminescent Avatar-style alien flora. Highly detailed soft ginger fur, vibrant pink fur, expressive cute cat faces, glowing whiskers, photorealistic cinematic lighting, volumetric atmospheric depth, 8k resolution nature photography.`,
+        atmosphere: `${promptAnchor} [04_atmo - Atmospheric Troposphere & Sky Phenomena]: High-altitude volumetric tropospheric descent above world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Breathtaking Avatar-style skies with floating rock islands, ethereal glowing pink and orange auroral ribbons, volumetric twilight sunbeams piercing through luminescent clouds, majestic flying alien silhouettes, pristine natural sky panorama, wide-angle cinematic nature photography, absolutely zero cockpit, zero machinery.`,
+        landmark: `${promptAnchor} [05_lore - Lore Dossier Cover & Monument]: Official monumental landmark on world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). The Great Sphinx of Felix: Colossal ancient feline monolith carved from translucent rose quartz and warm copper energy channels, glowing with 432Hz harmonic energy. Standing tall amidst bioluminescent Avatar flora and floating luminous crystals under vibrant pink and orange twilight auroras. Epic scale sci-fi monument photography.`,
+        video: `Single continuous FPV drone shot, no cuts. The camera begins gliding inches above bioluminescent Avatar-style alien moss and glowing orange whisker-ferns on planet Felix. It races smoothly forward, weaving past adorable fluffy rossenhuiskatten (ginger cats) and striking glowing pink cats playing playfully among floating rock spires and glowing flora. Accelerating into a rapid vertical climb through pink and orange auroral mist, the drone spirals tightly around the colossal rose quartz Great Sphinx of Felix, revealing the breathtaking alien landscape and vast planetary horizon. 14mm ultra-wide FPV lens, photorealistic 24fps cinematic motion blur, natural lighting, deep atmospheric depth, seamless 5-second vertical 9:16 loop.`,
+      }
+    : null;
+
   return {
     planetName,
     sectorName,
     isAmlemi,
+    isFelix,
     seed,
     variation,
-    prompts: {
+    prompts: felixPrompts || {
       hero: `${promptAnchor} [01_main - Main Orbital Hero]: Celestial disc and orbital curvature of newly designated world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}). Orbital feature: ${variation.ringSystem}. Atmospheric rim: ${variation.plasmaPhenomenon}. Pristine celestial curvature, volumetric cosmic lighting, deep space horizon, ${variation.atmosphericShimmer}. Color palette: ${colorPalette}. Topography inspired by ${environment}, 8k resolution, photorealistic conceptual space photography.${isAmlemi ? '' : ' Pristine uninhabited cosmic sphere.'}`,
       flora: `${promptAnchor} [02_flora - Botanical Flora System]: Interior botanical ecosystem of world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}) across ${biome} terrain. Lush alien vegetation: ${flora}. Terrain formation: ${variation.geologicalFormation}. Atmospheric mist, ${variation.atmosphericShimmer}, chromatic palette: ${colorPalette}, volumetric depth, macro sci-fi nature photography.${isAmlemi ? '' : ' Untamed alien flora, zero human presence.'}`,
       fauna: `${promptAnchor} [03_fauna - Exotic Fauna & Wildlife]: Xenobiological wildlife ecology of world "${planetName}" (Sector: ${sectorName}, Seed: #${seed}) in native ${biome} habitat. Apex creature: ${creature}. Environment: ${variation.geologicalFormation}. Volumetric atmospheric thermals, photorealistic speculative xenobiology, ${variation.chromaticAccent}, cinematic depth of field.${isAmlemi ? '' : ' Native non-human planetary wildlife, zero human presence.'}`,
@@ -2376,7 +2394,7 @@ export async function generatePlanetRenders(data: GeneratePlanetRequest): Promis
       if (planetName.toLowerCase() === 'felix' || isAmlemi) {
         videoUrl = isAmlemi
           ? '/assets/videos/amlemi_trailer.mp4'
-          : 'https://v3b.fal.media/files/b/0aaf623d/z1ql8Ve-M6NIe96OK1chO_video.mp4';
+          : 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4';
         videoQueued = false;
       } else {
         videoQueued = true;

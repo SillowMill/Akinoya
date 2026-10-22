@@ -7,9 +7,9 @@ import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import moodboardImg from '../assets/images/Mood.png';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
-import dnVideo from '../assets/videos/DN.mp4';
+import dnVideo from '../assets/videos/DNN.mp4';
 import dnThumbnailImg from '../assets/images/dn_thumbnail.png';
-import dontNeedVideo from '../assets/videos/Dontneed.mov';
+import dontNeedVideo from '../assets/videos/DNN.mp4';
 import bingaaLoopVideo from '../assets/videos/Bingaaloop.mov';
 import {
   Lock,
@@ -104,8 +104,8 @@ export interface VisualizerTrack {
   videoUrl?: string;
 }
 
-export const DN_VIDEO_URL = dnVideo || '/videos/DN.mp4';
-export const DONT_NEED_VIDEO_URL = dontNeedVideo || "/videos/Don'tneed.mov";
+export const DN_VIDEO_URL = dnVideo || '/videos/DNN.mp4';
+export const DONT_NEED_VIDEO_URL = dontNeedVideo || '/videos/DNN.mp4';
 export const BINGAA_LOOP_VIDEO_URL = bingaaLoopVideo || '/videos/Bingaaloop.mov';
 
 const VISUALIZER_TRACKS: VisualizerTrack[] = [
@@ -115,7 +115,7 @@ const VISUALIZER_TRACKS: VisualizerTrack[] = [
     code: 'DONTNEED',
     defaultUnlocked: true,
     artworkUrl: dnThumbnailImg || visualizerThumbnailImg,
-    videoUrl: DONT_NEED_VIDEO_URL,
+    videoUrl: DN_VIDEO_URL,
   },
   {
     id: '02',
@@ -1332,12 +1332,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
-                        {/* Top Left Clean Minimal Track Title ("Don't Need") */}
-                        <div className="absolute top-3 left-3 pointer-events-none">
-                          <span className="text-xs sm:text-sm font-display font-bold tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-                            Don't Need
-                          </span>
-                        </div>
 
                         {/* Audio Mute/Unmute Toggle Button */}
                         <button
@@ -2222,6 +2216,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           {/* Tab 3: My World — User's 5-Photo Cinematic Sci-Fi Dossier, 9:16 Story Verification Badge & Guest Simulation Mode */}
           {activeTab === 'my-world' && activeWorldDossier && (
             <motion.div
+              id="my-world"
               key="my-world-view"
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -2237,6 +2232,25 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               }}
               className="space-y-6 md:space-y-7"
             >
+              {/* Universal "My World" Living Storyline Lore Integration */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-950/70 via-[#070e24]/90 to-cyan-950/70 backdrop-blur-xl border border-cyan-400/40 p-5 sm:p-6 shadow-[0_10px_35px_rgba(0,0,0,0.6),0_0_25px_rgba(56,189,248,0.15)]">
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent pointer-events-none" />
+                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-cyan-950/90 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_20px_rgba(56,189,248,0.3)] shrink-0">
+                    <Globe2 className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-300" />
+                  </div>
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/40 text-cyan-300 font-semibold uppercase tracking-wider">
+                        ÄKINOYA EXPANSION PROTOCOL · LIVING STORYLINE
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-cyan-100/90 font-sans leading-relaxed">
+                      Beyond the release of the eleven visualizers lies an unfolding, living storyline. Äkinoya does not end with the music—it expands into the cosmos you create. Here, in &apos;My World&apos;, the narrative threads of Odi Selis&apos;s universe stretch directly into your own custom-generated planets. Synthesize your sector, anchor your world into the constellation matrix, and become an active co-creator of the Äkinoya lore.
+                    </p>
+                  </div>
+                </div>
+              </div>
               {/* Guest Simulation Mode & Magnetic Conversion Banner (Displayed when visitor hasn't synthesized their own world yet) */}
               {isGuestWorldSimulation && (
                 <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/75 via-[#071124]/90 to-cyan-950/70 backdrop-blur-xl border-2 border-amber-400/55 p-5 sm:p-6 md:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.65),0_0_35px_rgba(245,158,11,0.22)]">
