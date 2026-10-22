@@ -53,6 +53,7 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
     dossier.id === 'planet-nathan-pioneer-03' ||
     dossier.authorName?.toLowerCase().includes('nathan') ||
     dossier.authorUsername?.toLowerCase().includes('nathan') ||
+    dossier.planetName?.toLowerCase() === 'nathos' ||
     dossier.planetName?.toLowerCase() === 'natharia' ||
     dossier.planetName?.toLowerCase() === 'nathan';
 
@@ -60,6 +61,7 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
     dossier.id === 'planet-florian-pioneer-04' ||
     dossier.authorName?.toLowerCase().includes('florian') ||
     dossier.authorUsername?.toLowerCase().includes('florian') ||
+    dossier.planetName?.toLowerCase() === 'florium' ||
     dossier.planetName?.toLowerCase() === 'floriana' ||
     dossier.planetName?.toLowerCase() === 'florian';
 
@@ -67,6 +69,7 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
     dossier.id === 'planet-seppe-pioneer-05' ||
     dossier.authorName?.toLowerCase().includes('seppe') ||
     dossier.authorUsername?.toLowerCase().includes('seppe') ||
+    dossier.planetName?.toLowerCase() === 'sepplon' ||
     dossier.planetName?.toLowerCase() === 'seppion' ||
     dossier.planetName?.toLowerCase() === 'seppe';
 

@@ -197,9 +197,10 @@ export function getDeterministicPlanetCoordinates(
     };
   }
 
-  // Pioneer #3: Natharia (Nathan R.)
+  // Pioneer #3: Nathos (Nathan R.)
   const isNathan =
     planetId === 'planet-nathan-pioneer-03' ||
+    planetName === 'Nathos' ||
     planetName === 'Natharia' ||
     planetName === 'Nathan';
   if (isNathan) {
@@ -224,9 +225,10 @@ export function getDeterministicPlanetCoordinates(
     };
   }
 
-  // Pioneer #4: Floriana (Florian H.)
+  // Pioneer #4: Florium (Florian H.)
   const isFlorian =
     planetId === 'planet-florian-pioneer-04' ||
+    planetName === 'Florium' ||
     planetName === 'Floriana' ||
     planetName === 'Florian';
   if (isFlorian) {
@@ -251,9 +253,10 @@ export function getDeterministicPlanetCoordinates(
     };
   }
 
-  // Pioneer #5: Seppion (Seppe G.)
+  // Pioneer #5: Sepplon (Seppe G.)
   const isSeppe =
     planetId === 'planet-seppe-pioneer-05' ||
+    planetName === 'Sepplon' ||
     planetName === 'Seppion' ||
     planetName === 'Seppe';
   if (isSeppe) {
@@ -342,19 +345,19 @@ export function assignMultiVariantCoordinates(
     ? { x: 304, y: -68, sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)', armId: tr0.id, armName: tr0.name }
     : { x: 243, y: 176, sectorId: 'SECTOR CYGNUS-00 (CORE MERIDIAN)', armId: arm1.id, armName: arm1.name };
 
-  // Pioneer #3: Natharia (Nathan R.) - Arm 2 / Track 0 Slot 2
+  // Pioneer #3: Nathos (Nathan R.) - Arm 2 / Track 0 Slot 2
   const arm2 = CONSTELLATION_ARMS[2];
   const nathanCoord = mode === 'matrix'
     ? { x: 188, y: 178, sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)', armId: tr0.id, armName: tr0.name }
     : { x: -93, y: 285, sectorId: 'SECTOR SOLARIS-00 (CORE MERIDIAN)', armId: arm2.id, armName: arm2.name };
 
-  // Pioneer #4: Floriana (Florian H.) - Arm 3 / Track 0 Slot 3
+  // Pioneer #4: Florium (Florian H.) - Arm 3 / Track 0 Slot 3
   const arm3 = CONSTELLATION_ARMS[3];
   const florianCoord = mode === 'matrix'
     ? { x: -188, y: 178, sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)', armId: tr0.id, armName: tr0.name }
     : { x: -300, y: 0, sectorId: 'SECTOR AURELIA-00 (CORE MERIDIAN)', armId: arm3.id, armName: arm3.name };
 
-  // Pioneer #5: Seppion (Seppe G.) - Arm 4 / Track 0 Slot 4
+  // Pioneer #5: Sepplon (Seppe G.) - Arm 4 / Track 0 Slot 4
   const arm4 = CONSTELLATION_ARMS[4];
   const seppeCoord = mode === 'matrix'
     ? { x: -304, y: -68, sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)', armId: tr0.id, armName: tr0.name }
@@ -438,9 +441,10 @@ export function assignMultiVariantCoordinates(
       };
     }
 
-    // 2c. Natharia VIP Pioneer (#3)
+    // 2c. Nathos VIP Pioneer (#3)
     const isNathan =
       sub.id === 'planet-nathan-pioneer-03' ||
+      sub.planetName === 'Nathos' ||
       sub.planetName === 'Natharia' ||
       sub.planetName === 'Nathan';
     if (isNathan) {
@@ -456,9 +460,10 @@ export function assignMultiVariantCoordinates(
       };
     }
 
-    // 2d. Floriana VIP Pioneer (#4)
+    // 2d. Florium VIP Pioneer (#4)
     const isFlorian =
       sub.id === 'planet-florian-pioneer-04' ||
+      sub.planetName === 'Florium' ||
       sub.planetName === 'Floriana' ||
       sub.planetName === 'Florian';
     if (isFlorian) {
@@ -474,9 +479,10 @@ export function assignMultiVariantCoordinates(
       };
     }
 
-    // 2e. Seppion VIP Pioneer (#5)
+    // 2e. Sepplon VIP Pioneer (#5)
     const isSeppe =
       sub.id === 'planet-seppe-pioneer-05' ||
+      sub.planetName === 'Sepplon' ||
       sub.planetName === 'Seppion' ||
       sub.planetName === 'Seppe';
     if (isSeppe) {
@@ -1029,7 +1035,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     authorUsername: 'nathanr',
     authorEmail: 'nathan.r@akinoya.universe',
     authorAvatarGradient: 'from-violet-600 via-purple-600 to-indigo-800',
-    planetName: 'Natharia',
+    planetName: 'Nathos',
     atmosphere: 'Inverted twilight gravity vortex with deep obsidian, neon violet, electric cyan auroras, and floating inverted cloudbanks.',
     flora: 'Colossal flying trees floating freely in mid-air, with bioluminescent roots absorbing starlight and upside-down twisting canopies.',
     fauna: 'Ethereal zero-gravity sky manta rays and luminescent fractal shadow-cats gliding effortlessly between hovering islands.',
@@ -1038,7 +1044,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     landmark: 'The Monolith of Inverted Physics: A shattered, floating cubist obelisk defying gravitational laws in perpetual levitation.',
     additionalNotes: 'Founding Pioneer world #3 for Nathan R.',
     humanAnswers: {
-      planetName: 'Natharia',
+      planetName: 'Nathos',
       atmosphere: 'Inverted twilight gravity vortex with deep obsidian, neon violet, electric cyan auroras, and floating inverted cloudbanks.',
       flora: 'Colossal flying trees floating freely in mid-air, with bioluminescent roots absorbing starlight and upside-down twisting canopies.',
       fauna: 'Ethereal zero-gravity sky manta rays and luminescent fractal shadow-cats gliding effortlessly between hovering islands.',
@@ -1049,7 +1055,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       additionalNotes: 'Founding Pioneer world #3 for Nathan R.',
     },
     futurePromise: 'Across inverted horizons, imagination reshapes the laws of reality.',
-    generatedLore: `Classified by world architect Nathan R., Natharia is an official VIP frontier sector (#03) situated within the Äkinoya celestial sphere.\n\nTheme: Dark, cool, crazy, trippy, and surreal dreamscape featuring flying trees and abstract anti-gravity physics.\n\nNotable Landmark: The Monolith of Inverted Physics.`,
+    generatedLore: `Classified by world architect Nathan R., Nathos is an official VIP frontier sector (#03) situated within the Äkinoya celestial sphere.\n\nTheme: Dark, cool, crazy, trippy, and surreal dreamscape featuring flying trees and abstract anti-gravity physics.\n\nNotable Landmark: The Monolith of Inverted Physics.`,
     renders: {
       hero: 'https://v3b.fal.media/files/b/0aaf680b/abVXKSJD21rsIkKAINQUP_DMkQXa60.png',
       flora: 'https://v3b.fal.media/files/b/0aaf680d/NB87mCoA8EG2dU1qtb2ri_rozLGKjR.png',
@@ -1057,14 +1063,14 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       atmosphere: 'https://v3b.fal.media/files/b/0aaf6811/VbHaEEq81S156sf-2H_g-_D23i1FuO.png',
       landmark: 'https://v3b.fal.media/files/b/0aaf6813/Txn-nAVGcZlb_Y4DuyTS__tHA0X6eE.png',
       ecosystem: 'https://v3b.fal.media/files/b/0aaf680d/NB87mCoA8EG2dU1qtb2ri_rozLGKjR.png',
-      videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+      videoUrl: 'https://v3b.fal.media/files/b/0aaf6837/73G-TnsBj1_TYINxT0wtZ_video.mp4',
       '01_main': 'https://v3b.fal.media/files/b/0aaf680b/abVXKSJD21rsIkKAINQUP_DMkQXa60.png',
       '02_flora': 'https://v3b.fal.media/files/b/0aaf680d/NB87mCoA8EG2dU1qtb2ri_rozLGKjR.png',
       '03_fauna': 'https://v3b.fal.media/files/b/0aaf680f/lF1OMXjKS6OV0w46cRnFI_RQFYB9wW.png',
       '04_atmo': 'https://v3b.fal.media/files/b/0aaf6811/VbHaEEq81S156sf-2H_g-_D23i1FuO.png',
       '05_lore': 'https://v3b.fal.media/files/b/0aaf6813/Txn-nAVGcZlb_Y4DuyTS__tHA0X6eE.png',
     },
-    videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+    videoUrl: 'https://v3b.fal.media/files/b/0aaf6837/73G-TnsBj1_TYINxT0wtZ_video.mp4',
     videoStatus: 'READY',
     votesCount: 2,
     hasVoted: false,
@@ -1089,43 +1095,43 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     authorName: 'Florian H.',
     authorUsername: 'florianh',
     authorEmail: 'florian.h@akinoya.universe',
-    authorAvatarGradient: 'from-amber-400 via-orange-500 to-yellow-500',
-    planetName: 'Floriana',
-    atmosphere: 'Perpetual radiant golden-hour troposphere bathed in warm incandescent amber light, soft peach clouds, and shimmering solar dust.',
-    flora: 'Endless undulating meadows of glowing golden sun-grass, serene luminous blossom willows, and soft harmonic wildflowers.',
-    fauna: 'Gentle celestial deer with crystalline velvet antlers and friendly floating sun-doves radiating warmth and peace.',
-    sonicVibe: 'Warm acoustic cello harmonics, resonant singing bowls, and golden-hour ambient pads.',
-    visualAesthetic: 'Warm golden-hour meadows, peach skies, gentle peaceful sanctuary (Sillow Mill aesthetic).',
-    landmark: 'The Sanctuary of Concord: A majestic open-air amphitheater of rose-gold marble and warm quartz chimes.',
+    authorAvatarGradient: 'from-blue-600 via-indigo-600 to-cyan-500',
+    planetName: 'Florium',
+    atmosphere: 'Moody, stylish twilight sky over planet Florium seen from a high-rise terrace, deep royal blue evening troposphere cut by powerful crisp white stadium floodlights, architectural silhouettes of modern arenas and historic gothic towers under illuminated night clouds, Leuven night vibes.',
+    flora: 'Sleek architectural vertical bio-forests and illuminated rooftop gardens on planet Florium, glowing indigo and cool crisp white bio-moss, sleek geometric glass towers and steel bridges, Leuven-by-night stylish urban atmosphere, modern masculine design.',
+    fauna: 'A sleek, dynamic kinetic energy falcon and cybernetic companion walking with quiet confidence through a stylish pedestrian plaza on planet Florium, illuminated by deep blue and white stadium floodlights reflecting on wet dark asphalt, cool modern guy vibe.',
+    sonicVibe: 'Deep ambient electronic sub-bass, crisp modern stadium synth pads, and resonant twilight urban echoes.',
+    visualAesthetic: 'Sleek, cool, stylish masculine urban energy, modern architecture, deep sapphire blue and white stadium lighting (Sillow Mill aesthetic).',
+    landmark: 'The Stadium of Florium (The King Power Concord): A colossal, ultra-modern architectural sports arena and illuminated amphitheater forged from brushed steel and glass, radiating with deep sapphire blue and electric white stadium lighting over water canals.',
     additionalNotes: 'Founding Pioneer world #4 for Florian H.',
     humanAnswers: {
-      planetName: 'Floriana',
-      atmosphere: 'Perpetual radiant golden-hour troposphere bathed in warm incandescent amber light, soft peach clouds, and shimmering solar dust.',
-      flora: 'Endless undulating meadows of glowing golden sun-grass, serene luminous blossom willows, and soft harmonic wildflowers.',
-      fauna: 'Gentle celestial deer with crystalline velvet antlers and friendly floating sun-doves radiating warmth and peace.',
-      landmark: 'The Sanctuary of Concord: A majestic open-air amphitheater of rose-gold marble and warm quartz chimes.',
-      creativeExpression: 'Warm, beautiful, and inviting world reflecting a gentle, friendly spirit with soft golden-hour meadows.',
-      sonicVibe: 'Warm acoustic cello harmonics, resonant singing bowls, and golden-hour ambient pads.',
-      visualAesthetic: 'Warm golden-hour meadows, peach skies, gentle peaceful sanctuary (Sillow Mill aesthetic).',
+      planetName: 'Florium',
+      atmosphere: 'Moody, stylish twilight sky over planet Florium seen from a high-rise terrace, deep royal blue evening troposphere cut by powerful crisp white stadium floodlights, architectural silhouettes of modern arenas and historic gothic towers under illuminated night clouds, Leuven night vibes.',
+      flora: 'Sleek architectural vertical bio-forests and illuminated rooftop gardens on planet Florium, glowing indigo and cool crisp white bio-moss, sleek geometric glass towers and steel bridges, Leuven-by-night stylish urban atmosphere, modern masculine design.',
+      fauna: 'A sleek, dynamic kinetic energy falcon and cybernetic companion walking with quiet confidence through a stylish pedestrian plaza on planet Florium, illuminated by deep blue and white stadium floodlights reflecting on wet dark asphalt, cool modern guy vibe.',
+      landmark: 'The Stadium of Florium (The King Power Concord): A colossal, ultra-modern architectural sports arena and illuminated amphitheater forged from brushed steel and glass, radiating with deep sapphire blue and electric white stadium lighting over water canals.',
+      creativeExpression: 'Sleek, cool, stylish, and masculine urban energy reflecting Leuven-by-night, modern architecture, and subtle deep-blue/white stadium/soccer lighting (OHL vibe), matching a great 28-year-old personality. Zero cat assets.',
+      sonicVibe: 'Deep ambient electronic sub-bass, crisp modern stadium synth pads, and resonant twilight urban echoes.',
+      visualAesthetic: 'Sleek, cool, stylish masculine urban energy, modern architecture, deep sapphire blue and white stadium lighting (Sillow Mill aesthetic).',
       additionalNotes: 'Founding Pioneer world #4 for Florian H.',
     },
-    futurePromise: 'Kindness and warmth form the eternal foundation of peace.',
-    generatedLore: `Classified by world architect Florian H., Floriana is an official VIP frontier sector (#04) situated within the Äkinoya celestial sphere.\n\nTheme: Warm, beautiful, and inviting world reflecting a gentle, friendly spirit.\n\nNotable Landmark: The Sanctuary of Concord.`,
+    futurePromise: 'Style, passion, and modern architectural vision illuminate every night horizon.',
+    generatedLore: `Classified by world architect Florian H., Florium is an official VIP frontier sector (#04) situated within the Äkinoya celestial sphere.\n\nTheme: Sleek, cool, stylish, and masculine urban energy reflecting Leuven-by-night, modern architecture, and subtle deep-blue/white stadium/soccer lighting (OHL vibe), matching a great 28-year-old personality.\n\nNotable Landmark: The Stadium of Florium (The King Power Concord).`,
     renders: {
-      hero: 'https://v3b.fal.media/files/b/0aaf6833/6_DtMADrKFCNanBou6Afy_QTA5qj6f.png',
-      flora: 'https://v3b.fal.media/files/b/0aaf683d/pMLXSPrr5eN5LSmiqXJHA_ppdgBZpe.png',
-      fauna: 'https://v3b.fal.media/files/b/0aaf683f/7yL3MXv81V_4rtOPMYxZ8_rDvku4vW.png',
-      atmosphere: 'https://v3b.fal.media/files/b/0aaf6840/o_FCmzvxl0HdxzrTEbaM-_J3xqwdOv.png',
-      landmark: 'https://v3b.fal.media/files/b/0aaf6842/2aEsqExG47Et8MkhgcbNl_MXwupges.png',
-      ecosystem: 'https://v3b.fal.media/files/b/0aaf683d/pMLXSPrr5eN5LSmiqXJHA_ppdgBZpe.png',
-      videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
-      '01_main': 'https://v3b.fal.media/files/b/0aaf6833/6_DtMADrKFCNanBou6Afy_QTA5qj6f.png',
-      '02_flora': 'https://v3b.fal.media/files/b/0aaf683d/pMLXSPrr5eN5LSmiqXJHA_ppdgBZpe.png',
-      '03_fauna': 'https://v3b.fal.media/files/b/0aaf683f/7yL3MXv81V_4rtOPMYxZ8_rDvku4vW.png',
-      '04_atmo': 'https://v3b.fal.media/files/b/0aaf6840/o_FCmzvxl0HdxzrTEbaM-_J3xqwdOv.png',
-      '05_lore': 'https://v3b.fal.media/files/b/0aaf6842/2aEsqExG47Et8MkhgcbNl_MXwupges.png',
+      hero: 'https://v3b.fal.media/files/b/0aaf698b/27kxKI6v8phTiLmYnxq3c_au3ooi6U.png',
+      flora: 'https://v3b.fal.media/files/b/0aaf698d/m5M5nw2MGGpCiJKgrwDeR_4q0Kj3qa.png',
+      fauna: 'https://v3b.fal.media/files/b/0aaf698f/pUpRHv_QQrBhGTrRh0po8_F4gtyXNm.png',
+      atmosphere: 'https://v3b.fal.media/files/b/0aaf6991/TfW5CN0GOxdviStakgbNI_YYQ4up7x.png',
+      landmark: 'https://v3b.fal.media/files/b/0aaf6993/NWFOuBxgb2Hg-tC4w5pB5_KI51BOmF.png',
+      ecosystem: 'https://v3b.fal.media/files/b/0aaf698d/m5M5nw2MGGpCiJKgrwDeR_4q0Kj3qa.png',
+      videoUrl: 'https://v3b.fal.media/files/b/0aaf69c6/9XwCreSqJCrZ2xLu-rbUg_video.mp4',
+      '01_main': 'https://v3b.fal.media/files/b/0aaf698b/27kxKI6v8phTiLmYnxq3c_au3ooi6U.png',
+      '02_flora': 'https://v3b.fal.media/files/b/0aaf698d/m5M5nw2MGGpCiJKgrwDeR_4q0Kj3qa.png',
+      '03_fauna': 'https://v3b.fal.media/files/b/0aaf698f/pUpRHv_QQrBhGTrRh0po8_F4gtyXNm.png',
+      '04_atmo': 'https://v3b.fal.media/files/b/0aaf6991/TfW5CN0GOxdviStakgbNI_YYQ4up7x.png',
+      '05_lore': 'https://v3b.fal.media/files/b/0aaf6993/NWFOuBxgb2Hg-tC4w5pB5_KI51BOmF.png',
     },
-    videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+    videoUrl: 'https://v3b.fal.media/files/b/0aaf69c6/9XwCreSqJCrZ2xLu-rbUg_video.mp4',
     videoStatus: 'READY',
     votesCount: 2,
     hasVoted: false,
@@ -1151,7 +1157,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     authorUsername: 'seppeg',
     authorEmail: 'seppe.g@akinoya.universe',
     authorAvatarGradient: 'from-cyan-500 via-teal-600 to-emerald-600',
-    planetName: 'Seppion',
+    planetName: 'Sepplon',
     atmosphere: 'Pristine ionized nitrogen sky segmented by crystalline prism meridians, laser-guided orbital tracks, and geometric auroral lattices.',
     flora: 'Self-assembling fractal silicon crystals, perfectly tessellated hexagonal crystalline groves, and fiber-optic pulse trees.',
     fauna: 'Flawlessly polished chrome and obsidian cybernetic falcon sentinels with sapphire optic cores patrolling geometric vectors with absolute precision.',
@@ -1160,7 +1166,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     landmark: 'The Grand Calculation Matrix: A colossal hyper-symmetric planetary hypercube constructed from polished platinum and pulsating cobalt quantum circuitry.',
     additionalNotes: 'Founding Pioneer world #5 for Seppe G.',
     humanAnswers: {
-      planetName: 'Seppion',
+      planetName: 'Sepplon',
       atmosphere: 'Pristine ionized nitrogen sky segmented by crystalline prism meridians, laser-guided orbital tracks, and geometric auroral lattices.',
       flora: 'Self-assembling fractal silicon crystals, perfectly tessellated hexagonal crystalline groves, and fiber-optic pulse trees.',
       fauna: 'Flawlessly polished chrome and obsidian cybernetic falcon sentinels with sapphire optic cores patrolling geometric vectors with absolute precision.',
@@ -1171,7 +1177,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       additionalNotes: 'Founding Pioneer world #5 for Seppe G.',
     },
     futurePromise: 'Absolute clarity and precision conquer the deepest cosmic frontiers.',
-    generatedLore: `Classified by world architect Seppe G., Seppion is an official VIP frontier sector (#05) situated within the Äkinoya celestial sphere.\n\nTheme: Hyper-structured, brilliant, geometric, and flawlessly engineered masterwork of pure analytical elegance and strategic precision.\n\nNotable Landmark: The Grand Calculation Matrix.`,
+    generatedLore: `Classified by world architect Seppe G., Sepplon is an official VIP frontier sector (#05) situated within the Äkinoya celestial sphere.\n\nTheme: Hyper-structured, brilliant, geometric, and flawlessly engineered masterwork of pure analytical elegance and strategic precision.\n\nNotable Landmark: The Grand Calculation Matrix.`,
     renders: {
       hero: 'https://v3b.fal.media/files/b/0aaf6863/fTRjYgpPsxLtYE5rkxzCH_imKRu1DN.png',
       flora: 'https://v3b.fal.media/files/b/0aaf6865/0JTHOCwSvlzSDHzK_oJCS_VO54kUyl.png',
@@ -1179,14 +1185,14 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       atmosphere: 'https://v3b.fal.media/files/b/0aaf6869/KZcqGlmdpfYJbh59dM81N_tUw4eCG9.png',
       landmark: 'https://v3b.fal.media/files/b/0aaf686a/F2W0jCmJVs-f0nP_41N59_tjkY7BlY.png',
       ecosystem: 'https://v3b.fal.media/files/b/0aaf6865/0JTHOCwSvlzSDHzK_oJCS_VO54kUyl.png',
-      videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+      videoUrl: 'https://v3b.fal.media/files/b/0aaf68a7/zWCLRwPLq3WCd9hTAIJlH_video.mp4',
       '01_main': 'https://v3b.fal.media/files/b/0aaf6863/fTRjYgpPsxLtYE5rkxzCH_imKRu1DN.png',
       '02_flora': 'https://v3b.fal.media/files/b/0aaf6865/0JTHOCwSvlzSDHzK_oJCS_VO54kUyl.png',
       '03_fauna': 'https://v3b.fal.media/files/b/0aaf6867/WLJOKi6BlgnYV0ZMOaDrx_FDy1JgDw.png',
       '04_atmo': 'https://v3b.fal.media/files/b/0aaf6869/KZcqGlmdpfYJbh59dM81N_tUw4eCG9.png',
       '05_lore': 'https://v3b.fal.media/files/b/0aaf686a/F2W0jCmJVs-f0nP_41N59_tjkY7BlY.png',
     },
-    videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+    videoUrl: 'https://v3b.fal.media/files/b/0aaf68a7/zWCLRwPLq3WCd9hTAIJlH_video.mp4',
     videoStatus: 'READY',
     votesCount: 2,
     hasVoted: false,
