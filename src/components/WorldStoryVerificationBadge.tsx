@@ -2132,6 +2132,215 @@ export const LiveStoryTrailerViewport: React.FC<{
   );
 });
 
+export interface StoryCard9x16ViewProps {
+  dossier: PlanetSubmission;
+  meta: ReturnType<typeof deriveWorldVerificationMeta>;
+  photoCards: ReturnType<typeof getPlanetPhotoCards>;
+  onTapToFullscreen?: () => void;
+  showFullscreenHint?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+/**
+ * Universal 9:16 Official Story Verification Card view component.
+ * Displays the complete multi-asset preview collage (01 Main hero + 2x2 sub-grid 02-05),
+ * synchronized edition badge (#N), Sillow Mill branding, and verification cryptographic code.
+ */
+export const StoryCard9x16View: React.FC<StoryCard9x16ViewProps> = React.memo(({
+  dossier,
+  meta,
+  photoCards,
+  onTapToFullscreen,
+  showFullscreenHint = false,
+  className = '',
+  style,
+}) => {
+  const heroPhoto = photoCards[0];
+  const subPhotos = photoCards.slice(1, 5);
+
+  return (
+    <div
+      onClick={onTapToFullscreen}
+      style={{
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+        touchAction: 'pan-y',
+        ...style,
+      }}
+      className={`relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] p-3.5 sm:p-4 bg-gradient-to-b from-[#040915] via-[#060d1f] to-[#02050b] border-2 border-amber-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(245,158,11,0.22)] flex flex-col justify-between overflow-hidden select-none ${
+        onTapToFullscreen
+          ? 'cursor-pointer group active:scale-[0.99] transition-all hover:border-amber-300 hover:shadow-[0_25px_80px_rgba(245,158,11,0.35)]'
+          : ''
+      } ${className}`}
+    >
+      {/* Inner Cyan Hairline Frame */}
+      <div className="absolute inset-2 rounded-[20px] border border-cyan-400/25 pointer-events-none z-20" />
+      <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-cyan-400/15 rounded-full blur-2xl pointer-events-none" />
+
+      {/* Interactive Fullscreen Tap Badge */}
+      {showFullscreenHint && (
+        <div className="absolute top-3.5 right-3.5 z-30 pointer-events-none lg:hidden">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/85 border border-amber-400/70 text-[9px] font-mono font-bold text-amber-300 tracking-wider shadow-lg backdrop-blur-md group-hover:scale-105 group-hover:bg-amber-950/90 transition-all">
+            <Maximize2 className="w-3 h-3 text-amber-300" />
+            <span>FULLSCREEN 9:16</span>
+          </div>
+        </div>
+      )}
+
+      {/* 1. TOP-LEVEL HEADER: FOUNDING PIONEER STATUS + PLANET NAME + HOLDER */}
+      <div className="relative z-10 flex items-start justify-between gap-3 pb-2 border-b border-cyan-400/20">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden pr-1.5">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-amber-400/40 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(251,191,36,0.2)]">
+            <img
+              src={sillowMillLogoUrl}
+              alt="Sillow Mill Official Logo"
+              className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.55)]"
+            />
+          </div>
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
+              <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
+              <span className="truncate">
+                {meta.isAmlemi
+                  ? 'FOUNDING PIONEER · GENESIS BENCHMARK'
+                  : meta.isVipPioneer
+                  ? 'VIP PIONEER'
+                  : meta.isPioneer
+                  ? 'FOUNDING PIONEER · PRE-RELEASE'
+                  : 'FOUNDING PIONEER'}
+              </span>
+            </div>
+            <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide uppercase truncate leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] max-w-[190px] sm:max-w-[240px]">
+              {dossier.planetName}
+            </h4>
+            <div className="text-[7.5px] sm:text-[8px] font-mono text-cyan-300/90 truncate">
+              HOLDER: <strong className="text-white font-bold">{formatAuthorName(dossier.authorName)}</strong> · {dossier.sectorId || 'SECTOR AKN-01'}
+            </div>
+          </div>
+        </div>
+
+        {/* Unique Numbering Badge (#1, #2, etc.) */}
+        <div className="shrink-0 ml-auto min-w-[54px] sm:min-w-[62px] px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 flex flex-col items-center justify-center text-center shadow-[0_0_15px_rgba(251,191,36,0.35)] select-none">
+          <span className="block text-[6.5px] font-mono font-bold uppercase tracking-widest text-amber-200/90">
+            EDITION
+          </span>
+          <span className="block text-xs sm:text-sm font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent leading-tight">
+            #{meta.worldNumber}
+          </span>
+        </div>
+      </div>
+
+      {/* 2. 5-Photo Vertical Collage */}
+      <div className="relative z-10 flex-1 my-1.5 flex flex-col gap-1.5 min-h-0">
+        {/* Photo 01: Main Orbital Hero */}
+        <div className="relative flex-[1.3] min-h-0 rounded-xl overflow-hidden border border-amber-400/55 bg-slate-950 shadow-md">
+          {heroPhoto?.url ? (
+            <img
+              src={heroPhoto.url}
+              alt={heroPhoto.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-cyan-950/40 text-cyan-300">
+              <Sparkles className="w-5 h-5 animate-pulse text-cyan-400 mb-1" />
+              <span className="text-[7.5px] font-mono tracking-wider">SYNTHESIZING 01 ORBITAL...</span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
+          <div className="absolute top-1.5 left-2 px-1.5 py-0.5 rounded bg-black/75 border border-amber-400/40 text-[7px] font-mono font-bold text-amber-300 uppercase tracking-wider">
+            01_MAIN · ORBITAL HORIZON
+          </div>
+          <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between gap-1">
+            <span className="text-[9.5px] font-sans font-bold text-white truncate">
+              {heroPhoto?.title || 'Orbital Horizon'}
+            </span>
+            <span className="text-[7px] font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-400/40 px-1.5 py-0.2 rounded">
+              {heroPhoto?.url ? '4K VERIFIED' : 'SYNCHRONIZING'}
+            </span>
+          </div>
+        </div>
+
+        {/* Photos 02 - 05: Symmetrical 2x2 Sub-Grid */}
+        <div className="flex-[1.5] grid grid-cols-2 grid-rows-2 gap-1.5 min-h-0">
+          {subPhotos.map((photo, idx) => {
+            const slotTags = ['02 · FLORA', '03 · FAUNA', '04 · CANOPY', '05 · LORE'];
+            return (
+              <div
+                key={photo.id || idx}
+                className="relative rounded-lg overflow-hidden border border-cyan-400/35 bg-slate-950 min-h-0 flex items-center justify-center"
+              >
+                {photo.url ? (
+                  <img
+                    src={photo.url}
+                    alt={photo.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-cyan-950/30 text-cyan-400/60 font-mono text-[7.5px] p-1 text-center">
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400/60 animate-pulse mb-0.5" />
+                    <span className="truncate">{slotTags[idx]}</span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent pointer-events-none" />
+                <div className="absolute bottom-1 left-1.5 right-1.5">
+                  <span className="block text-[6.5px] font-mono font-bold text-cyan-300 uppercase tracking-wider truncate">
+                    {slotTags[idx]}
+                  </span>
+                  <span className="block text-[8px] font-sans font-semibold text-white truncate">
+                    {photo.title}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. Streamlined Minimalist Footer */}
+      <div className="relative z-10 p-2 rounded-xl bg-[#071022]/90 border border-amber-400/35 space-y-1.5">
+        <p className="text-[8px] sm:text-[8.5px] font-sans italic text-amber-100/95 line-clamp-1 leading-snug">
+          &ldquo;
+          {dossier.futurePromise ||
+            dossier.generatedLore ||
+            'Synthesized planetary archive bound to the Sillow Mill — Äkinoya universe.'}
+          &rdquo;
+        </p>
+
+        <div className="px-2 py-1 rounded-lg bg-[#040914]/95 border border-cyan-400/35 flex items-center justify-between gap-1.5 text-[7.5px] font-mono">
+          <span className="text-cyan-300 font-bold truncate">
+            CODE: {meta.verificationCode}
+          </span>
+          <span className="text-emerald-400 font-bold shrink-0">● AUTHENTICATED</span>
+        </div>
+
+        {/* Bottom-Left Embedded Sillowmilllogo.png */}
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <img
+              src={sillowMillLogoUrl}
+              alt="Sillow Mill Logo"
+              className="w-5 h-5 object-contain shrink-0 drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]"
+            />
+            <span className="text-[7.5px] font-display font-black tracking-[0.12em] text-white uppercase truncate">
+              SILLOW MILL
+            </span>
+          </div>
+          <span className="text-[7px] font-mono text-white/60 shrink-0">sillowmill.com</span>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgeProps> = React.memo(({
   dossier,
   editionRank,

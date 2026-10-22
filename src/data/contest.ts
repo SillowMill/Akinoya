@@ -996,7 +996,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       additionalNotes: 'Active community test creation for Esther P.',
     },
     futurePromise: 'With curiosity and grace, the feline cosmos opens its infinite horizons.',
-    generatedLore: `Classified by world architect Esther P., Felix is an official VIP frontier sector situated within the Äkinoya celestial sphere. Styled after breathtaking Avatar-like bioluminescent landscapes, this feline haven thrives with adorable fluffy rossenhuiskatten (ginger domestic cats) and striking neon pink cats roaming among floating rock formations and glowing whisker-ferns.\n\nAcross the canyon plateaus stands the Great Sphinx of Felix, a colossal rose quartz monument channeling planetary harmonics at 432Hz.\n\nFOUNDING CREED:\n"With curiosity and grace, the feline cosmos opens its infinite horizons."`,
+    generatedLore: `Classified by world architect Esther P., Felix is an official VIP frontier sector (#02) situated within the Äkinoya celestial sphere. Cascading across bioluminescent mountain ranges and floating quartz arches reminiscent of an Avatar-style alien paradise, its skies radiate with vibrant neon pink and warm incandescent auroras.\n\nAcross the canyon plateaus roam charming, fluffy rossenhuiskatten (ginger domestic cats) and striking bioluminescent pink sci-fi cats playing amidst glowing whisker-ferns that react to touch. At the planetary meridian stands the colossal Great Sphinx of Felix, an ancient feline monolith carved from rose quartz and copper conduits humming at 432Hz.\n\nFOUNDING CREED:\n"With curiosity and grace, the feline cosmos opens its infinite horizons."`,
     renders: {
       hero: 'https://v3b.fal.media/files/b/0aaf67e3/QCNr60F4WXHza0PgpPzkm_FpQcg8tP.png',
       flora: 'https://v3b.fal.media/files/b/0aaf67e5/seICefAuMBvzKL611nP6b_uzsXKplx.png',
@@ -1057,7 +1057,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       additionalNotes: 'Founding Pioneer world #3 for Nathan R.',
     },
     futurePromise: 'Across inverted horizons, imagination reshapes the laws of reality.',
-    generatedLore: `Classified by world architect Nathan R., Ankrau is an official VIP frontier sector (#03) situated within the Äkinoya celestial sphere.\n\nTheme: Dark, cool, crazy, trippy, and surreal dreamscape featuring flying trees and abstract anti-gravity physics.\n\nNotable Landmark: The Monolith of Inverted Physics.`,
+    generatedLore: `Classified by world architect Nathan R., Ankrau is an official VIP frontier sector (#03) situated within the Äkinoya celestial sphere. Defying conventional celestial mechanics, Ankrau exists within an inverted gravitational vortex where colossal bioluminescent trees float upside down in mid-air and levitating obsidian shards orbit in zero gravity under violet and electric cyan auroras.\n\nEthereal sky manta rays and fractal shadow-cats glide effortlessly between hovering moss islands. Anchoring the planetary vortex stands the Monolith of Inverted Physics, a shattered, perpetually levitating cubist obelisk channeling cosmic anti-gravity energy.\n\nFOUNDING CREED:\n"Across inverted horizons, imagination reshapes the laws of reality."`,
     renders: {
       hero: 'https://v3b.fal.media/files/b/0aaf680b/abVXKSJD21rsIkKAINQUP_DMkQXa60.png',
       flora: 'https://v3b.fal.media/files/b/0aaf680d/NB87mCoA8EG2dU1qtb2ri_rozLGKjR.png',
@@ -1118,7 +1118,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       additionalNotes: 'Founding Pioneer world #4 for Florian H.',
     },
     futurePromise: 'Style, passion, and modern architectural vision illuminate every night horizon.',
-    generatedLore: `Classified by world architect Florian H., Florium is an official VIP frontier sector (#04) situated within the Äkinoya celestial sphere.\n\nTheme: Sleek, cool, stylish, and masculine urban energy reflecting Leuven-by-night, modern architecture, and subtle deep-blue/white stadium/soccer lighting (OHL vibe), matching a great 28-year-old personality.\n\nNotable Landmark: The Stadium of Florium (The King Power Concord).`,
+    generatedLore: `Classified by world architect Florian H., Florium is an official VIP frontier sector (#04) situated within the Äkinoya celestial sphere. Conceived as a sleek, masculine neo-noir urban wonderworld inspired by Leuven-by-night, Florium merges modern architectural glasslines and reflecting river canals with electric sapphire blue and crisp white stadium floodlights (OHL energy).\n\nVertical bio-forests and illuminated rooftop gardens climb geometric steel towers, while dynamic cybernetic companions walk through pedestrian plazas reflecting floodlit skies. Towering above the water canals is the Stadium of Florium (The King Power Concord), a colossal architectural amphitheater forged from brushed titanium and illuminated glass.\n\nFOUNDING CREED:\n"Style, passion, and modern architectural vision illuminate every night horizon."`,
     renders: {
       hero: 'https://v3b.fal.media/files/b/0aaf698b/27kxKI6v8phTiLmYnxq3c_au3ooi6U.png',
       flora: 'https://v3b.fal.media/files/b/0aaf698d/m5M5nw2MGGpCiJKgrwDeR_4q0Kj3qa.png',
@@ -1179,7 +1179,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       additionalNotes: 'Founding Pioneer world #5 for Seppe G.',
     },
     futurePromise: 'Absolute clarity and precision conquer the deepest cosmic frontiers.',
-    generatedLore: `Classified by world architect Seppe G., Sepplon is an official VIP frontier sector (#05) situated within the Äkinoya celestial sphere.\n\nTheme: Hyper-structured, brilliant, geometric, and flawlessly engineered masterwork of pure analytical elegance and strategic precision.\n\nNotable Landmark: The Grand Calculation Matrix.`,
+    generatedLore: `Classified by world architect Seppe G., Sepplon is an official VIP frontier sector (#05) situated within the Äkinoya celestial sphere. Engineered as a masterpiece of mathematical perfection and analytical elegance, its ionized nitrogen atmosphere is mapped by razor-sharp cyan laser meridians and geometric auroral lattices.\n\nTessellated hexagonal silicon crystal groves and fiber-optic pulse trees self-assemble across the surface, patrolled by chrome and obsidian cybernetic falcon sentinels with sapphire optic cores. At the core of the grid pulsates the Grand Calculation Matrix, a colossal hyper-symmetric planetary hypercube constructed from polished platinum and cobalt quantum circuitry.\n\nFOUNDING CREED:\n"Absolute clarity and precision conquer the deepest cosmic frontiers."`,
     renders: {
       hero: 'https://v3b.fal.media/files/b/0aaf6863/fTRjYgpPsxLtYE5rkxzCH_imKRu1DN.png',
       flora: 'https://v3b.fal.media/files/b/0aaf6865/0JTHOCwSvlzSDHzK_oJCS_VO54kUyl.png',
