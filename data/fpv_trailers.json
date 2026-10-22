@@ -1,23 +1,34 @@
 [
   {
+    "id": "planet-felix-test-01",
+    "planetName": "Felix",
+    "rank": 2,
+    "prompt": "Single continuous FPV drone shot, no cuts, ultra-wide 14mm lens, realistic motion blur, smooth acceleration skimming through a bioluminescent alien canyon of glowing pink and orange flora on planet Felix, close-proximity orbit around charming fluffy ginger domestic cats and bioluminescent pink sci-fi cats resting near giant rose quartz arches and ancient feline monoliths, vertical 9:16 cinematic flight. Immersive ambient sound design with soft harmonic feline purring, gentle celestial wind, and ethereal chimes.",
+    "videoUrl": "https://v3b.fal.media/files/b/0aaf6d23/O9RBWYVGrZNiF9ppfJDsx_video.mp4",
+    "hasAudio": true
+  },
+  {
     "id": "planet-nathan-pioneer-03",
     "planetName": "Ankrau",
     "rank": 3,
-    "prompt": "Single continuous FPV drone shot, no cuts, ultra-wide 14mm lens, aggressive low-altitude acceleration diving under floating upside-down flying trees and levitating obsidian stone shards on surreal planet Ankrau, close-proximity orbit around glowing neon violet anti-gravity fractures and ultraviolet auroras, 1080p HD vertical 9:16 cinematic flight.",
-    "videoUrl": "https://v3b.fal.media/files/b/0aaf6b1a/EBNjsGdRhW9BmLI5R7aeX_video.mp4"
+    "prompt": "Single continuous FPV drone shot, no cuts, ultra-wide 14mm lens, realistic motion blur, fluid gliding flight navigating under giant upside-down flying trees and levitating obsidian crystals on planet Ankrau, close-proximity orbit around glowing neon violet anti-gravity rifts and celestial auroras, vertical 9:16 cinematic flight. Immersive ambient sound design of ethereal cosmic wind, deep resonant atmospheric reverberation, and mysterious celestial resonance.",
+    "videoUrl": "https://v3b.fal.media/files/b/0aaf6d21/2RmE9WRG5uB4JE9DrJ3kh_video.mp4",
+    "hasAudio": true
   },
   {
     "id": "planet-florian-pioneer-04",
     "planetName": "Florium",
     "rank": 4,
     "prompt": "Single continuous FPV drone shot, no cuts, ultra-wide 14mm lens, aggressive low-altitude acceleration skimming over wet dark asphalt canals and diving through illuminated modern architectural steel arches of planet Florium, close-proximity orbit around the colossal King Power Concord arena glowing in electric sapphire blue and crisp white stadium floodlights, Leuven-by-night neo-noir energy, 1080p HD vertical 9:16 cinematic flight.",
-    "videoUrl": "https://v3b.fal.media/files/b/0aaf6ac4/D2auzhOcimbCYZC5umTeM_video.mp4"
+    "videoUrl": "https://v3b.fal.media/files/b/0aaf6ac4/D2auzhOcimbCYZC5umTeM_video.mp4",
+    "hasAudio": true
   },
   {
     "id": "planet-seppe-pioneer-05",
     "planetName": "Sepplon",
     "rank": 5,
-    "prompt": "Single continuous FPV drone shot, no cuts, ultra-wide 14mm lens, aggressive low-altitude acceleration tracking along razor-sharp cyan laser meridians and geometric quantum hypercube grids on planet Sepplon, close-proximity orbit through towering crystalline silicon spires and cobalt circuitry with absolute mathematical precision, 1080p HD vertical 9:16 cinematic flight.",
-    "videoUrl": "https://v3b.fal.media/files/b/0aaf6abd/-qrVaZD-IYYU1mrW_14C-_video.mp4"
+    "prompt": "Single continuous FPV drone shot, no cuts, ultra-wide 14mm lens, realistic motion blur, precision flight darting along glowing cyan laser meridians and geometric quantum hypercube grids on planet Sepplon, close-proximity orbit through towering crystalline silicon spires and cobalt circuitry, vertical 9:16 cinematic flight. Immersive ambient sound design of clean electrical hum, harmonic laser chimes, and resonant crystalline frequencies.",
+    "videoUrl": "https://v3b.fal.media/files/b/0aaf6d23/dE0_HEXLkGCMwR-A5XTkb_video.mp4",
+    "hasAudio": true
   }
 ]
