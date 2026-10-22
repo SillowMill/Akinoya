@@ -13,7 +13,8 @@
     "dev": "tsx server.ts & vite --port=3000 --host=0.0.0.0",
     "dev:api": "tsx server.ts",
     "dev:vite": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
+    "build": "vite build && esbuild src/server/serverless.ts --bundle --platform=node --format=esm --packages=external --target=node20 --outfile=api/index.js",
+    "build:api": "esbuild src/server/serverless.ts --bundle --platform=node --format=esm --packages=external --target=node20 --outfile=api/index.js",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"

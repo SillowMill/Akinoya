@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { apiApp } from '../src/server/apiRouter';
+import { apiApp } from './apiRouter';
 
 /**
  * Consolidated Single Serverless Function Entrypoint for Vercel Hobby Plan (<12 functions limit).
@@ -9,7 +9,7 @@ import { apiApp } from '../src/server/apiRouter';
  * - POST /api/nfc/register & /api/nfc/send-pin
  * - GET/POST /api/nfc/verify-dna
  * - GET/POST /api/nfc/redeem & /api/nfc/verify
- * - GET/POST /api/nfc/reset-pass
+ * - GET/POST /api/nfc/reset-pass & /api/nfc/reset-all-passes
  * - POST /api/whitelist/subscribe
  * - POST /api/create-checkout-session, GET /api/inventory/status, GET /api/checkout/session/:id, POST /api/webhooks/stripe
  */
