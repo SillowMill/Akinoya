@@ -120,7 +120,7 @@ export interface OvalMatrixTrack {
 }
 
 export const OVAL_MATRIX_TRACKS: OvalMatrixTrack[] = [
-  { id: 'track-0', name: 'FOUNDATIONAL CAPITAL OVAL', a: 320, b: 220, slots: 4, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.45)' },
+  { id: 'track-0', name: 'FOUNDATIONAL CAPITAL OVAL', a: 320, b: 220, slots: 5, color: '#fbbf24', glowColor: 'rgba(251, 191, 36, 0.45)' },
   { id: 'track-1', name: 'INNER CORE MATRIX', a: 720, b: 480, slots: 6, color: '#f59e0b', glowColor: 'rgba(245, 158, 11, 0.35)' },
   { id: 'track-2', name: 'PIONEER HIGHWAY', a: 1240, b: 820, slots: 8, color: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.35)' },
   { id: 'track-3', name: 'IONIZATION BELT', a: 1800, b: 1180, slots: 10, color: '#a855f7', glowColor: 'rgba(168, 85, 247, 0.35)' },
@@ -145,6 +145,7 @@ export function getDeterministicPlanetCoordinates(
     return { x: 0, y: 0, sectorId: 'SECTOR AKN-00 (CORE)' };
   }
 
+  // Pioneer #1: Ämlemi (Odi S.)
   const isAmlemi =
     planetId === 'planet-amlemi-genesis-01' ||
     planetName === 'Ämlemi';
@@ -153,23 +154,24 @@ export function getDeterministicPlanetCoordinates(
       const tr = OVAL_MATRIX_TRACKS[0];
       return {
         x: 0,
-        y: -tr.b,
+        y: -tr.b, // (0, -220)
         sectorId: 'SECTOR MATRIX-T00 (CAPITAL APEX)',
         armId: tr.id,
         armName: tr.name,
       };
     }
-
-    // Default: Variant A (5-Arm Spiral) - Foundational node along Orion Meridian (~300 AU)
+    // Variant A (5-Arm Spiral) - Arm 0 (Orion Meridian) Origin
+    const arm = CONSTELLATION_ARMS[0];
     return {
       x: 243,
       y: -176,
       sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)',
-      armId: 'arm-orion',
-      armName: 'ORION MERIDIAN',
+      armId: arm.id,
+      armName: arm.name,
     };
   }
 
+  // Pioneer #2: Felix (Esther P.)
   const isFelix =
     planetId === 'planet-felix-test-01' ||
     planetName === 'Felix';
@@ -177,20 +179,100 @@ export function getDeterministicPlanetCoordinates(
     if (mode === 'matrix') {
       const tr = OVAL_MATRIX_TRACKS[0];
       return {
-        x: 0,
-        y: tr.b,
+        x: 304,
+        y: -68,
         sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)',
         armId: tr.id,
         armName: tr.name,
       };
     }
-
-    // Default: Variant A (5-Arm Spiral) - Start-of-Line Cygnus Filament Origin (~300 AU)
+    // Variant A (5-Arm Spiral) - Arm 1 (Cygnus Filament) Origin
     const arm = CONSTELLATION_ARMS[1];
     return {
       x: 243,
       y: 176,
       sectorId: 'SECTOR CYGNUS-00 (CORE MERIDIAN)',
+      armId: arm.id,
+      armName: arm.name,
+    };
+  }
+
+  // Pioneer #3: Natharia (Nathan R.)
+  const isNathan =
+    planetId === 'planet-nathan-pioneer-03' ||
+    planetName === 'Natharia' ||
+    planetName === 'Nathan';
+  if (isNathan) {
+    if (mode === 'matrix') {
+      const tr = OVAL_MATRIX_TRACKS[0];
+      return {
+        x: 188,
+        y: 178,
+        sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)',
+        armId: tr.id,
+        armName: tr.name,
+      };
+    }
+    // Variant A (5-Arm Spiral) - Arm 2 (Solaris Tendril) Origin
+    const arm = CONSTELLATION_ARMS[2];
+    return {
+      x: -93,
+      y: 285,
+      sectorId: 'SECTOR SOLARIS-00 (CORE MERIDIAN)',
+      armId: arm.id,
+      armName: arm.name,
+    };
+  }
+
+  // Pioneer #4: Floriana (Florian H.)
+  const isFlorian =
+    planetId === 'planet-florian-pioneer-04' ||
+    planetName === 'Floriana' ||
+    planetName === 'Florian';
+  if (isFlorian) {
+    if (mode === 'matrix') {
+      const tr = OVAL_MATRIX_TRACKS[0];
+      return {
+        x: -188,
+        y: 178,
+        sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)',
+        armId: tr.id,
+        armName: tr.name,
+      };
+    }
+    // Variant A (5-Arm Spiral) - Arm 3 (Aurelia Cluster) Origin
+    const arm = CONSTELLATION_ARMS[3];
+    return {
+      x: -300,
+      y: 0,
+      sectorId: 'SECTOR AURELIA-00 (CORE MERIDIAN)',
+      armId: arm.id,
+      armName: arm.name,
+    };
+  }
+
+  // Pioneer #5: Seppion (Seppe G.)
+  const isSeppe =
+    planetId === 'planet-seppe-pioneer-05' ||
+    planetName === 'Seppion' ||
+    planetName === 'Seppe';
+  if (isSeppe) {
+    if (mode === 'matrix') {
+      const tr = OVAL_MATRIX_TRACKS[0];
+      return {
+        x: -304,
+        y: -68,
+        sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)',
+        armId: tr.id,
+        armName: tr.name,
+      };
+    }
+    // Variant A (5-Arm Spiral) - Arm 4 (Centauri Stream) Origin
+    const arm = CONSTELLATION_ARMS[4];
+    return {
+      x: -93,
+      y: -285,
+      sectorId: 'SECTOR CENTAURI-00 (CORE MERIDIAN)',
       armId: arm.id,
       armName: arm.name,
     };
@@ -246,62 +328,63 @@ export function assignMultiVariantCoordinates(
   mode: ConstellationLayoutMode = 'spiral',
   seed: number = 0
 ): PlanetSubmission[] {
-  // Resolve mode-aware coordinates for Ämlemi foundational master anchor
-  let amlemiCoord = {
-    x: 243,
-    y: -176,
-    sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)',
-    armId: 'arm-orion',
-    armName: 'ORION MERIDIAN',
-  };
+  // Resolve mode-aware coordinates for all 5 Founding & VIP Pioneers
+  // Pioneer #1: Ämlemi (Odi S.) - Arm 0 / Track 0 Apex
+  const arm0 = CONSTELLATION_ARMS[0];
+  const tr0 = OVAL_MATRIX_TRACKS[0];
+  const amlemiCoord = mode === 'matrix'
+    ? { x: 0, y: -tr0.b, sectorId: 'SECTOR MATRIX-T00 (CAPITAL APEX)', armId: tr0.id, armName: tr0.name }
+    : { x: 243, y: -176, sectorId: 'SECTOR AKN-01 (CAPITAL MERIDIAN)', armId: arm0.id, armName: arm0.name };
 
-  if (mode === 'matrix') {
-    const tr = OVAL_MATRIX_TRACKS[0];
-    amlemiCoord = {
-      x: 0,
-      y: -tr.b,
-      sectorId: 'SECTOR MATRIX-T00 (CAPITAL APEX)',
-      armId: tr.id,
-      armName: tr.name,
-    };
-  }
+  // Pioneer #2: Felix (Esther P.) - Arm 1 / Track 0 Slot 1
+  const arm1 = CONSTELLATION_ARMS[1];
+  const felixCoord = mode === 'matrix'
+    ? { x: 304, y: -68, sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)', armId: tr0.id, armName: tr0.name }
+    : { x: 243, y: 176, sectorId: 'SECTOR CYGNUS-00 (CORE MERIDIAN)', armId: arm1.id, armName: arm1.name };
 
-  // Resolve mode-aware coordinates for Felix test creation (Arm 1 start-of-line origin: 243, 176)
-  const cygnusArm = CONSTELLATION_ARMS[1];
-  let felixCoord = {
-    x: 243,
-    y: 176,
-    sectorId: 'SECTOR CYGNUS-00 (CORE MERIDIAN)',
-    armId: cygnusArm.id,
-    armName: cygnusArm.name,
-  };
+  // Pioneer #3: Natharia (Nathan R.) - Arm 2 / Track 0 Slot 2
+  const arm2 = CONSTELLATION_ARMS[2];
+  const nathanCoord = mode === 'matrix'
+    ? { x: 188, y: 178, sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)', armId: tr0.id, armName: tr0.name }
+    : { x: -93, y: 285, sectorId: 'SECTOR SOLARIS-00 (CORE MERIDIAN)', armId: arm2.id, armName: arm2.name };
 
-  if (mode === 'matrix') {
-    const tr0 = OVAL_MATRIX_TRACKS[0];
-    felixCoord = {
-      x: 0,
-      y: tr0.b, // 220
-      sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)',
-      armId: tr0.id,
-      armName: tr0.name,
-    };
-  }
+  // Pioneer #4: Floriana (Florian H.) - Arm 3 / Track 0 Slot 3
+  const arm3 = CONSTELLATION_ARMS[3];
+  const florianCoord = mode === 'matrix'
+    ? { x: -188, y: 178, sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)', armId: tr0.id, armName: tr0.name }
+    : { x: -300, y: 0, sectorId: 'SECTOR AURELIA-00 (CORE MERIDIAN)', armId: arm3.id, armName: arm3.name };
 
-  // Hard pairwise distance tracking: Äkinoya Core (0, 0), Ämlemi anchor, and Felix are pre-registered
+  // Pioneer #5: Seppion (Seppe G.) - Arm 4 / Track 0 Slot 4
+  const arm4 = CONSTELLATION_ARMS[4];
+  const seppeCoord = mode === 'matrix'
+    ? { x: -304, y: -68, sectorId: 'SECTOR MATRIX-T00 (CAPITAL MERIDIAN)', armId: tr0.id, armName: tr0.name }
+    : { x: -93, y: -285, sectorId: 'SECTOR CENTAURI-00 (CORE MERIDIAN)', armId: arm4.id, armName: arm4.name };
+
+  // Hard pairwise distance tracking: Äkinoya Core (0, 0) and all 5 Pioneers are pre-registered
   const placedNodes: PlacedNode[] = [
     { id: 'akinoya-core', x: 0, y: 0 },
     { id: 'planet-amlemi-genesis-01', x: amlemiCoord.x, y: amlemiCoord.y },
     { id: 'planet-felix-test-01', x: felixCoord.x, y: felixCoord.y },
+    { id: 'planet-nathan-pioneer-03', x: nathanCoord.x, y: nathanCoord.y },
+    { id: 'planet-florian-pioneer-04', x: florianCoord.x, y: florianCoord.y },
+    { id: 'planet-seppe-pioneer-05', x: seppeCoord.x, y: seppeCoord.y },
   ];
+
   const occupiedSlots = new Set<string>();
   if (mode === 'matrix') {
-    // Track 0 slots: Slot 0 (top apex 0, -220) occupied by Ämlemi; Slot 2 (bottom meridian 0, 220) occupied by Felix
+    // Symmetrical Inner Core Saturation: All 5 slots on Track 0 are occupied by Pioneers #1-#5
     occupiedSlots.add('matrix_tr_0_slot_0');
+    occupiedSlots.add('matrix_tr_0_slot_1');
     occupiedSlots.add('matrix_tr_0_slot_2');
+    occupiedSlots.add('matrix_tr_0_slot_3');
+    occupiedSlots.add('matrix_tr_0_slot_4');
   } else {
-    // Spiral: Ämlemi foundational anchor (Arm 0 start-of-line); Felix occupies Arm 1 start-of-line
+    // Symmetrical 5-Arm Spiral: Inner origin (Tier 0, Sub 0, r=300) on each arm occupied by Pioneers #1-#5
     occupiedSlots.add('arm_0_tier_0_sub_0');
     occupiedSlots.add('arm_1_tier_0_sub_0');
+    occupiedSlots.add('arm_2_tier_0_sub_0');
+    occupiedSlots.add('arm_3_tier_0_sub_0');
+    occupiedSlots.add('arm_4_tier_0_sub_0');
   }
 
   return planets.map((sub) => {
@@ -321,7 +404,7 @@ export function assignMultiVariantCoordinates(
       };
     }
 
-    // 2. Ämlemi Master Anchor Check (Dynamically resolved per active constellation mode)
+    // 2. Ämlemi Master Anchor Check (#1)
     const isAmlemi =
       sub.id === 'planet-amlemi-genesis-01' ||
       sub.planetName === 'Ämlemi';
@@ -338,7 +421,7 @@ export function assignMultiVariantCoordinates(
       };
     }
 
-    // 2b. Felix Test Creation Check (Dynamically resolved per active constellation mode)
+    // 2b. Felix VIP Pioneer (#2)
     const isFelix =
       sub.id === 'planet-felix-test-01' ||
       sub.planetName === 'Felix';
@@ -352,6 +435,60 @@ export function assignMultiVariantCoordinates(
         sectorId: felixCoord.sectorId,
         armId: felixCoord.armId,
         armName: felixCoord.armName,
+      };
+    }
+
+    // 2c. Natharia VIP Pioneer (#3)
+    const isNathan =
+      sub.id === 'planet-nathan-pioneer-03' ||
+      sub.planetName === 'Natharia' ||
+      sub.planetName === 'Nathan';
+    if (isNathan) {
+      return {
+        ...sub,
+        coordX: nathanCoord.x,
+        coordY: nathanCoord.y,
+        coord_x: nathanCoord.x,
+        coord_y: nathanCoord.y,
+        sectorId: nathanCoord.sectorId,
+        armId: nathanCoord.armId,
+        armName: nathanCoord.armName,
+      };
+    }
+
+    // 2d. Floriana VIP Pioneer (#4)
+    const isFlorian =
+      sub.id === 'planet-florian-pioneer-04' ||
+      sub.planetName === 'Floriana' ||
+      sub.planetName === 'Florian';
+    if (isFlorian) {
+      return {
+        ...sub,
+        coordX: florianCoord.x,
+        coordY: florianCoord.y,
+        coord_x: florianCoord.x,
+        coord_y: florianCoord.y,
+        sectorId: florianCoord.sectorId,
+        armId: florianCoord.armId,
+        armName: florianCoord.armName,
+      };
+    }
+
+    // 2e. Seppion VIP Pioneer (#5)
+    const isSeppe =
+      sub.id === 'planet-seppe-pioneer-05' ||
+      sub.planetName === 'Seppion' ||
+      sub.planetName === 'Seppe';
+    if (isSeppe) {
+      return {
+        ...sub,
+        coordX: seppeCoord.x,
+        coordY: seppeCoord.y,
+        coord_x: seppeCoord.x,
+        coord_y: seppeCoord.y,
+        sectorId: seppeCoord.sectorId,
+        armId: seppeCoord.armId,
+        armName: seppeCoord.armName,
       };
     }
 
@@ -753,7 +890,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
   {
     id: 'planet-amlemi-genesis-01',
     userId: 'user-odi-founder',
-    authorName: 'Odi Selis',
+    authorName: 'Odi S.',
     authorUsername: 'odiselis',
     authorEmail: 'odi.selis3@gmail.com',
     authorAvatarGradient: 'from-amber-400 to-yellow-600',
@@ -784,7 +921,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       additionalNotes: 'Canonical community benchmark.',
     },
     futurePromise: 'Across the ionization rift, light always finds the horizon.',
-    generatedLore: `Classified by world architect Odi Selis, Ämlemi is the premier canonical benchmark sector anchoring the Sillow Mill universe. Anchored strictly to the photorealistic depth of Äkinoya and the volumetric atmospheric lighting of Mood.png, its skies glow with deep cobalt and incandescent amber.\n\nThe planetary ecology thrives through bioluminescent crystalline forests humming at 432Hz. Across the high troposphere roam apex plasma gliders, while the equatorial meridian is anchored by the ancient Obsidian Spire conduit.\n\nFOUNDING CREED:\n"Across the ionization rift, light always finds the horizon."`,
+    generatedLore: `Classified by world architect Odi S., Ämlemi is the premier canonical benchmark sector anchoring the Sillow Mill universe. Anchored strictly to the photorealistic depth of Äkinoya and the volumetric atmospheric lighting of Mood.png, its skies glow with deep cobalt and incandescent amber.\n\nThe planetary ecology thrives through bioluminescent crystalline forests humming at 432Hz. Across the high troposphere roam apex plasma gliders, while the equatorial meridian is anchored by the ancient Obsidian Spire conduit.\n\nFOUNDING CREED:\n"Across the ionization rift, light always finds the horizon."`,
     renders: {
       hero: amlemiOrbitalImg,
       flora: amlemiBotanicalImg,
@@ -793,6 +930,11 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       landmark: amlemiMonumentImg,
       ecosystem: amlemiBotanicalImg,
       videoUrl: '/assets/videos/amlemi_trailer.mp4',
+      '01_main': amlemiOrbitalImg,
+      '02_flora': amlemiBotanicalImg,
+      '03_fauna': amlemiFaunaImg,
+      '04_atmo': amlemiCockpitImg,
+      '05_lore': amlemiMonumentImg,
     },
     videoUrl: '/assets/videos/amlemi_trailer.mp4',
     videoStatus: 'READY',
@@ -800,6 +942,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     hasVoted: false,
     isPioneer: true,
     pioneerBadge: 'FOUNDING PIONEER · #01',
+    pioneer_badge: 'FOUNDING PIONEER · #01',
     status: 'PUBLISHED',
     coordX: 243,
     coordY: -176,
@@ -814,7 +957,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
   {
     id: 'planet-felix-test-01',
     userId: 'user-esther-vip-001',
-    authorName: 'Esther Philippen',
+    authorName: 'Esther P.',
     authorUsername: 'estherphilippen',
     authorEmail: 'estherphilippen@msn.com',
     authorAvatarGradient: 'from-pink-500 via-rose-500 to-amber-500',
@@ -825,7 +968,7 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     sonicVibe: 'Warm analog synthesizer purr, 432Hz ambient chime, and rhythmic cosmic heartbeat.',
     visualAesthetic: 'High-resolution cinematic Avatar-style sci-fi render, 8K bioluminescent alien landscape (Sillow Mill aesthetic).',
     landmark: 'The Great Sphinx of Felix: Colossal ancient feline monolith carved from rose quartz and copper energy channels.',
-    additionalNotes: 'Active community test creation for Esther Philippen.',
+    additionalNotes: 'Active community test creation for Esther P.',
     humanAnswers: {
       planetName: 'Felix',
       relaxation: 'Listening to celestial purring under warm sunset skies with glowing feline companions.',
@@ -842,23 +985,23 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
       sonicVibe: 'Warm analog synthesizer purr, 432Hz ambient chime, and rhythmic cosmic heartbeat.',
       visualAesthetic: 'High-resolution cinematic Avatar-style sci-fi render, 8K bioluminescent alien landscape.',
       landmark: 'The Great Sphinx of Felix.',
-      additionalNotes: 'Active community test creation for Esther Philippen.',
+      additionalNotes: 'Active community test creation for Esther P.',
     },
     futurePromise: 'With curiosity and grace, the feline cosmos opens its infinite horizons.',
-    generatedLore: `Classified by world architect Esther Philippen, Felix is an official VIP frontier sector situated within the Äkinoya celestial sphere. Styled after breathtaking Avatar-like bioluminescent landscapes, this feline haven thrives with adorable fluffy rossenhuiskatten (ginger domestic cats) and striking neon pink cats roaming among floating rock formations and glowing whisker-ferns.\n\nAcross the canyon plateaus stands the Great Sphinx of Felix, a colossal rose quartz monument channeling planetary harmonics at 432Hz.\n\nFOUNDING CREED:\n"With curiosity and grace, the feline cosmos opens its infinite horizons."`,
+    generatedLore: `Classified by world architect Esther P., Felix is an official VIP frontier sector situated within the Äkinoya celestial sphere. Styled after breathtaking Avatar-like bioluminescent landscapes, this feline haven thrives with adorable fluffy rossenhuiskatten (ginger domestic cats) and striking neon pink cats roaming among floating rock formations and glowing whisker-ferns.\n\nAcross the canyon plateaus stands the Great Sphinx of Felix, a colossal rose quartz monument channeling planetary harmonics at 432Hz.\n\nFOUNDING CREED:\n"With curiosity and grace, the feline cosmos opens its infinite horizons."`,
     renders: {
-      hero: 'https://v3b.fal.media/files/b/0aaf64a2/7a69vjml1kGOV6cGyaQIO.jpg',
-      flora: 'https://v3b.fal.media/files/b/0aaf64a2/46K7Ne74qqz3oCZqxbory.jpg',
-      fauna: 'https://v3b.fal.media/files/b/0aaf64a2/Do90KXx4R8AbUvNycoM7-.jpg',
-      atmosphere: 'https://v3b.fal.media/files/b/0aaf64a2/k-uciLSTiYQmf4XzNUOrX.jpg',
-      landmark: 'https://v3b.fal.media/files/b/0aaf64a2/esQ5s2FrNjYjF5i4P6NpF.jpg',
-      ecosystem: 'https://v3b.fal.media/files/b/0aaf64a2/46K7Ne74qqz3oCZqxbory.jpg',
+      hero: 'https://v3b.fal.media/files/b/0aaf67e3/QCNr60F4WXHza0PgpPzkm_FpQcg8tP.png',
+      flora: 'https://v3b.fal.media/files/b/0aaf67e5/seICefAuMBvzKL611nP6b_uzsXKplx.png',
+      fauna: 'https://v3b.fal.media/files/b/0aaf67e7/eZc38kitmkVPAAx-omyyR_m9gbfeX5.png',
+      atmosphere: 'https://v3b.fal.media/files/b/0aaf67e8/iSmEn2NslRpLLvBpxK97H_UFxeKMkO.png',
+      landmark: 'https://v3b.fal.media/files/b/0aaf67ea/7BY1x9xCPX1WHrnp7i7nT_5vJ41dxC.png',
+      ecosystem: 'https://v3b.fal.media/files/b/0aaf67e5/seICefAuMBvzKL611nP6b_uzsXKplx.png',
       videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
-      '01_main': 'https://v3b.fal.media/files/b/0aaf64a2/7a69vjml1kGOV6cGyaQIO.jpg',
-      '02_flora': 'https://v3b.fal.media/files/b/0aaf64a2/46K7Ne74qqz3oCZqxbory.jpg',
-      '03_fauna': 'https://v3b.fal.media/files/b/0aaf64a2/Do90KXx4R8AbUvNycoM7-.jpg',
-      '04_atmo': 'https://v3b.fal.media/files/b/0aaf64a2/k-uciLSTiYQmf4XzNUOrX.jpg',
-      '05_lore': 'https://v3b.fal.media/files/b/0aaf64a2/esQ5s2FrNjYjF5i4P6NpF.jpg',
+      '01_main': 'https://v3b.fal.media/files/b/0aaf67e3/QCNr60F4WXHza0PgpPzkm_FpQcg8tP.png',
+      '02_flora': 'https://v3b.fal.media/files/b/0aaf67e5/seICefAuMBvzKL611nP6b_uzsXKplx.png',
+      '03_fauna': 'https://v3b.fal.media/files/b/0aaf67e7/eZc38kitmkVPAAx-omyyR_m9gbfeX5.png',
+      '04_atmo': 'https://v3b.fal.media/files/b/0aaf67e8/iSmEn2NslRpLLvBpxK97H_UFxeKMkO.png',
+      '05_lore': 'https://v3b.fal.media/files/b/0aaf67ea/7BY1x9xCPX1WHrnp7i7nT_5vJ41dxC.png',
     },
     videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
     videoStatus: 'READY',
@@ -879,6 +1022,189 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     createdAt: '2026-10-22T09:20:00.000Z',
     votingDeadline: 'June 30, 2027',
   },
+  {
+    id: 'planet-nathan-pioneer-03',
+    userId: 'user-nathanr-vip',
+    authorName: 'Nathan R.',
+    authorUsername: 'nathanr',
+    authorEmail: 'nathan.r@akinoya.universe',
+    authorAvatarGradient: 'from-violet-600 via-purple-600 to-indigo-800',
+    planetName: 'Natharia',
+    atmosphere: 'Inverted twilight gravity vortex with deep obsidian, neon violet, electric cyan auroras, and floating inverted cloudbanks.',
+    flora: 'Colossal flying trees floating freely in mid-air, with bioluminescent roots absorbing starlight and upside-down twisting canopies.',
+    fauna: 'Ethereal zero-gravity sky manta rays and luminescent fractal shadow-cats gliding effortlessly between hovering islands.',
+    sonicVibe: 'Hypnotic sub-bass pulses, inverted granular delay clouds, and crystalline cosmic resonance.',
+    visualAesthetic: 'Surreal dark neon sci-fi dreamscape, floating trees, abstract anti-gravity physics (Sillow Mill aesthetic).',
+    landmark: 'The Monolith of Inverted Physics: A shattered, floating cubist obelisk defying gravitational laws in perpetual levitation.',
+    additionalNotes: 'Founding Pioneer world #3 for Nathan R.',
+    humanAnswers: {
+      planetName: 'Natharia',
+      atmosphere: 'Inverted twilight gravity vortex with deep obsidian, neon violet, electric cyan auroras, and floating inverted cloudbanks.',
+      flora: 'Colossal flying trees floating freely in mid-air, with bioluminescent roots absorbing starlight and upside-down twisting canopies.',
+      fauna: 'Ethereal zero-gravity sky manta rays and luminescent fractal shadow-cats gliding effortlessly between hovering islands.',
+      landmark: 'The Monolith of Inverted Physics: A shattered, floating cubist obelisk defying gravitational laws in perpetual levitation.',
+      creativeExpression: 'Dark, cool, crazy, trippy, and surreal dreamscape featuring flying/floating trees and abstract anti-gravity physics.',
+      sonicVibe: 'Hypnotic sub-bass pulses, inverted granular delay clouds, and crystalline cosmic resonance.',
+      visualAesthetic: 'Surreal dark neon sci-fi dreamscape, floating trees, abstract anti-gravity physics (Sillow Mill aesthetic).',
+      additionalNotes: 'Founding Pioneer world #3 for Nathan R.',
+    },
+    futurePromise: 'Across inverted horizons, imagination reshapes the laws of reality.',
+    generatedLore: `Classified by world architect Nathan R., Natharia is an official VIP frontier sector (#03) situated within the Äkinoya celestial sphere.\n\nTheme: Dark, cool, crazy, trippy, and surreal dreamscape featuring flying trees and abstract anti-gravity physics.\n\nNotable Landmark: The Monolith of Inverted Physics.`,
+    renders: {
+      hero: 'https://v3b.fal.media/files/b/0aaf680b/abVXKSJD21rsIkKAINQUP_DMkQXa60.png',
+      flora: 'https://v3b.fal.media/files/b/0aaf680d/NB87mCoA8EG2dU1qtb2ri_rozLGKjR.png',
+      fauna: 'https://v3b.fal.media/files/b/0aaf680f/lF1OMXjKS6OV0w46cRnFI_RQFYB9wW.png',
+      atmosphere: 'https://v3b.fal.media/files/b/0aaf6811/VbHaEEq81S156sf-2H_g-_D23i1FuO.png',
+      landmark: 'https://v3b.fal.media/files/b/0aaf6813/Txn-nAVGcZlb_Y4DuyTS__tHA0X6eE.png',
+      ecosystem: 'https://v3b.fal.media/files/b/0aaf680d/NB87mCoA8EG2dU1qtb2ri_rozLGKjR.png',
+      videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+      '01_main': 'https://v3b.fal.media/files/b/0aaf680b/abVXKSJD21rsIkKAINQUP_DMkQXa60.png',
+      '02_flora': 'https://v3b.fal.media/files/b/0aaf680d/NB87mCoA8EG2dU1qtb2ri_rozLGKjR.png',
+      '03_fauna': 'https://v3b.fal.media/files/b/0aaf680f/lF1OMXjKS6OV0w46cRnFI_RQFYB9wW.png',
+      '04_atmo': 'https://v3b.fal.media/files/b/0aaf6811/VbHaEEq81S156sf-2H_g-_D23i1FuO.png',
+      '05_lore': 'https://v3b.fal.media/files/b/0aaf6813/Txn-nAVGcZlb_Y4DuyTS__tHA0X6eE.png',
+    },
+    videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+    videoStatus: 'READY',
+    votesCount: 2,
+    hasVoted: false,
+    isPioneer: true,
+    isVipPioneer: true,
+    pioneerBadge: 'VIP PIONEER · #03',
+    pioneer_badge: 'VIP PIONEER · #03',
+    status: 'PUBLISHED',
+    coordX: -93,
+    coordY: 285,
+    coord_x: -93,
+    coord_y: 285,
+    sectorId: 'SECTOR SOLARIS-00 (CORE MERIDIAN)',
+    armId: 'arm-solaris',
+    armName: 'SOLARIS TENDRIL',
+    createdAt: '2026-10-22T09:21:00.000Z',
+    votingDeadline: 'June 30, 2027',
+  },
+  {
+    id: 'planet-florian-pioneer-04',
+    userId: 'user-florianh-vip',
+    authorName: 'Florian H.',
+    authorUsername: 'florianh',
+    authorEmail: 'florian.h@akinoya.universe',
+    authorAvatarGradient: 'from-amber-400 via-orange-500 to-yellow-500',
+    planetName: 'Floriana',
+    atmosphere: 'Perpetual radiant golden-hour troposphere bathed in warm incandescent amber light, soft peach clouds, and shimmering solar dust.',
+    flora: 'Endless undulating meadows of glowing golden sun-grass, serene luminous blossom willows, and soft harmonic wildflowers.',
+    fauna: 'Gentle celestial deer with crystalline velvet antlers and friendly floating sun-doves radiating warmth and peace.',
+    sonicVibe: 'Warm acoustic cello harmonics, resonant singing bowls, and golden-hour ambient pads.',
+    visualAesthetic: 'Warm golden-hour meadows, peach skies, gentle peaceful sanctuary (Sillow Mill aesthetic).',
+    landmark: 'The Sanctuary of Concord: A majestic open-air amphitheater of rose-gold marble and warm quartz chimes.',
+    additionalNotes: 'Founding Pioneer world #4 for Florian H.',
+    humanAnswers: {
+      planetName: 'Floriana',
+      atmosphere: 'Perpetual radiant golden-hour troposphere bathed in warm incandescent amber light, soft peach clouds, and shimmering solar dust.',
+      flora: 'Endless undulating meadows of glowing golden sun-grass, serene luminous blossom willows, and soft harmonic wildflowers.',
+      fauna: 'Gentle celestial deer with crystalline velvet antlers and friendly floating sun-doves radiating warmth and peace.',
+      landmark: 'The Sanctuary of Concord: A majestic open-air amphitheater of rose-gold marble and warm quartz chimes.',
+      creativeExpression: 'Warm, beautiful, and inviting world reflecting a gentle, friendly spirit with soft golden-hour meadows.',
+      sonicVibe: 'Warm acoustic cello harmonics, resonant singing bowls, and golden-hour ambient pads.',
+      visualAesthetic: 'Warm golden-hour meadows, peach skies, gentle peaceful sanctuary (Sillow Mill aesthetic).',
+      additionalNotes: 'Founding Pioneer world #4 for Florian H.',
+    },
+    futurePromise: 'Kindness and warmth form the eternal foundation of peace.',
+    generatedLore: `Classified by world architect Florian H., Floriana is an official VIP frontier sector (#04) situated within the Äkinoya celestial sphere.\n\nTheme: Warm, beautiful, and inviting world reflecting a gentle, friendly spirit.\n\nNotable Landmark: The Sanctuary of Concord.`,
+    renders: {
+      hero: 'https://v3b.fal.media/files/b/0aaf6833/6_DtMADrKFCNanBou6Afy_QTA5qj6f.png',
+      flora: 'https://v3b.fal.media/files/b/0aaf683d/pMLXSPrr5eN5LSmiqXJHA_ppdgBZpe.png',
+      fauna: 'https://v3b.fal.media/files/b/0aaf683f/7yL3MXv81V_4rtOPMYxZ8_rDvku4vW.png',
+      atmosphere: 'https://v3b.fal.media/files/b/0aaf6840/o_FCmzvxl0HdxzrTEbaM-_J3xqwdOv.png',
+      landmark: 'https://v3b.fal.media/files/b/0aaf6842/2aEsqExG47Et8MkhgcbNl_MXwupges.png',
+      ecosystem: 'https://v3b.fal.media/files/b/0aaf683d/pMLXSPrr5eN5LSmiqXJHA_ppdgBZpe.png',
+      videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+      '01_main': 'https://v3b.fal.media/files/b/0aaf6833/6_DtMADrKFCNanBou6Afy_QTA5qj6f.png',
+      '02_flora': 'https://v3b.fal.media/files/b/0aaf683d/pMLXSPrr5eN5LSmiqXJHA_ppdgBZpe.png',
+      '03_fauna': 'https://v3b.fal.media/files/b/0aaf683f/7yL3MXv81V_4rtOPMYxZ8_rDvku4vW.png',
+      '04_atmo': 'https://v3b.fal.media/files/b/0aaf6840/o_FCmzvxl0HdxzrTEbaM-_J3xqwdOv.png',
+      '05_lore': 'https://v3b.fal.media/files/b/0aaf6842/2aEsqExG47Et8MkhgcbNl_MXwupges.png',
+    },
+    videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+    videoStatus: 'READY',
+    votesCount: 2,
+    hasVoted: false,
+    isPioneer: true,
+    isVipPioneer: true,
+    pioneerBadge: 'VIP PIONEER · #04',
+    pioneer_badge: 'VIP PIONEER · #04',
+    status: 'PUBLISHED',
+    coordX: -300,
+    coordY: 0,
+    coord_x: -300,
+    coord_y: 0,
+    sectorId: 'SECTOR AURELIA-00 (CORE MERIDIAN)',
+    armId: 'arm-aurelia',
+    armName: 'AURELIA CLUSTER',
+    createdAt: '2026-10-22T09:22:00.000Z',
+    votingDeadline: 'June 30, 2027',
+  },
+  {
+    id: 'planet-seppe-pioneer-05',
+    userId: 'user-seppeg-vip',
+    authorName: 'Seppe G.',
+    authorUsername: 'seppeg',
+    authorEmail: 'seppe.g@akinoya.universe',
+    authorAvatarGradient: 'from-cyan-500 via-teal-600 to-emerald-600',
+    planetName: 'Seppion',
+    atmosphere: 'Pristine ionized nitrogen sky segmented by crystalline prism meridians, laser-guided orbital tracks, and geometric auroral lattices.',
+    flora: 'Self-assembling fractal silicon crystals, perfectly tessellated hexagonal crystalline groves, and fiber-optic pulse trees.',
+    fauna: 'Flawlessly polished chrome and obsidian cybernetic falcon sentinels with sapphire optic cores patrolling geometric vectors with absolute precision.',
+    sonicVibe: 'Surgical modular clicks, pure sine wave meridians, and rhythmic quantum clockwork.',
+    visualAesthetic: 'Hyper-structured geometric grid, laser meridians, cybernetic falcon sentinel (Sillow Mill aesthetic).',
+    landmark: 'The Grand Calculation Matrix: A colossal hyper-symmetric planetary hypercube constructed from polished platinum and pulsating cobalt quantum circuitry.',
+    additionalNotes: 'Founding Pioneer world #5 for Seppe G.',
+    humanAnswers: {
+      planetName: 'Seppion',
+      atmosphere: 'Pristine ionized nitrogen sky segmented by crystalline prism meridians, laser-guided orbital tracks, and geometric auroral lattices.',
+      flora: 'Self-assembling fractal silicon crystals, perfectly tessellated hexagonal crystalline groves, and fiber-optic pulse trees.',
+      fauna: 'Flawlessly polished chrome and obsidian cybernetic falcon sentinels with sapphire optic cores patrolling geometric vectors with absolute precision.',
+      landmark: 'The Grand Calculation Matrix: A colossal hyper-symmetric planetary hypercube constructed from polished platinum and pulsating cobalt quantum circuitry.',
+      creativeExpression: 'Hyper-structured, brilliant, geometric, and flawlessly engineered masterwork of pure analytical elegance.',
+      sonicVibe: 'Surgical modular clicks, pure sine wave meridians, and rhythmic quantum clockwork.',
+      visualAesthetic: 'Hyper-structured geometric grid, laser meridians, cybernetic falcon sentinel (Sillow Mill aesthetic).',
+      additionalNotes: 'Founding Pioneer world #5 for Seppe G.',
+    },
+    futurePromise: 'Absolute clarity and precision conquer the deepest cosmic frontiers.',
+    generatedLore: `Classified by world architect Seppe G., Seppion is an official VIP frontier sector (#05) situated within the Äkinoya celestial sphere.\n\nTheme: Hyper-structured, brilliant, geometric, and flawlessly engineered masterwork of pure analytical elegance and strategic precision.\n\nNotable Landmark: The Grand Calculation Matrix.`,
+    renders: {
+      hero: 'https://v3b.fal.media/files/b/0aaf6863/fTRjYgpPsxLtYE5rkxzCH_imKRu1DN.png',
+      flora: 'https://v3b.fal.media/files/b/0aaf6865/0JTHOCwSvlzSDHzK_oJCS_VO54kUyl.png',
+      fauna: 'https://v3b.fal.media/files/b/0aaf6867/WLJOKi6BlgnYV0ZMOaDrx_FDy1JgDw.png',
+      atmosphere: 'https://v3b.fal.media/files/b/0aaf6869/KZcqGlmdpfYJbh59dM81N_tUw4eCG9.png',
+      landmark: 'https://v3b.fal.media/files/b/0aaf686a/F2W0jCmJVs-f0nP_41N59_tjkY7BlY.png',
+      ecosystem: 'https://v3b.fal.media/files/b/0aaf6865/0JTHOCwSvlzSDHzK_oJCS_VO54kUyl.png',
+      videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+      '01_main': 'https://v3b.fal.media/files/b/0aaf6863/fTRjYgpPsxLtYE5rkxzCH_imKRu1DN.png',
+      '02_flora': 'https://v3b.fal.media/files/b/0aaf6865/0JTHOCwSvlzSDHzK_oJCS_VO54kUyl.png',
+      '03_fauna': 'https://v3b.fal.media/files/b/0aaf6867/WLJOKi6BlgnYV0ZMOaDrx_FDy1JgDw.png',
+      '04_atmo': 'https://v3b.fal.media/files/b/0aaf6869/KZcqGlmdpfYJbh59dM81N_tUw4eCG9.png',
+      '05_lore': 'https://v3b.fal.media/files/b/0aaf686a/F2W0jCmJVs-f0nP_41N59_tjkY7BlY.png',
+    },
+    videoUrl: 'https://v3b.fal.media/files/b/0aaf64e4/ideVLu7wALpKOI6KQyRO-_video.mp4',
+    videoStatus: 'READY',
+    votesCount: 2,
+    hasVoted: false,
+    isPioneer: true,
+    isVipPioneer: true,
+    pioneerBadge: 'VIP PIONEER · #05',
+    pioneer_badge: 'VIP PIONEER · #05',
+    status: 'PUBLISHED',
+    coordX: -93,
+    coordY: -285,
+    coord_x: -93,
+    coord_y: -285,
+    sectorId: 'SECTOR CENTAURI-00 (CORE MERIDIAN)',
+    armId: 'arm-centauri',
+    armName: 'CENTAURI STREAM',
+    createdAt: '2026-10-22T09:23:00.000Z',
+    votingDeadline: 'June 30, 2027',
+  },
 ];
 
 // Retrieve all stored planet submissions (purges obsolete mocks and seeds single benchmark Ämlemi)
@@ -890,7 +1216,7 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
       const parsed: PlanetSubmission[] = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
         const cleaned: PlanetSubmission[] = parsed
-          .filter((p) => p && p.id && !isForbiddenSubmission(p))
+          .filter((p) => p && p.id && !isForbiddenSubmission(p) && p.status !== 'QUEUED')
           .map((sub): PlanetSubmission => {
             const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
             const userVoted = hasUserVotedOnSubmission(sub.id);
@@ -1002,14 +1328,11 @@ export const getStoredPlanetSubmissions = (): PlanetSubmission[] => {
             };
           });
 
-        // Ensure Ämlemi is always present as the benchmark
-        if (!cleaned.some((p) => p.planetName === 'Ämlemi' || p.id === 'planet-amlemi-genesis-01')) {
-          cleaned.unshift(INITIAL_SUBMISSIONS[0]);
-        }
-        // Ensure Felix is present as the active community test creation
-        if (!cleaned.some((p) => p.id === 'planet-felix-test-01')) {
-          const felixSub = INITIAL_SUBMISSIONS.find((p) => p.id === 'planet-felix-test-01');
-          if (felixSub) cleaned.push(felixSub);
+        // Ensure all 5 benchmark & VIP Pioneer worlds are always present
+        for (const initSub of INITIAL_SUBMISSIONS) {
+          if (!cleaned.some((p) => p.id === initSub.id)) {
+            cleaned.push(initSub);
+          }
         }
 
         const equilibriumCleaned = assignEquilibriumCoordinates(cleaned);
@@ -1108,7 +1431,7 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
 
       if (!error && Array.isArray(data) && data.length > 0) {
         const live: PlanetSubmission[] = data
-          .filter((d: any) => d && !isForbiddenSubmission(d))
+          .filter((d: any) => d && !isForbiddenSubmission(d) && d.status !== 'QUEUED')
           .map((d: any) => {
             const isAmlemi = d.id === 'planet-amlemi-genesis-01' || d.planet_name === 'Ämlemi';
             const userVoted = userVotedIds.includes(d.id) || hasUserVotedOnSubmission(d.id, effectiveVoterId, voterEmail);
@@ -1248,13 +1571,11 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
             };
           });
 
-        // Always ensure canonical Ämlemi and Felix test planet are included
-        if (!live.some((p) => p.planetName === 'Ämlemi' || p.id === 'planet-amlemi-genesis-01')) {
-          live.unshift(INITIAL_SUBMISSIONS[0]);
-        }
-        if (!live.some((p) => p.id === 'planet-felix-test-01')) {
-          const felixSub = INITIAL_SUBMISSIONS.find((p) => p.id === 'planet-felix-test-01');
-          if (felixSub) live.push(felixSub);
+        // Always ensure all 5 benchmark & VIP Pioneer worlds are included
+        for (const initSub of INITIAL_SUBMISSIONS) {
+          if (!live.some((p) => p.id === initSub.id)) {
+            live.push(initSub);
+          }
         }
 
         const equilibriumLive = assignEquilibriumCoordinates(live);
@@ -1283,7 +1604,7 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
 
   // Local submissions
   for (const s of stored) {
-    if (s && s.id && !isForbiddenSubmission(s)) {
+    if (s && s.id && !isForbiddenSubmission(s) && s.status !== 'QUEUED') {
       submissionMap.set(s.id, s);
     }
   }

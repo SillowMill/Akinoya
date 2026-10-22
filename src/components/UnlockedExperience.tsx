@@ -2344,6 +2344,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
 
                     <div className="flex items-center justify-center gap-2 flex-wrap">
+                      {(activeWorldDossier.status === 'QUEUED' || (activeWorldDossier as any).isWaitlist) && (
+                        <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-amber-500/30 text-amber-300 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,158,11,0.4)] animate-pulse">
+                          <Sparkles className="w-3 h-3 text-amber-300" />
+                          <span>WORLD WILL BE REVEALED 9 JANUARI</span>
+                        </span>
+                      )}
                       {isPioneerPlanet(activeWorldDossier) && (
                         <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-gradient-to-r from-amber-500/30 via-yellow-500/25 to-amber-600/30 text-amber-200 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_16px_rgba(251,191,36,0.4)]">
                           <Sparkles className="w-3 h-3 text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
@@ -2361,6 +2367,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         <span>
                           {isGuestWorldSimulation
                             ? 'INTERACTIVE PREVIEW · 1 GOLDEN TICKET READY'
+                            : (activeWorldDossier.status === 'QUEUED' || (activeWorldDossier as any).isWaitlist)
+                            ? 'QUEUED FOR REVEAL · PROTECTED'
                             : 'GOLDEN TICKET EXPENDED · ONE-SHOT LOCKED'}
                         </span>
                       </span>

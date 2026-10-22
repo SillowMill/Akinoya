@@ -21,6 +21,7 @@ import {
   syncPassClaimToGoogleSheets,
   syncSubscriberRowToGoogleSheets,
   appendWhitelistEmailToGoogleSheets,
+  appendWaitlistSubmissionToGoogleSheets,
   WHITELIST_SPREADSHEET_ID,
 } from '../../api/nfc/_googleSheetsSync.js';
 import {
@@ -489,6 +490,55 @@ apiRouter.post('/whitelist/subscribe', async (req: Request, res: Response): Prom
     sheetSync,
     message: "You've been added to the Äkinoya Whitelist! You will receive priority notification for the next drop.",
   });
+});
+
+// ─── 8. Waitlist Planet Submission (Capture, Google Sheet Sync & January 9 Queue) ──
+apiRouter.post(['/waitlist/submit', '/api/waitlist/submit'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const body = req.body || {};
+    const email = String(body.email || '').trim().toLowerCase();
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+
+    if (!email || !isValidEmail) {
+      res.status(400).json({ success: false, error: 'INVALID_EMAIL', message: 'Please provide a valid email address.' });
+      return;
+    }
+
+    const firstName = String(body.first_name || body.firstName || email.split('@')[0]).trim();
+    const lastInitial = String(body.last_initial || body.lastInitial || '').trim().toUpperCase();
+    const questionnaireResponses = body.questionnaire_responses || body.questionnaireResponses || body.answers || body;
+    const timestamp = body.timestamp || new Date().toISOString();
+    const releaseTarget = '2027-01-09T00:00:00Z';
+    const generationStatus = 'queued';
+
+    console.log(`[WAITLIST] Queued submission for ${email} (${firstName} ${lastInitial}). Release: ${releaseTarget}`);
+
+    const syncResult = await appendWaitlistSubmissionToGoogleSheets({
+      timestamp,
+      firstName,
+      lastInitial,
+      email,
+      questionnaireResponses,
+      generationStatus,
+      releaseTarget,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Planet request queued for batch synthesis. World will be revealed 9 januari.',
+      data: {
+        email,
+        firstName,
+        lastInitial,
+        generationStatus,
+        releaseTarget,
+        syncResult,
+      },
+    });
+  } catch (err: any) {
+    console.error('[API] /waitlist/submit error:', err);
+    res.status(500).json({ success: false, error: err?.message || 'Internal server error processing waitlist submission' });
+  }
 });
 
 // ─── 9. Generate Test Dynamic Cipher ──────────────────────────────────────────

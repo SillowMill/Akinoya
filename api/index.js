@@ -19,6 +19,7 @@ __export(googleSheetsSync_exports, {
   SPREADSHEET_ID: () => SPREADSHEET_ID,
   WHITELIST_SPREADSHEET_ID: () => WHITELIST_SPREADSHEET_ID,
   appendVipGuestRecordToSheets: () => appendVipGuestRecordToSheets,
+  appendWaitlistSubmissionToGoogleSheets: () => appendWaitlistSubmissionToGoogleSheets,
   appendWhitelistEmailToGoogleSheets: () => appendWhitelistEmailToGoogleSheets,
   getAccessToken: () => getAccessToken,
   resetPassInGoogleSheets: () => resetPassInGoogleSheets,
@@ -829,6 +830,98 @@ async function appendWhitelistEmailToGoogleSheets({
   } catch (err) {
     console.warn("[Google Sheets Whitelist] Exception syncing email:", err);
     return { success: false, error: err.message, savedLocally: true };
+  }
+}
+async function appendWaitlistSubmissionToGoogleSheets({
+  timestamp = (/* @__PURE__ */ new Date()).toISOString(),
+  firstName = "",
+  lastInitial = "",
+  email = "",
+  questionnaireResponses = {},
+  generationStatus = "queued",
+  releaseTarget = "2027-01-09T00:00:00Z"
+}) {
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  const cleanFirst = String(firstName || "").trim();
+  const cleanLastInitial = String(lastInitial || "").trim().toUpperCase().replace(/\.$/, "");
+  const responsesJson = typeof questionnaireResponses === "string" ? questionnaireResponses : JSON.stringify(questionnaireResponses || {});
+  const waitlistFile = path2.resolve(process.cwd(), "data/waitlist_store.json");
+  try {
+    const dir = path2.dirname(waitlistFile);
+    if (!fs2.existsSync(dir)) fs2.mkdirSync(dir, { recursive: true });
+    let existingEntries = [];
+    if (fs2.existsSync(waitlistFile)) {
+      try {
+        existingEntries = JSON.parse(fs2.readFileSync(waitlistFile, "utf8"));
+      } catch {
+      }
+    }
+    const newEntry = {
+      timestamp,
+      first_name: cleanFirst,
+      last_initial: cleanLastInitial,
+      email: cleanEmail,
+      questionnaire_responses: typeof questionnaireResponses === "object" ? questionnaireResponses : {},
+      generation_status: generationStatus,
+      release_target: releaseTarget
+    };
+    const filtered = existingEntries.filter((e) => e && e.email !== cleanEmail);
+    filtered.push(newEntry);
+    fs2.writeFileSync(waitlistFile, JSON.stringify(filtered, null, 2), "utf8");
+    console.log(`[Waitlist Store] Recorded submission for ${cleanEmail} in ${waitlistFile}`);
+  } catch (storeErr) {
+    console.warn("[Waitlist Store Notice]:", storeErr);
+  }
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      return { success: true, savedLocally: true, note: "Saved locally, Google Sheets token pending" };
+    }
+    const targetTab = "Waitlist";
+    const rowValues = [
+      timestamp,
+      cleanFirst,
+      cleanLastInitial,
+      cleanEmail,
+      responsesJson,
+      generationStatus,
+      releaseTarget
+    ];
+    const appendRes = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
+        `'${targetTab}'!A:G`
+      )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ values: [rowValues] })
+      }
+    );
+    if (!appendRes.ok) {
+      await syncSubscriberRowToGoogleSheets({
+        firstName: cleanFirst,
+        lastName: cleanLastInitial,
+        email: cleanEmail,
+        role: "WAITLIST [RELEASE-JAN-9]",
+        vipCode: "WAITLIST-2027",
+        claimedSector: questionnaireResponses && questionnaireResponses.planetName || "Waitlist Planet",
+        registrationDate: timestamp
+      }).catch(() => {
+      });
+    }
+    return {
+      success: true,
+      email: cleanEmail,
+      timestamp,
+      generationStatus,
+      releaseTarget
+    };
+  } catch (sheetErr) {
+    console.warn("[Google Sheets Waitlist] Sync error:", sheetErr);
+    return { success: true, savedLocally: true, error: sheetErr?.message };
   }
 }
 var SPREADSHEET_ID, WHITELIST_SPREADSHEET_ID, _cachedAccessToken, _tokenExpiresAt;
@@ -3570,7 +3663,7 @@ async function generateViralVideoWithFal(heroImageUrl, apiKey, customMotionPromp
     prompt,
     image_urls: resolvedImageUrls,
     duration: "5",
-    resolution: "720p",
+    resolution: "1080p",
     aspect_ratio: "9:16",
     generate_audio: true,
     // Native ByteDance Seedance 2.5 synchronized Foley audio & sound effects!
@@ -3580,13 +3673,13 @@ async function generateViralVideoWithFal(heroImageUrl, apiKey, customMotionPromp
     prompt,
     image_url: resolvedHeroUrl,
     duration: "5",
-    resolution: "720p",
+    resolution: "1080p",
     aspect_ratio: "9:16",
     generate_audio: true,
     ...effectiveNegativePrompt ? { negative_prompt: effectiveNegativePrompt } : {},
     ...typeof seed === "number" && seed > 0 ? { seed } : {}
   };
-  console.log(`[fal.ai Video Execution] Synthesizing 9:16 viral video trailer via ${primaryModel} (5s duration, 720p, 9:16 aspect ratio, Foley audio)...`);
+  console.log(`[fal.ai Video Execution] Synthesizing 9:16 viral video trailer via ${primaryModel} (5s duration, 1080p, 9:16 aspect ratio, Foley audio)...`);
   const startTime = Date.now();
   const queueVideoUrl = await submitAndPollFalQueueVideo(primaryEndpoint, payload, activeKey);
   if (queueVideoUrl) {
@@ -3606,7 +3699,7 @@ async function generateViralVideoWithFal(heroImageUrl, apiKey, customMotionPromp
       prompt,
       image_url: resolvedHeroUrl,
       duration: "5",
-      resolution: "720p",
+      resolution: "1080p",
       generate_audio: true,
       ...effectiveNegativePrompt ? { negative_prompt: effectiveNegativePrompt } : {},
       ...typeof seed === "number" && seed > 0 ? { seed } : {}
@@ -5105,6 +5198,48 @@ apiRouter.post("/whitelist/subscribe", async (req, res) => {
     sheetSync,
     message: "You've been added to the \xC4kinoya Whitelist! You will receive priority notification for the next drop."
   });
+});
+apiRouter.post(["/waitlist/submit", "/api/waitlist/submit"], async (req, res) => {
+  try {
+    const body = req.body || {};
+    const email = String(body.email || "").trim().toLowerCase();
+    const isValidEmail2 = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+    if (!email || !isValidEmail2) {
+      res.status(400).json({ success: false, error: "INVALID_EMAIL", message: "Please provide a valid email address." });
+      return;
+    }
+    const firstName = String(body.first_name || body.firstName || email.split("@")[0]).trim();
+    const lastInitial = String(body.last_initial || body.lastInitial || "").trim().toUpperCase();
+    const questionnaireResponses = body.questionnaire_responses || body.questionnaireResponses || body.answers || body;
+    const timestamp = body.timestamp || (/* @__PURE__ */ new Date()).toISOString();
+    const releaseTarget = "2027-01-09T00:00:00Z";
+    const generationStatus = "queued";
+    console.log(`[WAITLIST] Queued submission for ${email} (${firstName} ${lastInitial}). Release: ${releaseTarget}`);
+    const syncResult = await appendWaitlistSubmissionToGoogleSheets({
+      timestamp,
+      firstName,
+      lastInitial,
+      email,
+      questionnaireResponses,
+      generationStatus,
+      releaseTarget
+    });
+    res.status(200).json({
+      success: true,
+      message: "Planet request queued for batch synthesis. World will be revealed 9 januari.",
+      data: {
+        email,
+        firstName,
+        lastInitial,
+        generationStatus,
+        releaseTarget,
+        syncResult
+      }
+    });
+  } catch (err) {
+    console.error("[API] /waitlist/submit error:", err);
+    res.status(500).json({ success: false, error: err?.message || "Internal server error processing waitlist submission" });
+  }
 });
 apiRouter.get("/nfc/generate-test-cipher", (req, res) => {
   const token = (req.query?.token || "AKN-VIP-2027-X0914").trim();

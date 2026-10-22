@@ -195,32 +195,66 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
         </div>
 
         <div className="hidden sm:flex items-center gap-2.5 flex-wrap shrink-0">
-          <button
-            type="button"
-            onClick={handleCopyGalaxyLink}
-            className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white/85 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap min-h-[40px]"
-            title="Copy Shareable Planet Link"
-          >
-            <MapPin className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Planet Link'}</span>
-          </button>
+          {dossier.status === 'QUEUED' || (dossier as any).isWaitlist ? (
+            <span className="px-3.5 py-2 rounded-xl bg-amber-950/80 border border-amber-400/50 text-amber-300 text-xs font-mono font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.25)] animate-pulse">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>World will be revealed 9 januari</span>
+            </span>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleCopyGalaxyLink}
+                className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white/85 hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap min-h-[40px]"
+                title="Copy Shareable Planet Link"
+              >
+                <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isCopiedGalaxyLink ? 'Link Copied!' : 'Copy Planet Link'}</span>
+              </button>
 
-          {onNavigateToGalaxy && (
-            <button
-              type="button"
-              onClick={() => onNavigateToGalaxy(dossier.id)}
-              className="px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)] whitespace-nowrap min-h-[40px]"
-            >
-              <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span>View in Galaxy</span>
-            </button>
+              {onNavigateToGalaxy && (
+                <button
+                  type="button"
+                  onClick={() => onNavigateToGalaxy(dossier.id)}
+                  className="px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)] whitespace-nowrap min-h-[40px]"
+                >
+                  <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>View in Galaxy</span>
+                </button>
+              )}
+
+              <span className="text-[10px] font-mono text-cyan-400 hidden xl:inline">
+                5-Photo 4K Archive · 9:16 Trailer (5s)
+              </span>
+            </>
           )}
-
-          <span className="text-[10px] font-mono text-cyan-400 hidden xl:inline">
-            5-Photo 4K Archive · 9:16 Trailer (5s)
-          </span>
         </div>
       </div>
+
+      {/* Queued / Waitlist Reveal Notification Banner */}
+      {(dossier.status === 'QUEUED' || (dossier as any).isWaitlist) && (
+        <div className="relative z-10 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/80 via-[#071126]/90 to-cyan-950/80 border-2 border-amber-400/50 p-4 sm:p-5 shadow-[0_10px_35px_rgba(0,0,0,0.7),0_0_25px_rgba(245,158,11,0.25)]">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300 to-transparent pointer-events-none" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-amber-400 text-black shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.5)]">
+                <Sparkles className="w-4 h-4" />
+              </span>
+              <div>
+                <div className="text-[11px] font-mono font-extrabold uppercase tracking-widest text-amber-300">
+                  PRIVATE PREVIEW · EXPANSION QUEUE
+                </div>
+                <div className="text-xs sm:text-sm text-white/90 font-sans mt-0.5">
+                  Your custom planetary coordinates are safely locked. Full constellation reveal occurs on <strong className="text-amber-300">9 januari 2027</strong>.
+                </div>
+              </div>
+            </div>
+            <span className="shrink-0 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider whitespace-nowrap">
+              WORLD WILL BE REVEALED 9 JANUARI
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Main Layout: 9:16 Vertical Video Trailer + 5 Photo Cards */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-7 items-stretch">

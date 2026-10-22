@@ -1007,4 +1007,113 @@ export async function appendWhitelistEmailToGoogleSheets({
   }
 }
 
+/**
+ * Appends a user planet waitlist submission to Google Sheets & local durable store.
+ * Strictly adheres to the schema:
+ * [timestamp, first_name, last_initial, email, questionnaire_responses, generation_status, release_target]
+ */
+export async function appendWaitlistSubmissionToGoogleSheets({
+  timestamp = new Date().toISOString(),
+  firstName = '',
+  lastInitial = '',
+  email = '',
+  questionnaireResponses = {},
+  generationStatus = 'queued',
+  releaseTarget = '2027-01-09T00:00:00Z',
+}) {
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  const cleanFirst = String(firstName || '').trim();
+  const cleanLastInitial = String(lastInitial || '').trim().toUpperCase().replace(/\.$/, '');
+  const responsesJson = typeof questionnaireResponses === 'string'
+    ? questionnaireResponses
+    : JSON.stringify(questionnaireResponses || {});
+
+  // 1. Durable Local Backup Store (data/waitlist_store.json)
+  const waitlistFile = path.resolve(process.cwd(), 'data/waitlist_store.json');
+  try {
+    const dir = path.dirname(waitlistFile);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    let existingEntries = [];
+    if (fs.existsSync(waitlistFile)) {
+      try {
+        existingEntries = JSON.parse(fs.readFileSync(waitlistFile, 'utf8'));
+      } catch {}
+    }
+    const newEntry = {
+      timestamp,
+      first_name: cleanFirst,
+      last_initial: cleanLastInitial,
+      email: cleanEmail,
+      questionnaire_responses: typeof questionnaireResponses === 'object' ? questionnaireResponses : {},
+      generation_status: generationStatus,
+      release_target: releaseTarget,
+    };
+    const filtered = existingEntries.filter((e) => e && e.email !== cleanEmail);
+    filtered.push(newEntry);
+    fs.writeFileSync(waitlistFile, JSON.stringify(filtered, null, 2), 'utf8');
+    console.log(`[Waitlist Store] Recorded submission for ${cleanEmail} in ${waitlistFile}`);
+  } catch (storeErr) {
+    console.warn('[Waitlist Store Notice]:', storeErr);
+  }
+
+  // 2. Google Sheets Synchronization
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      return { success: true, savedLocally: true, note: 'Saved locally, Google Sheets token pending' };
+    }
+
+    const targetTab = 'Waitlist';
+    const rowValues = [
+      timestamp,
+      cleanFirst,
+      cleanLastInitial,
+      cleanEmail,
+      responsesJson,
+      generationStatus,
+      releaseTarget,
+    ];
+
+    // Append to Waitlist tab in SPREADSHEET_ID
+    const appendRes = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
+        `'${targetTab}'!A:G`
+      )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ values: [rowValues] }),
+      }
+    );
+
+    if (!appendRes.ok) {
+      // Fallback: If 'Waitlist' tab does not exist yet, append to Subscribers tab
+      await syncSubscriberRowToGoogleSheets({
+        firstName: cleanFirst,
+        lastName: cleanLastInitial,
+        email: cleanEmail,
+        role: 'WAITLIST [RELEASE-JAN-9]',
+        vipCode: 'WAITLIST-2027',
+        claimedSector: (questionnaireResponses && questionnaireResponses.planetName) || 'Waitlist Planet',
+        registrationDate: timestamp,
+      }).catch(() => {});
+    }
+
+    return {
+      success: true,
+      email: cleanEmail,
+      timestamp,
+      generationStatus,
+      releaseTarget,
+    };
+  } catch (sheetErr) {
+    console.warn('[Google Sheets Waitlist] Sync error:', sheetErr);
+    return { success: true, savedLocally: true, error: sheetErr?.message };
+  }
+}
+
+
 

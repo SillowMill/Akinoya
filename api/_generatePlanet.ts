@@ -427,9 +427,10 @@ export class FalMaintenanceQueueError extends Error {
   }
 }
 
+export const FAL_NANO_BANANA_ENDPOINT = 'https://fal.run/google/nano-banana-2.1';
 export const FAL_FLUX_SCHNELL_ENDPOINT = 'https://fal.run/fal-ai/flux/schnell';
-export const FAL_IMAGE_ENDPOINT = FAL_FLUX_SCHNELL_ENDPOINT;
-export const FAL_ENDPOINT = FAL_FLUX_SCHNELL_ENDPOINT;
+export const FAL_IMAGE_ENDPOINT = FAL_NANO_BANANA_ENDPOINT;
+export const FAL_ENDPOINT = FAL_NANO_BANANA_ENDPOINT;
 
 export const FAL_SEEDANCE_IMAGE_VIDEO_ENDPOINT = 'https://fal.run/bytedance/seedance-2.5/us/image-to-video';
 export const FAL_SEEDANCE_REF_VIDEO_ENDPOINT = 'https://fal.run/bytedance/seedance-2.5/us/reference-to-video';
@@ -1222,7 +1223,7 @@ export async function generateViralVideoWithFal(
         prompt,
         image_urls: resolvedImageUrls,
         duration: '5',
-        resolution: '720p',
+        resolution: '1080p',
         aspect_ratio: '9:16',
         generate_audio: true, // Native ByteDance Seedance 2.5 synchronized Foley audio & sound effects!
         ...(effectiveNegativePrompt ? { negative_prompt: effectiveNegativePrompt } : {}),
@@ -1232,14 +1233,14 @@ export async function generateViralVideoWithFal(
         prompt,
         image_url: resolvedHeroUrl,
         duration: '5',
-        resolution: '720p',
+        resolution: '1080p',
         aspect_ratio: '9:16',
         generate_audio: true,
         ...(effectiveNegativePrompt ? { negative_prompt: effectiveNegativePrompt } : {}),
         ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),
       };
 
-  console.log(`[fal.ai Video Execution] Synthesizing 9:16 viral video trailer via ${primaryModel} (5s duration, 720p, 9:16 aspect ratio, Foley audio)...`);
+  console.log(`[fal.ai Video Execution] Synthesizing 9:16 viral video trailer via ${primaryModel} (5s duration, 1080p, 9:16 aspect ratio, Foley audio)...`);
   const startTime = Date.now();
 
   // 1. Primary Attempt: Fal.ai Queue API (handles 2-3min generation without socket timeout)
@@ -1263,7 +1264,7 @@ export async function generateViralVideoWithFal(
       prompt,
       image_url: resolvedHeroUrl,
       duration: '5',
-      resolution: '720p',
+      resolution: '1080p',
       generate_audio: true,
       ...(effectiveNegativePrompt ? { negative_prompt: effectiveNegativePrompt } : {}),
       ...(typeof seed === 'number' && seed > 0 ? { seed } : {}),

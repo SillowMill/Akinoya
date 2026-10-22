@@ -82,7 +82,7 @@ export interface PlanetSubmission {
   isSandbox?: boolean;
   pioneerBadge?: string;
   pioneer_badge?: string;
-  status: 'SUBMITTED' | 'PUBLISHED' | 'FINALIST';
+  status: 'SUBMITTED' | 'PUBLISHED' | 'FINALIST' | 'QUEUED';
   createdAt: string;
   votingDeadline: string; // 'June 30, 2027'
 }

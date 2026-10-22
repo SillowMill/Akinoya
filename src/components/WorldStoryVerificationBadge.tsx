@@ -49,6 +49,27 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
     dossier.id === 'planet-felix-test-01' ||
     dossier.planetName?.toLowerCase() === 'felix';
 
+  const isNathan =
+    dossier.id === 'planet-nathan-pioneer-03' ||
+    dossier.authorName?.toLowerCase().includes('nathan') ||
+    dossier.authorUsername?.toLowerCase().includes('nathan') ||
+    dossier.planetName?.toLowerCase() === 'natharia' ||
+    dossier.planetName?.toLowerCase() === 'nathan';
+
+  const isFlorian =
+    dossier.id === 'planet-florian-pioneer-04' ||
+    dossier.authorName?.toLowerCase().includes('florian') ||
+    dossier.authorUsername?.toLowerCase().includes('florian') ||
+    dossier.planetName?.toLowerCase() === 'floriana' ||
+    dossier.planetName?.toLowerCase() === 'florian';
+
+  const isSeppe =
+    dossier.id === 'planet-seppe-pioneer-05' ||
+    dossier.authorName?.toLowerCase().includes('seppe') ||
+    dossier.authorUsername?.toLowerCase().includes('seppe') ||
+    dossier.planetName?.toLowerCase() === 'seppion' ||
+    dossier.planetName?.toLowerCase() === 'seppe';
+
   // Check explicit edition number/index fields if present on object
   const explicitNumber =
     (dossier as any).worldNumber ||
@@ -64,6 +85,12 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
     worldNumber = 1;
   } else if (isFelix) {
     worldNumber = 2;
+  } else if (isNathan) {
+    worldNumber = 3;
+  } else if (isFlorian) {
+    worldNumber = 4;
+  } else if (isSeppe) {
+    worldNumber = 5;
   } else if (editionRank && editionRank > 0) {
     worldNumber = editionRank;
   } else if (explicitNumber && Number(explicitNumber) > 0) {
@@ -72,7 +99,7 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
     worldNumber = parseInt(badgeMatch[1], 10);
   } else {
     // Dynamic sequential fallback, never random or dummy high numbers
-    worldNumber = 3;
+    worldNumber = 6;
   }
 
   // Deterministic 4-char hex suffix from planet ID + author
