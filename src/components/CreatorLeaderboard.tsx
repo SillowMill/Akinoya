@@ -13,6 +13,7 @@ import { PlanetSubmission } from '../types/contest';
 import { getStoredPlanetSubmissions, togglePlanetSubmissionVote, fetchPlanetSubmissions, subscribeToPlanetSubmissions } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
+import { formatAuthorName } from '../utils/holder';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { useAuth } from '../context/AuthContext';
 
@@ -167,7 +168,7 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm font-mono text-amber-200/90 truncate">
-                      By {topFavoritePlanet.authorName} (@{topFavoritePlanet.authorUsername})
+                      By {formatAuthorName(topFavoritePlanet.authorName)} (@{topFavoritePlanet.authorUsername})
                     </p>
                     <p className="text-xs text-white/75 font-sans line-clamp-2 max-w-2xl leading-relaxed">
                       {topFavoritePlanet.futurePromise || topFavoritePlanet.generatedLore}
@@ -256,7 +257,7 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
                             </span>
                           )}
                           <span className="text-[10px] sm:text-xs font-mono text-white/55 truncate">
-                            by {planet.authorName}
+                            by {formatAuthorName(planet.authorName)}
                           </span>
                         </div>
                         <p className="text-[11px] sm:text-xs font-sans text-white/60 line-clamp-1 mt-0.5">

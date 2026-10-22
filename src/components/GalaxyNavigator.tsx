@@ -34,6 +34,7 @@ import {
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
+import { formatAuthorName } from '../utils/holder';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { scrollToVisualizerHub } from '../utils/scroll';
 import akinoyaHeroBg from '../assets/images/akinoya_hero_bg-CiYAZVRx.jpg';
@@ -104,6 +105,15 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const [mapFilter, setMapFilter] = useState<'all' | 'pioneer'>('all');
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetSubmission | null>(null);
   const [hoveredPlanet, setHoveredPlanet] = useState<PlanetSubmission | null>(null);
+
+  // Synchronized True Edition Rank for Selected Planet (#1 Ämlemi, #2 Felix, #3+...)
+  const selectedPlanetEditionRank = useMemo(() => {
+    if (!selectedPlanet) return undefined;
+    if (selectedPlanet.id === 'planet-amlemi-genesis-01' || selectedPlanet.planetName?.toLowerCase() === 'ämlemi') return 1;
+    if (selectedPlanet.id === 'planet-felix-test-01' || selectedPlanet.planetName?.toLowerCase() === 'felix') return 2;
+    const idx = planets.findIndex((p) => p.id === selectedPlanet.id);
+    return idx >= 0 ? idx + 1 : undefined;
+  }, [selectedPlanet, planets]);
   const [isAkinoyaModalOpen, setIsAkinoyaModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -1824,7 +1834,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                         )}
                       </div>
                       <span className="text-[10px] font-mono text-white/50 block truncate mt-0.5">
-                        By @{p.authorUsername} · ({p.coordX ?? 0}, {p.coordY ?? 0}) AU
+                        By {formatAuthorName(p.authorName || p.authorUsername)} · ({p.coordX ?? 0}, {p.coordY ?? 0}) AU
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -2220,6 +2230,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             const photoCards = getPlanetPhotoCards(planet);
             const thumbnail = photoCards[0]?.url || planet.renders?.hero || '';
             const rankNumber = index + 1;
+            const planetEditionNumber =
+              planet.id === 'planet-amlemi-genesis-01' || planet.planetName?.toLowerCase() === 'ämlemi'
+                ? 1
+                : planet.id === 'planet-felix-test-01' || planet.planetName?.toLowerCase() === 'felix'
+                ? 2
+                : (planets.findIndex((p) => p.id === planet.id) >= 0 ? planets.findIndex((p) => p.id === planet.id) + 1 : rankNumber);
 
             return (
               <div
@@ -2377,12 +2393,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   </span>
 
                   <span className="text-[9.5px] font-mono text-white/60 tracking-wider">
-                    @{planet.authorUsername}
+                    {formatAuthorName(planet.authorName || planet.authorUsername)}
                   </span>
 
                   <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#060c18]/90 border border-amber-400/45 shadow-[0_0_12px_rgba(251,191,36,0.28)]">
                     <span className="text-[9px] font-mono font-black text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]">
-                      #{rankNumber}
+                      #{planetEditionNumber}
                     </span>
                     <span className="text-white/25 text-[8px]">·</span>
                     <span className="text-[9px] font-mono font-extrabold text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]">
@@ -2402,6 +2418,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       <PlanetDossierModal
         planet={selectedPlanet}
         isOpen={Boolean(selectedPlanet)}
+        editionRank={selectedPlanetEditionRank}
         onClose={() => setSelectedPlanet(null)}
         onVote={(id) => handleVotePlanet(id)}
         onOpenCreator={onOpenCreator}

@@ -47,19 +47,18 @@ export const sanitizeHolderName = (name: string): string =>
   name.replace(/\s+/g, ' ').trim().slice(0, HOLDER_NAME_MAX_LENGTH);
 
 /**
- * Rigorously formats user/author names in Title Case (e.g. "Odi Selis"),
- * stripping out any legacy technical suffixes (such as "(Master)", "- #1 Showcase",
- * trailing digits like "odi.selis3", "#01", email domains, underscores, etc.).
+ * Uniformly formats author/creator names strictly as "[First Name] [Last Initial]."
+ * (e.g. "Esther Philippen" -> "Esther P.", "Odi Selis" -> "Odi S.", "Kaat Jansen" -> "Kaat J.").
  */
-export const formatTitleCaseUserName = (rawName?: string | null): string => {
-  if (!rawName) return 'Odi Selis';
+export const formatAuthorName = (rawName?: string | null): string => {
+  if (!rawName) return 'Odi S.';
 
   // 1. If it's an email, extract local part
   let clean = rawName.includes('@') ? rawName.split('@')[0] : rawName;
 
-  // 2. Normalize primary founder variations immediately to pure "Odi Selis"
+  // 2. Normalize primary founder variations immediately to "Odi S."
   if (/^(?:odi[\._\s-]?selis\d*|odiselis\d*)$/i.test(clean.trim())) {
-    return 'Odi Selis';
+    return 'Odi S.';
   }
 
   // 3. Strip legacy technical parentheticals, suffixes, badges & showcase tags
@@ -69,16 +68,44 @@ export const formatTitleCaseUserName = (rawName?: string | null): string => {
   clean = clean.replace(/([a-zA-Z]+)[\._\-]?\d+$/g, '$1'); // Strip trailing digits attached to words: user123 -> user
   clean = clean.replace(/[\._\-]+/g, ' '); // Replace separators with clean spaces
 
-  // 4. Split into clean words and format in strict Title Case
+  // 4. Split into clean words
   const words = clean.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return 'Odi Selis';
+  if (words.length === 0) return 'Odi S.';
 
-  const titleCased = words
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ');
+  // Preserve core branding entity
+  if (words[0].toLowerCase() === 'sillow' && words[1]?.toLowerCase() === 'mill') {
+    return 'Sillow Mill';
+  }
 
-  return titleCased || 'Odi Selis';
+  // If already in "[First] [Initial]." format (e.g. "Esther P." or "Esther P")
+  if (words.length === 2 && words[1].replace(/\.$/, '').length === 1) {
+    const first = words[0].charAt(0).toUpperCase() + words[0].slice(1).toLowerCase();
+    const initial = words[1].charAt(0).toUpperCase();
+    return `${first} ${initial}.`;
+  }
+
+  const firstName = words[0].charAt(0).toUpperCase() + words[0].slice(1).toLowerCase();
+
+  // If there are multiple words, format strictly as [First Name] [Last Initial].
+  if (words.length > 1) {
+    const lastWord = words[words.length - 1];
+    const lastInitial = lastWord.charAt(0).toUpperCase();
+    return `${firstName} ${lastInitial}.`;
+  }
+
+  // Handle concatenated camelCase names like "EstherPhilippen"
+  const camelMatch = firstName.match(/^([A-Z][a-z]+)([A-Z][a-z]+)$/);
+  if (camelMatch) {
+    return `${camelMatch[1]} ${camelMatch[2].charAt(0).toUpperCase()}.`;
+  }
+
+  return firstName;
 };
+
+/**
+ * Backwards-compatible alias for formatAuthorName
+ */
+export const formatTitleCaseUserName = formatAuthorName;
 
 export const getHolderName = (passId?: string): string => {
   if (typeof window === 'undefined') return '';

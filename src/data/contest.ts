@@ -185,13 +185,11 @@ export function getDeterministicPlanetCoordinates(
       };
     }
 
-    // Default: Variant A (5-Arm Spiral) - Cygnus Filament Tier 0 (~560 AU)
+    // Default: Variant A (5-Arm Spiral) - Start-of-Line Cygnus Filament Origin (~300 AU)
     const arm = CONSTELLATION_ARMS[1];
-    const radius = SPIRAL_RADIAL_TIERS[0];
-    const theta = getSpiralArmAngle(arm.baseAngle, radius) - 0.03;
     return {
-      x: Math.round(radius * Math.cos(theta)),
-      y: Math.round(radius * Math.sin(theta)),
+      x: 243,
+      y: 176,
       sectorId: 'SECTOR CYGNUS-00 (CORE MERIDIAN)',
       armId: arm.id,
       armName: arm.name,
@@ -225,9 +223,9 @@ export function getDeterministicPlanetCoordinates(
   const tierIndex = (absHash >> 3) % 2;
   const baseRadius = SPIRAL_RADIAL_TIERS[tierIndex];
   const subSlot = Math.floor(absHash / (CONSTELLATION_ARMS.length * 2)) % 2;
-  const radius = baseRadius + (subSlot === 1 ? 240 : 0);
+  const radius = tierIndex === 0 && subSlot === 0 ? 300 : baseRadius + (subSlot === 1 ? 240 : 0);
   const baseSpiralAngle = getSpiralArmAngle(arm.baseAngle, radius);
-  const finalAngle = baseSpiralAngle + (subSlot === 1 ? 0.05 : -0.03);
+  const finalAngle = baseSpiralAngle + (subSlot === 1 ? 0.05 : (tierIndex === 0 && subSlot === 0 ? 0 : -0.03));
   const x = Math.round(radius * Math.cos(finalAngle));
   const y = Math.round(radius * Math.sin(finalAngle));
   const sectorPrefix = arm.name.split(' ')[0];
@@ -268,13 +266,11 @@ export function assignMultiVariantCoordinates(
     };
   }
 
-  // Resolve mode-aware coordinates for Felix test creation
+  // Resolve mode-aware coordinates for Felix test creation (Arm 1 start-of-line origin: 243, 176)
   const cygnusArm = CONSTELLATION_ARMS[1];
-  const felixSpiralRadius = SPIRAL_RADIAL_TIERS[0]; // 560 AU (Tier 0 inner core)
-  const felixTheta = getSpiralArmAngle(cygnusArm.baseAngle, felixSpiralRadius) - 0.03;
   let felixCoord = {
-    x: Math.round(felixSpiralRadius * Math.cos(felixTheta)), // 309
-    y: Math.round(felixSpiralRadius * Math.sin(felixTheta)), // 467
+    x: 243,
+    y: 176,
     sectorId: 'SECTOR CYGNUS-00 (CORE MERIDIAN)',
     armId: cygnusArm.id,
     armName: cygnusArm.name,
@@ -303,8 +299,8 @@ export function assignMultiVariantCoordinates(
     occupiedSlots.add('matrix_tr_0_slot_0');
     occupiedSlots.add('matrix_tr_0_slot_2');
   } else {
-    // Spiral: Ämlemi foundational anchor; Felix occupies Arm 1 Tier 0 sub-slot 0
-    occupiedSlots.add('arm_0_tier_foundational');
+    // Spiral: Ämlemi foundational anchor (Arm 0 start-of-line); Felix occupies Arm 1 start-of-line
+    occupiedSlots.add('arm_0_tier_0_sub_0');
     occupiedSlots.add('arm_1_tier_0_sub_0');
   }
 
@@ -474,9 +470,8 @@ export function assignMultiVariantCoordinates(
           if (occupiedSlots.has(key)) continue;
 
           const arm = CONSTELLATION_ARMS[a];
-          const baseR = SPIRAL_RADIAL_TIERS[t];
-          const radius = baseR + (s === 1 ? 240 : 0);
-          const theta = getSpiralArmAngle(arm.baseAngle, radius) + (s === 1 ? 0.05 : -0.03);
+          const radius = t === 0 && s === 0 ? 300 : SPIRAL_RADIAL_TIERS[t] + (s === 1 ? 240 : 0);
+          const theta = getSpiralArmAngle(arm.baseAngle, radius) + (s === 1 ? 0.05 : (t === 0 && s === 0 ? 0 : -0.03));
           const candX = Math.round(radius * Math.cos(theta));
           const candY = Math.round(radius * Math.sin(theta));
 
@@ -874,10 +869,10 @@ export const INITIAL_SUBMISSIONS: PlanetSubmission[] = [
     pioneerBadge: 'VIP PIONEER · #02',
     pioneer_badge: 'VIP PIONEER · #02',
     status: 'PUBLISHED',
-    coordX: 309,
-    coordY: 467,
-    coord_x: 309,
-    coord_y: 467,
+    coordX: 243,
+    coordY: 176,
+    coord_x: 243,
+    coord_y: 176,
     sectorId: 'SECTOR CYGNUS-00 (CORE MERIDIAN)',
     armId: 'arm-cygnus',
     armName: 'CYGNUS FILAMENT',

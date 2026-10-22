@@ -14,7 +14,16 @@ app.use(apiApp);
 
 // Serve static assets from dist in production
 const distPath = path.resolve(process.cwd(), 'dist');
-app.use(express.static(distPath));
+app.use(
+  express.static(distPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.mp4')) {
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Content-Type', 'video/mp4');
+      }
+    },
+  })
+);
 
 // Serve Bingaa PDF asset
 app.get('/assets/Bing*.pdf', (_req, res) => {

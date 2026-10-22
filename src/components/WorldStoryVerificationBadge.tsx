@@ -22,7 +22,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { PlanetSubmission } from '../types/contest';
 import { getPlanetPhotoCards } from '../data/contest';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
-import { formatTitleCaseUserName } from '../utils/holder';
+import { formatTitleCaseUserName, formatAuthorName } from '../utils/holder';
 import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
@@ -45,15 +45,34 @@ export function deriveWorldVerificationMeta(dossier: PlanetSubmission, editionRa
     dossier.planetName?.toLowerCase() === 'ämlemi' ||
     isFoundingPioneerPlanet(dossier);
 
-  let worldNumber = editionRank && editionRank > 0 ? editionRank : 1;
+  const isFelix =
+    dossier.id === 'planet-felix-test-01' ||
+    dossier.planetName?.toLowerCase() === 'felix';
+
+  // Check explicit edition number/index fields if present on object
+  const explicitNumber =
+    (dossier as any).worldNumber ||
+    (dossier as any).worldIndex ||
+    (dossier as any).editionNumber ||
+    (dossier as any).index;
+
+  const badge = dossier.pioneerBadge || dossier.pioneer_badge || '';
+  const badgeMatch = badge.match(/#0*(\d+)/);
+
+  let worldNumber = 1;
   if (isAmlemi) {
     worldNumber = 1;
-  } else if (!editionRank || editionRank <= 0) {
-    let acc = 0;
-    for (let i = 0; i < dossier.id.length; i++) {
-      acc = (acc * 31 + dossier.id.charCodeAt(i)) % 99;
-    }
-    worldNumber = Math.max(2, acc + 2);
+  } else if (isFelix) {
+    worldNumber = 2;
+  } else if (editionRank && editionRank > 0) {
+    worldNumber = editionRank;
+  } else if (explicitNumber && Number(explicitNumber) > 0) {
+    worldNumber = Number(explicitNumber);
+  } else if (badgeMatch) {
+    worldNumber = parseInt(badgeMatch[1], 10);
+  } else {
+    // Dynamic sequential fallback, never random or dummy high numbers
+    worldNumber = 3;
   }
 
   // Deterministic 4-char hex suffix from planet ID + author
@@ -291,23 +310,25 @@ export async function renderWorldStoryBadgeBlob(
     brandHeaderY + 36
   );
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 46px "Inter", sans-serif';
-  ctx.fillText((dossier.planetName || 'ÄMLEMI').toUpperCase(), brandTextX, brandHeaderY + 80);
-
-  ctx.fillStyle = '#67e8f9';
-  ctx.font = 'bold 18px "JetBrains Mono", monospace';
-  const cleanHolderName = formatTitleCaseUserName(dossier.authorName);
-  const holderLine = `HOLDER: ${cleanHolderName.toUpperCase()} · ${(
-    dossier.sectorId || 'SECTOR AKN-01'
-  ).toUpperCase()}`;
-  ctx.fillText(holderLine, brandTextX, brandHeaderY + 106);
-
-  // Unique Edition Number Badge (Top Right alongside Header)
+  // Unique Edition Number Badge dimensions (Top Right alongside Header)
   const badgeW = 196;
   const badgeH = 100;
   const badgeX = W - 84 - badgeW;
   const badgeY = brandHeaderY + 4;
+  const maxHeaderTitleWidth = badgeX - brandTextX - 24;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 46px "Inter", sans-serif';
+  ctx.fillText((dossier.planetName || 'ÄMLEMI').toUpperCase(), brandTextX, brandHeaderY + 80, maxHeaderTitleWidth);
+
+  ctx.fillStyle = '#67e8f9';
+  ctx.font = 'bold 18px "JetBrains Mono", monospace';
+  const cleanHolderName = formatAuthorName(dossier.authorName);
+  const holderLine = `HOLDER: ${cleanHolderName.toUpperCase()} · ${(
+    dossier.sectorId || 'SECTOR AKN-01'
+  ).toUpperCase()}`;
+  ctx.fillText(holderLine, brandTextX, brandHeaderY + 106, maxHeaderTitleWidth);
+
   drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 22);
   const numGrad = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH);
   numGrad.addColorStop(0, 'rgba(245, 158, 11, 0.28)');
@@ -696,6 +717,13 @@ export function createCachedTrailerOverlayCanvas(
   ctx.font = `bold ${Math.round(15 * s)}px "JetBrains Mono", monospace`;
   ctx.fillText(pioneerText, contentX + Math.round(14 * s), Math.round(109 * s));
 
+  // Top-Right Edition Pill
+  const badgeW = Math.round(180 * s);
+  const badgeH = Math.round(76 * s);
+  const badgeX = W - contentX - badgeW;
+  const badgeY = Math.round(82 * s);
+  const maxTitleWidth = badgeX - contentX - Math.round(20 * s);
+
   // Large Stylized World Name
   const worldName = (dossier.planetName || 'ÄMLEMI').toUpperCase();
   ctx.save();
@@ -703,21 +731,16 @@ export function createCachedTrailerOverlayCanvas(
   ctx.font = `900 ${Math.round(54 * s)}px "Inter", sans-serif`;
   ctx.shadowColor = 'rgba(0, 242, 254, 0.6)';
   ctx.shadowBlur = 18 * s;
-  ctx.fillText(worldName, contentX, Math.round(172 * s));
+  ctx.fillText(worldName, contentX, Math.round(172 * s), maxTitleWidth);
   ctx.restore();
 
   // Holder & Sector Info
-  const holderText = formatTitleCaseUserName(dossier.authorName).toUpperCase();
+  const holderText = formatAuthorName(dossier.authorName).toUpperCase();
   const sectorText = (dossier.sectorId || 'SECTOR AKN-01').toUpperCase();
   ctx.fillStyle = '#67e8f9';
   ctx.font = `bold ${Math.round(19 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(`HOLDER: ${holderText} · ${sectorText}`, contentX, Math.round(208 * s));
+  ctx.fillText(`HOLDER: ${holderText} · ${sectorText}`, contentX, Math.round(208 * s), maxTitleWidth);
 
-  // Top-Right Edition Pill
-  const badgeW = Math.round(180 * s);
-  const badgeH = Math.round(76 * s);
-  const badgeX = W - contentX - badgeW;
-  const badgeY = Math.round(82 * s);
   drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, Math.round(18 * s));
   ctx.fillStyle = 'rgba(6, 13, 28, 0.88)';
   ctx.fill();
@@ -922,6 +945,13 @@ export function drawTrailerOverlay(
   ctx.font = `bold ${Math.round(15 * s)}px "JetBrains Mono", monospace`;
   ctx.fillText(pioneerText, contentX + Math.round(14 * s), Math.round(109 * s));
 
+  // Top-Right Edition Pill
+  const badgeW = Math.round(180 * s);
+  const badgeH = Math.round(76 * s);
+  const badgeX = W - contentX - badgeW;
+  const badgeY = Math.round(82 * s);
+  const maxTitleWidth = badgeX - contentX - Math.round(20 * s);
+
   // Large Stylized World Name
   const worldName = (dossier.planetName || 'ÄMLEMI').toUpperCase();
   ctx.save();
@@ -929,21 +959,16 @@ export function drawTrailerOverlay(
   ctx.font = `900 ${Math.round(54 * s)}px "Inter", sans-serif`;
   ctx.shadowColor = 'rgba(0, 242, 254, 0.6)';
   ctx.shadowBlur = 18 * s;
-  ctx.fillText(worldName, contentX, Math.round(172 * s));
+  ctx.fillText(worldName, contentX, Math.round(172 * s), maxTitleWidth);
   ctx.restore();
 
   // Holder & Sector Info
-  const holderText = formatTitleCaseUserName(dossier.authorName).toUpperCase();
+  const holderText = formatAuthorName(dossier.authorName).toUpperCase();
   const sectorText = (dossier.sectorId || 'SECTOR AKN-01').toUpperCase();
   ctx.fillStyle = '#67e8f9';
   ctx.font = `bold ${Math.round(19 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(`HOLDER: ${holderText} · ${sectorText}`, contentX, Math.round(208 * s));
+  ctx.fillText(`HOLDER: ${holderText} · ${sectorText}`, contentX, Math.round(208 * s), maxTitleWidth);
 
-  // Top-Right Edition Pill
-  const badgeW = Math.round(180 * s);
-  const badgeH = Math.round(76 * s);
-  const badgeX = W - contentX - badgeW;
-  const badgeY = Math.round(82 * s);
   drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, Math.round(18 * s));
   ctx.fillStyle = 'rgba(6, 13, 28, 0.88)';
   ctx.fill();
@@ -2328,8 +2353,8 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
               className="relative w-full h-full flex flex-col justify-between"
             >
               {/* 1. TOP-LEVEL HEADER: FOUNDING PIONEER STATUS + PLANET NAME + HOLDER */}
-              <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-cyan-400/20">
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="relative z-10 flex items-start justify-between gap-3 pb-2 border-b border-cyan-400/20">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden pr-1.5">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.06] border border-amber-400/40 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(251,191,36,0.2)]">
                     <img
                       src={sillowMillLogoUrl}
@@ -2337,7 +2362,7 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                       className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.55)]"
                     />
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 overflow-hidden">
                     <div className="inline-flex items-center gap-1 text-[8px] sm:text-[8.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
                       <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
                       <span className="truncate">
@@ -2350,17 +2375,17 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
                           : 'FOUNDING PIONEER'}
                       </span>
                     </div>
-                    <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide uppercase truncate leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+                    <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide uppercase truncate leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] max-w-[190px] sm:max-w-[240px]">
                       {dossier.planetName}
                     </h4>
                     <div className="text-[7.5px] sm:text-[8px] font-mono text-cyan-300/90 truncate">
-                      HOLDER: <strong className="text-white font-bold">{formatTitleCaseUserName(dossier.authorName)}</strong> · {dossier.sectorId || 'SECTOR AKN-01'}
+                      HOLDER: <strong className="text-white font-bold">{formatAuthorName(dossier.authorName)}</strong> · {dossier.sectorId || 'SECTOR AKN-01'}
                     </div>
                   </div>
                 </div>
 
-                {/* Unique Numbering Badge (#1, #2, etc.) */}
-                <div className="shrink-0 min-w-[50px] sm:min-w-[58px] px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 flex flex-col items-center justify-center text-center shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+                {/* Unique Numbering Badge (#1, #2, etc.) - Structurally locked with margin to prevent overlap */}
+                <div className="shrink-0 ml-auto min-w-[54px] sm:min-w-[62px] px-2.5 py-1 rounded-xl bg-gradient-to-br from-amber-500/30 via-yellow-500/20 to-cyan-500/20 border border-amber-300/75 flex flex-col items-center justify-center text-center shadow-[0_0_15px_rgba(251,191,36,0.35)] select-none">
                   <span className="block text-[6.5px] font-mono font-bold uppercase tracking-widest text-amber-200/90">
                     EDITION
                   </span>

@@ -34,7 +34,7 @@ import {
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet } from '../utils/pioneer';
-import { formatTitleCaseUserName } from '../utils/holder';
+import { formatTitleCaseUserName, formatAuthorName } from '../utils/holder';
 import {
   LiveStoryTrailerViewport,
   useDynamicWorldVideo,
@@ -49,6 +49,7 @@ import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
 export interface PlanetDossierModalProps {
   planet: PlanetSubmission | null;
   isOpen: boolean;
+  editionRank?: number;
   onClose: () => void;
   onVote?: (planetId: string) => void;
   onOpenCreator?: (username: string) => void;
@@ -58,6 +59,7 @@ export interface PlanetDossierModalProps {
 export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(({
   planet,
   isOpen,
+  editionRank,
   onClose,
   onVote,
   onOpenCreator,
@@ -166,8 +168,8 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
 
   const dynamicVideo = useDynamicWorldVideo(activePlanet);
   const meta = useMemo(
-    () => (activePlanet ? deriveWorldVerificationMeta(activePlanet) : null),
-    [activePlanet]
+    () => (activePlanet ? deriveWorldVerificationMeta(activePlanet, editionRank) : null),
+    [activePlanet, editionRank]
   );
 
   const isTrailerTab = activePhotoIdx === 0;
@@ -194,7 +196,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
 
     try {
       const activeVideoUrl = videoUrl || '/assets/videos/amlemi_trailer.mp4';
-      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText, activePlanet || undefined);
+      await downloadOrShareVideoDirect(activeVideoUrl, filename, shareTitle, shareText, activePlanet || undefined, editionRank);
     } finally {
       setIsDownloading(false);
     }
@@ -474,7 +476,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                         type="button"
                         onClick={handleDownloadTrailer}
                         disabled={isDownloading}
-                        className="w-full py-2.5 px-4 rounded-xl font-mono text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer"
+                        className="w-full py-2.5 px-4 rounded-xl font-mono text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer active:scale-95 touch-manipulation select-none"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>
@@ -589,7 +591,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                       type="button"
                       onClick={() => handleDownloadPhoto(currentPhoto)}
                       disabled={isDownloading}
-                      className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer"
+                      className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer active:scale-95 touch-manipulation select-none"
                       title="Save picture to Photos"
                     >
                       <Download className="w-3.5 h-3.5 text-black" />

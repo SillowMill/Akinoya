@@ -20,6 +20,7 @@ import {
   isForbiddenSubmission,
 } from '../data/contest';
 import { PlanetDossierModal } from './PlanetDossierModal';
+import { formatAuthorName } from '../utils/holder';
 
 interface LoreGovernancePortalProps {
   onNavigateToContest?: () => void;
@@ -214,7 +215,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
                       >
                         {sub.authorName.slice(0, 1)}
                       </div>
-                      <span className="truncate">By {sub.authorName}</span>
+                      <span className="truncate">By {formatAuthorName(sub.authorName)}</span>
                     </div>
 
                     <p className="text-xs text-white/70 font-sans line-clamp-2 leading-relaxed">

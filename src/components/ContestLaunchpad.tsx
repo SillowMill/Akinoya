@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
+import { formatAuthorName } from '../utils/holder';
 import millAvatar from '../assets/images/mill_photo.jpg';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
 import amlemiBotanicalImg from '../assets/images/amlemi_renders/02-botanical.png';
@@ -1725,7 +1726,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                         <div className={`w-5 h-5 rounded-full bg-gradient-to-tr ${sub.authorAvatarGradient || 'from-cyan-400 to-indigo-600'} flex items-center justify-center font-bold text-[9px] text-black`}>
                           {sub.authorName.slice(0, 1)}
                         </div>
-                        <span className="truncate">By {sub.authorName}</span>
+                        <span className="truncate">By {formatAuthorName(sub.authorName)}</span>
                         {isFounder && (
                           <span className="px-1.5 py-0.2 rounded text-[8.5px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-400/40">
                             FOUNDER
