@@ -93,3 +93,44 @@ export const scrollToVisualizerHub = (smooth = true, delay = 0) => {
     execute();
   }
 };
+
+/**
+ * Nearest scrollable ancestor of an element (or null when the window scrolls).
+ * Used by views that run inside an isolated internal scroll container
+ * (e.g. the Community Hub `[data-scroll-container]` on iPad / iOS Safari).
+ */
+export const getScrollParent = (el: HTMLElement | null): HTMLElement | null => {
+  if (typeof window === 'undefined' || !el) return null;
+  const tagged = el.closest('[data-scroll-container]') as HTMLElement | null;
+  if (tagged) return tagged;
+  let node: HTMLElement | null = el.parentElement;
+  while (node && node !== document.body && node !== document.documentElement) {
+    const { overflowY } = window.getComputedStyle(node);
+    if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return null;
+};
+
+/**
+ * Scroll an element into view inside its scroll container (internal scroller or window),
+ * keeping `offset` px of breathing room above it.
+ */
+export const scrollElementIntoContainer = (
+  target: HTMLElement | null,
+  offset = 16,
+  behavior: ScrollBehavior = 'smooth'
+) => {
+  if (typeof window === 'undefined' || !target) return;
+  const scroller = getScrollParent(target);
+  if (scroller) {
+    const top =
+      target.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - offset;
+    scroller.scrollTo({ top: Math.max(0, top), behavior });
+  } else {
+    const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+    window.scrollTo({ top: Math.max(0, top), behavior });
+  }
+};

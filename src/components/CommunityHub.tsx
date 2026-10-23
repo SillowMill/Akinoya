@@ -82,6 +82,7 @@ const HubModuleLoading: React.FC<{ label?: string }> = ({ label = 'LOADING MODUL
 import { getStoredCreators } from '../data/creators';
 import { openClaimWorldModal, isPostLaunch, openMembershipGateModal, hasPaidMembership } from '../utils/pioneer';
 import { VAULT_STAGE_FOLDER_IDS, VAULT_STAGE_NAMES, getVaultFolderIdForStage } from '../utils/drive';
+import { scrollElementIntoContainer } from '../utils/scroll';
 
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
 export const isMembershipLaunchLocked = !isPostLaunch();
@@ -178,6 +179,14 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   // Sticky header measurement: docks the sidebar exactly beneath the header on every
   // viewport (iPad portrait/landscape) so nothing floats or leaves a see-through gap.
   const hubHeaderRef = useRef<HTMLElement | null>(null);
+  // Isolated internal scroll container (the window itself never scrolls on this view):
+  // eliminates iOS/iPadOS Safari rubber-banding, sticky recalculation lag & URL-bar reflows.
+  const hubScrollRef = useRef<HTMLElement | null>(null);
+  const scrollHubTo = (top: number, behavior: ScrollBehavior = 'smooth') => {
+    const scroller = hubScrollRef.current;
+    if (scroller) scroller.scrollTo({ top, behavior });
+    else if (typeof window !== 'undefined') window.scrollTo({ top, behavior });
+  };
   useEffect(() => {
     const el = hubHeaderRef.current;
     if (!el || typeof window === 'undefined') return;
@@ -353,8 +362,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         url.hash = normalized;
         window.history.replaceState(null, '', url.toString());
       } catch {}
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollHubTo(0);
     }
   };
 
@@ -371,8 +379,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         url.hash = 'downloads';
         window.history.replaceState(null, '', url.toString());
       } catch {}
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollHubTo(0);
     }
   };
 
@@ -445,22 +452,25 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     }
 
     let timeoutId: any;
+    const scroller = hubScrollRef.current;
+    const getY = () => (scroller ? scroller.scrollTop : window.scrollY);
     const saveScroll = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        if (window.scrollY > 0) {
-          sessionStorage.setItem('akinoya_hub_scroll_y', String(window.scrollY));
+        if (getY() > 0) {
+          sessionStorage.setItem('akinoya_hub_scroll_y', String(getY()));
         }
       }, 60);
     };
 
     const handleInstantSaveScroll = () => {
-      if (window.scrollY > 0) {
-        sessionStorage.setItem('akinoya_hub_scroll_y', String(window.scrollY));
+      if (getY() > 0) {
+        sessionStorage.setItem('akinoya_hub_scroll_y', String(getY()));
       }
     };
 
-    window.addEventListener('scroll', saveScroll, { passive: true });
+    const scrollTarget: HTMLElement | Window = scroller || window;
+    scrollTarget.addEventListener('scroll', saveScroll, { passive: true });
     window.addEventListener('beforeunload', handleInstantSaveScroll);
     window.addEventListener('pagehide', handleInstantSaveScroll);
 
@@ -472,8 +482,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         const delays = [60, 150, 300, 600, 1000];
         delays.forEach((delay) => {
           setTimeout(() => {
-            if (Math.abs(window.scrollY - targetY) > 20) {
-              window.scrollTo({ top: targetY, behavior: 'instant' as ScrollBehavior });
+            if (Math.abs(getY() - targetY) > 20) {
+              scrollHubTo(targetY, 'instant' as ScrollBehavior);
             }
           }, delay);
         });
@@ -481,7 +491,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     }
 
     return () => {
-      window.removeEventListener('scroll', saveScroll);
+      scrollTarget.removeEventListener('scroll', saveScroll);
       window.removeEventListener('beforeunload', handleInstantSaveScroll);
       window.removeEventListener('pagehide', handleInstantSaveScroll);
       clearTimeout(timeoutId);
@@ -553,13 +563,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     }
     const target = document.getElementById(`stage-${stageNum}`);
     if (target) {
-      const headerOffset = 110;
-      const elementPosition = target.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      window.scrollTo({
-        top: Math.max(0, offsetPosition),
-        behavior: 'smooth',
-      });
+      // Header is static above the internal scroller, so only a small breathing margin is needed
+      scrollElementIntoContainer(target, 16);
     }
   };
 
@@ -1238,11 +1243,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   };
 
   return (
-    <div className="app-shell community-scroll-container relative min-h-[100dvh] w-full bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Top Universal Header Bar */}
+    <div className="app-shell community-app-shell community-scroll-container relative h-[100dvh] w-full overflow-hidden bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Top Universal Header Bar (static: sits above the internal scroller, never repositions during scroll) */}
       <header
         ref={hubHeaderRef}
-        className="hub-sticky-header sticky top-0 z-50 transform-gpu will-change-transform [backface-visibility:hidden] [-webkit-backface-visibility:hidden] w-full border-b border-white/10 bg-[#0a0b10]/80 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 w-full max-w-full overflow-visible"
+        className="hub-sticky-header hub-static-header relative shrink-0 z-50 transform-gpu w-full border-b border-white/10 bg-[#0a0b10] px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 w-full max-w-full overflow-visible"
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
@@ -1436,13 +1441,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             </nav>
 
             {/* Layout Wrapper: Desktop Left Sidebar + Main Content Viewport */}
-            <div className="flex-1 flex flex-col md:flex-row w-full max-w-[1700px] mx-auto min-h-0">
+            <div className="flex-1 flex flex-col md:flex-row w-full max-w-[1700px] mx-auto min-h-0 overflow-hidden">
               {/* ======================================================== */}
               {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION (>= 768px)   */}
               {/* ======================================================== */}
               <aside
-                className="hub-sidebar hidden md:flex w-64 lg:w-72 shrink-0 flex-col bg-[#050812] border-r border-white/10 sticky self-start z-40 overflow-hidden transform-gpu will-change-transform [backface-visibility:hidden] [-webkit-backface-visibility:hidden]"
-                style={{ contain: 'layout style', WebkitTransform: 'translateZ(0)' }}
+                className="hub-sidebar hidden md:flex w-64 lg:w-72 shrink-0 h-full min-h-0 flex-col bg-[#050812] border-r border-white/10 z-40 overflow-hidden"
+                style={{ contain: 'layout style' }}
               >
                 <div className="hub-sidebar-scroll community-scroll-container flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 space-y-6">
                 <div className="space-y-4">
@@ -1594,10 +1599,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                 </div>
               </aside>
 
-              {/* Main Content Viewport */}
+              {/* Main Content Viewport (isolated internal scroller) */}
               <main
-                className="relative z-0 isolate flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8"
-                style={{ contain: 'layout' }}
+                ref={hubScrollRef}
+                data-scroll-container="community-hub"
+                className="hub-main-scroll relative z-0 isolate flex-1 min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8"
+                style={{ contain: 'layout', WebkitOverflowScrolling: 'touch' }}
               >
                 {/* ======================================================== */}
                 {/* SECTION 0: 00 · WELCOME & VISION PORTAL (PRIMARY LANDING)*/}
@@ -1810,7 +1817,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               {/* Discord-Style Multi-Channel Grid: Left Channels Sidebar + Right Chat Feed */}
               <div className="flex flex-col lg:flex-row gap-6 items-start">
                 {/* LEFT SIDEBAR: Discord Server & Channels */}
-                <aside className="hidden lg:flex w-72 shrink-0 flex-col gap-4 rounded-2xl bg-[#060913]/90 border border-white/10 p-4 shadow-xl sticky top-24 self-start">
+                <aside className="hidden lg:flex w-72 shrink-0 flex-col gap-4 rounded-2xl bg-[#060913]/90 border border-white/10 p-4 shadow-xl sticky top-4 self-start">
                   {/* Guild Header */}
                   <div className="flex items-center justify-between pb-3 border-b border-white/10">
                     <div className="flex items-center gap-2.5">

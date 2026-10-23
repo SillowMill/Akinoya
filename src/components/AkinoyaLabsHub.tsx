@@ -65,6 +65,7 @@ import odiLockingImg from '../assets/images/character_locking/Odi.JPG';
 import sillowLockingImg from '../assets/images/character_locking/Sillow.JPG';
 
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME } from '../utils/certificate';
+import { scrollElementIntoContainer } from '../utils/scroll';
 
 export const LABS_RELEASE_DATE = new Date('2027-01-09T00:00:00Z');
 
@@ -325,13 +326,9 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     }
     const target = document.getElementById(`stage-${stageNum}`);
     if (target) {
-      const headerOffset = 110;
-      const elementPosition = target.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      window.scrollTo({
-        top: Math.max(0, offsetPosition),
-        behavior: 'smooth',
-      });
+      // Works both inside the Community Hub internal scroller and on window-scrolled pages
+      const inInternalScroller = Boolean(target.closest('[data-scroll-container]'));
+      scrollElementIntoContainer(target, inInternalScroller ? 16 : 110);
     }
   };
 

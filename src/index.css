@@ -181,18 +181,11 @@ textarea,
   -webkit-backface-visibility: hidden;
 }
 
-/* Community Hub sidebar: docked exactly under the measured header.
-   Uses `svh` (stable small viewport) instead of `dvh` so the panel no longer
-   resizes / bounces when the iPad toolbar shows or hides during scroll. */
+/* Community Hub sidebar: lives inside the isolated (non-scrolling) app shell, so it
+   simply fills the row height beneath the static header — no sticky offsets, no
+   viewport-unit math that reflows when the iPad Safari toolbar collapses. */
 .hub-sidebar {
-  top: var(--hub-header-h, 65px);
-  height: calc(100vh - var(--hub-header-h, 65px));
-  height: calc(100svh - var(--hub-header-h, 65px));
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  height: 100%;
   contain: layout paint;
 }
 
@@ -213,6 +206,29 @@ html:has(.community-scroll-container),
 body:has(.community-scroll-container) {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+}
+
+/* Community Hub isolated app-height: the window itself never scrolls (no iOS
+   rubber-banding, no sticky recalculation against the root, no URL-bar reflow).
+   All scrolling happens inside `.hub-main-scroll` / `.hub-sidebar-scroll`. */
+html:has(.community-app-shell),
+body:has(.community-app-shell) {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.hub-main-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+
+/* Static hub header: no backdrop-filter (continuous re-render on touch scroll) */
+.hub-static-header {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  will-change: auto;
 }
 
 /* Short landscape tablets: tighten sidebar so the pinned CTA dock always fits */
