@@ -65,7 +65,6 @@ import odiLockingImg from '../assets/images/character_locking/Odi.JPG';
 import sillowLockingImg from '../assets/images/character_locking/Sillow.JPG';
 
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME } from '../utils/certificate';
-import { scrollElementIntoContainer } from '../utils/scroll';
 
 export const LABS_RELEASE_DATE = new Date('2027-01-09T00:00:00Z');
 
@@ -191,7 +190,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
   // Deep-Dive Modal State & Stage Persistence
   const [selectedStageForModal, setSelectedStageForModal] = useState<StageDetail | null>(null);
   const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null);
-  const [activeStageId, setActiveStageId] = useState<number>(() => {
+  const [activeStageId] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.toLowerCase().replace('#', '');
       if (hash.startsWith('stage-')) {
@@ -286,51 +285,6 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     const timer = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  // Active Stage Detection on Scroll (for Desktop Sidebar & Mobile Fast-Jump Bar)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const stageNum = Number(entry.target.id.replace('stage-', ''));
-            if (stageNum >= 1 && stageNum <= 5) {
-              setActiveStageId(stageNum);
-            }
-          }
-        }
-      },
-      { rootMargin: '-15% 0px -55% 0px', threshold: 0.1 }
-    );
-
-    for (let i = 1; i <= 5; i++) {
-      const el = document.getElementById(`stage-${i}`);
-      if (el) observer.observe(el);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  const handleJumpToStage = (stageNum: number) => {
-    setActiveStageId(stageNum);
-    soundManager.playTone(580, 0.05);
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('akinoya_labs_active_stage', String(stageNum));
-      try {
-        const url = new URL(window.location.href);
-        url.hash = `stage-${stageNum}`;
-        window.history.replaceState(null, '', url.toString());
-      } catch {}
-    }
-    const target = document.getElementById(`stage-${stageNum}`);
-    if (target) {
-      // Works both inside the Community Hub internal scroller and on window-scrolled pages
-      const inInternalScroller = Boolean(target.closest('[data-scroll-container]'));
-      scrollElementIntoContainer(target, inInternalScroller ? 16 : 110);
-    }
-  };
 
   // Open Stage Deep-Dive Modal via Universal Event (e.g. from Community Hub Left Sidebar or Stage Navigation)
   useEffect(() => {
@@ -899,48 +853,6 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
           <span className="text-[10px] text-amber-400/90 font-bold tracking-wider shrink-0 uppercase">
             STAGES 01–05 LOCKED PRIOR TO LAUNCH
           </span>
-        </div>
-
-        {/* ======================================================== */}
-        {/* UNIVERSAL WORKFLOW STAGE FAST-JUMP & MODAL INSPECT BAR   */}
-        {/* ======================================================== */}
-        <div className="sticky top-2 sm:top-3 z-40 my-3 flex justify-center w-full px-2 pointer-events-none">
-          <div className="pointer-events-auto backdrop-blur-xl bg-[#050814]/90 border border-cyan-500/40 rounded-2xl sm:rounded-full p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.8),0_0_20px_rgba(0,242,254,0.25)] flex items-center justify-start sm:justify-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar max-w-full transform-gpu will-change-transform">
-            {STAGES.map((s) => {
-              const isActive = activeStageId === s.id;
-              const isLocked = s.isAdvancedLocked && !isMember;
-
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => {
-                    handleJumpToStage(s.id);
-                    handleOpenStageModal(s);
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl sm:rounded-full text-xs font-mono font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-black shadow-[0_0_20px_rgba(0,242,254,0.8)] font-extrabold scale-105'
-                      : isLocked
-                      ? 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/10'
-                      : 'bg-white/10 hover:bg-white/20 text-white/85 hover:text-white border border-white/15 hover:border-cyan-400/40'
-                  }`}
-                  title={`Inspect Stage ${s.stageNumber}: ${s.title}`}
-                >
-                  <span className="text-sm">{s.richIcon}</span>
-                  <span className="font-extrabold">STAGE {s.stageNumber}</span>
-                  <span className="hidden md:inline text-[11px] font-sans font-medium text-inherit/80 truncate max-w-[120px]">
-                    · {s.navLabel}
-                  </span>
-                  {isLocked ? (
-                    <Lock className="w-3 h-3 text-amber-400 shrink-0 ml-0.5" />
-                  ) : (
-                    <Eye className={`w-3 h-3 shrink-0 ml-0.5 ${isActive ? 'text-black' : 'text-cyan-400'}`} />
-                  )}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         {/* ======================================================== */}
