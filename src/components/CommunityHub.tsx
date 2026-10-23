@@ -498,30 +498,79 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     };
   }, []);
 
-  // Scroll-spy observer for Stage 01–05 when in Labs & Workflows
+  // Scroll-spy for Stage 01–05 (Labs & Workflows) driving the left sidebar highlight.
+  // Enabled on tablet + desktop (>= 768px, where the sidebar is visible); disabled on mobile.
+  // Uses a thin activation line (threshold 0) inside the internal hub scroller so tall,
+  // single-column tablet stage cards are detected reliably regardless of their height.
   useEffect(() => {
     if (typeof window === 'undefined' || activeSection !== 'workflows') return;
+    if (typeof IntersectionObserver === 'undefined') return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const stageNum = Number(entry.target.id.replace('stage-', ''));
-            if (stageNum >= 1 && stageNum <= 5) {
-              setActiveStageId(stageNum);
+    const mq = window.matchMedia('(min-width: 768px)');
+    let observer: IntersectionObserver | null = null;
+    let mutationObserver: MutationObserver | null = null;
+
+    const teardown = () => {
+      observer?.disconnect();
+      observer = null;
+      mutationObserver?.disconnect();
+      mutationObserver = null;
+    };
+
+    const attach = () => {
+      teardown();
+      if (!mq.matches) return; // Mobile (< 768px): scroll-spy explicitly disabled
+
+      const root = hubScrollRef.current;
+      observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              const stageNum = Number(entry.target.id.replace('stage-', ''));
+              if (stageNum >= 1 && stageNum <= 5) {
+                setActiveStageId((prev) => (prev === stageNum ? prev : stageNum));
+              }
             }
           }
+        },
+        // Activation line at ~35% from the top of the scroll viewport
+        { root, rootMargin: '-35% 0px -64% 0px', threshold: 0 }
+      );
+
+      const observeStages = () => {
+        let found = 0;
+        for (let i = 1; i <= 5; i++) {
+          const el = document.getElementById(`stage-${i}`);
+          if (el) {
+            observer?.observe(el);
+            found++;
+          }
         }
-      },
-      { rootMargin: '-15% 0px -55% 0px', threshold: 0.1 }
-    );
+        return found;
+      };
 
-    for (let i = 1; i <= 5; i++) {
-      const el = document.getElementById(`stage-${i}`);
-      if (el) observer.observe(el);
-    }
+      // Labs module is lazy-loaded: wait for the stage nodes to mount before observing
+      if (observeStages() < 5 && typeof MutationObserver !== 'undefined') {
+        mutationObserver = new MutationObserver(() => {
+          if (observeStages() >= 5) {
+            mutationObserver?.disconnect();
+            mutationObserver = null;
+          }
+        });
+        mutationObserver.observe(root || document.body, { childList: true, subtree: true });
+      }
+    };
 
-    return () => observer.disconnect();
+    attach();
+    const handleBreakpointChange = () => attach();
+    if (typeof mq.addEventListener === 'function') mq.addEventListener('change', handleBreakpointChange);
+    else mq.addListener(handleBreakpointChange);
+
+    return () => {
+      teardown();
+      if (typeof mq.removeEventListener === 'function') mq.removeEventListener('change', handleBreakpointChange);
+      else mq.removeListener(handleBreakpointChange);
+    };
   }, [activeSection]);
 
   // Auto-scroll to active stage on initial load/section switch in workflows
