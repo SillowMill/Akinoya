@@ -748,10 +748,10 @@ export const isAmlemiAsset = (url?: string): boolean => {
  * Endless Organic Naming Protocol:
  * Generates pure, evocative, organic proper names with endless variation.
  * STRICTLY PROHIBITED: Sci-fi serial numbers, hyphens, technical machine codes, digits, or underscores.
- * REQUIRED: Pure organic proper names (e.g. Ämlemi, Elysia, Valerion, Aethelgard, Zephyria).
+ * REQUIRED: Pure organic proper names (e.g. Ämlemi, Elysia, Valerion, Aethelgard).
  */
 const ORGANIC_NAME_PREFIXES = [
-  'Arbi', 'Luci', 'Ely', 'Vale', 'Aethel', 'Zephy', 'Sola', 'Aure', 'Celes', 'Vespe',
+  'Arbi', 'Luci', 'Ely', 'Vale', 'Aethel', 'Sola', 'Aure', 'Celes', 'Vespe',
   'Nova', 'Illy', 'Kaele', 'Mira', 'Sylva', 'Ophi', 'Althe', 'Corv', 'Mari', 'Erida',
   'Vae', 'Kyro', 'Amal', 'Zeni', 'Arctu', 'Sele', 'Elo', 'Thala', 'Borea', 'Caeli',
   'Faelo', 'Helio', 'Lumi', 'Naiad', 'Orphi', 'Pyra', 'Rhea', 'Siria', 'Tauri', 'Zora'
@@ -863,10 +863,14 @@ export const MOCK_PLANET_IDS = new Set([
   'planet-felix-genesis',
   'felix',
   'planet-felix',
+  'planet-zephyria',
+  'planet-zephyria-06',
+  'zephyria',
+  'PLN-2027-ZEPHYRIA',
 ]);
 
 /**
- * Filter against test submissions, mock worlds, or removed entries (e.g. Felix by Kaat Jansen).
+ * Filter against test submissions, mock worlds, or removed entries (e.g. Zephyria, Felix by Kaat Jansen).
  * Enforces that only canonical benchmark sectors like Ämlemi and valid participant worlds appear.
  */
 export const isForbiddenSubmission = (sub: any): boolean => {
@@ -879,6 +883,16 @@ export const isForbiddenSubmission = (sub: any): boolean => {
   // Explicitly permit Felix by Esther Philippen (active community test creation)
   if (id === 'planet-felix-test-01' || (name === 'felix' && (author.includes('esther') || email.includes('esther')))) {
     return false;
+  }
+
+  // Permanently purge and exclude Zephyria / test world entry #6
+  if (
+    name === 'zephyria' ||
+    name.includes('zephyria') ||
+    id.toLowerCase().includes('zephyria') ||
+    (author.includes('architect') && name.includes('zephyria'))
+  ) {
+    return true;
   }
 
   if (MOCK_PLANET_IDS.has(id)) return true;

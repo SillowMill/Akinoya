@@ -106,7 +106,7 @@ export const AuthModal: React.FC = () => {
           setError(res.error || 'Registration failed.');
           soundManager.playError();
         } else {
-          setSuccess('Account created successfully! Welcome to Sillow Mill.');
+          setSuccess('Your submission has been received! Your world will be available on the ninth of January.');
           try {
             sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
             sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');

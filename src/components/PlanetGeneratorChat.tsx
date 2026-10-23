@@ -50,14 +50,14 @@ interface StepConfig {
  */
 export function parsePlanetNameAndVision(input: string): { planetName: string; vision: string } {
   const trimmed = input.trim();
-  // Delimiter match: "Zephyria: A quiet star-desert..." or "Zephyria - A quiet..." or "Zephyria\nA quiet..."
+  // Delimiter match: "Aethelgard: A quiet star-desert..." or "Aethelgard - A quiet..." or "Aethelgard\nA quiet..."
   const delimiterMatch = trimmed.match(/^([^:\n—\-]+)[:\n—\-]\s*(.+)$/s);
   if (delimiterMatch) {
     const rawName = delimiterMatch[1].replace(/^(planet|world|sector)\s+/i, '').trim();
     const rawVision = delimiterMatch[2].trim();
     return { planetName: rawName, vision: rawVision };
   }
-  // Dot match: "Zephyria. A quiet star-desert..."
+  // Dot match: "Aethelgard. A quiet star-desert..."
   const dotMatch = trimmed.match(/^([^.]+)\.\s*(.+)$/s);
   if (dotMatch) {
     const rawName = dotMatch[1].replace(/^(planet|world|sector)\s+/i, '').trim();
@@ -80,8 +80,8 @@ export const WIZARD_STEPS: StepConfig[] = [
     category: 'PLANET NAME & INNER LANDSCAPE',
     prompt:
       'What is the name of your planet, and how do you envision its inner landscape?',
-    placeholder: 'e.g. Zephyria: A quiet, misty star-desert with serene crystals and a calm, philosophical vibe...',
-    helperExample: 'Zephyria: A quiet, misty star-desert with serene crystals and a calm, philosophical vibe.',
+    placeholder: 'e.g. Aethelgard: A quiet, misty star-desert with serene crystals and a calm, philosophical vibe...',
+    helperExample: 'Aethelgard: A quiet, misty star-desert with serene crystals and a calm, philosophical vibe.',
     icon: Globe2,
     field: 'naturalEnvironment',
   },
@@ -300,7 +300,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           const errorMsg: ChatMessage = {
             id: `mill-val-err-${Date.now()}`,
             sender: 'mill',
-            text: `⚠️ ${validation.error || 'Please provide a valid planet designation (e.g. "Zephyria: A quiet, misty star-desert...").'}\n\nQuestion 01 of 05 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`,
+            text: `⚠️ ${validation.error || 'Please provide a valid planet designation (e.g. "Aethelgard: A quiet, misty star-desert...").'}\n\nQuestion 01 of 05 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`,
             step: 1,
             exampleToCopy: WIZARD_STEPS[0].helperExample,
             timestamp: 'Just now',
@@ -415,10 +415,35 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         setIsSynthesizing(true);
         soundManager.playUnlockChime();
 
+        // Automated Pre-Launch Google Sheets Master Database Submission
+        try {
+          const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+          const pName = completeAnswers.planetName || designatedPlanetName;
+          fetch('/api/prelaunch/submission', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userName: userDisplayName || 'Pioneer Architect',
+              email: userEmail,
+              worldName: pName,
+              sectorId: (completeAnswers as any).sectorId || claim?.coordinates || 'AKN-01',
+              q1: completeAnswers.naturalEnvironment || completeAnswers.atmosphere,
+              q2: completeAnswers.creativeExpression || completeAnswers.flora,
+              q3: completeAnswers.colorPalette || completeAnswers.landmark,
+              q4: completeAnswers.admiredCreature || completeAnswers.fauna,
+              q5: completeAnswers.futurePromise || completeAnswers.lifePhilosophy,
+              humanAnswers: completeAnswers,
+              answers: completeAnswers,
+            }),
+          }).catch((err) => console.warn('[PlanetGeneratorChat] Pre-launch sheets sync notice:', err));
+        } catch (syncErr) {
+          console.warn('[PlanetGeneratorChat] Dispatch notice:', syncErr);
+        }
+
         const finalMsg: ChatMessage = {
           id: `mill-done-${Date.now()}`,
           sender: 'mill',
-          text: `Territory protocol complete! All 5 personality dimensions recorded.\n\nDesignated World: ${completeAnswers.planetName}\n\nConnecting to Nano Banana 4K Photorealistic AI and Seedance 2.5 FPV video pipeline to synthesize your 5-photo dossier, synchronized sound effects, and registered lore...`,
+          text: `Your submission has been received! Your world will be available on the ninth of January.\n\nAll 5 Worldbuilding Protocol answers recorded for ${completeAnswers.planetName}.\n\nSynthesizing 4K sci-fi planetary dossier and registered lore archive...`,
           timestamp: 'Just now',
         };
         setMessages((prev) => [...prev, finalMsg]);

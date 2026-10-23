@@ -30,6 +30,7 @@ import {
   CONSTELLATION_LAYOUT_VARIANTS,
   OVAL_MATRIX_TRACKS,
   assignMultiVariantCoordinates,
+  isForbiddenSubmission,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
@@ -179,9 +180,18 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     >
   >(new Map());
 
-  // Dynamically compute equilibrium coordinates across active layout mode & seed
+  // Dynamically compute equilibrium coordinates across active layout mode & seed (purging Zephyria / test entries)
   const layoutPlanets = useMemo(() => {
-    return assignMultiVariantCoordinates(planets, layoutMode, restructureSeed);
+    const cleaned = planets.filter(
+      (p) =>
+        p &&
+        p.id &&
+        !isForbiddenSubmission(p) &&
+        p.planetName?.toLowerCase() !== 'zephyria' &&
+        !p.planetName?.toLowerCase().includes('zephyria') &&
+        !p.id?.toLowerCase().includes('zephyria')
+    );
+    return assignMultiVariantCoordinates(cleaned, layoutMode, restructureSeed);
   }, [planets, layoutMode, restructureSeed]);
 
   const filteredPlanets = useMemo(() => {
@@ -1497,17 +1507,19 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     panTo(0, 0, isMobile ? 0.68 : 0.9, 800, 0);
   };
 
-  // Search filter - ranked dynamically by persistent community votes
+  // Search filter - ranked dynamically by persistent community votes (purging Zephyria)
   const searchResults = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return [];
+    if (!q || q === 'zephyria' || q.includes('zephyria')) return [];
     return filteredPlanets
       .filter(
         (p) =>
-          p.planetName.toLowerCase().includes(q) ||
-          (p.sectorId && p.sectorId.toLowerCase().includes(q)) ||
-          p.authorName.toLowerCase().includes(q) ||
-          p.authorUsername.toLowerCase().includes(q)
+          !p.planetName.toLowerCase().includes('zephyria') &&
+          !p.id.toLowerCase().includes('zephyria') &&
+          (p.planetName.toLowerCase().includes(q) ||
+            (p.sectorId && p.sectorId.toLowerCase().includes(q)) ||
+            p.authorName.toLowerCase().includes(q) ||
+            p.authorUsername.toLowerCase().includes(q))
       )
       .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
   }, [filteredPlanets, searchQuery]);

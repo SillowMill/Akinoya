@@ -203,6 +203,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     return stored === 'true';
   });
   const [sandboxSuccessDossier, setSandboxSuccessDossier] = useState<PlanetSubmission | null>(null);
+  const [submissionConfirmationNotice, setSubmissionConfirmationNotice] = useState<string | null>(null);
 
   const handleToggleSandbox = (val: boolean) => {
     setIsSandboxMode(val);
@@ -822,9 +823,28 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     setPreviewDossier(synchronizedDraft);
     await savePlanetSubmission(synchronizedDraft);
 
+    // Automated Pre-Launch Google Sheets Master Database Submission
+    fetch('/api/prelaunch/submission', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: user?.email || synchronizedDraft.authorEmail,
+        userName: userDisplayName || synchronizedDraft.authorName,
+        worldName: synchronizedDraft.planetName,
+        sectorId: synchronizedDraft.sectorId || 'AKN-01',
+        q1: synchronizedDraft.atmosphere,
+        q2: synchronizedDraft.flora,
+        q3: synchronizedDraft.landmark,
+        q4: synchronizedDraft.fauna,
+        q5: synchronizedDraft.futurePromise,
+        humanAnswers: synchronizedDraft.humanAnswers,
+        status: 'Your world will be available on the ninth of January.',
+      }),
+    }).catch((err) => console.warn('[Contest] Pre-launch sheets sync error:', err));
+
     setGenerationProgress(100);
     setGenerationStageName('SYNTHESIS SEQUENCE COMPLETE');
-    setGenerationStageDetails('5-Photo archive and 9:16 viral video trailer pipeline completed.');
+    setGenerationStageDetails('Your submission has been received! Your world will be available on the ninth of January.');
     setIsGeneratingRenders(false);
     soundManager.playUnlockChime();
   };
@@ -1010,11 +1030,31 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         }).catch(() => {});
       }
 
+      // 4b. Automated Pre-Launch Google Sheets Master Database Submission
+      fetch('/api/prelaunch/submission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user?.email || previewDossier.authorEmail,
+          userName: userDisplayName || previewDossier.authorName,
+          worldName: previewDossier.planetName,
+          sectorId: previewDossier.sectorId || 'AKN-01',
+          q1: previewDossier.atmosphere,
+          q2: previewDossier.flora,
+          q3: previewDossier.landmark,
+          q4: previewDossier.fauna,
+          q5: previewDossier.futurePromise,
+          humanAnswers: previewDossier.humanAnswers,
+          status: 'Your world will be available on the ninth of January.',
+        }),
+      }).catch((err) => console.warn('[Contest] Pre-launch sheets sync error:', err));
+
       // 5. Attach renders & lore to creator's public portfolio (/creators/[username])
       attachContestSubmissionToCreator(username, userDisplayName, previewDossier);
 
       // 6. Update local state
       setActiveSubmission(previewDossier);
+      setSubmissionConfirmationNotice('Your submission has been received! Your world will be available on the ninth of January.');
       setPreviewDossier(null);
       setPendingAnswers(null);
       setAllSubmissions((prev) => [previewDossier, ...prev.filter((p) => p.id !== previewDossier.id)]);
@@ -1242,6 +1282,18 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                 </p>
               </div>
 
+              {submissionConfirmationNotice && (
+                <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/90 via-cyan-950/90 to-emerald-950/90 border border-emerald-400/70 text-emerald-200 text-xs font-mono shadow-[0_0_25px_rgba(52,211,153,0.3)] flex items-start gap-2.5">
+                  <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 animate-pulse" />
+                  <div className="space-y-0.5 text-left">
+                    <span className="font-bold uppercase tracking-wider block text-emerald-300 text-[10.5px]">CONFIRMATION RECORDED</span>
+                    <p className="font-sans text-xs text-white/95 font-medium leading-relaxed">
+                      {submissionConfirmationNotice}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {hasSubmittedContest ? (
                 <div className="space-y-3">
                   <div className="p-3.5 rounded-xl bg-amber-950/70 border border-amber-500/50 text-center space-y-1 shadow-lg">
@@ -1252,8 +1304,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                     <div className="text-sm font-display font-bold text-white truncate">
                       {activeSubmission?.planetName || 'Territory Submitted'}
                     </div>
-                    <p className="text-[10.5px] text-white/60 font-mono">
-                      You have already claimed your 1 generation attempt.
+                    <p className="text-[11px] text-amber-200 font-mono font-medium">
+                      Your submission has been received! Your world will be available on the ninth of January.
                     </p>
                   </div>
 

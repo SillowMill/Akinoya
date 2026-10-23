@@ -8,6 +8,9 @@ export const SPREADSHEET_ID =
 export const WHITELIST_SPREADSHEET_ID =
   process.env.GOOGLE_SHEETS_WHITELIST_SPREADSHEET_ID || '1SivG6Sh9mdr3_1b_YInB5JR2Ol_SiqNkw9GtITE6gnY';
 
+export const PRELAUNCH_SPREADSHEET_ID =
+  process.env.GOOGLE_SHEETS_PRELAUNCH_SPREADSHEET_ID || '1F5mHO-JtYFVaxfFuyyP0Xbu2HpiCiVFnJtz213OvqrU';
+
 let _cachedAccessToken = null;
 let _tokenExpiresAt = 0;
 
@@ -1112,6 +1115,341 @@ export async function appendWaitlistSubmissionToGoogleSheets({
   } catch (sheetErr) {
     console.warn('[Google Sheets Waitlist] Sync error:', sheetErr);
     return { success: true, savedLocally: true, error: sheetErr?.message };
+  }
+}
+
+/**
+ * Automates Frontend Form Submissions and 5-Question Worldbuilding Protocol to Google Sheets Master Database.
+ * Target Spreadsheet: "Sillow Mill & Sleepwoody - Pre-Launch World Submissions & Leads"
+ * Spreadsheet ID: 1F5mHO-JtYFVaxfFuyyP0Xbu2HpiCiVFnJtz213OvqrU
+ * Tab: Blad1
+ *
+ * Expected Schema & Column Mapping:
+ * Column A: Timestamp (YYYY-MM-DD HH:mm:ss)
+ * Column B: User Name
+ * Column C: Email
+ * Column D: World Name
+ * Column E: Sector ID (e.g. AKN-01, AKN-02, SEC-05)
+ * Column F: Q1 - Origin & Atmosphere
+ * Column G: Q2 - Landscape & Flora/Fauna
+ * Column H: Q3 - Cosmic Anomaly / Core
+ * Column I: Q4 - Inhabitants & Lore
+ * Column J: Q5 - Vision & Memory Anchor
+ * Column K: Status ("Your world will be available on the ninth of January.")
+ */
+export async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const now = new Date();
+  const defaultTs = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+  let timestamp = record.timestamp || record.createdAt || record.created_at || defaultTs;
+  if (typeof timestamp === 'string' && timestamp.includes('T')) {
+    const d = new Date(timestamp);
+    if (!isNaN(d.getTime())) {
+      timestamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+  }
+
+  const cleanEmail = String(
+    record.email ||
+    record.authorEmail ||
+    record.author_email ||
+    record.holderEmail ||
+    ''
+  ).trim().toLowerCase();
+
+  let rawName = String(
+    record.userName ||
+    record.user_name ||
+    record.fullName ||
+    record.full_name ||
+    record.authorName ||
+    record.author_name ||
+    record.displayName ||
+    ''
+  ).trim();
+
+  if (!rawName) {
+    const fn = String(record.firstName || record.first_name || '').trim();
+    const ln = String(record.lastName || record.last_name || '').trim();
+    rawName = [fn, ln].filter(Boolean).join(' ') || (cleanEmail ? cleanEmail.split('@')[0] : 'Pioneer Architect');
+  }
+  const userName = rawName;
+
+  const worldName = String(
+    record.worldName ||
+    record.world_name ||
+    record.planetName ||
+    record.planet_name ||
+    record.claimed_sector ||
+    record.sectorName ||
+    record.sector_name ||
+    'Äkinoya Prime'
+  ).trim();
+
+  // Sector ID normalization (e.g., AKN-01, AKN-02, SEC-05)
+  let rawSector = String(
+    record.sectorId ||
+    record.sector_id ||
+    record.coordinates ||
+    record.sectorCode ||
+    record.sector ||
+    ''
+  ).trim();
+
+  let sectorId = 'AKN-01';
+  if (rawSector) {
+    const aknMatch = rawSector.match(/(AKN|SEC|SECTOR)[\s_-]*([A-Z0-9]+)/i);
+    if (aknMatch) {
+      const prefix = aknMatch[1].toUpperCase() === 'SECTOR' ? 'AKN' : aknMatch[1].toUpperCase();
+      sectorId = `${prefix}-${aknMatch[2].toUpperCase()}`;
+    } else {
+      const armMatch = rawSector.match(/SECTOR\s+([A-Z]+)-?(\d+)?/i);
+      if (armMatch) {
+        sectorId = `${armMatch[1].toUpperCase()}-${armMatch[2] || '01'}`;
+      } else {
+        sectorId = rawSector.replace(/\s*\(.*\)$/, '').trim() || 'AKN-01';
+      }
+    }
+  }
+
+  const humanAnswers = record.humanAnswers || record.human_answers || record.answers || record.questionnaireResponses || {};
+
+  const q1 = String(
+    record.q1 ||
+    record.q1_origin_atmosphere ||
+    record.originAtmosphere ||
+    humanAnswers.naturalEnvironment ||
+    record.naturalEnvironment ||
+    humanAnswers.atmosphere ||
+    record.atmosphere ||
+    record.biome ||
+    'A dark, bioluminescent realm enveloped in violet nebulae and glowing flora.'
+  ).trim();
+
+  const q2 = String(
+    record.q2 ||
+    record.q2_landscape_flora_fauna ||
+    record.landscapeFloraFauna ||
+    humanAnswers.creativeExpression ||
+    record.creativeExpression ||
+    humanAnswers.flora ||
+    record.flora ||
+    'Floating crystal pillars, shimmering spore mist, and towering ancient fungal canopy.'
+  ).trim();
+
+  const q3 = String(
+    record.q3 ||
+    record.q3_cosmic_anomaly_core ||
+    record.cosmicAnomalyCore ||
+    humanAnswers.colorPalette ||
+    record.colorPalette ||
+    humanAnswers.landmark ||
+    record.landmark ||
+    'The Pulse Core — a synchronized blue luminescent anomaly at the center.'
+  ).trim();
+
+  const q4 = String(
+    record.q4 ||
+    record.q4_inhabitants_lore ||
+    record.inhabitantsLore ||
+    humanAnswers.admiredCreature ||
+    record.admiredCreature ||
+    humanAnswers.fauna ||
+    record.fauna ||
+    'Sillow & Mill guardians alongside wandering cosmic wanderers.'
+  ).trim();
+
+  const q5 = String(
+    record.q5 ||
+    record.q5_vision_memory_anchor ||
+    record.visionMemoryAnchor ||
+    humanAnswers.futurePromise ||
+    record.futurePromise ||
+    humanAnswers.lifePhilosophy ||
+    record.lifePhilosophy ||
+    humanAnswers.relaxation ||
+    record.relaxation ||
+    'A sanctuary to process lost memories and restore emotional balance.'
+  ).trim();
+
+  const status = 'Your world will be available on the ninth of January.';
+
+  const rowValues = [
+    timestamp,
+    userName,
+    cleanEmail,
+    worldName,
+    sectorId,
+    q1,
+    q2,
+    q3,
+    q4,
+    q5,
+    status,
+  ];
+
+  // 1. Fail-Safe: Durable Local JSON Storage (data/prelaunch_submissions.json)
+  const localFile = path.resolve(process.cwd(), 'data/prelaunch_submissions.json');
+  try {
+    const dir = path.dirname(localFile);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    let existingList = [];
+    if (fs.existsSync(localFile)) {
+      try {
+        existingList = JSON.parse(fs.readFileSync(localFile, 'utf8'));
+      } catch {}
+    }
+    const storeEntry = {
+      timestamp,
+      userName,
+      email: cleanEmail,
+      worldName,
+      sectorId,
+      q1,
+      q2,
+      q3,
+      q4,
+      q5,
+      status,
+      rawRecord: record,
+    };
+    const filtered = existingList.filter((e) => !(e.email === cleanEmail && e.worldName === worldName));
+    filtered.push(storeEntry);
+    fs.writeFileSync(localFile, JSON.stringify(filtered, null, 2), 'utf8');
+    console.log(`[Pre-Launch Store] Recorded entry for ${cleanEmail} (${worldName}) in ${localFile}`);
+  } catch (storeErr) {
+    console.warn('[Pre-Launch Store Notice]:', storeErr);
+  }
+
+  // 2. Append to Central Google Sheets Master Database
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.warn('[Pre-Launch Sheets] Access token pending, saved locally in fail-safe store.');
+      return {
+        success: true,
+        savedLocally: true,
+        message: 'Your submission has been received! Your world will be available on the ninth of January.',
+      };
+    }
+
+    const spreadsheetId = PRELAUNCH_SPREADSHEET_ID;
+    let targetTab = 'Blad1';
+
+    try {
+      const metaRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (metaRes.ok) {
+        const meta = await metaRes.json();
+        const titles = (meta.sheets || []).map((s) => s.properties?.title);
+        if (titles.includes('Blad1')) targetTab = 'Blad1';
+        else if (titles[0]) targetTab = titles[0];
+      }
+    } catch {}
+
+    // Check if an existing row for this email has "Pending" world name to update instead of appending empty duplicate
+    let targetRowIndex = -1;
+    if (cleanEmail) {
+      try {
+        const checkRes = await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`'${targetTab}'!A:D`)}`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          const rows = checkData.values || [];
+          for (let i = 1; i < rows.length; i++) {
+            const rowEmail = String(rows[i][2] || '').trim().toLowerCase();
+            const rowWorld = String(rows[i][3] || '').trim().toLowerCase();
+            if (rowEmail === cleanEmail && (rowWorld.includes('pending') || rowWorld === worldName.toLowerCase())) {
+              targetRowIndex = i + 1;
+              break;
+            }
+          }
+        }
+      } catch (checkErr) {
+        console.warn('[Pre-Launch Sheets] Check row notice:', checkErr);
+      }
+    }
+
+    if (targetRowIndex > 1) {
+      const updateRange = `'${targetTab}'!A${targetRowIndex}:K${targetRowIndex}`;
+      const updateRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(updateRange)}?valueInputOption=USER_ENTERED`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ values: [rowValues] }),
+        }
+      );
+      if (updateRes.ok) {
+        console.log(`[Pre-Launch Sheets] Updated row ${targetRowIndex} for ${cleanEmail}`);
+        return {
+          success: true,
+          action: 'updated',
+          row: targetRowIndex,
+          message: 'Your submission has been received! Your world will be available on the ninth of January.',
+        };
+      }
+    }
+
+    // Append new row to master database
+    const appendRange = `'${targetTab}'!A:K`;
+    const appendRes = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(appendRange)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ values: [rowValues] }),
+      }
+    );
+
+    if (!appendRes.ok) {
+      const errText = await appendRes.text();
+      console.warn('[Pre-Launch Sheets] Append failed:', appendRes.status, errText);
+      try {
+        const failQueueFile = path.resolve(process.cwd(), 'data/prelaunch_queue_failed.json');
+        let failedList = [];
+        if (fs.existsSync(failQueueFile)) {
+          failedList = JSON.parse(fs.readFileSync(failQueueFile, 'utf8'));
+        }
+        failedList.push({ timestamp: new Date().toISOString(), record, rowValues, error: errText });
+        fs.writeFileSync(failQueueFile, JSON.stringify(failedList, null, 2), 'utf8');
+      } catch {}
+
+      return {
+        success: true,
+        savedLocally: true,
+        message: 'Your submission has been received! Your world will be available on the ninth of January.',
+      };
+    }
+
+    const appendData = await appendRes.json();
+    console.log(`[Pre-Launch Sheets] Appended row for ${cleanEmail} (${worldName}):`, appendData.updates?.updatedRange);
+
+    return {
+      success: true,
+      action: 'appended',
+      range: appendData.updates?.updatedRange,
+      message: 'Your submission has been received! Your world will be available on the ninth of January.',
+    };
+  } catch (err) {
+    console.warn('[Pre-Launch Sheets] Exception during sheet append:', err);
+    return {
+      success: true,
+      savedLocally: true,
+      error: err.message,
+      message: 'Your submission has been received! Your world will be available on the ninth of January.',
+    };
   }
 }
 

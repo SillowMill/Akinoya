@@ -1,6 +1,7 @@
 import {
   syncSubscriberRowToGoogleSheets,
   syncPassClaimToGoogleSheets,
+  appendPrelaunchWorldSubmissionToGoogleSheets,
 } from './nfc/_googleSheetsSync.js';
 
 /**
@@ -88,12 +89,27 @@ export default async function handler(req, res) {
       vipSync = await syncPassClaimToGoogleSheets(passIdToSync, fullName || email.split('@')[0], email);
     }
 
+    // 3. Automated Pre-Launch World Submissions & Leads Master Database Sync
+    let prelaunchSync = null;
+    try {
+      prelaunchSync = await appendPrelaunchWorldSubmissionToGoogleSheets({
+        ...record,
+        userName: fullName || email.split('@')[0],
+        email,
+        worldName: claimedSector || 'Pending Worldbuilding Protocol',
+      });
+    } catch (preErr) {
+      console.warn('[Google Sheets Prelaunch] Sync notice:', preErr);
+    }
+
     return sendJson(200, {
       success: subSync?.success ?? true,
       email,
       subscriberSync: subSync,
       vipSync,
+      prelaunchSync,
       tab: 'Subscribers',
+      message: 'Your submission has been received! Your world will be available on the ninth of January.',
     });
   } catch (error) {
     console.error('[Google Sheets Sync] Unhandled exception:', error);

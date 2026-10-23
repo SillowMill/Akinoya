@@ -22,6 +22,7 @@ import {
   syncSubscriberRowToGoogleSheets,
   appendWhitelistEmailToGoogleSheets,
   appendWaitlistSubmissionToGoogleSheets,
+  appendPrelaunchWorldSubmissionToGoogleSheets,
   WHITELIST_SPREADSHEET_ID,
 } from '../../api/nfc/_googleSheetsSync.js';
 import {
@@ -738,12 +739,27 @@ apiRouter.all(['/sync-sheets', '/auth/sync-sheets'], async (req: Request, res: R
       vipSync = await syncPassClaimToGoogleSheets(passIdToSync, fullName || email.split('@')[0], email);
     }
 
+    // 3. Automated Pre-Launch World Submissions & Leads Master Database Sync
+    let prelaunchSync = null;
+    try {
+      prelaunchSync = await appendPrelaunchWorldSubmissionToGoogleSheets({
+        ...record,
+        userName: fullName || email.split('@')[0],
+        email,
+        worldName: claimedSector || 'Pending Worldbuilding Protocol',
+      });
+    } catch (preErr) {
+      console.warn('[API] Pre-launch sheets sync notice:', preErr);
+    }
+
     res.status(200).json({
       success: subSync?.success ?? true,
       email,
       subscriberSync: subSync,
       vipSync,
+      prelaunchSync,
       tab: 'Subscribers',
+      message: 'Your submission has been received! Your world will be available on the ninth of January.',
     });
   } catch (err: any) {
     console.error('[API] sync-sheets error:', err);
@@ -797,6 +813,16 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
           console.warn('[Register] Google Sheets VIP claim sync notice:', vipErr)
         );
       }
+
+      await appendPrelaunchWorldSubmissionToGoogleSheets({
+        email,
+        firstName,
+        lastName,
+        userName: fullName,
+        role: result.profile?.role || role || 'FREE',
+        worldName: 'Pending Worldbuilding Protocol',
+        sectorId: 'AKN-01',
+      }).catch((err) => console.warn('[Register] Google Sheets prelaunch sync notice:', err));
     }
     res.status(result.success ? 200 : 400).json(result);
   } catch (err: any) {
@@ -955,9 +981,38 @@ apiRouter.post(['/dossier/submission', '/submission'], async (req: Request, res:
   try {
     const sub = req.body;
     const result = saveSubmissionRecord(sub);
-    res.status(result.success ? 200 : 400).json(result);
+
+    // Automated Pre-Launch Google Sheets Master Database Sync
+    appendPrelaunchWorldSubmissionToGoogleSheets(sub).catch((sheetErr) => {
+      console.warn('[API Dossier] Prelaunch sheet sync warning:', sheetErr);
+    });
+
+    res.status(result.success ? 200 : 400).json({
+      ...result,
+      message: 'Your submission has been received! Your world will be available on the ninth of January.',
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'Failed to save submission' });
+  }
+});
+
+// Dedicated Pre-Launch Worldbuilding Protocol & Lead Submissions endpoint
+apiRouter.post(['/prelaunch/submission', '/worldbuilding/submission'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const record = req.body || {};
+    const result = await appendPrelaunchWorldSubmissionToGoogleSheets(record);
+    res.status(200).json({
+      ...result,
+      message: 'Your submission has been received! Your world will be available on the ninth of January.',
+    });
+  } catch (err: any) {
+    console.warn('[API Prelaunch Submission] Error:', err);
+    res.status(200).json({
+      success: true,
+      savedLocally: true,
+      message: 'Your submission has been received! Your world will be available on the ninth of January.',
+      error: err?.message,
+    });
   }
 });
 

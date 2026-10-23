@@ -171,6 +171,21 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(syncPayload),
       }).catch((err) => console.warn('[Pioneer Modal] Sheets sync notice:', err));
+
+      // Automated Pre-Launch Google Sheets Master Database Submission
+      const prelaunchPayload = {
+        userName: [profile?.first_name || user?.user_metadata?.first_name, profile?.last_name || user?.user_metadata?.last_name].filter(Boolean).join(' ') || emailToUse.split('@')[0],
+        email: emailToUse,
+        worldName: cleanPlanetName,
+        sectorId: coordinates,
+        q1: `Atmosphere and terrain calibrated to ${selectedBiome.label}`,
+        status: 'Your world will be available on the ninth of January.',
+      };
+      fetch('/api/prelaunch/submission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(prelaunchPayload),
+      }).catch((err) => console.warn('[Pioneer Modal] Pre-launch sheets sync notice:', err));
     }
 
     // Auto-advance Mill directly to Question 1 with user's planet inputs
@@ -444,8 +459,8 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                 <h3 className="text-xl sm:text-3xl font-display font-black text-white">
                   World Claim Confirmed
                 </h3>
-                <p className="text-[11.5px] sm:text-sm text-white/70 font-sans max-w-md mx-auto">
-                  Your coordinates have been registered to the Äkinoya master registry and synced to Google Sheets.
+                <p className="text-[11.5px] sm:text-sm text-amber-200 font-sans max-w-md mx-auto font-medium">
+                  Your submission has been received! Your world will be available on the ninth of January.
                 </p>
               </div>
 
