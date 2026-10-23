@@ -237,51 +237,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         }
       }
     } else if (layoutMode === 'matrix') {
-      const trackGroups = new Map<string, PlanetSubmission[]>();
-      for (const track of OVAL_MATRIX_TRACKS) {
-        trackGroups.set(track.id, []);
-      }
-      for (const p of filteredPlanets) {
-        if ((p.coordX ?? 0) === 0 && (p.coordY ?? 0) === 0) continue;
-        const trackId = p.armId || OVAL_MATRIX_TRACKS[0].id;
-        if (trackGroups.has(trackId)) {
-          trackGroups.get(trackId)!.push(p);
-        }
-      }
-      for (const track of OVAL_MATRIX_TRACKS) {
-        const nodes = trackGroups.get(track.id);
-        if (!nodes || nodes.length < 2) continue;
-        nodes.sort((a, b) => {
-          const angA = Math.atan2(a.coordY ?? 0, a.coordX ?? 0);
-          const angB = Math.atan2(b.coordY ?? 0, b.coordX ?? 0);
-          return angA - angB;
-        });
-        for (let i = 0; i < nodes.length - 1; i++) {
-          edges.push({
-            nodeA: nodes[i],
-            nodeB: nodes[i + 1],
-            color: track.color,
-            glowColor: track.glowColor,
-          });
-        }
-        // Connect perimeter loop only if well-distributed along track
-        if (nodes.length >= 4) {
-          const first = nodes[0];
-          const last = nodes[nodes.length - 1];
-          const angFirst = Math.atan2(first.coordY ?? 0, first.coordX ?? 0);
-          const angLast = Math.atan2(last.coordY ?? 0, last.coordX ?? 0);
-          let diff = Math.abs(angLast - angFirst);
-          if (diff > Math.PI) diff = 2 * Math.PI - diff;
-          if (diff <= 1.85) {
-            edges.push({
-              nodeA: last,
-              nodeB: first,
-              color: track.color,
-              glowColor: track.glowColor,
-            });
-          }
-        }
-      }
+      // In Matrix mode, omit inter-planet lattice chords to keep the orbital matrix pristine
+      // and prevent thick, stray alignment vectors from connecting across tracks.
+      return [];
     }
 
     return edges;
@@ -1093,153 +1051,186 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         }
       }
 
-      // 5c. Constellation Lattice Connections between Charted Nodes (Batched GPU Render)
+      // 5c. Target World Connection & Constellation Connectors
       const currentPlanets = planetsRef.current;
       if (currentPlanets && currentPlanets.length > 0) {
         const activeHoveredId = hoveredPlanetRef.current?.id;
         const activeSelectedId = selectedPlanetRef.current?.id;
 
-        // Foundational Master Anchor: Golden genesis link from Äkinoya Core (0,0) to Ämlemi
         const amlemiNode = currentPlanets.find(
           (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
         );
-        if (amlemiNode) {
-          const amPos = getNodePos(amlemiNode);
-          const amX = coreScreenX + amPos.x * curZoom;
-          const amY = coreScreenY + amPos.y * curZoom;
-          const isAmlemiActive =
-            amlemiNode.id === activeHoveredId || amlemiNode.id === activeSelectedId;
 
-          ctx.save();
-          ctx.strokeStyle = isAmlemiActive
-            ? 'rgba(251, 191, 36, 0.95)'
-            : 'rgba(245, 158, 11, 0.45)';
-          ctx.lineWidth = isAmlemiActive ? 2.0 : 1.0;
-          ctx.setLineDash([4 * curZoom, 4 * curZoom]);
-          ctx.beginPath();
-          ctx.moveTo(coreScreenX, coreScreenY);
-          ctx.lineTo(amX, amY);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.restore();
-        }
+        if (activeMode === 'matrix') {
+          // =========================================================================
+          // MATRIX VIEW: Pure Single Clean Dotted Line to Active Target World
+          // Eliminate all thick, stray alignment lines/vectors across matrix tracks.
+          // Exactly one clean dotted line connects Äkinoya Core (0,0) to the target world.
+          // =========================================================================
+          const targetPlanet = hoveredPlanetRef.current || selectedPlanetRef.current || amlemiNode;
+          if (targetPlanet && (targetPlanet.coordX !== 0 || targetPlanet.coordY !== 0)) {
+            const tPos = getNodePos(targetPlanet);
+            const tx = coreScreenX + tPos.x * curZoom;
+            const ty = coreScreenY + tPos.y * curZoom;
+            const isTargetActive =
+              targetPlanet.id === activeHoveredId || targetPlanet.id === activeSelectedId;
 
-        // Precomputed Edges: 100% allocation-free & zero-sort batched GPU pipeline
-        const edges = latticeEdgesRef.current;
-        if (edges && edges.length > 0) {
-          const defaultEdgesByColor = new Map<string, Array<{ x1: number; y1: number; x2: number; y2: number }>>();
-          const highlightedEdges: Array<{ x1: number; y1: number; x2: number; y2: number; color: string }> = [];
-
-          for (let i = 0; i < edges.length; i++) {
-            const edge = edges[i];
-            const p1 = getNodePos(edge.nodeA);
-            const p2 = getNodePos(edge.nodeB);
-
-            const s1x = coreScreenX + p1.x * curZoom;
-            const s1y = coreScreenY + p1.y * curZoom;
-            const s2x = coreScreenX + p2.x * curZoom;
-            const s2y = coreScreenY + p2.y * curZoom;
-
-            // Viewport edge culling
-            const edgeBound = boundMargin;
-            if (
-              (s1x < -edgeBound && s2x < -edgeBound) ||
-              (s1x > width + edgeBound && s2x > width + edgeBound) ||
-              (s1y < -edgeBound && s2y < -edgeBound) ||
-              (s1y > height + edgeBound && s2y > height + edgeBound)
-            ) {
-              continue;
-            }
-
-            const isHighlighted =
-              edge.nodeA.id === activeHoveredId ||
-              edge.nodeB.id === activeHoveredId ||
-              edge.nodeA.id === activeSelectedId ||
-              edge.nodeB.id === activeSelectedId;
-
-            if (isHighlighted) {
-              highlightedEdges.push({ x1: s1x, y1: s1y, x2: s2x, y2: s2y, color: edge.color });
-            } else {
-              let group = defaultEdgesByColor.get(edge.color);
-              if (!group) {
-                group = [];
-                defaultEdgesByColor.set(edge.color, group);
-              }
-              group.push({ x1: s1x, y1: s1y, x2: s2x, y2: s2y });
-            }
-          }
-
-          // 1. Batched Non-Highlighted Filaments
-          ctx.save();
-          ctx.lineWidth = 0.75;
-          if (!isLite) {
-            ctx.setLineDash([3 * curZoom, 6 * curZoom]);
-          }
-          for (const [color, segs] of defaultEdgesByColor.entries()) {
-            ctx.strokeStyle = color;
-            ctx.globalAlpha = 0.12;
-            ctx.beginPath();
-            for (let j = 0; j < segs.length; j++) {
-              ctx.moveTo(segs[j].x1, segs[j].y1);
-              ctx.lineTo(segs[j].x2, segs[j].y2);
-            }
-            ctx.stroke();
-          }
-          ctx.setLineDash([]);
-          ctx.restore();
-
-          // 2. High-Priority Highlighted Lattice Connectors
-          if (highlightedEdges.length > 0) {
             ctx.save();
-            ctx.lineWidth = 1.75;
-            ctx.globalAlpha = 0.95;
-            for (let k = 0; k < highlightedEdges.length; k++) {
-              const h = highlightedEdges[k];
-              ctx.strokeStyle = h.color;
-              ctx.beginPath();
-              ctx.moveTo(h.x1, h.y1);
-              ctx.lineTo(h.y2, h.y2);
-              ctx.stroke();
-            }
+            ctx.strokeStyle = isTargetActive
+              ? 'rgba(251, 191, 36, 0.95)'
+              : 'rgba(245, 158, 11, 0.45)';
+            ctx.lineWidth = isTargetActive ? 1.25 : 1.0;
+            ctx.setLineDash([4 * curZoom, 4 * curZoom]);
+            ctx.beginPath();
+            ctx.moveTo(coreScreenX, coreScreenY);
+            ctx.lineTo(tx, ty);
+            ctx.stroke();
+            ctx.setLineDash([]);
             ctx.restore();
           }
+        } else {
+          // =========================================================================
+          // SPIRAL VIEW: Constellation Arms & Multi-Node Lattice Filaments
+          // =========================================================================
+          // Foundational Master Anchor: Golden genesis link from Äkinoya Core (0,0) to Ämlemi
+          if (amlemiNode) {
+            const amPos = getNodePos(amlemiNode);
+            const amX = coreScreenX + amPos.x * curZoom;
+            const amY = coreScreenY + amPos.y * curZoom;
+            const isAmlemiActive =
+              amlemiNode.id === activeHoveredId || amlemiNode.id === activeSelectedId;
+
+            ctx.save();
+            ctx.strokeStyle = isAmlemiActive
+              ? 'rgba(251, 191, 36, 0.95)'
+              : 'rgba(245, 158, 11, 0.45)';
+            ctx.lineWidth = isAmlemiActive ? 2.0 : 1.0;
+            ctx.setLineDash([4 * curZoom, 4 * curZoom]);
+            ctx.beginPath();
+            ctx.moveTo(coreScreenX, coreScreenY);
+            ctx.lineTo(amX, amY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+          }
+
+          // Precomputed Edges: Spiral Arm Filaments
+          const edges = latticeEdgesRef.current;
+          if (edges && edges.length > 0) {
+            const defaultEdgesByColor = new Map<string, Array<{ x1: number; y1: number; x2: number; y2: number }>>();
+            const highlightedEdges: Array<{ x1: number; y1: number; x2: number; y2: number; color: string }> = [];
+
+            for (let i = 0; i < edges.length; i++) {
+              const edge = edges[i];
+              const p1 = getNodePos(edge.nodeA);
+              const p2 = getNodePos(edge.nodeB);
+
+              const s1x = coreScreenX + p1.x * curZoom;
+              const s1y = coreScreenY + p1.y * curZoom;
+              const s2x = coreScreenX + p2.x * curZoom;
+              const s2y = coreScreenY + p2.y * curZoom;
+
+              // Viewport edge culling
+              const edgeBound = boundMargin;
+              if (
+                (s1x < -edgeBound && s2x < -edgeBound) ||
+                (s1x > width + edgeBound && s2x > width + edgeBound) ||
+                (s1y < -edgeBound && s2y < -edgeBound) ||
+                (s1y > height + edgeBound && s2y > height + edgeBound)
+              ) {
+                continue;
+              }
+
+              const isHighlighted =
+                edge.nodeA.id === activeHoveredId ||
+                edge.nodeB.id === activeHoveredId ||
+                edge.nodeA.id === activeSelectedId ||
+                edge.nodeB.id === activeSelectedId;
+
+              if (isHighlighted) {
+                highlightedEdges.push({ x1: s1x, y1: s1y, x2: s2x, y2: s2y, color: edge.color });
+              } else {
+                let group = defaultEdgesByColor.get(edge.color);
+                if (!group) {
+                  group = [];
+                  defaultEdgesByColor.set(edge.color, group);
+                }
+                group.push({ x1: s1x, y1: s1y, x2: s2x, y2: s2y });
+              }
+            }
+
+            // 1. Batched Non-Highlighted Filaments
+            ctx.save();
+            ctx.lineWidth = 0.75;
+            if (!isLite) {
+              ctx.setLineDash([3 * curZoom, 6 * curZoom]);
+            }
+            for (const [color, segs] of defaultEdgesByColor.entries()) {
+              ctx.strokeStyle = color;
+              ctx.globalAlpha = 0.12;
+              ctx.beginPath();
+              for (let j = 0; j < segs.length; j++) {
+                ctx.moveTo(segs[j].x1, segs[j].y1);
+                ctx.lineTo(segs[j].x2, segs[j].y2);
+              }
+              ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            ctx.restore();
+
+            // 2. High-Priority Highlighted Lattice Connectors (Fixed h.x2 coordinate)
+            if (highlightedEdges.length > 0) {
+              ctx.save();
+              ctx.lineWidth = 1.75;
+              ctx.globalAlpha = 0.95;
+              for (let k = 0; k < highlightedEdges.length; k++) {
+                const h = highlightedEdges[k];
+                ctx.strokeStyle = h.color;
+                ctx.beginPath();
+                ctx.moveTo(h.x1, h.y1);
+                ctx.lineTo(h.x2, h.y2);
+                ctx.stroke();
+              }
+              ctx.restore();
+            }
+          }
+
+          // 6. Subtle Coordinate Crosshair Rays from Core (Spiral mode only)
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+          ctx.lineWidth = 0.75;
+          ctx.beginPath();
+          ctx.moveTo(coreScreenX - 3500 * curZoom, coreScreenY);
+          ctx.lineTo(coreScreenX + 3500 * curZoom, coreScreenY);
+          ctx.moveTo(coreScreenX, coreScreenY - 3500 * curZoom);
+          ctx.lineTo(coreScreenX, coreScreenY + 3500 * curZoom);
+          ctx.stroke();
+
+          // 7. Hovered Connection Vector Line (from Core to hovered node in Spiral mode)
+          const hoveredNode = hoveredPlanetRef.current;
+          if (hoveredNode && (hoveredNode.coordX !== 0 || hoveredNode.coordY !== 0)) {
+            const hPos = getNodePos(hoveredNode);
+            const px = coreScreenX + hPos.x * curZoom;
+            const py = coreScreenY + hPos.y * curZoom;
+            const distAU = Math.round(Math.hypot(hPos.x, hPos.y));
+
+            ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([6, 6]);
+            ctx.beginPath();
+            ctx.moveTo(coreScreenX, coreScreenY);
+            ctx.lineTo(px, py);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Midpoint distance tag
+            const midX = (coreScreenX + px) / 2;
+            const midY = (coreScreenY + py) / 2;
+            ctx.font = '10px monospace';
+            ctx.fillStyle = '#fbbf24';
+            ctx.textAlign = 'center';
+            ctx.fillText(`VECTOR: ${distAU} AU`, midX, midY - 6);
+          }
         }
-      }
-
-      // 6. Subtle Coordinate Crosshair Rays from Core - Extremely faint alpha
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-      ctx.lineWidth = 0.75;
-      ctx.beginPath();
-      ctx.moveTo(coreScreenX - 3500 * curZoom, coreScreenY);
-      ctx.lineTo(coreScreenX + 3500 * curZoom, coreScreenY);
-      ctx.moveTo(coreScreenX, coreScreenY - 3500 * curZoom);
-      ctx.lineTo(coreScreenX, coreScreenY + 3500 * curZoom);
-      ctx.stroke();
-
-      // 7. Hovered Connection Vector Line (from Core to hovered node)
-      const hoveredNode = hoveredPlanetRef.current;
-      if (hoveredNode && (hoveredNode.coordX !== 0 || hoveredNode.coordY !== 0)) {
-        const hPos = getNodePos(hoveredNode);
-        const px = coreScreenX + hPos.x * curZoom;
-        const py = coreScreenY + hPos.y * curZoom;
-        const distAU = Math.round(Math.hypot(hPos.x, hPos.y));
-
-        ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([6, 6]);
-        ctx.beginPath();
-        ctx.moveTo(coreScreenX, coreScreenY);
-        ctx.lineTo(px, py);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Midpoint distance tag
-        const midX = (coreScreenX + px) / 2;
-        const midY = (coreScreenY + py) / 2;
-        ctx.font = '10px monospace';
-        ctx.fillStyle = '#fbbf24';
-        ctx.textAlign = 'center';
-        ctx.fillText(`VECTOR: ${distAU} AU`, midX, midY - 6);
       }
 
       ctx.restore();

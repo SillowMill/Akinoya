@@ -2342,8 +2342,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         loading="eager"
                       />
 
-                      {/* Subtle bottom-gradient overlay with interactive indicator */}
-                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex items-center justify-between gap-3 pointer-events-none">
+                      {/* Subtle bottom-gradient overlay with interactive indicator — hidden on mobile and tablet views for a 100% pristine visual image */}
+                      <div className="hidden lg:flex absolute inset-x-0 bottom-0 p-4 sm:p-5 bg-gradient-to-t from-black/90 via-black/40 to-transparent items-center justify-between gap-3 pointer-events-none">
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.9)]" />
                           <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-cyan-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
@@ -2351,7 +2351,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           </span>
                         </div>
 
-                        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold tracking-wider group-hover:bg-cyan-950/90 group-hover:border-cyan-300 transition-colors">
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold tracking-wider group-hover:bg-cyan-950/90 group-hover:border-cyan-300 transition-colors">
                           <span>Click to enter interactive 3D map</span>
                           <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                         </div>

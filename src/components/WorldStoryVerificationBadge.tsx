@@ -2825,28 +2825,20 @@ export const WorldStoryVerificationBadge: React.FC<WorldStoryVerificationBadgePr
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Section Header + Dual High-End Download Buttons */}
+        {/* Streamlined Verification Hub Header + Dual Clean Download Buttons */}
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-5 mb-6 border-b border-white/10">
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-[10px] font-mono font-extrabold uppercase tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
-                <Sparkles className="w-3 h-3 text-amber-300" />
-                <span>9:16 STORY &amp; TRAILER VERIFICATION HUB</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-300">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                <span>PROOF OF WORLD OWNERSHIP · #{meta.worldNumber}</span>
-              </span>
-            </div>
-            <h3 className="text-base sm:text-lg md:text-xl font-display font-black text-white tracking-wide">
-              Official Proof of World Ownership &amp; 9:16 Verification Affiche
-            </h3>
-            <p className="text-xs font-sans text-white/70 max-w-2xl leading-relaxed">
-              Click the 9:16 card to launch the Fullscreen Viewer or toggle seamlessly between the <strong>9:16 MP4 Trailer Loop</strong> and the <strong>9:16 Story Verification Card</strong>.
-            </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-[10px] font-mono font-extrabold uppercase tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+              <Sparkles className="w-3 h-3 text-amber-300" />
+              <span>9:16 STORY &amp; TRAILER VERIFICATION HUB</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-300">
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              <span>PROOF OF WORLD OWNERSHIP · #{meta.worldNumber}</span>
+            </span>
           </div>
 
-          {/* Dual Prominent High-End Action Buttons (Video-First Hierarchy) */}
+          {/* Dual Prominent High-End Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full xl:w-auto shrink-0">
             <button
               type="button"
