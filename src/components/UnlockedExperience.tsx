@@ -2521,7 +2521,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
 
                       <p className="text-xs sm:text-sm font-mono text-white/75 text-center xl:text-left max-w-xl">
-                        Synthesized by <strong className="text-amber-300 font-bold">{formatTitleCaseUserName(activeWorldDossier.authorName)}</strong> ({activeWorldDossier.authorEmail || user?.email || 'Verified Pioneer Account'})
+                        Synthesized by <strong className="text-amber-300 font-bold">{formatTitleCaseUserName(activeWorldDossier.authorName)}</strong>
                       </p>
                     </div>
 
