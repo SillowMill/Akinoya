@@ -27,8 +27,6 @@ import { useAuth } from '../context/AuthContext';
 interface PlanetGeneratorChatProps {
   userDisplayName: string;
   isLocked?: boolean;
-  isSandboxMode?: boolean;
-  onToggleSandbox?: (enabled: boolean) => void;
   onComplete: (answers: WizardAnswers) => void;
   onClose: () => void;
 }
@@ -135,8 +133,6 @@ export const WIZARD_STEPS: StepConfig[] = [
 export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
   userDisplayName,
   isLocked,
-  isSandboxMode,
-  onToggleSandbox,
   onComplete,
   onClose,
 }) => {
@@ -150,28 +146,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
     isVipAccount(user, profile, role, isVip)
   );
 
-  const [internalSandbox, setInternalSandbox] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    const stored = localStorage.getItem('akinoya_mill_sandbox_mode');
-    return stored !== null ? stored === 'true' : true;
-  });
-
-  const isEffectiveSandbox = isSandboxMode !== undefined ? isSandboxMode : internalSandbox;
-
-  const handleToggleSandbox = () => {
-    const nextVal = !isEffectiveSandbox;
-    if (onToggleSandbox) {
-      onToggleSandbox(nextVal);
-    } else {
-      setInternalSandbox(nextVal);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('akinoya_mill_sandbox_mode', String(nextVal));
-      }
-    }
-    soundManager.playTone(nextVal ? 720 : 540, 0.05);
-  };
-
-  const isEffectiveLocked = Boolean(isLocked && !isEffectiveSandbox);
+  const isEffectiveLocked = Boolean(isLocked);
 
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<WizardAnswers>(() => {
@@ -542,22 +517,6 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {/* Sandbox Mode Toggle Button */}
-            <button
-              type="button"
-              onClick={handleToggleSandbox}
-              className={`px-2.5 py-1 rounded-lg font-mono text-[10px] sm:text-[10.5px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer border ${
-                isEffectiveSandbox
-                  ? 'bg-emerald-950/90 text-emerald-300 border-emerald-400/60 shadow-[0_0_12px_rgba(52,211,153,0.3)]'
-                  : 'bg-white/5 text-white/60 border-white/15 hover:text-white'
-              }`}
-              title="Toggle Sandbox Mode (Risk-Free UI & Generation Testing without API/DB writes)"
-            >
-              <Beaker className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="hidden xs:inline">SANDBOX:</span>
-              <span>{isEffectiveSandbox ? 'ON' : 'OFF'}</span>
-            </button>
-
             {!isEffectiveLocked && (
               <button
                 type="button"
@@ -578,20 +537,6 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
             </button>
           </div>
         </header>
-
-        {/* Sandbox Active Ribbon */}
-        {isEffectiveSandbox && (
-          <div className="px-4 sm:px-6 py-1.5 bg-gradient-to-r from-emerald-950/80 via-[#061719] to-cyan-950/70 border-b border-emerald-400/40 flex items-center justify-between text-[10.5px] font-mono text-emerald-300 shrink-0">
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-extrabold">SANDBOX PREVIEW MODE:</span>
-              <span className="text-white/80 hidden sm:inline">Zero DB writes · Placeholder assets · Risk-free testing</span>
-            </div>
-            <span className="px-2 py-0.5 rounded bg-emerald-400/15 border border-emerald-400/40 text-[9px] font-extrabold uppercase tracking-wider text-emerald-200">
-              ISOLATED TEST RUN
-            </span>
-          </div>
-        )}
 
         {/* Wizard Progress Ribbon (5 Steps) */}
         {!isEffectiveLocked && (
@@ -728,14 +673,6 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
                 <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span>One-Shot Ticket Locked</span>
               </span>
-              <button
-                type="button"
-                onClick={handleToggleSandbox}
-                className="px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/60 text-emerald-300 font-bold text-[11px] cursor-pointer flex items-center gap-1"
-              >
-                <Beaker className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Switch to Sandbox Test Mode →</span>
-              </button>
             </div>
           ) : currentStepIndex < WIZARD_STEPS.length ? (
             <form onSubmit={handleFormSubmit} className="space-y-2">

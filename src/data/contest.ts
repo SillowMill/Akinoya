@@ -921,9 +921,9 @@ export const CURATED_GALAXY_WORLD_IDS = new Set([
 export const CURATED_GALAXY_WORLD_NAMES = new Set(['ämlemi', 'amlemi', 'felix', 'ankrau', 'florium', 'sepplon']);
 
 export const WORLD_RELEASE_DATE_LABEL = 'JANUARY 9, 2027';
-export const WORLD_QUEUE_STATUS_LABEL = 'WORLD GENERATION QUEUED · PROCESSING PROTOCOL';
+export const WORLD_QUEUE_STATUS_LABEL = 'WORLD GENERATION COMPLETE · PIONEER QUEUE';
 export const WORLD_QUEUE_OFFICIAL_MESSAGE =
-  'Your world will be ready on January 9, 2027, the release date of Sillow Mill Universe.';
+  'Your world will be fully ready and live on January 9, 2027, the official release date of Sillow Mill Universe.';
 
 /** True when a world is curated/approved for the public Galaxy Navigator map. */
 export const isLiveGalaxyWorld = (planet?: Partial<PlanetSubmission> | null): boolean => {
@@ -1993,8 +1993,7 @@ function toBase64(str: string): string {
 // ZERO VECTOR / SVG PLACEHOLDERS: Returns empty strings if not yet synthesized.
 export const resolvePlanetRenders = (answers: WizardAnswers): PlanetSubmission['renders'] => {
   const isAmlemi = answers.planetName === 'Ämlemi' || answers.planetName?.toLowerCase() === 'ämlemi';
-  const isSandbox = typeof window !== 'undefined' && localStorage.getItem('akinoya_mill_sandbox_mode') === 'true';
-  if (isAmlemi || isSandbox) {
+  if (isAmlemi) {
     return {
       hero: amlemiOrbitalImg,
       flora: amlemiBotanicalImg,
@@ -2077,10 +2076,8 @@ export interface PlanetPhotoCard {
 
 export const getPlanetPhotoCards = (sub: PlanetSubmission): PlanetPhotoCard[] => {
   const isAmlemi = sub.id === 'planet-amlemi-genesis-01' || sub.planetName === 'Ämlemi';
-  const isSandbox = Boolean(
-    sub.isSandbox ||
-    (typeof window !== 'undefined' && localStorage.getItem('akinoya_mill_sandbox_mode') === 'true')
-  );
+  // Legacy sandbox records only (sandbox test mode has been removed from the production flow)
+  const isSandbox = Boolean(sub.isSandbox);
   let renders = sub.renders;
   if (!isAmlemi && !isSandbox) {
     const hasLeak =

@@ -73,7 +73,7 @@ import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet, isPreLaun
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { WorldStoryVerificationBadge } from './WorldStoryVerificationBadge';
 import { MyAssetsMasterCarousel } from './MyAssetsMasterCarousel';
-import { WorldGenerationQueueState } from './WorldGenerationQueueState';
+import { WorldReleaseStatusBanner } from './WorldReleaseStatusBanner';
 import { isQueuedUserWorld } from '../data/contest';
 import {
   BINGAA_PDF_URL,
@@ -2409,7 +2409,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       {isQueuedWorld && (
                         <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-amber-500/30 text-amber-300 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,158,11,0.4)] animate-pulse">
                           <Sparkles className="w-3 h-3 text-amber-300" />
-                          <span>WORLD WILL BE REVEALED JANUARY 9, 2027</span>
+                          <span>PIONEER QUEUE · LIVE JANUARY 9, 2027</span>
                         </span>
                       )}
                       {isPioneerPlanet(activeWorldDossier) && (
@@ -2430,7 +2430,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           {isGuestWorldSimulation
                             ? 'INTERACTIVE PREVIEW · 1 GOLDEN TICKET READY'
                             : isQueuedWorld
-                            ? 'QUEUED FOR REVEAL · PROTECTED'
+                            ? 'GENERATION COMPLETE · PRIVATE UNTIL RELEASE'
                             : 'GOLDEN TICKET EXPENDED · ONE-SHOT LOCKED'}
                         </span>
                       </span>
@@ -2561,21 +2561,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                       <button
                         type="button"
-                        disabled={isQueuedWorld}
                         onClick={() => {
-                          if (isQueuedWorld) return;
                           soundManager.playTone(660, 0.05);
                           setSelectedDossierModal(activeWorldDossier);
                         }}
-                        className={`w-full xl:w-auto px-6 py-3 rounded-xl font-mono text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2.5 transition-all min-h-[48px] ${
-                          isQueuedWorld
-                            ? 'bg-white/5 border border-amber-300/40 text-amber-200/80 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black shadow-[0_0_25px_rgba(245,158,11,0.4)] cursor-pointer'
-                        }`}
+                        className="w-full xl:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black font-mono text-xs sm:text-sm font-extrabold shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2.5 transition-all cursor-pointer min-h-[48px]"
                       >
                         <Camera className="w-4 h-4 shrink-0" />
-                        <span>{isQueuedWorld ? 'Dossier Processing · Jan 9, 2027' : 'Inspect 5-Photo Dossier'}</span>
-                        {!isQueuedWorld && <ArrowRight className="w-4 h-4 shrink-0" />}
+                        <span>Inspect 5-Photo Dossier</span>
+                        <ArrowRight className="w-4 h-4 shrink-0" />
                       </button>
                     </div>
                   </div>
@@ -2663,10 +2657,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 </div>
 
-                {/* 9:16 Story & Trailer Verification Hub (replaced by processing scanner for queued worlds) */}
-                {isQueuedWorld ? (
-                  <WorldGenerationQueueState dossier={activeWorldDossier} variant="world" holderName={holderName} />
-                ) : (
+                {/* Release status banner (newly synthesized user worlds) + full 9:16 Story & Trailer Verification Hub */}
+                {isQueuedWorld && <WorldReleaseStatusBanner dossier={activeWorldDossier} />}
                 <WorldStoryVerificationBadge
                   dossier={activeWorldDossier}
                   editionRank={planetRank > 0 ? planetRank : 1}
@@ -2680,7 +2672,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     }
                   }}
                 />
-                )}
 
                 {/* Story & Philosophy Creed */}
                 <div className="p-5 sm:p-6 md:p-7 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#060c18]/85 to-[#040812]/90 backdrop-blur-xl border border-cyan-500/25 space-y-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
@@ -2760,10 +2751,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               className="space-y-5 sm:space-y-6 md:space-y-7"
             >
               {/* Asset 01: Differentiated Master Multi-Media Carousel (4K Archive, 9:16 Story Card, 9:16 MP4 Trailer) */}
-              {activeWorldDossier && isQueuedWorld && (
-                <WorldGenerationQueueState dossier={activeWorldDossier} variant="assets" holderName={holderName} />
-              )}
-              {activeWorldDossier && !isQueuedWorld && (
+              {activeWorldDossier && isQueuedWorld && <WorldReleaseStatusBanner dossier={activeWorldDossier} />}
+              {activeWorldDossier && (
                 <MyAssetsMasterCarousel
                   dossier={activeWorldDossier}
                   editionRank={planetRank > 0 ? planetRank : 1}
