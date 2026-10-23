@@ -7,6 +7,7 @@ import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import moodboardImg from '../assets/images/Mood.png';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
+import galaxyOverviewImg from '../assets/images/Galaxy.png';
 import dnVideo from '../assets/videos/DNN.mp4';
 import dnThumbnailImg from '../assets/images/dn_thumbnail.png';
 import dontNeedVideo from '../assets/videos/DNN.mp4';
@@ -2251,63 +2252,110 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 </div>
               </div>
-              {/* Guest Simulation Mode & Magnetic Conversion Banner (Displayed when visitor hasn't synthesized their own world yet) */}
-              {isGuestWorldSimulation && (
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/75 via-[#071124]/90 to-cyan-950/70 backdrop-blur-xl border-2 border-amber-400/55 p-5 sm:p-6 md:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.65),0_0_35px_rgba(245,158,11,0.22)]">
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/80 to-transparent pointer-events-none" />
-                  <div className="absolute -top-20 -right-20 w-72 h-72 bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-cyan-400/15 rounded-full blur-3xl pointer-events-none" />
+              {/* Galaxy Navigator Primary Visual Card — Experience Ämalie */}
+              {(isGuestWorldSimulation || activeWorldDossier?.planetName === 'Ämlemi' || activeWorldDossier?.id === 'planet-amlemi-genesis-01') && (
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0a132c]/95 via-[#060c1d]/95 to-[#040814]/98 backdrop-blur-2xl border-2 border-cyan-400/45 p-5 sm:p-7 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]">
+                  {/* Ambient top glowing beam */}
+                  <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none" />
+                  <div className="absolute -top-28 -right-28 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-28 -left-28 w-96 h-96 bg-amber-500/12 rounded-full blur-3xl pointer-events-none" />
 
-                  <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-5">
-                    <div className="space-y-2 max-w-2xl">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]">
-                          <Lock className="w-3 h-3 text-black shrink-0" />
-                          <span>GUEST SIMULATION MODE · BENCHMARK PREVIEW</span>
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-cyan-950/90 text-cyan-200 border border-cyan-400/45">
-                          <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
-                          <span>1 GOLDEN TICKET AVAILABLE</span>
-                        </span>
+                  <div className="relative z-10 space-y-5 sm:space-y-6">
+                    {/* Header Row: Title, Badges & Action Buttons */}
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 md:gap-5 pb-2">
+                      <div className="space-y-2 max-w-2xl">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
+                            <Compass className="w-3 h-3 text-cyan-300 shrink-0" />
+                            <span>ÄKINOYA CONSTELLATION NAVIGATOR</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.4)]">
+                            <Sparkles className="w-3 h-3 text-black shrink-0" />
+                            <span>FOUNDING CORE · 5 PIONEER WORLDS</span>
+                          </span>
+                        </div>
+
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                          Experience Ämalie
+                        </h2>
+
+                        <p className="text-xs sm:text-sm text-cyan-100/80 font-sans leading-relaxed max-w-xl">
+                          Explore the central Äkinoya Core and the surrounding constellation of the five founding pioneer worlds (#1 Ämalie, #2 Felix, #3 Ankrau, #4 Florium, #5 Sepplon). Venture deep into the cosmic map or synthesize your own custom sector into the living storyline.
+                        </p>
                       </div>
-                      <h3 className="text-lg sm:text-xl md:text-2xl font-display font-black text-white tracking-wide">
-                        Experiencing {formatTitleCaseUserName(activeWorldDossier.authorName)}&apos;s Verified &ldquo;Ämlemi&rdquo; Planetary Dossier (#1)
-                      </h3>
-                      <p className="text-xs sm:text-sm text-white/80 font-sans leading-relaxed">
-                        You are exploring an interactive live simulation of {formatTitleCaseUserName(activeWorldDossier.authorName)}&apos;s Founding Pioneer world <strong className="text-amber-300">Ämlemi</strong>. Sign in or launch Mill&apos;s 5-question Worldbuilding Protocol to claim your <strong className="text-cyan-300">1 Golden Ticket</strong>, synthesize your own 5-photo 4K sector, and mint your personal <strong className="text-amber-300">9:16 Story Verification Badge</strong>.
-                      </p>
-                    </div>
 
-                    <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          soundManager.playTone(660, 0.05);
-                          if (onNavigateToContest) {
-                            onNavigateToContest();
-                          } else if (typeof window !== 'undefined') {
-                            window.location.href = '/contest';
-                          }
-                        }}
-                        className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(245,158,11,0.45)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[46px]"
-                      >
-                        <Sparkles className="w-4 h-4 fill-black shrink-0" />
-                        <span>SYNTHESIZE YOUR WORLD →</span>
-                      </button>
-
-                      {!isAuthenticated && (
+                      {/* Interactive Action Buttons */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 pt-1 lg:pt-0">
+                        {/* Button 1: View in Äkinoya Galaxy */}
                         <button
                           type="button"
                           onClick={() => {
-                            soundManager.playTone(580, 0.05);
-                            openAuthModal('signin');
+                            soundManager.playTone(620, 0.05);
+                            if (onNavigateToGalaxy) {
+                              onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01');
+                            } else if (typeof window !== 'undefined') {
+                              window.location.hash = '#galaxy';
+                            }
                           }}
-                          className="px-4 py-3.5 rounded-xl bg-cyan-950/85 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[46px]"
+                          className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
                         >
-                          <Key className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                          <span>Sign In / Unlock Pass</span>
+                          <Compass className="w-4 h-4 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
+                          <span>View in Äkinoya Galaxy</span>
                         </button>
-                      )}
+
+                        {/* Button 2: Create Your World */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundManager.playTone(660, 0.05);
+                            if (onNavigateToContest) {
+                              onNavigateToContest();
+                            } else if (typeof window !== 'undefined') {
+                              window.location.href = '/contest';
+                            }
+                          }}
+                          className="group relative px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_30px_rgba(245,158,11,0.5)] hover:shadow-[0_0_40px_rgba(245,158,11,0.7)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                        >
+                          <Sparkles className="w-4 h-4 fill-black text-black shrink-0 group-hover:scale-110 transition-transform duration-200" />
+                          <span>Create Your World</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Primary Visual Card: Full-Color Central Galaxy Navigator Overview Image */}
+                    <div
+                      onClick={() => {
+                        soundManager.playTone(620, 0.05);
+                        if (onNavigateToGalaxy) {
+                          onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01');
+                        } else if (typeof window !== 'undefined') {
+                          window.location.hash = '#galaxy';
+                        }
+                      }}
+                      className="group relative overflow-hidden rounded-2xl border-2 border-cyan-400/50 hover:border-cyan-300 bg-black/60 shadow-[0_15px_45px_rgba(0,0,0,0.85),0_0_30px_rgba(56,189,248,0.25)] transition-all duration-300 cursor-pointer"
+                    >
+                      {/* Visual Overview Image */}
+                      <img
+                        src={galaxyOverviewImg}
+                        alt="Äkinoya Galaxy Navigator Overview featuring Äkinoya Core and the 5 Pioneer Worlds"
+                        className="w-full h-auto max-h-[560px] object-contain mx-auto transition-transform duration-500 ease-out group-hover:scale-[1.015]"
+                        loading="eager"
+                      />
+
+                      {/* Subtle bottom-gradient overlay with interactive indicator */}
+                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex items-center justify-between gap-3 pointer-events-none">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.9)]" />
+                          <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-cyan-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                            ÄKINOYA GALAXY NAVIGATOR · CENTRAL CORE &amp; 5 PIONEER SECTORS
+                          </span>
+                        </div>
+
+                        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold tracking-wider group-hover:bg-cyan-950/90 group-hover:border-cyan-300 transition-colors">
+                          <span>Click to enter interactive 3D map</span>
+                          <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
