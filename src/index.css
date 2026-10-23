@@ -201,6 +201,20 @@ textarea,
   scrollbar-width: thin;
 }
 
+/* Prevent overscroll bounce bleed (iPad / iOS Safari rubber-band makes sticky
+   headers & sidebars visibly jitter). Applies to the container itself when it
+   scrolls, and to the document root when the page scrolls on the window. */
+.community-scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+html:has(.community-scroll-container),
+body:has(.community-scroll-container) {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
 /* Short landscape tablets: tighten sidebar so the pinned CTA dock always fits */
 @media (min-width: 768px) and (max-height: 820px) {
   .hub-sidebar-scroll {

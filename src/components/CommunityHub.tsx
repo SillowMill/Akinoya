@@ -1238,11 +1238,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   };
 
   return (
-    <div className="app-shell relative min-h-[100dvh] w-full bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="app-shell community-scroll-container relative min-h-[100dvh] w-full bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Top Universal Header Bar */}
       <header
         ref={hubHeaderRef}
-        className="hub-sticky-header sticky top-0 z-50 w-full border-b border-white/10 bg-[#0a0b10]/80 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 w-full max-w-full overflow-visible"
+        className="hub-sticky-header sticky top-0 z-50 transform-gpu will-change-transform [backface-visibility:hidden] [-webkit-backface-visibility:hidden] w-full border-b border-white/10 bg-[#0a0b10]/80 backdrop-blur-xl px-2.5 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-3 w-full max-w-full overflow-visible"
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
@@ -1441,10 +1441,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION (>= 768px)   */}
               {/* ======================================================== */}
               <aside
-                className="hub-sidebar hidden md:flex w-64 lg:w-72 shrink-0 flex-col bg-[#050812] border-r border-white/10 sticky self-start z-40 overflow-hidden transform-gpu"
+                className="hub-sidebar hidden md:flex w-64 lg:w-72 shrink-0 flex-col bg-[#050812] border-r border-white/10 sticky self-start z-40 overflow-hidden transform-gpu will-change-transform [backface-visibility:hidden] [-webkit-backface-visibility:hidden]"
                 style={{ contain: 'layout style', WebkitTransform: 'translateZ(0)' }}
               >
-                <div className="hub-sidebar-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 space-y-6">
+                <div className="hub-sidebar-scroll community-scroll-container flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 space-y-6">
                 <div className="space-y-4">
                   {/* Sidebar Branding Header */}
                   <div className="pb-3 border-b border-white/10 space-y-1">
