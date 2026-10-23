@@ -904,6 +904,45 @@ export const isForbiddenSubmission = (sub: any): boolean => {
 };
 
 /**
+ * Curated Live Galaxy Worlds:
+ * Only the 5 founding pioneer worlds (and any world explicitly approved by an admin)
+ * appear on the public Galaxy Navigator. Newly generated user worlds stay private
+ * in the user's dashboard (My World / My Assets) in a queued state until the
+ * January 9, 2027 release / manual admin review.
+ */
+export const CURATED_GALAXY_WORLD_IDS = new Set([
+  'planet-amlemi-genesis-01',
+  'planet-felix-test-01',
+  'planet-nathan-pioneer-03',
+  'planet-florian-pioneer-04',
+  'planet-seppe-pioneer-05',
+]);
+
+export const CURATED_GALAXY_WORLD_NAMES = new Set(['ämlemi', 'amlemi', 'felix', 'ankrau', 'florium', 'sepplon']);
+
+export const WORLD_RELEASE_DATE_LABEL = 'JANUARY 9, 2027';
+export const WORLD_QUEUE_STATUS_LABEL = 'WORLD GENERATION QUEUED · PROCESSING PROTOCOL';
+export const WORLD_QUEUE_OFFICIAL_MESSAGE =
+  'Your world will be ready on January 9, 2027, the release date of Sillow Mill Universe.';
+
+/** True when a world is curated/approved for the public Galaxy Navigator map. */
+export const isLiveGalaxyWorld = (planet?: Partial<PlanetSubmission> | null): boolean => {
+  if (!planet) return false;
+  const anyP = planet as any;
+  if (anyP.adminApproved === true || anyP.admin_approved === true || anyP.galaxyApproved === true) return true;
+  const id = String(planet.id || '').trim();
+  if (CURATED_GALAXY_WORLD_IDS.has(id)) return true;
+  const name = String(planet.planetName || anyP.planet_name || '').trim().toLowerCase();
+  return CURATED_GALAXY_WORLD_NAMES.has(name);
+};
+
+/** True for newly registered / custom generated (non-benchmark) worlds awaiting release. */
+export const isQueuedUserWorld = (planet?: Partial<PlanetSubmission> | null): boolean => {
+  if (!planet) return false;
+  return !isLiveGalaxyWorld(planet);
+};
+
+/**
  * Single Canonical Community Benchmark Planet:
  * Ämlemi (Odi Selis - #1 Showcase, 3 votes)
  * Linked to the 5 official cinematic test renders from Akinoya_Test_Renders:

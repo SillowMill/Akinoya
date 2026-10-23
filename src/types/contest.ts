@@ -83,6 +83,8 @@ export interface PlanetSubmission {
   isSandbox?: boolean;
   pioneerBadge?: string;
   pioneer_badge?: string;
+  /** Set by an admin after manual review to publish the world on the public Galaxy Navigator. */
+  adminApproved?: boolean;
   status: 'SUBMITTED' | 'PUBLISHED' | 'FINALIST' | 'QUEUED';
   createdAt: string;
   votingDeadline: string; // 'June 30, 2027'

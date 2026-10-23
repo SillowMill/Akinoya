@@ -31,6 +31,7 @@ import {
   OVAL_MATRIX_TRACKS,
   assignMultiVariantCoordinates,
   isForbiddenSubmission,
+  isLiveGalaxyWorld,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
@@ -187,6 +188,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         p &&
         p.id &&
         !isForbiddenSubmission(p) &&
+        // Isolation: newly generated user worlds stay private until admin review / Jan 9, 2027 release
+        isLiveGalaxyWorld(p) &&
         p.planetName?.toLowerCase() !== 'zephyria' &&
         !p.planetName?.toLowerCase().includes('zephyria') &&
         !p.id?.toLowerCase().includes('zephyria')
@@ -668,7 +671,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     const coordParam = params.get('coord');
 
     if (planetId) {
-      const found = planets.find((p) => p.id === planetId || p.planetName.toLowerCase() === planetId.toLowerCase());
+      const found = planets.find(
+        (p) => isLiveGalaxyWorld(p) && (p.id === planetId || p.planetName.toLowerCase() === planetId.toLowerCase())
+      );
       if (found) {
         setSelectedPlanet(found);
         panTo(found.coordX ?? 0, found.coordY ?? 0, 1.05, 900);

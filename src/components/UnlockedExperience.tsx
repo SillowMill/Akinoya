@@ -73,6 +73,8 @@ import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet, isPreLaun
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { WorldStoryVerificationBadge } from './WorldStoryVerificationBadge';
 import { MyAssetsMasterCarousel } from './MyAssetsMasterCarousel';
+import { WorldGenerationQueueState } from './WorldGenerationQueueState';
+import { isQueuedUserWorld } from '../data/contest';
 import {
   BINGAA_PDF_URL,
   BINGAA_PDF_FILENAME,
@@ -370,6 +372,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   const activeWorldDossier = userDossier || amlemiBenchmarkDossier;
   const isGuestWorldSimulation = !userDossier;
+  // Newly registered / custom generated (non-benchmark) worlds: queued until January 9, 2027 release
+  const isQueuedWorld =
+    !isGuestWorldSimulation &&
+    Boolean(activeWorldDossier) &&
+    (isQueuedUserWorld(activeWorldDossier) ||
+      activeWorldDossier.status === 'QUEUED' ||
+      Boolean((activeWorldDossier as any).isWaitlist));
 
   const amlemiPhotoCards = useMemo(() => {
     return activeWorldDossier ? getPlanetPhotoCards(activeWorldDossier) : [];
@@ -1127,8 +1136,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 onClick={handleDirectGuestUnlockHub}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 text-xs font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 rounded-xl transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
               >
-                <Unlock className="w-4 h-4 text-black shrink-0" />
-                <span className="tracking-wider">UNLOCK VISUALIZER HUB</span>
+                <Unlock className="hidden lg:block w-4 h-4 text-black shrink-0" />
+                <AudioWaveform className="lg:hidden w-4 h-4 text-black shrink-0" />
+                <span className="tracking-wider hidden lg:inline">UNLOCK VISUALIZER HUB</span>
+                <span className="tracking-wider lg:hidden">OPEN VISUALIZER HUB</span>
               </button>
             </div>
           )}
@@ -1389,8 +1400,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               onClick={handleDirectGuestUnlockHub}
                               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
                             >
-                              <Unlock className="w-4 h-4 text-black shrink-0" />
-                              <span>UNLOCK VISUALIZER HUB</span>
+                              <Unlock className="hidden lg:block w-4 h-4 text-black shrink-0" />
+                              <AudioWaveform className="lg:hidden w-4 h-4 text-black shrink-0" />
+                              <span className="hidden lg:inline">UNLOCK VISUALIZER HUB</span>
+                              <span className="lg:hidden">OPEN VISUALIZER HUB</span>
                             </button>
                           )}
                         </div>
@@ -2252,7 +2265,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 </div>
               </div>
-              {/* Galaxy Navigator Primary Visual Card — Experience Ämalie */}
+              {/* Galaxy Navigator Primary Visual Card — Experience Ämlemi */}
               {(isGuestWorldSimulation || activeWorldDossier?.planetName === 'Ämlemi' || activeWorldDossier?.id === 'planet-amlemi-genesis-01') && (
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0a132c]/95 via-[#060c1d]/95 to-[#040814]/98 backdrop-blur-2xl border-2 border-cyan-400/45 p-5 sm:p-7 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]">
                   {/* Ambient top glowing beam */}
@@ -2276,11 +2289,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         </div>
 
                         <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                          Experience Ämalie
+                          Experience Ämlemi
                         </h2>
 
                         <p className="text-xs sm:text-sm text-cyan-100/80 font-sans leading-relaxed max-w-xl">
-                          Explore the central Äkinoya Core and the surrounding constellation of the five founding pioneer worlds (#1 Ämalie, #2 Felix, #3 Ankrau, #4 Florium, #5 Sepplon). Venture deep into the cosmic map or synthesize your own custom sector into the living storyline.
+                          Explore the central Äkinoya Core and the surrounding constellation of the five founding pioneer worlds (#1 Ämlemi, #2 Felix, #3 Ankrau, #4 Florium, #5 Sepplon). Venture deep into the cosmic map or synthesize your own custom sector into the living storyline.
                         </p>
                       </div>
 
@@ -2332,13 +2345,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           window.location.hash = '#galaxy';
                         }
                       }}
-                      className="group relative overflow-hidden rounded-2xl border-2 border-cyan-400/50 hover:border-cyan-300 bg-black/60 shadow-[0_15px_45px_rgba(0,0,0,0.85),0_0_30px_rgba(56,189,248,0.25)] transition-all duration-300 cursor-pointer"
+                      className="group relative overflow-hidden rounded-2xl border-2 border-cyan-400/50 hover:border-cyan-300 bg-black/60 shadow-[0_15px_45px_rgba(0,0,0,0.85),0_0_30px_rgba(56,189,248,0.25)] transition-all duration-300 cursor-pointer flex items-center justify-center w-full mx-auto"
                     >
-                      {/* Visual Overview Image */}
+                      {/* Visual Overview Image (source cropped symmetric around Äkinoya Core: equal Sepplon/Felix margins) */}
                       <img
                         src={galaxyOverviewImg}
                         alt="Äkinoya Galaxy Navigator Overview featuring Äkinoya Core and the 5 Pioneer Worlds"
-                        className="w-full h-auto max-h-[560px] object-contain mx-auto transition-transform duration-500 ease-out group-hover:scale-[1.015]"
+                        style={{ objectFit: 'contain', objectPosition: 'center', margin: '0 auto' }}
+                        className="block w-full h-auto max-h-[560px] object-contain object-center mx-auto transition-transform duration-500 ease-out origin-center group-hover:scale-[1.015]"
                         loading="eager"
                       />
 
@@ -2392,10 +2406,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
 
                     <div className="flex items-center justify-center gap-2 flex-wrap">
-                      {(activeWorldDossier.status === 'QUEUED' || (activeWorldDossier as any).isWaitlist) && (
+                      {isQueuedWorld && (
                         <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-amber-500/30 text-amber-300 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,158,11,0.4)] animate-pulse">
                           <Sparkles className="w-3 h-3 text-amber-300" />
-                          <span>WORLD WILL BE REVEALED 9 JANUARI</span>
+                          <span>WORLD WILL BE REVEALED JANUARY 9, 2027</span>
                         </span>
                       )}
                       {isPioneerPlanet(activeWorldDossier) && (
@@ -2415,7 +2429,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         <span>
                           {isGuestWorldSimulation
                             ? 'INTERACTIVE PREVIEW · 1 GOLDEN TICKET READY'
-                            : (activeWorldDossier.status === 'QUEUED' || (activeWorldDossier as any).isWaitlist)
+                            : isQueuedWorld
                             ? 'QUEUED FOR REVEAL · PROTECTED'
                             : 'GOLDEN TICKET EXPENDED · ONE-SHOT LOCKED'}
                         </span>
@@ -2547,15 +2561,21 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                       <button
                         type="button"
+                        disabled={isQueuedWorld}
                         onClick={() => {
+                          if (isQueuedWorld) return;
                           soundManager.playTone(660, 0.05);
                           setSelectedDossierModal(activeWorldDossier);
                         }}
-                        className="w-full xl:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black font-mono text-xs sm:text-sm font-extrabold shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2.5 transition-all cursor-pointer min-h-[48px]"
+                        className={`w-full xl:w-auto px-6 py-3 rounded-xl font-mono text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2.5 transition-all min-h-[48px] ${
+                          isQueuedWorld
+                            ? 'bg-white/5 border border-amber-300/40 text-amber-200/80 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black shadow-[0_0_25px_rgba(245,158,11,0.4)] cursor-pointer'
+                        }`}
                       >
                         <Camera className="w-4 h-4 shrink-0" />
-                        <span>Inspect 5-Photo Dossier</span>
-                        <ArrowRight className="w-4 h-4 shrink-0" />
+                        <span>{isQueuedWorld ? 'Dossier Processing · Jan 9, 2027' : 'Inspect 5-Photo Dossier'}</span>
+                        {!isQueuedWorld && <ArrowRight className="w-4 h-4 shrink-0" />}
                       </button>
                     </div>
                   </div>
@@ -2643,7 +2663,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 </div>
 
-                {/* 9:16 Story & Trailer Verification Hub */}
+                {/* 9:16 Story & Trailer Verification Hub (replaced by processing scanner for queued worlds) */}
+                {isQueuedWorld ? (
+                  <WorldGenerationQueueState dossier={activeWorldDossier} variant="world" holderName={holderName} />
+                ) : (
                 <WorldStoryVerificationBadge
                   dossier={activeWorldDossier}
                   editionRank={planetRank > 0 ? planetRank : 1}
@@ -2657,6 +2680,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     }
                   }}
                 />
+                )}
 
                 {/* Story & Philosophy Creed */}
                 <div className="p-5 sm:p-6 md:p-7 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#060c18]/85 to-[#040812]/90 backdrop-blur-xl border border-cyan-500/25 space-y-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
@@ -2736,7 +2760,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               className="space-y-5 sm:space-y-6 md:space-y-7"
             >
               {/* Asset 01: Differentiated Master Multi-Media Carousel (4K Archive, 9:16 Story Card, 9:16 MP4 Trailer) */}
-              {activeWorldDossier && (
+              {activeWorldDossier && isQueuedWorld && (
+                <WorldGenerationQueueState dossier={activeWorldDossier} variant="assets" holderName={holderName} />
+              )}
+              {activeWorldDossier && !isQueuedWorld && (
                 <MyAssetsMasterCarousel
                   dossier={activeWorldDossier}
                   editionRank={planetRank > 0 ? planetRank : 1}
