@@ -773,20 +773,25 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   }, [isVipMode]);
 
-  // DN Video audio toggle state & ref for the Pass Perks preview card
-  const [isDnVideoMuted, setIsDnVideoMuted] = useState<boolean>(true);
+  // Video preview audio state synced directly with global Bingäa player (planetSoundtrack)
+  const [isBingaaAudioPlaying, setIsBingaaAudioPlaying] = useState<boolean>(() => planetSoundtrack.isPlaying);
   const dnVideoRef = useRef<HTMLVideoElement | null>(null);
 
-  const toggleDnVideoAudio = (e: React.MouseEvent) => {
+  useEffect(() => {
+    const unsub = planetSoundtrack.subscribe((playing) => {
+      setIsBingaaAudioPlaying(playing);
+    });
+    return unsub;
+  }, []);
+
+  const togglePreviewAudio = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const nextMuted = !isDnVideoMuted;
-    setIsDnVideoMuted(nextMuted);
+    // Keep the video element itself permanently muted to delegate 100% to the global Bingäa audio track
     if (dnVideoRef.current) {
-      dnVideoRef.current.muted = nextMuted;
-      if (!nextMuted) {
-        dnVideoRef.current.play().catch(() => {});
-      }
+      dnVideoRef.current.muted = true;
+      dnVideoRef.current.play().catch(() => {});
     }
+    await planetSoundtrack.togglePlay();
   };
 
   // Track specific unlock state
@@ -896,7 +901,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     if (dnVideoRef.current) {
       dnVideoRef.current.muted = true;
     }
-    setIsDnVideoMuted(true);
     setActivePlayingTrack(track);
     if (track.id === '02') {
       planetSoundtrack.play();
@@ -1319,7 +1323,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           ref={(el) => {
                             dnVideoRef.current = el;
                             if (el) {
-                              el.muted = isDnVideoMuted;
+                              el.muted = true;
                               el.defaultMuted = true;
                               el.play().catch(() => {});
                             }
@@ -1328,7 +1332,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           poster={moodboardImg || visualizerThumbnailImg}
                           autoPlay
                           loop
-                          muted={isDnVideoMuted}
+                          muted
                           playsInline
                           preload="auto"
                           disablePictureInPicture
@@ -1343,15 +1347,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
-                        {/* Audio Mute/Unmute Toggle Button */}
+                        {/* Audio Mute/Unmute Toggle Button (Synced with Global Bingäa Header Player) */}
                         <button
                           type="button"
-                          onClick={toggleDnVideoAudio}
-                          aria-label={isDnVideoMuted ? "Unmute audio" : "Mute audio"}
-                          title={isDnVideoMuted ? "Unmute audio" : "Mute audio"}
+                          onClick={togglePreviewAudio}
+                          aria-label={isBingaaAudioPlaying ? "Mute Sillow Mill - Bingäa soundtrack" : "Play Sillow Mill - Bingäa soundtrack"}
+                          title={isBingaaAudioPlaying ? "Mute Bingäa soundtrack" : "Play Bingäa soundtrack"}
                           className="absolute bottom-3 right-3 p-2 rounded-full bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 hover:border-cyan-400 text-white hover:text-cyan-300 transition-all shadow-[0_0_12px_rgba(0,0,0,0.6)] cursor-pointer z-10 flex items-center justify-center group/audio"
                         >
-                          {isDnVideoMuted ? (
+                          {!isBingaaAudioPlaying ? (
                             <VolumeX className="w-4 h-4 text-white/80 group-hover/audio:text-cyan-300 transition-colors" />
                           ) : (
                             <Volume2 className="w-4 h-4 text-emerald-400 group-hover/audio:text-emerald-300 transition-colors" />
