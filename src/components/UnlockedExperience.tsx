@@ -1136,10 +1136,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 onClick={handleDirectGuestUnlockHub}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 text-xs font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 rounded-xl transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
               >
-                <Unlock className="hidden lg:block w-4 h-4 text-black shrink-0" />
-                <AudioWaveform className="lg:hidden w-4 h-4 text-black shrink-0" />
-                <span className="tracking-wider hidden lg:inline">UNLOCK VISUALIZER HUB</span>
-                <span className="tracking-wider lg:hidden">OPEN VISUALIZER HUB</span>
+                <AudioWaveform className="w-4 h-4 text-black shrink-0" />
+                <span className="tracking-wider">OPEN VISUALIZER HUB</span>
+                <ArrowRight className="hidden lg:block w-4 h-4 text-black shrink-0" />
               </button>
             </div>
           )}
@@ -1400,10 +1399,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               onClick={handleDirectGuestUnlockHub}
                               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
                             >
-                              <Unlock className="hidden lg:block w-4 h-4 text-black shrink-0" />
-                              <AudioWaveform className="lg:hidden w-4 h-4 text-black shrink-0" />
-                              <span className="hidden lg:inline">UNLOCK VISUALIZER HUB</span>
-                              <span className="lg:hidden">OPEN VISUALIZER HUB</span>
+                              <AudioWaveform className="w-4 h-4 text-black shrink-0" />
+                              <span>OPEN VISUALIZER HUB</span>
+                              <ArrowRight className="hidden lg:block w-4 h-4 text-black shrink-0" />
                             </button>
                           )}
                         </div>

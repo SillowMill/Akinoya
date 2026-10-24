@@ -146,8 +146,9 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-2 relative z-10">
-                <div className="flex items-center gap-4 min-w-0">
+              {/* Stacked through portrait/landscape tablets (sidebar narrows the content column); side-by-side only on xl */}
+              <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 sm:gap-5 mt-2 relative z-10">
+                <div className="flex items-center gap-4 min-w-0 w-full xl:w-auto xl:flex-1">
                   <div
                     onClick={() => handleOpenPlanetModal(topFavoritePlanet)}
                     className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-amber-400/80 p-0.5 shadow-[0_0_28px_rgba(245,158,11,0.45)] shrink-0 bg-black/90 cursor-pointer group/thumb"
@@ -179,11 +180,11 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
                 <button
                   type="button"
                   onClick={() => handleOpenPlanetModal(topFavoritePlanet)}
-                  className="w-full md:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs sm:text-sm font-extrabold transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.35)] hover:scale-[1.02] flex items-center justify-center gap-2.5 shrink-0"
+                  className="relative w-full xl:w-auto min-h-[48px] px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs sm:text-sm font-extrabold transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.35)] xl:hover:scale-[1.02] flex items-center justify-center gap-2.5 shrink-0 whitespace-nowrap"
                 >
-                  <Camera className="w-4 h-4 text-black" />
-                  <span>Explore 5-Photo Dossier</span>
-                  <ArrowRight className="w-4 h-4 text-black" />
+                  <Camera className="w-4 h-4 text-black shrink-0" />
+                  <span className="truncate">Explore 5-Photo Dossier</span>
+                  <ArrowRight className="w-4 h-4 text-black shrink-0" />
                 </button>
               </div>
             </div>
