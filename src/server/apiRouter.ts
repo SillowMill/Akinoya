@@ -1,4 +1,10 @@
 import express, { Request, Response, NextFunction } from 'express';
+// EMERGENCY COST PROTECTION: must load first so the fal.ai network guard wraps fetch before any route runs
+import {
+  isFalGenerationBlocked,
+  buildPrelaunchBlockedResponse,
+  PRELAUNCH_MESSAGE,
+} from './falKillSwitch';
 import {
   getStripe,
   createComicCheckoutSession,
@@ -555,6 +561,64 @@ apiRouter.get('/nfc/generate-test-cipher', (req: Request, res: Response): void =
 });
 
 // ─── 10. Generate Planet Prompts & Visuals (Fal.ai Flux Schnell Pipeline) ─────
+// EMERGENCY COST PROTECTION: while the fal.ai kill switch is active, every generation
+// request is intercepted here — no paid model is invoked. Questionnaire answers are
+// saved to the Pre-Launch Google Sheet and the standard pre-launch message is returned.
+apiRouter.all(
+  ['/generate-planet', '/planet/generate', '/generate-sector-images', '/sector/generate'],
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    if (!isFalGenerationBlocked()) {
+      next();
+      return;
+    }
+    const body = req.body || {};
+    const normSlot = body.slot ? normalizeSlot(body.slot) : '';
+    const isControlAction =
+      body.action === 'balance-check' || body.action === 'fal-status' || req.query?.action === 'balance-check' ||
+      body.resetLocks || body.markCompleted;
+
+    // Non-paid control actions (1-ticket lock bookkeeping, status) continue to the regular handler.
+    // balance-check is safe: getFalApiKey() returns '' while blocked, so no network call is made.
+    if (isControlAction) {
+      next();
+      return;
+    }
+
+    // Save the questionnaire once per run (full request or the first image slot), never per extra slot/video call
+    const shouldRecordLead =
+      !isControlAction && !body.videoOnly && !body.generateVideo && (!normSlot || normSlot === 'hero');
+    let prelaunchSync: unknown = null;
+    if (shouldRecordLead && (body.email || body.userId || body.planetName)) {
+      try {
+        prelaunchSync = await appendPrelaunchWorldSubmissionToGoogleSheets({
+          ...body,
+          userName: body.userName || body.authorName || body.fullName,
+          worldName: body.worldName || body.planetName,
+          humanAnswers: body.humanAnswers || body,
+        });
+      } catch (sheetErr) {
+        console.warn('[FAL KILL SWITCH] Pre-launch sheet sync notice:', sheetErr);
+      }
+    }
+
+    console.warn(`[FAL KILL SWITCH] Intercepted ${req.path}${normSlot ? ` (slot: ${normSlot})` : ''} — no paid generation invoked.`);
+    res.status(200).json(
+      buildPrelaunchBlockedResponse({
+        falBlocked: true,
+        ...(normSlot
+          ? {
+              slot: normSlot,
+              slotIndex: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).index,
+              slotLabel: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).label,
+            }
+          : {}),
+        planetName: body.planetName || body.worldName || body.sectorName || 'Äkinoya Frontier',
+        prelaunchSync,
+      })
+    );
+  }
+);
+
 apiRouter.all(
   ['/generate-planet', '/planet/generate', '/generate-sector-images', '/sector/generate'],
   async (req: Request, res: Response): Promise<void> => {
@@ -633,6 +697,12 @@ apiRouter.all(
 
 // ─── 10.1 Fal.ai Balance & Status Bridge ($25 Pool Verification) ─────────────
 apiRouter.all(['/fal/status', '/fal/balance', '/generate-planet/balance'], async (_req: Request, res: Response): Promise<void> => {
+  if (isFalGenerationBlocked()) {
+    res.status(200).json(
+      buildPrelaunchBlockedResponse({ connected: false, authenticated: false, falBlocked: true, ledger: loadFalLedger() })
+    );
+    return;
+  }
   try {
     const status = await verifyFalApiConnection();
     res.status(200).json({
@@ -1027,6 +1097,23 @@ apiRouter.get(['/dossier/submissions', '/submissions'], async (_req: Request, re
 
 // ─── 16. Dynamic Val.ai / Fal.ai Video Pipeline Status & Resolver ────────────
 apiRouter.all(['/video-pipeline/status', '/generate-planet/video-check'], async (req: Request, res: Response): Promise<void> => {
+  // EMERGENCY COST PROTECTION: never trigger paid video synthesis while the kill switch is active.
+  // Existing (already generated) video URLs are passed straight through.
+  if (isFalGenerationBlocked()) {
+    const existingVideoUrl = String(req.body?.existingVideoUrl || req.query.existingVideoUrl || '').trim();
+    res.status(200).json({
+      success: true,
+      prelaunch: true,
+      falBlocked: true,
+      keyConfigured: false,
+      isAiVideoAvailable: Boolean(existingVideoUrl),
+      videoUrl: existingVideoUrl,
+      pipelineMode: existingVideoUrl ? 'EXISTING_ASSET' : 'FALLBACK_SLIDESHOW_MONTAGE',
+      status: existingVideoUrl ? 'READY' : 'FALLBACK_MONTAGE',
+      message: PRELAUNCH_MESSAGE,
+    });
+    return;
+  }
   try {
     const planetId = (req.body?.planetId || req.query.planetId as string || '').trim();
     const planetName = (req.body?.planetName || req.query.planetName as string || '').trim();

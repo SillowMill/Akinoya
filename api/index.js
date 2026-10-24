@@ -2509,6 +2509,60 @@ var init_authVoteService = __esm({
 // src/server/apiRouter.ts
 import express from "express";
 
+// src/server/falKillSwitch.ts
+var PRELAUNCH_MESSAGE = "Your world will be available on the ninth of January.";
+var isFalGenerationBlocked = () => {
+  const flag = String(process.env.FAL_GENERATION_ENABLED || "").trim().toLowerCase();
+  return flag !== "true";
+};
+var BLOCKED_FAL_HOST_PATTERN = /(^|\.)fal\.(run|ai)$/i;
+var isBlockedFalUrl = (input) => {
+  try {
+    const raw = typeof input === "string" ? input : input instanceof URL ? input.href : input && typeof input === "object" && "url" in input ? String(input.url) : "";
+    if (!raw) return false;
+    const host = new URL(raw).hostname;
+    return BLOCKED_FAL_HOST_PATTERN.test(host);
+  } catch {
+    return false;
+  }
+};
+var FalGenerationBlockedError = class extends Error {
+  constructor(target) {
+    super(`[FAL KILL SWITCH] Outbound fal.ai request blocked${target ? ` (${target})` : ""}. ${PRELAUNCH_MESSAGE}`);
+    this.code = "FAL_GENERATION_BLOCKED";
+    this.name = "FalGenerationBlockedError";
+  }
+};
+var guardInstalled = false;
+var installFalNetworkGuard = () => {
+  if (guardInstalled) return;
+  const g = globalThis;
+  if (typeof g.fetch !== "function") return;
+  const originalFetch = g.fetch.bind(globalThis);
+  g.fetch = (input, init) => {
+    if (isFalGenerationBlocked() && isBlockedFalUrl(input)) {
+      let target = "";
+      try {
+        target = new URL(typeof input === "string" ? input : input?.url || String(input)).host;
+      } catch {
+      }
+      console.warn(`[FAL KILL SWITCH] Blocked outbound request to ${target || "fal.ai"}`);
+      return Promise.reject(new FalGenerationBlockedError(target));
+    }
+    return originalFetch(input, init);
+  };
+  guardInstalled = true;
+};
+var buildPrelaunchBlockedResponse = (extra = {}) => ({
+  success: false,
+  prelaunch: true,
+  code: "PRELAUNCH_GENERATION_LOCKED",
+  status: "QUEUED_PENDING",
+  message: PRELAUNCH_MESSAGE,
+  ...extra
+});
+installFalNetworkGuard();
+
 // src/server/stripeService.ts
 import Stripe from "stripe";
 import fs from "fs";
@@ -3452,6 +3506,7 @@ function recordFalUsage(entry) {
   return logItem;
 }
 var getFalApiKey = () => {
+  if (isFalGenerationBlocked()) return "";
   let key = (process.env.FAL_KEY || process.env.VAULT_AI_KEY || process.env.VAL_AI_KEY || process.env.VITE_FAL_KEY || process.env.VITE_VAULT_AI_KEY || process.env.VITE_VAL_AI_KEY || process.env.FAL_API_KEY || process.env.VAL_API_KEY || process.env.VAULT_API_KEY || "").trim();
   if (!key) {
     const envCandidates = [".env.production.local", ".env.local", ".env"];
@@ -5482,6 +5537,49 @@ apiRouter.get("/nfc/generate-test-cipher", (req, res) => {
 });
 apiRouter.all(
   ["/generate-planet", "/planet/generate", "/generate-sector-images", "/sector/generate"],
+  async (req, res, next) => {
+    if (!isFalGenerationBlocked()) {
+      next();
+      return;
+    }
+    const body = req.body || {};
+    const normSlot = body.slot ? normalizeSlot(body.slot) : "";
+    const isControlAction = body.action === "balance-check" || body.action === "fal-status" || req.query?.action === "balance-check" || body.resetLocks || body.markCompleted;
+    if (isControlAction) {
+      next();
+      return;
+    }
+    const shouldRecordLead = !isControlAction && !body.videoOnly && !body.generateVideo && (!normSlot || normSlot === "hero");
+    let prelaunchSync = null;
+    if (shouldRecordLead && (body.email || body.userId || body.planetName)) {
+      try {
+        prelaunchSync = await appendPrelaunchWorldSubmissionToGoogleSheets({
+          ...body,
+          userName: body.userName || body.authorName || body.fullName,
+          worldName: body.worldName || body.planetName,
+          humanAnswers: body.humanAnswers || body
+        });
+      } catch (sheetErr) {
+        console.warn("[FAL KILL SWITCH] Pre-launch sheet sync notice:", sheetErr);
+      }
+    }
+    console.warn(`[FAL KILL SWITCH] Intercepted ${req.path}${normSlot ? ` (slot: ${normSlot})` : ""} \u2014 no paid generation invoked.`);
+    res.status(200).json(
+      buildPrelaunchBlockedResponse({
+        falBlocked: true,
+        ...normSlot ? {
+          slot: normSlot,
+          slotIndex: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).index,
+          slotLabel: (SLOT_METADATA[normSlot] || SLOT_METADATA.hero).label
+        } : {},
+        planetName: body.planetName || body.worldName || body.sectorName || "\xC4kinoya Frontier",
+        prelaunchSync
+      })
+    );
+  }
+);
+apiRouter.all(
+  ["/generate-planet", "/planet/generate", "/generate-sector-images", "/sector/generate"],
   async (req, res) => {
     try {
       const body = req.body || {};
@@ -5550,6 +5648,12 @@ apiRouter.all(
   }
 );
 apiRouter.all(["/fal/status", "/fal/balance", "/generate-planet/balance"], async (_req, res) => {
+  if (isFalGenerationBlocked()) {
+    res.status(200).json(
+      buildPrelaunchBlockedResponse({ connected: false, authenticated: false, falBlocked: true, ledger: loadFalLedger() })
+    );
+    return;
+  }
   try {
     const status = await verifyFalApiConnection();
     res.status(200).json({
@@ -5895,6 +5999,21 @@ apiRouter.get(["/dossier/submissions", "/submissions"], async (_req, res) => {
   }
 });
 apiRouter.all(["/video-pipeline/status", "/generate-planet/video-check"], async (req, res) => {
+  if (isFalGenerationBlocked()) {
+    const existingVideoUrl = String(req.body?.existingVideoUrl || req.query.existingVideoUrl || "").trim();
+    res.status(200).json({
+      success: true,
+      prelaunch: true,
+      falBlocked: true,
+      keyConfigured: false,
+      isAiVideoAvailable: Boolean(existingVideoUrl),
+      videoUrl: existingVideoUrl,
+      pipelineMode: existingVideoUrl ? "EXISTING_ASSET" : "FALLBACK_SLIDESHOW_MONTAGE",
+      status: existingVideoUrl ? "READY" : "FALLBACK_MONTAGE",
+      message: PRELAUNCH_MESSAGE
+    });
+    return;
+  }
   try {
     const planetId = (req.body?.planetId || req.query.planetId || "").trim();
     const planetName = (req.body?.planetName || req.query.planetName || "").trim();

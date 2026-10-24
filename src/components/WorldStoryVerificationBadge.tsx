@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { PRELAUNCH_GENERATION_LOCKED } from '../config/prelaunch';
 import { createPortal } from 'react-dom';
 import {
   Download,
@@ -1874,6 +1875,8 @@ export function useDynamicWorldVideo(dossier: PlanetSubmission | null | undefine
             planetName: dossier.planetName,
             heroImageUrl: heroUrl,
             existingVideoUrl: currentInit,
+            // EMERGENCY COST PROTECTION: never request paid video synthesis during pre-launch lock
+            triggerSynthesis: !PRELAUNCH_GENERATION_LOCKED,
           }),
         });
 

@@ -28,6 +28,8 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
+// EMERGENCY COST PROTECTION: installs the fal.ai network guard on module load
+import { isFalGenerationBlocked } from '../src/server/falKillSwitch';
 import { createClient } from '@supabase/supabase-js';
 
 try {
@@ -622,6 +624,9 @@ export function recordFalUsage(entry: {
 }
 
 export const getFalApiKey = (): string => {
+  // EMERGENCY COST PROTECTION: no fal.ai key is ever resolved while the kill switch is active
+  if (isFalGenerationBlocked()) return '';
+
   let key = (
     process.env.FAL_KEY ||
     process.env.VAULT_AI_KEY ||

@@ -1,4 +1,5 @@
 import { PlanetSubmission, WizardAnswers } from '../types/contest';
+import { PRELAUNCH_GENERATION_LOCKED } from '../config/prelaunch';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { getPioneerMasterVideoUrl } from '../utils/pioneer';
 
@@ -2039,6 +2040,11 @@ export const generateSectorImages = async (answers: WizardAnswers): Promise<Plan
       '04_atmo': amlemiCockpitImg,
       '05_lore': amlemiMonumentImg,
     };
+  }
+
+  // EMERGENCY COST PROTECTION: no paid generation during pre-launch lock
+  if (PRELAUNCH_GENERATION_LOCKED) {
+    return resolvePlanetRenders(answers);
   }
 
   try {

@@ -71,6 +71,7 @@ import {
   isVipPioneerPlanet,
 } from '../utils/pioneer';
 import { isFounderEmail, PRIMARY_FOUNDER_EMAIL } from '../data/vipTokens';
+import { PRELAUNCH_GENERATION_LOCKED, PRELAUNCH_MESSAGE } from '../config/prelaunch';
 
 export type SlotStreamStatus = 'PENDING' | 'SYNTHESIZING_4K' | 'DONE' | 'QUEUED' | 'ERROR';
 
@@ -491,180 +492,190 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       landmark: '05_lore',
     };
 
-    // Step 1: Sequential Live Processing across all 5 photos (01_main through 05_lore)
-    for (let i = 0; i < initialSlots.length; i++) {
-      const slotItem = initialSlots[i];
-      setGenerationSlotIndex(i + 1);
-      setGenerationStageName(`SYNTHESIZING 4K: ${slotItem.title} (${i + 1}/5)...`);
-      setGenerationStageDetails(slotItem.subtitle);
-      setGenerationProgress(Math.round((i / (initialSlots.length + 1)) * 100));
+    // EMERGENCY COST PROTECTION: pre-launch lock — skip ALL paid image/video generation.
+    // Answers are still saved below (Step 3: Supabase/local + Pre-Launch Google Sheet).
+    let synthesizedVideoUrl = '';
+    if (PRELAUNCH_GENERATION_LOCKED) {
+      setGenerationProgress(60);
+      setGenerationStageName('PRE-LAUNCH MODE · SAVING YOUR WORLD');
+      setGenerationStageDetails(PRELAUNCH_MESSAGE);
+      setSlotStream((prev) => prev.map((s) => ({ ...s, status: 'QUEUED', url: null, error: PRELAUNCH_MESSAGE })));
+    } else {
+      // Step 1: Sequential Live Processing across all 5 photos (01_main through 05_lore)
+      for (let i = 0; i < initialSlots.length; i++) {
+        const slotItem = initialSlots[i];
+        setGenerationSlotIndex(i + 1);
+        setGenerationStageName(`SYNTHESIZING 4K: ${slotItem.title} (${i + 1}/5)...`);
+        setGenerationStageDetails(slotItem.subtitle);
+        setGenerationProgress(Math.round((i / (initialSlots.length + 1)) * 100));
 
-      setSlotStream((prev) =>
-        prev.map((s, idx) => (idx === i ? { ...s, status: 'SYNTHESIZING_4K', error: null } : s))
-      );
-      soundManager.playTone(600 + i * 70, 0.05);
+        setSlotStream((prev) =>
+          prev.map((s, idx) => (idx === i ? { ...s, status: 'SYNTHESIZING_4K', error: null } : s))
+        );
+        soundManager.playTone(600 + i * 70, 0.05);
 
-      try {
-        const res = await fetch('/api/generate-planet', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: user?.id || profile?.id,
-            email: user?.email,
-            deviceId: typeof window !== 'undefined' ? (localStorage.getItem('sillow_device_id') || undefined) : undefined,
-            bypassLock: isFounderAdmin && founderTestBypass,
-            relaxation: answers.relaxation,
-            creativeExpression: answers.creativeExpression,
-            naturalEnvironment: answers.naturalEnvironment,
-            lifePhilosophy: answers.lifePhilosophy,
-            admiredCreature: answers.admiredCreature,
-            colorPalette: answers.colorPalette,
-            resilienceStory: answers.resilienceStory,
-            futurePromise: answers.futurePromise,
-            planetName,
-            atmosphere: answers.atmosphere,
-            flora: answers.flora,
-            fauna: answers.fauna,
-            sonicVibe: answers.sonicVibe,
-            visualAesthetic: answers.visualAesthetic,
-            landmark: answers.landmark,
-            additionalNotes: answers.additionalNotes,
-            biome: answers.biome,
-            sectorName: answers.sectorName,
-            slot: slotItem.alias,
-          }),
-        });
+        try {
+          const res = await fetch('/api/generate-planet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user?.id || profile?.id,
+              email: user?.email,
+              deviceId: typeof window !== 'undefined' ? (localStorage.getItem('sillow_device_id') || undefined) : undefined,
+              bypassLock: isFounderAdmin && founderTestBypass,
+              relaxation: answers.relaxation,
+              creativeExpression: answers.creativeExpression,
+              naturalEnvironment: answers.naturalEnvironment,
+              lifePhilosophy: answers.lifePhilosophy,
+              admiredCreature: answers.admiredCreature,
+              colorPalette: answers.colorPalette,
+              resilienceStory: answers.resilienceStory,
+              futurePromise: answers.futurePromise,
+              planetName,
+              atmosphere: answers.atmosphere,
+              flora: answers.flora,
+              fauna: answers.fauna,
+              sonicVibe: answers.sonicVibe,
+              visualAesthetic: answers.visualAesthetic,
+              landmark: answers.landmark,
+              additionalNotes: answers.additionalNotes,
+              biome: answers.biome,
+              sectorName: answers.sectorName,
+              slot: slotItem.alias,
+            }),
+          });
 
-        if (res.status === 403) {
-          const json = await res.json().catch(() => ({}));
-          setIsGeneratingRenders(false);
-          soundManager.playError();
-          alert(json.message || 'You have already claimed your 1 generation attempt.');
-          return;
-        }
-
-        const json = await res.json().catch(() => ({}));
-
-        if (res.ok && json.success && json.imageUrl) {
-          collectedRenders[slotItem.id] = json.imageUrl;
-          if (slotItem.id === 'flora') collectedRenders.ecosystem = json.imageUrl;
-          const aliasKey = aliasMap[slotItem.id];
-          if (aliasKey) {
-            collectedRenders[aliasKey] = json.imageUrl;
+          if (res.status === 403) {
+            const json = await res.json().catch(() => ({}));
+            setIsGeneratingRenders(false);
+            soundManager.playError();
+            alert(json.message || 'You have already claimed your 1 generation attempt.');
+            return;
           }
 
+          const json = await res.json().catch(() => ({}));
+
+          if (res.ok && json.success && json.imageUrl) {
+            collectedRenders[slotItem.id] = json.imageUrl;
+            if (slotItem.id === 'flora') collectedRenders.ecosystem = json.imageUrl;
+            const aliasKey = aliasMap[slotItem.id];
+            if (aliasKey) {
+              collectedRenders[aliasKey] = json.imageUrl;
+            }
+
+            setSlotStream((prev) =>
+              prev.map((s, idx) =>
+                idx === i ? { ...s, status: 'DONE', url: json.imageUrl, error: null } : s
+              )
+            );
+            setPreviewDossier((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    renders: {
+                      ...prev.renders,
+                      [slotItem.id]: json.imageUrl,
+                      ...(aliasKey ? { [aliasKey]: json.imageUrl } : {}),
+                      ecosystem: collectedRenders.ecosystem,
+                    },
+                  }
+                : null
+            );
+            soundManager.playTone(880, 0.06);
+          } else {
+            setSlotStream((prev) =>
+              prev.map((s, idx) =>
+                idx === i ? { ...s, status: 'QUEUED', error: UI_RECALIBRATING_STATUS_TEXT } : s
+              )
+            );
+            soundManager.playTone(660, 0.05);
+          }
+        } catch {
           setSlotStream((prev) =>
             prev.map((s, idx) =>
-              idx === i ? { ...s, status: 'DONE', url: json.imageUrl, error: null } : s
-            )
-          );
-          setPreviewDossier((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  renders: {
-                    ...prev.renders,
-                    [slotItem.id]: json.imageUrl,
-                    ...(aliasKey ? { [aliasKey]: json.imageUrl } : {}),
-                    ecosystem: collectedRenders.ecosystem,
-                  },
-                }
-              : null
-          );
-          soundManager.playTone(880, 0.06);
-        } else {
-          setSlotStream((prev) =>
-            prev.map((s, idx) =>
-              idx === i ? { ...s, status: 'QUEUED', error: UI_RECALIBRATING_STATUS_TEXT } : s
+              idx === i
+                ? {
+                    ...s,
+                    status: 'QUEUED',
+                    error: UI_RECALIBRATING_STATUS_TEXT,
+                  }
+                : s
             )
           );
           soundManager.playTone(660, 0.05);
         }
-      } catch {
-        setSlotStream((prev) =>
-          prev.map((s, idx) =>
-            idx === i
-              ? {
-                  ...s,
-                  status: 'QUEUED',
-                  error: UI_RECALIBRATING_STATUS_TEXT,
-                }
-              : s
-          )
-        );
-        soundManager.playTone(660, 0.05);
+
+        setGenerationProgress(Math.round(((i + 1) / (initialSlots.length + 1)) * 100));
       }
 
-      setGenerationProgress(Math.round(((i + 1) / (initialSlots.length + 1)) * 100));
-    }
+      // Step 2: Viral 9:16 Video Trailer Synthesis (from all 5 newly rendered photos)
+      setGenerationStageName('SYNTHESIZING 9:16 VIRAL VIDEO TRAILER (5S)...');
+      setGenerationStageDetails(`Fusing all 5 rendered photos (${planetName}) into a dynamic continuous FPV drone flight via Seedance 2.5...`);
 
-    // Step 2: Viral 9:16 Video Trailer Synthesis (from all 5 newly rendered photos)
-    setGenerationStageName('SYNTHESIZING 9:16 VIRAL VIDEO TRAILER (5S)...');
-    setGenerationStageDetails(`Fusing all 5 rendered photos (${planetName}) into a dynamic continuous FPV drone flight via Seedance 2.5...`);
-    let synthesizedVideoUrl = '';
+      if (collectedRenders.hero) {
+        try {
+          const photoList = [
+            collectedRenders.hero,
+            collectedRenders.flora,
+            collectedRenders.fauna,
+            collectedRenders.atmosphere,
+            collectedRenders.landmark,
+          ].filter(Boolean);
 
-    if (collectedRenders.hero) {
-      try {
-        const photoList = [
-          collectedRenders.hero,
-          collectedRenders.flora,
-          collectedRenders.fauna,
-          collectedRenders.atmosphere,
-          collectedRenders.landmark,
-        ].filter(Boolean);
-
-        const videoRes = await fetch('/api/generate-planet', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: user?.id || profile?.id,
-            email: user?.email,
-            bypassLock: isFounderAdmin && founderTestBypass,
-            planetName,
-            heroImageUrl: collectedRenders.hero,
-            slot: 'video',
-            renders: collectedRenders,
-            imageUrls: photoList,
-            authorUsername: username,
-            architectName: userDisplayName,
-            relaxation: answers.relaxation,
-            creativeExpression: answers.creativeExpression,
-            naturalEnvironment: answers.naturalEnvironment,
-            lifePhilosophy: answers.lifePhilosophy,
-            admiredCreature: answers.admiredCreature,
-            colorPalette: answers.colorPalette,
-            resilienceStory: answers.resilienceStory,
-            futurePromise: answers.futurePromise,
-            atmosphere: answers.atmosphere,
-            flora: answers.flora,
-            fauna: answers.fauna,
-            sonicVibe: answers.sonicVibe,
-            visualAesthetic: answers.visualAesthetic,
-            landmark: answers.landmark,
-            biome: answers.biome,
-          }),
-        });
-        const videoJson = await videoRes.json().catch(() => ({}));
-        if (videoRes.ok && videoJson.success && videoJson.videoUrl) {
-          synthesizedVideoUrl = videoJson.videoUrl;
-          collectedRenders.videoUrl = synthesizedVideoUrl;
-          setPreviewDossier((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  videoUrl: synthesizedVideoUrl,
-                  videoStatus: 'READY',
-                  renders: {
-                    ...prev.renders,
+          const videoRes = await fetch('/api/generate-planet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user?.id || profile?.id,
+              email: user?.email,
+              bypassLock: isFounderAdmin && founderTestBypass,
+              planetName,
+              heroImageUrl: collectedRenders.hero,
+              slot: 'video',
+              renders: collectedRenders,
+              imageUrls: photoList,
+              authorUsername: username,
+              architectName: userDisplayName,
+              relaxation: answers.relaxation,
+              creativeExpression: answers.creativeExpression,
+              naturalEnvironment: answers.naturalEnvironment,
+              lifePhilosophy: answers.lifePhilosophy,
+              admiredCreature: answers.admiredCreature,
+              colorPalette: answers.colorPalette,
+              resilienceStory: answers.resilienceStory,
+              futurePromise: answers.futurePromise,
+              atmosphere: answers.atmosphere,
+              flora: answers.flora,
+              fauna: answers.fauna,
+              sonicVibe: answers.sonicVibe,
+              visualAesthetic: answers.visualAesthetic,
+              landmark: answers.landmark,
+              biome: answers.biome,
+            }),
+          });
+          const videoJson = await videoRes.json().catch(() => ({}));
+          if (videoRes.ok && videoJson.success && videoJson.videoUrl) {
+            synthesizedVideoUrl = videoJson.videoUrl;
+            collectedRenders.videoUrl = synthesizedVideoUrl;
+            setPreviewDossier((prev) =>
+              prev
+                ? {
+                    ...prev,
                     videoUrl: synthesizedVideoUrl,
-                  },
-                }
-              : null
-          );
+                    videoStatus: 'READY',
+                    renders: {
+                      ...prev.renders,
+                      videoUrl: synthesizedVideoUrl,
+                    },
+                  }
+                : null
+            );
+          }
+        } catch (vidErr) {
+          console.warn('[Video Trailer] Queued pending:', vidErr);
         }
-      } catch (vidErr) {
-        console.warn('[Video Trailer] Queued pending:', vidErr);
       }
+
     }
 
     // Step 3: Atomic Database Sync (5 image URLs + lore + 9:16 video_url)
@@ -727,6 +738,13 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   // Re-trigger synthesis for a single slot
   const handleRetrySlot = async (slotIndex: number) => {
     if (!pendingAnswers) return;
+    // EMERGENCY COST PROTECTION: no paid regeneration during pre-launch lock
+    if (PRELAUNCH_GENERATION_LOCKED) {
+      setSlotStream((prev) =>
+        prev.map((s, idx) => (idx === slotIndex ? { ...s, status: 'QUEUED', url: null, error: PRELAUNCH_MESSAGE } : s))
+      );
+      return;
+    }
     const slotItem = slotStream[slotIndex];
     if (!slotItem) return;
 
