@@ -1880,10 +1880,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                         <div className="text-[9.5px] font-mono text-white/40">SILLOW MILL HQ</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400 font-semibold bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      <span>128 Online</span>
-                    </div>
                   </div>
 
                   {/* CATEGORY 1: 📁 PUBLIC HUB */}
@@ -2134,10 +2130,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2.5 shrink-0 text-xs font-mono text-white/50">
-                      <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-500/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-[10.5px]">42 Online</span>
-                      </div>
                       <span className="text-[10.5px] bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
                         {channelPosts.length} Transmissions
                       </span>
