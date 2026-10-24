@@ -1324,8 +1324,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               el.play().catch(() => {});
                             }
                           }}
-                          src={DN_VIDEO_URL}
-                          poster={dnThumbnailImg || visualizerThumbnailImg}
+                          src={BINGAA_LOOP_VIDEO_URL}
+                          poster={moodboardImg || visualizerThumbnailImg}
                           autoPlay
                           loop
                           muted={isDnVideoMuted}
@@ -1342,6 +1342,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+
+                        {/* Track Badge Overlay */}
+                        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md border border-cyan-400/40 text-[10px] font-mono font-bold text-cyan-300 tracking-wider uppercase shadow-[0_0_12px_rgba(56,189,248,0.3)]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                          <span>TRACK 02 · BINGÄÄ VISUALIZER</span>
+                        </div>
 
 
                         {/* Audio Mute/Unmute Toggle Button */}
