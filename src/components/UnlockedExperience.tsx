@@ -89,7 +89,7 @@ import {
 } from '../utils/certificate';
 import { CertificateOfAuthenticity } from './CertificateOfAuthenticity';
 import { isFounderEmail } from '../lib/vipTokens';
-import { scrollToVisualizerHub } from '../utils/scroll';
+import { scrollToVisualizerHub, scrollToVisualizerArchive } from '../utils/scroll';
 
 // pdf.js is heavy — only fetch the reader chunk when a verified holder opens the comic
 const BingaaComicReader = lazy(() => import('./BingaaComicReader'));
@@ -540,14 +540,35 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       }
     };
 
+    const handleAutoScrollVisualizerArchive = () => {
+      setActiveTab('pass');
+      setPassSubView('overview');
+      scrollToVisualizerArchive(true, 120);
+    };
+
+    const checkAutoScrollVisualizerArchive = () => {
+      if (typeof window !== 'undefined' && sessionStorage.getItem('akinoya_scroll_to_visualizer_archive') === 'true') {
+        sessionStorage.removeItem('akinoya_scroll_to_visualizer_archive');
+        setActiveTab('pass');
+        setPassSubView('overview');
+        scrollToVisualizerArchive(true, 180);
+        setTimeout(() => {
+          document.getElementById('visualizer-archive')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 380);
+      }
+    };
+
     checkUrlParams();
+    checkAutoScrollVisualizerArchive();
     window.addEventListener('akinoya-open-visualizer-hub', handleOpenHub);
     window.addEventListener('akinoya-navigate-passperks-home', handleNavigatePassperksHome);
+    window.addEventListener('akinoya-auto-scroll-visualizer-archive', handleAutoScrollVisualizerArchive);
     window.addEventListener('popstate', checkUrlParams);
     window.addEventListener('hashchange', checkUrlParams);
     return () => {
       window.removeEventListener('akinoya-open-visualizer-hub', handleOpenHub);
       window.removeEventListener('akinoya-navigate-passperks-home', handleNavigatePassperksHome);
+      window.removeEventListener('akinoya-auto-scroll-visualizer-archive', handleAutoScrollVisualizerArchive);
       window.removeEventListener('popstate', checkUrlParams);
       window.removeEventListener('hashchange', checkUrlParams);
     };
@@ -858,6 +879,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       setPassSubView('hub');
       setPassIdError('');
       soundManager.playUnlockChime();
+      setTimeout(() => {
+        document.getElementById('visualizer-archive')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
     } else {
       setPassIdError(`Invalid Pass ID. Please enter an authentic Äkinoya Pass ID (e.g. #${FOUNDING_PASS_ID}).`);
       soundManager.playError();
@@ -1303,7 +1327,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   className="space-y-4 lg:space-y-6"
                 >
                   {/* Visualizer Hub Showcase Widget with 16:9 Cinematic Thumbnail */}
-                  <div className="bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)]">
+                  <div
+                    id="visualizer-archive"
+                    className="bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)] scroll-mt-20 sm:scroll-mt-24"
+                  >
                     <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
                     <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 lg:gap-8">

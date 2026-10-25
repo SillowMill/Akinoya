@@ -95,6 +95,60 @@ export const scrollToVisualizerHub = (smooth = true, delay = 0) => {
 };
 
 /**
+ * Universal Smooth Scroll to Äkinoya Visualizer Archive Showcase Section
+ *
+ * Centers the 16:9 video preview and "OPEN VISUALIZER HUB" button
+ * directly in the viewport across desktop, tablet, and mobile.
+ */
+export const scrollToVisualizerArchive = (smooth = true, delay = 0) => {
+  if (typeof window === 'undefined') return;
+
+  const performScroll = (): boolean => {
+    const target = document.getElementById('visualizer-archive');
+    if (!target) return false;
+
+    // Check user preference for reduced motion
+    const prefersReducedMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const behavior: ScrollBehavior = prefersReducedMotion ? 'auto' : (smooth ? 'smooth' : 'auto');
+
+    target.scrollIntoView({ behavior, block: 'center' });
+    return true;
+  };
+
+  const execute = () => {
+    if (performScroll()) {
+      setTimeout(() => {
+        performScroll();
+      }, 180);
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 25; // 25 * 40ms = 1000ms max
+    const interval = setInterval(() => {
+      attempts++;
+      if (performScroll()) {
+        clearInterval(interval);
+        setTimeout(() => {
+          performScroll();
+        }, 180);
+      } else if (attempts >= maxAttempts) {
+        clearInterval(interval);
+      }
+    }, 40);
+  };
+
+  if (delay > 0) {
+    setTimeout(execute, delay);
+  } else {
+    execute();
+  }
+};
+
+/**
  * Nearest scrollable ancestor of an element (or null when the window scrolls).
  * Used by views that run inside an isolated internal scroll container
  * (e.g. the Community Hub `[data-scroll-container]` on iPad / iOS Safari).
