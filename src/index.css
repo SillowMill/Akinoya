@@ -51,48 +51,63 @@
   text-shadow: 0 0 24px rgba(103, 232, 249, 0.4);
 }
 
-/* Atmospheric planet pulse animation */
+/* Atmospheric planet pulse animation - 60 FPS hardware accelerated */
 @keyframes planetAura {
   0%, 100% {
     opacity: 0.65;
-    transform: scale(1);
+    transform: scale(1) translateZ(0);
     filter: drop-shadow(0 0 60px rgba(56, 189, 248, 0.35));
   }
   50% {
     opacity: 0.85;
-    transform: scale(1.015);
+    transform: scale(1.015) translateZ(0);
     filter: drop-shadow(0 0 90px rgba(103, 232, 249, 0.55));
   }
 }
 
 .animate-planet-aura {
   animation: planetAura 8s ease-in-out infinite;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 @keyframes floatDrift {
   0%, 100% {
-    transform: translateY(0px) rotate(0deg);
+    transform: translateY(0px) rotate(0deg) translateZ(0);
   }
   50% {
-    transform: translateY(-8px) rotate(0.5deg);
+    transform: translateY(-8px) rotate(0.5deg) translateZ(0);
   }
 }
 
 .animate-float {
   animation: floatDrift 6s ease-in-out infinite;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 @keyframes spinReverse {
   from {
-    transform: rotate(360deg);
+    transform: rotate(360deg) translateZ(0);
   }
   to {
-    transform: rotate(0deg);
+    transform: rotate(0deg) translateZ(0);
   }
 }
 
 .animate-spin-reverse {
   animation: spinReverse 32s linear infinite;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Prevent iOS / Safari auto-zoom on input focus */
@@ -250,7 +265,7 @@ body:has(.community-app-shell) {
 .gpu-layer {
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
-  will-change: transform;
+  will-change: transform, opacity;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
@@ -262,6 +277,8 @@ body:has(.community-app-shell) {
 .animate-ping,
 .animate-float,
 .animate-planet-aura {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
   will-change: transform, opacity;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -411,14 +428,45 @@ div[role="dialog"],
 .modal-surface,
 .video-player-gpu,
 .video-stage-container,
-.video-viewport-wrapper {
+.video-viewport-wrapper,
+div[role="dialog"],
+[aria-modal="true"],
+.page-transition-container,
+.tab-transition-container,
+.card-interactive {
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
-  will-change: transform;
+  will-change: transform, opacity;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   -webkit-perspective: 1000px;
   perspective: 1000px;
+}
+
+/* Smooth 60 FPS transitions without layout jitter or micro-stutters */
+.smooth-gpu-transition,
+.transition-smooth {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Ensure interactive hover & active transitions remain fluid on compositor */
+.hover\:scale-105:hover,
+.hover\:scale-\[1\.01\]:hover,
+.hover\:scale-\[1\.02\]:hover,
+.hover\:scale-\[1\.03\]:hover,
+.hover\:scale-\[1\.04\]:hover,
+.group:hover .group-hover\:scale-105,
+.group:hover .group-hover\:scale-110 {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* Eliminate gray/black box loading flashes & layout shifts */

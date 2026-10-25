@@ -199,7 +199,14 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -20, scale: 0.96 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full flex items-center justify-center px-3 sm:px-4 py-2 sm:py-6 z-10"
+      style={{
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+        willChange: 'transform, opacity',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+      }}
+      className="w-full flex items-center justify-center px-3 sm:px-4 py-2 sm:py-6 z-10 page-transition-container"
     >
       <motion.div
         animate={

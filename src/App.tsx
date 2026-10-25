@@ -589,7 +589,14 @@ export default function App() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.5 }}
-                  className="w-full flex flex-col items-center"
+                  style={{
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                    willChange: 'transform, opacity',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                  }}
+                  className="w-full flex flex-col items-center page-transition-container"
                 >
                   <ComingSoonGate
                     onUnlockSuccess={handlePublicUnlockSuccess}
@@ -620,7 +627,14 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -16 }}
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                  className="w-full flex items-center justify-center"
+                  style={{
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                    willChange: 'transform, opacity',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                  }}
+                  className="w-full flex items-center justify-center page-transition-container"
                 >
                   <UnlockedExperience
                     isVip={isUserVip}

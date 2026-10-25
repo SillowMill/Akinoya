@@ -680,7 +680,14 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-2xl bg-[#090d16] border border-emerald-500/40 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(16,185,129,0.15)]"
+          style={{
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+            willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+          className="rounded-2xl bg-[#090d16] border border-emerald-500/40 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(16,185,129,0.15)] interactive-card"
         >
           {/* Header */}
           <div className="border-b border-white/10 pb-4 sm:pb-5 space-y-2">
@@ -746,7 +753,14 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-2xl bg-[#090d16] border border-red-500/40 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(239,68,68,0.15)]"
+          style={{
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+            willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+          className="rounded-2xl bg-[#090d16] border border-red-500/40 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(239,68,68,0.15)] interactive-card"
         >
           {/* Header */}
           <div className="border-b border-white/10 pb-4 sm:pb-5 space-y-2">
@@ -835,7 +849,14 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-2xl bg-[#090d16] border border-rose-500/40 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(244,63,94,0.15)]"
+          style={{
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+            willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+          className="rounded-2xl bg-[#090d16] border border-rose-500/40 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(244,63,94,0.15)] interactive-card"
         >
           {/* Header */}
           <div className="border-b border-white/10 pb-4 sm:pb-5 space-y-2">
@@ -905,7 +926,14 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-2xl bg-[#090d16] border border-cyan-500/30 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(6,182,212,0.12)]"
+          style={{
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+            willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+          className="rounded-2xl bg-[#090d16] border border-cyan-500/30 p-5 sm:p-8 space-y-6 shadow-[0_0_40px_rgba(6,182,212,0.12)] interactive-card"
         >
           {/* Header */}
           <div className="border-b border-white/10 pb-4 sm:pb-5 space-y-2">
@@ -1075,7 +1103,14 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-6"
+          style={{
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+            willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+          className="space-y-6 page-transition-container"
         >
           {/* Header Card */}
           <div className="rounded-2xl bg-[#090d16] border border-emerald-500/30 p-4 sm:p-6 shadow-[0_0_35px_rgba(16,185,129,0.12)] flex flex-wrap items-center justify-between gap-3">
