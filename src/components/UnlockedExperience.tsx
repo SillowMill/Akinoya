@@ -805,6 +805,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     return unsub;
   }, []);
 
+  // Ensure seamless autoplay loop for the archive preview video on mount and view changes
+  useEffect(() => {
+    if (dnVideoRef.current) {
+      dnVideoRef.current.muted = true;
+      dnVideoRef.current.defaultMuted = true;
+      dnVideoRef.current.play().catch(() => {});
+    }
+  }, [passSubView, activeTab]);
+
   const togglePreviewAudio = async (e: React.MouseEvent) => {
     e.stopPropagation();
     // Keep the video element itself permanently muted to delegate 100% to the global Bingäa audio track
@@ -1363,23 +1372,28 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             }
                           }}
                           src={BINGAA_LOOP_VIDEO_URL}
-                          poster={moodboardImg || visualizerThumbnailImg}
                           autoPlay
-                          loop
                           muted
+                          loop
                           playsInline
                           preload="auto"
                           disablePictureInPicture
                           disableRemotePlayback
                           controlsList="nodownload nofullscreen noremoteplayback"
+                          onCanPlay={(e) => e.currentTarget.play().catch(() => {})}
+                          onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
                           {...({
                             'webkit-playsinline': 'true',
                             'x5-playsinline': 'true',
                             playsinline: 'true',
                           } as any)}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                        >
+                          <source src={BINGAA_LOOP_VIDEO_URL} type="video/mp4" />
+                          <source src={BINGAA_LOOP_VIDEO_URL} type="video/quicktime" />
+                          <source src="/videos/Bingaaloop.mov" type="video/mp4" />
+                        </video>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
                         {/* Audio Mute/Unmute Toggle Button (Synced with Global Bingäa Header Player) */}
                         <button
