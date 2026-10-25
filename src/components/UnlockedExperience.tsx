@@ -805,13 +805,26 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     return unsub;
   }, []);
 
-  // Ensure seamless autoplay loop for the archive preview video on mount and view changes
+  // Ensure seamless autoplay loop for the archive preview video on mount, view changes, and mobile interactions
   useEffect(() => {
-    if (dnVideoRef.current) {
-      dnVideoRef.current.muted = true;
-      dnVideoRef.current.defaultMuted = true;
-      dnVideoRef.current.play().catch(() => {});
-    }
+    const playPreview = () => {
+      if (dnVideoRef.current) {
+        dnVideoRef.current.muted = true;
+        dnVideoRef.current.defaultMuted = true;
+        dnVideoRef.current.play().catch(() => {});
+      }
+    };
+
+    playPreview();
+    document.addEventListener('visibilitychange', playPreview);
+    window.addEventListener('touchstart', playPreview, { once: true, passive: true });
+    window.addEventListener('scroll', playPreview, { once: true, passive: true });
+
+    return () => {
+      document.removeEventListener('visibilitychange', playPreview);
+      window.removeEventListener('touchstart', playPreview);
+      window.removeEventListener('scroll', playPreview);
+    };
   }, [passSubView, activeTab]);
 
   const togglePreviewAudio = async (e: React.MouseEvent) => {

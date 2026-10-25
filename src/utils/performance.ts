@@ -43,8 +43,18 @@ export function useIsBelowWidth(breakpoint: number): boolean {
 }
 
 /**
+ * Detects mobile in-app browsers (TikTok, Instagram, Facebook, etc.)
+ */
+export function checkIsInAppBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+  return /TikTok|Instagram|FBAN|FBAV|Twitter|Snapchat|Line|MicroMessenger|musical_ly/i.test(ua);
+}
+
+/**
  * Detects lower-performance devices (few cores, low memory, reduced-motion preference)
- * and flags <html data-perf="lite"> so CSS can drop expensive blurs, glows & shadows.
+ * or in-app WebViews, flagging <html data-perf="lite"> & <html data-inapp="true">
+ * so CSS can drop expensive blurs, glows & shadows for smooth 60 FPS scrolling.
  */
 export function applyPerformanceTier(): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -53,8 +63,12 @@ export function applyPerformanceTier(): void {
     const cores = nav.hardwareConcurrency || 8;
     const memory = nav.deviceMemory || 8;
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const isLite = cores <= 4 || memory <= 4 || Boolean(reducedMotion);
+    const isInApp = checkIsInAppBrowser();
+    const isLite = cores <= 4 || memory <= 4 || Boolean(reducedMotion) || isInApp;
     document.documentElement.dataset.perf = isLite ? 'lite' : 'full';
+    if (isInApp) {
+      document.documentElement.dataset.inapp = 'true';
+    }
   } catch {
     // Ignore detection failures; default to full experience
   }

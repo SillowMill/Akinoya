@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, Compass, X } from 'lucide-react';
 import { AkinoyaPlanetCanvas } from './components/AkinoyaPlanetCanvas';
 import { ComingSoonGate } from './components/ComingSoonGate';
 import { UnlockedExperience } from './components/UnlockedExperience';
@@ -30,6 +30,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { hasAnyStoredCertificate } from './utils/certificate';
 import { soundManager } from './utils/audio';
 import { scrollToVisualizerHub } from './utils/scroll';
+import { checkIsInAppBrowser } from './utils/performance';
 
 export default function App() {
   const { user, profile, role, isAuthenticated, isVip, hasPendingVipInvitation, openAuthModal, isLoading } = useAuth();
@@ -185,6 +186,12 @@ export default function App() {
       }
     }
     return 'home';
+  });
+
+  // Mobile In-App Browser (TikTok / Instagram / Facebook WebView) detection
+  const [showInAppNotice, setShowInAppNotice] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return checkIsInAppBrowser() && sessionStorage.getItem('akinoya_dismiss_inapp_notice') !== 'true';
   });
 
   // Redirect incoming valid NFC token parameters from root domain directly to /verify/[id]
@@ -421,6 +428,36 @@ export default function App() {
 
   return (
     <main className="app-shell relative min-h-[100dvh] w-full bg-[#050505] text-white flex flex-col justify-between selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Mobile In-App Browser (TikTok/Instagram) Recommendation Notice */}
+      {showInAppNotice && (
+        <aside
+          role="note"
+          aria-label="Browser recommendation"
+          className="relative z-[70] w-full bg-gradient-to-r from-cyan-950 via-[#0a1224] to-cyan-950 border-b border-cyan-400/40 px-3 sm:px-6 py-2 text-center text-[11px] sm:text-xs font-mono text-cyan-200 flex items-center justify-between gap-3 shadow-[0_2px_15px_rgba(6,182,212,0.25)] shrink-0"
+        >
+          <div className="flex-1 flex items-center justify-center gap-2 truncate">
+            <Compass className="w-3.5 h-3.5 text-cyan-400 shrink-0 animate-pulse" />
+            <span className="truncate">
+              For the full 60 FPS reactive audio experience, tap <strong>•••</strong> and select <em>&ldquo;Open in Safari / Chrome&rdquo;</em>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setShowInAppNotice(false);
+              try {
+                sessionStorage.setItem('akinoya_dismiss_inapp_notice', 'true');
+              } catch {}
+            }}
+            className="p-1 rounded-md text-cyan-300 hover:text-white hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+            aria-label="Dismiss notice"
+            title="Dismiss notice"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </aside>
+      )}
+
       {/* Official Pioneer Launch Countdown Announcement Banner (Strictly post-auth dashboard across all devices) */}
       {isSiteUnlocked && route !== 'galaxy' && (
         <PioneerCampaignBanner
