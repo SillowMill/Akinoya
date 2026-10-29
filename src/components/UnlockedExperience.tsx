@@ -1479,7 +1479,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(34,211,238,0.85)]" />
               <span className="text-[10px] sm:text-[10.5px] font-mono text-cyan-400 font-semibold tracking-wider whitespace-nowrap shrink-0">
-                <span className="sm:hidden">ACTIVE</span>
+                <span className="sm:hidden">GUEST</span>
                 <span className="hidden sm:inline">PORTAL ACTIVE</span>
               </span>
               <span className="hidden md:inline text-white/30 text-[10px] shrink-0">·</span>
