@@ -607,21 +607,30 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                   </div>
                 ) : (
                   <div
-                    className="relative aspect-[16/10] sm:aspect-[16/9] lg:aspect-[21/9] rounded-2xl overflow-hidden bg-black/95 border border-cyan-500/40 shadow-[0_0_40px_rgba(56,189,248,0.15)] group touch-pan-y-lock"
+                    className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] rounded-2xl overflow-hidden bg-[#030712] border border-cyan-500/40 shadow-[0_0_40px_rgba(56,189,248,0.15)] flex items-center justify-center group touch-pan-y-lock"
                     style={{ touchAction: 'pan-y' }}
                     onTouchStart={handleTouchStartStage}
                     onTouchEnd={handleTouchEndStage}
                   >
                     {currentPhoto.url ? (
-                      <img
-                        src={currentPhoto.url}
-                        alt={currentPhoto.title}
-                        className={`w-full h-full object-cover transition-all duration-300 select-none ${
-                          isZoomed ? 'scale-125 cursor-zoom-out' : 'group-hover:scale-102 cursor-zoom-in'
-                        }`}
-                        onClick={() => setIsZoomed(!isZoomed)}
-                        draggable={false}
-                      />
+                      <>
+                        <img
+                          src={currentPhoto.url}
+                          alt=""
+                          aria-hidden="true"
+                          decoding="async"
+                          className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-35 scale-110 select-none pointer-events-none"
+                        />
+                        <img
+                          src={currentPhoto.url}
+                          alt={currentPhoto.title}
+                          className={`relative z-10 w-full h-full object-contain mx-auto transition-all duration-300 select-none ${
+                            isZoomed ? 'scale-125 cursor-zoom-out' : 'group-hover:scale-102 cursor-zoom-in'
+                          }`}
+                          onClick={() => setIsZoomed(!isZoomed)}
+                          draggable={false}
+                        />
+                      </>
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-[#070d1e] via-[#050813] to-black space-y-2.5">
                         <Sparkles className="w-6 h-6 text-amber-300 animate-pulse" />

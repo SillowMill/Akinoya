@@ -3085,21 +3085,21 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               }}
               className="space-y-5 sm:space-y-6 md:space-y-7"
             >
-              {/* MY ASSETS Introduction Header */}
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-950/50 via-[#060c1a]/90 to-[#050812]/95 backdrop-blur-xl border border-cyan-400/35 p-4 sm:p-5 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.12)]">
+              {/* MY ASSETS Introduction Header — Symmetrical Full-Width Alignment on Mobile & Desktop */}
+              <div className="w-full relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-cyan-950/50 via-[#060c1a]/90 to-[#050812]/95 backdrop-blur-xl border border-cyan-400/35 p-4 sm:p-6 md:p-7 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.12)]">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent pointer-events-none" />
-                <div className="relative z-10 flex items-start sm:items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-cyan-950/85 border border-cyan-400/45 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
-                    <Gem className="w-5 h-5 text-cyan-400" />
-                  </div>
-                  <div className="space-y-1 min-w-0 flex-1">
+                <div className="relative z-10 space-y-2.5">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-cyan-950/85 border border-cyan-400/45 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
+                      <Gem className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400" />
+                    </div>
                     <h2 className="text-base sm:text-lg font-display font-black uppercase tracking-wider text-white">
                       MY ASSETS
                     </h2>
-                    <p className="text-xs sm:text-sm text-white/85 font-sans italic leading-relaxed">
-                      Here you will find all your personal planetary assets and creations. When you acquire a comic or secure a world on Äkinoya, you receive an official, authentic PDF framing certificate linked to your unique core token—proving it is a 100% authentic, one-of-a-kind piece.
-                    </p>
                   </div>
+                  <p className="w-full text-xs sm:text-sm text-white/85 font-sans italic leading-relaxed">
+                    Here you will find all your personal planetary assets and creations. When you acquire a comic or secure a world on Äkinoya, you receive an official, authentic PDF framing certificate linked to your unique core token—proving it is a 100% authentic, one-of-a-kind piece.
+                  </p>
                 </div>
               </div>
 

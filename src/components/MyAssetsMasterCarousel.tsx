@@ -791,7 +791,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
       >
         {/* Dynamic Multi-Media Carousel Slides Container */}
         <div
-          className="w-full px-1 sm:px-4 lg:px-6 touch-pan-y-lock"
+          className="w-full px-0 sm:px-4 lg:px-6 touch-pan-y-lock"
           style={{ touchAction: 'pan-y' }}
         >
           <AnimatePresence mode="wait" custom={slideDirection}>
@@ -813,27 +813,37 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
                 }}
-                className="space-y-4"
+                className="w-full space-y-4"
               >
-                {/* Main 4K Cinematic Display Stage - Completely Pure, Crisp & Uncluttered Render */}
+                {/* Main 4K Cinematic Display Stage - Full Uncropped Picture View (object-contain) */}
                 <div
                   onClick={() => openFullscreenViewer('archive_4k')}
-                  className="relative w-full aspect-[16/10] sm:aspect-[16/9] max-h-[520px] rounded-2xl overflow-hidden bg-black border border-amber-400/40 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_30px_rgba(245,158,11,0.15)] group cursor-pointer hover:border-amber-300 transition-all select-none"
+                  className="relative w-full aspect-[4/3] sm:aspect-[16/10] max-h-[420px] sm:max-h-[520px] rounded-2xl overflow-hidden bg-[#030712] border border-amber-400/40 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_30px_rgba(245,158,11,0.15)] flex items-center justify-center group cursor-pointer hover:border-amber-300 transition-all select-none"
                   title="Click to view 4K master in full screen"
                 >
                   {activePhoto?.url && (
-                    <img
-                      src={activePhoto.url}
-                      alt={activePhoto.title}
-                      loading="eager"
-                      decoding="async"
-                      className="w-full h-full object-cover group-hover:scale-[1.015] transition-transform duration-700 select-none pointer-events-none"
-                    />
+                    <>
+                      {/* Subtle blurred ambient backdrop prevents harsh letterbox bars while keeping foreground 100% uncropped */}
+                      <img
+                        src={activePhoto.url}
+                        alt=""
+                        aria-hidden="true"
+                        decoding="async"
+                        className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-35 scale-110 select-none pointer-events-none"
+                      />
+                      <img
+                        src={activePhoto.url}
+                        alt={activePhoto.title}
+                        loading="eager"
+                        decoding="async"
+                        className="relative z-10 w-full h-full object-contain mx-auto group-hover:scale-[1.015] transition-transform duration-700 select-none pointer-events-none"
+                      />
+                    </>
                   )}
                 </div>
 
-                {/* Clean Information & Action Bar Below the 4K Render (Zero Overlap on Image) */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 py-1">
+                {/* Clean Information & Action Bar Below the 4K Render (Symmetrical Padded Placement on Mobile & Desktop) */}
+                <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-0.5 py-1">
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-base sm:text-lg font-display font-black text-white tracking-wide truncate">
@@ -851,15 +861,15 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2 sm:gap-2.5 shrink-0 pt-0.5 sm:pt-0">
                     <button
                       type="button"
                       onClick={() => openFullscreenViewer('archive_4k')}
-                      className="inline-flex lg:hidden items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-cyan-300 text-xs font-mono font-bold transition-all cursor-pointer min-h-[42px] touch-manipulation"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-cyan-300 text-[11px] sm:text-xs font-mono font-bold transition-all cursor-pointer min-h-[44px] touch-manipulation whitespace-nowrap"
                       title="Inspect in 4K Fullscreen"
                     >
-                      <Maximize2 className="w-3.5 h-3.5 text-cyan-300" />
-                      <span>FULLSCREEN</span>
+                      <Maximize2 className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+                      <span>Fullscreen</span>
                     </button>
                     <button
                       type="button"
@@ -868,11 +878,14 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         handleDownload4kPhoto();
                       }}
                       disabled={isDownloadingPhoto}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] shrink-0 min-h-[42px] touch-manipulation"
+                      className="w-full sm:w-auto px-3 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-[11px] sm:text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] shrink-0 min-h-[44px] touch-manipulation whitespace-nowrap"
                       title="Save watermarked 4K Master Picture directly to device Photos"
                     >
-                      <Download className="w-4 h-4 text-black" />
-                      <span>
+                      <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black shrink-0" />
+                      <span className="sm:hidden">
+                        {isDownloadingPhoto ? 'Saving...' : 'Save Picture'}
+                      </span>
+                      <span className="hidden sm:inline">
                         {isDownloadingPhoto
                           ? 'Saving picture to Photos...'
                           : 'Save picture to Photos'}
@@ -881,8 +894,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                   </div>
                 </div>
 
-                {/* 5-Photo Stage Thumbnails Strip (01 Main through 05 Lore) */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+                {/* 5-Photo Stage Thumbnails Strip (Symmetrical 5-Column Row on All Viewports) */}
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-2.5 pt-1">
                   {photoCards.slice(0, 5).map((card, idx) => {
                     const isSelected = idx === activePhotoIdx;
                     return (
@@ -893,18 +906,18 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                           soundManager.playTone(660 + idx * 30, 0.04);
                           setActivePhotoIdx(idx);
                         }}
-                        className={`group relative rounded-xl overflow-hidden aspect-[4/3] border-2 transition-all duration-300 cursor-pointer text-left ${
+                        className={`group relative rounded-xl overflow-hidden aspect-square sm:aspect-[4/3] border-2 transition-all duration-300 cursor-pointer text-left ${
                           isSelected
                             ? 'border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.45)] scale-[1.02]'
-                            : 'border-white/10 hover:border-cyan-400/60 opacity-75 hover:opacity-100'
+                            : 'border-white/15 hover:border-cyan-400/60 opacity-75 hover:opacity-100'
                         }`}
                       >
                         <img src={card.url} alt={card.title} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                        <div className="absolute top-1.5 left-2 px-1.5 py-0.5 rounded bg-black/80 text-[8px] font-mono font-bold text-amber-300">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+                        <div className="absolute top-1 left-1 sm:top-1.5 sm:left-2 px-1 sm:px-1.5 py-0.5 rounded bg-black/80 text-[7.5px] sm:text-[8px] font-mono font-bold text-amber-300">
                           0{idx + 1}
                         </div>
-                        <div className="absolute bottom-1.5 left-2 right-2">
+                        <div className="hidden sm:block absolute bottom-1.5 left-2 right-2">
                           <span className="block text-[9px] font-mono text-cyan-300 uppercase tracking-wider truncate">
                             {card.category.split('·')[1]?.trim() || card.category}
                           </span>
@@ -939,14 +952,16 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                 }}
                 className="flex flex-col lg:flex-row items-center justify-center gap-6 md:gap-8 py-2"
               >
-                {/* 9:16 Story Card View Component with Fullscreen Tap Handler */}
-                <StoryCard9x16View
-                  dossier={dossier}
-                  meta={meta}
-                  photoCards={photoCards}
-                  onTapToFullscreen={() => openFullscreenViewer('story_card')}
-                  showFullscreenHint
-                />
+                {/* 9:16 Story Card View Component Centered Cleanly with Fullscreen Tap Handler */}
+                <div className="flex flex-col items-center gap-3 w-full max-w-[340px] sm:max-w-[375px] mx-auto lg:mx-0">
+                  <StoryCard9x16View
+                    dossier={dossier}
+                    meta={meta}
+                    photoCards={photoCards}
+                    onTapToFullscreen={() => openFullscreenViewer('story_card')}
+                    showFullscreenHint
+                  />
+                </div>
 
                 {/* Side Specifications & Direct Download Actions Panel */}
                 <div className="space-y-4 max-w-md w-full">

@@ -1563,7 +1563,8 @@ export async function exportWorldTrailerVideoBlob(
       try {
         const v = document.createElement('video');
         v.crossOrigin = 'anonymous';
-        v.muted = false;
+        v.muted = true;
+        v.defaultMuted = true;
         v.playsInline = true;
         v.setAttribute('webkit-playsinline', 'true');
         v.setAttribute('playsinline', 'true');
@@ -1994,14 +1995,74 @@ export const LiveStoryTrailerViewport: React.FC<{
     };
   }, [dossier, meta, photoCards]);
 
-  const posterUrl = useMemo(
-    () => (photoCards[0]?.url ? getCacheBustedUrl(photoCards[0].url) : undefined),
-    [photoCards[0]?.url]
-  );
-  const resolvedVideoSrc = useMemo(
-    () => (videoUrl ? getCacheBustedUrl(videoUrl) : undefined),
-    [videoUrl]
-  );
+  const posterUrl = useMemo(() => photoCards[0]?.url || undefined, [photoCards[0]?.url]);
+  const resolvedVideoSrc = useMemo(() => {
+    if (!videoUrl) return undefined;
+    // Serve static /assets/videos/... directly so browser HTTP cache enables 0ms instant autoplay
+    if (videoUrl.startsWith('/assets/videos/') || videoUrl.startsWith('data:') || videoUrl.startsWith('blob:')) {
+      return videoUrl;
+    }
+    return getCacheBustedUrl(videoUrl);
+  }, [videoUrl]);
+
+  // Ensure continuous autoplay & seamless looping on mobile/tablet and desktop viewports
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !resolvedVideoSrc) return;
+
+    const ensurePlaying = () => {
+      if (!video) return;
+      video.defaultMuted = isMuted;
+      video.muted = isMuted;
+      video.loop = true;
+      video.playsInline = true;
+      if (video.paused) {
+        video.play().catch(() => {
+          // Fallback to muted autoplay if browser blocked unmuted playback
+          video.muted = true;
+          video.defaultMuted = true;
+          video.play().catch(() => {});
+        });
+      }
+    };
+
+    ensurePlaying();
+
+    let observer: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              ensurePlaying();
+            }
+          }
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(video);
+    }
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        ensurePlaying();
+      }
+    };
+    const onFirstTouch = () => {
+      if (video.paused) {
+        ensurePlaying();
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('touchstart', onFirstTouch, { passive: true });
+
+    return () => {
+      observer?.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('touchstart', onFirstTouch);
+    };
+  }, [resolvedVideoSrc, isMuted]);
 
   return (
     <div
@@ -2019,7 +2080,7 @@ export const LiveStoryTrailerViewport: React.FC<{
         <img
           src={posterUrl}
           alt={dossier.planetName || 'Ämlemi'}
-          className="absolute inset-0 w-full h-full object-cover z-0 filter brightness-95"
+          className="absolute inset-0 w-full h-full object-cover z-0 filter brightness-95 pointer-events-none select-none"
           decoding="async"
         />
       )}
@@ -2038,13 +2099,29 @@ export const LiveStoryTrailerViewport: React.FC<{
             ref={(el) => {
               videoRef.current = el;
               onVideoElementReady?.(el);
+              if (el) {
+                el.defaultMuted = isMuted;
+                el.muted = isMuted;
+                el.loop = true;
+                el.playsInline = true;
+                el.autoplay = true;
+                el.setAttribute('playsinline', '');
+                el.setAttribute('webkit-playsinline', '');
+                el.setAttribute('autoplay', '');
+                if (isMuted) {
+                  el.setAttribute('muted', '');
+                }
+                if (el.paused) {
+                  el.play().catch(() => {});
+                }
+              }
             }}
             src={resolvedVideoSrc}
-            poster={posterUrl}
             autoPlay
             loop
             muted={isMuted}
             playsInline
+            controls={false}
             preload="auto"
             disablePictureInPicture
             disableRemotePlayback
@@ -2054,13 +2131,39 @@ export const LiveStoryTrailerViewport: React.FC<{
               'x5-playsinline': 'true',
               playsinline: 'true',
             } as any)}
+            onLoadedMetadata={(e) => {
+              const v = e.currentTarget;
+              v.defaultMuted = isMuted;
+              v.muted = isMuted;
+              v.play().catch(() => {});
+            }}
+            onLoadedData={(e) => {
+              e.currentTarget.play().catch(() => {});
+            }}
+            onCanPlay={(e) => {
+              e.currentTarget.play().catch(() => {});
+            }}
+            onTimeUpdate={(e) => {
+              const v = e.currentTarget;
+              if (v.duration && v.duration > 0.5 && v.currentTime >= v.duration - 0.06) {
+                v.currentTime = 0;
+                if (v.paused) {
+                  v.play().catch(() => {});
+                }
+              }
+            }}
+            onEnded={(e) => {
+              const v = e.currentTarget;
+              v.currentTime = 0;
+              v.play().catch(() => {});
+            }}
             onPlay={() => {
               onPlaybackStateChange?.(true);
             }}
             onPause={(e) => {
               // Prevent accidental pause — keep trailer looping continuously
               const v = e.currentTarget;
-              if (v && v.paused && !v.ended) {
+              if (v && v.paused) {
                 v.play().catch(() => {});
               }
             }}
