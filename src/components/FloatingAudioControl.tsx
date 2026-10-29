@@ -33,8 +33,8 @@ export const FloatingAudioControl: React.FC<FloatingAudioControlProps> = ({ isGa
       className={`fixed ${
         isGalaxy
           ? 'bottom-20 right-4 sm:bottom-20 sm:right-6'
-          : 'bottom-[calc(env(safe-area-inset-bottom,0px)+0.875rem)] right-3.5 sm:bottom-5 sm:right-6'
-      } z-[60] flex items-center gap-2 select-none pointer-events-auto transform-gpu will-change-transform transition-[bottom,right] duration-300`}
+          : 'floating-audio-portrait-offset bottom-[calc(env(safe-area-inset-bottom,0px)+0.875rem)] right-3.5 sm:bottom-5 sm:right-6'
+      } z-[60] flex items-center gap-2 select-none pointer-events-auto transform-gpu will-change-transform`}
       style={{
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',

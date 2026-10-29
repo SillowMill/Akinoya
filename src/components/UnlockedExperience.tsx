@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import passCardImg from '../assets/images/akinoya_pass_card_1790852652003.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
@@ -927,7 +928,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     scrollToVisualizerHub(true);
   };
 
+  const [tappingTab, setTappingTab] = useState<'pass' | 'edition' | 'my-world' | 'assets' | null>(null);
+
   const handleSelectTab = (tab: 'pass' | 'edition' | 'my-world' | 'assets') => {
+    setTappingTab(tab);
+    setTimeout(() => setTappingTab((prev) => (prev === tab ? null : prev)), 155);
     soundManager.playTone(580, 0.04);
     setActiveTab(tab);
     if (tab === 'pass') {
@@ -1214,7 +1219,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
       }}
-      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10 page-transition-container"
+      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10 page-transition-container portrait-bottom-safe-pad"
     >
       {/* Top Status & Lock Control — Translucent Glassmorphism matching the Visualizer Hub Showcase Widget */}
       <div className="relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6 md:mb-7 lg:mb-8 bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:px-6 md:px-7 lg:px-8 lg:py-5 shadow-[0_0_30px_rgba(56,189,248,0.15)]">
@@ -1287,8 +1292,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
       {/* Main Tabs and Content Area */}
       <div className="space-y-5 sm:space-y-6 md:space-y-7 w-full">
-        {/* Navigation Tabs (All 4 tabs accessible, including My Assets for 9:16 Story Verification Badge) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
+        {/* Desktop & Landscape Navigation Tabs (Home, Comic, Worlds, My Assets) */}
+        <div className="desktop-landscape-only grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
           <button
             onClick={() => handleSelectTab('pass')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
@@ -1298,7 +1303,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             }`}
           >
             <Compass className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Pass Perks</span>
+            <span className="truncate">Home</span>
           </button>
           <button
             onClick={() => handleSelectTab('edition')}
@@ -1320,7 +1325,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             }`}
           >
             <Globe2 className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">My World</span>
+            <span className="truncate">Worlds</span>
           </button>
           <button
             onClick={() => handleSelectTab('assets')}
@@ -3607,6 +3612,72 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         onClose={() => setSelectedDossierModal(null)}
         onNavigateToGalaxy={onNavigateToGalaxy}
       />
+
+      {/* Version 1 Sticky Bottom Navigation with Sci-Fi Micro-Feedback (Portrait Mobile & Portrait Tablet Only) */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <nav
+            aria-label="Mobile Sci-Fi Bottom Navigation"
+            className="scifi-bottom-nav scifi-homepage-bottom-nav portrait-mobile-only select-none"
+          >
+            {/* Hardware-Accelerated Neon Underline Scanner Beam */}
+            <div className="scifi-scanner-track scifi-scanner-track-top">
+              <div
+                className="scifi-scanner-beam"
+                style={{
+                  '--scanner-index':
+                    activeTab === 'pass'
+                      ? 0
+                      : activeTab === 'edition'
+                      ? 1
+                      : activeTab === 'my-world'
+                      ? 2
+                      : 3,
+                } as React.CSSProperties}
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center px-2 py-1.5">
+              {(
+                [
+                  { id: 'pass' as const, label: 'Home', Icon: Compass },
+                  { id: 'edition' as const, label: 'Comic', Icon: BookOpen },
+                  { id: 'my-world' as const, label: 'Worlds', Icon: Globe2 },
+                  { id: 'assets' as const, label: 'My Assets', Icon: Gem },
+                ] as const
+              ).map(({ id, label, Icon }) => {
+                const isActive = activeTab === id;
+                const isTapping = tappingTab === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => handleSelectTab(id)}
+                    className={`scifi-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl cursor-pointer min-h-[52px] ${
+                      isActive ? 'is-active text-cyan-300' : 'text-white/55 hover:text-white/85'
+                    } ${isTapping ? 'is-tapping' : ''}`}
+                  >
+                    <Icon
+                      className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
+                        isActive
+                          ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.75)]'
+                          : 'text-white/60'
+                      }`}
+                    />
+                    <span
+                      className={`text-[10.5px] font-mono tracking-wider leading-none truncate ${
+                        isActive ? 'font-bold text-cyan-200' : 'font-medium text-white/60'
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>,
+          document.body
+        )}
     </motion.div>
   );
 };
