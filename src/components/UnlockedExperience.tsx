@@ -84,6 +84,7 @@ import {
   SectorClaimRecord,
 } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
+import { VisualizerPlayerModal } from './VisualizerPlayerModal';
 import { MyAssetsMasterCarousel } from './MyAssetsMasterCarousel';
 import { WorldReleaseStatusBanner } from './WorldReleaseStatusBanner';
 import {
@@ -1017,36 +1018,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [trackUnlockInput, setTrackUnlockInput] = useState('');
   const [trackUnlockError, setTrackUnlockError] = useState('');
   const [activePlayingTrack, setActivePlayingTrack] = useState<VisualizerTrack | null>(null);
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const streamVideoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    const unsub = planetSoundtrack.subscribe((playing) => {
-      if (!activePlayingTrack || activePlayingTrack.id === '02') {
-        setIsPlayingAudio(playing);
-      }
-    });
-    return () => unsub();
-  }, [activePlayingTrack]);
-
-  useEffect(() => {
-    const videoEl = streamVideoRef.current;
-    if (!videoEl || !activePlayingTrack?.videoUrl) return;
-    const shouldMute = activePlayingTrack.id === '02';
-    videoEl.muted = shouldMute;
-    videoEl.defaultMuted = shouldMute;
-    if (!shouldMute) {
-      videoEl.volume = 1.0;
-    }
-    videoEl
-      .play()
-      .then(() => {
-        if (activePlayingTrack.id !== '02') {
-          setIsPlayingAudio(true);
-        }
-      })
-      .catch(() => {});
-  }, [activePlayingTrack]);
 
   const handleUnlockVisualizers = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1206,12 +1177,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       dnVideoRef.current.muted = true;
     }
     setActivePlayingTrack(track);
-    if (track.id === '02') {
-      planetSoundtrack.play();
-    } else {
-      planetSoundtrack.pause();
-      setIsPlayingAudio(true);
-    }
   };
 
   const handleTrackCardClick = (track: VisualizerTrack) => {
@@ -3447,194 +3412,26 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Modal 2: Audio Stream Visualizer Player */}
-      <AnimatePresence>
-        {activePlayingTrack && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 xs:p-3 sm:p-6 lg:p-8 bg-black/95">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 15 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                transform: 'translateZ(0)',
-                WebkitTransform: 'translateZ(0)',
-                willChange: 'transform, opacity',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-              }}
-              className="relative w-full max-w-3xl lg:max-w-4xl bg-[#05080e] border border-cyan-400/40 rounded-2xl overflow-hidden shadow-[0_0_60px_rgba(56,189,248,0.25)] flex flex-col max-h-[92dvh] sm:max-h-none overflow-y-auto sm:overflow-visible modal-surface"
-            >
-              {/* Header Bar */}
-              <div className="flex items-center justify-between px-3.5 sm:px-6 py-3 sm:py-3.5 bg-black/60 border-b border-white/10 shrink-0">
-                <div className="flex items-center gap-2.5 sm:gap-3">
-                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
-                  <div>
-                    <div className="text-[9px] sm:text-[10px] font-mono text-cyan-400 tracking-wider">
-                      AUDIO TRANSMISSION · TRACK #{activePlayingTrack.id}
-                    </div>
-                    <h3 className="text-xs sm:text-base font-display font-bold text-white truncate max-w-[200px] xs:max-w-[260px] sm:max-w-none">
-                      {activePlayingTrack.title} — Official Audio Feed
-                    </h3>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    if (streamVideoRef.current) {
-                      streamVideoRef.current.pause();
-                    }
-                    setActivePlayingTrack(null);
-                    setIsPlayingAudio(false);
-                    if (activePlayingTrack.id === '02') {
-                      planetSoundtrack.pause();
-                    }
-                  }}
-                  className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Main Visualizer Stage */}
-              <div className="relative min-h-[270px] xs:min-h-[300px] sm:min-h-0 sm:aspect-video w-full bg-black overflow-hidden flex items-center justify-center">
-                {activePlayingTrack.videoUrl ? (
-                  <video
-                    ref={streamVideoRef}
-                    src={activePlayingTrack.videoUrl}
-                    poster={activePlayingTrack.artworkUrl || akinoyaVistaImg}
-                    autoPlay
-                    loop
-                    muted={activePlayingTrack.id === '02'}
-                    playsInline
-                    preload="auto"
-                    disablePictureInPicture
-                    disableRemotePlayback
-                    controlsList="nodownload nofullscreen noremoteplayback"
-                    onPlay={() => setIsPlayingAudio(true)}
-                    onPause={() => {
-                      if (activePlayingTrack.id !== '02') {
-                        setIsPlayingAudio(false);
-                      }
-                    }}
-                    {...({
-                      'webkit-playsinline': 'true',
-                      'x5-playsinline': 'true',
-                      playsinline: 'true',
-                    } as any)}
-                    className="w-full h-full object-cover object-center"
-                  />
-                ) : (
-                  <>
-                    {/* Background cosmic vista with glowing ambient motion */}
-                    <img
-                      src={akinoyaVistaImg}
-                      alt="Äkinoya Vista"
-                      className="absolute inset-0 w-full h-full object-cover object-center opacity-60 scale-105 animate-pulse"
-                      style={{ animationDuration: '8s' }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,black_80%)] pointer-events-none" />
-
-                    {/* Animated holographic audio telemetry overlay */}
-                    <div className="relative z-10 flex flex-col items-center text-center p-3.5 xs:p-4 sm:p-6 space-y-2.5 sm:space-y-4 w-full max-w-lg mx-auto">
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_30px_rgba(56,189,248,0.4)] shrink-0">
-                        <AudioWaveform className="w-5 h-5 sm:w-7 sm:h-7 text-cyan-400 animate-pulse" />
-                      </div>
-
-                      <div>
-                        <span className="text-[9px] sm:text-[10px] font-mono px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-950/90 border border-emerald-400/40 text-emerald-300 font-semibold tracking-wider uppercase">
-                          ● TRANSMISSION ACTIVE · HQ AUDIO FEED
-                        </span>
-                        <h2 className="text-lg xs:text-xl sm:text-2xl font-display font-extrabold text-white mt-1.5 sm:mt-2">
-                          {activePlayingTrack.title}
-                        </h2>
-                        <p className="text-[10px] xs:text-xs font-mono text-cyan-300/80 mt-1 max-w-xs sm:max-w-none mx-auto leading-tight sm:leading-normal">
-                          AUDIO MATRIX FREQUENCY · TRANSMISSION STREAM
-                        </p>
-                      </div>
-
-                      {/* Pulsing Audio Telemetry Waveform Bars */}
-                      <div className="flex items-center gap-1 sm:gap-1.5 h-8 sm:h-12 pt-1 sm:pt-2">
-                        {[35, 60, 90, 45, 80, 100, 75, 40, 65, 85, 55, 95, 70, 50, 85, 60, 40, 75].map((h, i) => (
-                          <div
-                            key={i}
-                            className="w-0.5 sm:w-1 rounded-full bg-gradient-to-t from-cyan-500 to-emerald-400 transition-all duration-300"
-                            style={{
-                              height: `${isPlayingAudio || activePlayingTrack.id !== '02' ? h : 15}%`,
-                              animation: 'pulse 1.2s ease-in-out infinite alternate',
-                              animationDelay: `${i * 0.08}s`,
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Player Controls Bar */}
-              <div className="px-3.5 sm:px-6 py-3.5 sm:py-4 bg-[#080d16] border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-                  <button
-                    onClick={() => {
-                      if (activePlayingTrack.id === '02') {
-                        planetSoundtrack.togglePlay();
-                        if (streamVideoRef.current) {
-                          if (isPlayingAudio) {
-                            streamVideoRef.current.pause();
-                          } else {
-                            streamVideoRef.current.play().catch(() => {});
-                          }
-                        }
-                      } else if (streamVideoRef.current) {
-                        if (!streamVideoRef.current.paused) {
-                          streamVideoRef.current.pause();
-                          setIsPlayingAudio(false);
-                        } else {
-                          streamVideoRef.current.muted = false;
-                          streamVideoRef.current.volume = 1.0;
-                          streamVideoRef.current.play().catch(() => {});
-                          setIsPlayingAudio(true);
-                        }
-                      } else {
-                        setIsPlayingAudio(!isPlayingAudio);
-                        soundManager.playTone(520, 0.1);
-                      }
-                    }}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-mono font-semibold transition-all cursor-pointer shadow-[0_0_12px_rgba(56,189,248,0.3)] min-h-[44px]"
-                  >
-                    {isPlayingAudio ? (
-                      <>
-                        <Pause className="w-4 h-4 fill-black" />
-                        <span>PAUSE STREAM</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4 fill-black ml-0.5" />
-                        <span>PLAY STREAM</span>
-                      </>
-                    )}
-                  </button>
-
-                  <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[11px] sm:text-xs font-mono text-white/70 text-center sm:text-left py-0.5 sm:py-0">
-                    <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 shrink-0" />
-                    <span className="truncate">
-                      {activePlayingTrack.id === '02'
-                        ? 'Master Planetary Soundtrack (BWS)'
-                        : 'Audio Synthesizer Matrix'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-[10px] sm:text-[11px] font-mono text-cyan-400/80 text-center sm:text-right pt-2 sm:pt-0 border-t border-white/5 sm:border-0">
-                  TOKEN #AKN-2027 · VIP EXCLUSIVE
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Modal 2: High-End Immersive Visualizer Hub Modal Overlay */}
+      <VisualizerPlayerModal
+        isOpen={Boolean(activePlayingTrack)}
+        activeTrack={activePlayingTrack}
+        tracks={VISUALIZER_TRACKS}
+        isVipMode={isVipMode}
+        onClose={() => {
+          setActivePlayingTrack(null);
+        }}
+        onSelectTrack={(track) => {
+          const isUnlocked = isVipMode || isVisualizerUnlocked || unlockedTracks[track.id] || track.defaultUnlocked;
+          if (isUnlocked) {
+            setActivePlayingTrack(track);
+          } else {
+            setSelectedTrackForUnlock(track);
+            setTrackUnlockInput('');
+            setTrackUnlockError('');
+          }
+        }}
+      />
 
       {/* Modal 3: Unified Comic Pre-Order Checkout Modal */}
       <AnimatePresence>
