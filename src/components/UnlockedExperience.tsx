@@ -1161,16 +1161,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   const resetWindowScrollInstant = () => {
     if (typeof window === 'undefined') return;
-    const htmlEl = document.documentElement;
-    const bodyEl = document.body;
-    const prevHtmlOverflow = htmlEl.style.overflowY;
-    // Halt active iOS/Android momentum scroll inertia synchronously before resetting scrollTop
-    htmlEl.style.overflowY = 'hidden';
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-    htmlEl.scrollTop = 0;
-    bodyEl.scrollTop = 0;
-    void htmlEl.offsetHeight;
-    htmlEl.style.overflowY = prevHtmlOverflow;
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   };
 
   const handleSelectTab = (tab: 'pass' | 'edition' | 'my-world' | 'assets') => {
@@ -3644,7 +3637,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           <nav
             aria-label="Mobile Sci-Fi Bottom Navigation"
             className="scifi-bottom-nav scifi-homepage-bottom-nav portrait-mobile-only select-none"
-            style={{ pointerEvents: 'auto', touchAction: 'manipulation' }}
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              width: '100%',
+              zIndex: 9999,
+              paddingBottom: 'env(safe-area-inset-bottom, 16px)',
+              pointerEvents: 'auto',
+              touchAction: 'manipulation',
+            }}
             onTouchStart={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
           >

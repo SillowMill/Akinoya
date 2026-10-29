@@ -1589,7 +1589,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                 <nav
                   aria-label="Community Hub Bottom Navigation"
                   className="scifi-bottom-nav portrait-mobile-only select-none"
-                  style={{ pointerEvents: 'auto', touchAction: 'manipulation' }}
+                  style={{
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    width: '100%',
+                    zIndex: 9999,
+                    paddingBottom: 'env(safe-area-inset-bottom, 16px)',
+                    pointerEvents: 'auto',
+                    touchAction: 'manipulation',
+                  }}
                   onTouchStart={(e) => e.stopPropagation()}
                   onPointerDown={(e) => e.stopPropagation()}
                 >
