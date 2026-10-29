@@ -1628,7 +1628,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   )}
 
                   {/* Primary Horizontally Swipable Bottom Tray with All 6 Exact Desktop Modules + Claim Your World */}
-                  <div className="scifi-bottom-tray-scroll px-2.5 py-2">
+                  <div className="scifi-bottom-tray-scroll px-2.5 py-0.5">
                     {HUB_TABS.map((tab) => {
                       const Icon = tab.icon;
                       const isActive = activeSection === tab.id;

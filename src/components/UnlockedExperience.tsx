@@ -3941,7 +3941,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-5 items-center px-1.5 py-1.5 pointer-events-auto">
+            <div className="grid grid-cols-5 items-center px-1.5 py-0 pointer-events-auto">
               {(
                 [
                   { id: 'pass' as const, label: 'Home', Icon: Compass },
@@ -3959,7 +3959,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     key={id}
                     type="button"
                     {...getNavButtonTouchHandlers(id)}
-                    className={`scifi-nav-item flex flex-col items-center justify-center gap-1 py-2 px-0.5 rounded-xl cursor-pointer min-h-[52px] min-w-0 ${
+                    className={`scifi-nav-item flex flex-col items-center justify-center gap-1 py-1.5 px-0.5 rounded-xl cursor-pointer min-h-[48px] sm:min-h-[50px] min-w-0 ${
                       isActive ? 'is-active text-cyan-300' : 'text-white/55 hover:text-white/85'
                     } ${isTapping ? 'is-tapping' : ''}`}
                   >

@@ -596,20 +596,25 @@ canvas {
     display: none !important;
   }
 
+  /* Padding for Page Content to prevent overlap behind fixed bottom navigation */
   .portrait-bottom-safe-pad {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6.5rem) !important;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 1.5rem) !important;
   }
 
   .portrait-bottom-safe-pad-workflows {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8.75rem) !important;
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px) + 1.5rem) !important;
   }
 
   .site-footer-safe {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.75rem) !important;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 1.75rem) !important;
+  }
+
+  .page-transition-container {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 1rem) !important;
   }
 
   .floating-audio-portrait-offset {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 5.25rem) !important;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 1rem) !important;
   }
 }
 
@@ -619,13 +624,17 @@ canvas {
   bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  width: 100%;
+  width: 100% !important;
+  box-sizing: border-box !important;
   z-index: 9000 !important;
   pointer-events: auto !important;
   touch-action: manipulation !important;
   overscroll-behavior: none;
   isolation: isolate;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-top: 12px !important;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  padding-left: max(env(safe-area-inset-left, 0px), 0px);
+  padding-right: max(env(safe-area-inset-right, 0px), 0px);
   background: rgba(6, 10, 18, 0.98) !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
