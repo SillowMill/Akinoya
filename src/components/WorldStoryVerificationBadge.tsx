@@ -1946,43 +1946,36 @@ export const LiveStoryTrailerViewport: React.FC<{
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    const rafId = requestAnimationFrame(() => {
-      if (video) {
-        video.muted = isMuted;
-      }
-    });
-    return () => cancelAnimationFrame(rafId);
+    video.muted = isMuted;
+    video.defaultMuted = isMuted;
+    if (!isMuted) {
+      video.volume = 1.0;
+    }
+    if (video.paused) {
+      video.play().catch(() => {});
+    }
   }, [isMuted]);
-
-  // Sync video play/pause status when controlled externally (wrapped in RAF for 60fps smoothness)
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || isPlaying === undefined) return;
-    const rafId = requestAnimationFrame(() => {
-      if (!video) return;
-      if (isPlaying && video.paused) {
-        video.play().catch(() => {});
-      } else if (!isPlaying && !video.paused) {
-        video.pause();
-      }
-    });
-    return () => cancelAnimationFrame(rafId);
-  }, [isPlaying]);
 
   const handleToggleAudio = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const video = videoRef.current;
+    const nextMuted = !isMuted;
     if (video) {
-      // Modify ONLY the .muted property directly via JavaScript - zero parent container reflow
-      video.muted = !video.muted;
-      soundManager.playTone(video.muted ? 440 : 680, 0.05);
+      video.muted = nextMuted;
+      video.defaultMuted = nextMuted;
+      if (!nextMuted) {
+        video.volume = 1.0;
+      }
       if (video.paused) {
         video.play().catch(() => {});
       }
-      setInternalMuted(video.muted);
+    }
+    setInternalMuted(nextMuted);
+    if (onToggleAudio) {
+      onToggleAudio();
     } else {
-      setInternalMuted((prev) => !prev);
+      soundManager.playTone(nextMuted ? 440 : 680, 0.05);
     }
   };
 
@@ -2100,11 +2093,12 @@ export const LiveStoryTrailerViewport: React.FC<{
             onPlay={() => {
               onPlaybackStateChange?.(true);
             }}
-            onPause={() => {
-              onPlaybackStateChange?.(false);
-            }}
-            onEnded={() => {
-              onPlaybackStateChange?.(false);
+            onPause={(e) => {
+              // Prevent accidental pause — keep trailer looping continuously
+              const v = e.currentTarget;
+              if (v && v.paused && !v.ended) {
+                v.play().catch(() => {});
+              }
             }}
             style={{
               transform: 'translateZ(0)',
@@ -2113,80 +2107,34 @@ export const LiveStoryTrailerViewport: React.FC<{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
             }}
-            className="w-full h-full object-contain relative z-10 pointer-events-auto"
+            className="w-full h-full object-contain relative z-10 pointer-events-none select-none"
           />
-          {/* Top-level & Bottom-left Branded Overlay on native MP4 */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none z-20" />
-          <div className="absolute top-3 left-3.5 right-3.5 flex items-start justify-between gap-2 pointer-events-none z-30">
-            <div className="min-w-0 flex-1">
-              <div className="inline-flex items-center gap-1 text-[8.5px] font-mono font-extrabold text-amber-300 tracking-wider uppercase">
-                <Sparkles className="w-2.5 h-2.5 text-amber-300 inline shrink-0" />
-                <span className="truncate">
-                  {meta.isAmlemi
-                    ? 'FOUNDING PIONEER'
-                    : meta.isVipPioneer
-                    ? 'VIP PIONEER'
-                    : 'FOUNDING PIONEER'}
-                </span>
-              </div>
-              <div className="text-sm font-display font-black tracking-[0.15em] text-white uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mt-0.5 truncate">
-                {dossier.planetName || 'ÄMLEMI'}
-              </div>
-              <div className="text-[7.5px] font-mono text-cyan-300 mt-0.5 truncate">
-                HOLDER: {formatTitleCaseUserName(dossier.authorName).toUpperCase()} · {dossier.sectorId || 'SECTOR AKN-01'}
-              </div>
-            </div>
 
-            {/* Audio Toggle Button & Edition Number */}
-            <div className="flex items-center gap-1.5 pointer-events-auto shrink-0">
-              <button
-                type="button"
-                onClick={handleToggleAudio}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-black/80 hover:bg-black border border-cyan-400/50 hover:border-cyan-300 text-cyan-200 hover:text-white transition-all shadow-md active:scale-95 cursor-pointer backdrop-blur-md"
-                title={isMuted ? 'Unmute Audio & Foley Sound Effects' : 'Mute Audio'}
-                aria-label={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-              >
-                {isMuted ? (
-                  <>
-                    <VolumeX className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="text-[8px] font-mono font-bold text-slate-300">UNMUTE</span>
-                  </>
-                ) : (
-                  <>
-                    <Volume2 className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-                    <span className="text-[8px] font-mono font-bold text-amber-300">AUDIO ON</span>
-                  </>
-                )}
-              </button>
-
-              <span className="shrink-0 min-w-[36px] px-2 py-1 rounded-lg bg-black/75 border border-amber-400/60 text-[10px] font-mono font-extrabold text-amber-300 text-center">
-                #{meta.worldNumber}
-              </span>
-            </div>
-          </div>
-
-          <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between gap-2 pointer-events-none z-30">
-            <div className="flex items-center gap-2">
-              <img
-                src={sillowMillLogoUrl}
-                alt="Sillow Mill Logo"
-                className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
-              />
-              <div>
-                <div className="text-[10.5px] font-display font-black text-white tracking-wider uppercase">
-                  {(dossier.planetName || 'ÄMLEMI').toUpperCase()}
-                </div>
-                <div className="text-[7.5px] font-mono text-cyan-300 font-bold">
-                  ÄKINOYA UNIVERSE · 01 / TYPE: CELESTIAL NUCLEUS
-                </div>
-                <div className="text-[6.5px] font-mono text-slate-300/80 tracking-wider">
-                  ™ &amp; © SILLOW MILL · sillowmill.com
-                </div>
-              </div>
-            </div>
-            <span className="text-[8px] font-mono font-bold text-emerald-400">
-              ● 9:16 LOOP
-            </span>
+          {/* Minimalist, Unobtrusive Mute/Unmute Control */}
+          <div className="absolute bottom-3.5 right-3.5 z-30 pointer-events-auto">
+            <button
+              type="button"
+              onClick={handleToggleAudio}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border transition-all shadow-lg active:scale-95 cursor-pointer touch-manipulation ${
+                isMuted
+                  ? 'bg-black/70 hover:bg-black/85 border-white/25 text-white/85 hover:text-white'
+                  : 'bg-cyan-950/85 hover:bg-cyan-900/95 border-cyan-400/60 text-cyan-200 shadow-[0_0_15px_rgba(34,211,238,0.3)]'
+              }`}
+              title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+              aria-label={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+            >
+              {isMuted ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                  <span className="text-[9.5px] font-mono font-bold tracking-wider uppercase">Unmute</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-cyan-300 animate-pulse shrink-0" />
+                  <span className="text-[9.5px] font-mono font-bold tracking-wider uppercase text-cyan-200">Sound On</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       ) : (

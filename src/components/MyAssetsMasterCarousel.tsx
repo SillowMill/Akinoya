@@ -22,6 +22,7 @@ import {
   X,
   Globe2,
   Radar,
+  Hand,
   RefreshCw,
   Zap,
 } from 'lucide-react';
@@ -636,19 +637,22 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
         e.preventDefault();
       }
     }
-    const video = videoElementRef.current;
-    if (video) {
-      const nextMuted = !video.muted;
-      soundManager.playTone(nextMuted ? 440 : 680, 0.05);
-      requestAnimationFrame(() => {
-        if (!video) return;
+    setIsMuted((prev) => {
+      const nextMuted = !prev;
+      const video = videoElementRef.current;
+      if (video) {
         video.muted = nextMuted;
-        setIsMuted(nextMuted);
-      });
-    } else {
-      soundManager.playTone(isMuted ? 680 : 440, 0.05);
-      setIsMuted((prev) => !prev);
-    }
+        video.defaultMuted = nextMuted;
+        if (!nextMuted) {
+          video.volume = 1.0;
+        }
+        if (video.paused) {
+          video.play().catch(() => {});
+        }
+      }
+      soundManager.playTone(nextMuted ? 440 : 680, 0.05);
+      return nextMuted;
+    });
   };
 
   // Slide Animation Variants
@@ -1026,64 +1030,67 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                 }}
                 className="flex flex-col lg:flex-row items-center justify-center gap-6 md:gap-8 py-2"
               >
-                {/* Natural Native Aspect-Ratio Video Trailer Stage (Zero Cropping, Zero Fullscreen Button Overlay) */}
-                <div
-                  onClick={(e) => {
-                    // Tap on stage toggles playback cleanly without triggering fullscreen takeover
-                    toggleVideoPlayback(e);
-                  }}
-                  style={{
-                    transform: 'translateZ(0)',
-                    WebkitTransform: 'translateZ(0)',
-                    willChange: 'transform',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    touchAction: 'pan-y',
-                  }}
-                  className="video-stage-container video-player-gpu relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none cursor-pointer group md:hover:border-cyan-300 md:hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)] md:transition-all touch-pan-y-lock"
-                >
-                  <LiveStoryTrailerViewport
-                    dossier={dossier}
-                    meta={meta}
-                    photoCards={photoCards}
-                    activeVideoUrl={dynamicVideo.videoUrl}
-                    isMuted={isMuted}
-                    onToggleAudio={toggleAudio}
-                    isPlaying={isPlayingVideo}
-                    onTogglePlay={toggleVideoPlayback}
-                    onPlaybackStateChange={setIsPlayingVideo}
-                    onVideoElementReady={(el) => {
-                      videoElementRef.current = el;
-                    }}
-                  />
-
-                  {/* Playback Controls Floating Bar */}
+                {/* Natural Native Aspect-Ratio Video Trailer Stage + Direct Swipe Indicator Beneath Card */}
+                <div className="flex flex-col items-center gap-3 w-full max-w-[340px] sm:max-w-[375px]">
                   <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute bottom-14 left-3 right-3 z-30 flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-black/85 border border-white/20 backdrop-blur-md touch-control-lock"
+                    style={{
+                      transform: 'translateZ(0)',
+                      WebkitTransform: 'translateZ(0)',
+                      willChange: 'transform',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      touchAction: 'pan-y',
+                    }}
+                    className="video-stage-container video-player-gpu relative w-full aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none group md:hover:border-cyan-300 md:hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)] md:transition-all touch-pan-y-lock"
                   >
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={toggleVideoPlayback}
-                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
-                        title={isPlayingVideo ? 'Pause Video' : 'Play Video'}
-                      >
-                        {isPlayingVideo ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={toggleAudio}
-                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
-                        title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-                      >
-                        {isMuted ? <VolumeX className="w-4 h-4 text-white/60" /> : <Volume2 className="w-4 h-4 text-cyan-300" />}
-                      </button>
+                    <LiveStoryTrailerViewport
+                      dossier={dossier}
+                      meta={meta}
+                      photoCards={photoCards}
+                      activeVideoUrl={dynamicVideo.videoUrl}
+                      isMuted={isMuted}
+                      onToggleAudio={toggleAudio}
+                      isPlaying={isPlayingVideo}
+                      onTogglePlay={toggleVideoPlayback}
+                      onPlaybackStateChange={setIsPlayingVideo}
+                      onVideoElementReady={(el) => {
+                        videoElementRef.current = el;
+                      }}
+                    />
+                  </div>
+
+                  {/* Carousel Swipe Indicator Directly Beneath Trailer Card */}
+                  <div className="w-full flex items-center justify-between gap-3 px-3.5 py-2 rounded-full bg-black/65 border border-cyan-400/30 backdrop-blur-md">
+                    {/* Three Pagination Dots */}
+                    <div className="flex items-center gap-1.5" role="tablist" aria-label="Asset Carousel Slides">
+                      {SLIDE_TABS.map((tab, idx) => {
+                        const isCurrent = activeSlide === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => goToSlide(tab.id)}
+                            aria-label={`Slide ${idx + 1}: ${tab.label}`}
+                            className={`h-2 rounded-full transition-all duration-200 cursor-pointer ${
+                              isCurrent
+                                ? 'w-6 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.85)]'
+                                : 'w-2 bg-white/30 hover:bg-white/60'
+                            }`}
+                          />
+                        );
+                      })}
                     </div>
 
-                    <span className="text-[9.5px] font-mono font-bold text-cyan-300">
-                      OFFICIAL TRAILER LOOP
-                    </span>
+                    {/* Subtle Swipe Text Cue + Finger/Swipe Icon */}
+                    <button
+                      type="button"
+                      onClick={handleNextSlide}
+                      className="flex items-center gap-1.5 text-[10.5px] font-mono text-cyan-200/90 hover:text-white transition-colors cursor-pointer group/swipe"
+                    >
+                      <Hand className="w-3.5 h-3.5 text-cyan-400 -rotate-12 group-hover/swipe:translate-x-0.5 transition-transform shrink-0" />
+                      <span>Swipe to see next</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-cyan-400/80 group-hover/swipe:translate-x-0.5 transition-transform shrink-0" />
+                    </button>
                   </div>
                 </div>
 
@@ -1383,32 +1390,6 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         videoElementRef.current = el;
                       }}
                     />
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute bottom-3 left-3 right-3 z-30 flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-black/85 border border-white/20 backdrop-blur-md touch-control-lock"
-                    >
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={toggleVideoPlayback}
-                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
-                          title={isPlayingVideo ? 'Pause Video' : 'Play Video'}
-                        >
-                          {isPlayingVideo ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={toggleAudio}
-                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
-                          title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-                        >
-                          {isMuted ? <VolumeX className="w-4 h-4 text-white/60" /> : <Volume2 className="w-4 h-4 text-cyan-300" />}
-                        </button>
-                      </div>
-                      <span className="text-[10px] font-mono font-bold text-cyan-300">
-                        OFFICIAL TRAILER LOOP
-                      </span>
-                    </div>
                   </div>
                 )}
 

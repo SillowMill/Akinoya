@@ -1281,7 +1281,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
       {/* Main Tabs and Content Area */}
       <div className="space-y-5 sm:space-y-6 md:space-y-7 w-full">
-        {/* Desktop & Landscape 5-Item Navigation Tabs (Home, Comic, Worlds, Galaxy Navigator, My Assets) */}
+        {/* Desktop & Landscape 5-Item Navigation Tabs (Home, Comic, Worlds, My Assets, Galaxy Navigator) */}
         <div className="desktop-landscape-only grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
           <button
             type="button"
@@ -1321,14 +1321,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           </button>
           <button
             type="button"
-            onClick={handleTriggerGalaxyNav}
-            className="py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation text-cyan-300/85 hover:text-white hover:bg-cyan-950/50"
-          >
-            <Radar className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-            <span className="truncate">Galaxy Navigator</span>
-          </button>
-          <button
-            type="button"
             onClick={() => handleSelectTab('assets')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'assets'
@@ -1338,6 +1330,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           >
             <Gem className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">My Assets</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleTriggerGalaxyNav}
+            className="py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation text-cyan-300/85 hover:text-white hover:bg-cyan-950/50"
+          >
+            <Radar className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span className="sm:hidden truncate">Galaxy</span>
+            <span className="hidden sm:inline truncate">Galaxy Navigator</span>
           </button>
         </div>
 
@@ -3594,14 +3595,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 style={{
                   '--scanner-index':
                     tappingTab === 'galaxy'
-                      ? 3
+                      ? 4
                       : activeTab === 'pass'
                       ? 0
                       : activeTab === 'edition'
                       ? 1
                       : activeTab === 'my-world'
                       ? 2
-                      : 4,
+                      : 3,
                 } as React.CSSProperties}
               />
             </div>
@@ -3612,10 +3613,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   { id: 'pass' as const, label: 'Home', Icon: Compass },
                   { id: 'edition' as const, label: 'Comic', Icon: BookOpen },
                   { id: 'my-world' as const, label: 'Worlds', Icon: Globe2 },
-                  { id: 'galaxy' as const, label: 'Galaxy Navigator', Icon: Radar },
                   { id: 'assets' as const, label: 'My Assets', Icon: Gem },
+                  { id: 'galaxy' as const, label: 'Galaxy', desktopLabel: 'Galaxy Navigator', Icon: Radar },
                 ] as const
-              ).map(({ id, label, Icon }) => {
+              ).map((item) => {
+                const { id, label, Icon } = item;
                 const isActive = id !== 'galaxy' && activeTab === id;
                 const isTapping = tappingTab === id;
                 return (
@@ -3636,13 +3638,32 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           : 'text-white/60'
                       }`}
                     />
-                    <span
-                      className={`text-[9.5px] xs:text-[10px] font-mono tracking-tight leading-none truncate max-w-full ${
-                        isActive ? 'font-bold text-cyan-200' : 'font-medium text-white/60'
-                      }`}
-                    >
-                      {label}
-                    </span>
+                    {'desktopLabel' in item ? (
+                      <>
+                        <span
+                          className={`sm:hidden text-[9.5px] xs:text-[10px] font-mono tracking-tight leading-none truncate max-w-full ${
+                            isActive ? 'font-bold text-cyan-200' : 'font-medium text-white/60'
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        <span
+                          className={`hidden sm:inline text-[10px] font-mono tracking-tight leading-none truncate max-w-full ${
+                            isActive ? 'font-bold text-cyan-200' : 'font-medium text-white/60'
+                          }`}
+                        >
+                          {item.desktopLabel}
+                        </span>
+                      </>
+                    ) : (
+                      <span
+                        className={`text-[9.5px] xs:text-[10px] font-mono tracking-tight leading-none truncate max-w-full ${
+                          isActive ? 'font-bold text-cyan-200' : 'font-medium text-white/60'
+                        }`}
+                      >
+                        {label}
+                      </span>
+                    )}
                   </button>
                 );
               })}
