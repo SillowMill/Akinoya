@@ -929,6 +929,38 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                     );
                   })}
                 </div>
+
+                {/* Carousel Swipe Indicator Directly Beneath 4K Archive Strip */}
+                <div className="w-full max-w-[340px] sm:max-w-[375px] mx-auto flex items-center justify-between gap-3 px-3.5 py-2 rounded-full bg-black/65 border border-cyan-400/30 backdrop-blur-md">
+                  <div className="flex items-center gap-1.5" role="tablist" aria-label="Asset Carousel Slides">
+                    {SLIDE_TABS.map((tab, idx) => {
+                      const isCurrent = activeSlide === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => goToSlide(tab.id)}
+                          aria-label={`Slide ${idx + 1}: ${tab.label}`}
+                          className={`h-2 rounded-full transition-all duration-200 cursor-pointer ${
+                            isCurrent
+                              ? 'w-6 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.85)]'
+                              : 'w-2 bg-white/30 hover:bg-white/60'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleNextSlide}
+                    className="flex items-center gap-1.5 text-[10.5px] font-mono text-cyan-200/90 hover:text-white transition-colors cursor-pointer group/swipe"
+                  >
+                    <Hand className="w-3.5 h-3.5 text-cyan-400 -rotate-12 group-hover/swipe:translate-x-0.5 transition-transform shrink-0" />
+                    <span>Swipe to see next</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-cyan-400/80 group-hover/swipe:translate-x-0.5 transition-transform shrink-0" />
+                  </button>
+                </div>
               </motion.div>
             )}
 
@@ -961,6 +993,38 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                     onTapToFullscreen={() => openFullscreenViewer('story_card')}
                     showFullscreenHint
                   />
+
+                  {/* Carousel Swipe Indicator Directly Beneath Story Card */}
+                  <div className="w-full flex items-center justify-between gap-3 px-3.5 py-2 rounded-full bg-black/65 border border-cyan-400/30 backdrop-blur-md">
+                    <div className="flex items-center gap-1.5" role="tablist" aria-label="Asset Carousel Slides">
+                      {SLIDE_TABS.map((tab, idx) => {
+                        const isCurrent = activeSlide === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => goToSlide(tab.id)}
+                            aria-label={`Slide ${idx + 1}: ${tab.label}`}
+                            className={`h-2 rounded-full transition-all duration-200 cursor-pointer ${
+                              isCurrent
+                                ? 'w-6 bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.85)]'
+                                : 'w-2 bg-white/30 hover:bg-white/60'
+                            }`}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleNextSlide}
+                      className="flex items-center gap-1.5 text-[10.5px] font-mono text-cyan-200/90 hover:text-white transition-colors cursor-pointer group/swipe"
+                    >
+                      <Hand className="w-3.5 h-3.5 text-cyan-400 -rotate-12 group-hover/swipe:translate-x-0.5 transition-transform shrink-0" />
+                      <span>Swipe to see next</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-cyan-400/80 group-hover/swipe:translate-x-0.5 transition-transform shrink-0" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Side Specifications & Direct Download Actions Panel */}
