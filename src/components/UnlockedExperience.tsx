@@ -970,22 +970,38 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   // Ensure seamless autoplay loop for the archive preview video on mount, view changes, and mobile interactions
   useEffect(() => {
     const playPreview = () => {
-      if (dnVideoRef.current) {
-        dnVideoRef.current.muted = true;
-        dnVideoRef.current.defaultMuted = true;
-        dnVideoRef.current.play().catch(() => {});
+      const v = dnVideoRef.current;
+      if (v) {
+        v.muted = true;
+        v.defaultMuted = true;
+        v.playsInline = true;
+        const p = v.play();
+        if (p !== undefined) {
+          p.catch(() => {});
+        }
       }
     };
 
     playPreview();
+    const rafId = requestAnimationFrame(playPreview);
+    const t1 = setTimeout(playPreview, 150);
+    const t2 = setTimeout(playPreview, 500);
+
     document.addEventListener('visibilitychange', playPreview);
     window.addEventListener('touchstart', playPreview, { once: true, passive: true });
+    window.addEventListener('touchend', playPreview, { once: true, passive: true });
     window.addEventListener('scroll', playPreview, { once: true, passive: true });
+    window.addEventListener('pointerdown', playPreview, { once: true, passive: true });
 
     return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(t1);
+      clearTimeout(t2);
       document.removeEventListener('visibilitychange', playPreview);
       window.removeEventListener('touchstart', playPreview);
+      window.removeEventListener('touchend', playPreview);
       window.removeEventListener('scroll', playPreview);
+      window.removeEventListener('pointerdown', playPreview);
     };
   }, [passSubView, activeTab]);
 
@@ -1598,6 +1614,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             if (el) {
                               el.muted = true;
                               el.defaultMuted = true;
+                              el.playsInline = true;
                               el.play().catch(() => {});
                             }
                           }}
@@ -1616,6 +1633,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             e.currentTarget.play().catch(() => {});
                           }}
                           onLoadedData={(e) => {
+                            e.currentTarget.muted = true;
+                            e.currentTarget.play().catch(() => {});
+                          }}
+                          onLoadedMetadata={(e) => {
                             e.currentTarget.muted = true;
                             e.currentTarget.play().catch(() => {});
                           }}
@@ -1968,6 +1989,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                       if (el) {
                                         el.muted = true;
                                         el.defaultMuted = true;
+                                        el.playsInline = true;
                                         el.play().catch(() => {});
                                       }
                                     }}
@@ -1976,11 +1998,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                     autoPlay
                                     loop
                                     muted
+                                    defaultMuted
                                     playsInline
                                     preload="auto"
                                     disablePictureInPicture
                                     disableRemotePlayback
                                     controlsList="nodownload nofullscreen noremoteplayback"
+                                    onCanPlay={(e) => {
+                                      e.currentTarget.muted = true;
+                                      e.currentTarget.play().catch(() => {});
+                                    }}
+                                    onLoadedMetadata={(e) => {
+                                      e.currentTarget.muted = true;
+                                      e.currentTarget.play().catch(() => {});
+                                    }}
                                     {...({
                                       'webkit-playsinline': 'true',
                                       'x5-playsinline': 'true',

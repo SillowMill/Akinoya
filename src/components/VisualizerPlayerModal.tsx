@@ -46,7 +46,10 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [controlsVisible, setControlsVisible] = useState<boolean>(true);
   const [feedbackIcon, setFeedbackIcon] = useState<'play' | 'pause' | null>(null);
+
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentIndex = tracks.findIndex((t) => t.id === activeTrack?.id);
@@ -54,13 +57,43 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
   const isTrack02 = activeTrack?.id === '02';
   const hasVideo = Boolean(activeTrack?.videoUrl);
 
+  // Inactivity auto-fade timer (1.5 seconds)
+  const resetControlsTimer = useCallback(() => {
+    setControlsVisible(true);
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    if (isPlaying) {
+      inactivityTimerRef.current = setTimeout(() => {
+        setControlsVisible(false);
+      }, 1500);
+    }
+  }, [isPlaying]);
+
+  // Keep controls visible whenever paused; auto-fade when playing
+  useEffect(() => {
+    if (!isPlaying) {
+      setControlsVisible(true);
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    } else {
+      resetControlsTimer();
+    }
+    return () => {
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    };
+  }, [isPlaying, resetControlsTimer]);
+
   // Trigger brief visual feedback on play/pause
   const showFeedback = (type: 'play' | 'pause') => {
     setFeedbackIcon(type);
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
     feedbackTimeoutRef.current = setTimeout(() => {
       setFeedbackIcon(null);
-    }, 550);
+    }, 600);
   };
 
   // Close handler with audio cleanup
@@ -69,6 +102,9 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
       videoRef.current.pause();
     }
     planetSoundtrack.pause();
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
     onClose();
   }, [onClose]);
 
@@ -77,17 +113,20 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
     if (currentIndex === -1 || totalTracks === 0) return;
     const prevIndex = (currentIndex - 1 + totalTracks) % totalTracks;
     onSelectTrack(tracks[prevIndex]);
-  }, [currentIndex, totalTracks, tracks, onSelectTrack]);
+    resetControlsTimer();
+  }, [currentIndex, totalTracks, tracks, onSelectTrack, resetControlsTimer]);
 
   // Navigate to Next Track
   const handleNextTrack = useCallback(() => {
     if (currentIndex === -1 || totalTracks === 0) return;
     const nextIndex = (currentIndex + 1) % totalTracks;
     onSelectTrack(tracks[nextIndex]);
-  }, [currentIndex, totalTracks, tracks, onSelectTrack]);
+    resetControlsTimer();
+  }, [currentIndex, totalTracks, tracks, onSelectTrack, resetControlsTimer]);
 
   // Toggle Play / Pause
   const handleTogglePlay = useCallback(() => {
+    resetControlsTimer();
     if (isTrack02) {
       const willPlay = !planetSoundtrack.isPlaying;
       if (willPlay) {
@@ -117,10 +156,11 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
         return next;
       });
     }
-  }, [isTrack02, hasVideo]);
+  }, [isTrack02, hasVideo, resetControlsTimer]);
 
   // Toggle Mute / Unmute
   const handleToggleMute = useCallback(() => {
+    resetControlsTimer();
     if (isTrack02) {
       const nextMuted = !isMuted;
       setIsMuted(nextMuted);
@@ -130,26 +170,35 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
       videoRef.current.muted = nextMuted;
       setIsMuted(nextMuted);
     }
-  }, [isTrack02, isMuted]);
+  }, [isTrack02, isMuted, resetControlsTimer]);
 
-  // Toggle Fullscreen
+  // Toggle Fullscreen / Theater mode
   const handleToggleFullscreen = useCallback(() => {
-    const el = containerRef.current || videoRef.current;
-    if (!el) return;
-
-    if (!document.fullscreenElement) {
-      if (el.requestFullscreen) {
-        el.requestFullscreen().catch(() => {});
-      } else if ((videoRef.current as any)?.webkitEnterFullscreen) {
-        (videoRef.current as any).webkitEnterFullscreen();
+    resetControlsTimer();
+    if (!isFullscreen) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
       }
       setIsFullscreen(true);
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
+      if (document.fullscreenElement) {
+        document.exitFullscreen?.().catch(() => {});
       }
       setIsFullscreen(false);
     }
+  }, [isFullscreen, resetControlsTimer]);
+
+  // Synchronize fullscreen state with document events
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
+    };
   }, []);
 
   // Sync Video & Audio when activeTrack changes
@@ -228,9 +277,14 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
 
     // Keyboard Shortcuts (Escape to close, Arrows to switch tracks, Space to play/pause)
     const handleKeyDown = (e: KeyboardEvent) => {
+      resetControlsTimer();
       if (e.key === 'Escape') {
         e.preventDefault();
-        handleClose();
+        if (isFullscreen) {
+          handleToggleFullscreen();
+        } else {
+          handleClose();
+        }
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         handlePrevTrack();
@@ -253,11 +307,13 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
       document.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('keydown', handleKeyDown);
       if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
     };
-  }, [isOpen, handleClose, handlePrevTrack, handleNextTrack, handleTogglePlay]);
+  }, [isOpen, isFullscreen, handleClose, handleToggleFullscreen, handlePrevTrack, handleNextTrack, handleTogglePlay, resetControlsTimer]);
 
   // Touch Swipe Handlers for mobile binge-watching
   const handleTouchStart = (e: React.TouchEvent) => {
+    resetControlsTimer();
     touchStartXRef.current = e.touches[0].clientX;
     touchStartYRef.current = e.touches[0].clientY;
   };
@@ -290,6 +346,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    resetControlsTimer();
     const time = parseFloat(e.target.value);
     setCurrentTime(time);
     if (videoRef.current) {
@@ -309,18 +366,21 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
   return createPortal(
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-[999999] flex items-center justify-center select-none"
+        className={`fixed inset-0 z-[999999] select-none transition-colors duration-300 ${
+          isFullscreen ? 'w-screen h-screen flex flex-col bg-black' : 'flex items-center justify-center p-3 xs:p-4 sm:p-6'
+        }`}
         style={{
           width: '100vw',
           height: '100vh',
-          backgroundColor: 'rgba(5, 7, 12, 0.94)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          backgroundColor: isFullscreen ? '#000000' : 'rgba(5, 7, 12, 0.94)',
+          backdropFilter: isFullscreen ? 'none' : 'blur(20px)',
+          WebkitBackdropFilter: isFullscreen ? 'none' : 'blur(20px)',
           touchAction: 'none',
         }}
         onClick={handleClose}
+        onMouseMove={resetControlsTimer}
       >
-        {/* Modal Window Card */}
+        {/* Modal Window Card (Adapts to 100vw/100vh when Fullscreen) */}
         <motion.div
           ref={containerRef}
           initial={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -330,15 +390,28 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
           onClick={(e) => e.stopPropagation()}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
+          onMouseMove={resetControlsTimer}
           style={{
             transform: 'translateZ(0)',
             WebkitTransform: 'translateZ(0)',
             touchAction: 'manipulation',
           }}
-          className="relative w-full max-w-4xl max-h-[96dvh] mx-3 xs:mx-4 sm:mx-6 rounded-2xl sm:rounded-3xl border border-white/12 bg-[#060911]/98 shadow-[0_0_60px_rgba(0,240,255,0.18),0_25px_50px_-12px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden"
+          className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
+            isFullscreen
+              ? 'w-full h-full max-w-none max-h-none mx-0 rounded-none border-0 bg-black'
+              : 'w-full max-w-4xl max-h-[96dvh] rounded-2xl sm:rounded-3xl border border-white/12 bg-[#060911]/98 shadow-[0_0_60px_rgba(0,240,255,0.18),0_25px_50px_-12px_rgba(0,0,0,0.85)]'
+          }`}
         >
-          {/* Top Bar: Live HUD & Close Button */}
-          <div className="flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-3.5 bg-black/60 border-b border-white/10 shrink-0">
+          {/* Top Bar: Live HUD & Close Button (Auto-fades in fullscreen) */}
+          <div
+            className={`flex items-center justify-between transition-opacity duration-300 shrink-0 ${
+              isFullscreen
+                ? `absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/90 via-black/50 to-transparent border-0 px-4 sm:px-8 py-3.5 ${
+                    controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                  }`
+                : 'px-3.5 sm:px-6 py-2.5 sm:py-3.5 bg-black/60 border-b border-white/10'
+            }`}
+          >
             {/* Left: Track Status & Index */}
             <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)] shrink-0" />
@@ -352,7 +425,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                     {currentIndex + 1} OF {totalTracks}
                   </span>
                   <span className="hidden sm:inline-block px-2 py-0.2 rounded-full text-[8.5px] font-mono tracking-widest uppercase bg-cyan-950/80 border border-cyan-400/40 text-cyan-300">
-                    {hasVideo ? '4K 60FPS MASTER' : 'PIPELINE ARCHIVE'}
+                    {hasVideo ? (isFullscreen ? 'THEATER 4K MASTER' : '4K 60FPS MASTER') : 'PIPELINE ARCHIVE'}
                   </span>
                 </div>
                 <h2 className="text-xs sm:text-base font-display font-bold text-white truncate max-w-[220px] xs:max-w-[280px] sm:max-w-md">
@@ -361,29 +434,35 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
               </div>
             </div>
 
-            {/* Right: Quick Close Button (Min 44x44px touch target) */}
-            <button
-              type="button"
-              aria-label="Close visualizer modal"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClose();
-              }}
-              onTouchEnd={(e) => {
-                e.stopPropagation();
-                handleClose();
-              }}
-              className="w-11 h-11 sm:w-12 sm:h-12 -mr-1 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white/75 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 hover:border-white/25 shadow-lg shrink-0"
-              style={{ touchAction: 'manipulation' }}
-            >
-              <X className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
+            {/* Right: Close & Exit Controls */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="Close visualizer modal"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClose();
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  handleClose();
+                }}
+                className="w-11 h-11 sm:w-12 sm:h-12 -mr-1 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white/75 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 hover:border-white/25 shadow-lg shrink-0"
+                style={{ touchAction: 'manipulation' }}
+              >
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </div>
           </div>
 
-          {/* Central Visualizer Stage (16:9 Maximize Ratio & Mobile Fit) */}
+          {/* Central Visualizer Stage */}
           <div
             onClick={handleTogglePlay}
-            className="relative w-full aspect-video max-h-[50vh] sm:max-h-[56vh] bg-black flex items-center justify-center overflow-hidden cursor-pointer group/stage"
+            className={`relative w-full bg-black flex items-center justify-center overflow-hidden cursor-pointer group/stage ${
+              isFullscreen
+                ? 'flex-1 h-full max-h-none'
+                : 'aspect-video max-h-[50vh] sm:max-h-[56vh]'
+            }`}
           >
             {hasVideo ? (
               <video
@@ -406,7 +485,9 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                   'x5-playsinline': 'true',
                   playsinline: 'true',
                 } as any)}
-                className="w-full h-full object-cover object-center pointer-events-none"
+                className={`w-full h-full pointer-events-none transition-all duration-300 ${
+                  isFullscreen ? 'object-contain' : 'object-cover object-center'
+                }`}
               />
             ) : (
               /* Ambient Audio Visualizer Hologram for Upcoming Tracks */
@@ -474,28 +555,47 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
               </div>
             )}
 
+            {/* Central Play/Pause Button Overlay (Fades out after 1.5s when playing; persistent when paused) */}
+            <div
+              className={`absolute inset-0 flex items-center justify-center pointer-events-none z-20 transition-all duration-300 ${
+                !isPlaying
+                  ? 'opacity-100 scale-100'
+                  : controlsVisible
+                  ? 'opacity-40 hover:opacity-100 scale-100'
+                  : 'opacity-0 scale-90'
+              }`}
+            >
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/60 backdrop-blur-md border border-cyan-400/40 flex items-center justify-center shadow-[0_0_35px_rgba(0,240,255,0.4)]">
+                {!isPlaying ? (
+                  <Play className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-400 fill-cyan-400 ml-1" />
+                ) : (
+                  <Pause className="w-8 h-8 sm:w-10 sm:h-10 text-white fill-white" />
+                )}
+              </div>
+            </div>
+
             {/* Visual Feedback on Play/Pause Click */}
             <AnimatePresence>
               {feedbackIcon && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.6 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.2 }}
-                  transition={{ duration: 0.25 }}
-                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+                  exit={{ opacity: 0, scale: 1.25 }}
+                  transition={{ duration: 0.28 }}
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-25"
                 >
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/60 backdrop-blur-md border border-cyan-400/40 flex items-center justify-center shadow-[0_0_30px_rgba(0,240,255,0.4)]">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-black/75 backdrop-blur-md border border-cyan-400/60 flex items-center justify-center shadow-[0_0_40px_rgba(0,240,255,0.5)]">
                     {feedbackIcon === 'play' ? (
-                      <Play className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-400 fill-cyan-400 ml-1" />
+                      <Play className="w-10 h-10 sm:w-12 sm:h-12 text-cyan-400 fill-cyan-400 ml-1" />
                     ) : (
-                      <Pause className="w-8 h-8 sm:w-10 sm:h-10 text-white fill-white" />
+                      <Pause className="w-10 h-10 sm:w-12 sm:h-12 text-white fill-white" />
                     )}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Floating Side Prev Button (Left) */}
+            {/* Floating Side Prev Button (Subtle transparent, fades out after inactivity, lights to 0.8 on proximity) */}
             <button
               type="button"
               aria-label="Previous track"
@@ -507,13 +607,17 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                 e.stopPropagation();
                 handlePrevTrack();
               }}
-              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/55 hover:bg-black/85 active:bg-cyan-500/25 text-white/80 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_0_20px_rgba(0,0,0,0.6)] flex items-center justify-center transition-all cursor-pointer backdrop-blur-md z-10 group"
+              className={`absolute left-2.5 sm:left-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/40 hover:bg-black/85 active:bg-cyan-500/30 text-white/80 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.6)] flex items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
+                controlsVisible
+                  ? 'opacity-30 sm:opacity-35 hover:opacity-100 active:opacity-100 group-hover/stage:opacity-80'
+                  : 'opacity-0 pointer-events-none'
+              }`}
               style={{ touchAction: 'manipulation' }}
             >
-              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 -ml-0.5 group-hover:scale-110 transition-transform" />
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 -ml-0.5 transition-transform group-hover/stage:scale-105" />
             </button>
 
-            {/* Floating Side Next Button (Right) */}
+            {/* Floating Side Next Button (Subtle transparent, fades out after inactivity, lights to 0.8 on proximity) */}
             <button
               type="button"
               aria-label="Next track"
@@ -525,144 +629,179 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                 e.stopPropagation();
                 handleNextTrack();
               }}
-              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/55 hover:bg-black/85 active:bg-cyan-500/25 text-white/80 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_0_20px_rgba(0,0,0,0.6)] flex items-center justify-center transition-all cursor-pointer backdrop-blur-md z-10 group"
+              className={`absolute right-2.5 sm:right-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/40 hover:bg-black/85 active:bg-cyan-500/30 text-white/80 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.6)] flex items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
+                controlsVisible
+                  ? 'opacity-30 sm:opacity-35 hover:opacity-100 active:opacity-100 group-hover/stage:opacity-80'
+                  : 'opacity-0 pointer-events-none'
+              }`}
               style={{ touchAction: 'manipulation' }}
             >
-              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 -mr-0.5 group-hover:scale-110 transition-transform" />
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 -mr-0.5 transition-transform group-hover/stage:scale-105" />
             </button>
           </div>
 
-          {/* Interactive Scrubber Bar (When duration exists) */}
-          {duration > 0 && (
-            <div className="relative w-full bg-black/90 px-3.5 sm:px-6 pt-2 pb-1 border-t border-white/5 shrink-0">
-              <input
-                type="range"
-                min="0"
-                max={duration || 100}
-                step="0.1"
-                value={currentTime}
-                onChange={handleSeek}
-                className="w-full h-1 sm:h-1.5 bg-white/15 rounded-lg appearance-none cursor-pointer accent-cyan-400 transition-all hover:bg-white/25"
-                style={{ touchAction: 'manipulation' }}
-              />
-              <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-mono text-white/50 pt-1">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Quick Track Switcher Strip */}
+          {/* Bottom Area: Scrubber, Track-Balk & Controls (Fixed & Subtly Persistent in Fullscreen) */}
           <div
-            ref={trackStripRef}
-            className="px-3.5 sm:px-6 py-2 bg-black/80 border-t border-white/5 flex items-center gap-1.5 overflow-x-auto scrollbar-none modal-allow-scroll shrink-0"
-            style={{ touchAction: 'pan-x' }}
+            className={`transition-all duration-300 shrink-0 ${
+              isFullscreen
+                ? 'absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black via-black/90 to-transparent border-t border-white/10 px-3.5 sm:px-8 pt-3 pb-safe flex flex-col gap-1.5'
+                : 'flex flex-col'
+            }`}
           >
-            <span className="text-[9px] font-mono text-cyan-400/90 font-bold tracking-wider uppercase shrink-0 mr-1 flex items-center gap-1">
-              <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
-              TRACKS:
-            </span>
-            {tracks.map((t) => {
-              const isActive = t.id === activeTrack.id;
-              const hasVid = Boolean(t.videoUrl);
-              return (
+            {/* Interactive Scrubber Bar */}
+            {duration > 0 && (
+              <div
+                className={`relative w-full px-3.5 sm:px-6 pt-1.5 pb-1 transition-opacity duration-300 ${
+                  isFullscreen ? 'bg-transparent' : 'bg-black/90 border-t border-white/5'
+                } ${controlsVisible || !isFullscreen ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
+              >
+                <input
+                  type="range"
+                  min="0"
+                  max={duration || 100}
+                  step="0.1"
+                  value={currentTime}
+                  onChange={handleSeek}
+                  className="w-full h-1 sm:h-1.5 bg-white/15 rounded-lg appearance-none cursor-pointer accent-cyan-400 transition-all hover:bg-white/25"
+                  style={{ touchAction: 'manipulation' }}
+                />
+                <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-mono text-white/50 pt-0.5">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Track Switcher Strip: PERMANENTLY ANCHORED & VISIBLE in Fullscreen */}
+            <div
+              ref={trackStripRef}
+              className={`px-3.5 sm:px-6 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none modal-allow-scroll transition-opacity duration-300 ${
+                isFullscreen
+                  ? 'bg-black/60 rounded-xl backdrop-blur-md border border-white/10 my-0.5'
+                  : 'bg-black/80 border-t border-white/5'
+              } ${controlsVisible || isFullscreen ? 'opacity-90 sm:opacity-85 hover:opacity-100' : 'opacity-70'}`}
+              style={{ touchAction: 'pan-x' }}
+            >
+              <span className="text-[9px] font-mono text-cyan-400/90 font-bold tracking-wider uppercase shrink-0 mr-1 flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
+                TRACKS:
+              </span>
+              {tracks.map((t) => {
+                const isActive = t.id === activeTrack.id;
+                const hasVid = Boolean(t.videoUrl);
+                return (
+                  <button
+                    key={t.id}
+                    data-track-id={t.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectTrack(t);
+                      resetControlsTimer();
+                    }}
+                    className={`shrink-0 px-2.5 py-1 rounded-lg text-[10.5px] font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/80 font-bold shadow-[0_0_12px_rgba(0,240,255,0.3)] scale-[1.02]'
+                        : 'bg-white/5 hover:bg-white/10 text-white/65 hover:text-white border border-white/10'
+                    }`}
+                    style={{ touchAction: 'manipulation' }}
+                  >
+                    <span className={isActive ? 'text-cyan-400 font-bold' : 'text-white/40'}>#{t.id}</span>
+                    <span className="truncate max-w-[95px] xs:max-w-[125px]">{t.title}</span>
+                    {hasVid && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Bottom Player Controls HUD */}
+            <div
+              className={`px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-3 shrink-0 transition-opacity duration-300 ${
+                isFullscreen
+                  ? 'bg-transparent border-0'
+                  : 'bg-[#070b13] border-t border-white/10'
+              } ${controlsVisible || !isFullscreen ? 'opacity-100 pointer-events-auto' : 'opacity-70 sm:opacity-50 hover:opacity-100'}`}
+            >
+              {/* Left: Play/Pause, Prev, Next */}
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Play / Pause Toggle Button */}
                 <button
-                  key={t.id}
-                  data-track-id={t.id}
                   type="button"
-                  onClick={() => onSelectTrack(t)}
-                  className={`shrink-0 px-2.5 py-1 rounded-lg text-[10.5px] font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/70 font-bold shadow-[0_0_12px_rgba(0,240,255,0.25)]'
-                      : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/10'
+                  onClick={handleTogglePlay}
+                  className="flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-300 text-black text-xs font-mono font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(0,240,255,0.4)] min-h-[40px] sm:min-h-[42px]"
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  {isPlaying ? (
+                    <>
+                      <Pause className="w-4 h-4 fill-black" />
+                      <span className="hidden xs:inline">PAUSE</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 fill-black ml-0.5" />
+                      <span className="hidden xs:inline">PLAY</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Prev Track Quick Button */}
+                <button
+                  type="button"
+                  aria-label="Previous track"
+                  onClick={handlePrevTrack}
+                  className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/70 hover:text-white border border-white/10 transition-colors cursor-pointer min-h-[40px] flex items-center justify-center"
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {/* Next Track Quick Button */}
+                <button
+                  type="button"
+                  aria-label="Next track"
+                  onClick={handleNextTrack}
+                  className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/70 hover:text-white border border-white/10 transition-colors cursor-pointer min-h-[40px] flex items-center justify-center"
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Right: Audio Volume / Fullscreen / Stream Tag */}
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                {/* Mute / Unmute Button */}
+                <button
+                  type="button"
+                  aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
+                  onClick={handleToggleMute}
+                  className={`p-2 sm:p-2.5 rounded-xl border transition-colors cursor-pointer min-h-[40px] flex items-center gap-1.5 ${
+                    isMuted
+                      ? 'bg-rose-950/40 border-rose-500/40 text-rose-300'
+                      : 'bg-white/5 hover:bg-white/10 border-white/10 text-white/70 hover:text-white'
                   }`}
                   style={{ touchAction: 'manipulation' }}
                 >
-                  <span className={isActive ? 'text-cyan-400 font-bold' : 'text-white/40'}>#{t.id}</span>
-                  <span className="truncate max-w-[95px] xs:max-w-[125px]">{t.title}</span>
-                  {hasVid && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />}
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
+                  <span className="hidden sm:inline text-[10px] font-mono">
+                    {isMuted ? 'MUTED' : isTrack02 ? 'BINGÄA AUDIO' : 'AUDIO ACTIVE'}
+                  </span>
                 </button>
-              );
-            })}
-          </div>
 
-          {/* Bottom Player Controls HUD */}
-          <div className="px-3.5 sm:px-6 py-2.5 sm:py-3.5 bg-[#070b13] border-t border-white/10 flex items-center justify-between gap-3 shrink-0">
-            {/* Left: Play/Pause, Prev, Next */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Play / Pause Toggle Button */}
-              <button
-                type="button"
-                onClick={handleTogglePlay}
-                className="flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-300 text-black text-xs font-mono font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(0,240,255,0.4)] min-h-[40px] sm:min-h-[42px]"
-                style={{ touchAction: 'manipulation' }}
-              >
-                {isPlaying ? (
-                  <>
-                    <Pause className="w-4 h-4 fill-black" />
-                    <span className="hidden xs:inline">PAUSE</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 fill-black ml-0.5" />
-                    <span className="hidden xs:inline">PLAY</span>
-                  </>
-                )}
-              </button>
-
-              {/* Prev Track Quick Button */}
-              <button
-                type="button"
-                aria-label="Previous track"
-                onClick={handlePrevTrack}
-                className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/70 hover:text-white border border-white/10 transition-colors cursor-pointer min-h-[40px] flex items-center justify-center"
-                style={{ touchAction: 'manipulation' }}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              {/* Next Track Quick Button */}
-              <button
-                type="button"
-                aria-label="Next track"
-                onClick={handleNextTrack}
-                className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/70 hover:text-white border border-white/10 transition-colors cursor-pointer min-h-[40px] flex items-center justify-center"
-                style={{ touchAction: 'manipulation' }}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Right: Audio Volume / Fullscreen / Stream Tag */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              {/* Mute / Unmute Button */}
-              <button
-                type="button"
-                aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
-                onClick={handleToggleMute}
-                className={`p-2 sm:p-2.5 rounded-xl border transition-colors cursor-pointer min-h-[40px] flex items-center gap-1.5 ${
-                  isMuted
-                    ? 'bg-rose-950/40 border-rose-500/40 text-rose-300'
-                    : 'bg-white/5 hover:bg-white/10 border-white/10 text-white/70 hover:text-white'
-                }`}
-                style={{ touchAction: 'manipulation' }}
-              >
-                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
-                <span className="hidden sm:inline text-[10px] font-mono">
-                  {isMuted ? 'MUTED' : isTrack02 ? 'BINGÄA AUDIO' : 'AUDIO ACTIVE'}
-                </span>
-              </button>
-
-              {/* Fullscreen Button */}
-              <button
-                type="button"
-                aria-label="Toggle fullscreen"
-                onClick={handleToggleFullscreen}
-                className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/70 hover:text-white border border-white/10 transition-colors cursor-pointer min-h-[40px] flex items-center justify-center"
-                style={{ touchAction: 'manipulation' }}
-              >
-                {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-              </button>
+                {/* Fullscreen Button */}
+                <button
+                  type="button"
+                  aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                  title={isFullscreen ? 'Exit theater mode' : 'Enter theater mode'}
+                  onClick={handleToggleFullscreen}
+                  className={`p-2 sm:p-2.5 rounded-xl border transition-colors cursor-pointer min-h-[40px] flex items-center justify-center ${
+                    isFullscreen
+                      ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200'
+                      : 'bg-white/5 hover:bg-white/10 border-white/10 text-white/70 hover:text-white'
+                  }`}
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
