@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
-import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import passCardImg from '../assets/images/akinoya_pass_card_1790852652003.jpg';
 import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
@@ -928,11 +927,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     scrollToVisualizerHub(true);
   };
 
-  const [tappingTab, setTappingTab] = useState<'pass' | 'edition' | 'my-world' | 'assets' | null>(null);
-
   const handleSelectTab = (tab: 'pass' | 'edition' | 'my-world' | 'assets') => {
-    setTappingTab(tab);
-    setTimeout(() => setTappingTab((prev) => (prev === tab ? null : prev)), 155);
     soundManager.playTone(580, 0.04);
     setActiveTab(tab);
     if (tab === 'pass') {
@@ -1219,7 +1214,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
       }}
-      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10 page-transition-container portrait-bottom-safe-pad"
+      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10 page-transition-container"
     >
       {/* Top Status & Lock Control — Translucent Glassmorphism matching the Visualizer Hub Showcase Widget */}
       <div className="relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6 md:mb-7 lg:mb-8 bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:px-6 md:px-7 lg:px-8 lg:py-5 shadow-[0_0_30px_rgba(56,189,248,0.15)]">
@@ -1292,8 +1287,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
       {/* Main Tabs and Content Area */}
       <div className="space-y-5 sm:space-y-6 md:space-y-7 w-full">
-        {/* Desktop & Landscape Navigation Tabs (Untouched inline 4-column bar) */}
-        <div className="desktop-landscape-only grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
+        {/* Navigation Tabs (All 4 tabs accessible, including My Assets for 9:16 Story Verification Badge) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
           <button
             onClick={() => handleSelectTab('pass')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
@@ -3612,50 +3607,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         onClose={() => setSelectedDossierModal(null)}
         onNavigateToGalaxy={onNavigateToGalaxy}
       />
-
-      {/* Sticky Bottom Navigation with Sci-Fi Micro-Feedback (Portrait Mobile & Portrait Tablet Only) */}
-      {typeof document !== 'undefined' &&
-        createPortal(
-          <nav
-            aria-label="Mobile Sci-Fi Bottom Navigation"
-            className="scifi-bottom-nav portrait-mobile-only select-none"
-          >
-            <div className="scifi-bottom-tray-scroll px-2.5 py-2">
-              {(
-                [
-                  { id: 'pass' as const, label: 'Pass Perks', Icon: Compass },
-                  { id: 'edition' as const, label: 'Comic', Icon: BookOpen },
-                  { id: 'my-world' as const, label: 'My World', Icon: Globe2 },
-                  { id: 'assets' as const, label: 'My Assets', Icon: Gem },
-                ] as const
-              ).map(({ id, label, Icon }) => {
-                const isActive = activeTab === id;
-                const isTapping = tappingTab === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => handleSelectTab(id)}
-                    className={`scifi-nav-item flex-1 min-w-[82px] flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl cursor-pointer min-h-[48px] whitespace-nowrap ${
-                      isActive
-                        ? 'is-active bg-amber-500/15 text-amber-300 border border-amber-400/40 font-bold'
-                        : 'bg-white/[0.04] text-white/70 hover:text-white border border-white/10'
-                    } ${isTapping ? 'is-tapping' : ''}`}
-                  >
-                    <Icon
-                      className={`w-4 h-4 shrink-0 ${
-                        isActive ? 'text-[#ffb700]' : 'text-cyan-400'
-                      }`}
-                    />
-                    <span className="text-xs font-mono tracking-tight">{label}</span>
-                    <span className="scifi-gold-underline" />
-                  </button>
-                );
-              })}
-            </div>
-          </nav>,
-          document.body
-        )}
     </motion.div>
   );
 };
