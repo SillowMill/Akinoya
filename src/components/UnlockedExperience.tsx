@@ -2324,9 +2324,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   <div className="absolute -bottom-28 -left-28 w-96 h-96 bg-amber-500/12 rounded-full blur-3xl pointer-events-none" />
 
                   <div className="relative z-10 space-y-5 sm:space-y-6">
-                    {/* Header Row: Title, Badges & Action Buttons */}
-                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 md:gap-5 pb-2">
-                      <div className="space-y-2 max-w-2xl">
+                    {/* Header Block: Title, Vision Narrative & Action Buttons Directly Beneath */}
+                    <div className="space-y-4 pb-1">
+                      <div className="space-y-2.5 max-w-3xl">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
                             <Radar className="w-3 h-3 text-cyan-300 shrink-0" />
@@ -2342,13 +2342,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           Explore The 5 Pioneer Worlds
                         </h2>
 
-                        <p className="text-xs sm:text-sm text-cyan-100/85 font-sans leading-relaxed max-w-xl">
-                          Within the Äkinoya ecosystem, you can <strong className="text-white">create and mint your own custom world</strong> directly into the 3D galaxy constellation. Explore our five founding pioneer worlds (#1 Ämlemi, #2 Felix, #3 Ankrau, #4 Florium, #5 Sepplon) below — featuring <strong className="text-amber-300">Ämlemi as Pioneer World #1 (An Example Sector)</strong> to showcase what is possible when you build your own world.
-                        </p>
+                        <div className="space-y-1.5 text-xs sm:text-sm font-sans leading-relaxed max-w-2xl">
+                          <p className="font-bold text-white">
+                            Beyond the eleven visualizers, the Äkinoya storyline expands directly into the cosmos you create.
+                          </p>
+                          <p className="italic text-cyan-100/85">
+                            Here, you can craft and mint your own custom world into the 3D galaxy constellation—with Ämlemi serving as Pioneer World #1 as an inspiring example. In the future, we will use the worlds you build to continue the overarching narrative, allow you to design your own characters, and feature your creations directly within the growing Äkinoya universe.
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Interactive Action Buttons */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 pt-1 lg:pt-0">
+                      {/* Primary Action Buttons Cleanly Positioned Directly Beneath Text Block */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
                         {/* Button 1: View in Äkinoya Galaxy */}
                         <button
                           type="button"
@@ -2767,19 +2772,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               }}
               className="space-y-5 sm:space-y-6 md:space-y-7"
             >
-              {/* ÄKINOYA ASSET VERIFICATION Introduction Header */}
+              {/* MY ASSETS Introduction Header */}
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-950/50 via-[#060c1a]/90 to-[#050812]/95 backdrop-blur-xl border border-cyan-400/35 p-4 sm:p-5 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.12)]">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent pointer-events-none" />
                 <div className="relative z-10 flex items-start sm:items-center gap-3.5">
                   <div className="w-10 h-10 rounded-xl bg-cyan-950/85 border border-cyan-400/45 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
-                    <ShieldCheck className="w-5 h-5 text-cyan-400" />
+                    <Gem className="w-5 h-5 text-cyan-400" />
                   </div>
                   <div className="space-y-1 min-w-0 flex-1">
-                    <h3 className="text-xs sm:text-sm font-mono font-extrabold uppercase tracking-widest text-cyan-300">
-                      ÄKINOYA ASSET VERIFICATION
-                    </h3>
-                    <p className="text-xs sm:text-sm text-white/80 font-sans italic leading-relaxed">
-                      When you create a world or acquire a community pass on Äkinoya, your account receives an official Verification Badge and unique ID Token. Below are your verified planetary and media assets.
+                    <h2 className="text-base sm:text-lg font-display font-black uppercase tracking-wider text-white">
+                      MY ASSETS
+                    </h2>
+                    <p className="text-xs sm:text-sm text-white/85 font-sans italic leading-relaxed">
+                      Here you will find all your personal planetary assets and creations. When you acquire a comic or secure a world on Äkinoya, you receive an official, authentic PDF framing certificate linked to your unique core token—proving it is a 100% authentic, one-of-a-kind piece.
                     </p>
                   </div>
                 </div>

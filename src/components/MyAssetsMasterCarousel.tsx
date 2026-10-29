@@ -710,11 +710,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.45)]">
               <Sparkles className="w-3 h-3 text-black shrink-0" />
-              <span>MY ASSETS · MASTER MULTI-MEDIA CAROUSEL</span>
+              <span>MY ASSETS</span>
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-cyan-950/90 text-cyan-200 border border-cyan-400/40">
               <ShieldCheck className="w-3 h-3 text-cyan-400 shrink-0" />
-              <span>AUTHENTICATED ARTIFACT SUITE</span>
+              <span>100% AUTHENTIC</span>
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-emerald-950/80 text-emerald-300 border border-emerald-400/40">
               <span>EDITION #{meta.worldNumber}</span>
