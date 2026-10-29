@@ -36,8 +36,9 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
   onClose,
   onSelectTrack,
 }) => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
   const lastTouchTimeRef = useRef<number>(0);
@@ -87,18 +88,120 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     };
   }, [isPlaying, resetControlsTimer]);
 
-  // Close handler with audio and video cleanup
+  // True Native Fullscreen Request
+  const requestNativeFullscreen = useCallback(() => {
+    const target = overlayRef.current || containerRef.current || document.documentElement;
+    try {
+      if (target.requestFullscreen) {
+        target.requestFullscreen().catch(() => {
+          document.documentElement.requestFullscreen?.().catch(() => {});
+        });
+      } else if ((target as any).webkitRequestFullscreen) {
+        (target as any).webkitRequestFullscreen();
+      } else if ((target as any).webkitRequestFullScreen) {
+        (target as any).webkitRequestFullScreen();
+      } else if ((target as any).mozRequestFullScreen) {
+        (target as any).mozRequestFullScreen();
+      } else if ((target as any).msRequestFullscreen) {
+        (target as any).msRequestFullscreen();
+      } else if (videoRef.current && (videoRef.current as any).webkitEnterFullscreen) {
+        // iOS Safari iPhone fallback
+        (videoRef.current as any).webkitEnterFullscreen();
+      }
+    } catch (err) {
+      console.warn('Native fullscreen request error:', err);
+    }
+  }, []);
+
+  // True Native Fullscreen Exit
+  const exitNativeFullscreen = useCallback(() => {
+    const doc = document as any;
+    try {
+      if (doc.exitFullscreen) {
+        doc.exitFullscreen().catch(() => {});
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
+      } else if (doc.webkitCancelFullScreen) {
+        doc.webkitCancelFullScreen();
+      } else if (doc.mozCancelFullScreen) {
+        doc.mozCancelFullScreen();
+      } else if (doc.msExitFullscreen) {
+        doc.msExitFullscreen();
+      }
+    } catch (err) {
+      console.warn('Native fullscreen exit error:', err);
+    }
+  }, []);
+
+  // Toggle Fullscreen / Theater mode
+  const handleToggleFullscreen = useCallback(() => {
+    resetControlsTimer();
+    const doc = document as any;
+    const isCurrentlyNativeFs = Boolean(
+      doc.fullscreenElement ||
+      doc.webkitFullscreenElement ||
+      doc.mozFullScreenElement ||
+      doc.msFullscreenElement
+    );
+
+    if (!isFullscreen && !isCurrentlyNativeFs) {
+      requestNativeFullscreen();
+      setIsFullscreen(true);
+    } else {
+      exitNativeFullscreen();
+      setIsFullscreen(false);
+    }
+  }, [isFullscreen, requestNativeFullscreen, exitNativeFullscreen, resetControlsTimer]);
+
+  // Synchronize fullscreen state across all standard and vendor-prefixed browser events
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const doc = document as any;
+      const isFs = Boolean(
+        doc.fullscreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.mozFullScreenElement ||
+        doc.msFullscreenElement
+      );
+      setIsFullscreen(isFs);
+    };
+
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    document.addEventListener('mozfullscreenchange', onFullscreenChange);
+    document.addEventListener('MSFullscreenChange', onFullscreenChange);
+
+    const videoEl = videoRef.current;
+    const onVideoBeginFs = () => setIsFullscreen(true);
+    const onVideoEndFs = () => setIsFullscreen(false);
+    if (videoEl) {
+      videoEl.addEventListener('webkitbeginfullscreen', onVideoBeginFs);
+      videoEl.addEventListener('webkitendfullscreen', onVideoEndFs);
+    }
+
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', onFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', onFullscreenChange);
+      if (videoEl) {
+        videoEl.removeEventListener('webkitbeginfullscreen', onVideoBeginFs);
+        videoEl.removeEventListener('webkitendfullscreen', onVideoEndFs);
+      }
+    };
+  }, [activeTrack?.id]);
+
+  // Close handler with audio, video and fullscreen cleanup
   const handleClose = useCallback(() => {
     if (videoRef.current) {
       videoRef.current.pause();
     }
     planetSoundtrack.pause();
-    if (document.fullscreenElement) {
-      document.exitFullscreen?.().catch(() => {});
-    }
+    exitNativeFullscreen();
+    setIsFullscreen(false);
     setControlsVisible(true);
     onClose();
-  }, [onClose]);
+  }, [onClose, exitNativeFullscreen]);
 
   // Navigate to Previous Track
   const handlePrevTrack = useCallback(() => {
@@ -167,7 +270,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
 
   // Desktop Stage Click (Mouse click to play/pause, or restores controls if hidden)
   const handleStageClick = useCallback(() => {
-    // If click was triggered right after a touch event, ignore synthetic mouse click
     if (Date.now() - lastTouchTimeRef.current < 500) return;
 
     if (!controlsVisible) {
@@ -196,35 +298,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
       setIsMuted(nextMuted);
     }
   }, [isTrack02, isMuted, resetControlsTimer]);
-
-  // Toggle Fullscreen / Theater mode
-  const handleToggleFullscreen = useCallback(() => {
-    resetControlsTimer();
-    if (!isFullscreen) {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
-      setIsFullscreen(true);
-    } else {
-      if (document.fullscreenElement) {
-        document.exitFullscreen?.().catch(() => {});
-      }
-      setIsFullscreen(false);
-    }
-  }, [isFullscreen, resetControlsTimer]);
-
-  // Synchronize fullscreen state with document events
-  useEffect(() => {
-    const onFullscreenChange = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
-    };
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', onFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
-    };
-  }, []);
 
   // Sync Video & Audio when activeTrack changes
   useEffect(() => {
@@ -260,13 +333,11 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
           setIsMuted(false);
         })
         .catch(() => {
-          // If browser blocked unmuted autoplay, mute and continue playing
           videoEl.muted = true;
           videoEl.play().catch(() => {});
           setIsMuted(true);
         });
     } else {
-      // Scheduled ambient track
       planetSoundtrack.pause();
       setIsPlaying(true);
     }
@@ -275,7 +346,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     if (trackStripRef.current) {
       const activePill = trackStripRef.current.querySelector<HTMLElement>(`[data-track-id="${activeTrack.id}"]`);
       if (activePill) {
-        activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        activePill.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
       }
     }
   }, [isOpen, activeTrack?.id, isTrack02, hasVideo]);
@@ -312,27 +383,15 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     };
   }, [activeTrack?.id]);
 
-  // 100% Page Scroll Lock when modal is active
+  // 100% Page Scroll Lock without heavy touchmove listeners (smooth 60fps on mobile)
   useEffect(() => {
     if (!isOpen) return;
 
     const originalBodyOverflow = document.body.style.overflow;
     const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalBodyPosition = document.body.style.position;
-    const originalBodyWidth = document.body.style.width;
 
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
-
-    // Prevent Safari background elastic overscroll
-    const handleTouchMove = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.modal-allow-scroll')) {
-        e.preventDefault();
-      }
-    };
-
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     // Keyboard Shortcuts (Escape to close, H to toggle interface, Arrows to switch tracks, Space to play/pause)
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -371,9 +430,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     return () => {
       document.body.style.overflow = originalBodyOverflow;
       document.documentElement.style.overflow = originalHtmlOverflow;
-      document.body.style.position = originalBodyPosition;
-      document.body.style.width = originalBodyWidth;
-      document.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('keydown', handleKeyDown);
       if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
     };
@@ -393,7 +449,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     touchStartXRef.current = null;
     touchStartYRef.current = null;
 
-    // Minimum swipe threshold: 45px horizontal and predominantly horizontal
+    // Minimum swipe threshold: 45px horizontal
     if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
       if (deltaX < 0) {
         handleNextTrack();
@@ -443,19 +499,18 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
   return createPortal(
     <AnimatePresence>
       <div
-        className={`fixed inset-0 z-[999999] select-none transition-colors duration-200 ${
-          isFullscreen ? 'w-screen h-screen flex flex-col bg-black' : 'flex items-center justify-center p-2 xs:p-3 sm:p-5'
+        ref={overlayRef}
+        className={`fixed inset-0 z-[999999] select-none ${
+          isFullscreen ? 'w-screen h-screen flex flex-col bg-black p-0 m-0' : 'flex items-center justify-center p-2 xs:p-3 sm:p-5'
         }`}
         style={{
           width: '100vw',
           height: '100dvh',
           minHeight: '100dvh',
           backgroundColor: isFullscreen ? '#000000' : 'rgba(5, 7, 12, 0.96)',
-          backdropFilter: isFullscreen ? 'none' : 'blur(10px)',
-          WebkitBackdropFilter: isFullscreen ? 'none' : 'blur(10px)',
-          touchAction: 'none',
           cursor: isCinematicCursorHidden ? 'none' : 'default',
           willChange: 'opacity',
+          touchAction: 'manipulation',
         }}
         onClick={handleClose}
         onMouseMove={handleMouseMove}
@@ -468,7 +523,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
           initial={{ opacity: 0, scale: 0.98, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 8 }}
-          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
           onMouseMove={handleMouseMove}
           style={{
@@ -480,7 +535,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
             WebkitBackfaceVisibility: 'hidden',
             cursor: isCinematicCursorHidden ? 'none' : 'default',
           }}
-          className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
+          className={`relative flex flex-col overflow-hidden ${
             isFullscreen
               ? 'w-full h-full max-w-none max-h-none mx-0 rounded-none border-0 bg-black'
               : 'w-full max-w-4xl max-h-[96dvh] rounded-2xl sm:rounded-3xl border border-white/12 bg-[#060911] shadow-[0_0_60px_rgba(0,240,255,0.16),0_25px_50px_-12px_rgba(0,0,0,0.9)]'
@@ -776,7 +831,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
               }`}
               style={{
                 paddingBottom: isFullscreen
-                  ? 'max(1rem, env(safe-area-inset-bottom, 1rem))'
+                  ? 'max(1.25rem, env(safe-area-inset-bottom, 1.25rem))'
                   : 'max(0.75rem, env(safe-area-inset-bottom, 0.75rem))',
               }}
             >
@@ -861,11 +916,11 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                   </span>
                 </button>
 
-                {/* Fullscreen Button */}
+                {/* Fullscreen Button with True Native Fullscreen API Integration */}
                 <button
                   type="button"
                   aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                  title={isFullscreen ? 'Exit theater mode' : 'Enter theater mode'}
+                  title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                   onClick={handleToggleFullscreen}
                   className={`p-2 sm:p-2.5 rounded-xl border transition-colors cursor-pointer min-h-[40px] flex items-center justify-center ${
                     isFullscreen

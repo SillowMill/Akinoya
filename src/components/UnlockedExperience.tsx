@@ -1811,13 +1811,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     WebkitBackfaceVisibility: 'hidden',
                     overflowAnchor: 'none',
                   }}
-                  className="space-y-4 pb-20 sm:pb-24 lg:pb-28"
+                  className="space-y-4 pb-24 sm:pb-28 lg:pb-32"
                 >
                   <div
                     id="akinoya-visualizer-archive"
                     className="bg-[#060a14] border border-cyan-500/30 rounded-2xl p-4 sm:p-6 lg:p-7 xl:p-8 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)] scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
                     style={{
-                      paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 2rem))',
+                      paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 2.5rem))',
                     }}
                   >
                     <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
