@@ -14,7 +14,6 @@ import {
   Sparkles,
   AudioWaveform,
   Film,
-  Eye,
   EyeOff,
 } from 'lucide-react';
 import { VisualizerTrack } from './UnlockedExperience';
@@ -50,7 +49,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
   const [duration, setDuration] = useState<number>(0);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [controlsVisible, setControlsVisible] = useState<boolean>(true);
-  const [isInterfaceHidden, setIsInterfaceHidden] = useState<boolean>(false);
 
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -89,11 +87,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     };
   }, [isPlaying, resetControlsTimer]);
 
-  // Reset explicit interface hidden mode when modal opens or active track switches
-  useEffect(() => {
-    setIsInterfaceHidden(false);
-  }, [isOpen, activeTrack?.id]);
-
   // Close handler with audio and video cleanup
   const handleClose = useCallback(() => {
     if (videoRef.current) {
@@ -103,7 +96,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     if (document.fullscreenElement) {
       document.exitFullscreen?.().catch(() => {});
     }
-    setIsInterfaceHidden(false);
+    setControlsVisible(true);
     onClose();
   }, [onClose]);
 
@@ -149,13 +142,16 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     }
   }, [isTrack02, hasVideo, resetControlsTimer]);
 
-  // Mobile / Tablet Stage Tap: Toggles minimal controls overlay cleanly (Netflix / YouTube style)
-  const handleStageTap = useCallback(() => {
-    if (isInterfaceHidden) {
-      setIsInterfaceHidden(false);
-      resetControlsTimer();
-      return;
+  // True 'Hide Interface' Mode: Immediately hides all UI elements and cursor (no persistent button)
+  const handleHideInterface = useCallback(() => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
     }
+    setControlsVisible(false);
+  }, []);
+
+  // Mobile / Tablet Stage Tap: Toggles minimal controls overlay cleanly
+  const handleStageTap = useCallback(() => {
     setControlsVisible((prev) => {
       const next = !prev;
       if (next) {
@@ -167,26 +163,25 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
       }
       return next;
     });
-  }, [isInterfaceHidden, resetControlsTimer]);
+  }, [resetControlsTimer]);
 
-  // Desktop Stage Click (Mouse click to play/pause, unless manual hide is active)
+  // Desktop Stage Click (Mouse click to play/pause, or restores controls if hidden)
   const handleStageClick = useCallback(() => {
     // If click was triggered right after a touch event, ignore synthetic mouse click
     if (Date.now() - lastTouchTimeRef.current < 500) return;
 
-    if (isInterfaceHidden) {
-      setIsInterfaceHidden(false);
-      resetControlsTimer();
-      return;
-    }
-
-    if (!controlsVisible && isPlaying) {
+    if (!controlsVisible) {
       resetControlsTimer();
       return;
     }
 
     handleTogglePlay();
-  }, [isInterfaceHidden, controlsVisible, isPlaying, handleTogglePlay, resetControlsTimer]);
+  }, [controlsVisible, handleTogglePlay, resetControlsTimer]);
+
+  // Mouse move handler: instantly wakes up interface and restores cursor
+  const handleMouseMove = useCallback(() => {
+    resetControlsTimer();
+  }, [resetControlsTimer]);
 
   // Toggle Mute / Unmute
   const handleToggleMute = useCallback(() => {
@@ -217,22 +212,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
       setIsFullscreen(false);
     }
   }, [isFullscreen, resetControlsTimer]);
-
-  // Toggle Manual Hide Interface (Desktop)
-  const handleToggleHideInterface = useCallback(() => {
-    setIsInterfaceHidden((prev) => {
-      const next = !prev;
-      if (next) {
-        setControlsVisible(false);
-        if (inactivityTimerRef.current) {
-          clearTimeout(inactivityTimerRef.current);
-        }
-      } else {
-        resetControlsTimer();
-      }
-      return next;
-    });
-  }, [resetControlsTimer]);
 
   // Synchronize fullscreen state with document events
   useEffect(() => {
@@ -315,6 +294,24 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     };
   }, []);
 
+  // Dynamic orientation and viewport resize listener for zero-lag re-alignment
+  useEffect(() => {
+    const handleOrientationOrResize = () => {
+      if (trackStripRef.current && activeTrack) {
+        const activePill = trackStripRef.current.querySelector<HTMLElement>(`[data-track-id="${activeTrack.id}"]`);
+        if (activePill) {
+          activePill.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+        }
+      }
+    };
+    window.addEventListener('resize', handleOrientationOrResize, { passive: true });
+    window.addEventListener('orientationchange', handleOrientationOrResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleOrientationOrResize);
+      window.removeEventListener('orientationchange', handleOrientationOrResize);
+    };
+  }, [activeTrack?.id]);
+
   // 100% Page Scroll Lock when modal is active
   useEffect(() => {
     if (!isOpen) return;
@@ -341,8 +338,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        if (isInterfaceHidden) {
-          setIsInterfaceHidden(false);
+        if (!controlsVisible) {
           resetControlsTimer();
         } else if (isFullscreen) {
           handleToggleFullscreen();
@@ -351,7 +347,11 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
         }
       } else if (e.key === 'h' || e.key === 'H') {
         e.preventDefault();
-        handleToggleHideInterface();
+        if (controlsVisible) {
+          handleHideInterface();
+        } else {
+          resetControlsTimer();
+        }
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         handlePrevTrack();
@@ -377,7 +377,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
       window.removeEventListener('keydown', handleKeyDown);
       if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
     };
-  }, [isOpen, isFullscreen, isInterfaceHidden, handleClose, handleToggleFullscreen, handleToggleHideInterface, handlePrevTrack, handleNextTrack, handleTogglePlay, resetControlsTimer]);
+  }, [isOpen, isFullscreen, controlsVisible, handleClose, handleToggleFullscreen, handleHideInterface, handlePrevTrack, handleNextTrack, handleTogglePlay, resetControlsTimer]);
 
   // Touch Handlers: Clean tap-to-toggle overlay & horizontal swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -437,8 +437,8 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
 
   if (typeof document === 'undefined' || !isOpen || !activeTrack) return null;
 
-  // Effective UI overlay visibility
-  const isOverlayVisible = controlsVisible && !isInterfaceHidden;
+  // Cinematic state: when interface is hidden and video is playing, hide cursor completely
+  const isCinematicCursorHidden = !controlsVisible && isPlaying;
 
   return createPortal(
     <AnimatePresence>
@@ -448,15 +448,19 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
         }`}
         style={{
           width: '100vw',
-          height: '100vh',
+          height: '100dvh',
+          minHeight: '100dvh',
           backgroundColor: isFullscreen ? '#000000' : 'rgba(5, 7, 12, 0.96)',
           backdropFilter: isFullscreen ? 'none' : 'blur(10px)',
           WebkitBackdropFilter: isFullscreen ? 'none' : 'blur(10px)',
           touchAction: 'none',
+          cursor: isCinematicCursorHidden ? 'none' : 'default',
           willChange: 'opacity',
         }}
         onClick={handleClose}
-        onMouseMove={resetControlsTimer}
+        onMouseMove={handleMouseMove}
+        onTouchStart={resetControlsTimer}
+        onTouchMove={resetControlsTimer}
       >
         {/* Modal Window Card */}
         <motion.div
@@ -466,7 +470,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
           exit={{ opacity: 0, scale: 0.98, y: 8 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          onMouseMove={resetControlsTimer}
+          onMouseMove={handleMouseMove}
           style={{
             transform: 'translateZ(0)',
             WebkitTransform: 'translateZ(0)',
@@ -474,6 +478,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
             touchAction: 'manipulation',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
+            cursor: isCinematicCursorHidden ? 'none' : 'default',
           }}
           className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
             isFullscreen
@@ -481,14 +486,14 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
               : 'w-full max-w-4xl max-h-[96dvh] rounded-2xl sm:rounded-3xl border border-white/12 bg-[#060911] shadow-[0_0_60px_rgba(0,240,255,0.16),0_25px_50px_-12px_rgba(0,0,0,0.9)]'
           }`}
         >
-          {/* Top Bar: Minimalist Title & Close Button (Fades out when interface is hidden) */}
+          {/* Top Bar: Title & Close Button (Fades to opacity: 0 after 2s inactivity) */}
           <div
             className={`flex items-center justify-between transition-opacity duration-300 shrink-0 ${
               isFullscreen
                 ? 'absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/90 via-black/50 to-transparent border-0 px-4 sm:px-8 py-3'
                 : 'px-3.5 sm:px-6 py-2.5 sm:py-3 bg-black/75 border-b border-white/10'
             } ${
-              isOverlayVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
           >
             {/* Left: Track Status & Title */}
@@ -502,9 +507,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                   <span className="text-white/30 text-[9px] font-mono">/</span>
                   <span className="text-[9px] sm:text-[10px] font-mono text-white/50 tracking-wide">
                     {currentIndex + 1} OF {totalTracks}
-                  </span>
-                  <span className="hidden sm:inline-block px-2 py-0.2 rounded-full text-[8.5px] font-mono tracking-widest uppercase bg-cyan-950/80 border border-cyan-400/40 text-cyan-300">
-                    {hasVideo ? (isFullscreen ? 'THEATER 4K MASTER' : '4K 60FPS MASTER') : 'PIPELINE ARCHIVE'}
                   </span>
                 </div>
                 <h2 className="text-xs sm:text-base font-display font-bold text-white truncate max-w-[200px] xs:max-w-[260px] sm:max-w-md">
@@ -544,8 +546,9 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
               transform: 'translateZ(0)',
               WebkitTransform: 'translateZ(0)',
               touchAction: 'manipulation',
+              cursor: isCinematicCursorHidden ? 'none' : 'pointer',
             }}
-            className={`relative w-full bg-black flex items-center justify-center overflow-hidden cursor-pointer group/stage ${
+            className={`relative w-full bg-black flex items-center justify-center overflow-hidden group/stage ${
               isFullscreen
                 ? 'flex-1 h-full max-h-none'
                 : 'aspect-video max-h-[50vh] sm:max-h-[56vh]'
@@ -604,9 +607,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                     <h3 className="text-base sm:text-xl font-display font-extrabold text-white mt-1">
                       {activeTrack.title}
                     </h3>
-                    <p className="text-[10px] sm:text-xs font-mono text-cyan-300/80 mt-0.5">
-                      3D Visualizer master rendering in progress
-                    </p>
                   </div>
 
                   {/* Pulsing Audio Telemetry Waveform Bars */}
@@ -656,7 +656,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                 handlePrevTrack();
               }}
               className={`hidden lg:flex absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 hover:bg-black/90 active:bg-cyan-500/30 text-white/85 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.7)] items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
-                isOverlayVisible
+                controlsVisible
                   ? 'opacity-85 hover:opacity-100 active:opacity-100 pointer-events-auto'
                   : 'opacity-0 pointer-events-none'
               }`}
@@ -678,7 +678,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                 handleNextTrack();
               }}
               className={`hidden lg:flex absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 hover:bg-black/90 active:bg-cyan-500/30 text-white/85 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.7)] items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
-                isOverlayVisible
+                controlsVisible
                   ? 'opacity-85 hover:opacity-100 active:opacity-100 pointer-events-auto'
                   : 'opacity-0 pointer-events-none'
               }`}
@@ -692,36 +692,14 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
             </button>
           </div>
 
-          {/* Floating 'Show interface' Button (Displayed when interface is manually hidden on desktop) */}
-          {isInterfaceHidden && (
-            <button
-              type="button"
-              aria-label="Show interface"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsInterfaceHidden(false);
-                resetControlsTimer();
-              }}
-              className="fixed md:absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/80 hover:bg-black/95 active:bg-cyan-500/20 text-white/80 hover:text-white border border-white/20 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.8)] backdrop-blur-md text-xs font-mono transition-all cursor-pointer group"
-              style={{
-                willChange: 'transform, opacity',
-                transform: 'translateZ(0)',
-                touchAction: 'manipulation',
-              }}
-            >
-              <Eye className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
-              <span className="tracking-wide">Show interface</span>
-            </button>
-          )}
-
           {/* Bottom Area: Scrubber, Track Strip & Controls HUD */}
           <div
             className={`transition-opacity duration-300 shrink-0 ${
               isFullscreen
-                ? 'absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black via-black/90 to-transparent border-t border-white/10 px-3.5 sm:px-8 pt-3 pb-safe flex flex-col gap-1.5'
+                ? 'absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black via-black/90 to-transparent border-t border-white/10 px-3.5 sm:px-8 pt-3 flex flex-col gap-1.5'
                 : 'flex flex-col'
             } ${
-              isOverlayVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
           >
             {/* Interactive Scrubber Bar */}
@@ -796,6 +774,11 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                   ? 'bg-transparent border-0'
                   : 'bg-[#070b13] border-t border-white/10'
               }`}
+              style={{
+                paddingBottom: isFullscreen
+                  ? 'max(1rem, env(safe-area-inset-bottom, 1rem))'
+                  : 'max(0.75rem, env(safe-area-inset-bottom, 0.75rem))',
+              }}
             >
               {/* Left: Play/Pause, Prev, Next */}
               <div className="flex items-center gap-2 sm:gap-3">
@@ -848,10 +831,10 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                 <button
                   type="button"
                   aria-label="Hide interface"
-                  title="Hide all interface elements for cinematic viewing (or press H)"
+                  title="Hide interface and cursor for pure cinema viewing (or press H)"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleToggleHideInterface();
+                    handleHideInterface();
                   }}
                   className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/70 hover:text-white border border-white/10 hover:border-cyan-400/40 text-[11px] font-mono transition-colors cursor-pointer min-h-[40px]"
                   style={{ touchAction: 'manipulation' }}

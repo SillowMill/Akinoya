@@ -1811,11 +1811,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     WebkitBackfaceVisibility: 'hidden',
                     overflowAnchor: 'none',
                   }}
-                  className="space-y-4"
+                  className="space-y-4 pb-20 sm:pb-24 lg:pb-28"
                 >
                   <div
                     id="akinoya-visualizer-archive"
-                    className="bg-[#060a14] border border-cyan-500/30 rounded-2xl p-5 sm:p-6 lg:p-7 xl:p-8 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)] scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
+                    className="bg-[#060a14] border border-cyan-500/30 rounded-2xl p-4 sm:p-6 lg:p-7 xl:p-8 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)] scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
+                    style={{
+                      paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 2rem))',
+                    }}
                   >
                     <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -1856,16 +1859,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       const scheduledTracks = VISUALIZER_TRACKS.filter((t) => !t.artworkUrl && !t.videoUrl);
 
                       const renderTrackCard = (track: VisualizerTrack, index: number, hasArtwork: boolean) => {
-                        const isTrack01 = track.id === '01';
-                        const isTrack02 = track.id === '02';
-                        const isProducedTrack = isTrack01 || isTrack02;
+                        const isProducedTrack = track.id === '01' || track.id === '02';
 
                         return (
                           <motion.div
                             key={track.id}
-                            initial={{ opacity: 0, y: 14 }}
+                            initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.03 }}
+                            transition={{ duration: 0.25, delay: index * 0.025 }}
                             whileHover={{ scale: 1.015 }}
                             onClick={() => handleTrackCardClick(track)}
                             style={{
@@ -1874,47 +1875,33 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               willChange: 'transform',
                               touchAction: 'manipulation',
                             }}
-                            className={`p-4 lg:p-4.5 rounded-xl border transition-all cursor-pointer relative group flex flex-col justify-between ${
+                            className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer relative group flex flex-col justify-between ${
                               isProducedTrack
-                                ? 'bg-gradient-to-br from-emerald-950/30 via-black/50 to-black/70 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:border-emerald-400'
-                                : 'bg-black/40 border-white/10 hover:border-amber-500/30 hover:bg-black/60 shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
+                                ? 'bg-gradient-to-br from-emerald-950/20 via-black/60 to-black/80 border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.12)] hover:border-emerald-400'
+                                : 'bg-black/50 border-white/10 hover:border-cyan-400/50 hover:bg-black/70 shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-2 mb-3">
-                              <div className="flex items-center gap-2.5">
-                                {/* Video Indicator Icon */}
-                                <div
-                                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                                    isProducedTrack
-                                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
-                                      : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                                  }`}
-                                >
-                                  {isProducedTrack ? (
-                                    <Play className="w-4 h-4 fill-emerald-400 text-emerald-400 ml-0.5" />
-                                  ) : (
-                                    <AudioWaveform className="w-4 h-4 text-cyan-400" />
-                                  )}
-                                </div>
-
-                                <div>
-                                  <div className="text-[10px] font-mono text-cyan-400/80">
-                                    TRACK #{track.id}
-                                  </div>
-                                  <h4 className="text-sm font-display font-bold text-white tracking-wide group-hover:text-cyan-200 transition-colors">
-                                    {track.title}
-                                  </h4>
-                                </div>
+                            {/* Card Header: Track Number, Name & Sleek Stream Button */}
+                            <div className="flex items-center justify-between gap-2.5 mb-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-[11px] font-mono text-cyan-400 font-bold shrink-0">
+                                  #{track.id}
+                                </span>
+                                <h4 className="text-sm sm:text-base font-display font-bold text-white tracking-wide truncate group-hover:text-cyan-200 transition-colors">
+                                  {track.title}
+                                </h4>
                               </div>
 
-                              <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/60">
-                                {isProducedTrack ? '4K 60FPS' : 'AUDIO MATRIX'}
-                              </span>
+                              {/* Sleek Stream Button */}
+                              <div className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/15 group-hover:bg-cyan-500 text-cyan-300 group-hover:text-black border border-cyan-400/40 text-[11px] font-mono font-semibold transition-all shadow-[0_0_10px_rgba(0,240,255,0.1)] group-hover:shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                                <Play className="w-3 h-3 fill-current ml-0.5" />
+                                <span>STREAM</span>
+                              </div>
                             </div>
 
                             {/* Active 16:9 Artwork Preview / Video Loop Container */}
                             {hasArtwork && (track.videoUrl || track.artworkUrl) && (
-                              <div className="w-full aspect-video rounded-lg overflow-hidden my-2.5 relative group/thumb border border-cyan-500/30 bg-black/80 shadow-[0_0_20px_rgba(56,189,248,0.15)]">
+                              <div className="w-full aspect-video rounded-lg overflow-hidden my-1 relative group/thumb border border-cyan-500/30 bg-black/80 shadow-[0_0_20px_rgba(56,189,248,0.15)]">
                                 {track.videoUrl ? (
                                   <video
                                     ref={(el) => {
@@ -1968,17 +1955,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 )}
                               </div>
                             )}
-
-                            <div className="flex items-center justify-between pt-2.5 border-t border-white/5 mt-auto">
-                              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-400/30 text-emerald-300 font-semibold flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                                <span>{isProducedTrack ? 'STREAM READY' : 'TELEMETRY READY'}</span>
-                              </span>
-
-                              <span className="text-[10px] font-mono text-cyan-400/80 group-hover:text-cyan-300 flex items-center gap-1">
-                                {isProducedTrack ? 'Watch Visualizer ▶' : 'Open Audio Matrix ▶'}
-                              </span>
-                            </div>
                           </motion.div>
                         );
                       };
