@@ -235,6 +235,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       const params = new URLSearchParams(window.location.search);
       const hash = window.location.hash.toLowerCase().replace('#', '');
       const savedTab = sessionStorage.getItem('akinoya_portal_active_tab') as any;
+      const savedSubview = sessionStorage.getItem('akinoya_portal_pass_subview');
+
+      if (
+        params.get('subview') === 'hub' ||
+        params.get('tab') === 'visualizers' ||
+        params.get('tab') === 'visualizer-hub' ||
+        hash === 'visualizer-hub' ||
+        hash === 'visualizers' ||
+        savedSubview === 'hub'
+      ) {
+        return 'pass';
+      }
 
       const candidate = params.get('tab') || hash || savedTab;
       if (candidate === 'pass' || candidate === 'pass-perks') return 'pass';
@@ -245,19 +257,65 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     return 'pass';
   });
 
+  const [passSubView, setPassSubView] = useState<'overview' | 'hub'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      const savedSubview = sessionStorage.getItem('akinoya_portal_pass_subview');
+      if (
+        params.get('subview') === 'hub' ||
+        params.get('tab') === 'visualizers' ||
+        params.get('tab') === 'visualizer-hub' ||
+        hash === 'visualizer-hub' ||
+        hash === 'visualizers' ||
+        savedSubview === 'hub'
+      ) {
+        return 'hub';
+      }
+    }
+    return 'overview';
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('akinoya_portal_pass_subview', passSubView);
+      try {
+        const url = new URL(window.location.href);
+        if (passSubView === 'hub') {
+          url.searchParams.set('subview', 'hub');
+          url.hash = 'visualizer-hub';
+          localStorage.setItem('akinoya_public_unlocked', 'true');
+          sessionStorage.setItem('akinoya_public_unlocked', 'true');
+          sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+        } else {
+          url.searchParams.delete('subview');
+          if (url.hash === '#visualizer-hub' || url.hash === '#visualizers') {
+            url.hash = activeTab;
+          }
+        }
+        window.history.replaceState(null, '', url.toString());
+      } catch {}
+    }
+  }, [passSubView, activeTab]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('akinoya_portal_active_tab', activeTab);
       try {
         const currentHash = window.location.hash.toLowerCase().replace('#', '');
-        if (currentHash !== activeTab) {
+        if (passSubView === 'hub') {
+          const url = new URL(window.location.href);
+          url.searchParams.set('subview', 'hub');
+          url.hash = 'visualizer-hub';
+          window.history.replaceState(null, '', url.toString());
+        } else if (currentHash !== activeTab && currentHash !== 'visualizer-hub' && currentHash !== 'visualizers') {
           const url = new URL(window.location.href);
           url.hash = activeTab;
           window.history.replaceState(null, '', url.toString());
         }
       } catch {}
     }
-  }, [activeTab]);
+  }, [activeTab, passSubView]);
 
   // Viewport scroll position saving & single-shot restoration (cancels immediately on user interaction so footer never auto-corrects)
   useEffect(() => {
@@ -629,28 +687,28 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     );
   }, [isAuthenticated, user, profile, role, isVipMode, isVip, authIsVip, hasUserCreatedWorld]);
 
-  const [passSubView, setPassSubView] = useState<'overview' | 'hub'>(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const savedSubview = sessionStorage.getItem('akinoya_portal_pass_subview');
-      if (params.get('subview') === 'hub' || params.get('tab') === 'visualizers' || savedSubview === 'hub') {
-        return 'hub';
-      }
-    }
-    return 'overview';
-  });
-
+  // Initial mount scroll restoration for Visualizer Hub
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('akinoya_portal_pass_subview', passSubView);
+    if (passSubView === 'hub') {
+      scrollToVisualizerHub(false, 60);
     }
-  }, [passSubView]);
+  }, []);
 
   // Listen for direct navigation to Visualizer Hub and Passperks Home
   useEffect(() => {
     const handleOpenHub = () => {
+      sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+      sessionStorage.setItem('akinoya_portal_pass_subview', 'hub');
+      sessionStorage.setItem('akinoya_public_unlocked', 'true');
+      localStorage.setItem('akinoya_public_unlocked', 'true');
       setActiveTab('pass');
       setPassSubView('hub');
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('subview', 'hub');
+        url.hash = 'visualizer-hub';
+        window.history.replaceState(null, '', url.toString());
+      } catch {}
       scrollToVisualizerHub(true);
     };
 
@@ -661,6 +719,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
         sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
         const url = new URL(window.location.href);
+        url.searchParams.delete('subview');
+        url.searchParams.delete('track');
         url.hash = 'pass';
         window.history.replaceState(null, '', url.toString());
       } catch {
@@ -673,30 +733,37 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const hash = window.location.hash.toLowerCase().replace('#', '');
+        const savedSubview = sessionStorage.getItem('akinoya_portal_pass_subview');
+
+        // Priority 1: Visualizer Hub retention on refresh & direct links
+        if (
+          params.get('subview') === 'hub' ||
+          params.get('tab') === 'visualizers' ||
+          params.get('tab') === 'visualizer-hub' ||
+          hash === 'visualizer-hub' ||
+          hash === 'visualizers' ||
+          savedSubview === 'hub'
+        ) {
+          setActiveTab('pass');
+          setPassSubView('hub');
+          scrollToVisualizerHub(false, 60);
+          return;
+        }
+
         if (
           params.get('tab') === 'pass-perks' ||
           params.get('tab') === 'pass' ||
           hash === 'pass-perks' ||
           hash === 'pass'
         ) {
-          if (params.get('subview') === 'hub') {
-            setActiveTab('pass');
-            setPassSubView('hub');
-            scrollToVisualizerHub(true, 80);
-          } else {
-            setActiveTab('pass');
-            setPassSubView('overview');
-          }
+          setActiveTab('pass');
+          setPassSubView('overview');
         } else if (params.get('tab') === 'assets' || hash === 'assets') {
           setActiveTab('assets');
         } else if (params.get('tab') === 'my-world' || hash === 'my-world') {
           setActiveTab('my-world');
         } else if (params.get('tab') === 'edition' || hash === 'edition' || hash === 'comic') {
           setActiveTab('edition');
-        } else if (params.get('tab') === 'visualizers') {
-          setActiveTab('pass');
-          setPassSubView('hub');
-          scrollToVisualizerHub(true, 80);
         }
       }
     };
@@ -1018,8 +1085,33 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     return { '02': true }; // Track 2 Bingäa early access by default
   });
 
-  // Modal states for video player
-  const [activePlayingTrack, setActivePlayingTrack] = useState<VisualizerTrack | null>(null);
+  // Modal states for video player with refresh state persistence
+  const [activePlayingTrack, setActivePlayingTrack] = useState<VisualizerTrack | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const savedTrackId = params.get('track') || sessionStorage.getItem('akinoya_active_visualizer_track_id');
+      if (savedTrackId) {
+        return VISUALIZER_TRACKS.find((t) => t.id === savedTrackId) || null;
+      }
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        if (activePlayingTrack) {
+          sessionStorage.setItem('akinoya_active_visualizer_track_id', activePlayingTrack.id);
+          url.searchParams.set('track', activePlayingTrack.id);
+        } else {
+          sessionStorage.removeItem('akinoya_active_visualizer_track_id');
+          url.searchParams.delete('track');
+        }
+        window.history.replaceState(null, '', url.toString());
+      } catch {}
+    }
+  }, [activePlayingTrack]);
 
   const handleUnlockVisualizers = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1031,13 +1123,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       isValidPassId(clean)
     ) {
       sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+      sessionStorage.setItem('akinoya_portal_pass_subview', 'hub');
+      sessionStorage.setItem('akinoya_public_unlocked', 'true');
+      localStorage.setItem('akinoya_public_unlocked', 'true');
       setIsVisualizerUnlocked(true);
       setPassSubView('hub');
       setPassIdError('');
       soundManager.playUnlockChime();
-      setTimeout(() => {
-        document.getElementById('visualizer-archive')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
+      scrollToVisualizerHub(true);
     } else {
       setPassIdError(`Invalid Pass ID. Please enter an authentic Äkinoya Pass ID (e.g. #${FOUNDING_PASS_ID}).`);
       soundManager.playError();
@@ -1046,9 +1139,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   const handleDirectGuestUnlockHub = () => {
     sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+    sessionStorage.setItem('akinoya_portal_pass_subview', 'hub');
+    sessionStorage.setItem('akinoya_public_unlocked', 'true');
+    localStorage.setItem('akinoya_public_unlocked', 'true');
     setIsVisualizerUnlocked(true);
     setActiveTab('pass');
     setPassSubView('hub');
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('subview', 'hub');
+      url.hash = 'visualizer-hub';
+      window.history.replaceState(null, '', url.toString());
+    } catch {}
     soundManager.playUnlockChime();
     scrollToVisualizerHub(true);
   };
@@ -1843,7 +1945,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
 
                       <button
-                        onClick={() => setPassSubView('overview')}
+                        onClick={() => {
+                          setPassSubView('overview');
+                          try {
+                            sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
+                            const url = new URL(window.location.href);
+                            url.searchParams.delete('subview');
+                            url.searchParams.delete('track');
+                            url.hash = 'pass';
+                            window.history.replaceState(null, '', url.toString());
+                          } catch {}
+                        }}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer"
                       >
                         <ArrowLeft className="w-3.5 h-3.5" />

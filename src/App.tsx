@@ -60,6 +60,29 @@ export default function App() {
   // Automatically bypass all lock gating if authenticated or local storage has an active session/unlock
   const [publicUnlocked, setPublicUnlocked] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      const path = window.location.pathname.toLowerCase();
+      const isHub =
+        path === '/visualizers' ||
+        path === '/visualizer-hub' ||
+        searchParams.get('subview') === 'hub' ||
+        searchParams.get('tab') === 'visualizers' ||
+        searchParams.get('tab') === 'visualizer-hub' ||
+        hash === 'visualizer-hub' ||
+        hash === 'visualizers' ||
+        sessionStorage.getItem('akinoya_portal_pass_subview') === 'hub';
+
+      if (isHub) {
+        try {
+          localStorage.setItem('akinoya_public_unlocked', 'true');
+          sessionStorage.setItem('akinoya_public_unlocked', 'true');
+          sessionStorage.setItem('akinoya_portal_pass_subview', 'hub');
+          sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+        } catch {}
+        return true;
+      }
+
       return (
         localStorage.getItem('akinoya_public_unlocked') === 'true' ||
         sessionStorage.getItem('akinoya_public_unlocked') === 'true'
@@ -158,10 +181,13 @@ export default function App() {
       if (path === '/privacy' || path.startsWith('/privacy/')) return 'privacy';
       if (path === '/kyc' || path.startsWith('/kyc/')) return 'kyc';
       if (path === '/success' || path.startsWith('/success/')) return 'success';
-      if (path === '/unlocked' || path.startsWith('/unlocked')) {
+      if (path === '/unlocked' || path.startsWith('/unlocked') || path === '/visualizers' || path === '/visualizer-hub') {
         try {
           localStorage.setItem('akinoya_public_unlocked', 'true');
           sessionStorage.setItem('akinoya_public_unlocked', 'true');
+          sessionStorage.setItem('akinoya_portal_pass_subview', 'hub');
+          sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
+          sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
         } catch {
           // ignore
         }
@@ -270,7 +296,7 @@ export default function App() {
         setRoute('kyc');
       } else if (path === '/success' || path.startsWith('/success/')) {
         setRoute('success');
-      } else if (path === '/unlocked' || path.startsWith('/unlocked')) {
+      } else if (path === '/unlocked' || path.startsWith('/unlocked') || path === '/visualizers' || path === '/visualizer-hub') {
         handlePublicUnlockSuccess();
         if (typeof window !== 'undefined') {
           try {
@@ -278,6 +304,8 @@ export default function App() {
             sessionStorage.setItem('akinoya_portal_pass_subview', 'hub');
             sessionStorage.removeItem('akinoya_portal_scroll_y');
             sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+            sessionStorage.setItem('akinoya_public_unlocked', 'true');
+            localStorage.setItem('akinoya_public_unlocked', 'true');
           } catch {}
         }
         setRoute('home');
@@ -397,9 +425,11 @@ export default function App() {
         sessionStorage.setItem('akinoya_portal_pass_subview', 'hub');
         sessionStorage.removeItem('akinoya_portal_scroll_y');
         sessionStorage.setItem('akinoya_visualizers_unlocked', 'true');
+        sessionStorage.setItem('akinoya_public_unlocked', 'true');
+        localStorage.setItem('akinoya_public_unlocked', 'true');
       } catch {}
     }
-    navigateTo('home', '/?tab=pass&subview=hub#pass');
+    navigateTo('home', '/?tab=pass&subview=hub#visualizer-hub');
     if (typeof window !== 'undefined') {
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('akinoya-open-visualizer-hub'));
