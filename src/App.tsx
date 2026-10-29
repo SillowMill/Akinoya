@@ -690,48 +690,51 @@ export default function App() {
         )}
       </ErrorBoundary>
 
-      {/* Luxury Minimalist Footer */}
+      {/* Luxury Minimalist Footer — Stable, Non-Shifting & Positioned Cleanly Above Sticky Bottom Navigation */}
       {!backdropOnly && route !== 'community' && route !== 'creators' && route !== 'contest' && route !== 'galaxy' && (
-        <footer className="relative z-10 w-full border-t border-white/5 bg-black/60 backdrop-blur-md py-4 px-4 sm:px-6 text-center space-y-2.5">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-white/40">
+        <footer
+          style={{ overflowAnchor: 'none' }}
+          className="site-footer-safe relative z-10 w-full shrink-0 border-t border-white/10 bg-[#050811]/95 py-5 px-4 sm:px-6 text-center space-y-2.5"
+        >
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-white/50">
             <div>
-              © 2027 SILLOW MILL <span className="text-white/20">/</span> ALL RIGHTS RESERVED
+              © 2027 SILLOW MILL <span className="text-white/25">/</span> ALL RIGHTS RESERVED
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] sm:text-[11px]">
               <button
                 type="button"
                 onClick={() => navigateTo('privacy', '/privacy')}
-                className="hover:text-cyan-300 transition-colors underline-offset-4 hover:underline cursor-pointer"
+                className="text-white/65 hover:text-cyan-300 transition-colors underline-offset-4 hover:underline cursor-pointer"
               >
                 Privacy Policy
               </button>
-              <span className="text-white/20">·</span>
+              <span className="text-white/25">·</span>
               <button
                 type="button"
                 onClick={() => navigateTo('kyc', '/kyc')}
-                className="hover:text-cyan-300 transition-colors underline-offset-4 hover:underline cursor-pointer"
+                className="text-white/65 hover:text-cyan-300 transition-colors underline-offset-4 hover:underline cursor-pointer"
               >
                 KYC Verification
               </button>
-              <span className="text-white/20">·</span>
-              <span className="text-cyan-400/80">ÄKINOYA LIVE PROTOCOL</span>
-              <span className="text-white/20">·</span>
+              <span className="text-white/25">·</span>
+              <span className="text-cyan-400/90">ÄKINOYA LIVE PROTOCOL</span>
+              <span className="text-white/25">·</span>
               <span>ARCHIVE ACCESS SECURED</span>
             </div>
           </div>
 
           {/* Sub-footer Legal Imprint Line */}
-          <div className="max-w-7xl mx-auto pt-2 border-t border-white/5 text-[10px] sm:text-[11px] font-mono text-white/35 flex flex-wrap items-center justify-center gap-1 sm:gap-2 leading-relaxed">
+          <div className="max-w-7xl mx-auto pt-2.5 border-t border-white/10 text-[10px] sm:text-[11px] font-mono text-white/45 flex flex-wrap items-center justify-center gap-1 sm:gap-2 leading-relaxed">
             <span>Sillow Mill</span>
-            <span className="text-white/20">·</span>
+            <span className="text-white/25">·</span>
             <span>Enterprise No. (KBO): 1041.720.513</span>
-            <span className="text-white/20">·</span>
+            <span className="text-white/25">·</span>
             <span>VAT: BE 1041.720.513</span>
-            <span className="text-white/20">·</span>
-            <a href="mailto:Odi@sillowmill.com" className="text-white/50 hover:text-cyan-300 transition-colors">
+            <span className="text-white/25">·</span>
+            <a href="mailto:Odi@sillowmill.com" className="text-white/60 hover:text-cyan-300 transition-colors">
               Odi@sillowmill.com
             </a>
-            <span className="text-white/20">·</span>
+            <span className="text-white/25">·</span>
             <span>KBC BE97 7460 3951 7915</span>
           </div>
         </footer>

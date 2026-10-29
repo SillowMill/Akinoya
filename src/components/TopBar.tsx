@@ -1,5 +1,5 @@
 import React from 'react';
-import { Orbit, Sparkles, Users } from 'lucide-react';
+import { Radar, Sparkles, Users } from 'lucide-react';
 import { SoundtrackButton } from './SoundtrackButton';
 import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
@@ -122,7 +122,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             }}
             className="inline-flex items-center gap-1 lg:gap-1.5 text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
           >
-            <Orbit className="w-3 h-3 lg:w-3.5 lg:h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <Radar className="w-3 h-3 lg:w-3.5 lg:h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
             <span className="hidden xl:inline">Galaxy Navigator</span>
             <span className="xl:hidden">Galaxy</span>
           </a>

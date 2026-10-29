@@ -479,56 +479,93 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     window.addEventListener('beforeunload', handleInstantSaveScroll);
     window.addEventListener('pagehide', handleInstantSaveScroll);
 
-    // Multi-interval robust scroll restoration
+    let userInteracted = false;
+    const markUserInteraction = () => {
+      userInteracted = true;
+    };
+    window.addEventListener('touchstart', markUserInteraction, { passive: true });
+    window.addEventListener('wheel', markUserInteraction, { passive: true });
+
+    // Single-shot scroll restoration (cancels immediately on user touch/scroll to prevent footer auto-correction)
+    let restoreTimer: any;
     const savedY = sessionStorage.getItem('akinoya_hub_scroll_y');
     if (savedY) {
       const targetY = parseFloat(savedY);
       if (!isNaN(targetY) && targetY > 50) {
-        const delays = [60, 150, 300, 600, 1000];
-        delays.forEach((delay) => {
-          setTimeout(() => {
-            if (Math.abs(getY() - targetY) > 20) {
-              scrollHubTo(targetY, 'instant' as ScrollBehavior);
-            }
-          }, delay);
-        });
+        restoreTimer = setTimeout(() => {
+          if (!userInteracted && Math.abs(getY() - targetY) > 20) {
+            scrollHubTo(targetY, 'instant' as ScrollBehavior);
+          }
+        }, 60);
       }
     }
 
     return () => {
       scrollTarget.removeEventListener('scroll', saveScroll);
+      window.removeEventListener('touchstart', markUserInteraction);
+      window.removeEventListener('wheel', markUserInteraction);
       window.removeEventListener('beforeunload', handleInstantSaveScroll);
       window.removeEventListener('pagehide', handleInstantSaveScroll);
       clearTimeout(timeoutId);
+      clearTimeout(restoreTimer);
     };
   }, []);
 
-  // Scroll-spy for Stage 01–05 (Labs & Workflows) driving the left sidebar highlight.
-  // Enabled on tablet + desktop (>= 768px, where the sidebar is visible); disabled on mobile.
-  // Uses a thin activation line (threshold 0) inside the internal hub scroller so tall,
-  // single-column tablet stage cards are detected reliably regardless of their height.
+  const pipelineStagesTrayRef = useRef<HTMLDivElement | null>(null);
+  const programmaticStageScrollUntilRef = useRef<number>(0);
+
+  // Scroll-spy for Stage 01–05 (Labs & Workflows) driving BOTH the desktop left sidebar
+  // AND the sticky bottom "PIPELINE STAGES" bar on mobile and tablet viewports in real time.
   useEffect(() => {
     if (typeof window === 'undefined' || activeSection !== 'workflows') return;
-    if (typeof IntersectionObserver === 'undefined') return;
 
-    const mq = window.matchMedia('(min-width: 768px)');
     let observer: IntersectionObserver | null = null;
     let mutationObserver: MutationObserver | null = null;
+    let rafId: number | null = null;
 
-    const teardown = () => {
-      observer?.disconnect();
-      observer = null;
-      mutationObserver?.disconnect();
-      mutationObserver = null;
+    const computeActiveStageFromScroll = () => {
+      if (Date.now() < programmaticStageScrollUntilRef.current) return;
+      const root = hubScrollRef.current;
+      const rootRect =
+        root && root.clientHeight > 0
+          ? root.getBoundingClientRect()
+          : { top: 0, height: window.innerHeight };
+      const activationY = rootRect.top + rootRect.height * 0.38;
+
+      let candidate = 1;
+      let anyFound = false;
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById(`stage-${i}`);
+        if (!el) continue;
+        anyFound = true;
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= activationY) {
+          candidate = i;
+        }
+      }
+      if (anyFound) {
+        setActiveStageId((prev) => (prev === candidate ? prev : candidate));
+      }
     };
 
-    const attach = () => {
-      teardown();
-      if (!mq.matches) return; // Mobile (< 768px): scroll-spy explicitly disabled
+    const handleScrollSpy = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        computeActiveStageFromScroll();
+      });
+    };
 
-      const root = hubScrollRef.current;
+    const root = hubScrollRef.current;
+    if (root) {
+      root.addEventListener('scroll', handleScrollSpy, { passive: true });
+    }
+    window.addEventListener('scroll', handleScrollSpy, { passive: true });
+
+    if (typeof IntersectionObserver !== 'undefined') {
       observer = new IntersectionObserver(
         (entries) => {
+          if (Date.now() < programmaticStageScrollUntilRef.current) return;
           for (const entry of entries) {
             if (entry.isIntersecting) {
               const stageNum = Number(entry.target.id.replace('stage-', ''));
@@ -537,9 +574,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               }
             }
           }
+          computeActiveStageFromScroll();
         },
-        // Activation line at ~35% from the top of the scroll viewport
-        { root, rootMargin: '-35% 0px -64% 0px', threshold: 0 }
+        { root, rootMargin: '-32% 0px -62% 0px', threshold: 0 }
       );
 
       const observeStages = () => {
@@ -554,40 +591,60 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         return found;
       };
 
-      // Labs module is lazy-loaded: wait for the stage nodes to mount before observing
       if (observeStages() < 5 && typeof MutationObserver !== 'undefined') {
         mutationObserver = new MutationObserver(() => {
           if (observeStages() >= 5) {
             mutationObserver?.disconnect();
             mutationObserver = null;
+            computeActiveStageFromScroll();
           }
         });
         mutationObserver.observe(root || document.body, { childList: true, subtree: true });
       }
-    };
+    }
 
-    attach();
-    const handleBreakpointChange = () => attach();
-    if (typeof mq.addEventListener === 'function') mq.addEventListener('change', handleBreakpointChange);
-    else mq.addListener(handleBreakpointChange);
+    // Initial check once mounted
+    const initTimer = window.setTimeout(computeActiveStageFromScroll, 120);
 
     return () => {
-      teardown();
-      if (typeof mq.removeEventListener === 'function') mq.removeEventListener('change', handleBreakpointChange);
-      else mq.removeListener(handleBreakpointChange);
+      if (root) {
+        root.removeEventListener('scroll', handleScrollSpy);
+      }
+      window.removeEventListener('scroll', handleScrollSpy);
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
+      window.clearTimeout(initTimer);
+      observer?.disconnect();
+      mutationObserver?.disconnect();
     };
   }, [activeSection]);
 
-  // Auto-scroll to active stage on initial load/section switch in workflows
+  // Keep active stage button centered in the mobile/tablet bottom "PIPELINE STAGES" strip as user scrolls
+  useEffect(() => {
+    if (typeof window === 'undefined' || activeSection !== 'workflows') return;
+    sessionStorage.setItem('akinoya_hub_active_stage', String(activeStageId));
+    const tray = pipelineStagesTrayRef.current;
+    if (!tray) return;
+    const activeBtn = tray.querySelector<HTMLElement>(`[data-pipeline-stage="${activeStageId}"]`);
+    if (activeBtn) {
+      const targetLeft =
+        activeBtn.offsetLeft - tray.clientWidth / 2 + activeBtn.offsetWidth / 2;
+      tray.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+    }
+  }, [activeStageId, activeSection]);
+
+  // Auto-scroll to active stage on initial load/section switch in workflows when hash specifies #stage-N
   useEffect(() => {
     if (typeof window === 'undefined' || activeSection !== 'workflows') return;
     const hash = window.location.hash.toLowerCase();
     const targetStage = hash.startsWith('#stage-')
       ? Number(hash.replace('#stage-', ''))
-      : activeStageId;
+      : 0;
 
-    if (targetStage && targetStage > 1 && targetStage <= 5) {
-      const delays = [150, 400, 800];
+    if (targetStage > 1 && targetStage <= 5) {
+      programmaticStageScrollUntilRef.current = Date.now() + 700;
+      const delays = [150, 400];
       delays.forEach((delay) => {
         setTimeout(() => {
           const el = document.getElementById(`stage-${targetStage}`);
@@ -600,6 +657,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   }, [activeSection]);
 
   const handleJumpToStage = (stageNum: number) => {
+    programmaticStageScrollUntilRef.current = Date.now() + 700;
     setActiveStageId(stageNum);
     soundManager.playTone(580, 0.05);
     if (typeof window !== 'undefined') {
@@ -1328,14 +1386,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
         {/* Right Status Actions: Auth Status Profile Button + Locked Membership Badge */}
         <div className="flex items-center justify-end gap-2 sm:gap-2.5 shrink-0">
-          <a
-            href="/contest"
-            className="hidden md:inline-flex items-center justify-center gap-1.5 px-3 lg:px-3.5 py-1.5 lg:py-2 rounded-xl text-[11px] lg:text-xs font-mono font-bold text-black bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition-all min-h-[40px] lg:min-h-[44px] shadow-[0_0_12px_rgba(245,158,11,0.25)] hover:scale-[1.01] whitespace-nowrap shrink-0"
-          >
-            <Trophy className="w-3.5 h-3.5 text-black shrink-0" />
-            <span className="hidden lg:inline">WORLDBUILDING CONTEST →</span>
-            <span className="lg:hidden">CONTEST →</span>
-          </a>
           <AuthHeaderButton />
           <button
             type="button"
@@ -1470,7 +1520,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                 >
                   {/* 5-Stage Pipeline Quick-Jump Strip when on Äkinoya Labs & Workflows */}
                   {activeSection === 'workflows' && (
-                    <div className="scifi-bottom-tray-scroll px-2.5 pt-2 pb-1 border-b border-white/10">
+                    <div
+                      ref={pipelineStagesTrayRef}
+                      className="scifi-bottom-tray-scroll px-2.5 pt-2 pb-1 border-b border-white/10"
+                    >
                       <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-400/90 shrink-0 self-center pr-1">
                         PIPELINE STAGES:
                       </span>
@@ -1480,6 +1533,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                           <button
                             key={st.id}
                             type="button"
+                            data-pipeline-stage={st.id}
                             onClick={() => handleJumpToStage(st.id)}
                             className={`scifi-nav-item shrink-0 px-2.5 py-1 rounded-lg text-[10.5px] font-mono flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                               isStageActive
@@ -1498,7 +1552,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     </div>
                   )}
 
-                  {/* Primary Horizontally Swipable Bottom Tray with All 6 Exact Desktop Modules + Operational Actions */}
+                  {/* Primary Horizontally Swipable Bottom Tray with All 6 Exact Desktop Modules + Claim Your World */}
                   <div className="scifi-bottom-tray-scroll px-2.5 py-2">
                     {HUB_TABS.map((tab) => {
                       const Icon = tab.icon;
@@ -1536,7 +1590,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       );
                     })}
 
-                    {/* Operational Dashboard Actions Preserved in Swipable Tray */}
+                    {/* Retain Exclusively Claim Your World in Swipable Tray */}
                     <button
                       type="button"
                       onClick={() => {
@@ -1548,14 +1602,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       <Globe2 className="w-4 h-4 text-[#ffb700] shrink-0" />
                       <span>CLAIM YOUR WORLD</span>
                     </button>
-
-                    <a
-                      href="/contest"
-                      className="scifi-nav-item shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-mono text-xs font-bold tracking-wider cursor-pointer whitespace-nowrap min-h-[46px]"
-                    >
-                      <Trophy className="w-4 h-4 text-black shrink-0" />
-                      <span>WORLDBUILDING CONTEST</span>
-                    </a>
                   </div>
                 </nav>,
                 document.body
@@ -1681,42 +1727,41 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     })}
                   </div>
                 </div>
+                </div>
 
-                {/* Sidebar Bottom Footer Info */}
-                <div className="pt-4 border-t border-white/10 space-y-3">
-                  <div className="p-3 rounded-2xl bg-black/50 border border-white/5 space-y-1">
-                    <div className="flex items-center justify-between text-[10px] font-mono">
-                      <span className="text-white/40">SYSTEM LAUNCH</span>
-                      <span className="text-amber-400 font-bold">JAN 9, 2027</span>
+                {/* Cohesive Desktop Sidebar Bottom Widget: Timeline Badge + "CLAIM YOUR WORLD" Button ABOVE "CREATE YOUR FREE WORLD · BEFORE 09/01/2027" */}
+                <div className="hub-sidebar-dock shrink-0 p-4 lg:p-5 pt-3 border-t border-white/10 bg-[#050812]">
+                  <div className="p-3.5 rounded-2xl bg-[#080d1a] border border-amber-500/30 shadow-[0_0_25px_rgba(0,0,0,0.65)] space-y-3">
+                    {/* Timeline Badge Header */}
+                    <div className="space-y-1 pb-2 border-b border-white/10">
+                      <div className="flex items-center justify-between text-[10px] font-mono">
+                        <span className="text-white/50 tracking-wider">SYSTEM LAUNCH</span>
+                        <span className="text-amber-400 font-bold">JAN 9, 2027</span>
+                      </div>
+                      <p className="text-[10px] text-white/60 font-sans leading-tight">
+                        Paid memberships &amp; VR planet minting launch worldwide.
+                      </p>
                     </div>
-                    <p className="text-[10px] text-white/60 font-sans leading-tight">
-                      Paid memberships &amp; VR planet minting launch worldwide.
-                    </p>
+
+                    {/* Primary Action: "CLAIM YOUR WORLD" Button Positioned ABOVE the Text Indicator */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundManager.playTone(520, 0.05);
+                        openClaimWorldModal();
+                      }}
+                      className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_18px_rgba(245,158,11,0.35)] transition-all cursor-pointer"
+                    >
+                      <Globe2 className="w-3.5 h-3.5 text-black shrink-0" />
+                      <span>CLAIM YOUR WORLD</span>
+                    </button>
+
+                    {/* Text Indicator Positioned Cleanly BELOW the Button */}
+                    <div className="flex items-center justify-center gap-1.5 pt-0.5 text-[9.5px] font-mono font-bold tracking-wider text-amber-300/95 text-center leading-tight">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                      <span>CREATE YOUR FREE WORLD · BEFORE 09/01/2027</span>
+                    </div>
                   </div>
-                </div>
-                </div>
-
-                {/* Pinned CTA dock: locked to sidebar bottom, never scrolls away or gets overlapped */}
-                <div className="hub-sidebar-dock shrink-0 p-4 lg:p-5 pt-3 border-t border-white/10 bg-[#050812] space-y-2.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      soundManager.playTone(520, 0.05);
-                      openClaimWorldModal();
-                    }}
-                    className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/25 to-amber-500/20 hover:from-amber-500/30 hover:to-yellow-500/35 border border-amber-400/50 text-amber-300 font-mono text-[10.5px] font-bold tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_14px_rgba(245,158,11,0.2)] transition-all cursor-pointer hover:scale-[1.02]"
-                  >
-                    <Globe2 className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                    <span>CLAIM YOUR WORLD</span>
-                  </button>
-
-                  <a
-                    href="/contest"
-                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.25)] transition-all cursor-pointer"
-                  >
-                    <Trophy className="w-3.5 h-3.5 text-black" />
-                    <span>WORLDBUILDING CONTEST</span>
-                  </a>
                 </div>
               </aside>
 
@@ -1724,8 +1769,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               <main
                 ref={hubScrollRef}
                 data-scroll-container="community-hub"
-                className="hub-main-scroll portrait-bottom-safe-pad relative z-0 isolate flex-1 min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8"
-                style={{ contain: 'layout', WebkitOverflowScrolling: 'touch' }}
+                className={`hub-main-scroll ${
+                  activeSection === 'workflows' ? 'portrait-bottom-safe-pad-workflows' : 'portrait-bottom-safe-pad'
+                } relative z-0 isolate flex-1 min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8`}
+                style={{ contain: 'layout', WebkitOverflowScrolling: 'touch', overflowAnchor: 'none' }}
               >
                 {/* ======================================================== */}
                 {/* SECTION 0: 00 · WELCOME & VISION PORTAL (PRIMARY LANDING)*/}
@@ -2600,6 +2647,51 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             </React.Suspense>
           </motion.div>
         )}
+
+        {/* Stable Compliance Footer inside Community Hub Scroller */}
+        <footer
+          style={{ overflowAnchor: 'none' }}
+          className="relative z-10 w-full shrink-0 border-t border-white/10 bg-[#050811]/95 rounded-2xl py-4 px-4 sm:px-6 mt-8 text-center space-y-2"
+        >
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-white/50">
+            <div>
+              © 2027 SILLOW MILL <span className="text-white/25">/</span> ALL RIGHTS RESERVED
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] sm:text-[11px]">
+              <a
+                href="/privacy"
+                className="text-white/65 hover:text-cyan-300 transition-colors underline-offset-4 hover:underline"
+              >
+                Privacy Policy
+              </a>
+              <span className="text-white/25">·</span>
+              <a
+                href="/kyc"
+                className="text-white/65 hover:text-cyan-300 transition-colors underline-offset-4 hover:underline"
+              >
+                KYC Verification
+              </a>
+              <span className="text-white/25">·</span>
+              <span className="text-cyan-400/90">ÄKINOYA LIVE PROTOCOL</span>
+              <span className="text-white/25">·</span>
+              <span>ARCHIVE ACCESS SECURED</span>
+            </div>
+          </div>
+
+          <div className="max-w-7xl mx-auto pt-2 border-t border-white/10 text-[10px] sm:text-[11px] font-mono text-white/45 flex flex-wrap items-center justify-center gap-1 sm:gap-2 leading-relaxed">
+            <span>Sillow Mill</span>
+            <span className="text-white/25">·</span>
+            <span>Enterprise No. (KBO): 1041.720.513</span>
+            <span className="text-white/25">·</span>
+            <span>VAT: BE 1041.720.513</span>
+            <span className="text-white/25">·</span>
+            <a href="mailto:Odi@sillowmill.com" className="text-white/60 hover:text-cyan-300 transition-colors">
+              Odi@sillowmill.com
+            </a>
+            <span className="text-white/25">·</span>
+            <span>KBC BE97 7460 3951 7915</span>
+          </div>
+        </footer>
       </main>
       </div>
           </>

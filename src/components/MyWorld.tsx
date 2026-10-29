@@ -12,6 +12,7 @@ import {
   Globe2,
   ChevronLeft,
   ChevronRight,
+  Radar,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
 import {
@@ -383,7 +384,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                 onClick={() => onNavigateToGalaxy(dossier.id)}
                 className="py-2 px-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
               >
-                <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+                <Radar className="w-3.5 h-3.5 text-cyan-400" />
                 <span>View in Galaxy</span>
               </button>
             )}

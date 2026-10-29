@@ -578,6 +578,11 @@ canvas {
   display: flex !important;
 }
 
+.site-footer-safe {
+  overflow-anchor: none;
+  flex-shrink: 0;
+}
+
 @media (max-width: 767px), (max-width: 1024px) and (orientation: portrait) {
   .portrait-mobile-only {
     display: block !important;
@@ -592,6 +597,14 @@ canvas {
   }
 
   .portrait-bottom-safe-pad {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6.5rem) !important;
+  }
+
+  .portrait-bottom-safe-pad-workflows {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8.75rem) !important;
+  }
+
+  .site-footer-safe {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.75rem) !important;
   }
 

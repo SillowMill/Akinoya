@@ -70,13 +70,21 @@ import {
   fetchPlanetSubmissions,
   subscribeToPlanetSubmissions,
   INITIAL_SUBMISSIONS,
+  CURATED_GALAXY_WORLD_IDS,
+  isQueuedUserWorld,
 } from '../data/contest';
 import { getUserStatusConfig } from '../utils/statusPill';
-import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet, isPreLaunch } from '../utils/pioneer';
+import {
+  isFoundingPioneerPlanet,
+  isPioneerPlanet,
+  isVipPioneerPlanet,
+  isPreLaunch,
+  getStoredSectorClaim,
+  SectorClaimRecord,
+} from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { MyAssetsMasterCarousel } from './MyAssetsMasterCarousel';
 import { WorldReleaseStatusBanner } from './WorldReleaseStatusBanner';
-import { isQueuedUserWorld } from '../data/contest';
 import {
   BINGAA_PDF_URL,
   BINGAA_PDF_FILENAME,
@@ -250,7 +258,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   }, [activeTab]);
 
-  // Viewport scroll position saving & restoration across reloads
+  // Viewport scroll position saving & single-shot restoration (cancels immediately on user interaction so footer never auto-corrects)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -259,13 +267,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
 
     let timeoutId: any;
+    let userInteracted = false;
+
+    const markUserInteraction = () => {
+      userInteracted = true;
+    };
+
     const saveScroll = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
         if (window.scrollY > 0) {
           sessionStorage.setItem('akinoya_portal_scroll_y', String(window.scrollY));
         }
-      }, 60);
+      }, 80);
     };
 
     const handleInstantSaveScroll = () => {
@@ -274,6 +288,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       }
     };
 
+    window.addEventListener('touchstart', markUserInteraction, { passive: true });
+    window.addEventListener('wheel', markUserInteraction, { passive: true });
+    window.addEventListener('keydown', markUserInteraction, { passive: true });
     window.addEventListener('scroll', saveScroll, { passive: true });
     window.addEventListener('beforeunload', handleInstantSaveScroll);
     window.addEventListener('pagehide', handleInstantSaveScroll);
@@ -284,31 +301,38 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       searchParams.get('tab') === 'visualizers' ||
       sessionStorage.getItem('akinoya_portal_pass_subview') === 'hub';
 
+    let restoreTimer: any;
     const savedY = !isTargetingHub ? sessionStorage.getItem('akinoya_portal_scroll_y') : null;
     if (savedY) {
       const targetY = parseFloat(savedY);
       if (!isNaN(targetY) && targetY > 50) {
-        const delays = [60, 150, 300, 600, 1000];
-        delays.forEach((delay) => {
-          setTimeout(() => {
-            if (Math.abs(window.scrollY - targetY) > 20) {
-              window.scrollTo({ top: targetY, behavior: 'instant' as ScrollBehavior });
+        restoreTimer = setTimeout(() => {
+          if (!userInteracted) {
+            const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+            const safeTargetY = Math.min(targetY, maxScroll);
+            if (safeTargetY > 50 && Math.abs(window.scrollY - safeTargetY) > 20) {
+              window.scrollTo({ top: safeTargetY, behavior: 'instant' as ScrollBehavior });
             }
-          }, delay);
-        });
+          }
+        }, 60);
       }
     }
 
     return () => {
+      window.removeEventListener('touchstart', markUserInteraction);
+      window.removeEventListener('wheel', markUserInteraction);
+      window.removeEventListener('keydown', markUserInteraction);
       window.removeEventListener('scroll', saveScroll);
       window.removeEventListener('beforeunload', handleInstantSaveScroll);
       window.removeEventListener('pagehide', handleInstantSaveScroll);
       clearTimeout(timeoutId);
+      clearTimeout(restoreTimer);
     };
   }, []);
 
   const { user, isVip: authIsVip, profile, role, isAuthenticated, openAuthModal } = useAuth();
   const [userDossier, setUserDossier] = useState<PlanetSubmission | null>(null);
+  const [claimedSector, setClaimedSector] = useState<SectorClaimRecord | null>(() => getStoredSectorClaim());
   const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);
   const [isCopiedDossierLink, setIsCopiedDossierLink] = useState(false);
 
@@ -317,29 +341,61 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   );
 
   useEffect(() => {
-    const userId = user?.id || profile?.id;
-    const email = user?.email || profile?.email;
-    if (userId || email) {
-      fetchUserContestSubmission(userId, email).then((sub) => {
-        if (sub) {
-          setUserDossier(sub);
-        } else if (email && isFounderEmail(email.toLowerCase().trim())) {
-          const amlemi = getStoredPlanetSubmissions().find(
-            (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
-          );
-          if (amlemi) setUserDossier(amlemi);
+    const syncUserWorldState = () => {
+      setClaimedSector(getStoredSectorClaim());
+      const userId = user?.id || profile?.id;
+      const email = user?.email || profile?.email;
+      const storedList = getStoredPlanetSubmissions();
+
+      if (userId || email) {
+        const localMatch = getUserContestSubmission(userId, email);
+        if (localMatch) {
+          setUserDossier(localMatch);
         }
-      });
-    } else {
-      const amlemi = getStoredPlanetSubmissions().find(
-        (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
-      );
-      if (amlemi && typeof window !== 'undefined') {
-        const storedToken = localStorage.getItem('akinoya_patron_token') || sessionStorage.getItem('akinoya_patron_token');
-        if (storedToken === FOUNDING_PASS_ID) {
-          setUserDossier(amlemi);
+        fetchUserContestSubmission(userId, email).then((sub) => {
+          if (sub) {
+            setUserDossier(sub);
+          } else {
+            // Check if a custom non-benchmark world was created in this session
+            const customLocal = storedList.find((p) => !CURATED_GALAXY_WORLD_IDS.has(p.id));
+            if (customLocal) {
+              setUserDossier(customLocal);
+            } else if (email && isFounderEmail(email.toLowerCase().trim())) {
+              const amlemi = storedList.find(
+                (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+              );
+              if (amlemi) setUserDossier(amlemi);
+            }
+          }
+        });
+      } else {
+        // Unauthenticated / local session: check if user created a custom world on this device first
+        const customLocal = storedList.find((p) => !CURATED_GALAXY_WORLD_IDS.has(p.id));
+        if (customLocal) {
+          setUserDossier(customLocal);
+          return;
+        }
+        const amlemi = storedList.find(
+          (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+        );
+        if (amlemi && typeof window !== 'undefined') {
+          const storedToken = localStorage.getItem('akinoya_patron_token') || sessionStorage.getItem('akinoya_patron_token');
+          if (storedToken === FOUNDING_PASS_ID) {
+            setUserDossier(amlemi);
+          }
         }
       }
+    };
+
+    syncUserWorldState();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('akinoya-sector-claimed', syncUserWorldState);
+      window.addEventListener('akinoya_planet_submissions_updated', syncUserWorldState);
+      return () => {
+        window.removeEventListener('akinoya-sector-claimed', syncUserWorldState);
+        window.removeEventListener('akinoya_planet_submissions_updated', syncUserWorldState);
+      };
     }
   }, [user?.id, profile?.id, user?.email, profile?.email]);
 
@@ -374,13 +430,56 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   const activeWorldDossier = userDossier || amlemiBenchmarkDossier;
   const isGuestWorldSimulation = !userDossier;
+  // Determine whether the current user/account has already created or minted a world
+  const hasUserCreatedWorld = useMemo(() => {
+    const emailNorm = (user?.email || profile?.email || '').toLowerCase().trim();
+    const userIdNorm = (user?.id || profile?.id || '').toLowerCase().trim();
+    if (
+      userDossier &&
+      userDossier.id !== 'planet-amlemi-genesis-01' &&
+      userDossier.planetName !== 'Ämlemi'
+    ) {
+      return true;
+    }
+    if (profile?.has_submitted_contest || profile?.contest_submission_id) {
+      return true;
+    }
+    if (
+      claimedSector &&
+      claimedSector.sectorName &&
+      claimedSector.sectorName.toLowerCase().trim() !== 'ämlemi' &&
+      (!emailNorm ||
+        !claimedSector.holderEmail ||
+        claimedSector.holderEmail.toLowerCase().trim() === emailNorm)
+    ) {
+      return true;
+    }
+    if (typeof window !== 'undefined') {
+      const accountKey = emailNorm || userIdNorm;
+      if (accountKey && localStorage.getItem(`user_generation_claimed_${accountKey}`) === 'true') {
+        return true;
+      }
+    }
+    return false;
+  }, [
+    userDossier,
+    profile?.has_submitted_contest,
+    profile?.contest_submission_id,
+    profile?.email,
+    profile?.id,
+    user?.email,
+    user?.id,
+    claimedSector,
+  ]);
+
   // Newly registered / custom generated (non-benchmark) worlds: queued until January 9, 2027 release
   const isQueuedWorld =
-    !isGuestWorldSimulation &&
-    Boolean(activeWorldDossier) &&
-    (isQueuedUserWorld(activeWorldDossier) ||
-      activeWorldDossier.status === 'QUEUED' ||
-      Boolean((activeWorldDossier as any).isWaitlist));
+    hasUserCreatedWorld ||
+    (!isGuestWorldSimulation &&
+      Boolean(activeWorldDossier) &&
+      (isQueuedUserWorld(activeWorldDossier) ||
+        activeWorldDossier.status === 'QUEUED' ||
+        Boolean((activeWorldDossier as any).isWaitlist)));
 
   const amlemiPhotoCards = useMemo(() => {
     return activeWorldDossier ? getPlanetPhotoCards(activeWorldDossier) : [];
@@ -1230,26 +1329,27 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         willChange: 'transform, opacity',
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
+        overflowAnchor: 'none',
       }}
-      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10 page-transition-container portrait-bottom-safe-pad"
+      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10 page-transition-container"
     >
       {/* Minified Low-Profile Status Bar Header with Inline Service View Toggle */}
-      <div className="relative overflow-hidden flex items-center justify-between gap-2.5 sm:gap-4 mb-4 sm:mb-5 bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-xl px-3.5 py-2.5 sm:px-5 sm:py-3 shadow-[0_0_25px_rgba(56,189,248,0.12)]">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyan-950/80 backdrop-blur-md border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.22)] shrink-0">
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+      <div className="relative isolate overflow-hidden flex items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-5 bg-[#060c18] bg-gradient-to-r from-cyan-950/50 via-[#060c18] to-[#040710] border border-cyan-500/35 rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-[0_0_25px_rgba(56,189,248,0.12)]">
+        <div className="relative z-10 flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-950/90 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.22)] shrink-0">
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
           </div>
-          <div className="min-w-0 flex-1 flex flex-col sm:flex-row sm:items-center sm:gap-3">
+          <div className="min-w-0 flex-1 flex items-center gap-2 sm:gap-3">
             <h2 className="text-xs sm:text-sm lg:text-base font-display font-bold text-white tracking-wide truncate drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
-              {isVipMode && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
+              <span className="sm:hidden">Welkom</span>
+              <span className="hidden sm:inline lg:hidden">Welcome to Äkinoya</span>
+              <span className="hidden lg:inline">Welcome to Äkinoya – Unlocked</span>
             </h2>
-            <div className="flex items-center gap-1.5 min-w-0">
+            <div className="hidden md:flex items-center gap-1.5 min-w-0">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
-              <span className="text-[9.5px] sm:text-[11px] font-mono text-cyan-400 font-semibold tracking-wider shrink-0">PORTAL ACTIVE</span>
+              <span className="text-[10.5px] font-mono text-cyan-400 font-semibold tracking-wider shrink-0">PORTAL ACTIVE</span>
               <span className="text-white/30 text-[10px]">·</span>
-              <span className="text-[9.5px] sm:text-[11px] text-white/65 font-mono truncate">
+              <span className="text-[10.5px] text-white/65 font-mono truncate">
                 {isVipMode && holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
               </span>
             </div>
@@ -1262,17 +1362,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             type="button"
             onClick={() => onToggleViewMode(currentViewMode === 'orbit' ? 'surface' : 'orbit')}
             title={currentViewMode === 'orbit' ? 'Switch to Service View' : 'Switch to Planet View'}
-            className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/60 hover:bg-cyan-950/90 backdrop-blur-md border border-cyan-500/35 hover:border-cyan-400/60 rounded-lg transition-all cursor-pointer min-h-[36px] sm:min-h-[38px]"
+            className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-950/95 border border-cyan-500/40 hover:border-cyan-400/70 rounded-lg transition-all cursor-pointer min-h-[34px] sm:min-h-[36px] whitespace-nowrap"
           >
             {currentViewMode === 'orbit' ? (
               <>
                 <Sliders className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span className="truncate">Service View</span>
+                <span>Service View</span>
               </>
             ) : (
               <>
                 <Eye className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span className="truncate">Planet View</span>
+                <span>Planet View</span>
               </>
             )}
           </button>
@@ -2315,13 +2415,26 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               }}
               className="space-y-6 md:space-y-7"
             >
-              {/* Galaxy Navigator Primary Visual Card — Explore The 5 Pioneer Worlds */}
-              {(isGuestWorldSimulation || activeWorldDossier?.planetName === 'Ämlemi' || activeWorldDossier?.id === 'planet-amlemi-genesis-01') && (
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0a132c]/95 via-[#060c1d]/95 to-[#040814]/98 backdrop-blur-2xl border-2 border-cyan-400/45 p-5 sm:p-7 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]">
-                  {/* Ambient top glowing beam */}
-                  <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none" />
-                  <div className="absolute -top-28 -right-28 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute -bottom-28 -left-28 w-96 h-96 bg-amber-500/12 rounded-full blur-3xl pointer-events-none" />
+              {/* Conditional World Status: Unclaimed ("Explore The 5 Pioneer Worlds") vs. Created ("Your world is loading, will be revealed 9 januari") */}
+              {!hasUserCreatedWorld ? (
+                <div
+                  style={{
+                    WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                  }}
+                  className="relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-b from-[#0a132c] via-[#060c1d] to-[#040814] bg-clip-padding border-2 border-cyan-400/50 p-5 sm:p-7 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]"
+                >
+                  {/* Sealed internal radial glow (never overflows rounded corners) */}
+                  <div
+                    className="absolute inset-0 rounded-[inherit] pointer-events-none"
+                    style={{
+                      background:
+                        'radial-gradient(circle at 92% 8%, rgba(6, 182, 212, 0.16) 0%, transparent 48%), radial-gradient(circle at 8% 92%, rgba(245, 158, 11, 0.12) 0%, transparent 48%)',
+                    }}
+                  />
+                  {/* Ambient top glowing beam inset away from rounded corner arcs */}
+                  <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none" />
 
                   <div className="relative z-10 space-y-5 sm:space-y-6">
                     {/* Header Block: Title, Vision Narrative & Action Buttons Directly Beneath */}
@@ -2400,14 +2513,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           window.location.hash = '#galaxy';
                         }
                       }}
-                      className="group relative overflow-hidden rounded-2xl border-2 border-cyan-400/50 hover:border-cyan-300 bg-black/60 shadow-[0_15px_45px_rgba(0,0,0,0.85),0_0_30px_rgba(56,189,248,0.25)] transition-all duration-300 cursor-pointer flex items-center justify-center w-full mx-auto"
+                      style={{
+                        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                      }}
+                      className="group relative isolate overflow-hidden rounded-2xl border-2 border-cyan-400/50 hover:border-cyan-300 bg-[#040917] bg-clip-padding shadow-[0_15px_45px_rgba(0,0,0,0.85),0_0_30px_rgba(56,189,248,0.25)] transition-all duration-300 cursor-pointer flex items-center justify-center w-full mx-auto"
                     >
                       {/* Visual Overview Image (source cropped symmetric around Äkinoya Core: equal Sepplon/Felix margins) */}
                       <img
                         src={galaxyOverviewImg}
                         alt="Äkinoya Galaxy Navigator Overview featuring Äkinoya Core and the 5 Pioneer Worlds"
                         style={{ objectFit: 'contain', objectPosition: 'center', margin: '0 auto' }}
-                        className="block w-full h-auto max-h-[560px] object-contain object-center mx-auto transition-transform duration-500 ease-out origin-center group-hover:scale-[1.015]"
+                        className="block w-full h-auto max-h-[560px] rounded-[14px] object-contain object-center mx-auto transition-transform duration-500 ease-out origin-center group-hover:scale-[1.015]"
                         loading="eager"
                       />
 
@@ -2425,6 +2541,73 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Dynamic Status Widget when the user HAS already created/minted a world */
+                <div
+                  role="status"
+                  style={{
+                    WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                  }}
+                  className="relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-r from-[#0a142d] via-[#060c1d] to-[#121009] bg-clip-padding border-2 border-amber-400/55 p-5 sm:p-7 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.2)]"
+                >
+                  <div
+                    className="absolute inset-0 rounded-[inherit] pointer-events-none"
+                    style={{
+                      background:
+                        'radial-gradient(circle at 90% 15%, rgba(245, 158, 11, 0.16) 0%, transparent 50%), radial-gradient(circle at 10% 85%, rgba(6, 182, 212, 0.14) 0%, transparent 50%)',
+                    }}
+                  />
+                  <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 via-cyan-400 to-transparent pointer-events-none" />
+
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+                    <div className="space-y-2.5 max-w-2xl">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-500/20 text-amber-300 border border-amber-400/60">
+                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                          <span>PIONEER SECTOR REGISTERED · LAUNCH QUEUE</span>
+                        </span>
+                        {(userDossier?.planetName || claimedSector?.sectorName) && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-cyan-950/90 text-cyan-300 border border-cyan-400/50">
+                            <Globe2 className="w-3 h-3 text-cyan-400 shrink-0" />
+                            <span>
+                              {userDossier?.planetName && userDossier.planetName !== 'Ämlemi'
+                                ? userDossier.planetName
+                                : claimedSector?.sectorName}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide">
+                        Your world is loading, will be revealed 9 januari
+                      </h2>
+
+                      <p className="text-xs sm:text-sm font-sans text-cyan-100/80 leading-relaxed">
+                        Your custom planetary coordinates and 4K sector dossier are locked in the Äkinoya Genesis Core ahead of the official January 9, 2027 worldwide launch.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundManager.playTone(620, 0.05);
+                          if (onNavigateToGalaxy) {
+                            onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01');
+                          } else if (typeof window !== 'undefined') {
+                            window.location.hash = '#galaxy';
+                          }
+                        }}
+                        className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                      >
+                        <Radar className="w-4 h-4 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
+                        <span>View in Äkinoya Galaxy</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -2712,11 +2895,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 </div>
 
-                {/* Release status banner (newly synthesized user worlds) */}
-                {isQueuedWorld && <WorldReleaseStatusBanner dossier={activeWorldDossier} />}
-
-                {/* Guest Conversion Push Footer Card */}
-                {isGuestWorldSimulation && (
+                {/* Guest Conversion Push Footer Card (only when user has not yet created a world) */}
+                {!hasUserCreatedWorld && isGuestWorldSimulation && (
                   <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#090d18] via-[#060c1a] to-black border border-amber-400/45 p-6 sm:p-8 text-center space-y-5 shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(245,158,11,0.18)]">
                     <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-400/15 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-[0_0_24px_rgba(245,158,11,0.3)]">
                       <Sparkles className="w-7 h-7" />

@@ -50,7 +50,10 @@ export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> =
               Release Target: {WORLD_RELEASE_DATE_LABEL}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-white/85 font-sans italic leading-relaxed">
+          <p className="text-xs sm:text-sm text-white/95 font-display font-bold tracking-wide leading-relaxed">
+            Your world is loading, will be revealed 9 januari
+          </p>
+          <p className="text-[11px] sm:text-xs text-white/70 font-sans italic leading-relaxed">
             &ldquo;{WORLD_QUEUE_OFFICIAL_MESSAGE}&rdquo;
           </p>
           <p className="flex items-center justify-center md:justify-start gap-1.5 text-[10px] font-mono text-white/45">

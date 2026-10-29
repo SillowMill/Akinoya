@@ -23,6 +23,7 @@ import {
   Play,
   Copy,
   Check,
+  Radar,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
 import {
@@ -380,7 +381,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                     }}
                     className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono transition-all cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.25)]"
                   >
-                    <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+                    <Radar className="w-3.5 h-3.5 text-cyan-400" />
                     <span>View in Galaxy</span>
                   </button>
                 )}
@@ -1120,7 +1121,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                       }}
                       className="h-[34px] px-2.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-[10.5px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 shrink-0"
                     >
-                      <Globe2 className="w-3 h-3 text-cyan-400 shrink-0" />
+                      <Radar className="w-3 h-3 text-cyan-400 shrink-0" />
                       <span>Galaxy</span>
                     </button>
                   )}
@@ -1185,7 +1186,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                       }}
                       className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
                     >
-                      <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+                      <Radar className="w-3.5 h-3.5 text-cyan-400" />
                       <span>View in Galaxy</span>
                     </button>
                   )}

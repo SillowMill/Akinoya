@@ -29,6 +29,7 @@ import {
   Beaker,
   X,
   RotateCcw,
+  Radar,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
@@ -1004,8 +1005,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px] sm:min-h-[40px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
               title="Galaxy Navigator"
             >
-              <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin shrink-0" style={{ animationDuration: '24s' }} />
-              <span className="hidden sm:inline">🌌 Galaxy Navigator</span>
+              <Radar className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span className="hidden sm:inline">Galaxy Navigator</span>
               <span className="sm:hidden text-[11px] font-bold">Galaxy</span>
             </button>
           )}

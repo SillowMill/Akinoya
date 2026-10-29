@@ -57,6 +57,12 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ on
   };
 
   if (isDismissed) {
+    if (
+      typeof window !== 'undefined' &&
+      window.location.pathname.toLowerCase().startsWith('/community')
+    ) {
+      return null;
+    }
     return (
       <div
         className="fixed bottom-4 left-4 z-[70] hidden sm:block"
