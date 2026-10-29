@@ -14,6 +14,8 @@ import {
   Sparkles,
   AudioWaveform,
   Film,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { VisualizerTrack } from './UnlockedExperience';
 import { planetSoundtrack } from '../utils/soundtrack';
@@ -28,7 +30,7 @@ export interface VisualizerPlayerModalProps {
   isVipMode?: boolean;
 }
 
-export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
+export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React.memo(({
   isOpen,
   activeTrack,
   tracks,
@@ -39,6 +41,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
+  const lastTouchTimeRef = useRef<number>(0);
   const trackStripRef = useRef<HTMLDivElement | null>(null);
 
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -47,6 +50,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
   const [duration, setDuration] = useState<number>(0);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [controlsVisible, setControlsVisible] = useState<boolean>(true);
+  const [isInterfaceHidden, setIsInterfaceHidden] = useState<boolean>(false);
 
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -85,7 +89,12 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
     };
   }, [isPlaying, resetControlsTimer]);
 
-  // Close handler with audio cleanup
+  // Reset explicit interface hidden mode when modal opens or active track switches
+  useEffect(() => {
+    setIsInterfaceHidden(false);
+  }, [isOpen, activeTrack?.id]);
+
+  // Close handler with audio and video cleanup
   const handleClose = useCallback(() => {
     if (videoRef.current) {
       videoRef.current.pause();
@@ -94,6 +103,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
     if (document.fullscreenElement) {
       document.exitFullscreen?.().catch(() => {});
     }
+    setIsInterfaceHidden(false);
     onClose();
   }, [onClose]);
 
@@ -113,14 +123,8 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
     resetControlsTimer();
   }, [currentIndex, totalTracks, tracks, onSelectTrack, resetControlsTimer]);
 
-  // Toggle Play / Pause (Clicking stage or play button)
+  // Toggle Play / Pause
   const handleTogglePlay = useCallback(() => {
-    // If controls were hidden, first tap simply wakes up controls without pausing
-    if (!controlsVisible && isPlaying) {
-      resetControlsTimer();
-      return;
-    }
-
     resetControlsTimer();
     if (isTrack02) {
       const willPlay = !planetSoundtrack.isPlaying;
@@ -143,7 +147,46 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
     } else {
       setIsPlaying((prev) => !prev);
     }
-  }, [controlsVisible, isPlaying, isTrack02, hasVideo, resetControlsTimer]);
+  }, [isTrack02, hasVideo, resetControlsTimer]);
+
+  // Mobile / Tablet Stage Tap: Toggles minimal controls overlay cleanly (Netflix / YouTube style)
+  const handleStageTap = useCallback(() => {
+    if (isInterfaceHidden) {
+      setIsInterfaceHidden(false);
+      resetControlsTimer();
+      return;
+    }
+    setControlsVisible((prev) => {
+      const next = !prev;
+      if (next) {
+        resetControlsTimer();
+      } else {
+        if (inactivityTimerRef.current) {
+          clearTimeout(inactivityTimerRef.current);
+        }
+      }
+      return next;
+    });
+  }, [isInterfaceHidden, resetControlsTimer]);
+
+  // Desktop Stage Click (Mouse click to play/pause, unless manual hide is active)
+  const handleStageClick = useCallback(() => {
+    // If click was triggered right after a touch event, ignore synthetic mouse click
+    if (Date.now() - lastTouchTimeRef.current < 500) return;
+
+    if (isInterfaceHidden) {
+      setIsInterfaceHidden(false);
+      resetControlsTimer();
+      return;
+    }
+
+    if (!controlsVisible && isPlaying) {
+      resetControlsTimer();
+      return;
+    }
+
+    handleTogglePlay();
+  }, [isInterfaceHidden, controlsVisible, isPlaying, handleTogglePlay, resetControlsTimer]);
 
   // Toggle Mute / Unmute
   const handleToggleMute = useCallback(() => {
@@ -174,6 +217,22 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
       setIsFullscreen(false);
     }
   }, [isFullscreen, resetControlsTimer]);
+
+  // Toggle Manual Hide Interface (Desktop)
+  const handleToggleHideInterface = useCallback(() => {
+    setIsInterfaceHidden((prev) => {
+      const next = !prev;
+      if (next) {
+        setControlsVisible(false);
+        if (inactivityTimerRef.current) {
+          clearTimeout(inactivityTimerRef.current);
+        }
+      } else {
+        resetControlsTimer();
+      }
+      return next;
+    });
+  }, [resetControlsTimer]);
 
   // Synchronize fullscreen state with document events
   useEffect(() => {
@@ -242,6 +301,20 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
     }
   }, [isOpen, activeTrack?.id, isTrack02, hasVideo]);
 
+  // Clean up video playback pipeline on component unmount
+  useEffect(() => {
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.removeAttribute('src');
+        videoRef.current.load();
+      }
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    };
+  }, []);
+
   // 100% Page Scroll Lock when modal is active
   useEffect(() => {
     if (!isOpen) return;
@@ -264,16 +337,21 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
 
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
 
-    // Keyboard Shortcuts (Escape to close, Arrows to switch tracks, Space to play/pause)
+    // Keyboard Shortcuts (Escape to close, H to toggle interface, Arrows to switch tracks, Space to play/pause)
     const handleKeyDown = (e: KeyboardEvent) => {
-      resetControlsTimer();
       if (e.key === 'Escape') {
         e.preventDefault();
-        if (isFullscreen) {
+        if (isInterfaceHidden) {
+          setIsInterfaceHidden(false);
+          resetControlsTimer();
+        } else if (isFullscreen) {
           handleToggleFullscreen();
         } else {
           handleClose();
         }
+      } else if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        handleToggleHideInterface();
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         handlePrevTrack();
@@ -283,6 +361,8 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
       } else if (e.key === ' ') {
         e.preventDefault();
         handleTogglePlay();
+      } else {
+        resetControlsTimer();
       }
     };
 
@@ -297,17 +377,16 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
       window.removeEventListener('keydown', handleKeyDown);
       if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
     };
-  }, [isOpen, isFullscreen, handleClose, handleToggleFullscreen, handlePrevTrack, handleNextTrack, handleTogglePlay, resetControlsTimer]);
+  }, [isOpen, isFullscreen, isInterfaceHidden, handleClose, handleToggleFullscreen, handleToggleHideInterface, handlePrevTrack, handleNextTrack, handleTogglePlay, resetControlsTimer]);
 
-  // Touch Swipe Handlers for mobile binge-watching
+  // Touch Handlers: Clean tap-to-toggle overlay & horizontal swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {
-    resetControlsTimer();
     touchStartXRef.current = e.touches[0].clientX;
     touchStartYRef.current = e.touches[0].clientY;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    resetControlsTimer();
+    lastTouchTimeRef.current = Date.now();
     if (touchStartXRef.current === null || touchStartYRef.current === null) return;
     const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
     const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
@@ -321,6 +400,12 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
       } else {
         handlePrevTrack();
       }
+      return;
+    }
+
+    // Small movement indicates a clean touch tap -> toggle minimal streaming overlay
+    if (Math.abs(deltaX) < 15 && Math.abs(deltaY) < 15) {
+      handleStageTap();
     }
   };
 
@@ -352,58 +437,61 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
 
   if (typeof document === 'undefined' || !isOpen || !activeTrack) return null;
 
+  // Effective UI overlay visibility
+  const isOverlayVisible = controlsVisible && !isInterfaceHidden;
+
   return createPortal(
     <AnimatePresence>
       <div
-        className={`fixed inset-0 z-[999999] select-none transition-colors duration-300 ${
-          isFullscreen ? 'w-screen h-screen flex flex-col bg-black' : 'flex items-center justify-center p-3 xs:p-4 sm:p-6'
+        className={`fixed inset-0 z-[999999] select-none transition-colors duration-200 ${
+          isFullscreen ? 'w-screen h-screen flex flex-col bg-black' : 'flex items-center justify-center p-2 xs:p-3 sm:p-5'
         }`}
         style={{
           width: '100vw',
           height: '100vh',
-          backgroundColor: isFullscreen ? '#000000' : 'rgba(5, 7, 12, 0.94)',
-          backdropFilter: isFullscreen ? 'none' : 'blur(20px)',
-          WebkitBackdropFilter: isFullscreen ? 'none' : 'blur(20px)',
+          backgroundColor: isFullscreen ? '#000000' : 'rgba(5, 7, 12, 0.96)',
+          backdropFilter: isFullscreen ? 'none' : 'blur(10px)',
+          WebkitBackdropFilter: isFullscreen ? 'none' : 'blur(10px)',
           touchAction: 'none',
+          willChange: 'opacity',
         }}
         onClick={handleClose}
         onMouseMove={resetControlsTimer}
-        onTouchStart={resetControlsTimer}
-        onTouchMove={resetControlsTimer}
       >
         {/* Modal Window Card */}
         <motion.div
           ref={containerRef}
-          initial={{ opacity: 0, scale: 0.96, y: 12 }}
+          initial={{ opacity: 0, scale: 0.98, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 12 }}
-          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+          exit={{ opacity: 0, scale: 0.98, y: 8 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
           onMouseMove={resetControlsTimer}
           style={{
             transform: 'translateZ(0)',
             WebkitTransform: 'translateZ(0)',
+            willChange: 'transform, opacity',
             touchAction: 'manipulation',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
           }}
           className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
             isFullscreen
               ? 'w-full h-full max-w-none max-h-none mx-0 rounded-none border-0 bg-black'
-              : 'w-full max-w-4xl max-h-[96dvh] rounded-2xl sm:rounded-3xl border border-white/12 bg-[#060911]/98 shadow-[0_0_60px_rgba(0,240,255,0.18),0_25px_50px_-12px_rgba(0,0,0,0.85)]'
+              : 'w-full max-w-4xl max-h-[96dvh] rounded-2xl sm:rounded-3xl border border-white/12 bg-[#060911] shadow-[0_0_60px_rgba(0,240,255,0.16),0_25px_50px_-12px_rgba(0,0,0,0.9)]'
           }`}
         >
-          {/* Top Bar: TikTok-Style Auto-Hide Overlay (fades to opacity: 0 after 2s inactivity) */}
+          {/* Top Bar: Minimalist Title & Close Button (Fades out when interface is hidden) */}
           <div
             className={`flex items-center justify-between transition-opacity duration-300 shrink-0 ${
               isFullscreen
-                ? 'absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/90 via-black/50 to-transparent border-0 px-4 sm:px-8 py-3.5'
-                : 'px-3.5 sm:px-6 py-2.5 sm:py-3.5 bg-black/60 border-b border-white/10'
+                ? 'absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/90 via-black/50 to-transparent border-0 px-4 sm:px-8 py-3'
+                : 'px-3.5 sm:px-6 py-2.5 sm:py-3 bg-black/75 border-b border-white/10'
             } ${
-              controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              isOverlayVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
           >
-            {/* Left: Track Status & Index */}
+            {/* Left: Track Status & Title */}
             <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)] shrink-0" />
               <div className="min-w-0">
@@ -419,14 +507,14 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                     {hasVideo ? (isFullscreen ? 'THEATER 4K MASTER' : '4K 60FPS MASTER') : 'PIPELINE ARCHIVE'}
                   </span>
                 </div>
-                <h2 className="text-xs sm:text-base font-display font-bold text-white truncate max-w-[220px] xs:max-w-[280px] sm:max-w-md">
+                <h2 className="text-xs sm:text-base font-display font-bold text-white truncate max-w-[200px] xs:max-w-[260px] sm:max-w-md">
                   {activeTrack.title}
                 </h2>
               </div>
             </div>
 
             {/* Right: Close Button */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 aria-label="Close visualizer modal"
@@ -438,17 +526,25 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                   e.stopPropagation();
                   handleClose();
                 }}
-                className="w-11 h-11 sm:w-12 sm:h-12 -mr-1 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white/75 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 hover:border-white/25 shadow-lg shrink-0"
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white/75 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 hover:border-white/25 shadow-lg shrink-0"
                 style={{ touchAction: 'manipulation' }}
               >
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                <X className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
               </button>
             </div>
           </div>
 
-          {/* Central Visualizer Stage (100% Pure Video: Continuous Looping, Zero Central Obstacles) */}
+          {/* Central Visualizer Stage: Zero Overlapping Obstacles on Mobile/Tablet */}
           <div
-            onClick={handleTogglePlay}
+            onClick={handleStageClick}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+              WebkitTransform: 'translateZ(0)',
+              touchAction: 'manipulation',
+            }}
             className={`relative w-full bg-black flex items-center justify-center overflow-hidden cursor-pointer group/stage ${
               isFullscreen
                 ? 'flex-1 h-full max-h-none'
@@ -476,6 +572,11 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                   'x5-playsinline': 'true',
                   playsinline: 'true',
                 } as any)}
+                style={{
+                  willChange: 'transform',
+                  transform: 'translateZ(0)',
+                  WebkitTransform: 'translateZ(0)',
+                }}
                 className={`w-full h-full pointer-events-none transition-all duration-300 ${
                   isFullscreen ? 'object-contain' : 'object-cover object-center'
                 }`}
@@ -546,7 +647,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
               </div>
             )}
 
-            {/* Floating Side Prev Button (Fades smoothly to opacity: 0 after 2s inactivity) */}
+            {/* Desktop-Only Floating Side Prev Button (Hidden on mobile/tablet to eliminate video clutter) */}
             <button
               type="button"
               aria-label="Previous track"
@@ -554,21 +655,21 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                 e.stopPropagation();
                 handlePrevTrack();
               }}
-              onTouchEnd={(e) => {
-                e.stopPropagation();
-                handlePrevTrack();
-              }}
-              className={`absolute left-2.5 sm:left-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/45 hover:bg-black/90 active:bg-cyan-500/30 text-white/85 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.7)] flex items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
-                controlsVisible
+              className={`hidden lg:flex absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 hover:bg-black/90 active:bg-cyan-500/30 text-white/85 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.7)] items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
+                isOverlayVisible
                   ? 'opacity-85 hover:opacity-100 active:opacity-100 pointer-events-auto'
                   : 'opacity-0 pointer-events-none'
               }`}
-              style={{ touchAction: 'manipulation' }}
+              style={{
+                willChange: 'transform, opacity',
+                transform: 'translateZ(0)',
+                touchAction: 'manipulation',
+              }}
             >
-              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 -ml-0.5 transition-transform group-hover/stage:scale-105" />
+              <ChevronLeft className="w-6 h-6 -ml-0.5 transition-transform group-hover/stage:scale-105" />
             </button>
 
-            {/* Floating Side Next Button (Fades smoothly to opacity: 0 after 2s inactivity) */}
+            {/* Desktop-Only Floating Side Next Button (Hidden on mobile/tablet to eliminate video clutter) */}
             <button
               type="button"
               aria-label="Next track"
@@ -576,29 +677,51 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                 e.stopPropagation();
                 handleNextTrack();
               }}
-              onTouchEnd={(e) => {
-                e.stopPropagation();
-                handleNextTrack();
-              }}
-              className={`absolute right-2.5 sm:right-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/45 hover:bg-black/90 active:bg-cyan-500/30 text-white/85 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.7)] flex items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
-                controlsVisible
+              className={`hidden lg:flex absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 hover:bg-black/90 active:bg-cyan-500/30 text-white/85 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.7)] items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
+                isOverlayVisible
                   ? 'opacity-85 hover:opacity-100 active:opacity-100 pointer-events-auto'
                   : 'opacity-0 pointer-events-none'
               }`}
-              style={{ touchAction: 'manipulation' }}
+              style={{
+                willChange: 'transform, opacity',
+                transform: 'translateZ(0)',
+                touchAction: 'manipulation',
+              }}
             >
-              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 -mr-0.5 transition-transform group-hover/stage:scale-105" />
+              <ChevronRight className="w-6 h-6 -mr-0.5 transition-transform group-hover/stage:scale-105" />
             </button>
           </div>
 
-          {/* Bottom Area: Scrubber, Track-Balk & Controls (TikTok-Style Auto-Hide: Fades to opacity: 0 after 2s) */}
+          {/* Floating 'Show interface' Button (Displayed when interface is manually hidden on desktop) */}
+          {isInterfaceHidden && (
+            <button
+              type="button"
+              aria-label="Show interface"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsInterfaceHidden(false);
+                resetControlsTimer();
+              }}
+              className="fixed md:absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/80 hover:bg-black/95 active:bg-cyan-500/20 text-white/80 hover:text-white border border-white/20 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.8)] backdrop-blur-md text-xs font-mono transition-all cursor-pointer group"
+              style={{
+                willChange: 'transform, opacity',
+                transform: 'translateZ(0)',
+                touchAction: 'manipulation',
+              }}
+            >
+              <Eye className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+              <span className="tracking-wide">Show interface</span>
+            </button>
+          )}
+
+          {/* Bottom Area: Scrubber, Track Strip & Controls HUD */}
           <div
-            className={`transition-all duration-300 shrink-0 ${
+            className={`transition-opacity duration-300 shrink-0 ${
               isFullscreen
                 ? 'absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black via-black/90 to-transparent border-t border-white/10 px-3.5 sm:px-8 pt-3 pb-safe flex flex-col gap-1.5'
                 : 'flex flex-col'
             } ${
-              controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              isOverlayVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
           >
             {/* Interactive Scrubber Bar */}
@@ -719,8 +842,24 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                 </button>
               </div>
 
-              {/* Right: Audio Volume / Fullscreen / Stream Tag */}
+              {/* Right: Desktop 'Hide interface' / Audio Mute / Fullscreen */}
               <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                {/* Desktop 'Hide interface' Toggle Button */}
+                <button
+                  type="button"
+                  aria-label="Hide interface"
+                  title="Hide all interface elements for cinematic viewing (or press H)"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleHideInterface();
+                  }}
+                  className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/70 hover:text-white border border-white/10 hover:border-cyan-400/40 text-[11px] font-mono transition-colors cursor-pointer min-h-[40px]"
+                  style={{ touchAction: 'manipulation' }}
+                >
+                  <EyeOff className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Hide interface</span>
+                </button>
+
                 {/* Mute / Unmute Button */}
                 <button
                   type="button"
@@ -762,4 +901,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
     </AnimatePresence>,
     document.body
   );
-};
+});
+
+VisualizerPlayerModal.displayName = 'VisualizerPlayerModal';

@@ -1938,9 +1938,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             key={track.id}
                             initial={{ opacity: 0, y: 14 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.35, delay: index * 0.035 }}
-                            whileHover={{ scale: 1.02 }}
+                            transition={{ duration: 0.3, delay: index * 0.03 }}
+                            whileHover={{ scale: 1.015 }}
                             onClick={() => handleTrackCardClick(track)}
+                            style={{
+                              transform: 'translateZ(0)',
+                              WebkitTransform: 'translateZ(0)',
+                              willChange: 'transform',
+                              touchAction: 'manipulation',
+                            }}
                             className={`p-4 lg:p-4.5 rounded-xl border transition-all cursor-pointer relative group flex flex-col justify-between ${
                               isProducedTrack
                                 ? 'bg-gradient-to-br from-emerald-950/30 via-black/50 to-black/70 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:border-emerald-400'
