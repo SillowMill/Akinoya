@@ -74,7 +74,7 @@ import {
   isLiveGalaxyWorld,
   isQueuedUserWorld,
 } from '../data/contest';
-import { getUserStatusConfig } from '../utils/statusPill';
+import { getUserStatusConfig, getMobileHeaderRoleConfig } from '../utils/statusPill';
 import {
   isFoundingPioneerPlanet,
   isPioneerPlanet,
@@ -617,6 +617,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     role,
     isVipMode || isVip || authIsVip
   );
+
+  const mobileRoleConfig = useMemo(() => {
+    return getMobileHeaderRoleConfig(
+      isAuthenticated,
+      user,
+      profile,
+      role,
+      isVipMode || isVip || authIsVip,
+      hasUserCreatedWorld
+    );
+  }, [isAuthenticated, user, profile, role, isVipMode, isVip, authIsVip, hasUserCreatedWorld]);
 
   const [passSubView, setPassSubView] = useState<'overview' | 'hub'>(() => {
     if (typeof window !== 'undefined') {
@@ -1465,10 +1476,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10 page-transition-container"
     >
       {/* Minified Low-Profile Status Bar Header with Inline Service View Toggle */}
-      <div className="relative isolate overflow-hidden flex items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-5 bg-[#060c18] bg-gradient-to-r from-cyan-950/50 via-[#060c18] to-[#040710] border border-cyan-500/35 rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 shadow-[0_0_25px_rgba(56,189,248,0.12)]">
+      <div className={`relative isolate overflow-hidden flex items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-5 bg-[#060c18] bg-gradient-to-r ${mobileRoleConfig.containerBg} border ${mobileRoleConfig.borderColor} rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 ${mobileRoleConfig.glowColor}`}>
         <div className="relative z-10 flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-950/90 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.22)] shrink-0">
-            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
+          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-black/60 border ${mobileRoleConfig.shieldBorderColor} flex items-center justify-center ${mobileRoleConfig.shieldTextColor} shadow-[0_0_12px_rgba(56,189,248,0.22)] shrink-0`}>
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
           <div className="min-w-0 flex-1 flex items-center gap-1.5 sm:gap-3">
             <h2 className="text-xs sm:text-sm lg:text-base font-display font-bold text-white tracking-wide shrink-0 drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
@@ -1477,10 +1488,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <span className="hidden lg:inline">Welcome to Äkinoya – Unlocked</span>
             </h2>
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(34,211,238,0.85)]" />
-              <span className="text-[10px] sm:text-[10.5px] font-mono text-cyan-400 font-semibold tracking-wider whitespace-nowrap shrink-0">
-                <span className="sm:hidden">GUEST</span>
-                <span className="hidden sm:inline">PORTAL ACTIVE</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${mobileRoleConfig.dotColor} animate-pulse shrink-0`} />
+              <span className="text-[10px] sm:text-[10.5px] font-mono font-semibold tracking-wider whitespace-nowrap shrink-0">
+                <span className={`sm:hidden ${mobileRoleConfig.textColor}`}>{mobileRoleConfig.label}</span>
+                <span className="hidden sm:inline text-cyan-400">PORTAL ACTIVE</span>
               </span>
               <span className="hidden md:inline text-white/30 text-[10px] shrink-0">·</span>
               <span className="hidden md:inline text-[10.5px] text-white/65 font-mono truncate">

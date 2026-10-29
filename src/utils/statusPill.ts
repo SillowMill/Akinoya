@@ -119,3 +119,121 @@ export function getUserStatusConfig(
     dotColorClassName: 'bg-cyan-400/70',
   };
 }
+
+export interface MobileHeaderRoleConfig {
+  role: 'GUEST' | 'HOLDER' | 'MEMBER' | 'VIP';
+  label: 'GUEST' | 'HOLDER' | 'MEMBER' | 'VIP' | 'VIP OWNER';
+  textColor: string;
+  dotColor: string;
+  borderColor: string;
+  glowColor: string;
+  shieldBorderColor: string;
+  shieldTextColor: string;
+  containerBg: string;
+}
+
+export function getMobileHeaderRoleConfig(
+  isAuthenticated: boolean,
+  user?: any,
+  profile?: any,
+  role?: string,
+  isVip?: boolean,
+  hasCreatedWorld?: boolean
+): MobileHeaderRoleConfig {
+  const isActuallyAuthenticated = Boolean(isAuthenticated && (user || profile));
+
+  const effectiveIsVip = Boolean(
+    (isActuallyAuthenticated &&
+      (isVip ||
+        profile?.has_vip_pass === true ||
+        profile?.is_vip === true ||
+        role === 'VIP_GUEST' ||
+        role === 'CREATOR' ||
+        Boolean(profile?.vip_code_redeemed) ||
+        (typeof window !== 'undefined' &&
+          (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+            Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+            Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+            Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+            Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+            localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+            localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST')))) ||
+      hasCreatedWorld
+  );
+
+  const effectiveIsCrew = Boolean(
+    isActuallyAuthenticated &&
+      !effectiveIsVip &&
+      (hasPaidMembership(user, profile, role) ||
+        role === 'ANNUAL_PASS' ||
+        role === 'SUBSCRIBER' ||
+        profile?.is_annual_member === true ||
+        profile?.is_subscriber === true ||
+        profile?.subscription_status === 'active' ||
+        (typeof window !== 'undefined' &&
+          (localStorage.getItem('akinoya_patron_role') === 'ANNUAL_PASS' ||
+            localStorage.getItem('akinoya_patron_role') === 'SUBSCRIBER')))
+  );
+
+  const effectiveIsAccount = Boolean(
+    isActuallyAuthenticated && !effectiveIsVip && !effectiveIsCrew
+  );
+
+  // 4. VIP / Owner (VIP Pass Holder or World Owner) — Gold (Vibrant Gold)
+  if (effectiveIsVip) {
+    return {
+      role: 'VIP',
+      label: hasCreatedWorld ? 'VIP OWNER' : 'VIP',
+      textColor: 'text-amber-400',
+      dotColor: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]',
+      borderColor: 'border-amber-500/40',
+      glowColor: 'shadow-[0_0_25px_rgba(245,158,11,0.15)]',
+      shieldBorderColor: 'border-amber-400/40',
+      shieldTextColor: 'text-amber-300',
+      containerBg: 'from-amber-950/40 via-[#060c18] to-[#040710]',
+    };
+  }
+
+  // 3. Member (Active Membership Subscriber) — Green (Neon/Emerald Green)
+  if (effectiveIsCrew) {
+    return {
+      role: 'MEMBER',
+      label: 'MEMBER',
+      textColor: 'text-emerald-400',
+      dotColor: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]',
+      borderColor: 'border-emerald-500/40',
+      glowColor: 'shadow-[0_0_25px_rgba(16,185,129,0.15)]',
+      shieldBorderColor: 'border-emerald-400/40',
+      shieldTextColor: 'text-emerald-300',
+      containerBg: 'from-emerald-950/40 via-[#060c18] to-[#040710]',
+    };
+  }
+
+  // 2. Holder (Registered Account) — Dark Blue (Deep Navy/Indigo)
+  if (effectiveIsAccount) {
+    return {
+      role: 'HOLDER',
+      label: 'HOLDER',
+      textColor: 'text-indigo-400',
+      dotColor: 'bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.9)]',
+      borderColor: 'border-indigo-500/40',
+      glowColor: 'shadow-[0_0_25px_rgba(99,102,241,0.15)]',
+      shieldBorderColor: 'border-indigo-400/40',
+      shieldTextColor: 'text-indigo-300',
+      containerBg: 'from-indigo-950/40 via-[#060c18] to-[#040710]',
+    };
+  }
+
+  // 1. Guest (Default / Non-authenticated) — Light Blue (Cyan-Blue)
+  return {
+    role: 'GUEST',
+    label: 'GUEST',
+    textColor: 'text-cyan-400',
+    dotColor: 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.85)]',
+    borderColor: 'border-cyan-500/35',
+    glowColor: 'shadow-[0_0_25px_rgba(56,189,248,0.12)]',
+    shieldBorderColor: 'border-cyan-400/40',
+    shieldTextColor: 'text-cyan-300',
+    containerBg: 'from-cyan-950/50 via-[#060c18] to-[#040710]',
+  };
+}
