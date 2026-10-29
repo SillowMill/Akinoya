@@ -68,6 +68,26 @@ class PlanetSoundtrackManager {
       this.audio.volume = Math.max(0, Math.min(1, vol));
     }
   }
+
+  public get currentTime(): number {
+    return this.audio?.currentTime || 0;
+  }
+
+  public set currentTime(time: number) {
+    if (this.audio && Number.isFinite(time)) {
+      this.audio.currentTime = time;
+    }
+  }
+
+  public seek(time: number) {
+    if (this.audio && Number.isFinite(time)) {
+      this.audio.currentTime = Math.max(0, time);
+    }
+  }
+
+  public get duration(): number {
+    return this.audio?.duration || 0;
+  }
 }
 
 export const planetSoundtrack = new PlanetSoundtrackManager();

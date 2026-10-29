@@ -50,12 +50,52 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [controlsVisible, setControlsVisible] = useState<boolean>(true);
 
+  const shouldPlayRef = useRef<boolean>(true);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentIndex = tracks.findIndex((t) => t.id === activeTrack?.id);
   const totalTracks = tracks.length;
   const isTrack02 = activeTrack?.id === '02';
   const hasVideo = Boolean(activeTrack?.videoUrl);
+
+  // Fullscreen Exit & Resize Playback Keep-Alive & Strict Audio-Video Sync
+  const ensurePlaybackAndSync = useCallback(() => {
+    if (!isOpen || !shouldPlayRef.current) return;
+
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+
+    if (isTrack02) {
+      // Bingäa: Video plays continuous loop muted; audio handled by planetSoundtrack
+      videoEl.muted = true;
+      videoEl.defaultMuted = true;
+      videoEl.loop = true;
+
+      const p = videoEl.play();
+      if (p !== undefined) {
+        p.catch(() => {});
+      }
+
+      if (!planetSoundtrack.isPlaying) {
+        planetSoundtrack.play();
+      }
+      setIsPlaying(true);
+    } else if (hasVideo) {
+      // Don't Need or other video: Unmuted continuous loop
+      videoEl.loop = true;
+      const p = videoEl.play();
+      if (p !== undefined) {
+        p.then(() => {
+          setIsPlaying(true);
+        }).catch(() => {
+          // If unmuted playback was temporarily restricted during resize/transition, retry muted
+          videoEl.muted = true;
+          videoEl.play().catch(() => {});
+          setIsPlaying(true);
+        });
+      }
+    }
+  }, [isOpen, isTrack02, hasVideo]);
 
   // TikTok-Style 2-Second Inactivity Auto-Fade Timer
   const resetControlsTimer = useCallback(() => {
@@ -150,11 +190,20 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
       exitNativeFullscreen();
       setIsFullscreen(false);
     }
-  }, [isFullscreen, requestNativeFullscreen, exitNativeFullscreen, resetControlsTimer]);
+
+    // Keep playback and audio strictly synchronized across fullscreen transitions
+    if (shouldPlayRef.current) {
+      ensurePlaybackAndSync();
+      requestAnimationFrame(ensurePlaybackAndSync);
+      setTimeout(ensurePlaybackAndSync, 50);
+      setTimeout(ensurePlaybackAndSync, 150);
+      setTimeout(ensurePlaybackAndSync, 300);
+    }
+  }, [isFullscreen, requestNativeFullscreen, exitNativeFullscreen, resetControlsTimer, ensurePlaybackAndSync]);
 
   // Synchronize fullscreen state across all standard and vendor-prefixed browser events
   useEffect(() => {
-    const onFullscreenChange = () => {
+    const handleFsChange = () => {
       const doc = document as any;
       const isFs = Boolean(
         doc.fullscreenElement ||
@@ -163,35 +212,77 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
         doc.msFullscreenElement
       );
       setIsFullscreen(isFs);
+
+      // Critical Sync-Fix: Exiting or entering fullscreen must NEVER pause playback or desync audio
+      if (shouldPlayRef.current) {
+        ensurePlaybackAndSync();
+        requestAnimationFrame(ensurePlaybackAndSync);
+        setTimeout(ensurePlaybackAndSync, 50);
+        setTimeout(ensurePlaybackAndSync, 150);
+        setTimeout(ensurePlaybackAndSync, 300);
+      }
     };
 
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
-    document.addEventListener('mozfullscreenchange', onFullscreenChange);
-    document.addEventListener('MSFullscreenChange', onFullscreenChange);
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    document.addEventListener('mozfullscreenchange', handleFsChange);
+    document.addEventListener('MSFullscreenChange', handleFsChange);
 
     const videoEl = videoRef.current;
-    const onVideoBeginFs = () => setIsFullscreen(true);
-    const onVideoEndFs = () => setIsFullscreen(false);
+    const onVideoBeginFs = () => {
+      setIsFullscreen(true);
+      if (shouldPlayRef.current) {
+        ensurePlaybackAndSync();
+      }
+    };
+    const onVideoEndFs = () => {
+      setIsFullscreen(false);
+      // iOS Safari native player exit fix: prevents iOS from stopping video
+      if (shouldPlayRef.current) {
+        ensurePlaybackAndSync();
+        requestAnimationFrame(ensurePlaybackAndSync);
+        setTimeout(ensurePlaybackAndSync, 50);
+        setTimeout(ensurePlaybackAndSync, 150);
+        setTimeout(ensurePlaybackAndSync, 300);
+      }
+    };
+
     if (videoEl) {
       videoEl.addEventListener('webkitbeginfullscreen', onVideoBeginFs);
       videoEl.addEventListener('webkitendfullscreen', onVideoEndFs);
     }
 
     return () => {
-      document.removeEventListener('fullscreenchange', onFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', onFullscreenChange);
-      document.removeEventListener('MSFullscreenChange', onFullscreenChange);
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('webkitfullscreenchange', handleFsChange);
+      document.removeEventListener('mozfullscreenchange', handleFsChange);
+      document.removeEventListener('MSFullscreenChange', handleFsChange);
       if (videoEl) {
         videoEl.removeEventListener('webkitbeginfullscreen', onVideoBeginFs);
         videoEl.removeEventListener('webkitendfullscreen', onVideoEndFs);
       }
     };
-  }, [activeTrack?.id]);
+  }, [activeTrack?.id, ensurePlaybackAndSync]);
+
+  // Watch isFullscreen transition to prevent pause during CSS / DOM reflow
+  useEffect(() => {
+    if (!isOpen) return;
+    if (shouldPlayRef.current) {
+      ensurePlaybackAndSync();
+      const rId = requestAnimationFrame(ensurePlaybackAndSync);
+      const t1 = setTimeout(ensurePlaybackAndSync, 50);
+      const t2 = setTimeout(ensurePlaybackAndSync, 150);
+      return () => {
+        cancelAnimationFrame(rId);
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [isFullscreen, isOpen, ensurePlaybackAndSync]);
 
   // Close handler with audio, video and fullscreen cleanup
   const handleClose = useCallback(() => {
+    shouldPlayRef.current = false;
     if (videoRef.current) {
       videoRef.current.pause();
     }
@@ -221,8 +312,11 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
   // Toggle Play / Pause
   const handleTogglePlay = useCallback(() => {
     resetControlsTimer();
+    const willPlay = !isPlaying;
+    shouldPlayRef.current = willPlay;
+    setIsPlaying(willPlay);
+
     if (isTrack02) {
-      const willPlay = !planetSoundtrack.isPlaying;
       if (willPlay) {
         planetSoundtrack.play();
         videoRef.current?.play().catch(() => {});
@@ -230,19 +324,14 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
         planetSoundtrack.pause();
         videoRef.current?.pause();
       }
-      setIsPlaying(willPlay);
     } else if (videoRef.current && hasVideo) {
-      if (videoRef.current.paused) {
+      if (willPlay) {
         videoRef.current.play().catch(() => {});
-        setIsPlaying(true);
       } else {
         videoRef.current.pause();
-        setIsPlaying(false);
       }
-    } else {
-      setIsPlaying((prev) => !prev);
     }
-  }, [isTrack02, hasVideo, resetControlsTimer]);
+  }, [isTrack02, hasVideo, isPlaying, resetControlsTimer]);
 
   // True 'Hide Interface' Mode: Immediately hides all UI elements and cursor (no persistent button)
   const handleHideInterface = useCallback(() => {
@@ -302,6 +391,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
   useEffect(() => {
     if (!isOpen || !activeTrack) return;
 
+    shouldPlayRef.current = true;
     setCurrentTime(0);
     setDuration(0);
 
@@ -364,7 +454,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     };
   }, []);
 
-  // Dynamic orientation and viewport resize listener for zero-lag re-alignment
+  // Dynamic orientation and viewport resize listener for zero-lag re-alignment & sync
   useEffect(() => {
     const handleOrientationOrResize = () => {
       if (trackStripRef.current && activeTrack) {
@@ -373,6 +463,13 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
           activePill.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
         }
       }
+
+      // Enforce zero audio-video desync and prevent browser pausing on resize/orientation switch
+      if (shouldPlayRef.current) {
+        ensurePlaybackAndSync();
+        setTimeout(ensurePlaybackAndSync, 50);
+        setTimeout(ensurePlaybackAndSync, 150);
+      }
     };
     window.addEventListener('resize', handleOrientationOrResize, { passive: true });
     window.addEventListener('orientationchange', handleOrientationOrResize, { passive: true });
@@ -380,7 +477,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
       window.removeEventListener('resize', handleOrientationOrResize);
       window.removeEventListener('orientationchange', handleOrientationOrResize);
     };
-  }, [activeTrack?.id]);
+  }, [activeTrack?.id, ensurePlaybackAndSync]);
 
   // 100% Page Scroll Lock without heavy touchmove listeners (smooth 60fps on mobile)
   useEffect(() => {
@@ -480,6 +577,9 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
     setCurrentTime(time);
     if (videoRef.current) {
       videoRef.current.currentTime = time;
+    }
+    if (isTrack02) {
+      planetSoundtrack.seek(time);
     }
   };
 
@@ -622,7 +722,16 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                 controlsList="nodownload nofullscreen noremoteplayback"
                 onTimeUpdate={handleTimeUpdate}
                 onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
+                onPause={() => {
+                  if (shouldPlayRef.current && isOpen) {
+                    ensurePlaybackAndSync();
+                  } else {
+                    setIsPlaying(false);
+                    if (isTrack02) {
+                      planetSoundtrack.pause();
+                    }
+                  }
+                }}
                 {...({
                   'webkit-playsinline': 'true',
                   'x5-playsinline': 'true',
