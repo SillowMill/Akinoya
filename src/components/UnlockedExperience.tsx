@@ -276,16 +276,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     const saveScroll = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        if (window.scrollY > 0) {
-          sessionStorage.setItem('akinoya_portal_scroll_y', String(window.scrollY));
-        }
+        sessionStorage.setItem('akinoya_portal_scroll_y', String(Math.max(0, Math.round(window.scrollY))));
       }, 80);
     };
 
     const handleInstantSaveScroll = () => {
-      if (window.scrollY > 0) {
-        sessionStorage.setItem('akinoya_portal_scroll_y', String(window.scrollY));
-      }
+      sessionStorage.setItem('akinoya_portal_scroll_y', String(Math.max(0, Math.round(window.scrollY))));
     };
 
     window.addEventListener('touchstart', markUserInteraction, { passive: true });
@@ -1029,22 +1025,55 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   };
 
   const [tappingTab, setTappingTab] = useState<'pass' | 'edition' | 'my-world' | 'galaxy' | 'assets' | null>(null);
+  const navTouchStartRef = useRef<{ x: number; y: number; time: number; id: string } | null>(null);
+  const lastTouchNavTimeRef = useRef<number>(0);
+
+  const resetWindowScrollInstant = () => {
+    if (typeof window === 'undefined') return;
+    const htmlEl = document.documentElement;
+    const bodyEl = document.body;
+    const prevHtmlOverflow = htmlEl.style.overflowY;
+    // Halt active iOS/Android momentum scroll inertia synchronously before resetting scrollTop
+    htmlEl.style.overflowY = 'hidden';
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    htmlEl.scrollTop = 0;
+    bodyEl.scrollTop = 0;
+    void htmlEl.offsetHeight;
+    htmlEl.style.overflowY = prevHtmlOverflow;
+  };
 
   const handleSelectTab = (tab: 'pass' | 'edition' | 'my-world' | 'assets') => {
     setTappingTab(tab);
     setTimeout(() => setTappingTab((prev) => (prev === tab ? null : prev)), 155);
     soundManager.playTone(580, 0.04);
+
+    if (typeof window !== 'undefined') {
+      if (document.activeElement instanceof HTMLElement && document.activeElement !== document.body) {
+        document.activeElement.blur();
+      }
+      sessionStorage.setItem('akinoya_portal_active_tab', tab);
+      sessionStorage.setItem('akinoya_portal_scroll_y', '0');
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('tab');
+        url.searchParams.delete('subview');
+        url.hash = tab;
+        window.history.replaceState(null, '', url.toString());
+      } catch {}
+      resetWindowScrollInstant();
+    }
+
     setActiveTab(tab);
     if (tab === 'pass') {
       setPassSubView('overview');
     }
+
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('akinoya_portal_active_tab', tab);
-      try {
-        const url = new URL(window.location.href);
-        url.hash = tab;
-        window.history.replaceState(null, '', url.toString());
-      } catch {}
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
     }
   };
 
@@ -1052,12 +1081,61 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     setTappingTab('galaxy');
     setTimeout(() => setTappingTab((prev) => (prev === 'galaxy' ? null : prev)), 155);
     soundManager.playTone(620, 0.05);
+    if (typeof window !== 'undefined' && document.activeElement instanceof HTMLElement && document.activeElement !== document.body) {
+      document.activeElement.blur();
+    }
     if (onNavigateToGalaxy) {
       onNavigateToGalaxy();
     } else if (typeof window !== 'undefined') {
       window.location.hash = '#galaxy';
     }
   };
+
+  const activateNavItem = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy') => {
+    if (id === 'galaxy') {
+      handleTriggerGalaxyNav();
+    } else {
+      handleSelectTab(id);
+    }
+  };
+
+  const getNavButtonTouchHandlers = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy') => ({
+    onMouseDown: (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+    },
+    onTouchStart: (e: React.TouchEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      const t = e.touches[0];
+      if (t) {
+        navTouchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now(), id };
+      }
+    },
+    onTouchEnd: (e: React.TouchEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      const start = navTouchStartRef.current;
+      navTouchStartRef.current = null;
+      const t = e.changedTouches[0];
+      if (!start || !t || start.id !== id) return;
+      const dx = Math.abs(t.clientX - start.x);
+      const dy = Math.abs(t.clientY - start.y);
+      const dt = Date.now() - start.time;
+      if (dx < 22 && dy < 22 && dt < 700) {
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        lastTouchNavTimeRef.current = Date.now();
+        activateNavItem(id);
+      }
+    },
+    onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      if (Date.now() - lastTouchNavTimeRef.current < 500) {
+        e.preventDefault();
+        return;
+      }
+      activateNavItem(id);
+    },
+  });
 
   const startTrackStream = (track: VisualizerTrack) => {
     if (dnVideoRef.current) {
@@ -1385,60 +1463,60 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         <div className="desktop-landscape-only grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
           <button
             type="button"
-            onClick={() => handleSelectTab('pass')}
-            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
+            {...getNavButtonTouchHandlers('pass')}
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation select-none ${
               activeTab === 'pass'
                 ? 'bg-amber-400 text-black font-bold shadow-[0_0_15px_rgba(245,158,11,0.35)]'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            <Compass className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Home</span>
+            <Compass className="w-3.5 h-3.5 shrink-0 pointer-events-none" />
+            <span className="truncate pointer-events-none">Home</span>
           </button>
           <button
             type="button"
-            onClick={() => handleSelectTab('edition')}
-            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
+            {...getNavButtonTouchHandlers('edition')}
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation select-none ${
               activeTab === 'edition'
                 ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            <BookOpen className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Comic</span>
+            <BookOpen className="w-3.5 h-3.5 shrink-0 pointer-events-none" />
+            <span className="truncate pointer-events-none">Comic</span>
           </button>
           <button
             type="button"
-            onClick={() => handleSelectTab('my-world')}
-            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
+            {...getNavButtonTouchHandlers('my-world')}
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation select-none ${
               activeTab === 'my-world'
                 ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            <Globe2 className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Worlds</span>
+            <Globe2 className="w-3.5 h-3.5 shrink-0 pointer-events-none" />
+            <span className="truncate pointer-events-none">Worlds</span>
           </button>
           <button
             type="button"
-            onClick={() => handleSelectTab('assets')}
-            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
+            {...getNavButtonTouchHandlers('assets')}
+            className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation select-none ${
               activeTab === 'assets'
                 ? 'bg-cyan-950/80 text-cyan-200 border border-cyan-400/30 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            <Gem className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">My Assets</span>
+            <Gem className="w-3.5 h-3.5 shrink-0 pointer-events-none" />
+            <span className="truncate pointer-events-none">My Assets</span>
           </button>
           <button
             type="button"
-            onClick={handleTriggerGalaxyNav}
-            className="py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation text-cyan-300/85 hover:text-white hover:bg-cyan-950/50"
+            {...getNavButtonTouchHandlers('galaxy')}
+            className="py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation select-none text-cyan-300/85 hover:text-white hover:bg-cyan-950/50"
           >
-            <Radar className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-            <span className="sm:hidden truncate">Galaxy</span>
-            <span className="hidden sm:inline truncate">Galaxy Navigator</span>
+            <Radar className="w-3.5 h-3.5 text-cyan-400 shrink-0 pointer-events-none" />
+            <span className="sm:hidden truncate pointer-events-none">Galaxy</span>
+            <span className="hidden sm:inline truncate pointer-events-none">Galaxy Navigator</span>
           </button>
         </div>
 
@@ -1448,10 +1526,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               {passSubView === 'overview' ? (
                 <motion.div
                   key="pass-overview-view"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.14 }}
+                  transition={{ duration: 0.12 }}
                   style={{
                     transform: 'translateZ(0)',
                     WebkitTransform: 'translateZ(0)',
@@ -1951,8 +2029,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           {activeTab === 'edition' && (
             <motion.div
               key="edition-view"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.12 }}
               style={{
@@ -2399,10 +2477,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           {/* Tab 3: My World — User's 5-Photo Cinematic Sci-Fi Dossier, 9:16 Story Verification Badge & Guest Simulation Mode */}
           {activeTab === 'my-world' && activeWorldDossier && (
             <motion.div
-              id="my-world"
               key="my-world-view"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.12 }}
               style={{
@@ -2939,8 +3016,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           {activeTab === 'assets' && (
             <motion.div
               key="assets-view"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.12 }}
               style={{
                 transform: 'translateZ(0)',
@@ -3772,6 +3849,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           <nav
             aria-label="Mobile Sci-Fi Bottom Navigation"
             className="scifi-bottom-nav scifi-homepage-bottom-nav portrait-mobile-only select-none"
+            style={{ pointerEvents: 'auto', touchAction: 'manipulation' }}
+            onTouchStart={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
           >
             {/* Hardware-Accelerated Neon Underline Scanner Beam */}
             <div className="scifi-scanner-track scifi-scanner-track-top">
@@ -3792,7 +3872,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-5 items-center px-1.5 py-1.5">
+            <div className="grid grid-cols-5 items-center px-1.5 py-1.5 pointer-events-auto">
               {(
                 [
                   { id: 'pass' as const, label: 'Home', Icon: Compass },
@@ -3809,7 +3889,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   <button
                     key={id}
                     type="button"
-                    onClick={() => (id === 'galaxy' ? handleTriggerGalaxyNav() : handleSelectTab(id))}
+                    {...getNavButtonTouchHandlers(id)}
                     className={`scifi-nav-item flex flex-col items-center justify-center gap-1 py-2 px-0.5 rounded-xl cursor-pointer min-h-[52px] min-w-0 ${
                       isActive ? 'is-active text-cyan-300' : 'text-white/55 hover:text-white/85'
                     } ${isTapping ? 'is-tapping' : ''}`}

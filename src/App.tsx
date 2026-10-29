@@ -601,7 +601,7 @@ export default function App() {
                 onOpenVisualizerHub={handleOpenVisualizerHub}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
+              <div className="flex flex-col items-center justify-start py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
                 <UnlockedExperience
                   isVip={true}
                   onLockPortal={() => setVipSubView('passport')}
@@ -617,7 +617,7 @@ export default function App() {
           </div>
         ) : (
           /* Public Root Domain (100% Locked Site) */
-          <div className="relative z-20 flex-1 flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
+          <div className={`relative z-20 flex-1 flex flex-col items-center ${isSiteUnlocked ? 'justify-start' : 'justify-center'} py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto`}>
             <AnimatePresence mode="wait">
               {!isSiteUnlocked ? (
                 <motion.div
@@ -660,10 +660,10 @@ export default function App() {
               ) : (
                 <motion.div
                   key="unlocked-view"
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -16 }}
-                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   style={{
                     transform: 'translateZ(0)',
                     WebkitTransform: 'translateZ(0)',
@@ -671,7 +671,7 @@ export default function App() {
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                   }}
-                  className="w-full flex items-center justify-center page-transition-container"
+                  className="w-full flex items-start justify-center page-transition-container"
                 >
                   <UnlockedExperience
                     isVip={isUserVip}

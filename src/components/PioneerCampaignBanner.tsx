@@ -65,7 +65,7 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ on
     }
     return (
       <div
-        className="fixed bottom-4 left-4 z-[70] hidden sm:block"
+        className="floating-audio-portrait-offset fixed bottom-4 left-4 z-[60] hidden sm:block"
         style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
       >
         <button

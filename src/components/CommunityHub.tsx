@@ -352,14 +352,72 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   ];
 
   const [tappingHubTab, setTappingHubTab] = useState<string | null>(null);
+  const hubNavTouchStartRef = useRef<{ x: number; y: number; time: number; key: string } | null>(null);
+  const lastHubTouchNavTimeRef = useRef<number>(0);
+
+  const resetHubScrollInstant = () => {
+    const scroller = hubScrollRef.current;
+    if (scroller) {
+      const prevOverflow = scroller.style.overflowY;
+      scroller.style.overflowY = 'hidden';
+      scroller.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+      scroller.scrollTop = 0;
+      void scroller.offsetHeight;
+      scroller.style.overflowY = prevOverflow;
+    }
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  };
+
+  const getHubNavTouchHandlers = (key: string, action: () => void) => ({
+    onMouseDown: (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+    },
+    onTouchStart: (e: React.TouchEvent<HTMLButtonElement>) => {
+      const t = e.touches[0];
+      if (t) {
+        hubNavTouchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now(), key };
+      }
+    },
+    onTouchEnd: (e: React.TouchEvent<HTMLButtonElement>) => {
+      const start = hubNavTouchStartRef.current;
+      hubNavTouchStartRef.current = null;
+      const t = e.changedTouches[0];
+      if (!start || !t || start.key !== key) return;
+      const dx = Math.abs(t.clientX - start.x);
+      const dy = Math.abs(t.clientY - start.y);
+      const dt = Date.now() - start.time;
+      if (dx < 14 && dy < 18 && dt < 650) {
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        e.stopPropagation();
+        lastHubTouchNavTimeRef.current = Date.now();
+        action();
+      }
+    },
+    onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      if (Date.now() - lastHubTouchNavTimeRef.current < 500) {
+        e.preventDefault();
+        return;
+      }
+      action();
+    },
+  });
 
   const handleSwitchSection = (section: CreativeHubSection) => {
     const normalized = section === 'drive-vault' ? 'downloads' : section;
     setTappingHubTab(normalized);
     setTimeout(() => setTappingHubTab((prev) => (prev === normalized ? null : prev)), 155);
-    setActiveSection(normalized);
     soundManager.playTone(580, 0.05);
     if (typeof window !== 'undefined') {
+      if (document.activeElement instanceof HTMLElement && document.activeElement !== document.body) {
+        document.activeElement.blur();
+      }
       sessionStorage.setItem('akinoya_hub_active_section', normalized);
       sessionStorage.setItem('akinoya_hub_scroll_y', '0');
       try {
@@ -367,15 +425,23 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         url.hash = normalized;
         window.history.replaceState(null, '', url.toString());
       } catch {}
-      scrollHubTo(0);
+      resetHubScrollInstant();
+    }
+    setActiveSection(normalized);
+    if (typeof window !== 'undefined') {
+      requestAnimationFrame(() => {
+        scrollHubTo(0, 'instant' as ScrollBehavior);
+      });
     }
   };
 
   const handleNavigateToVault = (folderId: string = 'root') => {
     setTargetVaultFolderId(folderId);
-    setActiveSection('downloads');
     soundManager.playTone(580, 0.05);
     if (typeof window !== 'undefined') {
+      if (document.activeElement instanceof HTMLElement && document.activeElement !== document.body) {
+        document.activeElement.blur();
+      }
       sessionStorage.setItem('akinoya_hub_active_section', 'downloads');
       sessionStorage.setItem('akinoya_hub_vault_folder', folderId);
       sessionStorage.setItem('akinoya_hub_scroll_y', '0');
@@ -384,7 +450,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         url.hash = 'downloads';
         window.history.replaceState(null, '', url.toString());
       } catch {}
-      scrollHubTo(0);
+      resetHubScrollInstant();
+    }
+    setActiveSection('downloads');
+    if (typeof window !== 'undefined') {
+      requestAnimationFrame(() => {
+        scrollHubTo(0, 'instant' as ScrollBehavior);
+      });
     }
   };
 
@@ -1517,6 +1589,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                 <nav
                   aria-label="Community Hub Bottom Navigation"
                   className="scifi-bottom-nav portrait-mobile-only select-none"
+                  style={{ pointerEvents: 'auto', touchAction: 'manipulation' }}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
                 >
                   {/* 5-Stage Pipeline Quick-Jump Strip when on Äkinoya Labs & Workflows */}
                   {activeSection === 'workflows' && (
@@ -1534,7 +1609,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                             key={st.id}
                             type="button"
                             data-pipeline-stage={st.id}
-                            onClick={() => handleJumpToStage(st.id)}
+                            {...getHubNavTouchHandlers(`stage-${st.id}`, () => handleJumpToStage(st.id))}
                             className={`scifi-nav-item shrink-0 px-2.5 py-1 rounded-lg text-[10.5px] font-mono flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                               isStageActive
                                 ? 'is-active bg-cyan-500/20 text-cyan-200 border border-cyan-400/60 font-bold'
@@ -1563,7 +1638,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                         <button
                           key={tab.id}
                           type="button"
-                          onClick={() => handleSwitchSection(tab.id as CreativeHubSection)}
+                          {...getHubNavTouchHandlers(`hub-${tab.id}`, () => handleSwitchSection(tab.id as CreativeHubSection))}
                           className={`scifi-nav-item shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-mono cursor-pointer whitespace-nowrap min-h-[46px] ${
                             isActive
                               ? 'is-active bg-amber-500/15 text-amber-200 border border-amber-400/45 font-bold'
@@ -1593,10 +1668,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                     {/* Retain Exclusively Claim Your World in Swipable Tray */}
                     <button
                       type="button"
-                      onClick={() => {
+                      {...getHubNavTouchHandlers('claim-world', () => {
                         soundManager.playTone(520, 0.05);
                         openClaimWorldModal();
-                      }}
+                      })}
                       className="scifi-nav-item shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-500/15 border border-amber-400/45 text-amber-300 font-mono text-xs font-bold tracking-wider cursor-pointer whitespace-nowrap min-h-[46px]"
                     >
                       <Globe2 className="w-4 h-4 text-[#ffb700] shrink-0" />
