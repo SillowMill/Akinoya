@@ -1470,7 +1470,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-950/90 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.22)] shrink-0">
             <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
           </div>
-          <div className="min-w-0 flex-1 flex items-center gap-2 sm:gap-3">
+          <div className="min-w-0 flex-1 flex items-center gap-1.5 sm:gap-3">
             <h2 className="text-xs sm:text-sm lg:text-base font-display font-bold text-white tracking-wide shrink-0 drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
               <span className="sm:hidden">Welcome</span>
               <span className="hidden sm:inline lg:hidden">Welcome to Äkinoya</span>
@@ -1478,8 +1478,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </h2>
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(34,211,238,0.85)]" />
-              <span className="text-[9.5px] xs:text-[10px] sm:text-[10.5px] font-mono text-cyan-400 font-semibold tracking-wider whitespace-nowrap shrink-0">
-                PORTAL ACTIVE
+              <span className="text-[10px] sm:text-[10.5px] font-mono text-cyan-400 font-semibold tracking-wider whitespace-nowrap shrink-0">
+                <span className="sm:hidden">ACTIVE</span>
+                <span className="hidden sm:inline">PORTAL ACTIVE</span>
               </span>
               <span className="hidden md:inline text-white/30 text-[10px] shrink-0">·</span>
               <span className="hidden md:inline text-[10.5px] text-white/65 font-mono truncate">
