@@ -654,20 +654,20 @@ export function createCachedTrailerOverlayCanvas(
 
   const s = W / 1080; // Scale factor relative to 1080x1920
 
-  // 1. Cinematic top & bottom dark gradient vignettes
-  const topVignette = ctx.createLinearGradient(0, 0, 0, H * 0.36);
-  topVignette.addColorStop(0, 'rgba(2, 6, 16, 0.95)');
-  topVignette.addColorStop(0.65, 'rgba(2, 6, 16, 0.65)');
+  // 1. Cinematic top & bottom dark gradient vignettes (leaving center 100% unhindered)
+  const topVignette = ctx.createLinearGradient(0, 0, 0, H * 0.22);
+  topVignette.addColorStop(0, 'rgba(2, 6, 16, 0.90)');
+  topVignette.addColorStop(0.55, 'rgba(2, 6, 16, 0.48)');
   topVignette.addColorStop(1, 'rgba(2, 6, 16, 0)');
   ctx.fillStyle = topVignette;
-  ctx.fillRect(0, 0, W, H * 0.36);
+  ctx.fillRect(0, 0, W, H * 0.22);
 
-  const bottomVignette = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  const bottomVignette = ctx.createLinearGradient(0, H * 0.78, 0, H);
   bottomVignette.addColorStop(0, 'rgba(2, 6, 16, 0)');
-  bottomVignette.addColorStop(0.45, 'rgba(2, 6, 16, 0.82)');
-  bottomVignette.addColorStop(1, 'rgba(1, 4, 10, 0.98)');
+  bottomVignette.addColorStop(0.45, 'rgba(2, 6, 16, 0.58)');
+  bottomVignette.addColorStop(1, 'rgba(1, 4, 10, 0.94)');
   ctx.fillStyle = bottomVignette;
-  ctx.fillRect(0, H * 0.55, W, H * 0.45);
+  ctx.fillRect(0, H * 0.78, W, H * 0.22);
 
   // 2. Custom Sci-Fi Border Framing with High-Tech Corner Brackets
   const pad = Math.round(36 * s);
@@ -791,55 +791,14 @@ export function createCachedTrailerOverlayCanvas(
   ctx.fillText(`#${meta.worldNumber}`, badgeX + badgeW / 2, badgeY + Math.round(50 * s));
   ctx.textAlign = 'left';
 
-  // 4. ACTIVE ARCHIVE SLOT TELEMETRY PILL (Above Footer)
-  const slotCard = photoCards[activeIdx] || photoCards[0];
-  const slotLabels = [
-    '01_MAIN · ORBITAL HORIZON',
-    '02_FLORA · BOTANICAL BIOME',
-    '03_FAUNA · APEX SPECIMEN',
-    meta.isAmlemi ? '04_CANOPY · COCKPIT DESCENT' : '04_ATMO · ATMOSPHERIC TROPOSPHERE',
-    '05_LORE · SACRED MONUMENT',
-  ];
-  const telemetryY = Math.round(1440 * s);
-  drawRoundedRect(ctx, contentX, telemetryY, contentW, Math.round(152 * s), Math.round(20 * s));
-  ctx.fillStyle = 'rgba(6, 13, 28, 0.88)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(34, 211, 238, 0.45)';
-  ctx.lineWidth = Math.max(1, 1.5 * s);
-  ctx.stroke();
-
-  ctx.fillStyle = '#67e8f9';
-  ctx.font = `bold ${Math.round(17 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(slotLabels[activeIdx] || '01_MAIN · ORBITAL HORIZON', contentX + Math.round(26 * s), telemetryY + Math.round(42 * s));
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${Math.round(28 * s)}px "Inter", sans-serif`;
-  ctx.fillText(slotCard?.title || dossier.planetName, contentX + Math.round(26 * s), telemetryY + Math.round(82 * s));
-
+  // 4. BOTTOM-LEFT EMBEDDED SILLOW MILL LOGO & METADATA STRING (Unhindered center view)
   const metadataCode = meta.isAmlemi
     ? 'AKN-WLD-2027-001-GENESIS'
     : meta.verificationCode || 'AKN-WLD-2027-001-GENESIS';
-  ctx.fillStyle = '#fbbf24';
-  ctx.font = `bold ${Math.round(18 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(`CODE: ${metadataCode}`, contentX + Math.round(26 * s), telemetryY + Math.round(124 * s));
 
-  ctx.fillStyle = '#34d399';
-  ctx.textAlign = 'right';
-  ctx.fillText('● AUTHENTICATED', contentX + contentW - Math.round(26 * s), telemetryY + Math.round(124 * s));
-  ctx.textAlign = 'left';
-
-  // Base progress track bar (unfilled)
-  const barX = contentX + Math.round(26 * s);
-  const barY = telemetryY + Math.round(138 * s);
-  const barW = contentW - Math.round(52 * s);
-  const barH = Math.max(2, Math.round(4 * s));
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-  ctx.fillRect(barX, barY, barW, barH);
-
-  // 5. BOTTOM-LEFT EMBEDDED SILLOW MILL LOGO & METADATA STRING
-  const footerY = Math.round(1630 * s);
+  const footerY = Math.round(1720 * s);
   if (logoImg) {
-    const targetH = Math.round(116 * s);
+    const targetH = Math.round(108 * s);
     const targetW = (logoImg.width / Math.max(1, logoImg.height)) * targetH;
     ctx.save();
     ctx.shadowColor = 'rgba(255, 255, 255, 0.55)';
@@ -847,26 +806,40 @@ export function createCachedTrailerOverlayCanvas(
     ctx.drawImage(logoImg, contentX, footerY, targetW, targetH);
     ctx.restore();
 
-    const textStartX = contentX + targetW + Math.round(24 * s);
+    const textStartX = contentX + targetW + Math.round(22 * s);
     ctx.fillStyle = '#ffffff';
-    ctx.font = `900 ${Math.round(36 * s)}px "Inter", sans-serif`;
-    ctx.fillText('SILLOW MILL', textStartX, footerY + Math.round(42 * s));
+    ctx.font = `900 ${Math.round(30 * s)}px "Inter", sans-serif`;
+    ctx.fillText(`${worldName} · SILLOW MILL`, textStartX, footerY + Math.round(36 * s));
 
     ctx.fillStyle = '#67e8f9';
-    ctx.font = `bold ${Math.round(18 * s)}px "JetBrains Mono", monospace`;
-    ctx.fillText('ÄKINOYA UNIVERSE', textStartX, footerY + Math.round(74 * s));
+    ctx.font = `bold ${Math.round(17 * s)}px "JetBrains Mono", monospace`;
+    ctx.fillText(`ÄKINOYA UNIVERSE · #${meta.worldNumber} / TYPE: CELESTIAL NUCLEUS`, textStartX, footerY + Math.round(68 * s));
 
     ctx.fillStyle = 'rgba(203, 213, 225, 0.9)';
-    ctx.font = `500 ${Math.round(17 * s)}px "JetBrains Mono", monospace`;
-    ctx.fillText(`sillowmill.com · ${metadataCode}`, textStartX, footerY + Math.round(106 * s));
+    ctx.font = `500 ${Math.round(15.5 * s)}px "JetBrains Mono", monospace`;
+    ctx.fillText(`™ & © SILLOW MILL · sillowmill.com · ${metadataCode}`, textStartX, footerY + Math.round(98 * s));
   }
+
+  ctx.fillStyle = '#34d399';
+  ctx.font = `bold ${Math.round(17 * s)}px "JetBrains Mono", monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText('● 9:16 LOOP', contentX + contentW, footerY + Math.round(98 * s));
+  ctx.textAlign = 'left';
+
+  // Sleek unobtrusive bottom progress bar
+  const barX = contentX;
+  const barY = footerY + Math.round(118 * s);
+  const barW = contentW;
+  const barH = Math.max(2, Math.round(3 * s));
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.fillRect(barX, barY, barW, barH);
 
   return { canvas: offscreen, barX, barY, barW, barH };
 }
 
 /**
  * Draws the complete Sillow Mill branded template overlay (vignettes, outer frame,
- * VIP/Founding Pioneer header, telemetry card, and bottom-left logo signature).
+ * VIP/Founding Pioneer header, and bottom-left logo signature).
  */
 export function drawTrailerOverlay(
   ctx: CanvasRenderingContext2D,
@@ -881,20 +854,20 @@ export function drawTrailerOverlay(
 ) {
   const s = W / 1080; // Scale factor relative to 1080x1920
 
-  // 1. Cinematic top & bottom dark gradient vignettes for crisp HUD legibility
-  const topVignette = ctx.createLinearGradient(0, 0, 0, H * 0.36);
-  topVignette.addColorStop(0, 'rgba(2, 6, 16, 0.95)');
-  topVignette.addColorStop(0.65, 'rgba(2, 6, 16, 0.65)');
+  // 1. Cinematic top & bottom dark gradient vignettes for crisp HUD legibility (center 100% unhindered)
+  const topVignette = ctx.createLinearGradient(0, 0, 0, H * 0.22);
+  topVignette.addColorStop(0, 'rgba(2, 6, 16, 0.90)');
+  topVignette.addColorStop(0.55, 'rgba(2, 6, 16, 0.48)');
   topVignette.addColorStop(1, 'rgba(2, 6, 16, 0)');
   ctx.fillStyle = topVignette;
-  ctx.fillRect(0, 0, W, H * 0.36);
+  ctx.fillRect(0, 0, W, H * 0.22);
 
-  const bottomVignette = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  const bottomVignette = ctx.createLinearGradient(0, H * 0.78, 0, H);
   bottomVignette.addColorStop(0, 'rgba(2, 6, 16, 0)');
-  bottomVignette.addColorStop(0.45, 'rgba(2, 6, 16, 0.82)');
-  bottomVignette.addColorStop(1, 'rgba(1, 4, 10, 0.98)');
+  bottomVignette.addColorStop(0.45, 'rgba(2, 6, 16, 0.58)');
+  bottomVignette.addColorStop(1, 'rgba(1, 4, 10, 0.94)');
   ctx.fillStyle = bottomVignette;
-  ctx.fillRect(0, H * 0.55, W, H * 0.45);
+  ctx.fillRect(0, H * 0.78, W, H * 0.22);
 
   // 2. Custom Sci-Fi Border Framing with High-Tech Corner Brackets
   const pad = Math.round(36 * s);
@@ -1019,56 +992,14 @@ export function drawTrailerOverlay(
   ctx.fillText(`#${meta.worldNumber}`, badgeX + badgeW / 2, badgeY + Math.round(50 * s));
   ctx.textAlign = 'left';
 
-  // 4. ACTIVE ARCHIVE SLOT TELEMETRY PILL (Above Footer)
-  const slotCard = photoCards[activeIdx] || photoCards[0];
-  const slotLabels = [
-    '01_MAIN · ORBITAL HORIZON',
-    '02_FLORA · BOTANICAL BIOME',
-    '03_FAUNA · APEX SPECIMEN',
-    meta.isAmlemi ? '04_CANOPY · COCKPIT DESCENT' : '04_ATMO · ATMOSPHERIC TROPOSPHERE',
-    '05_LORE · SACRED MONUMENT',
-  ];
-  const telemetryY = Math.round(1440 * s);
-  drawRoundedRect(ctx, contentX, telemetryY, contentW, Math.round(152 * s), Math.round(20 * s));
-  ctx.fillStyle = 'rgba(6, 13, 28, 0.88)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(34, 211, 238, 0.45)';
-  ctx.lineWidth = Math.max(1, 1.5 * s);
-  ctx.stroke();
-
-  ctx.fillStyle = '#67e8f9';
-  ctx.font = `bold ${Math.round(17 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(slotLabels[activeIdx] || '01_MAIN · ORBITAL HORIZON', contentX + Math.round(26 * s), telemetryY + Math.round(42 * s));
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${Math.round(28 * s)}px "Inter", sans-serif`;
-  ctx.fillText(slotCard?.title || dossier.planetName, contentX + Math.round(26 * s), telemetryY + Math.round(82 * s));
-
+  // 4. BOTTOM-LEFT EMBEDDED SILLOW MILL LOGO & METADATA STRING (Unhindered center view)
   const metadataCode = meta.isAmlemi
     ? 'AKN-WLD-2027-001-GENESIS'
     : meta.verificationCode || 'AKN-WLD-2027-001-GENESIS';
-  ctx.fillStyle = '#fbbf24';
-  ctx.font = `bold ${Math.round(18 * s)}px "JetBrains Mono", monospace`;
-  ctx.fillText(`CODE: ${metadataCode}`, contentX + Math.round(26 * s), telemetryY + Math.round(124 * s));
 
-  ctx.fillStyle = '#34d399';
-  ctx.textAlign = 'right';
-  ctx.fillText('● AUTHENTICATED', contentX + contentW - Math.round(26 * s), telemetryY + Math.round(124 * s));
-  ctx.textAlign = 'left';
-
-  // Progress Bar across bottom of telemetry card
-  const barX = contentX + Math.round(26 * s);
-  const barY = telemetryY + Math.round(138 * s);
-  const barW = contentW - Math.round(52 * s);
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-  ctx.fillRect(barX, barY, barW, Math.max(2, Math.round(4 * s)));
-  ctx.fillStyle = '#fbbf24';
-  ctx.fillRect(barX, barY, barW * progress, Math.max(2, Math.round(4 * s)));
-
-  // 5. BOTTOM-LEFT EMBEDDED SILLOW MILL LOGO & METADATA STRING
-  const footerY = Math.round(1630 * s);
+  const footerY = Math.round(1720 * s);
   if (logoImg) {
-    const targetH = Math.round(116 * s);
+    const targetH = Math.round(108 * s);
     const targetW = (logoImg.width / Math.max(1, logoImg.height)) * targetH;
     ctx.save();
     ctx.shadowColor = 'rgba(255, 255, 255, 0.55)';
@@ -1076,19 +1007,35 @@ export function drawTrailerOverlay(
     ctx.drawImage(logoImg, contentX, footerY, targetW, targetH);
     ctx.restore();
 
-    const textStartX = contentX + targetW + Math.round(24 * s);
+    const textStartX = contentX + targetW + Math.round(22 * s);
     ctx.fillStyle = '#ffffff';
-    ctx.font = `900 ${Math.round(36 * s)}px "Inter", sans-serif`;
-    ctx.fillText('SILLOW MILL', textStartX, footerY + Math.round(42 * s));
+    ctx.font = `900 ${Math.round(30 * s)}px "Inter", sans-serif`;
+    ctx.fillText(`${worldName} · SILLOW MILL`, textStartX, footerY + Math.round(36 * s));
 
     ctx.fillStyle = '#67e8f9';
-    ctx.font = `bold ${Math.round(18 * s)}px "JetBrains Mono", monospace`;
-    ctx.fillText('ÄKINOYA UNIVERSE', textStartX, footerY + Math.round(74 * s));
+    ctx.font = `bold ${Math.round(17 * s)}px "JetBrains Mono", monospace`;
+    ctx.fillText(`ÄKINOYA UNIVERSE · #${meta.worldNumber} / TYPE: CELESTIAL NUCLEUS`, textStartX, footerY + Math.round(68 * s));
 
     ctx.fillStyle = 'rgba(203, 213, 225, 0.9)';
-    ctx.font = `500 ${Math.round(17 * s)}px "JetBrains Mono", monospace`;
-    ctx.fillText(`sillowmill.com · ${metadataCode}`, textStartX, footerY + Math.round(106 * s));
+    ctx.font = `500 ${Math.round(15.5 * s)}px "JetBrains Mono", monospace`;
+    ctx.fillText(`™ & © SILLOW MILL · sillowmill.com · ${metadataCode}`, textStartX, footerY + Math.round(98 * s));
   }
+
+  ctx.fillStyle = '#34d399';
+  ctx.font = `bold ${Math.round(17 * s)}px "JetBrains Mono", monospace`;
+  ctx.textAlign = 'right';
+  ctx.fillText('● 9:16 LOOP', contentX + contentW, footerY + Math.round(98 * s));
+  ctx.textAlign = 'left';
+
+  // Sleek unobtrusive bottom progress bar
+  const barX = contentX;
+  const barY = footerY + Math.round(118 * s);
+  const barW = contentW;
+  const barH = Math.max(2, Math.round(3 * s));
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.fillRect(barX, barY, barW, barH);
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillRect(barX, barY, barW * progress, barH);
 }
 
 /**
@@ -1369,25 +1316,41 @@ export async function prewarmTrailerFastStartBlob(
     return brandedTrailerBlobCache.get(cacheKey)!;
   }
 
-  try {
-    const cacheBustedUrl = getCacheBustedUrl(targetUrl);
-    const res = await fetch(cacheBustedUrl);
-    if (!res.ok) return null;
-    const rawBlob = await res.blob();
-    const fastStartBlob = await optimizeMp4FastStart(rawBlob);
-    brandedTrailerBlobCache.set(cacheKey, fastStartBlob);
-    return fastStartBlob;
-  } catch (err) {
-    console.warn('Prewarm trailer faststart failed:', err);
-    return null;
+  // For Pioneer Worlds #1-#5, pre-fetch the pre-rendered 1080x1920 baked-in 9:16 branded master MP4
+  if (pioneerUrl) {
+    try {
+      const cacheBustedUrl = getCacheBustedUrl(pioneerUrl);
+      const res = await fetch(cacheBustedUrl);
+      if (!res.ok) return null;
+      const rawBlob = await res.blob();
+      const fastStartBlob = await optimizeMp4FastStart(rawBlob);
+      brandedTrailerBlobCache.set(cacheKey, fastStartBlob);
+      return fastStartBlob;
+    } catch (err) {
+      console.warn('Prewarm trailer faststart failed:', err);
+      return null;
+    }
   }
+
+  // For custom user worlds, pre-synthesize the baked-in 9:16 branded MP4 in the background
+  if (dossier) {
+    try {
+      const result = await exportWorldTrailerVideoBlob(dossier, undefined, targetUrl);
+      if (result?.blob) {
+        brandedTrailerBlobCache.set(cacheKey, result.blob);
+        return result.blob;
+      }
+    } catch {}
+  }
+
+  return null;
 }
 
 /**
  * Direct video download handler:
  * Instantly triggers native mobile media saving (iOS Photos / Camera Roll via Web Share sheet)
  * or direct native download without intermediate widgets or stalling loops.
- * Links directly to the high-quality, butter-smooth 60fps master export with FastStart headers.
+ * Always exports the 1080x1920 9:16 Sillow Mill branded MP4 (never a raw unbranded video).
  */
 export async function downloadOrShareVideoDirect(
   videoUrl: string,
@@ -1401,7 +1364,7 @@ export async function downloadOrShareVideoDirect(
   const safePlanet = (dossier?.planetName || 'akinoya-world').toLowerCase().replace(/[^a-z0-9-_]/g, '-');
   const safeFilename = filename || `sillowmill-${safePlanet}-9x16-trailer.mp4`;
 
-  // 1. Resolve Target Video URL (Pioneers 1-5 point strictly to high-speed local FastStart masters)
+  // 1. Resolve Target Video URL (Pioneers 1-5 point strictly to pre-rendered 1080x1920 9:16 branded FastStart masters)
   const pioneerUrl = getPioneerMasterVideoUrl(dossier, true);
   const targetUrl =
     pioneerUrl ||
@@ -1416,9 +1379,10 @@ export async function downloadOrShareVideoDirect(
   // 2. Check in-memory faststart blob cache for 0ms instantaneous share/download
   let videoBlob: Blob | null = brandedTrailerBlobCache.get(cacheKey) || null;
 
-  if (!videoBlob) {
+  // 3a. If Pioneer #1-#5 master URL is available, fetch the pre-rendered 1080x1920 baked-in 9:16 branded MP4
+  if (!videoBlob && pioneerUrl) {
     try {
-      const cacheBustedUrl = getCacheBustedUrl(targetUrl);
+      const cacheBustedUrl = getCacheBustedUrl(pioneerUrl);
       const res = await fetch(cacheBustedUrl);
       if (res.ok) {
         const rawBlob = await res.blob();
@@ -1430,7 +1394,18 @@ export async function downloadOrShareVideoDirect(
     }
   }
 
-  // 3. If blob resolved (from cache or fast fetch), trigger native share sheet (mobile) or instant download (desktop)
+  // 3b. For custom user-generated worlds (not a pre-rendered Pioneer master), bake the 9:16 branding frame into the MP4
+  if (!videoBlob && dossier) {
+    try {
+      const result = await exportWorldTrailerVideoBlob(dossier, editionRank, targetUrl);
+      if (result?.blob) {
+        videoBlob = result.blob;
+        brandedTrailerBlobCache.set(cacheKey, videoBlob);
+      }
+    } catch {}
+  }
+
+  // 4. If branded blob resolved, trigger native share sheet (mobile/tablet) or instant download (desktop)
   if (videoBlob) {
     const file = new File([videoBlob], safeFilename, { type: 'video/mp4' });
     if (isMobile) {
@@ -1452,29 +1427,18 @@ export async function downloadOrShareVideoDirect(
           console.warn('Mobile native share failed:', err);
         }
       }
-      // Mobile fallback: direct anchor download of the faststart blob
+      // Mobile fallback: direct anchor download of the faststart branded blob
       await downloadOrShareFileBlob(videoBlob, safeFilename, 'video/mp4', title, text);
       return;
     }
 
-    // Desktop: direct anchor download of the faststart blob
+    // Desktop: direct anchor download of the faststart branded blob
     await downloadOrShareFileBlob(videoBlob, safeFilename, 'video/mp4', title, text);
     return;
   }
 
-  // 4. Fallback for custom user submissions without pre-rendered video files
-  if (dossier) {
-    try {
-      const result = await exportWorldTrailerVideoBlob(dossier, editionRank, targetUrl);
-      if (result?.blob) {
-        await downloadOrShareFileBlob(result.blob, safeFilename, 'video/mp4', title, text);
-        return;
-      }
-    } catch {}
-  }
-
-  // 5. Ultimate browser-level direct download trigger
-  triggerDirectDownload(targetUrl, safeFilename);
+  // 5. Ultimate browser-level direct download trigger (always falls back to a branded master MP4)
+  triggerDirectDownload(pioneerUrl || '/assets/videos/amlemi_trailer_master.mp4', safeFilename);
 }
 
 /**
@@ -2055,14 +2019,14 @@ export const LiveStoryTrailerViewport: React.FC<{
         <img
           src={posterUrl}
           alt={dossier.planetName || 'Ämlemi'}
-          className="absolute inset-0 w-full h-full object-contain z-0 filter brightness-95"
+          className="absolute inset-0 w-full h-full object-cover z-0 filter brightness-95"
           decoding="async"
         />
       )}
 
       {videoUrl ? (
         <div
-          className="video-viewport-wrapper relative z-10 w-full h-full flex items-center justify-center"
+          className="video-viewport-wrapper relative z-10 w-full h-full"
           style={{
             transform: 'translateZ(0)',
             WebkitTransform: 'translateZ(0)',
@@ -2107,34 +2071,102 @@ export const LiveStoryTrailerViewport: React.FC<{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
             }}
-            className="w-full h-full object-contain relative z-10 pointer-events-none select-none"
+            className="w-full h-full object-cover relative z-10 pointer-events-none select-none"
           />
 
-          {/* Minimalist, Unobtrusive Mute/Unmute Control */}
-          <div className="absolute bottom-3.5 right-3.5 z-30 pointer-events-auto">
-            <button
-              type="button"
-              onClick={handleToggleAudio}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md border transition-all shadow-lg active:scale-95 cursor-pointer touch-manipulation ${
-                isMuted
-                  ? 'bg-black/70 hover:bg-black/85 border-white/25 text-white/85 hover:text-white'
-                  : 'bg-cyan-950/85 hover:bg-cyan-900/95 border-cyan-400/60 text-cyan-200 shadow-[0_0_15px_rgba(34,211,238,0.3)]'
-              }`}
-              title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-              aria-label={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-            >
-              {isMuted ? (
-                <>
-                  <VolumeX className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                  <span className="text-[9.5px] font-mono font-bold tracking-wider uppercase">Unmute</span>
-                </>
-              ) : (
-                <>
-                  <Volume2 className="w-3.5 h-3.5 text-cyan-300 animate-pulse shrink-0" />
-                  <span className="text-[9.5px] font-mono font-bold tracking-wider uppercase text-cyan-200">Sound On</span>
-                </>
-              )}
-            </button>
+          {/* Universal 9:16 Sillow Mill / Äkinoya Branded Template (Unhindered Center View) */}
+          <div
+            className="absolute inset-0 pointer-events-none z-20"
+            style={{
+              background:
+                'linear-gradient(to bottom, rgba(2,6,16,0.88) 0%, rgba(2,6,16,0.45) 12%, rgba(2,6,16,0) 22%, rgba(2,6,16,0) 76%, rgba(2,6,16,0.55) 88%, rgba(1,4,10,0.92) 100%)',
+            }}
+          />
+
+          {/* Sci-Fi Outer Cyan Frame + Inner Amber Hairline + Tech Corner Brackets */}
+          <div className="absolute inset-2 rounded-[20px] border border-cyan-400/45 shadow-[0_0_12px_rgba(0,242,254,0.25)] pointer-events-none z-20" />
+          <div className="absolute inset-3 rounded-[16px] border border-amber-400/20 pointer-events-none z-20" />
+          <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-amber-400 rounded-tl-[20px] pointer-events-none z-20 drop-shadow-[0_0_6px_rgba(245,158,11,0.65)]" />
+          <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-amber-400 rounded-tr-[20px] pointer-events-none z-20 drop-shadow-[0_0_6px_rgba(245,158,11,0.65)]" />
+          <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-amber-400 rounded-bl-[20px] pointer-events-none z-20 drop-shadow-[0_0_6px_rgba(245,158,11,0.65)]" />
+          <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-amber-400 rounded-br-[20px] pointer-events-none z-20 drop-shadow-[0_0_6px_rgba(245,158,11,0.65)]" />
+
+          {/* Top Bar: Pioneer Badge + Planet Name + Holder & Clean Mute/Unmute Toggle + Edition Number */}
+          <div className="absolute top-3.5 left-4 right-4 flex items-start justify-between gap-2 pointer-events-none z-30">
+            <div className="min-w-0 flex-1">
+              <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-400/50 text-[8px] font-mono font-extrabold text-amber-300 tracking-wider uppercase">
+                <Sparkles className="w-2.5 h-2.5 text-amber-300 inline shrink-0" />
+                <span className="truncate">
+                  {meta.isAmlemi
+                    ? 'FOUNDING PIONEER'
+                    : meta.isVipPioneer
+                    ? 'VIP PIONEER'
+                    : 'FOUNDING PIONEER'}
+                </span>
+              </div>
+              <div className="text-sm sm:text-base font-display font-black tracking-[0.12em] text-white uppercase drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] mt-1 truncate">
+                {dossier.planetName || 'ÄMLEMI'}
+              </div>
+              <div className="text-[7.5px] font-mono font-bold text-cyan-300 mt-0.5 truncate drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
+                HOLDER: {formatTitleCaseUserName(dossier.authorName).toUpperCase()} · {dossier.sectorId || 'SECTOR AKN-01'}
+              </div>
+            </div>
+
+            {/* Clean Functional Mute/Unmute Toggle + Edition Badge */}
+            <div className="flex items-center gap-1.5 pointer-events-auto shrink-0">
+              <button
+                type="button"
+                onClick={handleToggleAudio}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg backdrop-blur-md border transition-all shadow-md active:scale-95 cursor-pointer touch-manipulation ${
+                  isMuted
+                    ? 'bg-black/80 hover:bg-black border-cyan-400/50 hover:border-cyan-300 text-slate-200 hover:text-white'
+                    : 'bg-cyan-950/90 hover:bg-cyan-900 border-amber-400/70 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.3)]'
+                }`}
+                title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+                aria-label={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+              >
+                {isMuted ? (
+                  <>
+                    <VolumeX className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                    <span className="text-[8px] font-mono font-bold text-slate-200 uppercase">UNMUTE</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5 text-amber-300 animate-pulse shrink-0" />
+                    <span className="text-[8px] font-mono font-bold text-amber-300 uppercase">AUDIO ON</span>
+                  </>
+                )}
+              </button>
+
+              <span className="shrink-0 min-w-[36px] px-2 py-1 rounded-lg bg-[#060d1c]/90 border border-amber-400/70 text-[10px] font-mono font-extrabold text-amber-300 text-center shadow-[0_0_10px_rgba(245,158,11,0.25)]">
+                #{meta.worldNumber}
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom Bar: Official Sillow Mill Logo + Planet & Äkinoya Universe Signature + 9:16 Loop Status */}
+          <div className="absolute bottom-3.5 left-4 right-4 flex items-end justify-between gap-2 pointer-events-none z-30">
+            <div className="flex items-center gap-2 min-w-0">
+              <img
+                src={sillowMillLogoUrl}
+                alt="Sillow Mill Logo"
+                className="w-9 h-9 object-contain shrink-0 drop-shadow-[0_0_8px_rgba(255,255,255,0.55)]"
+              />
+              <div className="min-w-0">
+                <div className="text-[10.5px] font-display font-black text-white tracking-wider uppercase truncate">
+                  {(dossier.planetName || 'ÄMLEMI').toUpperCase()} · SILLOW MILL
+                </div>
+                <div className="text-[7.5px] font-mono text-cyan-300 font-bold truncate">
+                  ÄKINOYA UNIVERSE · #{meta.worldNumber} / TYPE: CELESTIAL NUCLEUS
+                </div>
+                <div className="text-[6.5px] font-mono text-slate-300/85 tracking-wider truncate">
+                  ™ &amp; © SILLOW MILL · sillowmill.com
+                </div>
+              </div>
+            </div>
+            <span className="text-[8px] font-mono font-bold text-emerald-400 shrink-0 pb-0.5">
+              ● 9:16 LOOP
+            </span>
           </div>
         </div>
       ) : (

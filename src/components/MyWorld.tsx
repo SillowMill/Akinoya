@@ -29,6 +29,8 @@ import {
   getCacheBustedUrl,
   downloadOrShareVideoDirect,
   prewarmTrailerFastStartBlob,
+  LiveStoryTrailerViewport,
+  deriveWorldVerificationMeta,
 } from './WorldStoryVerificationBadge';
 import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
 import { formatTitleCaseUserName } from '../utils/holder';
@@ -60,6 +62,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
     typeof window !== 'undefined' ? isMobileOrTabletDevice() : false
   );
   const photoCards = useMemo(() => getPlanetPhotoCards(dossier), [dossier]);
+  const meta = useMemo(() => deriveWorldVerificationMeta(dossier), [dossier]);
   const formattedAuthor = useMemo(() => formatTitleCaseUserName(dossier.authorName), [dossier.authorName]);
   const planetThumbnailUrl = useMemo(
     () => photoCards[0]?.url || dossier.renders?.hero || dossier.renders?.['01_main'] || amlemiOrbitalImg,
@@ -300,29 +303,11 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
             }}
           >
             {isVideoReady ? (
-              <video
-                src={getCacheBustedUrl(videoUrl)}
-                poster={heroPhotoUrl ? getCacheBustedUrl(heroPhotoUrl) : undefined}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                disablePictureInPicture
-                disableRemotePlayback
-                controlsList="nodownload nofullscreen noremoteplayback"
-                {...({
-                  'webkit-playsinline': 'true',
-                  'x5-playsinline': 'true',
-                  playsinline: 'true',
-                } as any)}
-                className="w-full h-full object-cover"
-                style={{
-                  transform: 'translateZ(0)',
-                  WebkitTransform: 'translateZ(0)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                }}
+              <LiveStoryTrailerViewport
+                dossier={dossier}
+                meta={meta}
+                photoCards={photoCards}
+                activeVideoUrl={videoUrl}
               />
             ) : (
               <div className="relative w-full h-full flex flex-col items-center justify-center p-4 text-center overflow-hidden">

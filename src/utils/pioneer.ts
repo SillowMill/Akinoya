@@ -326,7 +326,7 @@ export const getPioneerMasterVideoUrl = (
     author.includes('esther') ||
     username.includes('esther')
   ) {
-    return '/assets/videos/felix_trailer.mp4';
+    return useMasterOverlay ? '/assets/videos/felix_trailer_master.mp4' : '/assets/videos/felix_trailer.mp4';
   }
 
   // #3 Ankrau (Nathan R.)
@@ -339,7 +339,7 @@ export const getPioneerMasterVideoUrl = (
     author.includes('nathan') ||
     username.includes('nathan')
   ) {
-    return '/assets/videos/ankrau_trailer.mp4';
+    return useMasterOverlay ? '/assets/videos/ankrau_trailer_master.mp4' : '/assets/videos/ankrau_trailer.mp4';
   }
 
   // #4 Florium (Florian H.)
@@ -351,7 +351,7 @@ export const getPioneerMasterVideoUrl = (
     author.includes('florian') ||
     username.includes('florian')
   ) {
-    return '/assets/videos/florium_trailer.mp4';
+    return useMasterOverlay ? '/assets/videos/florium_trailer_master.mp4' : '/assets/videos/florium_trailer.mp4';
   }
 
   // #5 Sepplon (Seppe G.)
@@ -363,7 +363,7 @@ export const getPioneerMasterVideoUrl = (
     author.includes('seppe') ||
     username.includes('seppe')
   ) {
-    return '/assets/videos/sepplon_trailer.mp4';
+    return useMasterOverlay ? '/assets/videos/sepplon_trailer_master.mp4' : '/assets/videos/sepplon_trailer.mp4';
   }
 
   return null;
