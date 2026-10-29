@@ -550,7 +550,7 @@ canvas {
     transform: translateZ(0) !important;
   }
 
-  /* Prevent active touch scaling & layout thrashing site-wide */
+  /* Prevent active touch scaling & layout thrashing site-wide (except explicit sci-fi nav buttons) */
   .active\:scale-\[0\.99\]:active,
   .active\:scale-95:active,
   .active\:scale-98:active {
@@ -558,4 +558,186 @@ canvas {
     -webkit-transform: translateZ(0) !important;
   }
 }
+
+/* ==========================================================================
+   HIGH-PERFORMANCE 60 FPS SCI-FI MICRO-INTERACTIONS & MOBILE/PORTRAIT UX
+   Desktop & landscape layouts remain 100% isolated and untouched.
+   Exclusively animates transform & opacity on the GPU compositor.
+   ========================================================================== */
+
+/* Viewport isolation utilities: Portrait Mobile/Tablet vs Desktop/Landscape */
+.portrait-mobile-only {
+  display: none !important;
+}
+
+.desktop-landscape-only {
+  display: grid !important;
+}
+
+@media (max-width: 767px), (max-width: 1023px) and (orientation: portrait) {
+  .portrait-mobile-only {
+    display: block !important;
+  }
+
+  .desktop-landscape-only {
+    display: none !important;
+  }
+
+  .portrait-bottom-safe-pad {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.25rem) !important;
+  }
+
+  .floating-audio-portrait-offset {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 4.75rem) !important;
+  }
+}
+
+/* Component 1: Sticky Bottom Navigation Bar (Portrait Mobile / Tablet) */
+.scifi-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(8, 12, 20, 0.92);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(0, 240, 255, 0.15);
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.75);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+  contain: layout style;
+}
+
+/* Disable blur only inside strict low-spec in-app browsers if needed */
+html[data-inapp='true'] .scifi-bottom-nav,
+html[data-inapp='true'] .scifi-hub-topbar {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background: rgba(8, 12, 20, 0.97);
+}
+
+/* Component 2: Community Hub Sticky Top-Bar */
+.scifi-hub-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8, 12, 20, 0.92);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+  contain: layout style;
+}
+
+/* The "Zjoe-Zjoe" Micro-Interaction (Click / Tap Feedback) */
+.scifi-nav-item {
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-transform: scale(1) translateZ(0);
+  transform: scale(1) translateZ(0);
+  filter: brightness(1);
+  will-change: transform, opacity;
+  transition:
+    transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    filter 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    opacity 0.15s ease;
+}
+
+.scifi-nav-item:active,
+.scifi-nav-item.is-tapping {
+  -webkit-transform: scale(0.92) translateZ(0) !important;
+  transform: scale(0.92) translateZ(0) !important;
+  filter: brightness(1.3) !important;
+}
+
+/* Subtle Sci-Fi HUD Glint Sweep (purely transform + opacity on GPU) */
+.scifi-nav-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(0, 240, 255, 0.22) 50%,
+    transparent 80%
+  );
+  opacity: 0;
+  pointer-events: none;
+  -webkit-transform: translate3d(-120%, 0, 0);
+  transform: translate3d(-120%, 0, 0);
+  will-change: transform, opacity;
+  transition:
+    transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease;
+}
+
+.scifi-nav-item.is-active::after,
+.scifi-nav-item:active::after {
+  opacity: 1;
+  -webkit-transform: translate3d(120%, 0, 0);
+  transform: translate3d(120%, 0, 0);
+}
+
+/* Hardware-Accelerated Neon Underline "Scanner" Beam (slides smoothly across 4 slots) */
+.scifi-scanner-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.scifi-scanner-track-top {
+  top: 0;
+  bottom: auto;
+}
+
+.scifi-scanner-beam {
+  width: 25%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 240, 255, 0) 0%,
+    rgba(0, 240, 255, 0.95) 20%,
+    #ffffff 50%,
+    rgba(0, 240, 255, 0.95) 80%,
+    rgba(0, 240, 255, 0) 100%
+  );
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.85);
+  -webkit-transform: translate3d(calc(var(--scanner-index, 0) * 100%), 0, 0);
+  transform: translate3d(calc(var(--scanner-index, 0) * 100%), 0, 0);
+  will-change: transform, opacity;
+  transition: transform 0.26s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Dynamic Header Morph Animation (Pure GPU opacity + translateY) */
+@keyframes scifiHeaderMorphIn {
+  0% {
+    opacity: 0;
+    -webkit-transform: translate3d(0, 6px, 0);
+    transform: translate3d(0, 6px, 0);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.scifi-header-morph {
+  display: inline-block;
+  will-change: transform, opacity;
+  animation: scifiHeaderMorphIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 

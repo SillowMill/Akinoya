@@ -350,8 +350,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     { id: 5, num: '05', title: 'DaVinci Grading & Ableton' },
   ];
 
+  const [tappingHubTab, setTappingHubTab] = useState<string | null>(null);
+
   const handleSwitchSection = (section: CreativeHubSection) => {
     const normalized = section === 'drive-vault' ? 'downloads' : section;
+    setTappingHubTab(normalized);
+    setTimeout(() => setTappingHubTab((prev) => (prev === normalized ? null : prev)), 155);
     setActiveSection(normalized);
     soundManager.playTone(580, 0.05);
     if (typeof window !== 'undefined') {
@@ -620,19 +624,19 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   const getDynamicHeaderTitle = () => {
     switch (activeSection) {
       case 'welcome':
-        return 'ÄKINOYA COMMUNITY HUB · WELCOME & VISION';
+        return 'ÄKINOYA COMMUNITY HUB - COMIC NETWORK';
       case 'workflows':
-        return 'ÄKINOYA COMMUNITY HUB · LABS & WORKFLOWS';
+        return 'ÄKINOYA COMMUNITY HUB - LABS & WORKFLOWS';
       case 'downloads':
-        return 'ÄKINOYA COMMUNITY HUB · DRIVE ASSET VAULT';
+        return 'ÄKINOYA COMMUNITY HUB - DRIVE ASSET VAULT';
       case 'discussion':
-        return 'ÄKINOYA COMMUNITY HUB · COMM-NET CHAT';
+        return 'ÄKINOYA COMMUNITY HUB - COMMUNICATION NETWORK';
       case 'creators':
-        return 'ÄKINOYA COMMUNITY HUB · FAVORITE PLANETS & LEADERBOARD';
+        return 'ÄKINOYA COMMUNITY HUB - LEADERBOARD';
       case 'governance':
-        return 'ÄKINOYA COMMUNITY HUB · LORE & GOVERNANCE PORTAL';
+        return 'ÄKINOYA COMMUNITY HUB - LORE & GOVERNANCE';
       default:
-        return 'ÄKINOYA COMMUNITY HUB';
+        return 'ÄKINOYA COMMUNITY HUB - COMIC NETWORK';
     }
   };
 
@@ -1312,7 +1316,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
-            <span className="text-xs sm:text-sm font-display font-bold tracking-wider text-white uppercase truncate">
+            <span
+              key={activeSection}
+              className="scifi-header-morph text-xs sm:text-sm font-display font-bold tracking-wider text-white uppercase truncate"
+            >
               {getDynamicHeaderTitle()}
             </span>
           </div>
@@ -1451,41 +1458,80 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           },
         ];
 
+        const COMPACT_MOBILE_TABS = [
+          {
+            id: 'welcome' as CreativeHubSection,
+            glyph: '📖',
+            shortLabel: 'Comic',
+            formalTitle: 'Comic Network',
+          },
+          {
+            id: 'discussion' as CreativeHubSection,
+            glyph: '💬',
+            shortLabel: 'Comm-Net',
+            formalTitle: 'Communication Network',
+          },
+          {
+            id: 'creators' as CreativeHubSection,
+            glyph: '🏆',
+            shortLabel: 'Ranks',
+            formalTitle: 'Leaderboard',
+          },
+          {
+            id: 'governance' as CreativeHubSection,
+            glyph: '📜',
+            shortLabel: 'Governance',
+            formalTitle: 'Lore & Governance',
+          },
+        ];
+
+        const activeMobileTabIndex =
+          activeSection === 'discussion'
+            ? 1
+            : activeSection === 'creators'
+            ? 2
+            : activeSection === 'governance'
+            ? 3
+            : 0;
+
         return (
           <>
-            {/* Mobile Touch / Swipe Navigation Bar (< 768px) */}
+            {/* Component 2: Community Hub Optimized Sticky Top-Bar (< 768px) */}
             <nav
-              className="md:hidden relative z-20 w-full bg-[#04070e]/95 border-b border-white/10 px-3 py-2 overflow-x-auto no-scrollbar scroll-smooth shrink-0 shadow-lg"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              aria-label="Community Hub Mobile Top Navigation"
+              className="md:hidden scifi-hub-topbar w-full px-2 pt-1.5 pb-2 shrink-0 select-none"
             >
-              <div className="flex items-center gap-2 min-w-max">
-                {HUB_TABS.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeSection === tab.id;
+              <div className="grid grid-cols-4 gap-1 items-center">
+                {COMPACT_MOBILE_TABS.map((tab, idx) => {
+                  const isActive = activeMobileTabIndex === idx;
+                  const isTapping = tappingHubTab === tab.id;
 
                   return (
                     <button
                       key={tab.id}
                       type="button"
-                      onClick={() => handleSwitchSection(tab.id as CreativeHubSection)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap min-h-[44px] ${
+                      onClick={() => handleSwitchSection(tab.id)}
+                      className={`scifi-nav-item flex items-center justify-center gap-1.5 px-1.5 py-2 rounded-xl text-[11px] font-mono cursor-pointer min-h-[42px] ${
                         isActive
-                          ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(56,189,248,0.35)] font-bold scale-[1.02]'
-                          : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/5'
-                      }`}
+                          ? 'is-active bg-cyan-950/75 text-cyan-200 border border-cyan-400/35 font-bold'
+                          : 'bg-white/[0.03] text-white/65 hover:text-white border border-transparent'
+                      } ${isTapping ? 'is-tapping' : ''}`}
                     >
-                      <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-black' : 'text-cyan-400'}`} />
-                      <span>{tab.shortLabel}</span>
-                      <span
-                        className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-bold ${
-                          isActive ? 'bg-black/20 text-black' : 'bg-white/10 text-white/60'
-                        }`}
-                      >
-                        {tab.count}
+                      <span className="text-sm leading-none shrink-0" aria-hidden="true">
+                        {tab.glyph}
                       </span>
+                      <span className="truncate tracking-tight">{tab.shortLabel}</span>
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Hardware-Accelerated Neon Underline Scanner Beam */}
+              <div className="scifi-scanner-track">
+                <div
+                  className="scifi-scanner-beam"
+                  style={{ '--scanner-index': activeMobileTabIndex } as React.CSSProperties}
+                />
               </div>
             </nav>
 
@@ -1652,9 +1698,21 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               <main
                 ref={hubScrollRef}
                 data-scroll-container="community-hub"
-                className="hub-main-scroll relative z-0 isolate flex-1 min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8"
+                className="hub-main-scroll relative z-0 isolate flex-1 min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-5 sm:px-6 sm:py-8 lg:p-8 space-y-5 sm:space-y-8"
                 style={{ contain: 'layout', WebkitOverflowScrolling: 'touch' }}
               >
+                {/* Mobile Dynamic Header Morph Bar (Pure GPU opacity + translateY transition) */}
+                <div className="md:hidden flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-[#070b14] border border-cyan-500/20">
+                  <div
+                    key={`mobile-header-morph-${activeSection}`}
+                    className="scifi-header-morph flex items-center gap-2 min-w-0"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                    <span className="text-[11px] font-display font-bold tracking-wider text-cyan-100 uppercase truncate">
+                      {getDynamicHeaderTitle()}
+                    </span>
+                  </div>
+                </div>
                 {/* ======================================================== */}
                 {/* SECTION 0: 00 · WELCOME & VISION PORTAL (PRIMARY LANDING)*/}
                 {/* ======================================================== */}
