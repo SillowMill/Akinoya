@@ -903,7 +903,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [passIdError, setPassIdError] = useState('');
   const [pasteFeedback, setPasteFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const handlePastePassId = async (target: 'hub' | 'track' = 'hub') => {
+  const handlePastePassId = async () => {
     try {
       let text = '';
       if (typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
@@ -913,13 +913,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       const trimmed = text ? text.trim() : '';
       const valueToFill = trimmed || FOUNDING_PASS_ID;
 
-      if (target === 'hub') {
-        setPassIdInput(valueToFill);
-        if (passIdError) setPassIdError('');
-      } else {
-        setTrackUnlockInput(valueToFill);
-        if (trackUnlockError) setTrackUnlockError('');
-      }
+      setPassIdInput(valueToFill);
+      if (passIdError) setPassIdError('');
 
       soundManager.playTone(880, 0.08);
       setPasteFeedback({
@@ -929,13 +924,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       setTimeout(() => setPasteFeedback(null), 2500);
     } catch (err) {
       console.warn('Clipboard read error, fallback to FOUNDING_PASS_ID:', err);
-      if (target === 'hub') {
-        setPassIdInput(FOUNDING_PASS_ID);
-        if (passIdError) setPassIdError('');
-      } else {
-        setTrackUnlockInput(FOUNDING_PASS_ID);
-        if (trackUnlockError) setTrackUnlockError('');
-      }
+      setPassIdInput(FOUNDING_PASS_ID);
+      if (passIdError) setPassIdError('');
       soundManager.playTone(880, 0.08);
       setPasteFeedback({
         message: `Filled Pass ID: #${FOUNDING_PASS_ID}`,
@@ -1029,10 +1019,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     return { '02': true }; // Track 2 Bingäa early access by default
   });
 
-  // Modal states for track unlocks and video player
-  const [selectedTrackForUnlock, setSelectedTrackForUnlock] = useState<VisualizerTrack | null>(null);
-  const [trackUnlockInput, setTrackUnlockInput] = useState('');
-  const [trackUnlockError, setTrackUnlockError] = useState('');
+  // Modal states for video player
   const [activePlayingTrack, setActivePlayingTrack] = useState<VisualizerTrack | null>(null);
 
   const handleUnlockVisualizers = (e: React.FormEvent) => {
@@ -1056,14 +1043,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       setPassIdError(`Invalid Pass ID. Please enter an authentic Äkinoya Pass ID (e.g. #${FOUNDING_PASS_ID}).`);
       soundManager.playError();
     }
-  };
-
-  const handleRelockVisualizers = () => {
-    sessionStorage.removeItem('akinoya_visualizers_unlocked');
-    setIsVisualizerUnlocked(false);
-    setPassSubView('overview');
-    setPassIdInput('');
-    setPassIdError('');
   };
 
   const handleDirectGuestUnlockHub = () => {
@@ -1196,39 +1175,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   };
 
   const handleTrackCardClick = (track: VisualizerTrack) => {
-    const isUnlocked = isVipMode || isVisualizerUnlocked || unlockedTracks[track.id] || track.defaultUnlocked;
-    if (isUnlocked) {
-      startTrackStream(track);
-    } else {
-      setSelectedTrackForUnlock(track);
-      setTrackUnlockInput('');
-      setTrackUnlockError('');
-    }
-  };
-
-  const handleVerifyTrackCode = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedTrackForUnlock) return;
-    const clean = trackUnlockInput.trim().toUpperCase().replace('#', '');
-    if (
-      clean === selectedTrackForUnlock.code ||
-      clean === 'SILLOWMILL2027' ||
-      clean === FOUNDING_PASS_ID ||
-      isValidPassId(clean)
-    ) {
-      const updated = { ...unlockedTracks, [selectedTrackForUnlock.id]: true };
-      setUnlockedTracks(updated);
-      sessionStorage.setItem('akinoya_unlocked_tracks', JSON.stringify(updated));
-      soundManager.playUnlockChime();
-      const trackToPlay = selectedTrackForUnlock;
-      setSelectedTrackForUnlock(null);
-      setTrackUnlockInput('');
-      setTrackUnlockError('');
-      startTrackStream(trackToPlay);
-    } else {
-      setTrackUnlockError(`Incorrect cipher. Hint: enter ${selectedTrackForUnlock.code} or SillowMill2027`);
-      soundManager.playError();
-    }
+    startTrackStream(track);
   };
 
   // Comic Pre-Order Checkout States (Streamlined Stripe Checkout)
@@ -1672,15 +1619,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           <div className="flex flex-wrap items-center gap-2 mb-2">
                             <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/40 text-cyan-300 font-semibold tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(56,189,248,0.2)]">
                               <AudioWaveform className="w-3 h-3 text-cyan-400" />
-                              {(isVipMode || isVisualizerUnlocked) ? 'ARCHIVE ACCESS ACTIVE' : 'VISUALIZER HUB GATEWAY'}
+                              VISUALIZER HUB
                             </span>
                             <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                              11 TRACKS DECRYPTED
+                              OPEN ACCESS · 11 TRACKS
                             </span>
                           </div>
 
                           <h3 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white tracking-wide leading-tight">
-                            Äkinoya Visualizer Archive
+                            Äkinoya Visualizer Hub
                           </h3>
                           <p className="text-xs sm:text-sm font-sans text-white/70 leading-relaxed mt-1.5">
                             Experience 4K reactive telemetry visualizers and acoustic logs for all 11 project tracks—featuring the "Bingäa" and "Don't Need" animations.
@@ -1689,27 +1636,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                         {/* Action Buttons */}
                         <div className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                          {(isVipMode || isVisualizerUnlocked) ? (
-                            <button
-                              onClick={() => {
-                                setPassSubView('hub');
-                                scrollToVisualizerHub(true);
-                              }}
-                              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
-                            >
-                              <AudioWaveform className="w-4 h-4 text-black shrink-0" />
-                              <span>OPEN VISUALIZER HUB →</span>
-                            </button>
-                          ) : (
-                            <button
-                              onClick={handleDirectGuestUnlockHub}
-                              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
-                            >
-                              <AudioWaveform className="w-4 h-4 text-black shrink-0" />
-                              <span>OPEN VISUALIZER HUB</span>
-                              <ArrowRight className="hidden lg:block w-4 h-4 text-black shrink-0" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => {
+                              setPassSubView('hub');
+                              scrollToVisualizerHub(true);
+                            }}
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01]"
+                          >
+                            <AudioWaveform className="w-4 h-4 text-black shrink-0" />
+                            <span>OPEN VISUALIZER HUB →</span>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1883,43 +1819,34 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   >
                     <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                    {/* Navigation Bar: Back to Pass Overview button & Header */}
+                    {/* Clean Header: Äkinoya Visualizer Hub (Open Access) */}
                     <div
                       id="akinoya-visualizer-archive-header"
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4 mb-5 scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
+                      className="flex items-center justify-between gap-3 border-b border-white/10 pb-4 mb-5 scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
                     >
-                      <div>
-                        {/* Navigation Back Button (Seamless without losing state) */}
-                        <button
-                          onClick={() => setPassSubView('overview')}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 hover:text-white text-xs font-mono transition-all cursor-pointer mb-2.5 shadow-[0_0_10px_rgba(56,189,248,0.15)]"
-                        >
-                          <ArrowLeft className="w-3.5 h-3.5" />
-                          <span>← Back to Pass Overview</span>
-                        </button>
-
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                            <Unlock className="w-3 h-3 text-emerald-400" />
-                            VIP ACCESS GRANTED
-                          </span>
-                          <span className="text-[10px] font-mono text-cyan-400/80">11 PROJECT VISUALIZERS</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)] shrink-0" />
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-semibold tracking-wider uppercase">
+                              11 PROJECT VISUALIZERS
+                            </span>
+                            <span className="text-[10px] font-mono text-emerald-400 font-semibold uppercase">
+                              OPEN ACCESS
+                            </span>
+                          </div>
+                          <h2 className="text-lg sm:text-xl lg:text-2xl font-display font-extrabold text-white tracking-wide">
+                            Äkinoya Visualizer Hub
+                          </h2>
                         </div>
-                        <h2 className="text-base sm:text-lg lg:text-xl font-display font-extrabold text-white tracking-wide">
-                          ÄKINOYA VISUALIZER ARCHIVE — VIP ACCESS GRANTED
-                        </h2>
-                        <p className="text-[11px] sm:text-xs text-white/60 mt-0.5">
-                          Click any track to stream visualizers or enter specific decryption keys.
-                        </p>
                       </div>
 
                       <button
-                        onClick={handleRelockVisualizers}
-                        title="Lock Visualizer Hub and return to Pass Overview"
-                        className="self-start sm:self-center text-[10px] font-mono text-white/60 hover:text-white border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0 flex items-center gap-1"
+                        onClick={() => setPassSubView('overview')}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer"
                       >
-                        <Lock className="w-3 h-3 text-white/50" />
-                        <span>Lock Hub</span>
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>Back</span>
                       </button>
                     </div>
 
@@ -1960,13 +1887,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                   className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                                     isProducedTrack
                                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
-                                      : 'bg-white/5 text-white/40 border border-white/10 group-hover:text-amber-300 group-hover:border-amber-500/30'
+                                      : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
                                   }`}
                                 >
                                   {isProducedTrack ? (
                                     <Play className="w-4 h-4 fill-emerald-400 text-emerald-400 ml-0.5" />
                                   ) : (
-                                    <AudioWaveform className="w-4 h-4" />
+                                    <AudioWaveform className="w-4 h-4 text-cyan-400" />
                                   )}
                                 </div>
 
@@ -1980,11 +1907,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 </div>
                               </div>
 
-                              {isProducedTrack ? (
-                                <Unlock className="w-4 h-4 text-emerald-400 shrink-0" />
-                              ) : (
-                                <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
-                              )}
+                              <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/60">
+                                {isProducedTrack ? '4K 60FPS' : 'AUDIO MATRIX'}
+                              </span>
                             </div>
 
                             {/* Active 16:9 Artwork Preview / Video Loop Container */}
@@ -2045,25 +1970,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             )}
 
                             <div className="flex items-center justify-between pt-2.5 border-t border-white/5 mt-auto">
-                              {isTrack01 ? (
-                                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                                  <Unlock className="w-3 h-3 text-emerald-400 shrink-0" />
-                                  <span>MUTED LOOP ACTIVE</span>
-                                </span>
-                              ) : isTrack02 ? (
-                                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-emerald-300 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
-                                  <Unlock className="w-3 h-3 text-emerald-400 shrink-0" />
-                                  <span>MUTED LOOP ACTIVE</span>
-                                </span>
-                              ) : (
-                                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-400/30 text-amber-300/90 font-semibold flex items-center gap-1.5 shadow-[0_0_8px_rgba(245,158,11,0.15)]">
-                                  <Lock className="w-3 h-3 text-yellow-400 shrink-0" />
-                                  <span>RELEASE SCHEDULED</span>
-                                </span>
-                              )}
+                              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/70 border border-emerald-400/30 text-emerald-300 font-semibold flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                                <span>{isProducedTrack ? 'STREAM READY' : 'TELEMETRY READY'}</span>
+                              </span>
 
                               <span className="text-[10px] font-mono text-cyan-400/80 group-hover:text-cyan-300 flex items-center gap-1">
-                                {isProducedTrack ? 'Watch Stream ▶' : 'Transmission Pending'}
+                                {isProducedTrack ? 'Watch Visualizer ▶' : 'Open Audio Matrix ▶'}
                               </span>
                             </div>
                           </motion.div>
@@ -3350,127 +3263,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           {renderPassCardWidget()}
         </div>
 
-      {/* Modal 1: Track-Specific Code Unlock Modal */}
-      <AnimatePresence>
-        {selectedTrackForUnlock && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.25 }}
-              style={{
-                transform: 'translateZ(0)',
-                WebkitTransform: 'translateZ(0)',
-                willChange: 'transform, opacity',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-              }}
-              className="relative w-full max-w-md bg-[#070b12] border border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_50px_rgba(56,189,248,0.25)] overflow-hidden modal-surface"
-            >
-              {/* Background ambient glow */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
-
-              <button
-                onClick={() => setSelectedTrackForUnlock(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="flex items-center gap-2 mb-2">
-                <Key className="w-4 h-4 text-cyan-400" />
-                <span className="text-[11px] font-mono text-cyan-300 uppercase tracking-wider font-semibold">
-                  ENCRYPTED TRACK VISUALIZER
-                </span>
-              </div>
-
-              <h3 className="text-lg font-display font-bold text-white mb-1">
-                Decrypt Track #{selectedTrackForUnlock.id}: {selectedTrackForUnlock.title}
-              </h3>
-              <p className="text-xs text-white/60 mb-5 leading-relaxed">
-                Enter the specific cipher key for this visualizer or your VIP Pass ID to decrypt and unlock the stream.
-              </p>
-
-              <form onSubmit={handleVerifyTrackCode} className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-[11px] font-mono text-white/60">
-                      CIPHER CODE (HINT: {selectedTrackForUnlock.code} OR SillowMill2027)
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => handlePastePassId('track')}
-                      className="text-[10px] font-mono text-cyan-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
-                      title="Paste Pass ID from clipboard"
-                    >
-                      <ClipboardPaste className="w-3 h-3 text-cyan-400" />
-                      <span>PASTE PASS ID</span>
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <Key className="w-4 h-4 text-white/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="text"
-                      autoFocus
-                      value={trackUnlockInput}
-                      onChange={(e) => {
-                        setTrackUnlockInput(e.target.value);
-                        if (trackUnlockError) setTrackUnlockError('');
-                      }}
-                      placeholder={`Enter cipher or #${FOUNDING_PASS_ID}`}
-                      className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-3 text-base sm:text-sm text-white placeholder-white/40 outline-none font-mono tracking-wider transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {trackUnlockError && (
-                  <div className="flex items-center gap-2 text-xs font-mono text-rose-400 bg-rose-950/40 border border-rose-500/30 rounded-lg px-3 py-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{trackUnlockError}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2.5 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTrackForUnlock(null)}
-                    className="flex-1 py-2.5 px-4 rounded-xl text-xs font-mono text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer min-h-[44px]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.3)]"
-                  >
-                    <Unlock className="w-4 h-4 text-black" />
-                    <span>DECRYPT</span>
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Modal 2: High-End Immersive Visualizer Hub Modal Overlay */}
+      {/* Visualizer Player Modal: High-End Immersive Open Access Modal */}
       <VisualizerPlayerModal
         isOpen={Boolean(activePlayingTrack)}
         activeTrack={activePlayingTrack}
         tracks={VISUALIZER_TRACKS}
-        isVipMode={isVipMode}
+        isVipMode={true}
         onClose={() => {
           setActivePlayingTrack(null);
         }}
         onSelectTrack={(track) => {
-          const isUnlocked = isVipMode || isVisualizerUnlocked || unlockedTracks[track.id] || track.defaultUnlocked;
-          if (isUnlocked) {
-            setActivePlayingTrack(track);
-          } else {
-            setSelectedTrackForUnlock(track);
-            setTrackUnlockInput('');
-            setTrackUnlockError('');
-          }
+          setActivePlayingTrack(track);
         }}
       />
 

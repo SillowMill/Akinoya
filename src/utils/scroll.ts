@@ -1,8 +1,8 @@
 /**
- * Universal Smooth Scroll to Visualizer Hub Archive
+ * Universal Smooth Scroll to Äkinoya Visualizer Hub
  *
- * Accurately scrolls and frames the welcoming header widget:
- * "ÄKINOYA VISUALIZER ARCHIVE – VIP ACCESS GRANTED"
+ * Accurately scrolls and frames the welcoming header:
+ * "Äkinoya Visualizer Hub"
  * across all devices (desktop, tablet, mobile), accounting for
  * the sticky top navigation header and comfortable breathing margin.
  */
