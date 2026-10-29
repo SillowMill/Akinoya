@@ -635,9 +635,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                   transform: 'translateZ(0)',
                   WebkitTransform: 'translateZ(0)',
                 }}
-                className={`w-full h-full pointer-events-none transition-all duration-300 ${
-                  isFullscreen ? 'object-contain' : 'object-cover object-center'
-                }`}
+                className="w-full h-full pointer-events-none transition-all duration-300 object-contain object-center"
               />
             ) : (
               /* Ambient Audio Visualizer Hologram for Upcoming Tracks */
