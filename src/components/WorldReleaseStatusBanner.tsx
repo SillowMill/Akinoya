@@ -6,6 +6,7 @@ import {
   WORLD_QUEUE_OFFICIAL_MESSAGE,
   WORLD_QUEUE_STATUS_LABEL,
   WORLD_RELEASE_DATE_LABEL,
+  isLiveGalaxyWorld,
 } from '../data/contest';
 
 interface WorldReleaseStatusBannerProps {
@@ -18,8 +19,13 @@ interface WorldReleaseStatusBannerProps {
  * Rendered above the fully generated media (5-photo dossier, story card, 9:16 trailer)
  * in My World & My Assets. The world stays private to the dashboard until the
  * January 9, 2027 release / admin review.
+ * Strictly excludes the initial 5 Pioneer Worlds.
  */
 export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> = ({ dossier, className = '' }) => {
+  if (!dossier || isLiveGalaxyWorld(dossier)) {
+    return null;
+  }
+
   return (
     <div
       role="status"

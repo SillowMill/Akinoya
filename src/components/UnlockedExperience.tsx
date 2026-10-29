@@ -71,6 +71,7 @@ import {
   subscribeToPlanetSubmissions,
   INITIAL_SUBMISSIONS,
   CURATED_GALAXY_WORLD_IDS,
+  isLiveGalaxyWorld,
   isQueuedUserWorld,
 } from '../data/contest';
 import { getUserStatusConfig } from '../utils/statusPill';
@@ -341,6 +342,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       setClaimedSector(getStoredSectorClaim());
       const userId = user?.id || profile?.id;
       const email = user?.email || profile?.email;
+      const emailNorm = (email || '').toLowerCase().trim();
+      const userIdNorm = (userId || '').toLowerCase().trim();
       const storedList = getStoredPlanetSubmissions();
 
       if (userId || email) {
@@ -352,24 +355,46 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           if (sub) {
             setUserDossier(sub);
           } else {
-            // Check if a custom non-benchmark world was created in this session
-            const customLocal = storedList.find((p) => !CURATED_GALAXY_WORLD_IDS.has(p.id));
-            if (customLocal) {
-              setUserDossier(customLocal);
-            } else if (email && isFounderEmail(email.toLowerCase().trim())) {
+            // Only fall back to a local custom planet if it was explicitly created by this user account on this device
+            const ownCreatedId =
+              typeof window !== 'undefined'
+                ? (emailNorm &&
+                    (localStorage.getItem(`akinoya_own_created_planet_id_${emailNorm}`) ||
+                      sessionStorage.getItem(`akinoya_own_created_planet_id_${emailNorm}`))) ||
+                  (userIdNorm &&
+                    (localStorage.getItem(`akinoya_own_created_planet_id_${userIdNorm}`) ||
+                      sessionStorage.getItem(`akinoya_own_created_planet_id_${userIdNorm}`)))
+                : null;
+            const ownLocal = ownCreatedId
+              ? storedList.find((p) => p.id === ownCreatedId && !isLiveGalaxyWorld(p))
+              : undefined;
+            if (ownLocal) {
+              setUserDossier(ownLocal);
+            } else if (emailNorm && isFounderEmail(emailNorm)) {
               const amlemi = storedList.find(
                 (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
               );
               if (amlemi) setUserDossier(amlemi);
+            } else if (!localMatch) {
+              setUserDossier(null);
             }
           }
         });
       } else {
-        // Unauthenticated / local session: check if user created a custom world on this device first
-        const customLocal = storedList.find((p) => !CURATED_GALAXY_WORLD_IDS.has(p.id));
-        if (customLocal) {
-          setUserDossier(customLocal);
-          return;
+        // Unauthenticated / VIP pass session without user account: only match a world explicitly created on this browser
+        const ownCreatedId =
+          typeof window !== 'undefined'
+            ? sessionStorage.getItem('akinoya_own_created_planet_id') ||
+              localStorage.getItem('akinoya_own_created_planet_id')
+            : null;
+        if (ownCreatedId) {
+          const ownLocal = storedList.find(
+            (p) => p.id === ownCreatedId && !CURATED_GALAXY_WORLD_IDS.has(p.id) && !isLiveGalaxyWorld(p)
+          );
+          if (ownLocal) {
+            setUserDossier(ownLocal);
+            return;
+          }
         }
         const amlemi = storedList.find(
           (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
@@ -378,8 +403,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           const storedToken = localStorage.getItem('akinoya_patron_token') || sessionStorage.getItem('akinoya_patron_token');
           if (storedToken === FOUNDING_PASS_ID) {
             setUserDossier(amlemi);
+            return;
           }
         }
+        setUserDossier(null);
       }
     };
 
@@ -426,34 +453,32 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   const activeWorldDossier = userDossier || amlemiBenchmarkDossier;
   const isGuestWorldSimulation = !userDossier;
-  // Determine whether the current user/account has already created or minted a world
+  // Determine whether the current user/account has actively completed creating/minting a world
+  // Note: Having a VIP-pass alone or starting Step 0 sector claim does NOT count until world creation completes.
   const hasUserCreatedWorld = useMemo(() => {
     const emailNorm = (user?.email || profile?.email || '').toLowerCase().trim();
     const userIdNorm = (user?.id || profile?.id || '').toLowerCase().trim();
     if (
       userDossier &&
       userDossier.id !== 'planet-amlemi-genesis-01' &&
-      userDossier.planetName !== 'Ämlemi'
+      userDossier.planetName.toLowerCase().trim() !== 'ämlemi' &&
+      userDossier.planetName.toLowerCase().trim() !== 'amlemi'
     ) {
       return true;
     }
-    if (profile?.has_submitted_contest || profile?.contest_submission_id) {
-      return true;
-    }
-    if (
-      claimedSector &&
-      claimedSector.sectorName &&
-      claimedSector.sectorName.toLowerCase().trim() !== 'ämlemi' &&
-      (!emailNorm ||
-        !claimedSector.holderEmail ||
-        claimedSector.holderEmail.toLowerCase().trim() === emailNorm)
-    ) {
+    if (!isFounderEmail(emailNorm) && (profile?.has_submitted_contest || profile?.contest_submission_id)) {
       return true;
     }
     if (typeof window !== 'undefined') {
       const accountKey = emailNorm || userIdNorm;
-      if (accountKey && localStorage.getItem(`user_generation_claimed_${accountKey}`) === 'true') {
-        return true;
+      if (accountKey && !isFounderEmail(emailNorm)) {
+        if (
+          localStorage.getItem(`user_generation_claimed_${accountKey}`) === 'true' ||
+          Boolean(localStorage.getItem(`akinoya_own_created_planet_id_${accountKey}`)) ||
+          Boolean(sessionStorage.getItem(`akinoya_own_created_planet_id_${accountKey}`))
+        ) {
+          return true;
+        }
       }
     }
     return false;
@@ -465,17 +490,45 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     profile?.id,
     user?.email,
     user?.id,
-    claimedSector,
   ]);
 
-  // Newly registered / custom generated (non-benchmark) worlds: queued until January 9, 2027 release
-  const isQueuedWorld =
-    hasUserCreatedWorld ||
-    (!isGuestWorldSimulation &&
+  // Newly registered / custom generated worlds beyond the 5 Pioneer Worlds: queued until January 9, 2027 release.
+  // The 5 Pioneer Worlds (Ämlemi, Felix, Ankrau, Florium, Sepplon) NEVER show the loading/reveal status text.
+  const isQueuedWorld = useMemo(() => {
+    // If the user has a dossier and it is one of the 5 Pioneer Worlds, never show the loading banner
+    if (userDossier && isLiveGalaxyWorld(userDossier)) {
+      return false;
+    }
+    // If the active dossier is one of the 5 Pioneer Worlds and the user has not created a custom non-pioneer world, exclude it
+    if (activeWorldDossier && isLiveGalaxyWorld(activeWorldDossier) && !userDossier) {
+      const emailNorm = (user?.email || profile?.email || '').toLowerCase().trim();
+      const INITIAL_FIVE_PIONEER_EMAILS = new Set([
+        'odin@sillow.be',
+        'sillow_nft@hotmail.com',
+        'felix@sillow.be',
+        'nathanael@sillow.be',
+        'florian@sillow.be',
+        'seppe@sillow.be',
+      ]);
+      if (!hasUserCreatedWorld || INITIAL_FIVE_PIONEER_EMAILS.has(emailNorm)) {
+        return false;
+      }
+    }
+    if (userDossier && !isLiveGalaxyWorld(userDossier)) {
+      return true;
+    }
+    if (hasUserCreatedWorld && !userDossier) {
+      return true;
+    }
+    return (
+      !isGuestWorldSimulation &&
       Boolean(activeWorldDossier) &&
+      !isLiveGalaxyWorld(activeWorldDossier) &&
       (isQueuedUserWorld(activeWorldDossier) ||
         activeWorldDossier.status === 'QUEUED' ||
-        Boolean((activeWorldDossier as any).isWaitlist)));
+        Boolean((activeWorldDossier as any).isWaitlist))
+    );
+  }, [hasUserCreatedWorld, isGuestWorldSimulation, activeWorldDossier, userDossier, user?.email, profile?.email]);
 
   const amlemiPhotoCards = useMemo(() => {
     return activeWorldDossier ? getPlanetPhotoCards(activeWorldDossier) : [];
@@ -2621,8 +2674,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
                 </div>
-              ) : (
-                /* Dynamic Status Widget when the user HAS already created/minted a world */
+              ) : isQueuedWorld ? (
+                /* Dynamic Status Widget when a new/custom world beyond the 5 Pioneer Worlds has been created */
                 <div
                   role="status"
                   style={{
@@ -2688,7 +2741,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* Active or Simulated Planet Dossier Experience */}
               <div className="space-y-6 md:space-y-7">
@@ -3048,7 +3101,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               </div>
 
               {/* Asset 01: Differentiated Master Multi-Media Carousel (4K Archive, 9:16 Story Card, 9:16 MP4 Trailer) */}
-              {activeWorldDossier && isQueuedWorld && <WorldReleaseStatusBanner dossier={activeWorldDossier} />}
+              {activeWorldDossier && isQueuedWorld && !isLiveGalaxyWorld(activeWorldDossier) && (
+                <WorldReleaseStatusBanner dossier={activeWorldDossier} />
+              )}
               {activeWorldDossier && (
                 <MyAssetsMasterCarousel
                   dossier={activeWorldDossier}

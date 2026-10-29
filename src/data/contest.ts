@@ -919,7 +919,18 @@ export const CURATED_GALAXY_WORLD_IDS = new Set([
   'planet-seppe-pioneer-05',
 ]);
 
-export const CURATED_GALAXY_WORLD_NAMES = new Set(['ämlemi', 'amlemi', 'felix', 'ankrau', 'florium', 'sepplon']);
+export const CURATED_GALAXY_WORLD_NAMES = new Set([
+  'ämlemi',
+  'amlemi',
+  'felix',
+  'ankrau',
+  'nathos',
+  'natharia',
+  'florium',
+  'floriana',
+  'sepplon',
+  'seppion',
+]);
 
 export const WORLD_RELEASE_DATE_LABEL = 'JANUARY 9, 2027';
 export const WORLD_QUEUE_STATUS_LABEL = 'WORLD GENERATION COMPLETE · PIONEER QUEUE';
@@ -2238,6 +2249,21 @@ export const savePlanetSubmission = async (
     const existing = getStoredPlanetSubmissions();
     const updated = [enrichedSubmission, ...existing.filter((s) => s.id !== enrichedSubmission.id)];
     localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(updated));
+
+    if (typeof window !== 'undefined' && !isLiveGalaxyWorld(enrichedSubmission)) {
+      try {
+        localStorage.setItem('akinoya_own_created_planet_id', enrichedSubmission.id);
+        sessionStorage.setItem('akinoya_own_created_planet_id', enrichedSubmission.id);
+        const emailKey = (enrichedSubmission.authorEmail || '').trim().toLowerCase();
+        const userKey = (enrichedSubmission.userId || '').trim().toLowerCase();
+        if (emailKey) {
+          localStorage.setItem(`akinoya_own_created_planet_id_${emailKey}`, enrichedSubmission.id);
+        }
+        if (userKey) {
+          localStorage.setItem(`akinoya_own_created_planet_id_${userKey}`, enrichedSubmission.id);
+        }
+      } catch {}
+    }
 
     // Instant Map Registration: Broadcast local event to live Galaxy Navigator and listening components
     if (typeof window !== 'undefined') {
