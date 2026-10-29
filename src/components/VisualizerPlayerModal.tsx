@@ -14,7 +14,6 @@ import {
   Sparkles,
   AudioWaveform,
   Film,
-  RotateCcw,
 } from 'lucide-react';
 import { VisualizerTrack } from './UnlockedExperience';
 import { planetSoundtrack } from '../utils/soundtrack';
@@ -48,33 +47,30 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
   const [duration, setDuration] = useState<number>(0);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [controlsVisible, setControlsVisible] = useState<boolean>(true);
-  const [hasEnded, setHasEnded] = useState<boolean>(false);
 
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentIndex = tracks.findIndex((t) => t.id === activeTrack?.id);
   const totalTracks = tracks.length;
-  const nextIndex = (currentIndex + 1) % (totalTracks || 1);
-  const nextTrack = tracks[nextIndex] || tracks[0];
   const isTrack02 = activeTrack?.id === '02';
   const hasVideo = Boolean(activeTrack?.videoUrl);
 
-  // Inactivity auto-fade timer (2.5 seconds) - transitions UI to ultra-clean opacity: 0.2
+  // TikTok-Style 2-Second Inactivity Auto-Fade Timer
   const resetControlsTimer = useCallback(() => {
     setControlsVisible(true);
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
     }
-    if (isPlaying && !hasEnded) {
+    if (isPlaying) {
       inactivityTimerRef.current = setTimeout(() => {
         setControlsVisible(false);
-      }, 2500);
+      }, 2000);
     }
-  }, [isPlaying, hasEnded]);
+  }, [isPlaying]);
 
-  // Keep controls visible whenever paused or ended; auto-fade when playing
+  // Keep controls visible whenever paused; auto-fade after 2s when playing
   useEffect(() => {
-    if (!isPlaying || hasEnded) {
+    if (!isPlaying) {
       setControlsVisible(true);
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
@@ -87,7 +83,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
         clearTimeout(inactivityTimerRef.current);
       }
     };
-  }, [isPlaying, hasEnded, resetControlsTimer]);
+  }, [isPlaying, resetControlsTimer]);
 
   // Close handler with audio cleanup
   const handleClose = useCallback(() => {
@@ -104,7 +100,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
   // Navigate to Previous Track
   const handlePrevTrack = useCallback(() => {
     if (currentIndex === -1 || totalTracks === 0) return;
-    setHasEnded(false);
     const prevIndex = (currentIndex - 1 + totalTracks) % totalTracks;
     onSelectTrack(tracks[prevIndex]);
     resetControlsTimer();
@@ -113,48 +108,19 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
   // Navigate to Next Track
   const handleNextTrack = useCallback(() => {
     if (currentIndex === -1 || totalTracks === 0) return;
-    setHasEnded(false);
-    const nIndex = (currentIndex + 1) % totalTracks;
-    onSelectTrack(tracks[nIndex]);
+    const nextIndex = (currentIndex + 1) % totalTracks;
+    onSelectTrack(tracks[nextIndex]);
     resetControlsTimer();
   }, [currentIndex, totalTracks, tracks, onSelectTrack, resetControlsTimer]);
 
-  // Handle End of Video
-  const handleVideoEnded = useCallback(() => {
-    setHasEnded(true);
-    setIsPlaying(false);
-    setControlsVisible(true);
-    if (isTrack02) {
-      planetSoundtrack.pause();
-    }
-  }, [isTrack02]);
-
-  // Rewatch current video
-  const handleRewatch = useCallback(() => {
-    setHasEnded(false);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
-    }
-    if (isTrack02) {
-      planetSoundtrack.play();
-    }
-    setIsPlaying(true);
-    resetControlsTimer();
-  }, [isTrack02, resetControlsTimer]);
-
-  // Jump to Next from End-of-Video Prompt
-  const handleNextFromEnded = useCallback(() => {
-    setHasEnded(false);
-    handleNextTrack();
-  }, [handleNextTrack]);
-
   // Toggle Play / Pause (Clicking stage or play button)
   const handleTogglePlay = useCallback(() => {
-    if (hasEnded) {
-      handleRewatch();
+    // If controls were hidden, first tap simply wakes up controls without pausing
+    if (!controlsVisible && isPlaying) {
+      resetControlsTimer();
       return;
     }
+
     resetControlsTimer();
     if (isTrack02) {
       const willPlay = !planetSoundtrack.isPlaying;
@@ -177,7 +143,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
     } else {
       setIsPlaying((prev) => !prev);
     }
-  }, [hasEnded, handleRewatch, isTrack02, hasVideo, resetControlsTimer]);
+  }, [controlsVisible, isPlaying, isTrack02, hasVideo, resetControlsTimer]);
 
   // Toggle Mute / Unmute
   const handleToggleMute = useCallback(() => {
@@ -228,25 +194,26 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
 
     setCurrentTime(0);
     setDuration(0);
-    setHasEnded(false);
 
     const videoEl = videoRef.current;
 
     if (isTrack02) {
-      // Bingäa: Video plays muted in background, audio played by master planetSoundtrack
+      // Bingäa: Video plays muted in continuous loop, audio handled by planetSoundtrack
       if (videoEl) {
         videoEl.muted = true;
         videoEl.defaultMuted = true;
+        videoEl.loop = true;
         videoEl.play().catch(() => {});
       }
       planetSoundtrack.play();
       setIsPlaying(true);
       setIsMuted(false);
     } else if (hasVideo && videoEl) {
-      // Don't Need or other video: Video audio unmuted, pause planetSoundtrack
+      // Don't Need or other video: Unmuted continuous loop, pause planetSoundtrack
       planetSoundtrack.pause();
       videoEl.muted = false;
       videoEl.defaultMuted = false;
+      videoEl.loop = true;
       videoEl.volume = 1.0;
       videoEl
         .play()
@@ -261,12 +228,12 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
           setIsMuted(true);
         });
     } else {
-      // Scheduled track
+      // Scheduled ambient track
       planetSoundtrack.pause();
       setIsPlaying(true);
     }
 
-    // Auto-scroll track strip so active pill is visible
+    // Auto-scroll track strip so active pill is centered
     if (trackStripRef.current) {
       const activePill = trackStripRef.current.querySelector<HTMLElement>(`[data-track-id="${activeTrack.id}"]`);
       if (activePill) {
@@ -340,6 +307,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    resetControlsTimer();
     if (touchStartXRef.current === null || touchStartYRef.current === null) return;
     const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
     const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
@@ -400,6 +368,8 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
         }}
         onClick={handleClose}
         onMouseMove={resetControlsTimer}
+        onTouchStart={resetControlsTimer}
+        onTouchMove={resetControlsTimer}
       >
         {/* Modal Window Card */}
         <motion.div
@@ -423,16 +393,14 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
               : 'w-full max-w-4xl max-h-[96dvh] rounded-2xl sm:rounded-3xl border border-white/12 bg-[#060911]/98 shadow-[0_0_60px_rgba(0,240,255,0.18),0_25px_50px_-12px_rgba(0,0,0,0.85)]'
           }`}
         >
-          {/* Top Bar: Ultra-Clean Hover/Touch Navigation (opacity: 0.2 resting, lights up on interaction) */}
+          {/* Top Bar: TikTok-Style Auto-Hide Overlay (fades to opacity: 0 after 2s inactivity) */}
           <div
             className={`flex items-center justify-between transition-opacity duration-300 shrink-0 ${
               isFullscreen
-                ? `absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/90 via-black/50 to-transparent border-0 px-4 sm:px-8 py-3.5 ${
-                    controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-20 hover:opacity-100 pointer-events-auto'
-                  }`
-                : `px-3.5 sm:px-6 py-2.5 sm:py-3.5 bg-black/60 border-b border-white/10 ${
-                    controlsVisible ? 'opacity-100' : 'opacity-20 hover:opacity-100'
-                  }`
+                ? 'absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/90 via-black/50 to-transparent border-0 px-4 sm:px-8 py-3.5'
+                : 'px-3.5 sm:px-6 py-2.5 sm:py-3.5 bg-black/60 border-b border-white/10'
+            } ${
+              controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
           >
             {/* Left: Track Status & Index */}
@@ -478,7 +446,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
             </div>
           </div>
 
-          {/* Central Visualizer Stage (100% Cinema Clean: Zero central play/pause clutter) */}
+          {/* Central Visualizer Stage (100% Pure Video: Continuous Looping, Zero Central Obstacles) */}
           <div
             onClick={handleTogglePlay}
             className={`relative w-full bg-black flex items-center justify-center overflow-hidden cursor-pointer group/stage ${
@@ -494,18 +462,15 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                 src={activeTrack.videoUrl}
                 poster={activeTrack.artworkUrl || akinoyaVistaImg}
                 autoPlay
+                loop
                 playsInline
                 preload="auto"
                 disablePictureInPicture
                 disableRemotePlayback
                 controlsList="nodownload nofullscreen noremoteplayback"
                 onTimeUpdate={handleTimeUpdate}
-                onPlay={() => {
-                  setIsPlaying(true);
-                  setHasEnded(false);
-                }}
+                onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
-                onEnded={handleVideoEnded}
                 {...({
                   'webkit-playsinline': 'true',
                   'x5-playsinline': 'true',
@@ -581,63 +546,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
               </div>
             )}
 
-            {/* Smart "End-of-Video" Prompt (Replaces standard loop) */}
-            <AnimatePresence>
-              {hasEnded && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.94, y: 8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.94, y: 8 }}
-                  transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute inset-0 z-40 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="w-full max-w-sm sm:max-w-md p-6 sm:p-7 rounded-2xl bg-[#060912]/95 border border-cyan-400/40 shadow-[0_0_50px_rgba(0,240,255,0.25)] flex flex-col items-center text-center space-y-4">
-                    <div className="w-12 h-12 rounded-full bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_20px_rgba(0,240,255,0.35)]">
-                      <Sparkles className="w-6 h-6 text-cyan-400" />
-                    </div>
-
-                    <div>
-                      <span className="text-[9.5px] font-mono tracking-widest uppercase text-cyan-400 font-semibold px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/30">
-                        TRANSMISSION COMPLETE
-                      </span>
-                      <h3 className="text-lg sm:text-xl font-display font-bold text-white mt-2">
-                        Wanna go to the next visualizer?
-                      </h3>
-                      <p className="text-[11px] font-mono text-white/60 mt-1">
-                        Up next: Track #{nextTrack.id} — {nextTrack.title}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full pt-1">
-                      {/* Next Visualizer Button */}
-                      <button
-                        type="button"
-                        onClick={handleNextFromEnded}
-                        className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 active:scale-[0.98] text-black font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-[0_0_20px_rgba(0,240,255,0.4)] flex items-center justify-center gap-2 cursor-pointer"
-                        style={{ touchAction: 'manipulation' }}
-                      >
-                        <span>Next Visualizer</span>
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-
-                      {/* Rewatch Button */}
-                      <button
-                        type="button"
-                        onClick={handleRewatch}
-                        className="w-full sm:w-auto py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 active:scale-[0.98] text-white font-mono font-semibold text-xs transition-all border border-white/15 flex items-center justify-center gap-1.5 cursor-pointer"
-                        style={{ touchAction: 'manipulation' }}
-                      >
-                        <RotateCcw className="w-3.5 h-3.5 text-cyan-300" />
-                        <span>Rewatch</span>
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Floating Side Prev Button (Subtle opacity: 0.2 resting, lights to 0.8/1.0 on proximity) */}
+            {/* Floating Side Prev Button (Fades smoothly to opacity: 0 after 2s inactivity) */}
             <button
               type="button"
               aria-label="Previous track"
@@ -649,17 +558,17 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                 e.stopPropagation();
                 handlePrevTrack();
               }}
-              className={`absolute left-2.5 sm:left-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/40 hover:bg-black/85 active:bg-cyan-500/30 text-white/80 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.6)] flex items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
+              className={`absolute left-2.5 sm:left-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/45 hover:bg-black/90 active:bg-cyan-500/30 text-white/85 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.7)] flex items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
                 controlsVisible
-                  ? 'opacity-80 hover:opacity-100 active:opacity-100 group-hover/stage:opacity-100'
-                  : 'opacity-20 hover:opacity-100 group-hover/stage:opacity-80'
+                  ? 'opacity-85 hover:opacity-100 active:opacity-100 pointer-events-auto'
+                  : 'opacity-0 pointer-events-none'
               }`}
               style={{ touchAction: 'manipulation' }}
             >
               <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 -ml-0.5 transition-transform group-hover/stage:scale-105" />
             </button>
 
-            {/* Floating Side Next Button (Subtle opacity: 0.2 resting, lights to 0.8/1.0 on proximity) */}
+            {/* Floating Side Next Button (Fades smoothly to opacity: 0 after 2s inactivity) */}
             <button
               type="button"
               aria-label="Next track"
@@ -671,10 +580,10 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
                 e.stopPropagation();
                 handleNextTrack();
               }}
-              className={`absolute right-2.5 sm:right-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/40 hover:bg-black/85 active:bg-cyan-500/30 text-white/80 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.6)] flex items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
+              className={`absolute right-2.5 sm:right-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/45 hover:bg-black/90 active:bg-cyan-500/30 text-white/85 hover:text-white border border-white/15 hover:border-cyan-400/60 shadow-[0_4px_24px_rgba(0,0,0,0.7)] flex items-center justify-center backdrop-blur-md z-30 transition-all duration-300 cursor-pointer ${
                 controlsVisible
-                  ? 'opacity-80 hover:opacity-100 active:opacity-100 group-hover/stage:opacity-100'
-                  : 'opacity-20 hover:opacity-100 group-hover/stage:opacity-80'
+                  ? 'opacity-85 hover:opacity-100 active:opacity-100 pointer-events-auto'
+                  : 'opacity-0 pointer-events-none'
               }`}
               style={{ touchAction: 'manipulation' }}
             >
@@ -682,22 +591,20 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
             </button>
           </div>
 
-          {/* Bottom Area: Scrubber, Track-Balk & Controls (Subtle opacity: 0.2 resting, lights to 1.0 on hover/touch) */}
+          {/* Bottom Area: Scrubber, Track-Balk & Controls (TikTok-Style Auto-Hide: Fades to opacity: 0 after 2s) */}
           <div
             className={`transition-all duration-300 shrink-0 ${
               isFullscreen
-                ? `absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black via-black/90 to-transparent border-t border-white/10 px-3.5 sm:px-8 pt-3 pb-safe flex flex-col gap-1.5 ${
-                    controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-20 hover:opacity-100 pointer-events-auto'
-                  }`
-                : `flex flex-col ${
-                    controlsVisible ? 'opacity-100' : 'opacity-20 hover:opacity-100'
-                  }`
+                ? 'absolute bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-black via-black/90 to-transparent border-t border-white/10 px-3.5 sm:px-8 pt-3 pb-safe flex flex-col gap-1.5'
+                : 'flex flex-col'
+            } ${
+              controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
             }`}
           >
             {/* Interactive Scrubber Bar */}
             {duration > 0 && (
               <div
-                className={`relative w-full px-3.5 sm:px-6 pt-1.5 pb-1 transition-opacity duration-300 ${
+                className={`relative w-full px-3.5 sm:px-6 pt-1.5 pb-1 ${
                   isFullscreen ? 'bg-transparent' : 'bg-black/90 border-t border-white/5'
                 }`}
               >
@@ -718,10 +625,10 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
               </div>
             )}
 
-            {/* Quick Track Switcher Strip: PERMANENTLY ANCHORED & VISIBLE */}
+            {/* Quick Track Switcher Strip */}
             <div
               ref={trackStripRef}
-              className={`px-3.5 sm:px-6 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none modal-allow-scroll transition-opacity duration-300 ${
+              className={`px-3.5 sm:px-6 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none modal-allow-scroll ${
                 isFullscreen
                   ? 'bg-black/60 rounded-xl backdrop-blur-md border border-white/10 my-0.5'
                   : 'bg-black/80 border-t border-white/5'
@@ -761,7 +668,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = ({
 
             {/* Bottom Player Controls HUD */}
             <div
-              className={`px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-3 shrink-0 transition-opacity duration-300 ${
+              className={`px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-3 shrink-0 ${
                 isFullscreen
                   ? 'bg-transparent border-0'
                   : 'bg-[#070b13] border-t border-white/10'
