@@ -2062,14 +2062,14 @@ export const LiveStoryTrailerViewport: React.FC<{
         <img
           src={posterUrl}
           alt={dossier.planetName || 'Ämlemi'}
-          className="absolute inset-0 w-full h-full object-cover z-0 filter brightness-95"
+          className="absolute inset-0 w-full h-full object-contain z-0 filter brightness-95"
           decoding="async"
         />
       )}
 
       {videoUrl ? (
         <div
-          className="video-viewport-wrapper relative z-10 w-full h-full"
+          className="video-viewport-wrapper relative z-10 w-full h-full flex items-center justify-center"
           style={{
             transform: 'translateZ(0)',
             WebkitTransform: 'translateZ(0)',
@@ -2113,7 +2113,7 @@ export const LiveStoryTrailerViewport: React.FC<{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
             }}
-            className="w-full h-full object-cover relative z-10 pointer-events-auto"
+            className="w-full h-full object-contain relative z-10 pointer-events-auto"
           />
           {/* Top-level & Bottom-left Branded Overlay on native MP4 */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none z-20" />

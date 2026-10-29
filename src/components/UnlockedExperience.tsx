@@ -52,6 +52,8 @@ import {
   ThumbsUp,
   Flame,
   Share2,
+  Radar,
+  Sliders,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
@@ -72,7 +74,6 @@ import {
 import { getUserStatusConfig } from '../utils/statusPill';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isVipPioneerPlanet, isPreLaunch } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
-import { WorldStoryVerificationBadge } from './WorldStoryVerificationBadge';
 import { MyAssetsMasterCarousel } from './MyAssetsMasterCarousel';
 import { WorldReleaseStatusBanner } from './WorldReleaseStatusBanner';
 import { isQueuedUserWorld } from '../data/contest';
@@ -928,7 +929,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     scrollToVisualizerHub(true);
   };
 
-  const [tappingTab, setTappingTab] = useState<'pass' | 'edition' | 'my-world' | 'assets' | null>(null);
+  const [tappingTab, setTappingTab] = useState<'pass' | 'edition' | 'my-world' | 'galaxy' | 'assets' | null>(null);
 
   const handleSelectTab = (tab: 'pass' | 'edition' | 'my-world' | 'assets') => {
     setTappingTab(tab);
@@ -945,6 +946,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         url.hash = tab;
         window.history.replaceState(null, '', url.toString());
       } catch {}
+    }
+  };
+
+  const handleTriggerGalaxyNav = () => {
+    setTappingTab('galaxy');
+    setTimeout(() => setTappingTab((prev) => (prev === 'galaxy' ? null : prev)), 155);
+    soundManager.playTone(620, 0.05);
+    if (onNavigateToGalaxy) {
+      onNavigateToGalaxy();
+    } else if (typeof window !== 'undefined') {
+      window.location.hash = '#galaxy';
     }
   };
 
@@ -1221,68 +1233,45 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       }}
       className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10 page-transition-container portrait-bottom-safe-pad"
     >
-      {/* Top Status & Lock Control — Translucent Glassmorphism matching the Visualizer Hub Showcase Widget */}
-      <div className="relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6 md:mb-7 lg:mb-8 bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:px-6 md:px-7 lg:px-8 lg:py-5 shadow-[0_0_30px_rgba(56,189,248,0.15)]">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Minified Low-Profile Status Bar Header with Inline Service View Toggle */}
+      <div className="relative overflow-hidden flex items-center justify-between gap-2.5 sm:gap-4 mb-4 sm:mb-5 bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-xl px-3.5 py-2.5 sm:px-5 sm:py-3 shadow-[0_0_25px_rgba(56,189,248,0.12)]">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex items-center gap-3 min-w-0 flex-1 max-w-full">
-          <div className="w-10 h-10 rounded-xl bg-cyan-950/80 backdrop-blur-md border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
-            <ShieldCheck className="w-5 h-5 text-cyan-400" />
+        <div className="relative z-10 flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyan-950/80 backdrop-blur-md border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.22)] shrink-0">
+            <ShieldCheck className="w-4 h-4 text-cyan-400" />
           </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-base sm:text-lg lg:text-xl font-display font-bold text-white tracking-wide break-words drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)] mb-1.5">
+          <div className="min-w-0 flex-1 flex flex-col sm:flex-row sm:items-center sm:gap-3">
+            <h2 className="text-xs sm:text-sm lg:text-base font-display font-bold text-white tracking-wide truncate drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
               {isVipMode && holderName ? `Welcome to Äkinoya, ${holderName} — Unlocked` : 'Welcome to Äkinoya — Unlocked'}
             </h2>
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
-              <span className="text-[10px] sm:text-xs font-mono text-cyan-400 font-semibold tracking-wider shrink-0">PORTAL ACTIVE</span>
-              <span className="text-white/30 text-xs">·</span>
-              <span className="text-[10px] sm:text-xs text-white/70 font-mono truncate">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+              <span className="text-[9.5px] sm:text-[11px] font-mono text-cyan-400 font-semibold tracking-wider shrink-0">PORTAL ACTIVE</span>
+              <span className="text-white/30 text-[10px]">·</span>
+              <span className="text-[9.5px] sm:text-[11px] text-white/65 font-mono truncate">
                 {isVipMode && holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
               </span>
-              {(isOdiUser || isMaster || isPreLaunch()) && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-600/25 border border-amber-400/60 text-amber-200 text-[9px] sm:text-[10px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(251,191,36,0.35)] shrink-0">
-                  <Sparkles className="w-2.5 h-2.5 text-amber-300 shrink-0" />
-                  <span>{isOdiUser || isMaster ? 'FOUNDING PIONEER · #01' : 'PIONEER 2027'}</span>
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => handleSelectTab('my-world')}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-400/45 text-cyan-200 hover:text-white text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase shadow-[0_0_10px_rgba(34,211,238,0.25)] transition-all cursor-pointer shrink-0"
-                title="Inspect Bound Planetary Profile"
-              >
-                <Globe2 className="w-2.5 h-2.5 text-amber-400 shrink-0" />
-                <span>PLANET: {(userDossier?.planetName || 'ÄMLEMI').toUpperCase()}</span>
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Action buttons (Touch targets >= 44px) */}
-        <div className="relative z-10 flex items-center gap-2 w-full sm:w-auto flex-wrap shrink-0">
-          {onNavigateToGalaxy && (
-            <button
-              type="button"
-              onClick={() => onNavigateToGalaxy()}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2 text-xs font-mono font-bold text-cyan-200 hover:text-white bg-cyan-950/80 hover:bg-cyan-900/90 backdrop-blur-md border border-cyan-400/40 rounded-xl transition-all cursor-pointer min-h-[44px] shadow-[0_0_12px_rgba(6,182,212,0.25)]"
-            >
-              <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin shrink-0" style={{ animationDuration: '24s' }} />
-              <span className="truncate tracking-wide">Galaxy Navigator</span>
-            </button>
-          )}
-
+        {/* Inline Service View Toggle (Distinct Sliders / Eye Icon — never duplicates Worlds Globe2 icon) */}
+        <div className="relative z-10 flex items-center shrink-0">
           <button
+            type="button"
             onClick={() => onToggleViewMode(currentViewMode === 'orbit' ? 'surface' : 'orbit')}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2 text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/60 hover:bg-cyan-950/85 backdrop-blur-md border border-cyan-500/35 rounded-xl transition-all cursor-pointer min-h-[44px]"
+            title={currentViewMode === 'orbit' ? 'Switch to Service View' : 'Switch to Planet View'}
+            className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/60 hover:bg-cyan-950/90 backdrop-blur-md border border-cyan-500/35 hover:border-cyan-400/60 rounded-lg transition-all cursor-pointer min-h-[36px] sm:min-h-[38px]"
           >
             {currentViewMode === 'orbit' ? (
               <>
-                <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+                <Sliders className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                 <span className="truncate">Service View</span>
               </>
             ) : (
               <>
-                <Eye className="w-3.5 h-3.5 text-cyan-400" />
+                <Eye className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                 <span className="truncate">Planet View</span>
               </>
             )}
@@ -1292,9 +1281,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
       {/* Main Tabs and Content Area */}
       <div className="space-y-5 sm:space-y-6 md:space-y-7 w-full">
-        {/* Desktop & Landscape Navigation Tabs (Home, Comic, Worlds, My Assets) */}
-        <div className="desktop-landscape-only grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
+        {/* Desktop & Landscape 5-Item Navigation Tabs (Home, Comic, Worlds, Galaxy Navigator, My Assets) */}
+        <div className="desktop-landscape-only grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
           <button
+            type="button"
             onClick={() => handleSelectTab('pass')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'pass'
@@ -1306,6 +1296,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <span className="truncate">Home</span>
           </button>
           <button
+            type="button"
             onClick={() => handleSelectTab('edition')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'edition'
@@ -1317,6 +1308,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <span className="truncate">Comic</span>
           </button>
           <button
+            type="button"
             onClick={() => handleSelectTab('my-world')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'my-world'
@@ -1328,6 +1320,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <span className="truncate">Worlds</span>
           </button>
           <button
+            type="button"
+            onClick={handleTriggerGalaxyNav}
+            className="py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation text-cyan-300/85 hover:text-white hover:bg-cyan-950/50"
+          >
+            <Radar className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span className="truncate">Galaxy Navigator</span>
+          </button>
+          <button
+            type="button"
             onClick={() => handleSelectTab('assets')}
             className={`py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation ${
               activeTab === 'assets'
@@ -2313,26 +2314,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               }}
               className="space-y-6 md:space-y-7"
             >
-              {/* Universal "My World" Living Storyline Lore Integration */}
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-950/70 via-[#070e24]/90 to-cyan-950/70 backdrop-blur-xl border border-cyan-400/40 p-5 sm:p-6 shadow-[0_10px_35px_rgba(0,0,0,0.6),0_0_25px_rgba(56,189,248,0.15)]">
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/80 to-transparent pointer-events-none" />
-                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-cyan-950/90 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_20px_rgba(56,189,248,0.3)] shrink-0">
-                    <Globe2 className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-300" />
-                  </div>
-                  <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/40 text-cyan-300 font-semibold uppercase tracking-wider">
-                        ÄKINOYA EXPANSION PROTOCOL · LIVING STORYLINE
-                      </span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-cyan-100/90 font-sans leading-relaxed">
-                      Beyond the release of the eleven visualizers lies an unfolding, living storyline. Äkinoya does not end with the music—it expands into the cosmos you create. Here, in &apos;My World&apos;, the narrative threads of Odi Selis&apos;s universe stretch directly into your own custom-generated planets. Synthesize your sector, anchor your world into the constellation matrix, and become an active co-creator of the Äkinoya lore.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {/* Galaxy Navigator Primary Visual Card — Experience Ämlemi */}
+              {/* Galaxy Navigator Primary Visual Card — Explore The 5 Pioneer Worlds */}
               {(isGuestWorldSimulation || activeWorldDossier?.planetName === 'Ämlemi' || activeWorldDossier?.id === 'planet-amlemi-genesis-01') && (
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#0a132c]/95 via-[#060c1d]/95 to-[#040814]/98 backdrop-blur-2xl border-2 border-cyan-400/45 p-5 sm:p-7 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]">
                   {/* Ambient top glowing beam */}
@@ -2346,7 +2328,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <div className="space-y-2 max-w-2xl">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
-                            <Compass className="w-3 h-3 text-cyan-300 shrink-0" />
+                            <Radar className="w-3 h-3 text-cyan-300 shrink-0" />
                             <span>ÄKINOYA CONSTELLATION NAVIGATOR</span>
                           </span>
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.4)]">
@@ -2356,11 +2338,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         </div>
 
                         <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                          Experience Ämlemi
+                          Explore The 5 Pioneer Worlds
                         </h2>
 
-                        <p className="text-xs sm:text-sm text-cyan-100/80 font-sans leading-relaxed max-w-xl">
-                          Explore the central Äkinoya Core and the surrounding constellation of the five founding pioneer worlds (#1 Ämlemi, #2 Felix, #3 Ankrau, #4 Florium, #5 Sepplon). Venture deep into the cosmic map or synthesize your own custom sector into the living storyline.
+                        <p className="text-xs sm:text-sm text-cyan-100/85 font-sans leading-relaxed max-w-xl">
+                          Within the Äkinoya ecosystem, you can <strong className="text-white">create and mint your own custom world</strong> directly into the 3D galaxy constellation. Explore our five founding pioneer worlds (#1 Ämlemi, #2 Felix, #3 Ankrau, #4 Florium, #5 Sepplon) below — featuring <strong className="text-amber-300">Ämlemi as Pioneer World #1 (An Example Sector)</strong> to showcase what is possible when you build your own world.
                         </p>
                       </div>
 
@@ -2379,7 +2361,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           }}
                           className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
                         >
-                          <Compass className="w-4 h-4 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
+                          <Radar className="w-4 h-4 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
                           <span>View in Äkinoya Galaxy</span>
                         </button>
 
@@ -2466,8 +2448,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         <Globe2 className="w-4 h-4" />
                       </span>
                       <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
-                        {isGuestWorldSimulation
-                          ? 'Benchmark World Simulation · Ämlemi (#1)'
+                        {isGuestWorldSimulation || activeWorldDossier?.planetName === 'Ämlemi'
+                          ? 'Pioneer World #1 (An Example Sector) · Ämlemi'
                           : 'My Synthesized Sector · Dossier Active'}
                       </span>
                     </div>
@@ -2724,41 +2706,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 </div>
 
-                {/* Release status banner (newly synthesized user worlds) + full 9:16 Story & Trailer Verification Hub */}
+                {/* Release status banner (newly synthesized user worlds) */}
                 {isQueuedWorld && <WorldReleaseStatusBanner dossier={activeWorldDossier} />}
-                <WorldStoryVerificationBadge
-                  dossier={activeWorldDossier}
-                  editionRank={planetRank > 0 ? planetRank : 1}
-                  isSimulationMode={isGuestWorldSimulation}
-                  onUnlockSimulation={() => {
-                    soundManager.playTone(660, 0.05);
-                    if (onNavigateToContest) {
-                      onNavigateToContest();
-                    } else if (typeof window !== 'undefined') {
-                      window.location.href = '/contest';
-                    }
-                  }}
-                />
-
-                {/* Story & Philosophy Creed */}
-                <div className="p-5 sm:p-6 md:p-7 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#060c18]/85 to-[#040812]/90 backdrop-blur-xl border border-cyan-500/25 space-y-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
-                    <h3 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-white">
-                      Archival Lore &amp; Philosophical Creed
-                    </h3>
-                  </div>
-
-                  {activeWorldDossier.futurePromise && (
-                    <blockquote className="p-4 rounded-xl bg-slate-950/90 border border-amber-400/35 border-l-4 border-l-amber-400 text-xs sm:text-sm text-amber-100 font-sans italic leading-relaxed shadow-[0_0_15px_rgba(245,158,11,0.1)]">
-                      &ldquo;{activeWorldDossier.futurePromise}&rdquo;
-                    </blockquote>
-                  )}
-
-                  <p className="text-xs sm:text-sm text-white/90 font-sans leading-relaxed whitespace-pre-line">
-                    {activeWorldDossier.generatedLore}
-                  </p>
-                </div>
 
                 {/* Guest Conversion Push Footer Card */}
                 {isGuestWorldSimulation && (
@@ -2800,7 +2749,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             </motion.div>
           )}
 
-          {/* Tab 4: My Assets — Permanently accessible for 9:16 Story Verification Badge + VIP Holder Archive */}
+          {/* Tab 5: My Assets — Permanently accessible for 9:16 Story Verification Badge + VIP Holder Archive */}
           {activeTab === 'assets' && (
             <motion.div
               key="assets-view"
@@ -2817,6 +2766,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               }}
               className="space-y-5 sm:space-y-6 md:space-y-7"
             >
+              {/* ÄKINOYA ASSET VERIFICATION Introduction Header */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-950/50 via-[#060c1a]/90 to-[#050812]/95 backdrop-blur-xl border border-cyan-400/35 p-4 sm:p-5 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.12)]">
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent pointer-events-none" />
+                <div className="relative z-10 flex items-start sm:items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-950/85 border border-cyan-400/45 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
+                    <ShieldCheck className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <h3 className="text-xs sm:text-sm font-mono font-extrabold uppercase tracking-widest text-cyan-300">
+                      ÄKINOYA ASSET VERIFICATION
+                    </h3>
+                    <p className="text-xs sm:text-sm text-white/80 font-sans italic leading-relaxed">
+                      When you create a world or acquire a community pass on Äkinoya, your account receives an official Verification Badge and unique ID Token. Below are your verified planetary and media assets.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Asset 01: Differentiated Master Multi-Media Carousel (4K Archive, 9:16 Story Card, 9:16 MP4 Trailer) */}
               {activeWorldDossier && isQueuedWorld && <WorldReleaseStatusBanner dossier={activeWorldDossier} />}
               {activeWorldDossier && (
@@ -3626,34 +3593,37 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 className="scifi-scanner-beam"
                 style={{
                   '--scanner-index':
-                    activeTab === 'pass'
+                    tappingTab === 'galaxy'
+                      ? 3
+                      : activeTab === 'pass'
                       ? 0
                       : activeTab === 'edition'
                       ? 1
                       : activeTab === 'my-world'
                       ? 2
-                      : 3,
+                      : 4,
                 } as React.CSSProperties}
               />
             </div>
 
-            <div className="grid grid-cols-4 items-center px-2 py-1.5">
+            <div className="grid grid-cols-5 items-center px-1.5 py-1.5">
               {(
                 [
                   { id: 'pass' as const, label: 'Home', Icon: Compass },
                   { id: 'edition' as const, label: 'Comic', Icon: BookOpen },
                   { id: 'my-world' as const, label: 'Worlds', Icon: Globe2 },
+                  { id: 'galaxy' as const, label: 'Galaxy Navigator', Icon: Radar },
                   { id: 'assets' as const, label: 'My Assets', Icon: Gem },
                 ] as const
               ).map(({ id, label, Icon }) => {
-                const isActive = activeTab === id;
+                const isActive = id !== 'galaxy' && activeTab === id;
                 const isTapping = tappingTab === id;
                 return (
                   <button
                     key={id}
                     type="button"
-                    onClick={() => handleSelectTab(id)}
-                    className={`scifi-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl cursor-pointer min-h-[52px] ${
+                    onClick={() => (id === 'galaxy' ? handleTriggerGalaxyNav() : handleSelectTab(id))}
+                    className={`scifi-nav-item flex flex-col items-center justify-center gap-1 py-2 px-0.5 rounded-xl cursor-pointer min-h-[52px] min-w-0 ${
                       isActive ? 'is-active text-cyan-300' : 'text-white/55 hover:text-white/85'
                     } ${isTapping ? 'is-tapping' : ''}`}
                   >
@@ -3661,11 +3631,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
                         isActive
                           ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.75)]'
+                          : id === 'galaxy'
+                          ? 'text-cyan-400/80'
                           : 'text-white/60'
                       }`}
                     />
                     <span
-                      className={`text-[10.5px] font-mono tracking-wider leading-none truncate ${
+                      className={`text-[9.5px] xs:text-[10px] font-mono tracking-tight leading-none truncate max-w-full ${
                         isActive ? 'font-bold text-cyan-200' : 'font-medium text-white/60'
                       }`}
                     >

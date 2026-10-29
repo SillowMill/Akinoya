@@ -21,6 +21,7 @@ import {
   Lock,
   X,
   Globe2,
+  Radar,
   RefreshCw,
   Zap,
 } from 'lucide-react';
@@ -71,7 +72,7 @@ const SLIDE_TABS: {
     id: 'video_trailer',
     index: '01',
     label: '9:16 MP4 Trailer Loop',
-    badge: 'VAL.AI FPV',
+    badge: 'OFFICIAL TRAILER',
     icon: Film,
   },
   {
@@ -179,16 +180,6 @@ const StoryCard9x16View: React.FC<{
       <div className="absolute inset-2 rounded-[20px] border border-cyan-400/25 pointer-events-none z-20" />
       <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-400/15 rounded-full blur-2xl pointer-events-none" />
       <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-cyan-400/15 rounded-full blur-2xl pointer-events-none" />
-
-      {/* Interactive Fullscreen Tap Badge - Exclusively Mobile/Tablet (lg:hidden) */}
-      {showFullscreenHint && (
-        <div className="absolute top-3.5 right-3.5 z-30 pointer-events-none lg:hidden">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/85 border border-amber-400/70 text-[9px] font-mono font-bold text-amber-300 tracking-wider shadow-lg backdrop-blur-md group-hover:scale-105 group-hover:bg-amber-950/90 transition-all">
-            <Maximize2 className="w-3 h-3 text-amber-300" />
-            <span>FULLSCREEN 9:16</span>
-          </div>
-        </div>
-      )}
 
       {/* 1. TOP-LEVEL BRANDING HEADER */}
       <div className="relative z-10 flex items-center justify-between gap-2 pb-2 border-b border-white/15">
@@ -770,7 +761,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
               onClick={() => onNavigateToGalaxy(dossier.id)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono font-semibold transition-all cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.2)]"
             >
-              <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+              <Radar className="w-3.5 h-3.5 text-cyan-400" />
               <span className="hidden sm:inline">Explore in</span> Galaxy
             </button>
           )}
@@ -781,61 +772,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
         </div>
       </div>
 
-      {/* ─── 2. DISTINCT 3-BUTTON ASSET SELECTOR SUITE ─── */}
-      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 w-full">
-        {SLIDE_TABS.map((tab) => {
-          const isActive = activeSlide === tab.id;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => goToSlide(tab.id)}
-              className={`relative flex items-center justify-between sm:justify-start gap-3 px-4 py-3.5 rounded-2xl font-mono text-xs font-bold transition-all duration-200 cursor-pointer min-h-[58px] border-2 shadow-lg active:scale-[0.98] hover:scale-[1.01] touch-manipulation ${
-                isActive
-                  ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 border-amber-300 text-black shadow-[0_0_30px_rgba(245,158,11,0.45),0_8px_24px_rgba(0,0,0,0.6)] font-extrabold'
-                  : 'bg-[#060c1c]/90 hover:bg-[#0c1630] border-white/15 hover:border-cyan-400/50 text-white/80 hover:text-white shadow-[0_6px_20px_rgba(0,0,0,0.5)]'
-              }`}
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <span
-                  className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 text-[11px] font-black border transition-all ${
-                    isActive
-                      ? 'bg-black text-amber-300 border-black/40 shadow-sm'
-                      : 'bg-cyan-950/80 text-cyan-300 border-cyan-400/40'
-                  }`}
-                >
-                  {tab.index}
-                </span>
-                <div className="text-left min-w-0">
-                  <span className="block truncate tracking-wide uppercase text-xs sm:text-[12.5px] leading-tight font-extrabold">
-                    {tab.label}
-                  </span>
-                  <span
-                    className={`block text-[9.5px] font-mono tracking-widest uppercase mt-0.5 ${
-                      isActive ? 'text-black/85 font-extrabold' : 'text-cyan-400/90'
-                    }`}
-                  >
-                    {tab.badge}
-                  </span>
-                </div>
-              </div>
-
-              <div
-                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-all ${
-                  isActive
-                    ? 'bg-black/20 text-black border-black/20'
-                    : 'bg-white/5 text-cyan-400 border-white/10'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ─── 3. CAROUSEL MAIN VIEWPORT WITH SLEEK FLOATING CIRCULAR BLUE ARROWS ─── */}
+      {/* ─── 2. CAROUSEL MAIN VIEWPORT (ZERO OVERLAY ARROWS) ─── */}
       <div
         ref={carouselContainerRef}
         onTouchStart={handleTouchStart}
@@ -846,33 +783,11 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
           willChange: 'transform',
           overflowAnchor: 'none',
         }}
-        className="relative z-10 min-h-[580px] sm:min-h-[620px] flex items-center justify-center"
+        className="relative z-10 flex flex-col items-center justify-center space-y-5"
       >
-        {/* Sleek Minimalist Circular Blue Navigation Arrow (Left) - Symmetrically anchored floating arrow */}
-        <button
-          type="button"
-          onClick={handlePrevSlide}
-          className="absolute -left-2 sm:-left-4 lg:-left-5 xl:-left-6 top-1/2 -translate-y-1/2 z-30 min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#040916]/92 hover:bg-cyan-950/95 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white flex items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.9),0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.7)] cursor-pointer active:scale-95 hover:scale-105 touch-manipulation group"
-          aria-label="Previous Asset Slide"
-          title="Previous Asset Slide (or press Left Arrow)"
-        >
-          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-300 group-hover:scale-110 transition-transform" />
-        </button>
-
-        {/* Sleek Minimalist Circular Blue Navigation Arrow (Right) - Symmetrically anchored floating arrow */}
-        <button
-          type="button"
-          onClick={handleNextSlide}
-          className="absolute -right-2 sm:-right-4 lg:-right-5 xl:-right-6 top-1/2 -translate-y-1/2 z-30 min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#040916]/92 hover:bg-cyan-950/95 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-300 hover:text-white flex items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.9),0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.7)] cursor-pointer active:scale-95 hover:scale-105 touch-manipulation group"
-          aria-label="Next Asset Slide"
-          title="Next Asset Slide (or press Right Arrow)"
-        >
-          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-300 group-hover:scale-110 transition-transform" />
-        </button>
-
         {/* Dynamic Multi-Media Carousel Slides Container */}
         <div
-          className="w-full px-2 sm:px-8 lg:px-10 touch-pan-y-lock"
+          className="w-full px-1 sm:px-4 lg:px-6 touch-pan-y-lock"
           style={{ touchAction: 'pan-y' }}
         >
           <AnimatePresence mode="wait" custom={slideDirection}>
@@ -1092,7 +1007,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
             )}
 
             {/* ══════════════════════════════════════════════════════════════════
-                SLIDE 3: ANIMATED 9:16 MP4 TRAILER LOOP (Val.ai Pipeline)
+                SLIDE 3: ANIMATED 9:16 MP4 TRAILER LOOP
                ══════════════════════════════════════════════════════════════════ */}
             {activeSlide === 'video_trailer' && (
               <motion.div
@@ -1111,7 +1026,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                 }}
                 className="flex flex-col lg:flex-row items-center justify-center gap-6 md:gap-8 py-2"
               >
-                {/* 9:16 Animated Video Trailer Stage */}
+                {/* Natural Native Aspect-Ratio Video Trailer Stage (Zero Cropping, Zero Fullscreen Button Overlay) */}
                 <div
                   onClick={(e) => {
                     // Tap on stage toggles playback cleanly without triggering fullscreen takeover
@@ -1127,23 +1042,6 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                   }}
                   className="video-stage-container video-player-gpu relative w-full max-w-[340px] sm:max-w-[375px] aspect-[9/16] rounded-[26px] overflow-hidden bg-[#030712] border-2 border-cyan-400/60 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_35px_rgba(6,182,212,0.25)] flex flex-col justify-between select-none cursor-pointer group md:hover:border-cyan-300 md:hover:shadow-[0_25px_80px_rgba(6,182,212,0.4)] md:transition-all touch-pan-y-lock"
                 >
-                  {/* Interactive Fullscreen Tap Badge */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openFullscreenViewer('video_trailer');
-                    }}
-                    className="absolute top-3.5 right-3.5 z-30 pointer-events-auto cursor-pointer focus:outline-none"
-                    title="Open Fullscreen 9:16"
-                    aria-label="Open Fullscreen 9:16"
-                  >
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/85 border border-cyan-400/70 text-[9px] font-mono font-bold text-cyan-300 tracking-wider shadow-lg backdrop-blur-md hover:bg-cyan-950/90 hover:scale-105 transition-all">
-                      <Maximize2 className="w-3 h-3 text-cyan-300" />
-                      <span>FULLSCREEN 9:16</span>
-                    </div>
-                  </button>
-
                   <LiveStoryTrailerViewport
                     dossier={dossier}
                     meta={meta}
@@ -1184,7 +1082,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                     </div>
 
                     <span className="text-[9.5px] font-mono font-bold text-cyan-300">
-                      {dynamicVideo.isAiVideo ? 'VAL.AI FPV 24FPS' : '60FPS ORBITAL KEN BURNS'}
+                      OFFICIAL TRAILER LOOP
                     </span>
                   </div>
                 </div>
@@ -1198,29 +1096,29 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       </span>
                     </div>
                     <h3 className="text-lg sm:text-xl font-display font-black text-white tracking-wide">
-                      Cinematic FPV Video Pipeline
+                      Planetary World Video Trailer
                     </h3>
                     <p className="text-xs font-sans text-white/70 leading-relaxed">
-                      Continuous low-altitude FPV drone movement, aggressive close-proximity orbits, rapid vertical climbs, natural shutter motion blur, and strong parallax separation. Synthesized for seamless 5-second viral looping.
+                      Official planetary sector video trailer loop in natural vertical aspect ratio with synchronized audio and verified Sillow Mill telemetry.
                     </p>
                   </div>
 
                   {/* Dynamic Pipeline Telemetry Box */}
                   <div className="p-3.5 rounded-xl bg-black/60 border border-amber-400/30 space-y-2">
                     <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-white/50">PIPELINE STATUS</span>
+                      <span className="text-white/50">STREAM STATUS</span>
                       <span className="inline-flex items-center gap-1.5 font-bold text-emerald-400">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        {dynamicVideo.isAiVideo ? 'VAL.AI PRODUCTION AI VIDEO' : 'DYNAMIC ACTIVE MONTAGE'}
+                        VERIFIED MASTER STREAM
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-white/50">PHYSICS ENGINE</span>
-                      <span className="text-cyan-300 font-semibold">FPV Drone Proximity 24fps</span>
+                      <span className="text-white/50">MOTION ENGINE</span>
+                      <span className="text-cyan-300 font-semibold">Orbital Sector Telemetry</span>
                     </div>
                     <div className="flex items-center justify-between text-xs font-mono">
                       <span className="text-white/50">ASPECT RATIO</span>
-                      <span className="text-white font-semibold">9:16 Vertical (1080×1920)</span>
+                      <span className="text-white font-semibold">Native Vertical (1080×1920)</span>
                     </div>
                   </div>
 
@@ -1254,6 +1152,49 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Dedicated Clean Arrow Navigation Bar Below Media Container (Zero Overlay on Image/Video) */}
+        <div className="w-full max-w-xl mx-auto flex items-center justify-between gap-3 px-3 py-2.5 rounded-2xl bg-[#040916]/90 border border-cyan-400/35 shadow-lg">
+          <button
+            type="button"
+            onClick={handlePrevSlide}
+            className="min-w-[44px] min-h-[44px] px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 hover:border-cyan-300 text-cyan-200 hover:text-white flex items-center justify-center gap-1.5 text-xs font-mono font-bold transition-all cursor-pointer active:scale-95 touch-manipulation"
+            aria-label="Previous Asset Slide"
+          >
+            <ChevronLeft className="w-4 h-4 text-cyan-300 shrink-0" />
+            <span>PREV</span>
+          </button>
+
+          <div className="flex items-center gap-2 text-xs font-mono font-bold text-white/80">
+            {SLIDE_TABS.map((tab, idx) => {
+              const isCurrent = activeSlide === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => goToSlide(tab.id)}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    isCurrent
+                      ? 'bg-amber-400 text-black font-extrabold shadow-[0_0_12px_rgba(245,158,11,0.4)]'
+                      : 'bg-white/5 text-white/60 hover:text-white'
+                  }`}
+                >
+                  0{idx + 1}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleNextSlide}
+            className="min-w-[44px] min-h-[44px] px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 hover:border-cyan-300 text-cyan-200 hover:text-white flex items-center justify-center gap-1.5 text-xs font-mono font-bold transition-all cursor-pointer active:scale-95 touch-manipulation"
+            aria-label="Next Asset Slide"
+          >
+            <span>NEXT</span>
+            <ChevronRight className="w-4 h-4 text-cyan-300 shrink-0" />
+          </button>
         </div>
       </div>
 
@@ -1465,7 +1406,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         </button>
                       </div>
                       <span className="text-[10px] font-mono font-bold text-cyan-300">
-                        {dynamicVideo.isAiVideo ? 'VAL.AI FPV 24FPS' : '60FPS ORBITAL KEN BURNS'}
+                        OFFICIAL TRAILER LOOP
                       </span>
                     </div>
                   </div>
