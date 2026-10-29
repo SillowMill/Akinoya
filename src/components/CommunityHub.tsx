@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Download,
@@ -624,19 +625,19 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   const getDynamicHeaderTitle = () => {
     switch (activeSection) {
       case 'welcome':
-        return 'ÄKINOYA COMMUNITY HUB - COMIC NETWORK';
+        return 'ÄKINOYA COMMUNITY HUB · WELCOME & VISION';
       case 'workflows':
-        return 'ÄKINOYA COMMUNITY HUB - LABS & WORKFLOWS';
+        return 'ÄKINOYA COMMUNITY HUB · LABS & WORKFLOWS';
       case 'downloads':
-        return 'ÄKINOYA COMMUNITY HUB - DRIVE ASSET VAULT';
+        return 'ÄKINOYA COMMUNITY HUB · DRIVE ASSET VAULT';
       case 'discussion':
-        return 'ÄKINOYA COMMUNITY HUB - COMMUNICATION NETWORK';
+        return 'ÄKINOYA COMMUNITY HUB · COMM-NET CHAT';
       case 'creators':
-        return 'ÄKINOYA COMMUNITY HUB - LEADERBOARD';
+        return 'ÄKINOYA COMMUNITY HUB · FAVORITE PLANETS & LEADERBOARD';
       case 'governance':
-        return 'ÄKINOYA COMMUNITY HUB - LORE & GOVERNANCE';
+        return 'ÄKINOYA COMMUNITY HUB · LORE & GOVERNANCE PORTAL';
       default:
-        return 'ÄKINOYA COMMUNITY HUB - COMIC NETWORK';
+        return 'ÄKINOYA COMMUNITY HUB';
     }
   };
 
@@ -1458,90 +1459,115 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           },
         ];
 
-        const COMPACT_MOBILE_TABS = [
-          {
-            id: 'welcome' as CreativeHubSection,
-            glyph: '📖',
-            shortLabel: 'Comic',
-            formalTitle: 'Comic Network',
-          },
-          {
-            id: 'discussion' as CreativeHubSection,
-            glyph: '💬',
-            shortLabel: 'Comm-Net',
-            formalTitle: 'Communication Network',
-          },
-          {
-            id: 'creators' as CreativeHubSection,
-            glyph: '🏆',
-            shortLabel: 'Ranks',
-            formalTitle: 'Leaderboard',
-          },
-          {
-            id: 'governance' as CreativeHubSection,
-            glyph: '📜',
-            shortLabel: 'Governance',
-            formalTitle: 'Lore & Governance',
-          },
-        ];
-
-        const activeMobileTabIndex =
-          activeSection === 'discussion'
-            ? 1
-            : activeSection === 'creators'
-            ? 2
-            : activeSection === 'governance'
-            ? 3
-            : 0;
-
         return (
           <>
-            {/* Component 2: Community Hub Optimized Sticky Top-Bar (< 768px) */}
-            <nav
-              aria-label="Community Hub Mobile Top Navigation"
-              className="md:hidden scifi-hub-topbar w-full px-2 pt-1.5 pb-2 shrink-0 select-none"
-            >
-              <div className="grid grid-cols-4 gap-1 items-center">
-                {COMPACT_MOBILE_TABS.map((tab, idx) => {
-                  const isActive = activeMobileTabIndex === idx;
-                  const isTapping = tappingHubTab === tab.id;
-
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => handleSwitchSection(tab.id)}
-                      className={`scifi-nav-item flex items-center justify-center gap-1.5 px-1.5 py-2 rounded-xl text-[11px] font-mono cursor-pointer min-h-[42px] ${
-                        isActive
-                          ? 'is-active bg-cyan-950/75 text-cyan-200 border border-cyan-400/35 font-bold'
-                          : 'bg-white/[0.03] text-white/65 hover:text-white border border-transparent'
-                      } ${isTapping ? 'is-tapping' : ''}`}
-                    >
-                      <span className="text-sm leading-none shrink-0" aria-hidden="true">
-                        {tab.glyph}
+            {/* Fixed Bottom Navigation Tray with Horizontal Thumb-Swipe (Mobile & Portrait Tablet Only) */}
+            {typeof document !== 'undefined' &&
+              createPortal(
+                <nav
+                  aria-label="Community Hub Bottom Navigation"
+                  className="scifi-bottom-nav portrait-mobile-only select-none"
+                >
+                  {/* 5-Stage Pipeline Quick-Jump Strip when on Äkinoya Labs & Workflows */}
+                  {activeSection === 'workflows' && (
+                    <div className="scifi-bottom-tray-scroll px-2.5 pt-2 pb-1 border-b border-white/10">
+                      <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-400/90 shrink-0 self-center pr-1">
+                        PIPELINE STAGES:
                       </span>
-                      <span className="truncate tracking-tight">{tab.shortLabel}</span>
-                    </button>
-                  );
-                })}
-              </div>
+                      {WORKFLOW_STAGES.map((st) => {
+                        const isStageActive = activeStageId === st.id;
+                        return (
+                          <button
+                            key={st.id}
+                            type="button"
+                            onClick={() => handleJumpToStage(st.id)}
+                            className={`scifi-nav-item shrink-0 px-2.5 py-1 rounded-lg text-[10.5px] font-mono flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                              isStageActive
+                                ? 'is-active bg-cyan-500/20 text-cyan-200 border border-cyan-400/60 font-bold'
+                                : 'bg-white/[0.04] text-white/65 hover:text-white border border-white/10'
+                            }`}
+                          >
+                            <span className={isStageActive ? 'text-[#ffb700] font-bold' : 'text-white/45'}>
+                              [{st.num}]
+                            </span>
+                            <span>{st.title}</span>
+                            <span className="scifi-gold-underline" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
 
-              {/* Hardware-Accelerated Neon Underline Scanner Beam */}
-              <div className="scifi-scanner-track">
-                <div
-                  className="scifi-scanner-beam"
-                  style={{ '--scanner-index': activeMobileTabIndex } as React.CSSProperties}
-                />
-              </div>
-            </nav>
+                  {/* Primary Horizontally Swipable Bottom Tray with All 6 Exact Desktop Modules + Operational Actions */}
+                  <div className="scifi-bottom-tray-scroll px-2.5 py-2">
+                    {HUB_TABS.map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeSection === tab.id;
+                      const isTapping = tappingHubTab === tab.id;
+
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => handleSwitchSection(tab.id as CreativeHubSection)}
+                          className={`scifi-nav-item shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-mono cursor-pointer whitespace-nowrap min-h-[46px] ${
+                            isActive
+                              ? 'is-active bg-amber-500/15 text-amber-200 border border-amber-400/45 font-bold'
+                              : 'bg-white/[0.04] hover:bg-white/[0.08] text-white/75 hover:text-white border border-white/10'
+                          } ${isTapping ? 'is-tapping' : ''}`}
+                        >
+                          <Icon
+                            className={`w-4 h-4 shrink-0 ${
+                              isActive ? 'text-[#ffb700]' : 'text-cyan-400'
+                            }`}
+                          />
+                          <span>{tab.label}</span>
+                          <span
+                            className={`text-[9.5px] px-1.5 py-0.5 rounded-full font-bold ${
+                              isActive
+                                ? 'bg-amber-400/25 text-amber-200'
+                                : 'bg-white/10 text-white/60'
+                            }`}
+                          >
+                            {tab.count}
+                          </span>
+                          <span className="scifi-gold-underline" />
+                        </button>
+                      );
+                    })}
+
+                    {/* Operational Dashboard Actions Preserved in Swipable Tray */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundManager.playTone(520, 0.05);
+                        openClaimWorldModal();
+                      }}
+                      className="scifi-nav-item shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-500/15 border border-amber-400/45 text-amber-300 font-mono text-xs font-bold tracking-wider cursor-pointer whitespace-nowrap min-h-[46px]"
+                    >
+                      <Globe2 className="w-4 h-4 text-[#ffb700] shrink-0" />
+                      <span>CLAIM YOUR WORLD</span>
+                    </button>
+
+                    <a
+                      href="/contest"
+                      className="scifi-nav-item shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-mono text-xs font-bold tracking-wider cursor-pointer whitespace-nowrap min-h-[46px]"
+                    >
+                      <Trophy className="w-4 h-4 text-black shrink-0" />
+                      <span>WORLDBUILDING CONTEST</span>
+                    </a>
+                  </div>
+                </nav>,
+                document.body
+              )}
 
             {/* Layout Wrapper: Desktop Left Sidebar + Main Content Viewport */}
             <div className="flex-1 flex flex-col md:flex-row w-full max-w-[1700px] mx-auto min-h-0 overflow-hidden">
               {/* ======================================================== */}
-              {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION (>= 768px)   */}
+              {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION (Untouched) */}
               {/* ======================================================== */}
               <aside
-                className="hub-sidebar hidden md:flex w-64 lg:w-72 shrink-0 h-full min-h-0 flex-col bg-[#050812] border-r border-white/10 z-40 overflow-hidden"
+                className="hub-sidebar desktop-landscape-sidebar hidden md:flex w-64 lg:w-72 shrink-0 h-full min-h-0 flex-col bg-[#050812] border-r border-white/10 z-40 overflow-hidden"
                 style={{ contain: 'layout style' }}
               >
                 <div className="hub-sidebar-scroll community-scroll-container flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 space-y-6">
@@ -1698,21 +1724,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               <main
                 ref={hubScrollRef}
                 data-scroll-container="community-hub"
-                className="hub-main-scroll relative z-0 isolate flex-1 min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-5 sm:px-6 sm:py-8 lg:p-8 space-y-5 sm:space-y-8"
+                className="hub-main-scroll portrait-bottom-safe-pad relative z-0 isolate flex-1 min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8"
                 style={{ contain: 'layout', WebkitOverflowScrolling: 'touch' }}
               >
-                {/* Mobile Dynamic Header Morph Bar (Pure GPU opacity + translateY transition) */}
-                <div className="md:hidden flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-[#070b14] border border-cyan-500/20">
-                  <div
-                    key={`mobile-header-morph-${activeSection}`}
-                    className="scifi-header-morph flex items-center gap-2 min-w-0"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                    <span className="text-[11px] font-display font-bold tracking-wider text-cyan-100 uppercase truncate">
-                      {getDynamicHeaderTitle()}
-                    </span>
-                  </div>
-                </div>
                 {/* ======================================================== */}
                 {/* SECTION 0: 00 · WELCOME & VISION PORTAL (PRIMARY LANDING)*/}
                 {/* ======================================================== */}

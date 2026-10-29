@@ -3613,37 +3613,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         onNavigateToGalaxy={onNavigateToGalaxy}
       />
 
-      {/* Component 1: Sticky Bottom Navigation with Sci-Fi Micro-Feedback (Portrait Mobile & Portrait Tablet Only) */}
+      {/* Sticky Bottom Navigation with Sci-Fi Micro-Feedback (Portrait Mobile & Portrait Tablet Only) */}
       {typeof document !== 'undefined' &&
         createPortal(
           <nav
             aria-label="Mobile Sci-Fi Bottom Navigation"
             className="scifi-bottom-nav portrait-mobile-only select-none"
           >
-            {/* Hardware-Accelerated Neon Underline Scanner Beam */}
-            <div className="scifi-scanner-track scifi-scanner-track-top">
-              <div
-                className="scifi-scanner-beam"
-                style={{
-                  '--scanner-index':
-                    activeTab === 'pass'
-                      ? 0
-                      : activeTab === 'edition'
-                      ? 1
-                      : activeTab === 'my-world'
-                      ? 2
-                      : 3,
-                } as React.CSSProperties}
-              />
-            </div>
-
-            <div className="grid grid-cols-4 items-center px-2 py-1.5">
+            <div className="scifi-bottom-tray-scroll px-2.5 py-2">
               {(
                 [
-                  { id: 'pass' as const, label: 'pass perks', Icon: Compass },
-                  { id: 'edition' as const, label: 'comic', Icon: BookOpen },
-                  { id: 'my-world' as const, label: 'my world', Icon: Globe2 },
-                  { id: 'assets' as const, label: 'my assets', Icon: Gem },
+                  { id: 'pass' as const, label: 'Pass Perks', Icon: Compass },
+                  { id: 'edition' as const, label: 'Comic', Icon: BookOpen },
+                  { id: 'my-world' as const, label: 'My World', Icon: Globe2 },
+                  { id: 'assets' as const, label: 'My Assets', Icon: Gem },
                 ] as const
               ).map(({ id, label, Icon }) => {
                 const isActive = activeTab === id;
@@ -3653,24 +3636,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     key={id}
                     type="button"
                     onClick={() => handleSelectTab(id)}
-                    className={`scifi-nav-item flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl cursor-pointer min-h-[52px] ${
-                      isActive ? 'is-active text-cyan-300' : 'text-white/55 hover:text-white/85'
+                    className={`scifi-nav-item flex-1 min-w-[82px] flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl cursor-pointer min-h-[48px] whitespace-nowrap ${
+                      isActive
+                        ? 'is-active bg-amber-500/15 text-amber-300 border border-amber-400/40 font-bold'
+                        : 'bg-white/[0.04] text-white/70 hover:text-white border border-white/10'
                     } ${isTapping ? 'is-tapping' : ''}`}
                   >
                     <Icon
-                      className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
-                        isActive
-                          ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.75)]'
-                          : 'text-white/60'
+                      className={`w-4 h-4 shrink-0 ${
+                        isActive ? 'text-[#ffb700]' : 'text-cyan-400'
                       }`}
                     />
-                    <span
-                      className={`text-[10.5px] font-mono lowercase tracking-wider leading-none truncate ${
-                        isActive ? 'font-bold text-cyan-200' : 'font-medium text-white/60'
-                      }`}
-                    >
-                      {label}
-                    </span>
+                    <span className="text-xs font-mono tracking-tight">{label}</span>
+                    <span className="scifi-gold-underline" />
                   </button>
                 );
               })}
