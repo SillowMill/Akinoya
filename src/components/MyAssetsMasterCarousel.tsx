@@ -1175,49 +1175,6 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
             )}
           </AnimatePresence>
         </div>
-
-        {/* Dedicated Clean Arrow Navigation Bar Below Media Container (Zero Overlay on Image/Video) */}
-        <div className="w-full max-w-xl mx-auto flex items-center justify-between gap-3 px-3 py-2.5 rounded-2xl bg-[#040916]/90 border border-cyan-400/35 shadow-lg">
-          <button
-            type="button"
-            onClick={handlePrevSlide}
-            className="min-w-[44px] min-h-[44px] px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 hover:border-cyan-300 text-cyan-200 hover:text-white flex items-center justify-center gap-1.5 text-xs font-mono font-bold transition-all cursor-pointer active:scale-95 touch-manipulation"
-            aria-label="Previous Asset Slide"
-          >
-            <ChevronLeft className="w-4 h-4 text-cyan-300 shrink-0" />
-            <span>PREV</span>
-          </button>
-
-          <div className="flex items-center gap-2 text-xs font-mono font-bold text-white/80">
-            {SLIDE_TABS.map((tab, idx) => {
-              const isCurrent = activeSlide === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => goToSlide(tab.id)}
-                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                    isCurrent
-                      ? 'bg-amber-400 text-black font-extrabold shadow-[0_0_12px_rgba(245,158,11,0.4)]'
-                      : 'bg-white/5 text-white/60 hover:text-white'
-                  }`}
-                >
-                  0{idx + 1}
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleNextSlide}
-            className="min-w-[44px] min-h-[44px] px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 hover:border-cyan-300 text-cyan-200 hover:text-white flex items-center justify-center gap-1.5 text-xs font-mono font-bold transition-all cursor-pointer active:scale-95 touch-manipulation"
-            aria-label="Next Asset Slide"
-          >
-            <span>NEXT</span>
-            <ChevronRight className="w-4 h-4 text-cyan-300 shrink-0" />
-          </button>
-        </div>
       </div>
 
       {/* ─── 4. CAROUSEL FOOTER TELEMETRY & GUEST SIMULATION NOTICE ─── */}
