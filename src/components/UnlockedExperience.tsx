@@ -12,7 +12,7 @@ import galaxyOverviewImg from '../assets/images/Galaxy.png';
 import dnVideo from '../assets/videos/DNN.mp4';
 import dnThumbnailImg from '../assets/images/dn_thumbnail.png';
 import dontNeedVideo from '../assets/videos/DNN.mp4';
-import bingaaLoopVideo from '../assets/videos/Bingaaloop.mov';
+import bingaaLoopVideo from '../assets/videos/Bingaaloop.mp4';
 import {
   Lock,
   Unlock,
@@ -121,7 +121,7 @@ export interface VisualizerTrack {
 
 export const DN_VIDEO_URL = dnVideo || '/videos/DNN.mp4';
 export const DONT_NEED_VIDEO_URL = dontNeedVideo || '/videos/DNN.mp4';
-export const BINGAA_LOOP_VIDEO_URL = bingaaLoopVideo || '/videos/Bingaaloop.mov';
+export const BINGAA_LOOP_VIDEO_URL = bingaaLoopVideo || '/videos/Bingaaloop.mp4';
 
 const VISUALIZER_TRACKS: VisualizerTrack[] = [
   {
@@ -1618,7 +1618,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               el.play().catch(() => {});
                             }
                           }}
-                          src={DN_VIDEO_URL}
+                          src={BINGAA_LOOP_VIDEO_URL}
+                          poster={moodboardImg || akinoyaVistaImg}
                           autoPlay
                           muted
                           defaultMuted
@@ -1682,7 +1683,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             Äkinoya Visualizer Archive
                           </h3>
                           <p className="text-xs sm:text-sm font-sans text-white/70 leading-relaxed mt-1.5">
-                            Experience 4K reactive telemetry visualizers and acoustic logs for all 11 project tracks—including the featured "Don't Need" and "Bingäa" animations.
+                            Experience 4K reactive telemetry visualizers and acoustic logs for all 11 project tracks—featuring the "Bingäa" and "Don't Need" animations.
                           </p>
                         </div>
 
