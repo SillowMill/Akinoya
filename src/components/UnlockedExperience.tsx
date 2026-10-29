@@ -1601,28 +1601,31 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               el.play().catch(() => {});
                             }
                           }}
-                          src={BINGAA_LOOP_VIDEO_URL}
+                          src={DN_VIDEO_URL}
                           autoPlay
                           muted
-                          loop
+                          defaultMuted
                           playsInline
+                          loop
                           preload="auto"
                           disablePictureInPicture
                           disableRemotePlayback
                           controlsList="nodownload nofullscreen noremoteplayback"
-                          onCanPlay={(e) => e.currentTarget.play().catch(() => {})}
-                          onLoadedData={(e) => e.currentTarget.play().catch(() => {})}
+                          onCanPlay={(e) => {
+                            e.currentTarget.muted = true;
+                            e.currentTarget.play().catch(() => {});
+                          }}
+                          onLoadedData={(e) => {
+                            e.currentTarget.muted = true;
+                            e.currentTarget.play().catch(() => {});
+                          }}
                           {...({
                             'webkit-playsinline': 'true',
                             'x5-playsinline': 'true',
                             playsinline: 'true',
                           } as any)}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                        >
-                          <source src={BINGAA_LOOP_VIDEO_URL} type="video/mp4" />
-                          <source src={BINGAA_LOOP_VIDEO_URL} type="video/quicktime" />
-                          <source src="/videos/Bingaaloop.mov" type="video/mp4" />
-                        </video>
+                          className="home-visualizer-video w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out pointer-events-none"
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
                         {/* Audio Mute/Unmute Toggle Button (Synced with Global Bingäa Header Player) */}

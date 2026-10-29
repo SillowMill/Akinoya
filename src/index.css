@@ -512,6 +512,7 @@ div[role="dialog"],
 .video-player-gpu,
 .video-stage-container,
 .video-viewport-wrapper,
+.home-visualizer-video,
 video,
 canvas {
   -webkit-transform: translateZ(0) !important;
@@ -522,6 +523,17 @@ canvas {
   perspective: 1000px;
   will-change: transform;
   touch-action: manipulation !important;
+}
+
+.home-visualizer-video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  pointer-events: none !important;
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+  -webkit-backface-visibility: hidden !important;
+  backface-visibility: hidden !important;
 }
 
 @media (max-width: 768px) {
