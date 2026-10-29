@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'rea
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import passCardImg from '../assets/images/akinoya_pass_card_1790852652003.jpg';
-import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import moodboardImg from '../assets/images/Mood.png';
@@ -1566,7 +1565,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             }
                           }}
                           src={BINGAA_LOOP_VIDEO_URL}
-                          poster={moodboardImg || akinoyaVistaImg}
                           autoPlay
                           muted
                           defaultMuted
@@ -1913,7 +1911,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                       }
                                     }}
                                     src={track.videoUrl}
-                                    poster={track.artworkUrl}
                                     autoPlay
                                     loop
                                     muted

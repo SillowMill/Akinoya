@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { VisualizerTrack } from './UnlockedExperience';
 import { planetSoundtrack } from '../utils/soundtrack';
-import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
 
 export interface VisualizerPlayerModalProps {
   isOpen: boolean;
@@ -614,7 +613,6 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                 ref={videoRef}
                 key={activeTrack.videoUrl}
                 src={activeTrack.videoUrl}
-                poster={activeTrack.artworkUrl || akinoyaVistaImg}
                 autoPlay
                 loop
                 playsInline
@@ -635,17 +633,19 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                   transform: 'translateZ(0)',
                   WebkitTransform: 'translateZ(0)',
                 }}
-                className="w-full h-full pointer-events-none transition-all duration-300 object-contain object-center"
+                className="w-full h-full pointer-events-none transition-all duration-300 object-contain object-center bg-black"
               />
             ) : (
               /* Ambient Audio Visualizer Hologram for Upcoming Tracks */
               <div className="relative w-full h-full flex flex-col items-center justify-center p-4 text-center">
-                <img
-                  src={activeTrack.artworkUrl || akinoyaVistaImg}
-                  alt={activeTrack.title}
-                  className="absolute inset-0 w-full h-full object-cover opacity-50 scale-105 animate-pulse"
-                  style={{ animationDuration: '7s' }}
-                />
+                {activeTrack.artworkUrl && (
+                  <img
+                    src={activeTrack.artworkUrl}
+                    alt={activeTrack.title}
+                    className="absolute inset-0 w-full h-full object-cover opacity-50 scale-105 animate-pulse"
+                    style={{ animationDuration: '7s' }}
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,black_80%)] pointer-events-none" />
 
