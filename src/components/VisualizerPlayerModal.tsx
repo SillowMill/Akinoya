@@ -15,9 +15,11 @@ import {
   AudioWaveform,
   Film,
   EyeOff,
+  Gamepad2,
 } from 'lucide-react';
 import { VisualizerTrack } from './UnlockedExperience';
 import { planetSoundtrack } from '../utils/soundtrack';
+import { getRunnerLevelForTrack } from './runner/runnerMeta';
 
 export interface VisualizerPlayerModalProps {
   isOpen: boolean;
@@ -26,6 +28,7 @@ export interface VisualizerPlayerModalProps {
   onClose: () => void;
   onSelectTrack: (track: VisualizerTrack) => void;
   isVipMode?: boolean;
+  onOpenRunner?: (level?: number) => void;
 }
 
 export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React.memo(({
@@ -34,6 +37,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
   tracks,
   onClose,
   onSelectTrack,
+  onOpenRunner,
 }) => {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -1022,6 +1026,32 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                     {isMuted ? 'MUTED' : isTrack02 ? 'BINGÄA AUDIO' : 'AUDIO ACTIVE'}
                   </span>
                 </button>
+
+                {/* Äkinoya Runner Mini-Game Launch Button */}
+                {onOpenRunner && (
+                  <button
+                    type="button"
+                    aria-label="Play Äkinoya Runner mini-game"
+                    title="Launch Äkinoya Runner for this track"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (videoRef.current) {
+                        videoRef.current.pause();
+                      }
+                      planetSoundtrack.pause();
+                      setIsPlaying(false);
+                      const lvl = getRunnerLevelForTrack(activeTrack?.id) ?? 1;
+                      onOpenRunner(lvl);
+                    }}
+                    className="p-2 sm:p-2.5 rounded-xl border border-cyan-400/40 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 text-cyan-300 hover:text-white transition-all cursor-pointer min-h-[40px] flex items-center gap-1.5 shadow-[0_0_15px_rgba(53,240,255,0.25)] active:scale-95"
+                    style={{ touchAction: 'manipulation' }}
+                  >
+                    <Gamepad2 className="w-4 h-4 text-cyan-400 animate-pulse" />
+                    <span className="hidden sm:inline text-[10px] font-mono font-bold tracking-wider">
+                      RUNNER
+                    </span>
+                  </button>
+                )}
 
                 {/* Fullscreen Button with True Native Fullscreen API Integration */}
                 <button

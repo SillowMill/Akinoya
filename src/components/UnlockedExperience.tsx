@@ -53,6 +53,7 @@ import {
   Share2,
   Radar,
   Sliders,
+  Gamepad2,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
@@ -104,6 +105,11 @@ import { scrollToVisualizerHub, scrollToVisualizerArchive } from '../utils/scrol
 
 // pdf.js is heavy — only fetch the reader chunk when a verified holder opens the comic
 const BingaaComicReader = lazy(() => import('./BingaaComicReader'));
+
+// Canvas 2D engine & assets are lazily loaded so the main platform bundle remains lean
+const AkinoyaRunnerModal = lazy(() =>
+  import('./runner/AkinoyaRunnerModal').then((m) => ({ default: m.AkinoyaRunnerModal }))
+);
 
 export const FOUNDING_PASS_ID = 'AKN-VIP-2027-X0914';
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
@@ -890,6 +896,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
   const [showComicReader, setShowComicReader] = useState(false);
+  const [isRunnerOpen, setIsRunnerOpen] = useState(false);
+  const [runnerInitialLevel, setRunnerInitialLevel] = useState<number>(1);
   const [showCoverPreview, setShowCoverPreview] = useState(false);
   const [isReserved, setIsReserved] = useState(false);
   const [waitlistEmail, setWaitlistEmail] = useState('');
@@ -1155,7 +1163,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     scrollToVisualizerHub(true);
   };
 
-  const [tappingTab, setTappingTab] = useState<'pass' | 'edition' | 'my-world' | 'galaxy' | 'assets' | null>(null);
+  const [tappingTab, setTappingTab] = useState<'pass' | 'edition' | 'my-world' | 'galaxy' | 'assets' | 'runner' | null>(null);
   const navTouchStartRef = useRef<{ x: number; y: number; time: number; id: string } | null>(null);
   const lastTouchNavTimeRef = useRef<number>(0);
 
@@ -1215,15 +1223,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
-  const activateNavItem = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy') => {
+  const activateNavItem = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy' | 'runner') => {
     if (id === 'galaxy') {
       handleTriggerGalaxyNav();
+    } else if (id === 'runner') {
+      setRunnerInitialLevel(1);
+      setIsRunnerOpen(true);
     } else {
       handleSelectTab(id);
     }
   };
 
-  const getNavButtonTouchHandlers = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy') => ({
+  const getNavButtonTouchHandlers = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy' | 'runner') => ({
     onMouseDown: (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
     },
@@ -1548,8 +1559,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
       {/* Main Tabs and Content Area */}
       <div className="space-y-5 sm:space-y-6 md:space-y-7 w-full">
-        {/* Desktop & Landscape 5-Item Navigation Tabs (Home, Comic, Worlds, My Assets, Galaxy Navigator) */}
-        <div className="desktop-landscape-only grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
+        {/* Desktop & Landscape 6-Item Navigation Tabs (Home, Comic, Worlds, My Assets, Galaxy Navigator, Äkinoya Runner) */}
+        <div className="desktop-landscape-only grid grid-cols-2 sm:grid-cols-6 gap-1.5 sm:gap-2 p-1.5 sm:p-2 bg-[#060a14]/90 backdrop-blur-xl border border-white/15 rounded-xl lg:rounded-2xl shadow-xl">
           <button
             type="button"
             {...getNavButtonTouchHandlers('pass')}
@@ -1606,6 +1617,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             <Radar className="w-3.5 h-3.5 text-cyan-400 shrink-0 pointer-events-none" />
             <span className="sm:hidden truncate pointer-events-none">Galaxy</span>
             <span className="hidden sm:inline truncate pointer-events-none">Galaxy Navigator</span>
+          </button>
+          <button
+            type="button"
+            {...getNavButtonTouchHandlers('runner')}
+            className="py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation select-none text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-400/30 shadow-[0_0_12px_rgba(53,240,255,0.2)]"
+          >
+            <Gamepad2 className="w-3.5 h-3.5 text-cyan-400 shrink-0 pointer-events-none animate-pulse" />
+            <span className="truncate pointer-events-none font-semibold">Runner</span>
           </button>
         </div>
 
@@ -3353,7 +3372,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         onSelectTrack={(track) => {
           setActivePlayingTrack(track);
         }}
+        onOpenRunner={(level) => {
+          setRunnerInitialLevel(level ?? 1);
+          setIsRunnerOpen(true);
+        }}
       />
+
+      {/* Äkinoya Runner Mini-Game Modal (Lazy Loaded Canvas 2D Engine) */}
+      {isRunnerOpen && (
+        <Suspense fallback={null}>
+          <AkinoyaRunnerModal
+            isOpen={isRunnerOpen}
+            initialLevel={runnerInitialLevel}
+            onClose={() => setIsRunnerOpen(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Modal 3: Unified Comic Pre-Order Checkout Modal */}
       <AnimatePresence>
@@ -3655,8 +3689,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <div
                 className="scifi-scanner-beam"
                 style={{
+                  '--scanner-count': 6,
                   '--scanner-index':
-                    tappingTab === 'galaxy'
+                    tappingTab === 'runner'
+                      ? 5
+                      : tappingTab === 'galaxy'
                       ? 4
                       : activeTab === 'pass'
                       ? 0
@@ -3669,7 +3706,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-5 items-center px-1.5 py-0 pointer-events-auto">
+            <div className="grid grid-cols-6 items-center px-1 py-0 pointer-events-auto">
               {(
                 [
                   { id: 'pass' as const, label: 'Home', Icon: Compass },
@@ -3677,10 +3714,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   { id: 'my-world' as const, label: 'Worlds', Icon: Globe2 },
                   { id: 'assets' as const, label: 'My Assets', Icon: Gem },
                   { id: 'galaxy' as const, label: 'Galaxy', desktopLabel: 'Galaxy Navigator', Icon: Radar },
+                  { id: 'runner' as const, label: 'Runner', desktopLabel: 'Äkinoya Runner', Icon: Gamepad2 },
                 ] as const
               ).map((item) => {
                 const { id, label, Icon } = item;
-                const isActive = id !== 'galaxy' && activeTab === id;
+                const isActive = id !== 'galaxy' && id !== 'runner' && activeTab === id;
                 const isTapping = tappingTab === id;
                 return (
                   <button
@@ -3695,7 +3733,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
                         isActive
                           ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.75)]'
-                          : id === 'galaxy'
+                          : id === 'galaxy' || id === 'runner'
                           ? 'text-cyan-400/80'
                           : 'text-white/60'
                       }`}
