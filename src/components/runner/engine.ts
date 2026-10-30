@@ -18,11 +18,10 @@ import { planetSoundtrack } from '../../utils/soundtrack';
 /* Public types                                                                                */
 /* ------------------------------------------------------------------------------------------ */
 
-export type RunnerState = 'ready' | 'playing' | 'paused' | 'complete' | 'gameover';
+export type RunnerState = 'ready' | 'playing' | 'paused' | 'gameover';
 
 export type RunnerEvent =
-  | { type: 'complete'; score: number; orbs: number; orbsTotal: number; stars: number; livesLeft: number }
-  | { type: 'gameover'; score: number; orbs: number; progress: number }
+  | { type: 'gameover'; score: number; orbs: number; distance: number }
   | { type: 'pause-request' };
 
 export interface RunnerAssets {
@@ -293,19 +292,16 @@ export class RunnerEngine {
   private stripW = 960;
   private stripPx = 1;
 
-  // simulation
+  // simulation (Endless Mode)
   private rng: () => number = mulberry32(1);
   private t = 0;
   private distance = 0;
-  private finishX = 0;
-  private totalSec = 40;
   private score = 0;
   private orbsCollected = 0;
   private orbsSpawned = 0;
   private lives = START_LIVES;
   private invuln = 0;
   private shake = 0;
-  private finishing = false;
   private speedMul = 1;
   private nextSpawn = 0;
   private obstacles: Obstacle[] = [];
@@ -423,7 +419,7 @@ export class RunnerEngine {
   /* -------------------------------- input -------------------------------- */
 
   jump(): void {
-    if (this.state !== 'playing' || this.finishing) return;
+    if (this.state !== 'playing') return;
     const p = this.player;
     p.sliding = false;
     p.slideQueued = false;
@@ -446,7 +442,7 @@ export class RunnerEngine {
   }
 
   slideStart(hold = false): void {
-    if (this.state !== 'playing' || this.finishing) return;
+    if (this.state !== 'playing') return;
     const p = this.player;
     p.slideHold = hold;
     p.slideKey = hold;
@@ -817,7 +813,6 @@ export class RunnerEngine {
     this.lives = START_LIVES;
     this.invuln = 0;
     this.shake = 0;
-    this.finishing = false;
     this.speedMul = 1;
     this.obstacles.length = 0;
     this.orbList.length = 0;
@@ -830,26 +825,15 @@ export class RunnerEngine {
     });
     for (const p of this.particles) p.active = false;
 
-    // Level length follows the official track: loops × track length (fallback when unreadable).
-    const trackSec = this.audio.duration || this.level.fallbackTrackSec;
-    this.totalSec = Math.max(20, trackSec * this.level.loops);
-    // Integrate the deterministic speed curve to find the finish line.
-    let d = 0;
-    const steps = 600;
-    for (let i = 0; i < steps; i++) d += this.speedAt((i + 0.5) / steps) * (this.totalSec / steps);
-    this.finishX = d;
     this.nextSpawn = this.W * 1.5;
     this.dirty = true;
   }
 
-  private speedAt(progress: number): number {
-    const warm = smooth(clamp(progress / 0.04, 0, 1)) * 0.35 + 0.65;
-    const ramp = smooth(clamp(progress, 0, 1));
-    return lerp(this.level.baseSpeed, this.level.maxSpeed, ramp) * warm;
-  }
-
-  private get progress(): number {
-    return clamp(this.t / this.totalSec, 0, 1);
+  private speedAt(dist: number): number {
+    // Progressive endless curve: smoothly scales from baseSpeed up to 1.35x maxSpeed
+    const ramp = 1 - Math.exp(-dist / 14000);
+    const topSpeed = this.level.maxSpeed * 1.35;
+    return lerp(this.level.baseSpeed, topSpeed, ramp);
   }
 
   private resyncAudio(): void {
@@ -881,21 +865,10 @@ export class RunnerEngine {
     this.t += dt;
     this.hintTimer += dt;
 
-    // ---- speed / distance
-    const targetMul = this.finishing ? 0 : 1;
-    this.speedMul += (targetMul - this.speedMul) * Math.min(1, dt * (this.finishing ? 2.6 : 6));
-    const speed = this.speedAt(this.progress) * this.speedMul;
+    // ---- speed / distance (Endless Mode)
+    const speed = this.speedAt(this.distance) * this.speedMul;
     this.distance += speed * dt;
     this.score += (speed * dt) / 10;
-
-    // ---- finish
-    if (!this.finishing && this.distance >= this.finishX) {
-      this.finishing = true;
-    }
-    if (this.finishing && this.speedMul < 0.04) {
-      this.finish();
-      return;
-    }
 
     // ---- invulnerability / shake
     if (this.invuln > 0) this.invuln = Math.max(0, this.invuln - dt);
@@ -947,9 +920,9 @@ export class RunnerEngine {
       this.burst(this.playerX - 10, this.groundY, 1, 'rgba(210,235,255,0.7)', 60, p.sliding ? 1.4 : 1);
     }
 
-    // ---- spawn / cull
+    // ---- endless spawn / cull
     const spawnHorizon = this.distance + (this.W - this.playerX) + 120;
-    while (this.nextSpawn < spawnHorizon && this.nextSpawn < this.finishX - this.W * 0.9) {
+    while (this.nextSpawn < spawnHorizon) {
       this.spawnPattern(this.nextSpawn);
     }
     const cullX = this.distance - this.playerX - 120;
@@ -978,8 +951,8 @@ export class RunnerEngine {
 
   private spawnPattern(x: number): void {
     const r = this.rng;
-    const prog = clamp(x / this.finishX, 0, 1);
-    const speed = this.speedAt(prog);
+    const prog = clamp(x / 14000, 0, 1);
+    const speed = this.speedAt(x);
     const roll = r();
 
     let extent = 60;
@@ -1013,8 +986,8 @@ export class RunnerEngine {
       extent = 170;
     }
 
-    const gapSec = lerp(1.5, 0.92, smooth(prog)) * this.level.gapScale * (0.92 + r() * 0.3);
-    this.nextSpawn = x + extent + Math.max(0.82, gapSec) * speed;
+    const gapSec = lerp(1.6, 1.05, smooth(prog)) * this.level.gapScale * (0.92 + r() * 0.3);
+    this.nextSpawn = x + extent + Math.max(0.85, gapSec) * speed;
   }
 
   private addSpike(x: number, h: number): void {
@@ -1085,26 +1058,9 @@ export class RunnerEngine {
         type: 'gameover',
         score: Math.round(this.score),
         orbs: this.orbsCollected,
-        progress: clamp(this.distance / this.finishX, 0, 1),
+        distance: Math.round(this.distance / 10),
       });
     }
-  }
-
-  private finish(): void {
-    this.score += this.lives * 200;
-    const orbRatio = this.orbsSpawned ? this.orbsCollected / this.orbsSpawned : 1;
-    const stars = 1 + (this.lives >= 2 ? 1 : 0) + (orbRatio >= 0.6 ? 1 : 0);
-    this.state = 'complete';
-    this.dirty = true;
-    this.audio.pause();
-    this.onEvent({
-      type: 'complete',
-      score: Math.round(this.score),
-      orbs: this.orbsCollected,
-      orbsTotal: this.orbsSpawned,
-      stars,
-      livesLeft: this.lives,
-    });
   }
 
   private burst(x: number, y: number, n: number, color: string, power: number, size = 1): void {
@@ -1148,62 +1104,82 @@ export class RunnerEngine {
       : p.sliding ? 'slide' : p.onGround ? 'run' : 'air';
 
     if (mode === 'run') {
-      const legAmp = 0.66;
-      parts.legL.rot = s * legAmp;
-      parts.legR.rot = -s * legAmp;
-      const liftL = Math.max(0, -parts.legL.rot) / legAmp;
-      const liftR = Math.max(0, -parts.legR.rot) / legAmp;
-      parts.legL.dy = -liftL * 8;
-      parts.legR.dy = -liftR * 8;
-      parts.legL.sy = 1 - liftL * 0.09;
-      parts.legR.sy = 1 - liftR * 0.09;
-      parts.armL.rot = -s * 0.78;
-      parts.armR.rot = s * 0.78;
-      T.bodyRot = 0.15 + 0.025 * c;
-      T.dy = -Math.abs(s) * 4.5;
-      parts.head.rot = -0.07 + 0.035 * s;
-      parts.head.dy = -Math.abs(c) * 1.4;
-      parts.torso.rot = 0.02 * s;
+      const legAmp = 0.58;
+      // Front leg is legL (closest to viewer in 3/4 right view)
+      // Negative rotation under scale(-1, 1) reaches forward to the right
+      // Positive rotation swings backward to the left
+      parts.legL.rot = -s * legAmp;
+      parts.legR.rot = s * legAmp;
+
+      // When leg swings back (positive angle), trailing foot lifts off ground
+      const liftL = Math.max(0, parts.legL.rot) / legAmp;
+      const liftR = Math.max(0, parts.legR.rot) / legAmp;
+      parts.legL.dy = -liftL * 6;
+      parts.legR.dy = -liftR * 6;
+      parts.legL.sy = 1 - liftL * 0.08;
+      parts.legR.sy = 1 - liftR * 0.08;
+
+      // Arms swing in counter-motion:
+      // Front arm (armL) swings back when legL reaches forward:
+      parts.armL.rot = s * 0.72;
+      parts.armR.rot = -s * 0.72;
+
+      // Athletic forward lean (negative angle = forward to the right!):
+      T.bodyRot = -0.16 - 0.02 * c;
+      T.dy = 0; // Feet stay grounded
+      parts.head.rot = 0.06 - 0.03 * s;
+      parts.torso.rot = -0.02 * s;
     } else if (mode === 'air') {
       const dbl = this.debugPose === 'double' || p.flipT > 0;
       const rising = this.debugPose ? true : p.vy > 0;
       if (dbl) {
-        // tucked flip
-        parts.legL.rot = -1.35;
-        parts.legR.rot = -1.1;
-        parts.armL.rot = 0.5;
-        parts.armR.rot = -0.9;
+        // tucked 360° flip: somersault in direction of travel!
+        parts.legL.rot = 1.1;
+        parts.legR.rot = 0.9;
+        parts.armL.rot = -0.6;
+        parts.armR.rot = 0.8;
         parts.legL.sy = parts.legR.sy = 0.9;
-        T.bodyRot = (this.debugPose === 'double' ? 0.55 : p.flipT) * Math.PI * 2;
+        // Negative rotation in local mirrored space = forward roll (clockwise in screen space)!
+        T.bodyRot = -((this.debugPose === 'double' ? 0.55 : p.flipT) * Math.PI * 2);
       } else if (rising) {
-        parts.legL.rot = -1.05;
-        parts.legR.rot = 0.4;
-        parts.armL.rot = 2.45;
-        parts.armR.rot = -2.25;
-        parts.legL.sy = 0.92;
-        T.bodyRot = 0.04;
+        // leap forward
+        parts.legL.rot = 0.85;  // trailing back
+        parts.legR.rot = -0.35; // reaching forward
+        parts.armL.rot = -1.8;  // reaching forward/up
+        parts.armR.rot = 1.6;
+        T.bodyRot = -0.14;      // lean forward
         T.sy = 1.05;
         T.sx = 0.96;
       } else {
-        parts.legL.rot = -0.55;
-        parts.legR.rot = 0.5;
-        parts.armL.rot = 1.9;
-        parts.armR.rot = -1.75;
-        T.bodyRot = 0.1;
-        T.sy = 1.03;
+        // falling / prepare landing
+        parts.legL.rot = 0.35;
+        parts.legR.rot = -0.25;
+        parts.armL.rot = -1.2;
+        parts.armR.rot = 1.1;
+        T.bodyRot = -0.08;
+        T.sy = 1.02;
         T.sx = 0.98;
       }
-      parts.head.rot = -0.1;
+      parts.head.rot = 0.08;
     } else {
-      // slide: lean back, legs thrust forward
-      T.bodyRot = -1.22;
-      T.dy = CHAR_H * 0.22;
-      T.dx = -4;
-      parts.legL.rot = -0.2;
-      parts.legR.rot = -0.1;
-      parts.armL.rot = 0.5;
-      parts.armR.rot = -0.25;
-      parts.head.rot = 0.18;
+      // SLIDE: low profile, sliding to the right!
+      // Legs extend straight forward to the right (negative angle = forward):
+      parts.legL.rot = -0.35;
+      parts.legL.dy = -1;
+      parts.legR.rot = -0.25;
+      parts.legR.dy = 1;
+
+      // Pelvis drops low to the ground:
+      T.dy = 24;
+
+      // Torso leans back low (positive angle under scale(-1,1) = leaning to the left!):
+      T.bodyRot = 0.95; // ~55 degrees back, keeping head and torso low
+      T.dx = -2;
+
+      // Arms: rear arm down to ground, front arm tucked:
+      parts.armL.rot = -0.4;
+      parts.armR.rot = 0.65;
+      parts.head.rot = -0.25; // looking forward
     }
 
     if (p.land > 0 && mode === 'run') {
@@ -1253,7 +1229,6 @@ export class RunnerEngine {
     ctx.translate(sx, sy);
     this.drawBackground();
     this.drawGround();
-    this.drawFinish();
     this.drawEntities();
     this.drawPlayer();
     this.drawParticles();
@@ -1364,29 +1339,6 @@ export class RunnerEngine {
 
   private worldToScreenX(wx: number): number {
     return this.playerX + (wx - this.distance);
-  }
-
-  private drawFinish(): void {
-    const sx = this.worldToScreenX(this.finishX);
-    if (sx > this.W + 80 || sx < -80) return;
-    const ctx = this.ctx;
-    const gy = this.groundY;
-    const pal = this.palette;
-    ctx.fillStyle = hexToRgba(pal.accent, 0.12);
-    ctx.fillRect(sx - 34, gy - 190, 68, 190);
-    ctx.fillStyle = pal.accent;
-    ctx.fillRect(sx - 36, gy - 190, 5, 190);
-    ctx.fillRect(sx + 31, gy - 190, 5, 190);
-    ctx.fillRect(sx - 36, gy - 192, 72, 5);
-    // checker strip
-    for (let i = 0; i < 9; i++) {
-      ctx.fillStyle = i % 2 ? '#ffffff' : '#10122c';
-      ctx.fillRect(sx - 34 + i * 7.6, gy - 6, 7.6, 6);
-    }
-    ctx.font = '700 12px ui-monospace, SFMono-Regular, Menlo, monospace';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('FINISH', sx, gy - 198);
   }
 
   private drawEntities(): void {
@@ -1548,25 +1500,43 @@ export class RunnerEngine {
     const footX = RIG_SOURCE.w / 2;
     const footSrcY = RIG_SOURCE.h;
     const pose = this.pose;
-    const chestY = (450 - footSrcY) * s;
+    const isFlip = this.player.flipT > 0 || this.debugPose === 'double';
+    const flipPivotY = (420 - footSrcY) * s;
+    const hipY = (548 - footSrcY) * s;
 
     ctx.save();
     ctx.translate(x, footY);
-    ctx.scale(pose.sx, pose.sy);
+    // Mirror horizontally so Mill faces forward to the RIGHT:
+    ctx.scale(-pose.sx, pose.sy);
     ctx.translate(pose.dx, pose.dy);
-    ctx.translate(0, chestY);
-    ctx.rotate(pose.bodyRot);
-    ctx.translate(0, -chestY);
+
+    if (isFlip) {
+      // Whole-body tucked somersault around center of mass during double-jump
+      ctx.translate(0, flipPivotY);
+      ctx.rotate(pose.bodyRot);
+      ctx.translate(0, -flipPivotY);
+    }
 
     for (const name of RIG_ORDER) {
       const part = RIG_PARTS[name];
       const pp = pose.parts[name];
+      const isUpper = name === 'torso' || name === 'head' || name === 'armL' || name === 'armR';
+
+      ctx.save();
+      if (!isFlip && isUpper) {
+        // Upper body leans forward/backward from the hips/waist:
+        ctx.translate(0, hipY);
+        ctx.rotate(pose.bodyRot);
+        ctx.translate(0, -hipY);
+      }
+
       const pvx = (part.px - footX) * s + pp.dx;
       const pvy = (part.py - footSrcY) * s + pp.dy;
-      ctx.save();
+
       ctx.translate(pvx, pvy);
       if (pp.rot) ctx.rotate(pp.rot);
       if (pp.sy !== 1) ctx.scale(1, pp.sy);
+
       ctx.drawImage(
         atlas,
         part.sx, part.sy, part.sw, part.sh,
@@ -1594,7 +1564,7 @@ export class RunnerEngine {
   private drawForeground(): void {
     if (this.reducedMotion) return;
     const ctx = this.ctx;
-    const speed = this.speedAt(this.progress) * this.speedMul;
+    const speed = this.speedAt(this.distance) * this.speedMul;
     if (speed < 120) return;
     ctx.strokeStyle = hexToRgba('#ffffff', 0.12);
     ctx.lineWidth = 1;
@@ -1638,7 +1608,7 @@ export class RunnerEngine {
     ctx.font = font(10, 600);
     ctx.fillText(`◆ ${this.orbsCollected}`, safeLeft, safeTop + 44);
 
-    // hearts (below the DOM buttons, right)
+    // hearts (below the top buttons, right)
     ctx.textAlign = 'right';
     ctx.font = font(15);
     for (let i = 0; i < START_LIVES; i++) {
@@ -1646,34 +1616,14 @@ export class RunnerEngine {
       ctx.fillText('♥', W - safeRight - i * 20, safeTop + 64);
     }
 
-    // level progress (top-centre)
-    const barW = Math.min(180, Math.max(80, (W - safeLeft - safeRight) * 0.34));
-    const bx = W / 2 - barW / 2;
+    // Endless distance display (top-centre)
     ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
     ctx.font = font(9, 600);
-    ctx.fillText(`LVL ${this.level.level} · ${this.level.title.toUpperCase()}`, W / 2, safeTop + 8);
-    ctx.fillStyle = 'rgba(255,255,255,0.14)';
-    ctx.fillRect(bx, safeTop + 15, barW, 4);
+    ctx.fillText(`${this.level.title.toUpperCase()} · ENDLESS RUN`, W / 2, safeTop + 8);
     ctx.fillStyle = pal.accent;
-    ctx.fillRect(bx, safeTop + 15, barW * clamp(this.distance / this.finishX, 0, 1), 4);
-
-    // controls hint (first seconds)
-    if (this.state === 'playing' && this.hintTimer < 4.5) {
-      const a = this.hintTimer < 3.6 ? 1 : 1 - (this.hintTimer - 3.6) / 0.9;
-      ctx.globalAlpha = clamp(a, 0, 1) * 0.9;
-      ctx.fillStyle = 'rgba(8,10,34,0.62)';
-      const text = this.inputKind === 'touch'
-        ? 'TAP = JUMP  ·  TAP AGAIN IN AIR = DOUBLE JUMP  ·  SWIPE DOWN = SLIDE'
-        : 'SPACE / ↑ = JUMP  ·  ↑ AGAIN IN AIR = DOUBLE JUMP  ·  ↓ = SLIDE  ·  ESC = PAUSE';
-      ctx.font = font(this.portrait ? 9 : 11, 600);
-      const tw = Math.min(W - safeLeft - safeRight - 16, ctx.measureText(text).width + 24);
-      const hy = this.groundY + (this.H - this.groundY) * 0.42;
-      ctx.fillRect(W / 2 - tw / 2, hy - 15, tw, 26);
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.fillText(text, W / 2, hy + 2, W - safeLeft - safeRight - 20);
-      ctx.globalAlpha = 1;
-    }
+    ctx.font = font(16, 800);
+    const distMeters = Math.floor(this.distance / 10);
+    ctx.fillText(`${distMeters} M`, W / 2, safeTop + 26);
   }
 }

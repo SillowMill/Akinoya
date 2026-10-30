@@ -33,24 +33,26 @@ export interface RunnerProgress {
   /** Highest unlocked level (>= 1). */
   unlocked: number;
   best: Record<number, number>;
+  bestDistance: Record<number, number>;
   stars: Record<number, number>;
 }
 
-const DEFAULT_PROGRESS: RunnerProgress = { unlocked: 1, best: {}, stars: {} };
+const DEFAULT_PROGRESS: RunnerProgress = { unlocked: 1, best: {}, bestDistance: {}, stars: {} };
 
 export function loadRunnerProgress(): RunnerProgress {
   if (typeof window === 'undefined') return { ...DEFAULT_PROGRESS };
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_PROGRESS, best: {}, stars: {} };
+    if (!raw) return { ...DEFAULT_PROGRESS, best: {}, bestDistance: {}, stars: {} };
     const parsed = JSON.parse(raw) as Partial<RunnerProgress>;
     return {
       unlocked: Math.min(RUNNER_LEVELS_META.length, Math.max(1, Number(parsed.unlocked) || 1)),
       best: parsed.best && typeof parsed.best === 'object' ? parsed.best : {},
+      bestDistance: parsed.bestDistance && typeof parsed.bestDistance === 'object' ? parsed.bestDistance : {},
       stars: parsed.stars && typeof parsed.stars === 'object' ? parsed.stars : {},
     };
   } catch {
-    return { ...DEFAULT_PROGRESS, best: {}, stars: {} };
+    return { ...DEFAULT_PROGRESS, best: {}, bestDistance: {}, stars: {} };
   }
 }
 
@@ -63,22 +65,29 @@ export function saveRunnerProgress(progress: RunnerProgress): void {
   }
 }
 
-/** Records a finished run; unlocks the next level when `completed`. */
+/** Records a finished run in Endless Mode; unlocks next level if distance threshold is reached. */
 export function recordRunnerResult(
   level: number,
   score: number,
-  stars: number,
-  completed: boolean
-): RunnerProgress {
+  distanceMeters: number,
+  _orbs: number
+): { progress: RunnerProgress; isNewHigh: boolean; isNewBestDist: boolean; unlockedNext: boolean } {
   const progress = loadRunnerProgress();
-  progress.best[level] = Math.max(progress.best[level] ?? 0, Math.round(score));
-  if (completed) {
-    progress.stars[level] = Math.max(progress.stars[level] ?? 0, stars);
-    progress.unlocked = Math.min(
-      RUNNER_LEVELS_META.length,
-      Math.max(progress.unlocked, level + 1)
-    );
+  const prevBest = progress.best[level] ?? 0;
+  const prevBestDist = progress.bestDistance[level] ?? 0;
+  const isNewHigh = score > prevBest;
+  const isNewBestDist = distanceMeters > prevBestDist;
+
+  progress.best[level] = Math.max(prevBest, Math.round(score));
+  progress.bestDistance[level] = Math.max(prevBestDist, Math.round(distanceMeters));
+
+  // Surviving past 400m in Level 1 unlocks Level 2
+  let unlockedNext = false;
+  if (level === 1 && distanceMeters >= 400 && progress.unlocked < 2) {
+    progress.unlocked = 2;
+    unlockedNext = true;
   }
+
   saveRunnerProgress(progress);
-  return progress;
+  return { progress, isNewHigh, isNewBestDist, unlockedNext };
 }

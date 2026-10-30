@@ -10,11 +10,11 @@ import {
   Minimize2,
   X,
   Grid,
-  ArrowRight,
-  Trophy,
-  Star,
+  HelpCircle,
   Lock,
   Gamepad2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { RunnerEngine, type RunnerEvent, type RunnerAssets } from './engine';
 import { getLevel, LEVELS, type LevelDef } from './levels';
@@ -31,22 +31,15 @@ export interface AkinoyaRunnerModalProps {
   onClose: () => void;
 }
 
-type ModalView = 'loading' | 'playing' | 'paused' | 'gameover' | 'victory' | 'levelselect';
-
-interface VictoryData {
-  score: number;
-  orbs: number;
-  orbsTotal: number;
-  stars: number;
-  livesLeft: number;
-  isNewHigh: boolean;
-  newLevelUnlocked: boolean;
-}
+type ModalView = 'loading' | 'playing' | 'paused' | 'gameover' | 'levelselect';
 
 interface GameOverData {
   score: number;
   orbs: number;
-  progress: number;
+  distance: number;
+  isNewHigh: boolean;
+  isNewBestDist: boolean;
+  newLevelUnlocked: boolean;
 }
 
 export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
@@ -64,9 +57,9 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [progress, setProgress] = useState<RunnerProgress>(() => loadRunnerProgress());
 
-  const [victoryData, setVictoryData] = useState<VictoryData | null>(null);
   const [gameOverData, setGameOverData] = useState<GameOverData | null>(null);
 
   // Sync initial level when opening
@@ -100,38 +93,23 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
   const handleEngineEvent = useCallback(
     (ev: RunnerEvent) => {
       const currentLevel = currentLevelNum;
-      if (ev.type === 'complete') {
-        const prevUnlocked = progress.unlocked;
-        const prevBest = progress.best[currentLevel] ?? 0;
-        const nextProg = recordRunnerResult(currentLevel, ev.score, ev.stars, true);
-        setProgress(nextProg);
-        setVictoryData({
-          score: ev.score,
-          orbs: ev.orbs,
-          orbsTotal: ev.orbsTotal,
-          stars: ev.stars,
-          livesLeft: ev.livesLeft,
-          isNewHigh: ev.score > prevBest,
-          newLevelUnlocked: nextProg.unlocked > prevUnlocked,
-        });
-        setView('victory');
-      } else if (ev.type === 'gameover') {
-        const prevBest = progress.best[currentLevel] ?? 0;
-        if (ev.score > prevBest) {
-          const nextProg = recordRunnerResult(currentLevel, ev.score, 0, false);
-          setProgress(nextProg);
-        }
+      if (ev.type === 'gameover') {
+        const res = recordRunnerResult(currentLevel, ev.score, ev.distance, ev.orbs);
+        setProgress(res.progress);
         setGameOverData({
           score: ev.score,
           orbs: ev.orbs,
-          progress: ev.progress,
+          distance: ev.distance,
+          isNewHigh: res.isNewHigh,
+          isNewBestDist: res.isNewBestDist,
+          newLevelUnlocked: res.unlockedNext,
         });
         setView('gameover');
       } else if (ev.type === 'pause-request') {
         setView('paused');
       }
     },
-    [currentLevelNum, progress]
+    [currentLevelNum]
   );
 
   // Load level assets and start engine
@@ -295,13 +273,6 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
     }
   };
 
-  const handleNextLevel = () => {
-    const nextNum = currentLevelNum + 1;
-    if (LEVELS.some((l) => l.level === nextNum)) {
-      startLevel(nextNum);
-    }
-  };
-
   const handleSelectLevel = (lvl: number) => {
     if (lvl <= progress.unlocked) {
       startLevel(lvl);
@@ -311,7 +282,8 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
   if (!isOpen) return null;
 
   const currentLevelDef = getLevel(currentLevelNum);
-  const hasNextLevel = LEVELS.some((l) => l.level === currentLevelNum + 1);
+  const bestScore = progress.best[currentLevelNum] ?? 0;
+  const bestDist = progress.bestDistance[currentLevelNum] ?? 0;
 
   return createPortal(
     <div
@@ -358,12 +330,22 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
         <div className="flex items-center gap-2 pointer-events-auto bg-black/60 backdrop-blur-md border border-cyan-500/30 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(53,240,255,0.2)]">
           <Gamepad2 className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
           <span className="text-[10px] sm:text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase">
-            Äkinoya Runner // L{currentLevelNum}
+            Äkinoya // {currentLevelDef.title}
           </span>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Tutorial / Help */}
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white/80 hover:text-white hover:border-cyan-400 hover:bg-black/80 transition-all active:scale-95"
+            title="Controls & Instructions"
+            aria-label="Controls"
+          >
+            <HelpCircle className="w-4 h-4 text-cyan-300" />
+          </button>
+
           {/* Mute */}
           <button
             onClick={toggleMute}
@@ -408,19 +390,20 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
         </div>
       </div>
 
-      {/* Touch Assist Overlay Buttons (Mobile / Tablet only) */}
+      {/* Minimalist Touch Assist Buttons (Subtle & Unobtrusive) */}
       {isTouchDevice && view === 'playing' && (
         <div
           className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none flex justify-between items-end p-4"
           style={{
-            paddingBottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
-            paddingLeft: 'max(18px, env(safe-area-inset-left, 18px))',
-            paddingRight: 'max(18px, env(safe-area-inset-right, 18px))',
+            paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))',
+            paddingLeft: 'max(16px, env(safe-area-inset-left, 16px))',
+            paddingRight: 'max(16px, env(safe-area-inset-right, 16px))',
           }}
         >
           {/* SLIDE BUTTON */}
           <button
             type="button"
+            aria-label="Slide"
             onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -436,25 +419,63 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
               e.stopPropagation();
               engineRef.current?.slideEnd();
             }}
-            className="pointer-events-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500/20 to-black/60 backdrop-blur-md border border-amber-400/40 text-amber-300 active:bg-amber-400/40 active:scale-95 flex flex-col items-center justify-center gap-1 shadow-[0_0_20px_rgba(251,191,36,0.18)]"
+            className="pointer-events-auto w-14 h-14 rounded-full bg-black/25 hover:bg-black/40 backdrop-blur-[2px] border border-white/15 text-white/50 active:bg-amber-500/25 active:border-amber-400 active:text-amber-200 active:scale-90 flex flex-col items-center justify-center transition-all select-none"
           >
-            <span className="text-[10px] font-mono font-bold tracking-widest text-amber-200">SLIDE</span>
-            <span className="text-xs">▼</span>
+            <ChevronDown className="w-5 h-5" />
+            <span className="text-[8px] font-mono font-bold tracking-widest leading-none mt-0.5">SLIDE</span>
           </button>
 
           {/* JUMP BUTTON */}
           <button
             type="button"
+            aria-label="Jump"
             onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               engineRef.current?.jump();
             }}
-            className="pointer-events-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-black/60 backdrop-blur-md border border-cyan-400/50 text-cyan-300 active:bg-cyan-400/40 active:scale-95 flex flex-col items-center justify-center gap-1 shadow-[0_0_20px_rgba(53,240,255,0.25)]"
+            className="pointer-events-auto w-14 h-14 rounded-full bg-black/25 hover:bg-black/40 backdrop-blur-[2px] border border-white/15 text-white/50 active:bg-cyan-500/25 active:border-cyan-400 active:text-cyan-200 active:scale-90 flex flex-col items-center justify-center transition-all select-none"
           >
-            <span className="text-[10px] font-mono font-bold tracking-widest text-cyan-200">JUMP</span>
-            <span className="text-xs">▲</span>
+            <ChevronUp className="w-5 h-5" />
+            <span className="text-[8px] font-mono font-bold tracking-widest leading-none mt-0.5">JUMP</span>
           </button>
+        </div>
+      )}
+
+      {/* TUTORIAL / INSTRUCTIONS POP-UP */}
+      {showTutorial && (
+        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-xs bg-gradient-to-b from-[#10142e] to-[#070918] border border-cyan-500/40 rounded-2xl p-5 shadow-[0_0_35px_rgba(53,240,255,0.25)] font-mono text-center animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-10 h-10 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center mx-auto mb-3">
+              <Gamepad2 className="w-5 h-5" />
+            </div>
+            <h3 className="text-sm font-bold text-white mb-1 uppercase tracking-wider">
+              PILOT MANUAL
+            </h3>
+            <p className="text-[10px] text-cyan-400/80 uppercase tracking-widest mb-4">
+              ÄKINOYA ENDLESS RUNNER
+            </p>
+            <div className="space-y-2.5 text-xs text-white/80 text-left mb-5 bg-white/5 p-3.5 rounded-xl border border-white/10">
+              <div>
+                <span className="text-cyan-300 font-bold block text-[10px] uppercase">JUMP / DOUBLE JUMP</span>
+                <span className="text-white/70">Tap screen or press Space / ↑</span>
+              </div>
+              <div>
+                <span className="text-amber-300 font-bold block text-[10px] uppercase">SLIDE / DUCK</span>
+                <span className="text-white/70">Swipe down or press ↓</span>
+              </div>
+              <div>
+                <span className="text-pink-300 font-bold block text-[10px] uppercase">ENDLESS OBJECTIVE</span>
+                <span className="text-white/70">Survive infinitely, collect orbs & beat your distance record!</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowTutorial(false)}
+              className="w-full py-2.5 bg-cyan-400 hover:bg-cyan-300 text-black font-bold rounded-xl text-xs active:scale-95 transition-all shadow-[0_0_15px_rgba(53,240,255,0.4)]"
+            >
+              ENGAGE MISSION
+            </button>
+          </div>
         </div>
       )}
 
@@ -483,7 +504,7 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
               MISSION PAUSED
             </h2>
             <p className="text-xs text-cyan-400/80 font-mono tracking-widest uppercase mb-6">
-              LVL {currentLevelNum} · {currentLevelDef.title} ({currentLevelDef.world})
+              {currentLevelDef.title} ({currentLevelDef.world})
             </p>
 
             <div className="flex flex-col gap-3 font-mono">
@@ -519,130 +540,58 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
         </div>
       )}
 
-      {/* MODAL OVERLAY: GAME OVER */}
+      {/* MODAL OVERLAY: GAME OVER (Endless Mode) */}
       {view === 'gameover' && gameOverData && (
         <div className="absolute inset-0 z-40 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-sm bg-gradient-to-b from-[#250d18] to-[#0c050a] border border-rose-500/40 rounded-2xl p-6 shadow-[0_0_40px_rgba(244,63,94,0.25)] text-center animate-in fade-in zoom-in-95 duration-200">
             <h2 className="text-2xl sm:text-3xl font-black tracking-wider font-mono text-rose-400 mb-1 uppercase drop-shadow-[0_0_12px_rgba(244,63,94,0.5)]">
-              CRITICAL FAILURE
+              RUN TERMINATED
             </h2>
-            <p className="text-xs text-rose-300/70 font-mono tracking-widest uppercase mb-6">
-              ORBITAL SYNC LOST · REACHED {Math.round(gameOverData.progress * 100)}%
+            <p className="text-xs text-rose-300/70 font-mono tracking-widest uppercase mb-5">
+              ORBITAL SIGNAL LOST
             </p>
-
-            {/* Stats box */}
-            <div className="bg-black/50 border border-rose-500/20 rounded-xl p-4 mb-6 grid grid-cols-2 gap-3 text-left font-mono">
-              <div>
-                <div className="text-[10px] text-white/50 tracking-wider">SCORE</div>
-                <div className="text-lg font-bold text-white">
-                  {String(Math.round(gameOverData.score)).padStart(5, '0')}
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] text-white/50 tracking-wider">ORBS COLLECTED</div>
-                <div className="text-lg font-bold text-amber-400">◆ {gameOverData.orbs}</div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 font-mono">
-              <button
-                onClick={handleRetry}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-rose-500 text-white font-bold tracking-wider hover:from-rose-500 hover:to-rose-400 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(244,63,94,0.4)]"
-              >
-                <RotateCcw className="w-4 h-4" /> TRY AGAIN
-              </button>
-
-              <button
-                onClick={() => setView('levelselect')}
-                className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white/90 border border-white/20 font-semibold tracking-wider active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <Grid className="w-4 h-4" /> SELECT LEVEL
-              </button>
-
-              <button
-                onClick={onClose}
-                className="w-full py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 font-semibold tracking-wider active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <X className="w-4 h-4" /> EXIT
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL OVERLAY: VICTORY */}
-      {view === 'victory' && victoryData && (
-        <div className="absolute inset-0 z-40 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-gradient-to-b from-[#0e1f38] to-[#070b1a] border border-cyan-400/50 rounded-2xl p-6 shadow-[0_0_50px_rgba(53,240,255,0.3)] text-center animate-in fade-in zoom-in-95 duration-200">
-            <h2 className="text-2xl sm:text-3xl font-black tracking-wider font-mono text-cyan-300 mb-1 uppercase drop-shadow-[0_0_15px_rgba(53,240,255,0.6)]">
-              LEVEL COMPLETE!
-            </h2>
-            <p className="text-xs text-cyan-400/80 font-mono tracking-widest uppercase mb-4">
-              {currentLevelDef.title} CONQUERED
-            </p>
-
-            {/* Stars */}
-            <div className="flex justify-center items-center gap-3 mb-5">
-              {[1, 2, 3].map((starIdx) => (
-                <div
-                  key={starIdx}
-                  className={`transition-all transform ${
-                    starIdx <= victoryData.stars
-                      ? 'text-amber-400 scale-110 drop-shadow-[0_0_12px_rgba(251,191,36,0.8)]'
-                      : 'text-white/20 scale-90'
-                  }`}
-                >
-                  <Star className={`w-8 h-8 ${starIdx <= victoryData.stars ? 'fill-amber-400' : ''}`} />
-                </div>
-              ))}
-            </div>
 
             {/* Unlock Banner if Level 2 was just unlocked */}
-            {victoryData.newLevelUnlocked && (
+            {gameOverData.newLevelUnlocked && (
               <div className="mb-4 py-2 px-3 bg-gradient-to-r from-amber-500/20 via-pink-500/20 to-cyan-500/20 border border-cyan-400/40 rounded-xl">
                 <span className="text-[11px] font-mono font-bold tracking-wider text-cyan-200">
-                  ★ NEW LEVEL UNLOCKED: LEVEL 2 ★
+                  ★ NEW SECTOR UNLOCKED: FROZEN CORE ★
                 </span>
               </div>
             )}
 
             {/* Stats box */}
-            <div className="bg-black/50 border border-cyan-500/20 rounded-xl p-4 mb-6 grid grid-cols-2 gap-3 text-left font-mono">
+            <div className="bg-black/50 border border-rose-500/20 rounded-xl p-4 mb-6 grid grid-cols-2 gap-3 text-left font-mono">
               <div>
-                <div className="text-[10px] text-white/50 tracking-wider">FINAL SCORE</div>
-                <div className="text-lg font-bold text-white">
-                  {String(Math.round(victoryData.score)).padStart(5, '0')}
+                <div className="text-[10px] text-white/50 tracking-wider">DISTANCE</div>
+                <div className="text-xl font-bold text-cyan-300">
+                  {gameOverData.distance} M
                 </div>
-                {victoryData.isNewHigh && (
+                {gameOverData.isNewBestDist && (
                   <span className="text-[9px] text-emerald-400 font-bold tracking-wider">NEW RECORD!</span>
                 )}
               </div>
               <div>
-                <div className="text-[10px] text-white/50 tracking-wider">ORBS COLLECTED</div>
-                <div className="text-lg font-bold text-cyan-400">
-                  ◆ {victoryData.orbs} / {victoryData.orbsTotal}
+                <div className="text-[10px] text-white/50 tracking-wider">FINAL SCORE</div>
+                <div className="text-xl font-bold text-white">
+                  {String(Math.round(gameOverData.score)).padStart(5, '0')}
                 </div>
-                <span className="text-[9px] text-white/40 tracking-wider">
-                  {victoryData.livesLeft} {victoryData.livesLeft === 1 ? 'LIFE' : 'LIVES'} REMAINING
-                </span>
+                {gameOverData.isNewHigh && !gameOverData.isNewBestDist && (
+                  <span className="text-[9px] text-emerald-400 font-bold tracking-wider">NEW BEST!</span>
+                )}
+              </div>
+              <div className="col-span-2 pt-1 border-t border-white/10 flex items-center justify-between text-xs text-amber-400">
+                <span>ORBS COLLECTED:</span>
+                <span className="font-bold">◆ {gameOverData.orbs}</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 font-mono">
-              {hasNextLevel && (
-                <button
-                  onClick={handleNextLevel}
-                  className="w-full py-3 px-4 rounded-xl bg-cyan-400 text-black font-bold tracking-wider hover:bg-cyan-300 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(53,240,255,0.5)]"
-                >
-                  NEXT LEVEL <ArrowRight className="w-4 h-4" />
-                </button>
-              )}
-
               <button
                 onClick={handleRetry}
-                className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white/90 border border-white/20 font-semibold tracking-wider active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 text-black font-bold tracking-wider hover:from-cyan-400 hover:to-cyan-300 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(53,240,255,0.4)]"
               >
-                <RotateCcw className="w-4 h-4" /> REPLAY LEVEL
+                <RotateCcw className="w-4 h-4" /> PLAY AGAIN
               </button>
 
               <button
@@ -668,18 +617,18 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
         <div className="absolute inset-0 z-40 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-gradient-to-b from-[#0f142b] to-[#070914] border border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_40px_rgba(53,240,255,0.2)] text-center animate-in fade-in zoom-in-95 duration-200">
             <h2 className="text-2xl font-black tracking-wider font-mono text-white mb-1 uppercase">
-              SELECT LEVEL
+              SELECT SECTOR
             </h2>
             <p className="text-xs text-cyan-400/80 font-mono tracking-widest uppercase mb-6">
-              ÄKINOYA SECTOR MISSIONS
+              ÄKINOYA ENDLESS RUNNER SECTORS
             </p>
 
             <div className="flex flex-col gap-3 mb-6">
               {LEVELS.map((lvl) => {
                 const isUnlocked = lvl.level <= progress.unlocked;
                 const isSelected = lvl.level === currentLevelNum;
-                const bestScore = progress.best[lvl.level] ?? 0;
-                const starsCount = progress.stars[lvl.level] ?? 0;
+                const lvlBestScore = progress.best[lvl.level] ?? 0;
+                const lvlBestDist = progress.bestDistance[lvl.level] ?? 0;
 
                 return (
                   <button
@@ -707,28 +656,18 @@ export const AkinoyaRunnerModal: React.FC<AkinoyaRunnerModalProps> = ({
                           {lvl.title}
                         </div>
                         <div className="text-[11px] text-white/50">{lvl.world}</div>
-                        {isUnlocked && bestScore > 0 && (
+                        {isUnlocked && (lvlBestDist > 0 || lvlBestScore > 0) && (
                           <div className="text-[10px] text-cyan-400 mt-0.5">
-                            BEST: {String(bestScore).padStart(5, '0')}
+                            BEST: {lvlBestDist}M · {String(lvlBestScore).padStart(5, '0')} PTS
+                          </div>
+                        )}
+                        {!isUnlocked && (
+                          <div className="text-[10px] text-amber-400 mt-0.5">
+                            SURVIVE 400M IN SECTOR 1 TO UNLOCK
                           </div>
                         )}
                       </div>
                     </div>
-
-                    {isUnlocked && (
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3].map((s) => (
-                          <Star
-                            key={s}
-                            className={`w-4 h-4 ${
-                              s <= starsCount
-                                ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]'
-                                : 'text-white/15'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    )}
                   </button>
                 );
               })}
