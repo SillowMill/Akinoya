@@ -170,10 +170,11 @@
   -webkit-backface-visibility: hidden;
 }
 
-/* GPU Hardware-Versnelling (Offloading): widgets, cards & planet nodes */
+/* GPU Hardware-Versnelling (Offloading): widgets, cards, planet nodes & galaxy container */
 .widget-container,
 .community-card,
 .planet-node,
+.galaxy-container,
 .community-feed,
 .community-hub-container {
   transform: translateZ(0);
@@ -183,12 +184,38 @@
   -webkit-backface-visibility: hidden;
 }
 
-/* Strip expensive WebKit filters within Community Hub and widgets on mobile & tablet viewports */
+/* Kristalheldere Tekst-Rendering (Sharp Typography op Safari) */
+.comm-net-container,
+.chat-channel-item,
+.channel-name,
+.chat-message {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.comm-net-container,
+.chat-channel-item,
+.channel-name,
+.chat-message,
+.comm-net-container h1,
+.comm-net-container h2,
+.comm-net-container h3,
+.comm-net-container h4,
+.comm-net-container p,
+.comm-net-container span,
+.comm-net-container button {
+  text-shadow: none !important;
+}
+
+/* Strip expensive WebKit filters within Community Hub, Galaxy Navigator and widgets on mobile & tablet viewports */
 @media (max-width: 1024px) {
   .widget-container,
   .widget-container *,
   .community-hub-container,
-  .community-hub-container * {
+  .community-hub-container *,
+  .galaxy-container,
+  .galaxy-container * {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
@@ -429,8 +456,8 @@ body:has(.community-app-shell) {
     margin-top: 0.75rem !important;
   }
   .hub-sidebar-dock {
-    padding-top: 0.625rem;
-    padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem)) !important;
+    padding-top: 0.375rem;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem)) !important;
   }
 }
 

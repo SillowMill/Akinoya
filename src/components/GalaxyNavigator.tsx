@@ -1648,6 +1648,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               <img
                 src={akinoyaHeroBg}
                 alt="Äkinoya Capital Core · Bingäa Visualizer"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex items-end justify-between p-3.5">
@@ -1712,7 +1714,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         WebkitUserSelect: 'none',
         userSelect: 'none',
       }}
-      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#020308] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30 transform-gpu"
+      className="galaxy-container fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#020308] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30 transform-gpu"
     >
       {/* Background Starfield & Orbit Rings Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0 transform-gpu" />
@@ -2202,6 +2204,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   WebkitBorderRadius: '50%',
                 }}
                 draggable={false}
+                loading="lazy"
+                decoding="async"
               />
               <div
                 className="absolute inset-0 bg-gradient-to-tr from-amber-500/40 via-transparent to-yellow-200/40 pointer-events-none"

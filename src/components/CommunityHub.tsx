@@ -1831,51 +1831,27 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   })}
                 </div>
 
-                {/* 3. Vaste Positionering "System Launch" Widget (Fixed Footer at Bottom) */}
-                <div className="hub-sidebar-dock widget-container shrink-0 p-4 lg:p-5 pt-3 pb-6 md:pb-8 border-t border-white/10 mt-auto bg-[#050812]">
-                  <div className="p-3.5 rounded-2xl bg-[#080d1a] border border-amber-500/30 shadow-[0_0_25px_rgba(0,0,0,0.65)] space-y-3">
-                    {/* Timeline Badge Header */}
-                    <div className="space-y-1.5 pb-2 border-b border-white/10">
-                      <div className="flex items-center justify-between text-[10px] font-mono">
-                        <span className="text-white/50 tracking-wider">SYSTEM LAUNCH</span>
-                        <span className="text-amber-400 font-bold">JAN 9, 2027</span>
-                      </div>
-                      {/* Live Countdown Display */}
-                      <div className="flex items-center gap-1.5 py-1 px-2 rounded-lg bg-black/40 border border-white/5 font-mono text-[10px] text-amber-300">
-                        <Clock className="w-3 h-3 text-amber-400 shrink-0 animate-pulse" />
-                        <div className="flex items-center justify-between w-full font-bold">
-                          <span>{launchCountdown.days}d</span>
-                          <span className="text-white/40">:</span>
-                          <span>{launchCountdown.hours}h</span>
-                          <span className="text-white/40">:</span>
-                          <span>{launchCountdown.minutes}m</span>
-                          <span className="text-white/40">:</span>
-                          <span>{launchCountdown.seconds}s</span>
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-white/60 font-sans leading-tight">
-                        Paid memberships &amp; VR planet minting launch worldwide.
-                      </p>
+                {/* 3. Compacte Vaste Positionering "System Launch" Widget */}
+                <div className="hub-sidebar-dock widget-container shrink-0 p-3 lg:p-3.5 border-t border-white/10 mt-auto bg-[#050812]">
+                  <div className="p-2.5 rounded-xl bg-[#080d1a] border border-amber-500/30 shadow-[0_0_18px_rgba(0,0,0,0.5)] space-y-2">
+                    {/* Compact Title Header: SYSTEM LAUNCH */}
+                    <div className="flex items-center justify-between text-[10px] font-mono">
+                      <span className="text-white/60 font-bold tracking-wider uppercase">SYSTEM LAUNCH</span>
+                      <span className="text-amber-400 font-extrabold">JAN 9, 2027</span>
                     </div>
 
-                    {/* Primary Action: "CLAIM YOUR WORLD" Button Positioned ABOVE the Text Indicator */}
+                    {/* Compact Primary Action: "CLAIM YOUR WORLD" Button */}
                     <button
                       type="button"
                       onClick={() => {
                         soundManager.playTone(520, 0.05);
                         openClaimWorldModal();
                       }}
-                      className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_18px_rgba(245,158,11,0.35)] transition-all cursor-pointer"
+                      className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_14px_rgba(245,158,11,0.3)] transition-all cursor-pointer"
                     >
                       <Globe2 className="w-3.5 h-3.5 text-black shrink-0" />
                       <span>CLAIM YOUR WORLD</span>
                     </button>
-
-                    {/* Text Indicator Positioned Cleanly BELOW the Button */}
-                    <div className="flex items-center justify-center gap-1.5 pt-0.5 text-[9.5px] font-mono font-bold tracking-wider text-amber-300/95 text-center leading-tight">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                      <span>CREATE YOUR FREE WORLD · BEFORE 09/01/2027</span>
-                    </div>
                   </div>
                 </div>
               </aside>
@@ -2098,9 +2074,9 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               </div>
 
               {/* Discord-Style Multi-Channel Grid: Left Channels Sidebar + Right Chat Feed */}
-              <div className="flex flex-col lg:flex-row gap-6 items-start">
+              <div className="comm-net-container flex flex-col lg:flex-row gap-6 items-start">
                 {/* LEFT SIDEBAR: Discord Server & Channels */}
-                <aside className="hidden lg:flex w-72 shrink-0 flex-col gap-4 rounded-2xl bg-[#060913]/90 border border-white/10 p-4 shadow-xl sticky top-4 self-start">
+                <aside className="hidden lg:flex w-72 shrink-0 flex-col gap-4 rounded-2xl bg-[#060913] border border-white/10 p-4 shadow-xl sticky top-4 self-start">
                   {/* Guild Header */}
                   <div className="flex items-center justify-between pb-3 border-b border-white/10">
                     <div className="flex items-center gap-2.5">
@@ -2108,7 +2084,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                         #
                       </div>
                       <div>
-                        <div className="text-xs font-display font-extrabold text-white tracking-wider uppercase">
+                        <div className="channel-name text-xs font-display font-extrabold text-white tracking-wider uppercase">
                           COMM-NET SERVER
                         </div>
                         <div className="text-[9.5px] font-mono text-white/40">SILLOW MILL HQ</div>
@@ -2135,16 +2111,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                             if (ch.id === 'general-chat') setDiscussionImage(null);
                             soundManager.playTone(600, 0.05);
                           }}
-                          className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
+                          className={`chat-channel-item w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
                             isChActive
                               ? 'bg-cyan-950/70 border-cyan-400/60 text-white shadow-[0_0_12px_rgba(56,189,248,0.2)]'
-                              : 'bg-black/40 border-white/5 hover:border-white/15 text-white/70 hover:text-white'
+                              : 'bg-[#080d1a] border-white/5 hover:border-white/15 text-white/70 hover:text-white'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-cyan-400' : 'text-white/40 group-hover:text-cyan-400'}`} />
                             <div className="min-w-0">
-                              <div className="text-xs font-mono font-semibold truncate leading-tight">
+                              <div className="channel-name text-xs font-mono font-semibold truncate leading-tight">
                                 {ch.name}
                               </div>
                               <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
@@ -2177,16 +2153,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                             setActiveChannelId(ch.id);
                             soundManager.playTone(600, 0.05);
                           }}
-                          className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
+                          className={`chat-channel-item w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
                             isChActive
                               ? 'bg-amber-950/50 border-amber-400/60 text-white shadow-[0_0_12px_rgba(245,158,11,0.2)]'
-                              : 'bg-black/40 border-white/5 hover:border-white/15 text-white/70 hover:text-white'
+                              : 'bg-[#080d1a] border-white/5 hover:border-white/15 text-white/70 hover:text-white'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-amber-400' : 'text-white/40 group-hover:text-amber-400'}`} />
                             <div className="min-w-0">
-                              <div className="text-xs font-mono font-semibold truncate leading-tight">
+                              <div className="channel-name text-xs font-mono font-semibold truncate leading-tight">
                                 {ch.name}
                               </div>
                               <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
@@ -2222,16 +2198,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                             setActiveChannelId(ch.id);
                             soundManager.playTone(600, 0.05);
                           }}
-                          className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
+                          className={`chat-channel-item w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
                             isChActive
                               ? 'bg-cyan-950/60 border-cyan-400/60 text-white shadow-[0_0_12px_rgba(56,189,248,0.2)]'
-                              : 'bg-black/40 border-white/5 hover:border-white/15 text-white/70 hover:text-white'
+                              : 'bg-[#080d1a] border-white/5 hover:border-white/15 text-white/70 hover:text-white'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-cyan-400' : 'text-white/40 group-hover:text-cyan-400'}`} />
                             <div className="min-w-0">
-                              <div className="text-xs font-mono font-semibold truncate leading-tight">
+                              <div className="channel-name text-xs font-mono font-semibold truncate leading-tight">
                                 {ch.name}
                               </div>
                               <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
@@ -2267,16 +2243,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                             setActiveChannelId(ch.id);
                             soundManager.playTone(600, 0.05);
                           }}
-                          className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
+                          className={`chat-channel-item w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
                             isChActive
                               ? 'bg-purple-950/50 border-purple-400/60 text-white shadow-[0_0_12px_rgba(168,85,247,0.2)]'
-                              : 'bg-black/40 border-white/5 hover:border-white/15 text-white/70 hover:text-white'
+                              : 'bg-[#080d1a] border-white/5 hover:border-white/15 text-white/70 hover:text-white'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-purple-400' : 'text-white/40 group-hover:text-purple-400'}`} />
                             <div className="min-w-0">
-                              <div className="text-xs font-mono font-semibold truncate leading-tight">
+                              <div className="channel-name text-xs font-mono font-semibold truncate leading-tight">
                                 {ch.name}
                               </div>
                               <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
@@ -2310,16 +2286,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                             setActiveChannelId(ch.id);
                             soundManager.playTone(600, 0.05);
                           }}
-                          className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
+                          className={`chat-channel-item w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between group min-h-[44px] ${
                             isChActive
                               ? 'bg-yellow-950/50 border-yellow-400/60 text-white shadow-[0_0_12px_rgba(234,179,8,0.2)]'
-                              : 'bg-black/40 border-white/5 hover:border-white/15 text-white/70 hover:text-white'
+                              : 'bg-[#080d1a] border-white/5 hover:border-white/15 text-white/70 hover:text-white'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-yellow-400' : 'text-white/40 group-hover:text-yellow-400'}`} />
                             <div className="min-w-0">
-                              <div className="text-xs font-mono font-semibold truncate leading-tight">
+                              <div className="channel-name text-xs font-mono font-semibold truncate leading-tight">
                                 {ch.name}
                               </div>
                               <div className="text-[9.5px] font-sans text-white/45 truncate mt-0.5">
@@ -2337,11 +2313,11 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                 {/* RIGHT CHAT AREA */}
                 <div className="flex-1 min-w-0 space-y-4 w-full">
                   {/* Active Channel Header */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-[#070c18] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Hash className="w-5 h-5 text-cyan-400 shrink-0" />
-                        <h2 className="text-base sm:text-lg font-display font-bold text-white tracking-wide truncate">
+                        <h2 className="channel-name text-base sm:text-lg font-display font-bold text-white tracking-wide truncate">
                           {activeChannel.name}
                         </h2>
                         <span className={`text-[9.5px] font-mono px-2 py-0.5 rounded-full font-bold ${
@@ -2386,7 +2362,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                           channelPosts.map((post) => (
                             <div
                               key={post.id}
-                              className="community-card p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 hover:border-white/20 transition-all space-y-3 shadow-[0_4px_25px_rgba(0,0,0,0.5)]"
+                              className="chat-message community-card p-4 sm:p-5 rounded-2xl bg-[#070c18] border border-white/10 hover:border-white/20 transition-all space-y-3 shadow-[0_4px_25px_rgba(0,0,0,0.5)]"
                             >
                                 <div className="flex items-center gap-2.5 text-left">
                                   <div
@@ -3137,16 +3113,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                         setIsMobileChannelsOpen(false);
                         soundManager.playTone(600, 0.05);
                       }}
-                      className={`w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      className={`chat-channel-item w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
                         isChActive
                           ? 'bg-cyan-950/70 border-cyan-400 text-white shadow-[0_0_15px_rgba(56,189,248,0.25)]'
-                          : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
+                          : 'bg-[#080d1a] border-white/10 text-white/70 hover:text-white'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-cyan-400' : 'text-white/40'}`} />
                         <div className="min-w-0">
-                          <div className="text-xs font-mono font-bold truncate">#{ch.name}</div>
+                          <div className="channel-name text-xs font-mono font-bold truncate">#{ch.name}</div>
                           <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
                         </div>
                       </div>
@@ -3175,16 +3151,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                         setIsMobileChannelsOpen(false);
                         soundManager.playTone(600, 0.05);
                       }}
-                      className={`w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      className={`chat-channel-item w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
                         isChActive
                           ? 'bg-amber-950/50 border-amber-400 text-white shadow-[0_0_15px_rgba(245,158,11,0.25)]'
-                          : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
+                          : 'bg-[#080d1a] border-white/10 text-white/70 hover:text-white'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-amber-400' : 'text-white/40'}`} />
                         <div className="min-w-0">
-                          <div className="text-xs font-mono font-bold truncate">#{ch.name}</div>
+                          <div className="channel-name text-xs font-mono font-bold truncate">#{ch.name}</div>
                           <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
                         </div>
                       </div>
@@ -3213,16 +3189,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                         setIsMobileChannelsOpen(false);
                         soundManager.playTone(600, 0.05);
                       }}
-                      className={`w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      className={`chat-channel-item w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
                         isChActive
                           ? 'bg-cyan-950/60 border-cyan-400 text-white shadow-[0_0_15px_rgba(56,189,248,0.25)]'
-                          : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
+                          : 'bg-[#080d1a] border-white/10 text-white/70 hover:text-white'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-cyan-400' : 'text-white/40'}`} />
                         <div className="min-w-0">
-                          <div className="text-xs font-mono font-bold truncate">#{ch.name}</div>
+                          <div className="channel-name text-xs font-mono font-bold truncate">#{ch.name}</div>
                           <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
                         </div>
                       </div>
@@ -3251,16 +3227,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                         setIsMobileChannelsOpen(false);
                         soundManager.playTone(600, 0.05);
                       }}
-                      className={`w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      className={`chat-channel-item w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
                         isChActive
                           ? 'bg-purple-950/50 border-purple-400 text-white shadow-[0_0_15px_rgba(168,85,247,0.25)]'
-                          : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
+                          : 'bg-[#080d1a] border-white/10 text-white/70 hover:text-white'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-purple-400' : 'text-white/40'}`} />
                         <div className="min-w-0">
-                          <div className="text-xs font-mono font-bold truncate">#{ch.name}</div>
+                          <div className="channel-name text-xs font-mono font-bold truncate">#{ch.name}</div>
                           <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
                         </div>
                       </div>
@@ -3289,16 +3265,16 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                         setIsMobileChannelsOpen(false);
                         soundManager.playTone(600, 0.05);
                       }}
-                      className={`w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      className={`chat-channel-item w-full min-h-[48px] p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
                         isChActive
                           ? 'bg-yellow-950/50 border-yellow-400 text-white shadow-[0_0_15px_rgba(234,179,8,0.25)]'
-                          : 'bg-black/40 border-white/10 text-white/70 hover:text-white'
+                          : 'bg-[#080d1a] border-white/10 text-white/70 hover:text-white'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Hash className={`w-4 h-4 shrink-0 ${isChActive ? 'text-yellow-400' : 'text-white/40'}`} />
                         <div className="min-w-0">
-                          <div className="text-xs font-mono font-bold truncate">#{ch.name}</div>
+                          <div className="channel-name text-xs font-mono font-bold truncate">#{ch.name}</div>
                           <div className="text-[10px] text-white/50 truncate">{ch.description}</div>
                         </div>
                       </div>
