@@ -170,10 +170,12 @@
   -webkit-backface-visibility: hidden;
 }
 
-/* Community Hub Safari & Mobile GPU Hardware-Acceleration */
-.community-hub-container,
+/* GPU Hardware-Versnelling (Offloading): widgets, cards & planet nodes */
+.widget-container,
 .community-card,
-.community-feed {
+.planet-node,
+.community-feed,
+.community-hub-container {
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   will-change: transform;
@@ -181,14 +183,17 @@
   -webkit-backface-visibility: hidden;
 }
 
-/* Strip expensive WebKit filters within Community Hub on mobile & tablet viewports */
+/* Strip expensive WebKit filters within Community Hub and widgets on mobile & tablet viewports */
 @media (max-width: 1024px) {
+  .widget-container,
+  .widget-container *,
   .community-hub-container,
   .community-hub-container * {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
 
+  .widget-container,
   .community-card {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
   }
@@ -280,6 +285,18 @@ textarea,
   -webkit-backface-visibility: hidden;
 }
 
+/* Sidebar Container: Fixed Viewport Height & Flexbox Structure */
+.sidebar-container {
+  height: 100vh;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Community Hub sidebar (.sidebar & .hub-sidebar): lives inside the isolated (non-scrolling) app shell,
    using flexible full height, flexbox column with space-between positioning */
 .sidebar,
@@ -289,13 +306,26 @@ textarea,
   max-height: 100dvh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  position: sticky;
+  top: 0;
   overflow: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
+/* Interne Scrollbare Navigatie (Tussen header en onderste system launch widget) */
+.sidebar-nav-links {
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
 /* Fallback: if viewport is extremely short, allow aside itself to scroll */
 @media (max-height: 520px) {
+  .sidebar-container,
   .sidebar,
   .hub-sidebar {
     overflow-y: auto !important;
@@ -303,18 +333,24 @@ textarea,
 }
 
 /* Subtle / clean scrollbar for sidebar & inner scroll content */
+.sidebar-container::-webkit-scrollbar,
+.sidebar-nav-links::-webkit-scrollbar,
 .sidebar::-webkit-scrollbar,
 .hub-sidebar::-webkit-scrollbar,
 .hub-sidebar-scroll::-webkit-scrollbar {
   width: 4px;
 }
 
+.sidebar-container::-webkit-scrollbar-track,
+.sidebar-nav-links::-webkit-scrollbar-track,
 .sidebar::-webkit-scrollbar-track,
 .hub-sidebar::-webkit-scrollbar-track,
 .hub-sidebar-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 
+.sidebar-container::-webkit-scrollbar-thumb,
+.sidebar-nav-links::-webkit-scrollbar-thumb,
 .sidebar::-webkit-scrollbar-thumb,
 .hub-sidebar::-webkit-scrollbar-thumb,
 .hub-sidebar-scroll::-webkit-scrollbar-thumb {
@@ -322,6 +358,8 @@ textarea,
   border-radius: 9999px;
 }
 
+.sidebar-container::-webkit-scrollbar-thumb:hover,
+.sidebar-nav-links::-webkit-scrollbar-thumb:hover,
 .sidebar::-webkit-scrollbar-thumb:hover,
 .hub-sidebar::-webkit-scrollbar-thumb:hover,
 .hub-sidebar-scroll::-webkit-scrollbar-thumb:hover {

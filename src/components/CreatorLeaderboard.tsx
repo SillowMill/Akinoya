@@ -167,6 +167,8 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
                     <img
                       src={topFavoritePlanet.renders.hero}
                       alt={topFavoritePlanet.planetName}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover rounded-xl group-hover/thumb:scale-105 transition-transform"
                     />
                   </div>
@@ -253,6 +255,8 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
                         <img
                           src={planet.renders.hero}
                           alt={planet.planetName}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       </div>

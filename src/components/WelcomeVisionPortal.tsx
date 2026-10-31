@@ -129,11 +129,13 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
             </div>
 
             {/* Quick Hero Guide Persona */}
-            <div className="community-card shrink-0 flex items-center gap-3 p-3.5 px-4 rounded-2xl bg-black/70 border border-cyan-500/30 max-w-sm backdrop-blur-none lg:backdrop-blur-md self-start lg:self-auto shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+            <div className="community-card widget-container shrink-0 flex items-center gap-3 p-3.5 px-4 rounded-2xl bg-black/70 border border-cyan-500/30 max-w-sm backdrop-blur-none lg:backdrop-blur-md self-start lg:self-auto shadow-[0_0_20px_rgba(0,0,0,0.5)]">
               <div className="relative shrink-0">
                 <img
                   src={millAvatar}
                   alt="Mill"
+                  loading="lazy"
+                  decoding="async"
                   className="w-12 h-12 rounded-xl object-cover border-2 border-cyan-400 shadow-[0_0_15px_rgba(0,242,254,0.5)]"
                 />
                 <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-cyan-400 border-2 border-black" />
@@ -182,6 +184,8 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
             <img
               src={akinoyaVistaImg}
               alt="Äkinoya Vista Transmission"
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover brightness-75 filter group-hover/video:scale-102 transition-transform duration-1000"
             />
 

@@ -1717,125 +1717,122 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION            */}
               {/* ======================================================== */}
               <aside
-                className="sidebar hub-sidebar desktop-landscape-sidebar hidden md:flex w-64 lg:w-72 shrink-0 h-full max-h-[100dvh] flex-col justify-between bg-[#050812] border-r border-white/10 z-40 overscroll-contain community-scroll-container"
+                className="sidebar-container sidebar hub-sidebar desktop-landscape-sidebar hidden md:flex w-64 lg:w-72 shrink-0 h-full max-h-[100dvh] flex-col justify-between bg-[#050812] border-r border-white/10 z-40 overscroll-contain community-scroll-container"
                 style={{
                   WebkitOverflowScrolling: 'touch',
                 }}
               >
-                {/* Scrollable Navigation Modules Content */}
-                <div className="hub-sidebar-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 space-y-4">
-                  {/* Sidebar Branding Header */}
-                  <div className="pb-3 border-b border-white/10 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(0,242,254,0.8)]" />
-                        COMMUNITY OS v2.4
-                      </span>
-                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
-                        6 MODULES
-                      </span>
-                    </div>
-                    <div className="text-xs font-display font-black text-white tracking-wide">
-                      ÄKINOYA PORTAL NAVIGATOR
-                    </div>
+                {/* 1. Fixed Top Branding Header (Never scrolls away) */}
+                <div className="sidebar-header shrink-0 p-4 lg:p-5 pb-3 border-b border-white/10 space-y-1 bg-[#050812]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(0,242,254,0.8)]" />
+                      COMMUNITY OS v2.4
+                    </span>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
+                      6 MODULES
+                    </span>
                   </div>
-
-                  {/* Vertical Navigation Tabs */}
-                  <div className="space-y-1.5">
-                    {HUB_TABS.map((tab) => {
-                      const Icon = tab.icon;
-                      const isActive = activeSection === tab.id;
-
-                      return (
-                        <div key={tab.id} className="space-y-1">
-                          <button
-                            type="button"
-                            onClick={() => handleSwitchSection(tab.id as CreativeHubSection)}
-                            className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group min-h-[46px] ${
-                              isActive
-                                ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.4)] font-bold scale-[1.01]'
-                                : 'bg-white/[0.03] border-white/5 hover:border-cyan-400/40 hover:bg-white/[0.07] text-white/70 hover:text-white'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <Icon
-                                className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
-                                  isActive ? 'text-black' : 'text-cyan-400'
-                                }`}
-                              />
-                              <div className="min-w-0">
-                                <span className="text-xs font-mono font-bold block truncate">
-                                  {tab.label}
-                                </span>
-                                <span
-                                  className={`text-[9.5px] font-sans block truncate ${
-                                    isActive ? 'text-black/80 font-medium' : 'text-white/40'
-                                  }`}
-                                >
-                                  {tab.desc}
-                                </span>
-                              </div>
-                            </div>
-
-                            <span
-                              className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full font-bold shrink-0 ml-1.5 ${
-                                isActive
-                                  ? 'bg-black/20 text-black'
-                                  : 'bg-white/10 text-white/60 group-hover:bg-cyan-500/20 group-hover:text-cyan-300'
-                              }`}
-                            >
-                              {tab.count}
-                            </span>
-                          </button>
-
-                          {/* Nested Pipeline Stages sub-menu when on Labs & Workflows */}
-                          {isActive && tab.id === 'workflows' && (
-                            <div className="ml-3 pl-3 border-l-2 border-cyan-500/40 space-y-1 pt-1.5 pb-1">
-                              <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-400/90 block px-2 pb-0.5">
-                                PIPELINE STAGES
-                              </span>
-                              {WORKFLOW_STAGES.map((st) => {
-                                const isStageActive = activeStageId === st.id;
-                                return (
-                                  <button
-                                    key={st.id}
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleJumpToStage(st.id);
-                                    }}
-                                    className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-mono transition-all flex items-center justify-between cursor-pointer ${
-                                      isStageActive
-                                        ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/60 shadow-[0_0_12px_rgba(0,242,254,0.35)] font-bold'
-                                        : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
-                                    }`}
-                                  >
-                                    <span className="flex items-center gap-1.5 truncate">
-                                      <span
-                                        className={`text-[10px] ${
-                                          isStageActive ? 'text-cyan-300 font-bold' : 'text-white/40'
-                                        }`}
-                                      >
-                                        [{st.num}]
-                                      </span>
-                                      <span className="truncate text-[11px]">{st.title}</span>
-                                    </span>
-                                    {isStageActive && (
-                                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0 ml-1 shadow-[0_0_6px_#00f2fe]" />
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div className="text-xs font-display font-black text-white tracking-wide">
+                    ÄKINOYA PORTAL NAVIGATOR
                   </div>
                 </div>
 
-                {/* Cohesive Desktop Sidebar Bottom Widget: Timeline Badge + Live Countdown + "CLAIM YOUR WORLD" Button */}
-                <div className="hub-sidebar-dock shrink-0 p-4 lg:p-5 pt-3 pb-6 md:pb-8 border-t border-white/10 mt-auto bg-[#050812]">
+                {/* 2. Middle Scrollable Navigation: .sidebar-nav-links (Between header and bottom widget) */}
+                <div className="sidebar-nav-links hub-sidebar-scroll flex-grow min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 pt-3 pb-3 space-y-1.5">
+                  {HUB_TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeSection === tab.id;
+
+                    return (
+                      <div key={tab.id} className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSwitchSection(tab.id as CreativeHubSection)}
+                          className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group min-h-[46px] ${
+                            isActive
+                              ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.4)] font-bold scale-[1.01]'
+                              : 'bg-white/[0.03] border-white/5 hover:border-cyan-400/40 hover:bg-white/[0.07] text-white/70 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon
+                              className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
+                                isActive ? 'text-black' : 'text-cyan-400'
+                              }`}
+                            />
+                            <div className="min-w-0">
+                              <span className="text-xs font-mono font-bold block truncate">
+                                {tab.label}
+                              </span>
+                              <span
+                                className={`text-[9.5px] font-sans block truncate ${
+                                  isActive ? 'text-black/80 font-medium' : 'text-white/40'
+                                }`}
+                              >
+                                {tab.desc}
+                              </span>
+                            </div>
+                          </div>
+
+                          <span
+                            className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full font-bold shrink-0 ml-1.5 ${
+                              isActive
+                                ? 'bg-black/20 text-black'
+                                : 'bg-white/10 text-white/60 group-hover:bg-cyan-500/20 group-hover:text-cyan-300'
+                            }`}
+                          >
+                            {tab.count}
+                          </span>
+                        </button>
+
+                        {/* Nested Pipeline Stages sub-menu when on Labs & Workflows */}
+                        {isActive && tab.id === 'workflows' && (
+                          <div className="ml-3 pl-3 border-l-2 border-cyan-500/40 space-y-1 pt-1.5 pb-1">
+                            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-400/90 block px-2 pb-0.5">
+                              PIPELINE STAGES
+                            </span>
+                            {WORKFLOW_STAGES.map((st) => {
+                              const isStageActive = activeStageId === st.id;
+                              return (
+                                <button
+                                  key={st.id}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleJumpToStage(st.id);
+                                  }}
+                                  className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-mono transition-all flex items-center justify-between cursor-pointer ${
+                                    isStageActive
+                                      ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/60 shadow-[0_0_12px_rgba(0,242,254,0.35)] font-bold'
+                                      : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
+                                  }`}
+                                >
+                                  <span className="flex items-center gap-1.5 truncate">
+                                    <span
+                                      className={`text-[10px] ${
+                                        isStageActive ? 'text-cyan-300 font-bold' : 'text-white/40'
+                                      }`}
+                                    >
+                                      [{st.num}]
+                                    </span>
+                                    <span className="truncate text-[11px]">{st.title}</span>
+                                  </span>
+                                  {isStageActive && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0 ml-1 shadow-[0_0_6px_#00f2fe]" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 3. Vaste Positionering "System Launch" Widget (Fixed Footer at Bottom) */}
+                <div className="hub-sidebar-dock widget-container shrink-0 p-4 lg:p-5 pt-3 pb-6 md:pb-8 border-t border-white/10 mt-auto bg-[#050812]">
                   <div className="p-3.5 rounded-2xl bg-[#080d1a] border border-amber-500/30 shadow-[0_0_25px_rgba(0,0,0,0.65)] space-y-3">
                     {/* Timeline Badge Header */}
                     <div className="space-y-1.5 pb-2 border-b border-white/10">
@@ -2567,7 +2564,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
                         {discussionImage && activeChannelId !== 'general-chat' && (
                           <div className="flex items-center gap-2 bg-white/5 p-2 rounded-xl w-fit border border-cyan-500/30">
-                            <img src={discussionImage} alt="Upload" className="w-16 h-16 object-cover rounded-lg" />
+                            <img src={discussionImage} alt="Upload" loading="lazy" decoding="async" className="w-16 h-16 object-cover rounded-lg" />
                             <button
                               type="button"
                               onClick={() => setDiscussionImage(null)}

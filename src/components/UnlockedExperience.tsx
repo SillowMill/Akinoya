@@ -629,8 +629,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     if (
       (user as any)?.hasClaimedWorld === true ||
       (profile as any)?.hasClaimedWorld === true ||
+      (user as any)?.has_claimed_world === true ||
+      (profile as any)?.has_claimed_world === true ||
+      Boolean((user as any)?.claimedWorld) ||
+      Boolean((user as any)?.claimed_world) ||
+      Boolean((profile as any)?.claimed_world) ||
       Boolean((user?.user_metadata as any)?.hasClaimedWorld) ||
-      Boolean((user?.app_metadata as any)?.hasClaimedWorld)
+      Boolean((user?.user_metadata as any)?.has_claimed_world) ||
+      Boolean((user?.app_metadata as any)?.hasClaimedWorld) ||
+      Boolean((user?.app_metadata as any)?.has_claimed_world) ||
+      Boolean((user as any)?.created_planet_id || (profile as any)?.created_planet_id)
     ) {
       return true;
     }
@@ -2717,7 +2725,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     transform: 'translateZ(0)',
                     WebkitTransform: 'translateZ(0)',
                   }}
-                  className="relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-b from-[#0a132c] via-[#060c1d] to-[#040814] bg-clip-padding border-2 border-cyan-400/50 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]"
+                  className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-b from-[#0a132c] via-[#060c1d] to-[#040814] bg-clip-padding border-2 border-cyan-400/50 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]"
                 >
                   {/* Sealed internal radial glow (never overflows rounded corners) */}
                   <div
@@ -2849,7 +2857,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     transform: 'translateZ(0)',
                     WebkitTransform: 'translateZ(0)',
                   }}
-                  className="relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-r from-[#0a142d] via-[#060c1d] to-[#121009] bg-clip-padding border-2 border-amber-400/55 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.2)]"
+                  className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-r from-[#0a142d] via-[#060c1d] to-[#121009] bg-clip-padding border-2 border-amber-400/55 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.2)]"
                 >
                   <div
                     className="absolute inset-0 rounded-[inherit] pointer-events-none"
@@ -3355,7 +3363,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         className="shrink-0 w-24 sm:w-28 aspect-[3/4] rounded-lg overflow-hidden border border-white/15 hover:border-cyan-400/60 transition-colors cursor-pointer shadow-[0_0_15px_rgba(0,0,0,0.5)]"
                         aria-label="Preview Bingäa cover artwork"
                       >
-                        <img src={BINGAA_COVER_URL} alt="Bingäa official cover artwork" className="w-full h-full object-cover" />
+                        <img src={BINGAA_COVER_URL} alt="Bingäa official cover artwork" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       </button>
                       <div className="min-w-0 flex-1 w-full space-y-3 text-center sm:text-left">
                         <div>

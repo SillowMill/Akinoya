@@ -197,6 +197,8 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
                     <img
                       src={sub.renders.hero}
                       alt={sub.planetName}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-black/90 text-amber-300 border border-amber-400/40">

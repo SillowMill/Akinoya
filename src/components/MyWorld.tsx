@@ -158,7 +158,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
 
   return (
     <div
-      className="relative overflow-hidden p-5 sm:p-6 md:p-8 rounded-3xl bg-gradient-to-b from-[#060c1e]/90 via-[#030612]/92 to-[#01040a]/98 backdrop-blur-2xl border border-cyan-400/35 space-y-6 md:space-y-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(6,182,212,0.18)]"
+      className="widget-container relative overflow-hidden p-5 sm:p-6 md:p-8 rounded-3xl bg-gradient-to-b from-[#060c1e]/90 via-[#030612]/92 to-[#01040a]/98 backdrop-blur-none lg:backdrop-blur-2xl border border-cyan-400/35 space-y-6 md:space-y-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(6,182,212,0.18)]"
       style={{
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
@@ -190,7 +190,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                 alt={`${dossier.planetName || 'Ämlemi'} Planetary Horizon`}
                 className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700"
                 draggable={false}
-                loading="eager"
+                loading="lazy"
                 decoding="async"
               />
               {/* Gradient Atmospheric Shell matching Galaxy Navigator (Crystal-Clear Purity) */}
@@ -316,6 +316,8 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                   <img
                     src={heroPhotoUrl}
                     alt={dossier.planetName}
+                    loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 w-full h-full object-cover opacity-35 scale-110 transition-transform duration-1000"
                   />
                 )}
@@ -435,6 +437,8 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                   src={getCacheBustedUrl(activeCard.url)}
                   alt={activeCard.title}
                   draggable={false}
+                  loading="lazy"
+                  decoding="async"
                   className="absolute inset-0 w-full h-full object-cover select-none"
                   onClick={() => {
                     if (onInspectModal) {
@@ -596,6 +600,8 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                       <img
                         src={photo.url}
                         alt={photo.title}
+                        loading="lazy"
+                        decoding="async"
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 will-change-transform"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
