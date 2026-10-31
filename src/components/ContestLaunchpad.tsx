@@ -254,10 +254,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         isAccountGenerationClaimed())
   );
 
-  const isHannaTest = (user?.email || profile?.email || '').toLowerCase().trim() === 'hanna.meers@gmail.com';
-
-  // Founder Test Bypass / Hanna RB Test Reset: allows continuous clean testing of planet generation
-  const hasSubmittedContest = (isFounderAdmin && founderTestBypass) || isHannaTest ? false : rawHasSubmittedContest;
+  // Founder Test Bypass: allows odi.selis3@gmail.com to continuously test planet generation
+  const hasSubmittedContest = isFounderAdmin && founderTestBypass ? false : rawHasSubmittedContest;
 
   const handleFounderAdminReset = async () => {
     if (!isFounderAdmin) return;

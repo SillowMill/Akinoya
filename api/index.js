@@ -2525,7 +2525,6 @@ var init_authVoteService = __esm({
     _userStore = loadUsersStore();
     _voteStore = loadVotesStore();
     _submissionsStore = loadSubmissionsStore();
-    resetTestAccountData("hanna.meers@gmail.com");
   }
 });
 

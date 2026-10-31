@@ -209,8 +209,6 @@ export function resetTestAccountData(email = 'hanna.meers@gmail.com'): void {
   }
 }
 
-resetTestAccountData('hanna.meers@gmail.com');
-
 // ─── Submissions Operations ───────────────────────────────────────────────────
 export function saveSubmissionRecord(sub: any): { success: boolean; submission: any } {
   if (!sub || !sub.id) {

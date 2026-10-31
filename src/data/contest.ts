@@ -902,17 +902,6 @@ export const isForbiddenSubmission = (sub: any): boolean => {
   if (email.includes('kaat.jansen') || email.includes('hannah.jansen')) return true;
   if (id.toLowerCase().includes('kaat')) return true;
 
-  // Reset / purge previous test world records for Hanna RB / Aethelgard so test account starts 100% clean
-  if (
-    name === 'aethelgard' ||
-    name.includes('aethelgard') ||
-    id.toLowerCase().includes('aethelgard') ||
-    email.includes('hanna.meers') ||
-    author.includes('hanna meers') ||
-    author.includes('hanna rb')
-  ) {
-    return true;
-  }
   return false;
 };
 
@@ -1776,12 +1765,7 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
 
 // Check if a specific user already has a golden ticket submission
 export const getUserContestSubmission = (userId?: string, email?: string): PlanetSubmission | null => {
-  if (!userId && !email) return null;
   const normalizedEmail = (email || '').trim().toLowerCase();
-  // Reset for test account Hanna RB: return null so claim and creation flows are completely open
-  if (normalizedEmail === 'hanna.meers@gmail.com' || normalizedEmail.includes('hanna.meers')) {
-    return null;
-  }
   const submissions = getStoredPlanetSubmissions();
   const isOdi =
     normalizedEmail === 'odi.selis3@gmail.com' ||
@@ -1789,11 +1773,38 @@ export const getUserContestSubmission = (userId?: string, email?: string): Plane
     normalizedEmail === 'sillowmill@gmail.com' ||
     userId === 'user-odi-founder' ||
     userId === 'user-odi-genesis';
+
+  // Check explicit own created planet id stored during creation
+  let ownId: string | null = null;
+  if (typeof window !== 'undefined') {
+    try {
+      ownId =
+        (normalizedEmail && localStorage.getItem(`akinoya_own_created_planet_id_${normalizedEmail}`)) ||
+        (userId && localStorage.getItem(`akinoya_own_created_planet_id_${userId}`)) ||
+        localStorage.getItem('akinoya_own_created_planet_id') ||
+        sessionStorage.getItem('akinoya_own_created_planet_id');
+    } catch {}
+  }
+
+  // Check claimed sector name from local sector reservation
+  let claimedSectorName = '';
+  if (typeof window !== 'undefined') {
+    try {
+      const rawClaim = localStorage.getItem('sillow_claimed_sector');
+      if (rawClaim) {
+        const parsed = JSON.parse(rawClaim);
+        claimedSectorName = (parsed.sectorName || '').trim().toLowerCase();
+      }
+    } catch {}
+  }
+
   const match = submissions.find(
     (s) =>
       !isForbiddenSubmission(s) &&
       ((userId && s.userId === userId) ||
         (normalizedEmail && s.authorEmail && s.authorEmail.toLowerCase() === normalizedEmail) ||
+        (ownId && s.id === ownId) ||
+        (claimedSectorName && s.planetName && s.planetName.toLowerCase() === claimedSectorName) ||
         (isOdi && (s.id === 'planet-amlemi-genesis-01' || s.planetName === 'Ämlemi')))
   );
   return match || null;

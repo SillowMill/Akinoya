@@ -397,18 +397,87 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   useEffect(() => {
     const syncUserWorldState = () => {
-      setClaimedSector(getStoredSectorClaim());
+      const claim = getStoredSectorClaim();
+      setClaimedSector(claim);
       const userId = user?.id || profile?.id;
       const email = user?.email || profile?.email;
       const emailNorm = (email || '').toLowerCase().trim();
       const userIdNorm = (userId || '').toLowerCase().trim();
       const storedList = getStoredPlanetSubmissions();
 
-      if (userId || email) {
-        const localMatch = getUserContestSubmission(userId, email);
-        if (localMatch) {
-          setUserDossier(localMatch);
+      // Check if user has an existing submission or custom created planet
+      let localMatch = getUserContestSubmission(userId, email);
+
+      // If no direct submission yet, but user has an active sector claim (e.g. Hout or Aethelgard)
+      if (
+        !localMatch &&
+        claim &&
+        claim.sectorName &&
+        claim.sectorName.toLowerCase() !== 'ämlemi' &&
+        claim.sectorName.toLowerCase() !== 'amlemi'
+      ) {
+        // Look up by claimed sector name in stored submissions
+        localMatch =
+          storedList.find(
+            (p) =>
+              p.planetName &&
+              p.planetName.toLowerCase() === claim.sectorName.toLowerCase() &&
+              !CURATED_GALAXY_WORLD_IDS.has(p.id)
+          ) || null;
+
+        // If not yet in stored submissions, construct the user's claimed pioneer world immediately
+        if (!localMatch) {
+          const derivedName = profile?.first_name
+            ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}`
+            : profile?.full_name || (email ? email.split('@')[0] : 'Pioneer Architect');
+
+          localMatch = {
+            id: `PLN-CLAIM-${claim.sectorName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+            userId: userId || 'user-pioneer',
+            authorName: derivedName,
+            authorUsername: profile?.username || derivedName,
+            authorEmail: email || claim.holderEmail,
+            authorAvatarGradient: 'from-amber-400 via-yellow-500 to-amber-700',
+            planetName: claim.sectorName,
+            atmosphere: `Atmospheric calibration in progress for ${claim.sectorName}`,
+            flora: `Native biome: ${claim.biome}`,
+            fauna: 'Indigenous biodiversity cataloging queued',
+            sonicVibe: 'Ambient harmonic resonance',
+            visualAesthetic: `${claim.biome} frontier`,
+            landmark: `${claim.sectorName} Prime Monument`,
+            biome: claim.biome,
+            sectorName: claim.sectorName,
+            sectorId: claim.coordinates || 'SECTOR AKN-01',
+            additionalNotes: '',
+            generatedLore: `Official planetary dossier archive registered for ${claim.sectorName}. Terrain and environmental envelope assigned to ${claim.biome}.`,
+            futurePromise: 'Pioneer frontier reserved for launch.',
+            isPioneer: true,
+            isVipPioneer: isVipMode,
+            pioneerBadge: claim.pioneerBadge || 'PIONEER 2027 · PRE-RELEASE',
+            videoUrl: '',
+            videoStatus: 'QUEUED_PENDING',
+            sfxAudioUrl: '',
+            sfxStatus: 'QUEUED_PENDING',
+            renders: {
+              hero: '',
+              flora: '',
+              fauna: '',
+              atmosphere: '',
+              landmark: '',
+              ecosystem: '',
+            },
+            votesCount: 1,
+            hasVoted: false,
+            status: 'QUEUED',
+            createdAt: claim.claimedAt || new Date().toISOString().split('T')[0],
+            votingDeadline: 'June 30, 2027',
+          };
         }
+      }
+
+      if (localMatch) {
+        setUserDossier(localMatch);
+      } else if (userId || email) {
         fetchUserContestSubmission(userId, email).then((sub) => {
           if (sub) {
             setUserDossier(sub);
@@ -433,7 +502,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
               );
               if (amlemi) setUserDossier(amlemi);
-            } else if (!localMatch) {
+            } else {
               setUserDossier(null);
             }
           }
@@ -516,9 +585,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const hasUserCreatedWorld = useMemo(() => {
     const emailNorm = (user?.email || profile?.email || '').toLowerCase().trim();
     const userIdNorm = (user?.id || profile?.id || '').toLowerCase().trim();
-    if (emailNorm === 'hanna.meers@gmail.com') {
-      return false;
-    }
     if (
       userDossier &&
       userDossier.id !== 'planet-amlemi-genesis-01' &&
@@ -2759,203 +2825,257 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
               {/* Active or Simulated Planet Dossier Experience */}
               <div className="space-y-6 md:space-y-7">
-                {/* Top Sector Dossier Header Banner — Supreme Galaxy Vibe Glassmorphism with Pioneer Badging */}
-                <div
-                  style={{
-                    transform: 'translateZ(0)',
-                    WebkitTransform: 'translateZ(0)',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                  }}
-                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d1630]/90 via-[#040816]/92 to-[#09152b]/90 backdrop-blur-md border border-cyan-400/35 p-5 sm:p-6 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(6,182,212,0.18)]"
-                >
-                  {/* Multi-layered radial nebula glows */}
-                  <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/80 via-amber-300/80 to-transparent pointer-events-none" />
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-[90px] pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/15 rounded-full blur-[90px] pointer-events-none" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-indigo-600/12 rounded-full blur-[110px] pointer-events-none" />
+                {/* Top Sector Dossier Header Banner — Supreme Galaxy Vibe Glassmorphism with Pioneer Badging & Sci-Fi Quantum Synthesis Animation */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`dossier-banner-${activeWorldDossier?.id || activeWorldDossier?.planetName}`}
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.97 }}
+                    transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                    style={{
+                      transform: 'translateZ(0)',
+                      WebkitTransform: 'translateZ(0)',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                    }}
+                    className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d1630]/90 via-[#040816]/92 to-[#09152b]/90 backdrop-blur-md border border-cyan-400/35 p-5 sm:p-6 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(6,182,212,0.18)]"
+                  >
+                    {/* Multi-layered radial nebula glows */}
+                    <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/80 via-amber-300/80 to-transparent pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-[90px] pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/15 rounded-full blur-[90px] pointer-events-none" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-indigo-600/12 rounded-full blur-[110px] pointer-events-none" />
 
-                  <div className="flex flex-wrap items-center justify-center xl:justify-between gap-3 mb-4 relative z-10 text-center xl:text-left">
-                    <div className="flex items-center gap-2">
-                      <span className="p-1.5 rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 text-black shrink-0 shadow-[0_0_12px_rgba(251,191,36,0.5)]">
-                        <Globe2 className="w-4 h-4" />
-                      </span>
-                      <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
-                        {isGuestWorldSimulation || activeWorldDossier?.planetName === 'Ämlemi'
-                          ? 'Pioneer World #1 (An Example Sector) · Ämlemi'
-                          : 'My Synthesized Sector · Dossier Active'}
-                      </span>
-                    </div>
+                    {/* Cinematic Sci-Fi Quantum Scanner Sweep Laser on Replacement/Mount */}
+                    <motion.div
+                      key={`quantum-sweep-${activeWorldDossier.id}`}
+                      initial={{ top: '-20%', opacity: 1 }}
+                      animate={{ top: '120%', opacity: 0 }}
+                      transition={{ duration: 1.3, ease: 'easeInOut' }}
+                      className="absolute inset-x-0 h-20 pointer-events-none bg-gradient-to-b from-transparent via-cyan-400/30 to-amber-400/10 border-b-2 border-cyan-300/80 shadow-[0_0_24px_rgba(34,211,238,0.7)] z-20"
+                    />
 
-                    <div className="flex items-center justify-center gap-2 flex-wrap">
-                      {isQueuedWorld && (
-                        <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-amber-500/30 text-amber-300 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,158,11,0.4)] animate-pulse">
-                          <Sparkles className="w-3 h-3 text-amber-300" />
-                          <span>PRIVATE UNTIL RELEASE</span>
+                    {/* Quantum Shockwave Dissolve Pulse */}
+                    <motion.div
+                      key={`quantum-pulse-${activeWorldDossier.id}`}
+                      initial={{ scale: 0.8, opacity: 0.9 }}
+                      animate={{ scale: 2.5, opacity: 0 }}
+                      transition={{ duration: 1.1, ease: 'easeOut' }}
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-gradient-to-tr from-cyan-500/25 via-amber-400/20 to-transparent blur-3xl pointer-events-none z-10"
+                    />
+
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.45, delay: 0.1 }}
+                      className="flex flex-wrap items-center justify-center xl:justify-between gap-3 mb-4 relative z-10 text-center xl:text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 text-black shrink-0 shadow-[0_0_12px_rgba(251,191,36,0.5)]">
+                          <Globe2 className="w-4 h-4" />
                         </span>
-                      )}
-                      {isPioneerPlanet(activeWorldDossier) && (
-                        <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-gradient-to-r from-amber-500/30 via-yellow-500/25 to-amber-600/30 text-amber-200 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_16px_rgba(251,191,36,0.4)]">
-                          <Sparkles className="w-3 h-3 text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
+                        <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
+                          {isGuestWorldSimulation || activeWorldDossier?.planetName === 'Ämlemi'
+                            ? 'Pioneer World #1 (An Example Sector) · Ämlemi'
+                            : 'My Synthesized Sector · Dossier Active'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        {isQueuedWorld && (
+                          <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-amber-500/30 text-amber-300 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,158,11,0.4)] animate-pulse">
+                            <Sparkles className="w-3 h-3 text-amber-300" />
+                            <span>PRIVATE UNTIL RELEASE</span>
+                          </span>
+                        )}
+                        {isPioneerPlanet(activeWorldDossier) && (
+                          <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-gradient-to-r from-amber-500/30 via-yellow-500/25 to-amber-600/30 text-amber-200 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_16px_rgba(251,191,36,0.4)]">
+                            <Sparkles className="w-3 h-3 text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
+                            <span>
+                              {isFoundingPioneerPlanet(activeWorldDossier)
+                                ? `FOUNDING PIONEER · #01 · ${formatTitleCaseUserName(activeWorldDossier.authorName).toUpperCase()}`
+                                : isVipPioneerPlanet(activeWorldDossier)
+                                ? 'VIP PIONEER · 2027 ARCHIVE'
+                                : activeWorldDossier.pioneerBadge || 'PIONEER 2027 · PRE-RELEASE'}
+                            </span>
+                          </span>
+                        )}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-400/40 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                           <span>
-                            {isFoundingPioneerPlanet(activeWorldDossier)
-                              ? `FOUNDING PIONEER · #01 · ${formatTitleCaseUserName(activeWorldDossier.authorName).toUpperCase()}`
-                              : isVipPioneerPlanet(activeWorldDossier)
-                              ? 'VIP PIONEER · 2027 ARCHIVE'
-                              : activeWorldDossier.pioneerBadge || 'PIONEER 2027 · PRE-RELEASE'}
+                            {isGuestWorldSimulation
+                              ? 'INTERACTIVE PREVIEW · 1 GOLDEN TICKET READY'
+                              : isQueuedWorld
+                              ? 'GENERATION COMPLETE · PRIVATE UNTIL RELEASE'
+                              : 'GOLDEN TICKET EXPENDED · ONE-SHOT LOCKED'}
                           </span>
                         </span>
-                      )}
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-400/40 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span>
-                          {isGuestWorldSimulation
-                            ? 'INTERACTIVE PREVIEW · 1 GOLDEN TICKET READY'
-                            : isQueuedWorld
-                            ? 'GENERATION COMPLETE · PRIVATE UNTIL RELEASE'
-                            : 'GOLDEN TICKET EXPENDED · ONE-SHOT LOCKED'}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-400/40 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-cyan-400" />
+                          <span>{isGuestWorldSimulation ? 'VERIFIED GENESIS ARCHIVE' : 'BOUND TO ACCOUNT'}</span>
                         </span>
-                      </span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-400/40 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-cyan-400" />
-                        <span>{isGuestWorldSimulation ? 'VERIFIED GENESIS ARCHIVE' : 'BOUND TO ACCOUNT'}</span>
-                      </span>
-                    </div>
-                  </div>
+                      </div>
+                    </motion.div>
 
-                  {/* Tablet Portrait & Mobile Vertical Alignment: Sillow Mill Logo, Stylized ÄMLEMI & Stacked Touch Buttons */}
-                  <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 md:gap-7 relative z-10">
-                    <div className="min-w-0 flex flex-col items-center xl:items-start text-center xl:text-left space-y-3 sm:space-y-3.5">
-                      {/* Sillow Mill Logo, Stylized ÄMLEMI Title, and Metadata Sector Badge in Clean Vertical Alignment on Portrait Tablet (< xl) */}
-                      <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-start gap-3 sm:gap-4 xl:gap-5 min-w-0 w-full">
-                        {/* Official Ämlemi Planetary Thumbnail Render (Matching Galaxy Navigator Celestial Orb) */}
-                        <div
-                          className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0 group flex items-center justify-center rounded-full"
-                          style={{
-                            borderRadius: '50%',
-                            WebkitBorderRadius: '50%',
-                          }}
-                        >
-                          {/* 1. Radiant Pulsing Golden Halo */}
-                          <div
-                            className="absolute -inset-3.5 rounded-full bg-gradient-to-tr from-amber-500/30 via-yellow-400/20 to-transparent blur-md animate-pulse pointer-events-none"
-                            style={{ borderRadius: '50%' }}
-                          />
-
-                          {/* 2. Outer Rotating Dashed Orbit Ring (Exclusively for #01 Founding Pioneer Ämlemi) */}
-                          {isFoundingPioneerPlanet(activeWorldDossier) && (
+                    {/* Tablet Portrait & Mobile Vertical Alignment: Sillow Mill Logo, Stylized ÄMLEMI & Stacked Touch Buttons */}
+                    <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 md:gap-7 relative z-10">
+                      <div className="min-w-0 flex flex-col items-center xl:items-start text-center xl:text-left space-y-3 sm:space-y-3.5">
+                        {/* Sillow Mill Logo, Stylized Title, and Metadata Sector Badge in Clean Vertical Alignment on Portrait Tablet (< xl) */}
+                        <div className="flex flex-col xl:flex-row items-center justify-center xl:justify-start gap-3 sm:gap-4 xl:gap-5 min-w-0 w-full">
+                          {/* 3D Celestial Planet Orb with Quantum Synthesis Entrance */}
+                          <motion.div
+                            initial={{ scale: 0.5, rotate: -40, opacity: 0 }}
+                            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+                            className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 shrink-0 group flex items-center justify-center rounded-full"
+                            style={{
+                              borderRadius: '50%',
+                              WebkitBorderRadius: '50%',
+                            }}
+                          >
+                            {/* 1. Radiant Pulsing Golden Halo */}
                             <div
-                              className="absolute -inset-3 rounded-full border border-dashed border-amber-400/40 pointer-events-none animate-spin-reverse"
+                              className="absolute -inset-3.5 rounded-full bg-gradient-to-tr from-amber-500/30 via-yellow-400/20 to-transparent blur-md animate-pulse pointer-events-none"
+                              style={{ borderRadius: '50%' }}
+                            />
+
+                            {/* 2. Outer Rotating Dashed Orbit Ring (Exclusively for #01 Founding Pioneer Ämlemi) */}
+                            {isFoundingPioneerPlanet(activeWorldDossier) && (
+                              <div
+                                className="absolute -inset-3 rounded-full border border-dashed border-amber-400/40 pointer-events-none animate-spin-reverse"
+                                style={{
+                                  animationDuration: '28s',
+                                  borderRadius: '50%',
+                                  WebkitBorderRadius: '50%',
+                                  willChange: 'transform',
+                                }}
+                              />
+                            )}
+
+                            {/* 3. Single Orbit Ring Standard: Concentric Rotating Dashed Orbit Ring */}
+                            <div
+                              className={`absolute ${
+                                isFoundingPioneerPlanet(activeWorldDossier) ? '-inset-1.5' : '-inset-2.5'
+                              } rounded-full border border-dashed border-amber-300/90 shadow-[0_0_14px_rgba(251,191,36,0.5)] pointer-events-none animate-spin`}
                               style={{
-                                animationDuration: '28s',
+                                animationDuration: isFoundingPioneerPlanet(activeWorldDossier) ? '18s' : '24s',
                                 borderRadius: '50%',
                                 WebkitBorderRadius: '50%',
                                 willChange: 'transform',
                               }}
-                            />
-                          )}
+                            >
+                              {isFoundingPioneerPlanet(activeWorldDossier) && (
+                                <span
+                                  className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-[0_0_8px_#fbbf24]"
+                                  style={{ borderRadius: '50%' }}
+                                />
+                              )}
+                            </div>
 
-                          {/* 3. Single Orbit Ring Standard: Concentric Rotating Dashed Orbit Ring */}
-                          <div
-                            className={`absolute ${
-                              isFoundingPioneerPlanet(activeWorldDossier) ? '-inset-1.5' : '-inset-2.5'
-                            } rounded-full border border-dashed border-amber-300/90 shadow-[0_0_14px_rgba(251,191,36,0.5)] pointer-events-none animate-spin`}
-                            style={{
-                              animationDuration: isFoundingPioneerPlanet(activeWorldDossier) ? '18s' : '24s',
-                              borderRadius: '50%',
-                              WebkitBorderRadius: '50%',
-                              willChange: 'transform',
-                            }}
-                          >
-                            {isFoundingPioneerPlanet(activeWorldDossier) && (
-                              <span
-                                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-[0_0_8px_#fbbf24]"
-                                style={{ borderRadius: '50%' }}
-                              />
-                            )}
-                          </div>
-
-                          {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
-                          <div
-                            className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300"
-                            style={{
-                              borderRadius: '50%',
-                              WebkitBorderRadius: '50%',
-                              overflow: 'hidden',
-                              WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                            }}
-                          >
-                            <img
-                              src={amlemiThumbnailUrl}
-                              alt={`${activeWorldDossier.planetName} Planetary Horizon`}
-                              className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700 pointer-events-none select-none"
+                            {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
+                            <div
+                              className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300"
                               style={{
                                 borderRadius: '50%',
                                 WebkitBorderRadius: '50%',
+                                overflow: 'hidden',
+                                WebkitMaskImage: '-webkit-radial-gradient(white, black)',
                               }}
-                              draggable={false}
-                              loading="eager"
-                              decoding="async"
-                            />
-                            {/* Gradient Atmospheric Shell matching Galaxy Navigator (Crystal-Clear Purity) */}
-                            <div
-                              className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none"
-                              style={{ borderRadius: '50%' }}
-                            />
+                            >
+                              <img
+                                src={amlemiThumbnailUrl}
+                                alt={`${activeWorldDossier.planetName} Planetary Horizon`}
+                                className="w-full h-full object-cover group-hover:rotate-6 transition-transform duration-700 pointer-events-none select-none"
+                                style={{
+                                  borderRadius: '50%',
+                                  WebkitBorderRadius: '50%',
+                                }}
+                                draggable={false}
+                                loading="eager"
+                                decoding="async"
+                              />
+                              {/* Gradient Atmospheric Shell matching Galaxy Navigator (Crystal-Clear Purity) */}
+                              <div
+                                className="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/20 pointer-events-none"
+                                style={{ borderRadius: '50%' }}
+                              />
+                            </div>
+                          </motion.div>
+
+                          {/* Large Stylized Planet Title & Sector Badge with Smooth Reveal */}
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3.5 flex-wrap">
+                            <motion.h2
+                              initial={{ opacity: 0, x: -16, filter: 'blur(6px)' }}
+                              animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                              transition={{ duration: 0.6, delay: 0.25, ease: 'easeOut' }}
+                              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-black text-white tracking-wider sm:tracking-widest drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)] uppercase text-center xl:text-left"
+                            >
+                              {activeWorldDossier.planetName}
+                            </motion.h2>
+                            <motion.span
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.45, delay: 0.35, ease: 'backOut' }}
+                              className="px-3 py-1 rounded-lg bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 font-mono text-[10.5px] sm:text-xs font-extrabold tracking-widest uppercase shadow-[0_0_14px_rgba(6,182,212,0.35)] shrink-0"
+                            >
+                              {activeWorldDossier.sectorId || 'SECTOR AKN-01'}
+                            </motion.span>
                           </div>
                         </div>
 
-                        {/* Large Stylized ÄMLEMI World Name & Sector Badge */}
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3.5 flex-wrap">
-                          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-black text-white tracking-wider sm:tracking-widest drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)] uppercase text-center xl:text-left">
-                            {activeWorldDossier.planetName}
-                          </h2>
-                          <span className="px-3 py-1 rounded-lg bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 font-mono text-[10.5px] sm:text-xs font-extrabold tracking-widest uppercase shadow-[0_0_14px_rgba(6,182,212,0.35)] shrink-0">
-                            {activeWorldDossier.sectorId || 'SECTOR AKN-01'}
-                          </span>
-                        </div>
+                        {/* Maker Name: "Synthesized by [User]" with Animated Reveal */}
+                        <motion.p
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: 0.45 }}
+                          className="text-xs sm:text-sm font-mono text-white/75 text-center xl:text-left max-w-xl"
+                        >
+                          Synthesized by <strong className="text-amber-300 font-bold">{formatTitleCaseUserName(activeWorldDossier.authorName)}</strong>
+                        </motion.p>
                       </div>
 
-                      <p className="text-xs sm:text-sm font-mono text-white/75 text-center xl:text-left max-w-xl">
-                        Synthesized by <strong className="text-amber-300 font-bold">{formatTitleCaseUserName(activeWorldDossier.authorName)}</strong>
-                      </p>
-                    </div>
-
-                    {/* Stacked Action Buttons: Responsive Column Layout for Touch Interaction on Tablet Portrait */}
-                    <div className="w-full max-w-sm sm:max-w-md xl:max-w-none xl:w-auto mx-auto xl:mx-0 flex flex-col xl:flex-row items-stretch xl:items-center gap-3 xl:shrink-0 pt-2 xl:pt-0">
-                      <button
-                        type="button"
-                        onClick={handleShareDossier}
-                        className="w-full xl:w-auto px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/90 hover:text-white border border-white/20 font-mono text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[48px] shadow-sm active:scale-[0.99]"
+                      {/* Stacked Action Buttons: Responsive Column Layout for Touch Interaction on Tablet Portrait */}
+                      <motion.div
+                        initial={{ opacity: 0, x: 12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.5 }}
+                        className="w-full max-w-sm sm:max-w-md xl:max-w-none xl:w-auto mx-auto xl:mx-0 flex flex-col xl:flex-row items-stretch xl:items-center gap-3 xl:shrink-0 pt-2 xl:pt-0"
                       >
-                        {isCopiedDossierLink ? (
-                          <>
-                            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                            <span className="text-emerald-400 font-bold">Link Copied!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Share2 className="w-4 h-4 shrink-0" />
-                            <span>Share Dossier</span>
-                          </>
-                        )}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={handleShareDossier}
+                          className="w-full xl:w-auto px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/90 hover:text-white border border-white/20 font-mono text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[48px] shadow-sm active:scale-[0.99]"
+                        >
+                          {isCopiedDossierLink ? (
+                            <>
+                              <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <span className="text-emerald-400 font-bold">Link Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Share2 className="w-4 h-4 shrink-0" />
+                              <span>Share Dossier</span>
+                            </>
+                          )}
+                        </button>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          soundManager.playTone(660, 0.05);
-                          setSelectedDossierModal(activeWorldDossier);
-                        }}
-                        className="w-full xl:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black font-mono text-xs sm:text-sm font-extrabold shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2.5 transition-all cursor-pointer min-h-[48px]"
-                      >
-                        <Camera className="w-4 h-4 shrink-0" />
-                        <span>Inspect 5-Photo Dossier</span>
-                        <ArrowRight className="w-4 h-4 shrink-0" />
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundManager.playTone(660, 0.05);
+                            setSelectedDossierModal(activeWorldDossier);
+                          }}
+                          className="w-full xl:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black font-mono text-xs sm:text-sm font-extrabold shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2.5 transition-all cursor-pointer min-h-[48px]"
+                        >
+                          <Camera className="w-4 h-4 shrink-0" />
+                          <span>Inspect 5-Photo Dossier</span>
+                          <ArrowRight className="w-4 h-4 shrink-0" />
+                        </button>
+                      </motion.div>
                     </div>
-                  </div>
-                </div>
+                  </motion.div>
+                </AnimatePresence>
 
                 {/* 3 Live Social Engagement Metric Cards — Calibrated for iPad Portrait (md:grid-cols-3 md:gap-5 md:p-6) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
@@ -3115,25 +3235,36 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               </div>
 
               {/* Asset 01: Differentiated Master Multi-Media Carousel (4K Archive, 9:16 Story Card, 9:16 MP4 Trailer) */}
-              {activeWorldDossier && isQueuedWorld && !isLiveGalaxyWorld(activeWorldDossier) && (
-                <WorldReleaseStatusBanner dossier={activeWorldDossier} />
-              )}
-              {activeWorldDossier && (
-                <MyAssetsMasterCarousel
-                  dossier={activeWorldDossier}
-                  editionRank={planetRank > 0 ? planetRank : 1}
-                  isSimulationMode={isGuestWorldSimulation}
-                  onUnlockSimulation={() => {
-                    soundManager.playTone(660, 0.05);
-                    if (onNavigateToContest) {
-                      onNavigateToContest();
-                    } else if (typeof window !== 'undefined') {
-                      window.location.href = '/contest';
-                    }
-                  }}
-                  onNavigateToGalaxy={onNavigateToGalaxy}
-                />
-              )}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`assets-dossier-${activeWorldDossier?.id || activeWorldDossier?.planetName}`}
+                  initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, y: -16, filter: 'blur(6px)' }}
+                  transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                  className="space-y-4"
+                >
+                  {activeWorldDossier && isQueuedWorld && !isLiveGalaxyWorld(activeWorldDossier) && (
+                    <WorldReleaseStatusBanner dossier={activeWorldDossier} />
+                  )}
+                  {activeWorldDossier && (
+                    <MyAssetsMasterCarousel
+                      dossier={activeWorldDossier}
+                      editionRank={planetRank > 0 ? planetRank : 1}
+                      isSimulationMode={isGuestWorldSimulation}
+                      onUnlockSimulation={() => {
+                        soundManager.playTone(660, 0.05);
+                        if (onNavigateToContest) {
+                          onNavigateToContest();
+                        } else if (typeof window !== 'undefined') {
+                          window.location.href = '/contest';
+                        }
+                      }}
+                      onNavigateToGalaxy={onNavigateToGalaxy}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
 
               {isVipMode ? (
                 <>
