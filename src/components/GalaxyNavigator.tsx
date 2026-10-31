@@ -75,7 +75,7 @@ interface CameraTarget {
 export type PerformanceTier = 'high' | 'medium' | 'low';
 
 const ORBITAL_RINGS = [
-  { radius: 300, label: '300 AU · FOUNDATIONAL CAPITAL ORBIT (ÄMLEMI)', color: 'rgba(255, 255, 255, 0.045)' },
+  { radius: 300, label: '300 AU · FOUNDATIONAL CAPITAL ORBIT (ÄMLEMI)', color: 'rgba(251, 191, 36, 0.05)' },
   { radius: 540, label: '540 AU · INNER CORE HARMONIC RING', color: 'rgba(255, 255, 255, 0.04)' },
   { radius: 1000, label: '1000 AU · PIONEER ORBIT', color: 'rgba(255, 255, 255, 0.04)' },
   { radius: 1480, label: '1480 AU · IONIZATION REEF', color: 'rgba(255, 255, 255, 0.035)' },
@@ -332,9 +332,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const velocityRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const lastMoveTimeRef = useRef<number>(0);
   const inertiaAnimRef = useRef<number | null>(null);
-  const moveRafIdRef = useRef<number | null>(null);
-  const wheelRafIdRef = useRef<number | null>(null);
-  const targetWheelZoomRef = useRef<number | null>(null);
 
   // Active Pointers Map & Two-Finger Pinch/Rotate State
   const touchesRef = useRef<Map<number, { x: number; y: number }>>(new Map());
@@ -402,22 +399,18 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     }
   }, [isMorphing]);
 
-  const visThrottleCounterRef = useRef<number>(0);
-
   // Direct GPU DOM Transform & HUD Synchronizer (Runs in <0.1ms with zero React overhead)
-  const syncWorldTransformAndHud = useCallback((forceVisibilityCheck = false) => {
+  const syncWorldTransformAndHud = useCallback(() => {
     const curPan = panRef.current;
     const curZoom = zoomRef.current;
     const curRot = rotationRef.current;
 
     if (worldLayerRef.current) {
-      worldLayerRef.current.style.transform = `translate3d(${curPan.x * curZoom}px, ${curPan.y * curZoom}px, 0) scale(${curZoom}) translateZ(0)`;
-      (worldLayerRef.current.style as any).webkitTransform = `translate3d(${curPan.x * curZoom}px, ${curPan.y * curZoom}px, 0) scale(${curZoom}) translateZ(0)`;
+      worldLayerRef.current.style.transform = `translate3d(${curPan.x * curZoom}px, ${curPan.y * curZoom}px, 0) scale(${curZoom})`;
     }
     if (worldRotationWrapperRef.current) {
       const deg = (curRot * 180) / Math.PI;
-      worldRotationWrapperRef.current.style.transform = `rotate3d(0, 0, 1, ${deg}deg) translateZ(0)`;
-      (worldRotationWrapperRef.current.style as any).webkitTransform = `rotate3d(0, 0, 1, ${deg}deg) translateZ(0)`;
+      worldRotationWrapperRef.current.style.transform = `rotate3d(0, 0, 1, ${deg}deg)`;
     }
     if (hudCoordRef.current) {
       hudCoordRef.current.textContent = `X: ${Math.round(-curPan.x)} · Y: ${Math.round(-curPan.y)}`;
@@ -429,10 +422,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       hudZoomRef.current.textContent = `${(curZoom * 100).toFixed(0)}%`;
     }
 
-    // Spatial Viewport Culling & DOM Node Recycling (Throttled during drag to relieve Safari main thread)
-    if (forceVisibilityCheck || !isDraggingRef.current || ++visThrottleCounterRef.current % 3 === 0) {
-      updateNodeVisibility();
-    }
+    // Spatial Viewport Culling & DOM Node Recycling (Skips off-screen rendering)
+    updateNodeVisibility();
   }, [updateNodeVisibility]);
 
   // Re-evaluate node visibility once morph completes
@@ -580,14 +571,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     };
   }, []);
 
-  // Cancel any pending throttled gesture frames on unmount
-  useEffect(() => {
-    return () => {
-      if (moveRafIdRef.current !== null) cancelAnimationFrame(moveRafIdRef.current);
-      if (wheelRafIdRef.current !== null) cancelAnimationFrame(wheelRafIdRef.current);
-    };
-  }, []);
-
   // Fetch Supabase and local planets & setup realtime subscription
   useEffect(() => {
     let isMounted = true;
@@ -623,44 +606,35 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     };
   }, [user?.id, user?.email]);
 
-  // Initialize rich, deep-space Starfield with balanced, subtle, realistic stars
+  // Initialize rich, deep-space Starfield with adaptive density based on performance tier
   useEffect(() => {
     const stars: Star[] = [];
-    const count = isMobile ? 420 : 680;
-    // Subtle, natural deep-space celestial palette (soft silvery whites, faint stellar blues, delicate tints)
-    const colors = [
-      '#ffffff',
-      '#f8fafc',
-      '#e2e8f0',
-      '#cbd5e1',
-      '#e0f2fe',
-      '#bae6fd',
-      '#fef08a',
-    ];
+    const count = perfTier === 'low' ? 200 : perfTier === 'medium' ? 380 : (isMobile ? 480 : 700);
+    const colors = ['#ffffff', '#bae6fd', '#fef08a', '#e9d5ff', '#67e8f9', '#f0f9ff'];
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
       const distance = Math.pow(Math.random(), 0.52) * 4400;
-      const layer = Math.random() < 0.65 ? 0 : Math.random() < 0.92 ? 1 : 2;
+      const layer = Math.random() < 0.62 ? 0 : Math.random() < 0.88 ? 1 : 2;
       const radius =
         layer === 0
-          ? Math.random() * 0.35 + 0.35    // Tiny distant pinpoints: 0.35px - 0.70px
+          ? Math.random() * 0.75 + 0.25
           : layer === 1
-          ? Math.random() * 0.45 + 0.65    // Delicate midground stars: 0.65px - 1.10px
-          : Math.random() * 0.40 + 1.15;   // Occasional brighter star: 1.15px - 1.55px
+          ? Math.random() * 1.25 + 0.75
+          : Math.random() * 2.2 + 1.4;
 
       stars.push({
         x: Math.cos(angle) * distance,
         y: Math.sin(angle) * distance,
         radius,
-        baseAlpha: layer === 0 ? Math.random() * 0.25 + 0.22 : layer === 1 ? Math.random() * 0.25 + 0.38 : Math.random() * 0.20 + 0.55,
-        twinkleSpeed: Math.random() * 0.03 + 0.01,
+        baseAlpha: layer === 0 ? Math.random() * 0.45 + 0.15 : Math.random() * 0.55 + 0.3,
+        twinkleSpeed: Math.random() * 0.035 + 0.008,
         color: colors[Math.floor(Math.random() * colors.length)],
         layer,
       });
     }
     starsRef.current = stars;
-  }, [isMobile]);
+  }, [isMobile, perfTier]);
 
   // Smooth Camera Pan to Coordinates
   const panTo = useCallback((targetX: number, targetY: number, targetZoom?: number, duration = 800, targetRotation = 0) => {
@@ -801,13 +775,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       const width = canvasDimsRef.current.width || window.innerWidth;
       const height = canvasDimsRef.current.height || window.innerHeight;
 
-      const targetDpr = isMobile
-        ? Math.min(1.5, window.devicePixelRatio || 1)
-        : perfTierRef.current === 'low'
-        ? 1
-        : perfTierRef.current === 'medium'
-        ? Math.min(1.5, window.devicePixelRatio || 1)
-        : Math.min(2, window.devicePixelRatio || 1);
+      const targetDpr =
+        perfTierRef.current === 'low'
+          ? 1
+          : perfTierRef.current === 'medium'
+          ? Math.min(1.5, window.devicePixelRatio || 1)
+          : Math.min(2, window.devicePixelRatio || 1);
 
       const targetW = Math.round(width * targetDpr);
       const targetH = Math.round(height * targetDpr);
@@ -819,10 +792,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
       ctx.save();
       ctx.scale(targetDpr, targetDpr);
-
-      // 2. Stable pure pitch-black space (#000000) - Instant 60 FPS hardware clear on Safari/iOS
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, width, height);
+      ctx.clearRect(0, 0, width, height);
 
       const centerX = width / 2;
       const centerY = height / 2;
@@ -832,6 +802,21 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       const isLite = perfTierRef.current === 'low';
       const isBalanced = perfTierRef.current === 'medium';
 
+      // 2. Cosmic Background Ambient Gradient
+      const bgGrad = ctx.createRadialGradient(
+        centerX + curPan.x * curZoom * 0.1,
+        centerY + curPan.y * curZoom * 0.1,
+        50,
+        centerX,
+        centerY,
+        Math.max(width, height)
+      );
+      bgGrad.addColorStop(0, '#0a0d1f');
+      bgGrad.addColorStop(0.4, '#04060d');
+      bgGrad.addColorStop(1, '#010206');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, width, height);
+
       // Apply synchronized 2-finger map rotation around screen center
       if (curRot !== 0) {
         ctx.translate(centerX, centerY);
@@ -839,13 +824,29 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         ctx.translate(-centerX, -centerY);
       }
 
-      // 3. Central Äkinoya Anchor Point (Zero yellow haze, pristine cosmos)
+      // 3. Central Äkinoya Golden Core Glow
       const coreScreenX = centerX + curPan.x * curZoom;
       const coreScreenY = centerY + curPan.y * curZoom;
+      const coreGrad = ctx.createRadialGradient(
+        coreScreenX,
+        coreScreenY,
+        10 * curZoom,
+        coreScreenX,
+        coreScreenY,
+        380 * curZoom
+      );
+      coreGrad.addColorStop(0, 'rgba(251, 191, 36, 0.22)');
+      coreGrad.addColorStop(0.3, 'rgba(245, 158, 11, 0.12)');
+      coreGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.04)');
+      coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(coreScreenX, coreScreenY, 380 * curZoom, 0, Math.PI * 2);
+      ctx.fill();
 
-      // 4. Parallax Starfield with Multilayer Depth & Organic Twinkling (Subtle, balanced & sharp)
+      // 4. Parallax Starfield with Multilayer Depth, Twinkling & Dynamic Capping
       const stars = starsRef.current;
-      const maxStarCount = isMobile ? Math.min(420, stars.length) : isLite ? 300 : isBalanced ? 520 : stars.length;
+      const maxStarCount = isLite ? 160 : isBalanced ? 320 : stars.length;
       const boundMargin = Math.max(width, height) * 0.45;
 
       for (let i = 0; i < maxStarCount; i++) {
@@ -857,22 +858,34 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         // Bounds culling (expanded for rotation)
         if (sx < -boundMargin || sx > width + boundMargin || sy < -boundMargin || sy > height + boundMargin) continue;
 
-        const twinkle = Math.sin(time * star.twinkleSpeed + i) * 0.18;
-        const alpha = Math.max(0.18, Math.min(0.8, star.baseAlpha + twinkle));
+        const twinkle =
+          Math.sin(time * star.twinkleSpeed + i) * 0.32 +
+          Math.cos(time * star.twinkleSpeed * 0.6 + i * 1.7) * 0.12;
+        const alpha = Math.max(0.08, Math.min(1, star.baseAlpha + twinkle));
 
-        // High-performance clean pinpoint rendering
-        ctx.fillStyle = star.color;
-        ctx.globalAlpha = alpha;
-
-        // On mobile or for small stars (layer 0 & 1), fillRect is 5x faster on Safari GPU and visually identical
-        if (isMobile || isLite || star.layer !== 2) {
-          const sz = star.radius * (isMobile ? 1.4 : 1.25);
+        // On low-tier, draw distant stars with ultra-fast fillRect (zero arc overhead)
+        if (isLite && star.layer === 0) {
+          ctx.fillStyle = star.color;
+          ctx.globalAlpha = alpha;
+          const sz = star.radius * 1.2;
           ctx.fillRect(sx - sz * 0.5, sy - sz * 0.5, sz, sz);
-        } else {
+          continue;
+        }
+
+        // Soft radiant glow for foreground stellar beacons on high/medium tier
+        if (!isLite && star.layer === 2 && alpha > 0.55) {
+          ctx.fillStyle = star.color;
+          ctx.globalAlpha = alpha * 0.2;
           ctx.beginPath();
-          ctx.arc(sx, sy, star.radius * Math.min(1.2, Math.max(0.8, curZoom)), 0, Math.PI * 2);
+          ctx.arc(sx, sy, star.radius * 2.4 * Math.min(1.4, Math.max(0.7, curZoom)), 0, Math.PI * 2);
           ctx.fill();
         }
+
+        ctx.fillStyle = star.color;
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(sx, sy, star.radius * Math.min(1.5, Math.max(0.7, curZoom)), 0, Math.PI * 2);
+        ctx.fill();
       }
       ctx.globalAlpha = 1.0;
 
@@ -1239,8 +1252,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       animId = requestAnimationFrame(render);
     };
 
-    // Paint frame 0 immediately and synchronously to prevent unpainted white flash in Safari
-    render(performance.now());
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
   }, [syncWorldTransformAndHud]);
@@ -1311,11 +1322,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     reanchorMultiTouch();
   };
 
-  // High-performance throttled gesture processor (Runs at most once per display frame)
-  const processPointerMove = useCallback(() => {
-    moveRafIdRef.current = null;
-    if (!isDraggingRef.current || touchesRef.current.size === 0) return;
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || !touchesRef.current.has(e.pointerId)) return;
 
+    touchesRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const touchCount = touchesRef.current.size;
 
     // 3 or more fingers: stabilize & smoothly pan by centroid only without zoom/velocity jumps
@@ -1417,28 +1427,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       lastMoveTimeRef.current = now;
       syncWorldTransformAndHud();
     }
-  }, [syncWorldTransformAndHud]);
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current || !touchesRef.current.has(e.pointerId)) return;
-
-    touchesRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-    // Throttle pan/zoom handling to at most once per display frame using requestAnimationFrame
-    if (moveRafIdRef.current === null) {
-      moveRafIdRef.current = requestAnimationFrame(processPointerMove);
-    }
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     try {
       (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
     } catch {}
-
-    if (moveRafIdRef.current !== null) {
-      cancelAnimationFrame(moveRafIdRef.current);
-      moveRafIdRef.current = null;
-    }
 
     touchesRef.current.delete(e.pointerId);
 
@@ -1453,9 +1447,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
-
-    // Force full visibility synchronization at the conclusion of touch drag
-    syncWorldTransformAndHud(true);
 
     // Only apply inertia after a clean single-finger pan (never fling after a multi-touch pinch)
     if (wasMultiTouchRef.current) {
@@ -1483,14 +1474,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           inertiaAnimRef.current = requestAnimationFrame(stepInertia);
         } else {
           inertiaAnimRef.current = null;
-          syncWorldTransformAndHud(true);
         }
       };
       inertiaAnimRef.current = requestAnimationFrame(stepInertia);
     }
   };
 
-  // Wheel / Trackpad Zoom - throttled via requestAnimationFrame
+  // Wheel / Trackpad Zoom
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (inertiaAnimRef.current) {
@@ -1498,20 +1488,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       inertiaAnimRef.current = null;
     }
 
-    const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
-    const baseZoom = targetWheelZoomRef.current ?? zoomRef.current;
-    targetWheelZoomRef.current = Math.min(2.6, Math.max(0.28, baseZoom * zoomFactor));
-
-    if (wheelRafIdRef.current === null) {
-      wheelRafIdRef.current = requestAnimationFrame(() => {
-        wheelRafIdRef.current = null;
-        if (targetWheelZoomRef.current !== null) {
-          zoomRef.current = targetWheelZoomRef.current;
-          targetWheelZoomRef.current = null;
-          syncWorldTransformAndHud(true);
-        }
-      });
-    }
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.91;
+    const nextZoom = Math.min(2.6, Math.max(0.28, zoomRef.current * zoomFactor));
+    zoomRef.current = nextZoom;
+    syncWorldTransformAndHud();
   };
 
   // Zoom Button Controls (Velvet Camera Animation)
@@ -1634,7 +1614,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="interactive-hud-element fixed inset-0 z-[9999] w-screen h-[100dvh] flex items-center justify-center p-4 bg-[#02040a]/95 select-none"
+          className="interactive-hud-element fixed inset-0 z-[9999] w-screen h-[100dvh] flex items-center justify-center p-4 bg-[#02040a]/95 backdrop-blur-xl transform-gpu select-none"
           style={{ willChange: 'opacity' }}
           onPointerDown={(e) => e.stopPropagation()}
         >
@@ -1644,11 +1624,11 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="relative z-10 w-full max-w-lg bg-[#070c18] border border-amber-400/50 rounded-2xl p-6 shadow-2xl space-y-4"
+            className="relative z-10 w-full max-w-lg bg-[#070c18] border border-amber-400/50 rounded-2xl p-6 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(245,158,11,0.25)] space-y-4 transform-gpu"
           >
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex flex-col items-start gap-1">
-                <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[10px] tracking-widest uppercase border border-amber-300/60 items-center gap-1">
+                <span className="inline-flex px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-mono font-extrabold text-[10px] tracking-widest uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] items-center gap-1">
                   <span>👑 ÄKINOYA CORE</span>
                 </span>
                 <span className="text-[11px] font-display font-extrabold text-white tracking-wider">
@@ -1664,7 +1644,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               </button>
             </div>
 
-            <div className="relative aspect-video rounded-xl overflow-hidden border border-amber-400/30 shadow-md">
+            <div className="relative aspect-video rounded-xl overflow-hidden border border-amber-400/30 shadow-[0_0_30px_rgba(245,158,11,0.25)]">
               <img
                 src={akinoyaHeroBg}
                 alt="Äkinoya Capital Core · Bingäa Visualizer"
@@ -1705,7 +1685,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                     onBackToHome();
                   }
                 }}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-md flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.35)] flex items-center gap-2"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Go To Visualizer Hub</span>
@@ -1732,21 +1712,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         WebkitUserSelect: 'none',
         userSelect: 'none',
       }}
-      className="galaxy-navigator-container galaxy-container fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#000000] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30"
+      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#020308] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30 transform-gpu"
     >
-      {/* Background Starfield & Orbit Rings Canvas (Solid pure black #000000 for instant 60 FPS on Safari) */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          backgroundColor: '#000000',
-          WebkitBackfaceVisibility: 'hidden',
-          backfaceVisibility: 'hidden',
-        }}
-        className="galaxy-navigator-canvas absolute inset-0 w-full h-full pointer-events-none z-0"
-      />
+      {/* Background Starfield & Orbit Rings Canvas */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0 transform-gpu" />
 
       {/* TOP NAVIGATION BAR / SCI-FI HEADER */}
-      <header className="interactive-hud-element absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[#060914] via-[#060914]/92 to-transparent p-3 sm:p-4 flex items-center justify-between gap-3 border-b border-white/10">
+      <header className={`interactive-hud-element absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[#060914]/95 via-[#060914]/80 to-transparent p-3 sm:p-4 ${perfTier === 'low' ? 'bg-[#060914]/98' : 'backdrop-blur-md'} flex items-center justify-between gap-3 border-b border-white/5`}>
         <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
           <button
             type="button"
@@ -1815,7 +1787,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             />
           )}
 
-          <div className="relative z-20 flex items-center bg-gradient-to-r from-cyan-950/90 via-[#070c1a] to-[#050914] border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl transition-all overflow-hidden">
+          <div className={`relative z-20 flex items-center bg-gradient-to-r from-cyan-950/60 via-[#070c1a]/90 to-[#050914]/90 ${perfTier === 'low' ? 'bg-[#070c1a]' : 'backdrop-blur-xl'} border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.18)] transition-all overflow-hidden`}>
             <Search className="w-4 h-4 text-cyan-400 ml-3.5 shrink-0" />
             <input
               type="text"
@@ -1844,7 +1816,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
           {/* Search Autocomplete Dropdown */}
           {isSearchFocused && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-[#060914] border border-cyan-500/30 rounded-2xl shadow-xl max-h-48 sm:max-h-64 overflow-y-auto divide-y divide-white/5 z-50">
+            <div className={`absolute top-full left-0 right-0 mt-2 bg-[#060914]/95 ${perfTier === 'low' ? 'bg-[#060914]' : 'backdrop-blur-xl'} border border-cyan-500/30 rounded-2xl shadow-2xl max-h-48 sm:max-h-64 overflow-y-auto divide-y divide-white/5 z-50`}>
               {searchResults.map((p) => {
                 const isFounder = isFoundingPioneerPlanet(p);
                 const isPioneer = isPioneerPlanet(p);
@@ -1860,7 +1832,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                           {p.planetName}
                         </span>
                         {isPioneer && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 text-[8.5px] font-mono font-extrabold tracking-wider uppercase">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 text-[8.5px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_8px_rgba(251,191,36,0.35)]">
                             {isFounder
                               ? '👑 FOUNDING PIONEER'
                               : isVipPioneerPlanet(p)
@@ -1874,7 +1846,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-400/40 text-amber-300 font-mono text-[10px] font-extrabold">
+                      <span className="px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-400/40 text-amber-300 font-mono text-[10px] font-extrabold shadow-[0_0_10px_rgba(251,191,36,0.25)]">
                         ★ {p.votesCount}
                       </span>
                       <button
@@ -1900,10 +1872,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               soundManager.playTone(620, 0.04);
               setMapFilter('all');
             }}
-            className={`px-2.5 py-1 rounded-full font-mono text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1.5 bg-[#060a14]/95 border ${
+            className={`px-2.5 py-1 rounded-full font-mono text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1.5 ${perfTier === 'low' ? 'bg-[#060a14]' : 'backdrop-blur-xl'} ${
               mapFilter === 'all'
-                ? 'bg-cyan-950/90 border-cyan-400/70 text-cyan-200'
-                : 'border-white/15 text-white/60 hover:text-white'
+                ? 'bg-cyan-950/90 border border-cyan-400/70 text-cyan-200 shadow-[0_0_14px_rgba(34,211,238,0.35)]'
+                : 'bg-[#060a14]/80 border border-white/15 text-white/60 hover:text-white'
             }`}
           >
             <Globe2 className="w-3 h-3 text-cyan-400" />
@@ -1916,10 +1888,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               soundManager.playTone(740, 0.05);
               setMapFilter(mapFilter === 'pioneer' ? 'all' : 'pioneer');
             }}
-            className={`px-2.5 py-1 rounded-full font-mono text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1.5 bg-[#060a14]/95 border ${
+            className={`px-2.5 py-1 rounded-full font-mono text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1.5 ${perfTier === 'low' ? 'bg-[#060a14]' : 'backdrop-blur-xl'} ${
               mapFilter === 'pioneer'
-                ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black border-amber-300'
-                : 'border-amber-400/40 text-amber-300 hover:bg-amber-900/70'
+                ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black border border-amber-300 shadow-[0_0_18px_rgba(251,191,36,0.55)]'
+                : 'bg-amber-950/60 border border-amber-400/50 text-amber-300 hover:bg-amber-900/70 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
             }`}
             title="Filter planets created prior to official release (Jan 9, 2027)"
           >
@@ -1931,11 +1903,11 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
       {/* ========================================================================= */}
       {/* LEFT-HAND VERTICAL ARCHITECTURE & RESTRUCTURE CONTROL DOCK               */}
-      {/* Sleek, minimalist vertical dock for mobile, tablet & desktop              */}
+      {/* Sleek, minimalist vertical glassmorphic dock for mobile, tablet & desktop */}
       {/* ========================================================================= */}
       <nav
         aria-label="Constellation Architectural Layout Dock"
-        className="interactive-hud-element absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1.5 p-1.5 rounded-2xl bg-gradient-to-b from-[#060a16] via-[#071026] to-[#060a16] border border-cyan-500/35 shadow-md select-none"
+        className={`interactive-hud-element absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1.5 p-1.5 rounded-2xl bg-gradient-to-b from-[#060a16]/92 via-[#071026]/92 to-[#060a16]/92 ${perfTier === 'low' ? 'bg-[#060a16]' : 'backdrop-blur-2xl'} border border-cyan-500/35 shadow-[0_8px_32px_rgba(0,0,0,0.75),0_0_20px_rgba(6,182,212,0.18)] select-none`}
         style={{ touchAction: 'manipulation' }}
       >
         <div className="text-[7.5px] font-mono font-bold tracking-widest text-cyan-400/60 uppercase px-1 py-0.5 text-center hidden sm:block">
@@ -1957,7 +1929,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 disabled={isMorphing}
                 className={`relative group flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? 'bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 text-black border border-amber-300 font-extrabold scale-105'
+                    ? 'bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 text-black shadow-[0_0_16px_rgba(251,191,36,0.6)] font-extrabold scale-105'
                     : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10'
                 } ${isMorphing ? 'opacity-60 pointer-events-none' : ''}`}
                 title={`${variant.name} (${variant.description})`}
@@ -1974,11 +1946,11 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
                 {/* Active Indicator Pip on Left Border */}
                 {isActive && (
-                  <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-4 rounded-r-full bg-amber-300" />
+                  <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-4 rounded-r-full bg-amber-300 shadow-[0_0_8px_#fbbf24]" />
                 )}
 
-                {/* Floating Tooltip on Desktop hover */}
-                <span className="pointer-events-none absolute left-full ml-3 hidden sm:group-hover:flex items-center px-2.5 py-1 rounded-lg bg-[#060c18]/95 border border-cyan-500/40 text-cyan-200 text-[10px] font-mono font-semibold whitespace-nowrap shadow-md z-50">
+                {/* Floating Glassmorphic Tooltip on Desktop hover */}
+                <span className="pointer-events-none absolute left-full ml-3 hidden sm:group-hover:flex items-center px-2.5 py-1 rounded-lg bg-[#060c18]/95 border border-cyan-500/40 text-cyan-200 text-[10px] font-mono font-semibold whitespace-nowrap shadow-xl z-50">
                   {variant.name}
                 </span>
               </button>
@@ -1994,7 +1966,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           type="button"
           onClick={handleTriggerRestructure}
           disabled={isMorphing}
-          className={`relative group flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white transition-all duration-200 cursor-pointer active:scale-95 ${
+          className={`relative group flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 hover:text-white transition-all duration-200 cursor-pointer shadow-[0_0_14px_rgba(6,182,212,0.25)] active:scale-95 ${
             isMorphing ? 'opacity-60 pointer-events-none' : ''
           }`}
           title="Restructure Constellation (60fps Fluid Morph)"
@@ -2005,15 +1977,15 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             Morph
           </span>
 
-          {/* Floating Tooltip on Desktop hover */}
-          <span className="pointer-events-none absolute left-full ml-3 hidden sm:group-hover:flex items-center px-2.5 py-1 rounded-lg bg-[#060c18]/95 border border-cyan-500/40 text-cyan-200 text-[10px] font-mono font-semibold whitespace-nowrap shadow-md z-50">
+          {/* Floating Glassmorphic Tooltip on Desktop hover */}
+          <span className="pointer-events-none absolute left-full ml-3 hidden sm:group-hover:flex items-center px-2.5 py-1 rounded-lg bg-[#060c18]/95 border border-cyan-500/40 text-cyan-200 text-[10px] font-mono font-semibold whitespace-nowrap shadow-xl z-50">
             Restructure Constellation
           </span>
         </button>
       </nav>
 
       {/* ASTROGATION COORDINATES HUD (Bottom Left) — Direct-DOM 60fps Refs */}
-      <div className="interactive-hud-element absolute bottom-4 left-4 z-30 hidden sm:flex flex-col gap-1.5 p-3.5 rounded-2xl bg-gradient-to-br from-cyan-950/80 via-[#060a14]/95 to-[#040812] border border-cyan-500/30 font-mono text-[10.5px] text-white/70 shadow-md">
+      <div className={`interactive-hud-element absolute bottom-4 left-4 z-30 hidden sm:flex flex-col gap-1.5 p-3.5 rounded-2xl bg-gradient-to-br from-cyan-950/45 via-[#060a14]/90 to-[#040812]/95 ${perfTier === 'low' ? 'bg-[#060a14]' : 'backdrop-blur-xl'} border border-cyan-500/30 font-mono text-[10.5px] text-white/70 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(34,211,238,0.12)]`}>
         <div className="flex items-center gap-2 text-cyan-300 font-bold">
           <Target className="w-3.5 h-3.5 text-cyan-400" />
           <span>ASTROGATION HUD</span>
@@ -2032,15 +2004,15 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             {(initialZoom * 100).toFixed(0)}%
           </span>
           <span>CONSTELLATION:</span>
-          <span className="text-amber-300 font-extrabold text-right uppercase">
+          <span className="text-amber-300 font-extrabold text-right uppercase drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]">
             {layoutMode === 'spiral' ? '5-ARM SPIRAL' : 'OVAL MATRIX'}
           </span>
           <span>CHARTED WORLDS:</span>
-          <span className="text-cyan-300 font-extrabold text-right">
+          <span className="text-cyan-300 font-extrabold text-right drop-shadow-[0_0_6px_rgba(34,211,238,0.5)]">
             {filteredPlanets.length} WORLDS
           </span>
           <span>PIONEER WORLDS:</span>
-          <span className="text-amber-300 font-extrabold text-right">
+          <span className="text-amber-300 font-extrabold text-right drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]">
             ⚡ {pioneerPlanetsCount} PRE-RELEASE
           </span>
           <span>ENGINE STATUS:</span>
@@ -2048,10 +2020,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             <span
               className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-mono font-black uppercase tracking-wider ${
                 perfTier === 'high'
-                  ? 'bg-emerald-950/80 border border-emerald-400/60 text-emerald-300'
+                  ? 'bg-emerald-950/80 border border-emerald-400/60 text-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.35)]'
                   : perfTier === 'medium'
-                  ? 'bg-cyan-950/80 border border-cyan-400/60 text-cyan-300'
-                  : 'bg-amber-950/80 border border-amber-400/60 text-amber-300'
+                  ? 'bg-cyan-950/80 border border-cyan-400/60 text-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.35)]'
+                  : 'bg-amber-950/80 border border-amber-400/60 text-amber-300 shadow-[0_0_8px_rgba(251,191,36,0.35)]'
               }`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
@@ -2067,7 +2039,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           type="button"
           onClick={handleTriggerRestructure}
           disabled={isMorphing}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold transition-all cursor-pointer min-h-[42px]"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_18px_rgba(6,182,212,0.25)] min-h-[42px]"
           title="Restructure Constellation (60fps Fluid Morph)"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isMorphing ? 'animate-spin' : ''}`} />
@@ -2077,14 +2049,14 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         <button
           type="button"
           onClick={handleCenterAkinoya}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono text-xs font-bold transition-all cursor-pointer min-h-[42px]"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
           title="Center on Capital Core Äkinoya (0, 0)"
         >
           <Target className="w-3.5 h-3.5" />
           <span className="hidden xs:inline">Center Äkinoya</span>
         </button>
 
-        <div className="flex items-center bg-[#060a14] border border-white/15 rounded-xl p-0.5 shadow-md">
+        <div className="flex items-center bg-[#060a14] border border-white/15 rounded-xl p-0.5 shadow-lg">
           <button
             type="button"
             onClick={handleZoomIn}
@@ -2160,7 +2132,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               } as PlanetSubmission);
             }}
             onPointerLeave={() => setHoveredPlanet(null)}
-            className="planet-node absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none touch-manipulation rounded-full"
+            className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none touch-manipulation rounded-full"
             style={{
               left: 0,
               top: 0,
@@ -2168,46 +2140,52 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               height: 72,
               borderRadius: '50%',
               WebkitBorderRadius: '50%',
-              transform: 'translate(-50%, -50%) translateZ(0)',
-              WebkitTransform: 'translate(-50%, -50%) translateZ(0)',
-              willChange: 'transform',
               backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
             }}
           >
-            {/* 1. Tier 1: Outer Astrolabe Ring with 4 Cardinal Star-Diamonds (Clockwise Drift) */}
+            {/* 1. Volumetric Golden Corona & Core Flare */}
             <div
-              className="orbit-ring absolute -inset-8 rounded-full border border-amber-400/35 galaxy-orbit-spin-slow pointer-events-none"
+              className="absolute -inset-10 rounded-full bg-gradient-to-tr from-amber-500/25 via-yellow-400/15 to-transparent blur-2xl animate-pulse pointer-events-none"
               style={{ borderRadius: '50%' }}
+            />
+            <div
+              className="absolute -inset-5 rounded-full bg-amber-400/20 blur-lg pointer-events-none"
+              style={{ borderRadius: '50%' }}
+            />
+
+            {/* 2. Tier 1: Outer Astrolabe Ring with 4 Cardinal Star-Diamonds (Clockwise Drift) */}
+            <div
+              className="absolute -inset-8 rounded-full border border-amber-400/35 animate-spin pointer-events-none"
+              style={{ animationDuration: '48s', borderRadius: '50%' }}
             >
               {/* Cardinal Navigation Pips */}
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 border border-amber-300/60" />
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 border border-amber-300/60" />
-              <span className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 border border-amber-300/60" />
-              <span className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 border border-amber-300/60" />
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
+              <span className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
+              <span className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
             </div>
 
-            {/* 2. Tier 2: Mid Segmented Energy Crest (Counter-Clockwise Rotation) */}
+            {/* 3. Tier 2: Mid Segmented Energy Crest (Counter-Clockwise Rotation) */}
             <div
-              className="orbit-ring absolute -inset-5 rounded-full border border-dashed border-amber-300/60 galaxy-orbit-spin-reverse pointer-events-none"
+              className="absolute -inset-5 rounded-full border border-dashed border-amber-300/60 animate-spin-reverse pointer-events-none"
+              style={{ animationDuration: '32s', borderRadius: '50%' }}
+            />
+
+            {/* 4. Tier 3: Concentric Geometric Hairline Resonator */}
+            <div
+              className="absolute -inset-3 rounded-full border border-amber-400/25 pointer-events-none"
               style={{ borderRadius: '50%' }}
             />
 
-            {/* 3. Tier 3: Concentric Geometric Hairline Resonator */}
+            {/* 5. Tier 4: Inner High-Precision Dotted Orbital Halo (Clockwise Rotation) */}
             <div
-              className="orbit-ring absolute -inset-3 rounded-full border border-amber-400/25 pointer-events-none"
-              style={{ borderRadius: '50%' }}
+              className="absolute -inset-1.5 rounded-full border border-dotted border-amber-200/90 animate-spin pointer-events-none"
+              style={{ animationDuration: '18s', borderRadius: '50%' }}
             />
 
-            {/* 4. Tier 4: Inner High-Precision Dotted Orbital Halo (Clockwise Rotation) */}
+            {/* 6. Capital Core Planet Orb: Refined 72px Scale with Luminous Gold Border */}
             <div
-              className="orbit-ring absolute -inset-1.5 rounded-full border border-dotted border-amber-200/90 galaxy-orbit-spin-fast pointer-events-none"
-              style={{ borderRadius: '50%' }}
-            />
-
-            {/* 5. Capital Core Planet Orb: Clean 72px Scale with Luminous Gold Border (Zero Yellow Haze) */}
-            <div
-              className="relative w-[70px] h-[70px] sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden border-2 border-amber-300 group-hover:scale-108 transition-transform duration-300 bg-black flex items-center justify-center shrink-0"
+              className="relative w-[70px] h-[70px] sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden border-2 border-amber-300 shadow-[0_0_40px_rgba(245,158,11,0.9),0_0_80px_rgba(251,191,36,0.4),inset_0_0_24px_rgba(245,158,11,0.5)] group-hover:scale-108 transition-all duration-300 bg-black flex items-center justify-center shrink-0"
               style={{
                 borderRadius: '50%',
                 WebkitBorderRadius: '50%',
@@ -2224,8 +2202,6 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   WebkitBorderRadius: '50%',
                 }}
                 draggable={false}
-                loading="lazy"
-                decoding="async"
               />
               <div
                 className="absolute inset-0 bg-gradient-to-tr from-amber-500/40 via-transparent to-yellow-200/40 pointer-events-none"
@@ -2235,10 +2211,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
             {/* Capital Core Badge Label */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3.5 flex flex-col items-center pointer-events-none whitespace-nowrap text-center">
-              <span className="inline-flex px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-mono font-black text-[9.5px] tracking-widest uppercase items-center gap-1 border border-amber-300/50">
+              <span className="inline-flex px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-mono font-black text-[9.5px] tracking-widest uppercase shadow-[0_0_20px_rgba(245,158,11,0.6)] items-center gap-1">
                 <span>👑 ÄKINOYA CORE</span>
               </span>
-              <span className="text-xs font-display font-extrabold text-white tracking-wider mt-0.5 group-hover:text-amber-300 transition-colors">
+              <span className="text-xs font-display font-extrabold text-white tracking-wider mt-0.5 group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                 Capital of Sillow Mill
               </span>
             </div>
@@ -2285,7 +2261,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   setHoveredPlanet(planet);
                 }}
                 onPointerLeave={() => setHoveredPlanet(null)}
-                className="planet-node absolute cursor-pointer group z-10 flex items-center justify-center select-none touch-manipulation rounded-full"
+                className="absolute cursor-pointer group z-10 flex items-center justify-center select-none touch-manipulation rounded-full"
                 style={{
                   left: 0,
                   top: 0,
@@ -2294,38 +2270,36 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   borderRadius: '50%',
                   WebkitBorderRadius: '50%',
                   transform: `translate3d(${posX}px, ${posY}px, 0) translate(-50%, -50%)`,
-                  WebkitTransform: `translate3d(${posX}px, ${posY}px, 0) translate(-50%, -50%)`,
                   transition: isMorphing
                     ? 'transform 650ms cubic-bezier(0.16, 1, 0.3, 1)'
                     : 'none',
-                  willChange: 'transform',
+                  willChange: isMorphing ? 'transform' : 'auto',
                   backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
                 }}
               >
                 {/* Pioneer Status Floating Marker Above Orb */}
                 {isPioneer && (
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 pointer-events-none whitespace-nowrap">
                     {isAmlemi ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black font-mono font-extrabold text-[8.5px] tracking-widest uppercase border border-amber-300/60">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black font-mono font-extrabold text-[8.5px] tracking-widest uppercase shadow-[0_0_16px_rgba(251,191,36,0.65)]">
                         <span>👑 FOUNDING PIONEER · #01</span>
                       </span>
                     ) : isVipPioneer ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black font-mono font-extrabold text-[8.5px] tracking-widest uppercase border border-amber-300/60">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-black font-mono font-extrabold text-[8.5px] tracking-widest uppercase shadow-[0_0_14px_rgba(245,158,11,0.6)]">
                         <span>👑 VIP PIONEER</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/90 border border-amber-400/60 text-amber-300 font-mono font-extrabold text-[8px] tracking-widest uppercase">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/90 border border-amber-400/60 text-amber-300 font-mono font-extrabold text-[8px] tracking-widest uppercase shadow-[0_0_12px_rgba(245,158,11,0.35)]">
                         <span>⚡ PIONEER</span>
                       </span>
                     )}
                   </div>
                 )}
 
-                {/* 1. Concentric Golden Halo (Ämlemi Master Anchor or Selected Planet) */}
+                {/* 1. Radiant Pulsing Golden Halo (Ämlemi Master Anchor or Selected Planet) */}
                 {(isAmlemi || isSelected) && (
                   <div
-                    className="absolute -inset-3.5 rounded-full border border-amber-400/50 pointer-events-none"
+                    className="absolute -inset-4 rounded-full bg-gradient-to-tr from-amber-500/30 via-yellow-400/20 to-transparent blur-md animate-pulse pointer-events-none"
                     style={{ borderRadius: '50%' }}
                   />
                 )}
@@ -2333,10 +2307,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 {/* 2. Outer Counter-Clockwise Orbit Ring (Exclusively for #01 Founding Pioneer Ämlemi) */}
                 {isAmlemi && (
                   <div
-                    className="orbit-ring absolute -inset-3.5 rounded-full border border-dashed border-amber-400/40 galaxy-orbit-spin-reverse pointer-events-none"
+                    className="absolute -inset-3.5 rounded-full border border-dashed border-amber-400/40 animate-spin-reverse pointer-events-none"
                     style={{
+                      animationDuration: '28s',
                       borderRadius: '50%',
                       WebkitBorderRadius: '50%',
+                      willChange: 'transform',
                     }}
                   />
                 )}
@@ -2344,43 +2320,43 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 {/* 3. Single Orbit Ring Standard: Concentric Rotating Dashed Orbit Ring */}
                 {/* For all newly generated / community planet nodes: Exactly ONE single rotating dashed orbit ring (Minimalist & Uncluttered) */}
                 <div
-                  className={`orbit-ring absolute ${
+                  className={`absolute ${
                     isAmlemi ? '-inset-1.5' : '-inset-2.5'
-                  } rounded-full border border-dashed pointer-events-none ${
-                    isAmlemi ? 'galaxy-orbit-spin-fast' : 'galaxy-orbit-spin'
-                  } ${
+                  } rounded-full border border-dashed pointer-events-none animate-spin ${
                     isAmlemi
-                      ? 'border-amber-300/90'
+                      ? 'border-amber-300/90 shadow-[0_0_14px_rgba(251,191,36,0.5)]'
                       : isSelected
-                      ? 'border-amber-300/95'
+                      ? 'border-amber-300/95 shadow-[0_0_14px_rgba(251,191,36,0.6)]'
                       : isHovered
-                      ? 'border-amber-300/85'
+                      ? 'border-amber-300/85 shadow-[0_0_10px_rgba(245,158,11,0.4)]'
                       : 'border-amber-400/60'
                   }`}
                   style={{
+                    animationDuration: isAmlemi ? '18s' : '24s',
                     borderRadius: '50%',
                     WebkitBorderRadius: '50%',
+                    willChange: 'transform',
                   }}
                 >
                   {/* Cardinal Satellite Pip (Exclusively for #01 Founding Pioneer Ämlemi) */}
                   {isAmlemi && (
                     <span
-                      className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-300 border border-amber-200/50"
+                      className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-[0_0_8px_#fbbf24]"
                       style={{ borderRadius: '50%' }}
                     />
                   )}
                 </div>
 
-                {/* Celestial Planet Orb with Solid Gold Primary Border */}
+                {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
                 <div
-                  className={`relative w-12 h-12 rounded-full overflow-hidden border-2 transition-transform duration-300 bg-[#070c18] flex items-center justify-center shrink-0 ${
+                  className={`relative w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400 transition-all duration-300 bg-[#070c18] flex items-center justify-center shrink-0 ${
                     isAmlemi
-                      ? 'border-amber-300 group-hover:scale-120'
+                      ? 'shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-120'
                       : isSelected
-                      ? 'scale-120 border-amber-300'
+                      ? 'scale-120 shadow-[0_0_26px_rgba(245,158,11,0.75)]'
                       : isHovered
-                      ? 'scale-115 border-amber-300'
-                      : 'border-amber-400/80 group-hover:scale-110'
+                      ? 'scale-115 shadow-[0_0_22px_rgba(245,158,11,0.65)]'
+                      : 'shadow-[0_0_18px_rgba(245,158,11,0.45)] group-hover:scale-110'
                   }`}
                   style={{
                     borderRadius: '50%',
@@ -2407,7 +2383,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                       className="w-full h-full bg-gradient-to-br from-amber-950 via-slate-900 to-black flex items-center justify-center"
                       style={{ borderRadius: '50%' }}
                     >
-                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
                     </div>
                   )}
 
@@ -2420,7 +2396,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
                 {/* Planet Label: Positioned cleanly below orb without shifting orb center */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 flex flex-col items-center pointer-events-none whitespace-nowrap">
-                  <span className="text-xs font-display font-bold text-white tracking-wide group-hover:text-amber-300 transition-colors">
+                  <span className="text-xs font-display font-bold text-white tracking-wide group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                     {planet.planetName}
                   </span>
 
@@ -2428,12 +2404,12 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                     {formatAuthorName(planet.authorName || planet.authorUsername)}
                   </span>
 
-                  <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#060c18]/90 border border-amber-400/45">
-                    <span className="text-[9px] font-mono font-black text-cyan-300">
+                  <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#060c18]/90 border border-amber-400/45 shadow-[0_0_12px_rgba(251,191,36,0.28)]">
+                    <span className="text-[9px] font-mono font-black text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]">
                       #{planetEditionNumber}
                     </span>
                     <span className="text-white/25 text-[8px]">·</span>
-                    <span className="text-[9px] font-mono font-extrabold text-amber-300">
+                    <span className="text-[9px] font-mono font-extrabold text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]">
                       ★ {planet.votesCount}
                     </span>
                   </div>

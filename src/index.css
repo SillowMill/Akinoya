@@ -160,16 +160,7 @@
   -webkit-backface-visibility: hidden;
 }
 
-/* Galaxy Navigator Safari & Mobile Hardware Acceleration */
-.galaxy-navigator-container {
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-/* Force GPU Hardware-Acceleration on Core Galaxy Navigator & Orbital Elements */
-.galaxy-container,
+/* Force GPU Hardware-Acceleration on Core Orbital Elements */
 .planet-node,
 .orbit-ring {
   transform: translateZ(0);
@@ -177,13 +168,6 @@
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-}
-
-.galaxy-navigator-container,
-.galaxy-navigator-container * {
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  mix-blend-mode: normal !important;
 }
 
 /* Prevent iOS / Safari auto-zoom on input focus */
