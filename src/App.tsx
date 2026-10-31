@@ -175,6 +175,14 @@ export default function App() {
       if (path === '/contest' || path.startsWith('/contest/')) return 'contest';
       if (path === '/creators' || path.startsWith('/creators/')) return 'creators';
       if (path === '/community' || path.startsWith('/community/')) return 'community';
+      if (path === '/my-world' || path.startsWith('/my-world')) {
+        try {
+          sessionStorage.setItem('akinoya_portal_active_tab', 'my-world');
+          sessionStorage.setItem('akinoya_public_unlocked', 'true');
+          localStorage.setItem('akinoya_public_unlocked', 'true');
+        } catch {}
+        return 'home';
+      }
       if (path === '/auth/callback' || path.startsWith('/auth/callback') || path === '/update-password' || path.startsWith('/update-password') || isSupabaseAuth) {
         return 'home';
       }
@@ -296,6 +304,17 @@ export default function App() {
         setRoute('kyc');
       } else if (path === '/success' || path.startsWith('/success/')) {
         setRoute('success');
+      } else if (path === '/my-world' || path.startsWith('/my-world')) {
+        try {
+          sessionStorage.setItem('akinoya_portal_active_tab', 'my-world');
+          sessionStorage.setItem('akinoya_public_unlocked', 'true');
+          localStorage.setItem('akinoya_public_unlocked', 'true');
+        } catch {}
+        setPublicUnlocked(true);
+        setRoute('home');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('akinoya-navigate-my-world'));
+        }
       } else if (path === '/unlocked' || path.startsWith('/unlocked') || path === '/visualizers' || path === '/visualizer-hub') {
         handlePublicUnlockSuccess();
         if (typeof window !== 'undefined') {
@@ -373,9 +392,36 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleNavigateToWorlds = () => {
+    soundManager.playTone(600, 0.04);
+    try {
+      sessionStorage.setItem('akinoya_portal_active_tab', 'my-world');
+      sessionStorage.setItem('akinoya_public_unlocked', 'true');
+      localStorage.setItem('akinoya_public_unlocked', 'true');
+    } catch {
+      // ignore
+    }
+    setPublicUnlocked(true);
+    navigateTo('home', '/my-world');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('akinoya-navigate-my-world'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const handleNavigateToPassperksHome = () => {
     soundManager.playTone(600, 0.04);
     try {
+      const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const fromParam = searchParams?.get('from');
+      const savedFrom = typeof window !== 'undefined' ? sessionStorage.getItem('galaxy_return_from') : null;
+      if (fromParam === 'worlds' || savedFrom === 'worlds') {
+        try {
+          sessionStorage.removeItem('galaxy_return_from');
+        } catch {}
+        handleNavigateToWorlds();
+        return;
+      }
       sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
     } catch {
       // ignore
@@ -387,8 +433,17 @@ export default function App() {
     }
   };
 
-  const navigateToGalaxy = (planetId?: string) => {
-    const targetPath = planetId ? `/galaxy?planet=${encodeURIComponent(planetId)}` : '/galaxy';
+  const navigateToGalaxy = (planetId?: string, from?: string) => {
+    const params = new URLSearchParams();
+    if (planetId) params.set('planet', planetId);
+    if (from) {
+      params.set('from', from);
+      try {
+        sessionStorage.setItem('galaxy_return_from', from);
+      } catch {}
+    }
+    const qs = params.toString();
+    const targetPath = qs ? `/galaxy?${qs}` : '/galaxy';
     navigateTo('galaxy', targetPath);
   };
 
@@ -545,6 +600,7 @@ export default function App() {
           <div className="fixed inset-0 z-30 w-full h-full flex flex-col overflow-hidden bg-[#000000]">
             <GalaxyNavigator
               onBackToHome={handleNavigateToPassperksHome}
+              onBackToWorlds={handleNavigateToWorlds}
               onNavigateToContest={() => navigateTo('contest', '/contest')}
               onNavigateToCommunity={() => navigateTo('community', '/community')}
               onNavigateToVisualizerHub={handleOpenVisualizerHub}
@@ -632,16 +688,16 @@ export default function App() {
               />
             ) : (
               <div className="flex flex-col items-center justify-start py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
-                <UnlockedExperience
-                  isVip={true}
-                  onLockPortal={() => setVipSubView('passport')}
-                  onNavigateToPassport={() => setVipSubView('passport')}
-                  onToggleViewMode={setViewMode}
-                  currentViewMode={viewMode}
-                  onNavigateToVerify={() => setVipSubView('passport')}
-                  onNavigateToContest={() => navigateTo('contest', '/contest')}
-                  onNavigateToGalaxy={(id) => navigateToGalaxy(id)}
-                />
+                  <UnlockedExperience
+                    isVip={true}
+                    onLockPortal={() => setVipSubView('passport')}
+                    onNavigateToPassport={() => setVipSubView('passport')}
+                    onToggleViewMode={setViewMode}
+                    currentViewMode={viewMode}
+                    onNavigateToVerify={() => setVipSubView('passport')}
+                    onNavigateToContest={() => navigateTo('contest', '/contest')}
+                    onNavigateToGalaxy={(id, from) => navigateToGalaxy(id, from)}
+                  />
               </div>
             )}
           </div>
@@ -711,7 +767,7 @@ export default function App() {
                     onNavigateToPassport={() => navigateTo('verify', '/verify')}
                     onNavigateToVerify={() => navigateTo('verify', '/verify')}
                     onNavigateToContest={() => navigateTo('contest', '/contest')}
-                    onNavigateToGalaxy={(id) => navigateToGalaxy(id)}
+                    onNavigateToGalaxy={(id, from) => navigateToGalaxy(id, from)}
                   />
                 </motion.div>
               )}

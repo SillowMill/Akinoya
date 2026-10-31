@@ -64,7 +64,7 @@ export interface PlanetDossierModalProps {
   onClose: () => void;
   onVote?: (planetId: string) => void;
   onOpenCreator?: (username: string) => void;
-  onNavigateToGalaxy?: (planetId?: string) => void;
+  onNavigateToGalaxy?: (planetId?: string, from?: string) => void;
 }
 
 export type DossierModalTab = 'trailer' | 'story_card' | 0 | 1 | 2 | 3 | 4;

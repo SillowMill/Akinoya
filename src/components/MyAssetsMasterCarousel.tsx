@@ -58,7 +58,7 @@ interface MyAssetsMasterCarouselProps {
   editionRank?: number;
   isSimulationMode?: boolean;
   onUnlockSimulation?: () => void;
-  onNavigateToGalaxy?: (planetId?: string) => void;
+  onNavigateToGalaxy?: (planetId?: string, from?: string) => void;
 }
 
 const SLIDE_TABS: {

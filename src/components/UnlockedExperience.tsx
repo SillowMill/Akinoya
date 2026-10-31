@@ -219,7 +219,7 @@ interface UnlockedExperienceProps {
   isVip?: boolean;
   onNavigateToPassport?: () => void;
   onNavigateToContest?: () => void;
-  onNavigateToGalaxy?: (planetId?: string) => void;
+  onNavigateToGalaxy?: (planetId?: string, from?: string) => void;
 }
 
 export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
@@ -234,6 +234,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'my-world' | 'assets'>(() => {
     if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      if (path === '/my-world' || path.startsWith('/my-world')) {
+        return 'my-world';
+      }
+
       const params = new URLSearchParams(window.location.search);
       const hash = window.location.hash.toLowerCase().replace('#', '');
       const savedTab = sessionStorage.getItem('akinoya_portal_active_tab') as any;
@@ -911,6 +916,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           return;
         }
 
+        const path = window.location.pathname.toLowerCase();
+        if (path === '/my-world' || path.startsWith('/my-world')) {
+          setActiveTab('my-world');
+          return;
+        }
+
         if (
           params.get('tab') === 'pass-perks' ||
           params.get('tab') === 'pass' ||
@@ -947,16 +958,25 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       }
     };
 
+    const handleNavigateMyWorld = () => {
+      setActiveTab('my-world');
+      try {
+        sessionStorage.setItem('akinoya_portal_active_tab', 'my-world');
+      } catch {}
+    };
+
     checkUrlParams();
     checkAutoScrollVisualizerArchive();
     window.addEventListener('akinoya-open-visualizer-hub', handleOpenHub);
     window.addEventListener('akinoya-navigate-passperks-home', handleNavigatePassperksHome);
+    window.addEventListener('akinoya-navigate-my-world', handleNavigateMyWorld);
     window.addEventListener('akinoya-auto-scroll-visualizer-archive', handleAutoScrollVisualizerArchive);
     window.addEventListener('popstate', checkUrlParams);
     window.addEventListener('hashchange', checkUrlParams);
     return () => {
       window.removeEventListener('akinoya-open-visualizer-hub', handleOpenHub);
       window.removeEventListener('akinoya-navigate-passperks-home', handleNavigatePassperksHome);
+      window.removeEventListener('akinoya-navigate-my-world', handleNavigateMyWorld);
       window.removeEventListener('akinoya-auto-scroll-visualizer-archive', handleAutoScrollVisualizerArchive);
       window.removeEventListener('popstate', checkUrlParams);
       window.removeEventListener('hashchange', checkUrlParams);
@@ -1340,6 +1360,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       sessionStorage.setItem('akinoya_portal_scroll_y', '0');
       try {
         const url = new URL(window.location.href);
+        if (url.pathname === '/my-world' && tab !== 'my-world') {
+          url.pathname = '/';
+        }
         url.searchParams.delete('tab');
         url.searchParams.delete('subview');
         url.hash = tab;
@@ -2774,10 +2797,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           type="button"
                           onClick={() => {
                             soundManager.playTone(620, 0.05);
+                            try {
+                              sessionStorage.setItem('galaxy_return_from', 'worlds');
+                            } catch {}
                             if (onNavigateToGalaxy) {
-                              onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01');
+                              onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
                             } else if (typeof window !== 'undefined') {
-                              window.location.hash = '#galaxy';
+                              window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
                             }
                           }}
                           className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
@@ -2809,10 +2835,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div
                       onClick={() => {
                         soundManager.playTone(620, 0.05);
+                        try {
+                          sessionStorage.setItem('galaxy_return_from', 'worlds');
+                        } catch {}
                         if (onNavigateToGalaxy) {
-                          onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01');
+                          onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
                         } else if (typeof window !== 'undefined') {
-                          window.location.hash = '#galaxy';
+                          window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
                         }
                       }}
                       style={{
@@ -2901,10 +2930,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         type="button"
                         onClick={() => {
                           soundManager.playTone(620, 0.05);
+                          try {
+                            sessionStorage.setItem('galaxy_return_from', 'worlds');
+                          } catch {}
                           if (onNavigateToGalaxy) {
-                            onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01');
+                            onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
                           } else if (typeof window !== 'undefined') {
-                            window.location.hash = '#galaxy';
+                            window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
                           }
                         }}
                         className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
@@ -3791,7 +3823,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         planet={selectedDossierModal}
         isOpen={Boolean(selectedDossierModal)}
         onClose={() => setSelectedDossierModal(null)}
-        onNavigateToGalaxy={onNavigateToGalaxy}
+        onNavigateToGalaxy={(id) => {
+          if (activeTab === 'my-world') {
+            try {
+              sessionStorage.setItem('galaxy_return_from', 'worlds');
+            } catch {}
+            if (onNavigateToGalaxy) {
+              onNavigateToGalaxy(id, 'worlds');
+            }
+          } else if (onNavigateToGalaxy) {
+            onNavigateToGalaxy(id);
+          }
+        }}
       />
 
       {/* Version 1 Sticky Bottom Navigation with Sci-Fi Micro-Feedback (Portrait Mobile & Portrait Tablet Only) */}

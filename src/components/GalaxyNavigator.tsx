@@ -43,6 +43,7 @@ import akinoyaHeroBg from '../assets/images/akinoya_hero_bg-CiYAZVRx.jpg';
 
 interface GalaxyNavigatorProps {
   onBackToHome: () => void;
+  onBackToWorlds?: () => void;
   onNavigateToContest?: () => void;
   onNavigateToCommunity?: () => void;
   onOpenCreator?: (username: string) => void;
@@ -86,6 +87,7 @@ const ORBITAL_RINGS = [
 
 export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   onBackToHome,
+  onBackToWorlds,
   onNavigateToContest,
   onNavigateToCommunity,
   onOpenCreator,
@@ -96,6 +98,40 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const worldRotationWrapperRef = useRef<HTMLDivElement | null>(null);
   const worldLayerRef = useRef<HTMLDivElement | null>(null);
+
+  // Dynamic return detection: check if arrived from Worlds page (?from=worlds or sessionStorage)
+  const isFromWorlds = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const fromParam = searchParams.get('from');
+      const savedFrom = sessionStorage.getItem('galaxy_return_from');
+      return fromParam === 'worlds' || savedFrom === 'worlds';
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const handleBackNavigation = useCallback(() => {
+    soundManager.playTone(600, 0.04);
+    if (isFromWorlds) {
+      try {
+        sessionStorage.removeItem('galaxy_return_from');
+      } catch {}
+      if (onBackToWorlds) {
+        onBackToWorlds();
+      } else if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('akinoya_portal_active_tab', 'my-world');
+        } catch {}
+        window.location.href = '/my-world';
+      } else {
+        onBackToHome();
+      }
+    } else {
+      onBackToHome();
+    }
+  }, [isFromWorlds, onBackToWorlds, onBackToHome]);
 
   // Direct-DOM HUD refs for zero-react-rerender 60fps updates
   const hudCoordRef = useRef<HTMLSpanElement | null>(null);
@@ -1724,11 +1760,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
           <button
             type="button"
-            onClick={onBackToHome}
+            onClick={handleBackNavigation}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-xs font-mono transition-all cursor-pointer min-h-[40px] shrink-0"
+            title={isFromWorlds ? 'Back to Worlds' : 'Back to Home'}
+            aria-label={isFromWorlds ? 'Back to Worlds' : 'Back to Home'}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Home</span>
+            <span className="hidden sm:inline">{isFromWorlds ? 'Worlds' : 'Home'}</span>
           </button>
 
           <div className="flex items-center gap-2 min-w-0">

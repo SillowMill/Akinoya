@@ -46,7 +46,7 @@ interface MyWorldProps {
   onInspectModal?: (dossier: PlanetSubmission) => void;
   onRetryVideoSynthesis?: () => void;
   isSynthesizingVideo?: boolean;
-  onNavigateToGalaxy?: (planetId?: string) => void;
+  onNavigateToGalaxy?: (planetId?: string, from?: string) => void;
 }
 
 export const MyWorld: React.FC<MyWorldProps> = React.memo(({
@@ -230,7 +230,12 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
               {onNavigateToGalaxy && (
                 <button
                   type="button"
-                  onClick={() => onNavigateToGalaxy(dossier.id)}
+                  onClick={() => {
+                    try {
+                      sessionStorage.setItem('galaxy_return_from', 'worlds');
+                    } catch {}
+                    onNavigateToGalaxy(dossier.id, 'worlds');
+                  }}
                   className="px-3.5 py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.25)] whitespace-nowrap min-h-[40px]"
                 >
                   <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
@@ -383,7 +388,12 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
             {onNavigateToGalaxy && (
               <button
                 type="button"
-                onClick={() => onNavigateToGalaxy(dossier.id)}
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem('galaxy_return_from', 'worlds');
+                  } catch {}
+                  onNavigateToGalaxy(dossier.id, 'worlds');
+                }}
                 className="py-2 px-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/40 text-cyan-200 font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
               >
                 <Radar className="w-3.5 h-3.5 text-cyan-400" />
