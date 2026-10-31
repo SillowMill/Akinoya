@@ -384,6 +384,25 @@ html[data-inapp='true'] .mix-blend-screen {
 }
 
 /* --------------------------------------------------------------------------
+   SAFARI WEB-KIT COMPOSITOR STABILIZATION (GALAXY NAVIGATOR)
+   Prevents bright layer-allocation flash and backdrop-filter desync
+   during route initialization on macOS and iOS Safari.
+   -------------------------------------------------------------------------- */
+.galaxy-navigator-canvas {
+  background-color: #020308 !important;
+  -webkit-transform: none !important;
+  transform: none !important;
+}
+
+@supports (-webkit-touch-callout: none) {
+  /* Safari iOS/macOS: Enforce solid base on Galaxy HUD elements */
+  .interactive-hud-element {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}
+
+/* --------------------------------------------------------------------------
    BINGÄÄ COMIC COVER — LIGHTWEIGHT TWINKLING WHITE STAR ACCENTS
    Uses compositor-only properties (opacity + transform) for zero CPU/paint
    overhead, and scales down automatically on low-power devices.

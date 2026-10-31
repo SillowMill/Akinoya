@@ -606,40 +606,39 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     };
   }, [user?.id, user?.email]);
 
-  // Initialize rich, deep-space Starfield with high brightness, opacity and density
+  // Initialize rich, deep-space Starfield with balanced, subtle, realistic stars
   useEffect(() => {
     const stars: Star[] = [];
-    const count = perfTier === 'low' ? 350 : perfTier === 'medium' ? 650 : (isMobile ? 800 : 1200);
-    // Piercing, brilliant celestial palette prioritizing crisp whites, icy cyans, and diamond sparkles
+    const count = perfTier === 'low' ? 300 : perfTier === 'medium' ? 520 : (isMobile ? 650 : 950);
+    // Subtle, natural deep-space celestial palette (soft silvery whites, faint stellar blues, delicate tints)
     const colors = [
-      '#ffffff',
-      '#ffffff',
-      '#ffffff',
       '#f8fafc',
+      '#e2e8f0',
+      '#ffffff',
+      '#cbd5e1',
       '#e0f2fe',
       '#bae6fd',
-      '#67e8f9',
       '#fef08a',
-      '#ffffff',
+      '#dbeafe',
     ];
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
       const distance = Math.pow(Math.random(), 0.52) * 4400;
-      const layer = Math.random() < 0.52 ? 0 : Math.random() < 0.84 ? 1 : 2;
+      const layer = Math.random() < 0.60 ? 0 : Math.random() < 0.90 ? 1 : 2;
       const radius =
         layer === 0
-          ? Math.random() * 0.9 + 0.6    // Distant pinpoint stars: crisp, sharp
+          ? Math.random() * 0.45 + 0.3    // Tiny distant pinpoints: 0.3px - 0.75px
           : layer === 1
-          ? Math.random() * 1.5 + 1.2    // Midground beacons
-          : Math.random() * 2.2 + 2.0;   // Foreground sparkling celestial giants
+          ? Math.random() * 0.55 + 0.6    // Delicate midground stars: 0.6px - 1.15px
+          : Math.random() * 0.65 + 1.0;   // Occasional brighter star: 1.0px - 1.65px (delicate, never a blotch)
 
       stars.push({
         x: Math.cos(angle) * distance,
         y: Math.sin(angle) * distance,
         radius,
-        baseAlpha: layer === 0 ? Math.random() * 0.35 + 0.55 : Math.random() * 0.3 + 0.72,
-        twinkleSpeed: Math.random() * 0.045 + 0.015,
+        baseAlpha: layer === 0 ? Math.random() * 0.3 + 0.25 : layer === 1 ? Math.random() * 0.3 + 0.42 : Math.random() * 0.25 + 0.58,
+        twinkleSpeed: Math.random() * 0.035 + 0.012,
         color: colors[Math.floor(Math.random() * colors.length)],
         layer,
       });
@@ -844,9 +843,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       const coreScreenX = centerX + curPan.x * curZoom;
       const coreScreenY = centerY + curPan.y * curZoom;
 
-      // 4. Parallax Starfield with Multilayer Depth, Piercing Diamond Sparkle & Twinkling
+      // 4. Parallax Starfield with Multilayer Depth & Organic Twinkling (Subtle, balanced & sharp)
       const stars = starsRef.current;
-      const maxStarCount = isLite ? 350 : isBalanced ? 650 : stars.length;
+      const maxStarCount = isLite ? 300 : isBalanced ? 520 : stars.length;
       const boundMargin = Math.max(width, height) * 0.45;
 
       for (let i = 0; i < maxStarCount; i++) {
@@ -859,47 +858,24 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         if (sx < -boundMargin || sx > width + boundMargin || sy < -boundMargin || sy > height + boundMargin) continue;
 
         const twinkle =
-          Math.sin(time * star.twinkleSpeed + i) * 0.26 +
-          Math.cos(time * star.twinkleSpeed * 0.75 + i * 1.5) * 0.14;
-        const alpha = Math.max(0.45, Math.min(1.0, star.baseAlpha + twinkle));
+          Math.sin(time * star.twinkleSpeed + i) * 0.2 +
+          Math.cos(time * star.twinkleSpeed * 0.7 + i * 1.3) * 0.1;
+        const alpha = Math.max(0.18, Math.min(0.85, star.baseAlpha + twinkle));
 
-        // On low-tier, draw all stars with ultra-fast fillRect (zero arc overhead, highly visible)
+        // On low-tier, draw all stars with ultra-fast fillRect
         if (isLite) {
           ctx.fillStyle = star.color;
           ctx.globalAlpha = alpha;
-          const sz = star.radius * 1.3;
+          const sz = star.radius * 1.2;
           ctx.fillRect(sx - sz * 0.5, sy - sz * 0.5, sz, sz);
           continue;
         }
 
-        // Radiant sparkling stellar halo & 4-point cross diffraction for foreground beacon stars
-        if (!isLite && star.layer === 2 && alpha > 0.6) {
-          const glowRadius = star.radius * 2.6 * Math.min(1.4, Math.max(0.75, curZoom));
-          ctx.fillStyle = star.color;
-          ctx.globalAlpha = alpha * 0.35;
-          ctx.beginPath();
-          ctx.arc(sx, sy, glowRadius, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Subtle 4-point cosmic sparkle cross on brightest stars
-          if (alpha > 0.82 && curZoom > 0.55) {
-            ctx.strokeStyle = star.color;
-            ctx.globalAlpha = (alpha - 0.7) * 0.75;
-            ctx.lineWidth = 0.8;
-            const spikeLen = star.radius * 3.4;
-            ctx.beginPath();
-            ctx.moveTo(sx - spikeLen, sy);
-            ctx.lineTo(sx + spikeLen, sy);
-            ctx.moveTo(sx, sy - spikeLen);
-            ctx.lineTo(sx, sy + spikeLen);
-            ctx.stroke();
-          }
-        }
-
+        // Clean, crisp pinpoint star (single-pass, zero blurry halos or blotches)
         ctx.fillStyle = star.color;
         ctx.globalAlpha = alpha;
         ctx.beginPath();
-        ctx.arc(sx, sy, star.radius * Math.min(1.4, Math.max(0.8, curZoom)), 0, Math.PI * 2);
+        ctx.arc(sx, sy, star.radius * Math.min(1.2, Math.max(0.8, curZoom)), 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1.0;
@@ -1267,6 +1243,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       animId = requestAnimationFrame(render);
     };
 
+    // Paint frame 0 immediately and synchronously to prevent unpainted white flash in Safari
+    render(performance.now());
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
   }, [syncWorldTransformAndHud]);
@@ -1629,7 +1607,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="interactive-hud-element fixed inset-0 z-[9999] w-screen h-[100dvh] flex items-center justify-center p-4 bg-[#02040a]/95 backdrop-blur-xl transform-gpu select-none"
+          className="interactive-hud-element fixed inset-0 z-[9999] w-screen h-[100dvh] flex items-center justify-center p-4 bg-[#02040a]/95 backdrop-blur-sm select-none"
           style={{ willChange: 'opacity' }}
           onPointerDown={(e) => e.stopPropagation()}
         >
@@ -1639,7 +1617,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="relative z-10 w-full max-w-lg bg-[#070c18] border border-amber-400/50 rounded-2xl p-6 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(245,158,11,0.25)] space-y-4 transform-gpu"
+            className="relative z-10 w-full max-w-lg bg-[#070c18] border border-amber-400/50 rounded-2xl p-6 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(245,158,11,0.25)] space-y-4"
           >
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex flex-col items-start gap-1">
@@ -1727,13 +1705,21 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         WebkitUserSelect: 'none',
         userSelect: 'none',
       }}
-      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#020308] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30 transform-gpu"
+      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#020308] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30"
     >
-      {/* Background Starfield & Orbit Rings Canvas */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0 transform-gpu" />
+      {/* Background Starfield & Orbit Rings Canvas (Solid black backing to eliminate Safari initial flash) */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          backgroundColor: '#020308',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
+        }}
+        className="galaxy-navigator-canvas absolute inset-0 w-full h-full pointer-events-none z-0"
+      />
 
       {/* TOP NAVIGATION BAR / SCI-FI HEADER */}
-      <header className={`interactive-hud-element absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[#060914]/95 via-[#060914]/80 to-transparent p-3 sm:p-4 ${perfTier === 'low' ? 'bg-[#060914]/98' : 'backdrop-blur-md'} flex items-center justify-between gap-3 border-b border-white/5`}>
+      <header className="interactive-hud-element absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[#060914]/95 via-[#060914]/85 to-transparent p-3 sm:p-4 backdrop-blur-sm flex items-center justify-between gap-3 border-b border-white/5">
         <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
           <button
             type="button"
@@ -1802,7 +1788,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             />
           )}
 
-          <div className={`relative z-20 flex items-center bg-gradient-to-r from-cyan-950/60 via-[#070c1a]/90 to-[#050914]/90 ${perfTier === 'low' ? 'bg-[#070c1a]' : 'backdrop-blur-xl'} border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.18)] transition-all overflow-hidden`}>
+          <div className="relative z-20 flex items-center bg-gradient-to-r from-cyan-950/70 via-[#070c1a]/95 to-[#050914]/95 backdrop-blur-sm border border-cyan-500/40 focus-within:border-amber-400/80 rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.15)] transition-all overflow-hidden">
             <Search className="w-4 h-4 text-cyan-400 ml-3.5 shrink-0" />
             <input
               type="text"
@@ -1831,7 +1817,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
           {/* Search Autocomplete Dropdown */}
           {isSearchFocused && searchResults.length > 0 && (
-            <div className={`absolute top-full left-0 right-0 mt-2 bg-[#060914]/95 ${perfTier === 'low' ? 'bg-[#060914]' : 'backdrop-blur-xl'} border border-cyan-500/30 rounded-2xl shadow-2xl max-h-48 sm:max-h-64 overflow-y-auto divide-y divide-white/5 z-50`}>
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#060914]/98 backdrop-blur-sm border border-cyan-500/30 rounded-2xl shadow-2xl max-h-48 sm:max-h-64 overflow-y-auto divide-y divide-white/5 z-50">
               {searchResults.map((p) => {
                 const isFounder = isFoundingPioneerPlanet(p);
                 const isPioneer = isPioneerPlanet(p);
@@ -1887,7 +1873,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               soundManager.playTone(620, 0.04);
               setMapFilter('all');
             }}
-            className={`px-2.5 py-1 rounded-full font-mono text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1.5 ${perfTier === 'low' ? 'bg-[#060a14]' : 'backdrop-blur-xl'} ${
+            className={`px-2.5 py-1 rounded-full font-mono text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1.5 bg-[#060a14]/90 backdrop-blur-sm ${
               mapFilter === 'all'
                 ? 'bg-cyan-950/90 border border-cyan-400/70 text-cyan-200 shadow-[0_0_14px_rgba(34,211,238,0.35)]'
                 : 'bg-[#060a14]/80 border border-white/15 text-white/60 hover:text-white'
@@ -1903,7 +1889,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               soundManager.playTone(740, 0.05);
               setMapFilter(mapFilter === 'pioneer' ? 'all' : 'pioneer');
             }}
-            className={`px-2.5 py-1 rounded-full font-mono text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1.5 ${perfTier === 'low' ? 'bg-[#060a14]' : 'backdrop-blur-xl'} ${
+            className={`px-2.5 py-1 rounded-full font-mono text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer flex items-center gap-1.5 bg-[#060a14]/90 backdrop-blur-sm ${
               mapFilter === 'pioneer'
                 ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black border border-amber-300 shadow-[0_0_18px_rgba(251,191,36,0.55)]'
                 : 'bg-amber-950/60 border border-amber-400/50 text-amber-300 hover:bg-amber-900/70 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
@@ -1922,7 +1908,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       {/* ========================================================================= */}
       <nav
         aria-label="Constellation Architectural Layout Dock"
-        className={`interactive-hud-element absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1.5 p-1.5 rounded-2xl bg-gradient-to-b from-[#060a16]/92 via-[#071026]/92 to-[#060a16]/92 ${perfTier === 'low' ? 'bg-[#060a16]' : 'backdrop-blur-2xl'} border border-cyan-500/35 shadow-[0_8px_32px_rgba(0,0,0,0.75),0_0_20px_rgba(6,182,212,0.18)] select-none`}
+        className="interactive-hud-element absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1.5 p-1.5 rounded-2xl bg-gradient-to-b from-[#060a16]/95 via-[#071026]/95 to-[#060a16]/95 backdrop-blur-sm border border-cyan-500/35 shadow-[0_8px_32px_rgba(0,0,0,0.75),0_0_15px_rgba(6,182,212,0.15)] select-none"
         style={{ touchAction: 'manipulation' }}
       >
         <div className="text-[7.5px] font-mono font-bold tracking-widest text-cyan-400/60 uppercase px-1 py-0.5 text-center hidden sm:block">
@@ -2000,7 +1986,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       </nav>
 
       {/* ASTROGATION COORDINATES HUD (Bottom Left) — Direct-DOM 60fps Refs */}
-      <div className={`interactive-hud-element absolute bottom-4 left-4 z-30 hidden sm:flex flex-col gap-1.5 p-3.5 rounded-2xl bg-gradient-to-br from-cyan-950/45 via-[#060a14]/90 to-[#040812]/95 ${perfTier === 'low' ? 'bg-[#060a14]' : 'backdrop-blur-xl'} border border-cyan-500/30 font-mono text-[10.5px] text-white/70 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(34,211,238,0.12)]`}>
+      <div className="interactive-hud-element absolute bottom-4 left-4 z-30 hidden sm:flex flex-col gap-1.5 p-3.5 rounded-2xl bg-gradient-to-br from-cyan-950/60 via-[#060a14]/95 to-[#040812]/98 backdrop-blur-sm border border-cyan-500/30 font-mono text-[10.5px] text-white/70 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_15px_rgba(34,211,238,0.1)]">
         <div className="flex items-center gap-2 text-cyan-300 font-bold">
           <Target className="w-3.5 h-3.5 text-cyan-400" />
           <span>ASTROGATION HUD</span>
