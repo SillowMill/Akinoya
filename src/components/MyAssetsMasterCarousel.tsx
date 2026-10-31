@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   Camera,
   Film,
-  Maximize2,
   Play,
   Pause,
   Volume2,
@@ -862,16 +861,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                     </p>
                   </div>
 
-                  <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2 sm:gap-2.5 shrink-0 pt-0.5 sm:pt-0">
-                    <button
-                      type="button"
-                      onClick={() => openFullscreenViewer('archive_4k')}
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-cyan-300 text-[11px] sm:text-xs font-mono font-bold transition-all cursor-pointer min-h-[44px] touch-manipulation whitespace-nowrap"
-                      title="Inspect in 4K Fullscreen"
-                    >
-                      <Maximize2 className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
-                      <span>Fullscreen</span>
-                    </button>
+                  <div className="w-full sm:w-auto flex items-center gap-2 sm:gap-2.5 shrink-0 pt-0.5 sm:pt-0">
                     <button
                       type="button"
                       onClick={(e) => {
