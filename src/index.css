@@ -935,5 +935,17 @@ video::-internal-media-controls-overlay-cast-button {
   appearance: none !important;
 }
 
+/* Mobile & Tablet 60 FPS Compositor Stabilization for My World & Assets */
+@media (max-width: 768px) {
+  .my-world-gpu-optimized {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform, opacity;
+  }
+}
+
+
 
 

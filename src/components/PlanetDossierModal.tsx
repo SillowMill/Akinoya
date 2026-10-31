@@ -618,12 +618,15 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                           src={currentPhoto.url}
                           alt=""
                           aria-hidden="true"
+                          loading="lazy"
                           decoding="async"
-                          className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-35 scale-110 select-none pointer-events-none"
+                          className="absolute inset-0 w-full h-full object-cover blur-md md:blur-2xl opacity-35 scale-110 select-none pointer-events-none"
                         />
                         <img
                           src={currentPhoto.url}
                           alt={currentPhoto.title}
+                          loading="lazy"
+                          decoding="async"
                           className={`relative z-10 w-full h-full object-contain mx-auto transition-all duration-300 select-none ${
                             isZoomed ? 'scale-125 cursor-zoom-out' : 'group-hover:scale-102 cursor-zoom-in'
                           }`}
@@ -709,6 +712,8 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                       <img
                         src={heroPhotoUrl}
                         alt="9:16 Trailer"
+                        loading="lazy"
+                        decoding="async"
                         className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none select-none"
                       />
                     )}
@@ -741,6 +746,8 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                       <img
                         src={heroPhotoUrl}
                         alt="9:16 Story Card"
+                        loading="lazy"
+                        decoding="async"
                         className="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none select-none"
                       />
                     )}
@@ -774,7 +781,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                         }`}
                       >
                         {card.url ? (
-                          <img src={card.url} alt={card.title} className="w-full h-full object-cover pointer-events-none select-none" />
+                          <img src={card.url} alt={card.title} loading="lazy" decoding="async" className="w-full h-full object-cover pointer-events-none select-none" />
                         ) : (
                           <div className="w-full h-full bg-[#070d1e] flex items-center justify-center pointer-events-none select-none">
                             <Sparkles className="w-4 h-4 text-amber-300/60" />

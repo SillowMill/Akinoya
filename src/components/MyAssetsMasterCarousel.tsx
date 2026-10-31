@@ -818,7 +818,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                 {/* Main 4K Cinematic Display Stage - Full Uncropped Picture View (object-contain) */}
                 <div
                   onClick={() => openFullscreenViewer('archive_4k')}
-                  className="relative w-full aspect-[4/3] sm:aspect-[16/10] max-h-[420px] sm:max-h-[520px] rounded-2xl overflow-hidden bg-[#030712] border border-amber-400/40 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_30px_rgba(245,158,11,0.15)] flex items-center justify-center group cursor-pointer hover:border-amber-300 transition-all select-none"
+                  className="relative w-full aspect-[4/3] sm:aspect-[16/10] max-h-[420px] sm:max-h-[520px] rounded-2xl overflow-hidden bg-[#030712] border border-amber-400/40 shadow-md md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_30px_rgba(245,158,11,0.15)] flex items-center justify-center group cursor-pointer hover:border-amber-300 transition-all select-none"
                   title="Click to view 4K master in full screen"
                 >
                   {activePhoto?.url && (
@@ -828,13 +828,14 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         src={activePhoto.url}
                         alt=""
                         aria-hidden="true"
+                        loading="lazy"
                         decoding="async"
-                        className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-35 scale-110 select-none pointer-events-none"
+                        className="absolute inset-0 w-full h-full object-cover blur-md md:blur-2xl opacity-35 scale-110 select-none pointer-events-none"
                       />
                       <img
                         src={activePhoto.url}
                         alt={activePhoto.title}
-                        loading="eager"
+                        loading="lazy"
                         decoding="async"
                         className="relative z-10 w-full h-full object-contain mx-auto group-hover:scale-[1.015] transition-transform duration-700 select-none pointer-events-none"
                       />
@@ -912,7 +913,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             : 'border-white/15 hover:border-cyan-400/60 opacity-75 hover:opacity-100'
                         }`}
                       >
-                        <img src={card.url} alt={card.title} className="w-full h-full object-cover" />
+                        <img src={card.url} alt={card.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
                         <div className="absolute top-1 left-1 sm:top-1.5 sm:left-2 px-1 sm:px-1.5 py-0.5 rounded bg-black/80 text-[7.5px] sm:text-[8px] font-mono font-bold text-amber-300">
                           0{idx + 1}
@@ -1445,6 +1446,8 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       <img
                         src={activePhoto.url}
                         alt={activePhoto.title}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-contain"
                       />
                       <div className="absolute top-3 left-4 px-2.5 py-1 rounded bg-black/80 border border-amber-400/50 text-[10px] font-mono font-bold text-amber-300 uppercase">
@@ -1465,7 +1468,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             idx === activePhotoIdx ? 'border-amber-400 scale-105' : 'border-white/20 opacity-60 hover:opacity-100'
                           }`}
                         >
-                          <img src={card.url} alt={card.title} className="w-full h-full object-cover" />
+                          <img src={card.url} alt={card.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                         </button>
                       ))}
                     </div>

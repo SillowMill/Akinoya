@@ -593,12 +593,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     ) {
       return true;
     }
-    if (!isFounderEmail(emailNorm) && (profile?.has_submitted_contest || profile?.contest_submission_id)) {
+    if (profile?.has_submitted_contest || profile?.contest_submission_id) {
       return true;
     }
     if (typeof window !== 'undefined') {
       const accountKey = emailNorm || userIdNorm;
-      if (accountKey && !isFounderEmail(emailNorm)) {
+      if (accountKey) {
         if (
           localStorage.getItem(`user_generation_claimed_${accountKey}`) === 'true' ||
           Boolean(localStorage.getItem(`akinoya_own_created_planet_id_${accountKey}`)) ||
@@ -618,6 +618,74 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     user?.email,
     user?.id,
   ]);
+
+  // Master Check: Determine whether the logged-in user (such as Odi as worldbuilder/maker and other VIP pioneers)
+  // has claimed a world (user.hasClaimedWorld === true or equivalent status).
+  // If claimed/created, the "Explore The 5 Pioneer Worlds" promo widget is completely hidden from their dashboard.
+  const hasUserClaimedWorld = useMemo(() => {
+    // 1. Explicit hasClaimedWorld boolean flags on user / profile / metadata
+    if (
+      (user as any)?.hasClaimedWorld === true ||
+      (profile as any)?.hasClaimedWorld === true ||
+      Boolean((user?.user_metadata as any)?.hasClaimedWorld) ||
+      Boolean((user?.app_metadata as any)?.hasClaimedWorld)
+    ) {
+      return true;
+    }
+
+    const emailNorm = (user?.email || profile?.email || '').toLowerCase().trim();
+    const userIdNorm = (user?.id || profile?.id || '').toLowerCase().trim();
+
+    // 2. Founder / Maker accounts (such as Odi as worldbuilder/maker)
+    if (emailNorm && isFounderEmail(emailNorm)) {
+      return true;
+    }
+
+    // 3. User has a custom or claimed world dossier
+    if (
+      userDossier &&
+      (userDossier.id !== 'planet-amlemi-genesis-01' ||
+        userDossier.planetName.toLowerCase().trim() !== 'ämlemi' ||
+        Boolean((userDossier as any).claimedBy) ||
+        Boolean(userDossier.authorEmail))
+    ) {
+      return true;
+    }
+
+    // 4. Contest submission / world creation in database profile
+    if (Boolean(profile?.has_submitted_contest) || Boolean(profile?.contest_submission_id)) {
+      return true;
+    }
+
+    // 5. Account or browser storage records indicating world generation / claim
+    if (typeof window !== 'undefined') {
+      const accountKey = emailNorm || userIdNorm;
+      if (accountKey) {
+        if (
+          localStorage.getItem(`user_generation_claimed_${accountKey}`) === 'true' ||
+          localStorage.getItem(`akinoya_claimed_world_${accountKey}`) === 'true' ||
+          Boolean(localStorage.getItem(`akinoya_own_created_planet_id_${accountKey}`)) ||
+          Boolean(sessionStorage.getItem(`akinoya_own_created_planet_id_${accountKey}`))
+        ) {
+          return true;
+        }
+      }
+      if (
+        localStorage.getItem('akinoya_claimed_world') === 'true' ||
+        Boolean(localStorage.getItem('akinoya_own_created_planet_id')) ||
+        Boolean(sessionStorage.getItem('akinoya_own_created_planet_id'))
+      ) {
+        return true;
+      }
+    }
+
+    // 6. hasUserCreatedWorld evaluated
+    if (hasUserCreatedWorld) {
+      return true;
+    }
+
+    return false;
+  }, [user, profile, userDossier, hasUserCreatedWorld]);
 
   // Newly registered / custom generated worlds beyond the 5 Pioneer Worlds: queued until January 9, 2027 release.
   // The 5 Pioneer Worlds (Ämlemi, Felix, Ankrau, Florium, Sepplon) NEVER show the loading/reveal status text.
@@ -2626,14 +2694,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               className="space-y-6 md:space-y-7"
             >
               {/* Conditional World Status: Unclaimed ("Explore The 5 Pioneer Worlds") vs. Created ("Your world is loading, will be revealed 9 januari") */}
-              {!hasUserCreatedWorld ? (
+              {!hasUserClaimedWorld ? (
                 <div
                   style={{
                     WebkitMaskImage: '-webkit-radial-gradient(white, black)',
                     transform: 'translateZ(0)',
                     WebkitTransform: 'translateZ(0)',
                   }}
-                  className="relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-b from-[#0a132c] via-[#060c1d] to-[#040814] bg-clip-padding border-2 border-cyan-400/50 p-5 sm:p-7 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]"
+                  className="relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-b from-[#0a132c] via-[#060c1d] to-[#040814] bg-clip-padding border-2 border-cyan-400/50 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]"
                 >
                   {/* Sealed internal radial glow (never overflows rounded corners) */}
                   <div
@@ -2726,7 +2794,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       style={{
                         WebkitMaskImage: '-webkit-radial-gradient(white, black)',
                       }}
-                      className="group relative isolate overflow-hidden rounded-2xl border-2 border-cyan-400/50 hover:border-cyan-300 bg-[#040917] bg-clip-padding shadow-[0_15px_45px_rgba(0,0,0,0.85),0_0_30px_rgba(56,189,248,0.25)] transition-all duration-300 cursor-pointer flex items-center justify-center w-full mx-auto"
+                      className="group relative isolate overflow-hidden rounded-2xl border-2 border-cyan-400/50 hover:border-cyan-300 bg-[#040917] bg-clip-padding shadow-md md:shadow-[0_15px_45px_rgba(0,0,0,0.85),0_0_30px_rgba(56,189,248,0.25)] transition-all duration-300 cursor-pointer flex items-center justify-center w-full mx-auto"
                     >
                       {/* Visual Overview Image (source cropped symmetric around Äkinoya Core: equal Sepplon/Felix margins) */}
                       <img
@@ -2734,7 +2802,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         alt="Äkinoya Galaxy Navigator Overview featuring Äkinoya Core and the 5 Pioneer Worlds"
                         style={{ objectFit: 'contain', objectPosition: 'center', margin: '0 auto' }}
                         className="block w-full h-auto max-h-[560px] rounded-[14px] object-contain object-center mx-auto transition-transform duration-500 ease-out origin-center group-hover:scale-[1.015]"
-                        loading="eager"
+                        loading="lazy"
+                        decoding="async"
+                        fetchPriority="low"
                       />
 
                       {/* Subtle bottom-gradient overlay with interactive indicator — hidden on mobile and tablet views for a 100% pristine visual image */}
@@ -2763,7 +2833,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     transform: 'translateZ(0)',
                     WebkitTransform: 'translateZ(0)',
                   }}
-                  className="relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-r from-[#0a142d] via-[#060c1d] to-[#121009] bg-clip-padding border-2 border-amber-400/55 p-5 sm:p-7 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.2)]"
+                  className="relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-r from-[#0a142d] via-[#060c1d] to-[#121009] bg-clip-padding border-2 border-amber-400/55 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.2)]"
                 >
                   <div
                     className="absolute inset-0 rounded-[inherit] pointer-events-none"
@@ -2827,13 +2897,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <div className="space-y-6 md:space-y-7">
                 {/* Top Sector Dossier Header Banner — Supreme Galaxy Vibe Glassmorphism with Pioneer Badging & Instant Lightweight Switch */}
                 <div
-                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d1630]/90 via-[#040816]/92 to-[#09152b]/90 backdrop-blur-md border border-cyan-400/35 p-5 sm:p-6 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(6,182,212,0.18)]"
+                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d1630]/90 via-[#040816]/92 to-[#09152b]/90 backdrop-blur-none md:backdrop-blur-md border border-cyan-400/35 p-5 sm:p-6 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(6,182,212,0.18)]"
                 >
-                  {/* Multi-layered radial nebula glows */}
+                  {/* Multi-layered radial nebula glows (lightweight on mobile) */}
                   <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/80 via-amber-300/80 to-transparent pointer-events-none" />
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-[90px] pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/15 rounded-full blur-[90px] pointer-events-none" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-indigo-600/12 rounded-full blur-[110px] pointer-events-none" />
+                  <div className="hidden md:block absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-[90px] pointer-events-none" />
+                  <div className="hidden md:block absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/15 rounded-full blur-[90px] pointer-events-none" />
+                  <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-indigo-600/12 rounded-full blur-[110px] pointer-events-none" />
 
                   <div className="flex flex-wrap items-center justify-center xl:justify-between gap-3 mb-4 relative z-10 text-center xl:text-left">
                     <div className="flex items-center gap-2">
@@ -2935,7 +3005,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                           {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
                           <div
-                            className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300"
+                            className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(245,158,11,0.5)] md:shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300"
                             style={{
                               borderRadius: '50%',
                               WebkitBorderRadius: '50%',
@@ -2952,7 +3022,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 WebkitBorderRadius: '50%',
                               }}
                               draggable={false}
-                              loading="eager"
+                              loading="lazy"
                               decoding="async"
                             />
                             {/* Gradient Atmospheric Shell matching Galaxy Navigator (Crystal-Clear Purity) */}
@@ -3027,9 +3097,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 {/* 3 Live Social Engagement Metric Cards — Calibrated for iPad Portrait (md:grid-cols-3 md:gap-5 md:p-6) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                   {/* Metric 1: Likes / Votes Count */}
-                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#0e172e]/85 via-[#060b17]/90 to-[#03060f]/95 backdrop-blur-2xl border border-amber-400/40 hover:border-amber-300/70 flex items-center justify-between gap-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(245,158,11,0.15)] transition-all">
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#0e172e]/85 via-[#060b17]/90 to-[#03060f]/95 backdrop-blur-none md:backdrop-blur-2xl border border-amber-400/40 hover:border-amber-300/70 flex items-center justify-between gap-3.5 shadow-md md:shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(245,158,11,0.15)] transition-all">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent pointer-events-none" />
-                    <div className="absolute -top-8 -right-8 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="hidden sm:block absolute -top-8 -right-8 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10 min-w-0">
                       <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-amber-200/80 font-bold block">
                         Community Votes
@@ -3058,9 +3128,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
 
                   {/* Metric 2: Leaderboard Position */}
-                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#081935]/85 via-[#040c1a]/90 to-[#02050f]/95 backdrop-blur-2xl border border-cyan-400/40 hover:border-cyan-300/70 flex items-center justify-between gap-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(34,211,238,0.15)] transition-all">
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#081935]/85 via-[#040c1a]/90 to-[#02050f]/95 backdrop-blur-none md:backdrop-blur-2xl border border-cyan-400/40 hover:border-cyan-300/70 flex items-center justify-between gap-3.5 shadow-md md:shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(34,211,238,0.15)] transition-all">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent pointer-events-none" />
-                    <div className="absolute -top-8 -right-8 w-24 h-24 bg-cyan-400/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="hidden sm:block absolute -top-8 -right-8 w-24 h-24 bg-cyan-400/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10 min-w-0">
                       <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-200/80 font-bold block">
                         Leaderboard Position
@@ -3083,9 +3153,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
 
                   {/* Metric 3: Lore Governance & Pioneer Status */}
-                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#08241e]/85 via-[#041216]/90 to-[#02060f]/95 backdrop-blur-2xl border border-emerald-400/40 hover:border-emerald-300/70 flex items-center justify-between gap-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(16,185,129,0.15)] transition-all">
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#08241e]/85 via-[#041216]/90 to-[#02060f]/95 backdrop-blur-none md:backdrop-blur-2xl border border-emerald-400/40 hover:border-emerald-300/70 flex items-center justify-between gap-3.5 shadow-md md:shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(16,185,129,0.15)] transition-all">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent pointer-events-none" />
-                    <div className="absolute -top-8 -right-8 w-24 h-24 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="hidden sm:block absolute -top-8 -right-8 w-24 h-24 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10 min-w-0">
                       <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-200/80 font-bold block">
                         Pioneer &amp; Lore Status
@@ -3107,8 +3177,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 </div>
 
                 {/* Guest Conversion Push Footer Card (only when user has not yet created a world) */}
-                {!hasUserCreatedWorld && isGuestWorldSimulation && (
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#090d18] via-[#060c1a] to-black border border-amber-400/45 p-6 sm:p-8 text-center space-y-5 shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(245,158,11,0.18)]">
+                {!hasUserClaimedWorld && isGuestWorldSimulation && (
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#090d18] via-[#060c1a] to-black border border-amber-400/45 p-6 sm:p-8 text-center space-y-5 shadow-md md:shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(245,158,11,0.18)]">
                     <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-400/15 border border-amber-400/40 flex items-center justify-center text-amber-300 shadow-[0_0_24px_rgba(245,158,11,0.3)]">
                       <Sparkles className="w-7 h-7" />
                     </div>
@@ -3164,7 +3234,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               className="space-y-5 sm:space-y-6 md:space-y-7"
             >
               {/* MY ASSETS Introduction Header — Symmetrical Full-Width Alignment on Mobile & Desktop */}
-              <div className="w-full relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-cyan-950/50 via-[#060c1a]/90 to-[#050812]/95 backdrop-blur-xl border border-cyan-400/35 p-4 sm:p-6 md:p-7 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.12)]">
+              <div className="w-full relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-cyan-950/50 via-[#060c1a]/90 to-[#050812]/95 backdrop-blur-none md:backdrop-blur-xl border border-cyan-400/35 p-4 sm:p-6 md:p-7 shadow-md md:shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.12)]">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent pointer-events-none" />
                 <div className="relative z-10 space-y-2.5">
                   <div className="flex items-center gap-2.5 sm:gap-3">
