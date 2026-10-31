@@ -201,7 +201,10 @@ textarea,
    viewport-unit math that reflows when the iPad Safari toolbar collapses. */
 .hub-sidebar {
   height: 100%;
-  contain: layout paint;
+  contain: layout style;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .hub-sidebar-scroll {

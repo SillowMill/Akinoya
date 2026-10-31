@@ -522,6 +522,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const hasUserCreatedWorld = useMemo(() => {
     const emailNorm = (user?.email || profile?.email || '').toLowerCase().trim();
     const userIdNorm = (user?.id || profile?.id || '').toLowerCase().trim();
+    if (emailNorm === 'hanna.meers@gmail.com') {
+      return false;
+    }
     if (
       userDossier &&
       userDossier.id !== 'planet-amlemi-genesis-01' &&

@@ -16,7 +16,7 @@ import {
   fetchPlanetSubmissions,
   subscribeToPlanetSubmissions,
   isForbiddenSubmission,
-  isLiveGalaxyWorld,
+  isOfficialCanonWorld,
 } from '../data/contest';
 import { soundManager } from '../utils/audio';
 import { isFoundingPioneerPlanet, isPioneerPlanet, isPreLaunch } from '../utils/pioneer';
@@ -56,7 +56,7 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
   // Planets data dynamically sorted descending by total votesCount
   const rankedPlanets = useMemo(() => {
     return [...planetSubmissions]
-      .filter((s) => !isForbiddenSubmission(s) && (!isPreLaunch() || isLiveGalaxyWorld(s)))
+      .filter((s) => !isForbiddenSubmission(s) && (!isPreLaunch() || isOfficialCanonWorld(s)))
       .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
   }, [planetSubmissions]);
   const topFavoritePlanet = rankedPlanets[0];

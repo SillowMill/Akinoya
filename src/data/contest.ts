@@ -949,6 +949,20 @@ export const WORLD_QUEUE_STATUS_LABEL = 'PRIVATE UNTIL RELEASE';
 export const WORLD_QUEUE_OFFICIAL_MESSAGE =
   'Your world is loading, will be revealed 9 januari.';
 
+/**
+ * Strictly verifies whether a planet is one of the 5 official canon pioneer worlds
+ * (Ämlemi, Felix, Ankrau, Florium, Sepplon).
+ * In pre-release (< Jan 9, 2027), ONLY official canon worlds are shown in public leaderboards,
+ * lore governance portals, and community ranking tallies.
+ */
+export const isOfficialCanonWorld = (planet?: Partial<PlanetSubmission> | null): boolean => {
+  if (!planet) return false;
+  const id = String(planet.id || '').trim();
+  if (CURATED_GALAXY_WORLD_IDS.has(id)) return true;
+  const name = String(planet.planetName || (planet as any).planet_name || '').trim().toLowerCase();
+  return CURATED_GALAXY_WORLD_NAMES.has(name);
+};
+
 /** True when a world is curated/approved for the public Galaxy Navigator map. */
 export const isLiveGalaxyWorld = (planet?: Partial<PlanetSubmission> | null): boolean => {
   if (!planet) return false;

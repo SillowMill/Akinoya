@@ -42,6 +42,7 @@ import {
   Trophy,
   Heart,
   Globe2,
+  Clock,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
@@ -81,7 +82,14 @@ const HubModuleLoading: React.FC<{ label?: string }> = ({ label = 'LOADING MODUL
   </div>
 );
 import { getStoredCreators } from '../data/creators';
-import { openClaimWorldModal, isPostLaunch, openMembershipGateModal, hasPaidMembership } from '../utils/pioneer';
+import {
+  openClaimWorldModal,
+  isPostLaunch,
+  openMembershipGateModal,
+  hasPaidMembership,
+  calculateLaunchCountdown,
+  CountdownTime,
+} from '../utils/pioneer';
 import { VAULT_STAGE_FOLDER_IDS, VAULT_STAGE_NAMES, getVaultFolderIdForStage } from '../utils/drive';
 import { scrollElementIntoContainer } from '../utils/scroll';
 
@@ -241,6 +249,15 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     }
     return 'Patron Member #042';
   });
+
+  const [launchCountdown, setLaunchCountdown] = useState<CountdownTime>(calculateLaunchCountdown);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLaunchCountdown(calculateLaunchCountdown());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const userDisplayName = profile?.first_name
     ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}`
@@ -1697,153 +1714,170 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION (Untouched) */}
               {/* ======================================================== */}
               <aside
-                className="hub-sidebar desktop-landscape-sidebar hidden md:flex w-64 lg:w-72 shrink-0 h-full min-h-0 flex-col bg-[#050812] border-r border-white/10 z-40 overflow-hidden"
-                style={{ contain: 'layout style' }}
+                className="hub-sidebar desktop-landscape-sidebar hidden md:flex w-64 lg:w-72 shrink-0 h-full min-h-0 flex-col bg-[#050812] border-r border-white/10 z-40 overflow-y-auto overscroll-contain community-scroll-container"
+                style={{
+                  contain: 'layout style',
+                  WebkitOverflowScrolling: 'touch',
+                  scrollbarWidth: 'thin',
+                }}
               >
-                <div className="hub-sidebar-scroll community-scroll-container flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 space-y-6">
-                <div className="space-y-4">
-                  {/* Sidebar Branding Header */}
-                  <div className="pb-3 border-b border-white/10 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(0,242,254,0.8)]" />
-                        COMMUNITY OS v2.4
-                      </span>
-                      <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
-                        6 MODULES
-                      </span>
+                <div className="flex-1 flex flex-col justify-between min-h-0 p-4 lg:p-5 space-y-6 pb-28 md:pb-12">
+                  <div className="space-y-4">
+                    {/* Sidebar Branding Header */}
+                    <div className="pb-3 border-b border-white/10 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(0,242,254,0.8)]" />
+                          COMMUNITY OS v2.4
+                        </span>
+                        <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
+                          6 MODULES
+                        </span>
+                      </div>
+                      <div className="text-xs font-display font-black text-white tracking-wide">
+                        ÄKINOYA PORTAL NAVIGATOR
+                      </div>
                     </div>
-                    <div className="text-xs font-display font-black text-white tracking-wide">
-                      ÄKINOYA PORTAL NAVIGATOR
-                    </div>
-                  </div>
 
-                  {/* Vertical Navigation Tabs */}
-                  <div className="space-y-1.5">
-                    {HUB_TABS.map((tab) => {
-                      const Icon = tab.icon;
-                      const isActive = activeSection === tab.id;
+                    {/* Vertical Navigation Tabs */}
+                    <div className="space-y-1.5">
+                      {HUB_TABS.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeSection === tab.id;
 
-                      return (
-                        <div key={tab.id} className="space-y-1">
-                          <button
-                            type="button"
-                            onClick={() => handleSwitchSection(tab.id as CreativeHubSection)}
-                            className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group min-h-[46px] ${
-                              isActive
-                                ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.4)] font-bold scale-[1.01]'
-                                : 'bg-white/[0.03] border-white/5 hover:border-cyan-400/40 hover:bg-white/[0.07] text-white/70 hover:text-white'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <Icon
-                                className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
-                                  isActive ? 'text-black' : 'text-cyan-400'
-                                }`}
-                              />
-                              <div className="min-w-0">
-                                <span className="text-xs font-mono font-bold block truncate">
-                                  {tab.label}
-                                </span>
-                                <span
-                                  className={`text-[9.5px] font-sans block truncate ${
-                                    isActive ? 'text-black/80 font-medium' : 'text-white/40'
-                                  }`}
-                                >
-                                  {tab.desc}
-                                </span>
-                              </div>
-                            </div>
-
-                            <span
-                              className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full font-bold shrink-0 ml-1.5 ${
+                        return (
+                          <div key={tab.id} className="space-y-1">
+                            <button
+                              type="button"
+                              onClick={() => handleSwitchSection(tab.id as CreativeHubSection)}
+                              className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group min-h-[46px] ${
                                 isActive
-                                  ? 'bg-black/20 text-black'
-                                  : 'bg-white/10 text-white/60 group-hover:bg-cyan-500/20 group-hover:text-cyan-300'
+                                  ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.4)] font-bold scale-[1.01]'
+                                  : 'bg-white/[0.03] border-white/5 hover:border-cyan-400/40 hover:bg-white/[0.07] text-white/70 hover:text-white'
                               }`}
                             >
-                              {tab.count}
-                            </span>
-                          </button>
-
-                          {/* Nested Pipeline Stages sub-menu when on Labs & Workflows */}
-                          {isActive && tab.id === 'workflows' && (
-                            <div className="ml-3 pl-3 border-l-2 border-cyan-500/40 space-y-1 pt-1.5 pb-1">
-                              <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-400/90 block px-2 pb-0.5">
-                                PIPELINE STAGES
-                              </span>
-                              {WORKFLOW_STAGES.map((st) => {
-                                const isStageActive = activeStageId === st.id;
-                                return (
-                                  <button
-                                    key={st.id}
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleJumpToStage(st.id);
-                                    }}
-                                    className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-mono transition-all flex items-center justify-between cursor-pointer ${
-                                      isStageActive
-                                        ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/60 shadow-[0_0_12px_rgba(0,242,254,0.35)] font-bold'
-                                        : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <Icon
+                                  className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${
+                                    isActive ? 'text-black' : 'text-cyan-400'
+                                  }`}
+                                />
+                                <div className="min-w-0">
+                                  <span className="text-xs font-mono font-bold block truncate">
+                                    {tab.label}
+                                  </span>
+                                  <span
+                                    className={`text-[9.5px] font-sans block truncate ${
+                                      isActive ? 'text-black/80 font-medium' : 'text-white/40'
                                     }`}
                                   >
-                                    <span className="flex items-center gap-1.5 truncate">
-                                      <span
-                                        className={`text-[10px] ${
-                                          isStageActive ? 'text-cyan-300 font-bold' : 'text-white/40'
-                                        }`}
-                                      >
-                                        [{st.num}]
+                                    {tab.desc}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <span
+                                className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full font-bold shrink-0 ml-1.5 ${
+                                  isActive
+                                    ? 'bg-black/20 text-black'
+                                    : 'bg-white/10 text-white/60 group-hover:bg-cyan-500/20 group-hover:text-cyan-300'
+                                }`}
+                              >
+                                {tab.count}
+                              </span>
+                            </button>
+
+                            {/* Nested Pipeline Stages sub-menu when on Labs & Workflows */}
+                            {isActive && tab.id === 'workflows' && (
+                              <div className="ml-3 pl-3 border-l-2 border-cyan-500/40 space-y-1 pt-1.5 pb-1">
+                                <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-400/90 block px-2 pb-0.5">
+                                  PIPELINE STAGES
+                                </span>
+                                {WORKFLOW_STAGES.map((st) => {
+                                  const isStageActive = activeStageId === st.id;
+                                  return (
+                                    <button
+                                      key={st.id}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleJumpToStage(st.id);
+                                      }}
+                                      className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-mono transition-all flex items-center justify-between cursor-pointer ${
+                                        isStageActive
+                                          ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/60 shadow-[0_0_12px_rgba(0,242,254,0.35)] font-bold'
+                                          : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
+                                      }`}
+                                    >
+                                      <span className="flex items-center gap-1.5 truncate">
+                                        <span
+                                          className={`text-[10px] ${
+                                            isStageActive ? 'text-cyan-300 font-bold' : 'text-white/40'
+                                          }`}
+                                        >
+                                          [{st.num}]
+                                        </span>
+                                        <span className="truncate text-[11px]">{st.title}</span>
                                       </span>
-                                      <span className="truncate text-[11px]">{st.title}</span>
-                                    </span>
-                                    {isStageActive && (
-                                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0 ml-1 shadow-[0_0_6px_#00f2fe]" />
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                </div>
-
-                {/* Cohesive Desktop Sidebar Bottom Widget: Timeline Badge + "CLAIM YOUR WORLD" Button ABOVE "CREATE YOUR FREE WORLD · BEFORE 09/01/2027" */}
-                <div className="hub-sidebar-dock shrink-0 p-4 lg:p-5 pt-3 border-t border-white/10 bg-[#050812]">
-                  <div className="p-3.5 rounded-2xl bg-[#080d1a] border border-amber-500/30 shadow-[0_0_25px_rgba(0,0,0,0.65)] space-y-3">
-                    {/* Timeline Badge Header */}
-                    <div className="space-y-1 pb-2 border-b border-white/10">
-                      <div className="flex items-center justify-between text-[10px] font-mono">
-                        <span className="text-white/50 tracking-wider">SYSTEM LAUNCH</span>
-                        <span className="text-amber-400 font-bold">JAN 9, 2027</span>
-                      </div>
-                      <p className="text-[10px] text-white/60 font-sans leading-tight">
-                        Paid memberships &amp; VR planet minting launch worldwide.
-                      </p>
+                                      {isStageActive && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shrink-0 ml-1 shadow-[0_0_6px_#00f2fe]" />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
+                  </div>
 
-                    {/* Primary Action: "CLAIM YOUR WORLD" Button Positioned ABOVE the Text Indicator */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        soundManager.playTone(520, 0.05);
-                        openClaimWorldModal();
-                      }}
-                      className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_18px_rgba(245,158,11,0.35)] transition-all cursor-pointer"
-                    >
-                      <Globe2 className="w-3.5 h-3.5 text-black shrink-0" />
-                      <span>CLAIM YOUR WORLD</span>
-                    </button>
+                  {/* Cohesive Desktop Sidebar Bottom Widget: Timeline Badge + Live Countdown + "CLAIM YOUR WORLD" Button */}
+                  <div className="hub-sidebar-dock shrink-0 pt-4 border-t border-white/10 mt-auto">
+                    <div className="p-3.5 rounded-2xl bg-[#080d1a] border border-amber-500/30 shadow-[0_0_25px_rgba(0,0,0,0.65)] space-y-3">
+                      {/* Timeline Badge Header */}
+                      <div className="space-y-1.5 pb-2 border-b border-white/10">
+                        <div className="flex items-center justify-between text-[10px] font-mono">
+                          <span className="text-white/50 tracking-wider">SYSTEM LAUNCH</span>
+                          <span className="text-amber-400 font-bold">JAN 9, 2027</span>
+                        </div>
+                        {/* Live Countdown Display */}
+                        <div className="flex items-center gap-1.5 py-1 px-2 rounded-lg bg-black/40 border border-white/5 font-mono text-[10px] text-amber-300">
+                          <Clock className="w-3 h-3 text-amber-400 shrink-0 animate-pulse" />
+                          <div className="flex items-center justify-between w-full font-bold">
+                            <span>{launchCountdown.days}d</span>
+                            <span className="text-white/40">:</span>
+                            <span>{launchCountdown.hours}h</span>
+                            <span className="text-white/40">:</span>
+                            <span>{launchCountdown.minutes}m</span>
+                            <span className="text-white/40">:</span>
+                            <span>{launchCountdown.seconds}s</span>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-white/60 font-sans leading-tight">
+                          Paid memberships &amp; VR planet minting launch worldwide.
+                        </p>
+                      </div>
 
-                    {/* Text Indicator Positioned Cleanly BELOW the Button */}
-                    <div className="flex items-center justify-center gap-1.5 pt-0.5 text-[9.5px] font-mono font-bold tracking-wider text-amber-300/95 text-center leading-tight">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                      <span>CREATE YOUR FREE WORLD · BEFORE 09/01/2027</span>
+                      {/* Primary Action: "CLAIM YOUR WORLD" Button Positioned ABOVE the Text Indicator */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundManager.playTone(520, 0.05);
+                          openClaimWorldModal();
+                        }}
+                        className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_18px_rgba(245,158,11,0.35)] transition-all cursor-pointer"
+                      >
+                        <Globe2 className="w-3.5 h-3.5 text-black shrink-0" />
+                        <span>CLAIM YOUR WORLD</span>
+                      </button>
+
+                      {/* Text Indicator Positioned Cleanly BELOW the Button */}
+                      <div className="flex items-center justify-center gap-1.5 pt-0.5 text-[9.5px] font-mono font-bold tracking-wider text-amber-300/95 text-center leading-tight">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                        <span>CREATE YOUR FREE WORLD · BEFORE 09/01/2027</span>
+                      </div>
                     </div>
                   </div>
                 </div>

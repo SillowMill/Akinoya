@@ -58,6 +58,7 @@ import {
   subscribeToPlanetSubmissions,
   isCleanPhotorealistic,
   isForbiddenSubmission,
+  isOfficialCanonWorld,
   isLiveGalaxyWorld,
   UI_RECALIBRATING_STATUS_TEXT,
 } from '../data/contest';
@@ -200,7 +201,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     const isVisibleInLaunchpad = (sub: PlanetSubmission) => {
       if (isForbiddenSubmission(sub)) return false;
       if (!isPreLaunch()) return true;
-      if (isLiveGalaxyWorld(sub)) return true;
+      if (isOfficialCanonWorld(sub)) return true;
       // Pre-release: creator sees their own world in launchpad, other visitors do not
       return Boolean(
         (userId && sub.userId === userId) ||
@@ -253,8 +254,10 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         isAccountGenerationClaimed())
   );
 
-  // Founder Test Bypass: allows odi.selis3@gmail.com to continuously test planet generation
-  const hasSubmittedContest = isFounderAdmin && founderTestBypass ? false : rawHasSubmittedContest;
+  const isHannaTest = (user?.email || profile?.email || '').toLowerCase().trim() === 'hanna.meers@gmail.com';
+
+  // Founder Test Bypass / Hanna RB Test Reset: allows continuous clean testing of planet generation
+  const hasSubmittedContest = (isFounderAdmin && founderTestBypass) || isHannaTest ? false : rawHasSubmittedContest;
 
   const handleFounderAdminReset = async () => {
     if (!isFounderAdmin) return;

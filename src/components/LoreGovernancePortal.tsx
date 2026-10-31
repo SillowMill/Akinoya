@@ -18,7 +18,7 @@ import {
   togglePlanetSubmissionVote,
   subscribeToPlanetSubmissions,
   isForbiddenSubmission,
-  isLiveGalaxyWorld,
+  isOfficialCanonWorld,
 } from '../data/contest';
 import { isPreLaunch } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
@@ -45,7 +45,7 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
       if (isForbiddenSubmission(s)) return false;
       // Pre-launch (pre-January 9, 2027): user-created pioneer worlds are strictly shielded from public governance voting
       if (isPreLaunch()) {
-        return isLiveGalaxyWorld(s);
+        return isOfficialCanonWorld(s);
       }
       return true;
     };
