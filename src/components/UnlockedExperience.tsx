@@ -81,6 +81,8 @@ import {
   isPreLaunch,
   getStoredSectorClaim,
   SectorClaimRecord,
+  isOdiFounderAccount,
+  isVipAccount,
 } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { VisualizerPlayerModal } from './VisualizerPlayerModal';
@@ -637,7 +639,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     const userIdNorm = (user?.id || profile?.id || '').toLowerCase().trim();
 
     // 2. Founder / Maker accounts (such as Odi as worldbuilder/maker)
-    if (emailNorm && isFounderEmail(emailNorm)) {
+    if (
+      (emailNorm && isFounderEmail(emailNorm)) ||
+      isOdiFounderAccount({
+        email: emailNorm,
+        userId: userIdNorm,
+        name: profile?.full_name || (user?.user_metadata as any)?.full_name,
+        username: profile?.username || (user?.user_metadata as any)?.username,
+      })
+    ) {
       return true;
     }
 
@@ -645,20 +655,33 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     if (
       userDossier &&
       (userDossier.id !== 'planet-amlemi-genesis-01' ||
-        userDossier.planetName.toLowerCase().trim() !== 'ämlemi' ||
+        userDossier.planetName?.toLowerCase().trim() !== 'ämlemi' ||
         Boolean((userDossier as any).claimedBy) ||
         Boolean(userDossier.authorEmail))
     ) {
       return true;
     }
 
-    // 4. Contest submission / world creation in database profile
+    // 4. Stored or active sector claim (e.g. Aethelgard or Hout)
+    if (Boolean(claimedSector) || Boolean(getStoredSectorClaim())) {
+      return true;
+    }
+
+    // 5. Contest submission / world creation in database profile
     if (Boolean(profile?.has_submitted_contest) || Boolean(profile?.contest_submission_id)) {
       return true;
     }
 
-    // 5. Account or browser storage records indicating world generation / claim
+    // 6. Account or browser storage records indicating world generation / claim
     if (typeof window !== 'undefined') {
+      if (
+        localStorage.getItem('sillow_claimed_sector') ||
+        localStorage.getItem('akinoya_claimed_world') === 'true' ||
+        Boolean(localStorage.getItem('akinoya_own_created_planet_id')) ||
+        Boolean(sessionStorage.getItem('akinoya_own_created_planet_id'))
+      ) {
+        return true;
+      }
       const accountKey = emailNorm || userIdNorm;
       if (accountKey) {
         if (
@@ -670,22 +693,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           return true;
         }
       }
-      if (
-        localStorage.getItem('akinoya_claimed_world') === 'true' ||
-        Boolean(localStorage.getItem('akinoya_own_created_planet_id')) ||
-        Boolean(sessionStorage.getItem('akinoya_own_created_planet_id'))
-      ) {
-        return true;
-      }
     }
 
-    // 6. hasUserCreatedWorld evaluated
+    // 7. hasUserCreatedWorld evaluated
     if (hasUserCreatedWorld) {
       return true;
     }
 
     return false;
-  }, [user, profile, userDossier, hasUserCreatedWorld]);
+  }, [user, profile, userDossier, claimedSector, hasUserCreatedWorld]);
 
   // Newly registered / custom generated worlds beyond the 5 Pioneer Worlds: queued until January 9, 2027 release.
   // The 5 Pioneer Worlds (Ämlemi, Felix, Ankrau, Florium, Sepplon) NEVER show the loading/reveal status text.
@@ -2897,7 +2913,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <div className="space-y-6 md:space-y-7">
                 {/* Top Sector Dossier Header Banner — Supreme Galaxy Vibe Glassmorphism with Pioneer Badging & Instant Lightweight Switch */}
                 <div
-                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d1630]/90 via-[#040816]/92 to-[#09152b]/90 backdrop-blur-none md:backdrop-blur-md border border-cyan-400/35 p-5 sm:p-6 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(6,182,212,0.18)]"
+                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d1630] via-[#040816] to-[#09152b] border border-cyan-400/35 p-5 sm:p-6 md:p-8 shadow-md"
                 >
                   {/* Multi-layered radial nebula glows (lightweight on mobile) */}
                   <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/80 via-amber-300/80 to-transparent pointer-events-none" />
@@ -2985,9 +3001,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                           {/* 3. Single Orbit Ring Standard: Concentric Rotating Dashed Orbit Ring */}
                           <div
-                            className={`absolute ${
+                            className={`orbit-ring absolute ${
                               isFoundingPioneerPlanet(activeWorldDossier) ? '-inset-1.5' : '-inset-2.5'
-                            } rounded-full border border-dashed border-amber-300/90 shadow-[0_0_14px_rgba(251,191,36,0.5)] pointer-events-none ${
+                            } rounded-full border border-dashed border-amber-300/90 pointer-events-none ${
                               isFoundingPioneerPlanet(activeWorldDossier) ? 'galaxy-orbit-spin-fast' : 'galaxy-orbit-spin'
                             }`}
                             style={{
@@ -2997,15 +3013,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           >
                             {isFoundingPioneerPlanet(activeWorldDossier) && (
                               <span
-                                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-[0_0_8px_#fbbf24]"
+                                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-amber-300 border border-amber-200/50"
                                 style={{ borderRadius: '50%' }}
                               />
                             )}
                           </div>
 
-                          {/* Celestial Planet Orb with Glowing Solid Gold Primary Border */}
+                          {/* Celestial Planet Orb with Solid Gold Primary Border */}
                           <div
-                            className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(245,158,11,0.5)] md:shadow-[0_0_28px_rgba(245,158,11,0.8)] group-hover:scale-110 transition-all duration-300"
+                            className="planet-node relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400 bg-[#070c18] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300"
                             style={{
                               borderRadius: '50%',
                               WebkitBorderRadius: '50%',
@@ -3097,15 +3113,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 {/* 3 Live Social Engagement Metric Cards — Calibrated for iPad Portrait (md:grid-cols-3 md:gap-5 md:p-6) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                   {/* Metric 1: Likes / Votes Count */}
-                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#0e172e]/85 via-[#060b17]/90 to-[#03060f]/95 backdrop-blur-none md:backdrop-blur-2xl border border-amber-400/40 hover:border-amber-300/70 flex items-center justify-between gap-3.5 shadow-md md:shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(245,158,11,0.15)] transition-all">
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#0e172e] via-[#060b17] to-[#03060f] border border-amber-400/40 hover:border-amber-300/70 flex items-center justify-between gap-3.5 shadow-md transition-colors">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent pointer-events-none" />
-                    <div className="hidden sm:block absolute -top-8 -right-8 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10 min-w-0">
                       <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-amber-200/80 font-bold block">
                         Community Votes
                       </span>
                       <div className="flex items-baseline gap-2 mt-1.5">
-                        <span className="text-2xl sm:text-3xl font-display font-black bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(251,191,36,0.6)]">
+                        <span className="text-2xl sm:text-3xl font-display font-black text-amber-300">
                           {activeWorldDossier.votesCount}
                         </span>
                         <span className="text-[11px] font-mono text-amber-200/60 uppercase tracking-wider">votes</span>
@@ -3117,8 +3132,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       onClick={handleVoteUserDossier}
                       className={`relative z-10 px-3.5 py-2.5 rounded-xl font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer min-h-[44px] shrink-0 ${
                         activeWorldDossier.hasVoted
-                          ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.45)]'
-                          : 'bg-amber-950/50 hover:bg-amber-900/60 text-amber-200 hover:text-white border border-amber-400/40'
+                          ? 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black border border-amber-300'
+                          : 'bg-amber-950/70 hover:bg-amber-900/80 text-amber-200 hover:text-white border border-amber-400/40'
                       }`}
                       title="Cast Vote"
                     >
@@ -3128,15 +3143,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
 
                   {/* Metric 2: Leaderboard Position */}
-                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#081935]/85 via-[#040c1a]/90 to-[#02050f]/95 backdrop-blur-none md:backdrop-blur-2xl border border-cyan-400/40 hover:border-cyan-300/70 flex items-center justify-between gap-3.5 shadow-md md:shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(34,211,238,0.15)] transition-all">
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#081935] via-[#040c1a] to-[#02050f] border border-cyan-400/40 hover:border-cyan-300/70 flex items-center justify-between gap-3.5 shadow-md transition-colors">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent pointer-events-none" />
-                    <div className="hidden sm:block absolute -top-8 -right-8 w-24 h-24 bg-cyan-400/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10 min-w-0">
                       <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-cyan-200/80 font-bold block">
                         Leaderboard Position
                       </span>
                       <div className="flex items-baseline gap-2 mt-1.5">
-                        <span className="text-2xl sm:text-3xl font-display font-black bg-gradient-to-b from-cyan-100 via-cyan-300 to-sky-400 bg-clip-text text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.65)]">
+                        <span className="text-2xl sm:text-3xl font-display font-black text-cyan-300">
                           #{planetRank > 0 ? planetRank : 1}
                         </span>
                         <span className="text-[11px] font-mono text-cyan-200/60 truncate">Group&apos;s Favorites</span>
@@ -3145,7 +3159,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                     <a
                       href="/community"
-                      className="relative z-10 px-3.5 py-2.5 rounded-xl bg-cyan-950/70 hover:bg-cyan-900/80 text-cyan-200 border border-cyan-400/40 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-[0_0_12px_rgba(34,211,238,0.2)] min-h-[44px] shrink-0"
+                      className="relative z-10 px-3.5 py-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900/90 text-cyan-200 border border-cyan-400/40 font-mono text-xs font-bold transition-colors flex items-center gap-1.5 min-h-[44px] shrink-0"
                     >
                       <Trophy className="w-3.5 h-3.5 text-amber-400" />
                       <span>Board</span>
@@ -3153,15 +3167,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
 
                   {/* Metric 3: Lore Governance & Pioneer Status */}
-                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#08241e]/85 via-[#041216]/90 to-[#02060f]/95 backdrop-blur-none md:backdrop-blur-2xl border border-emerald-400/40 hover:border-emerald-300/70 flex items-center justify-between gap-3.5 shadow-md md:shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(16,185,129,0.15)] transition-all">
+                  <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#08241e] via-[#041216] to-[#02060f] border border-emerald-400/40 hover:border-emerald-300/70 flex items-center justify-between gap-3.5 shadow-md transition-colors">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent pointer-events-none" />
-                    <div className="hidden sm:block absolute -top-8 -right-8 w-24 h-24 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="relative z-10 min-w-0">
                       <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-emerald-200/80 font-bold block">
                         Pioneer &amp; Lore Status
                       </span>
                       <div className="flex items-baseline gap-1.5 mt-1.5">
-                        <span className="text-base sm:text-lg font-display font-extrabold text-emerald-300 drop-shadow-[0_0_10px_rgba(16,185,129,0.4)] truncate">
+                        <span className="text-base sm:text-lg font-display font-extrabold text-emerald-300 truncate">
                           {isFoundingPioneerPlanet(activeWorldDossier) ? 'Founding Benchmark' : 'Pioneer Candidate'}
                         </span>
                       </div>
@@ -3170,7 +3183,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </span>
                     </div>
 
-                    <div className="relative z-10 w-11 h-11 rounded-xl bg-emerald-950/80 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                    <div className="relative z-10 w-11 h-11 rounded-xl bg-emerald-950/90 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0">
                       <Vote className="w-5 h-5" />
                     </div>
                   </div>

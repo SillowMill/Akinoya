@@ -168,6 +168,17 @@
   backface-visibility: hidden;
 }
 
+/* Force GPU Hardware-Acceleration on Core Galaxy Navigator & Orbital Elements */
+.galaxy-container,
+.planet-node,
+.orbit-ring {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 .galaxy-navigator-container,
 .galaxy-navigator-container * {
   -webkit-backdrop-filter: none !important;

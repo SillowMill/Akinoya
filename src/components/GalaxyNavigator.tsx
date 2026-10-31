@@ -1732,7 +1732,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         WebkitUserSelect: 'none',
         userSelect: 'none',
       }}
-      className="galaxy-navigator-container fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#000000] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30"
+      className="galaxy-navigator-container galaxy-container fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#000000] text-white overflow-hidden select-none cursor-grab active:cursor-grabbing font-sans z-30"
     >
       {/* Background Starfield & Orbit Rings Canvas (Solid pure black #000000 for instant 60 FPS on Safari) */}
       <canvas
@@ -2160,7 +2160,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               } as PlanetSubmission);
             }}
             onPointerLeave={() => setHoveredPlanet(null)}
-            className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none touch-manipulation rounded-full"
+            className="planet-node absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 flex items-center justify-center select-none touch-manipulation rounded-full"
             style={{
               left: 0,
               top: 0,
@@ -2177,7 +2177,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           >
             {/* 1. Tier 1: Outer Astrolabe Ring with 4 Cardinal Star-Diamonds (Clockwise Drift) */}
             <div
-              className="absolute -inset-8 rounded-full border border-amber-400/35 galaxy-orbit-spin-slow pointer-events-none"
+              className="orbit-ring absolute -inset-8 rounded-full border border-amber-400/35 galaxy-orbit-spin-slow pointer-events-none"
               style={{ borderRadius: '50%' }}
             >
               {/* Cardinal Navigation Pips */}
@@ -2189,19 +2189,19 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
             {/* 2. Tier 2: Mid Segmented Energy Crest (Counter-Clockwise Rotation) */}
             <div
-              className="absolute -inset-5 rounded-full border border-dashed border-amber-300/60 galaxy-orbit-spin-reverse pointer-events-none"
+              className="orbit-ring absolute -inset-5 rounded-full border border-dashed border-amber-300/60 galaxy-orbit-spin-reverse pointer-events-none"
               style={{ borderRadius: '50%' }}
             />
 
             {/* 3. Tier 3: Concentric Geometric Hairline Resonator */}
             <div
-              className="absolute -inset-3 rounded-full border border-amber-400/25 pointer-events-none"
+              className="orbit-ring absolute -inset-3 rounded-full border border-amber-400/25 pointer-events-none"
               style={{ borderRadius: '50%' }}
             />
 
             {/* 4. Tier 4: Inner High-Precision Dotted Orbital Halo (Clockwise Rotation) */}
             <div
-              className="absolute -inset-1.5 rounded-full border border-dotted border-amber-200/90 galaxy-orbit-spin-fast pointer-events-none"
+              className="orbit-ring absolute -inset-1.5 rounded-full border border-dotted border-amber-200/90 galaxy-orbit-spin-fast pointer-events-none"
               style={{ borderRadius: '50%' }}
             />
 
@@ -2285,7 +2285,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                   setHoveredPlanet(planet);
                 }}
                 onPointerLeave={() => setHoveredPlanet(null)}
-                className="absolute cursor-pointer group z-10 flex items-center justify-center select-none touch-manipulation rounded-full"
+                className="planet-node absolute cursor-pointer group z-10 flex items-center justify-center select-none touch-manipulation rounded-full"
                 style={{
                   left: 0,
                   top: 0,
@@ -2333,7 +2333,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 {/* 2. Outer Counter-Clockwise Orbit Ring (Exclusively for #01 Founding Pioneer Ämlemi) */}
                 {isAmlemi && (
                   <div
-                    className="absolute -inset-3.5 rounded-full border border-dashed border-amber-400/40 galaxy-orbit-spin-reverse pointer-events-none"
+                    className="orbit-ring absolute -inset-3.5 rounded-full border border-dashed border-amber-400/40 galaxy-orbit-spin-reverse pointer-events-none"
                     style={{
                       borderRadius: '50%',
                       WebkitBorderRadius: '50%',
@@ -2344,7 +2344,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 {/* 3. Single Orbit Ring Standard: Concentric Rotating Dashed Orbit Ring */}
                 {/* For all newly generated / community planet nodes: Exactly ONE single rotating dashed orbit ring (Minimalist & Uncluttered) */}
                 <div
-                  className={`absolute ${
+                  className={`orbit-ring absolute ${
                     isAmlemi ? '-inset-1.5' : '-inset-2.5'
                   } rounded-full border border-dashed pointer-events-none ${
                     isAmlemi ? 'galaxy-orbit-spin-fast' : 'galaxy-orbit-spin'
