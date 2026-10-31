@@ -160,6 +160,21 @@
   -webkit-backface-visibility: hidden;
 }
 
+/* Galaxy Navigator Safari & Mobile Hardware Acceleration */
+.galaxy-navigator-container {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.galaxy-navigator-container,
+.galaxy-navigator-container * {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
 /* Prevent iOS / Safari auto-zoom on input focus */
 @media screen and (max-width: 768px) {
   input,
