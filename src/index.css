@@ -389,16 +389,18 @@ html[data-inapp='true'] .mix-blend-screen {
    during route initialization on macOS and iOS Safari.
    -------------------------------------------------------------------------- */
 .galaxy-navigator-canvas {
-  background-color: #020308 !important;
+  background-color: #000000 !important;
   -webkit-transform: none !important;
   transform: none !important;
 }
 
 @supports (-webkit-touch-callout: none) {
-  /* Safari iOS/macOS: Enforce solid base on Galaxy HUD elements */
+  /* Safari iOS/macOS: Enforce solid base on Galaxy HUD elements & zero backdrop lag */
   .interactive-hud-element {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
 }
 
