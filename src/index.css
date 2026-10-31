@@ -94,17 +94,67 @@
 
 @keyframes spinReverse {
   from {
-    transform: rotate(360deg) translateZ(0);
+    transform: rotate(360deg);
   }
   to {
-    transform: rotate(0deg) translateZ(0);
+    transform: rotate(0deg);
   }
 }
 
 .animate-spin-reverse {
   animation: spinReverse 32s linear infinite;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+  transform-origin: center center;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Dedicated continuous 60fps orbital rotations (GPU-accelerated, zero CPU overhead) */
+@keyframes galaxyOrbitSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes galaxyOrbitSpinReverse {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.galaxy-orbit-spin {
+  animation: galaxyOrbitSpin 24s linear infinite !important;
+  transform-origin: center center;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.galaxy-orbit-spin-reverse {
+  animation: galaxyOrbitSpinReverse 28s linear infinite !important;
+  transform-origin: center center;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.galaxy-orbit-spin-fast {
+  animation: galaxyOrbitSpin 18s linear infinite !important;
+  transform-origin: center center;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.galaxy-orbit-spin-slow {
+  animation: galaxyOrbitSpin 48s linear infinite !important;
+  transform-origin: center center;
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -274,8 +324,6 @@ body:has(.community-app-shell) {
 }
 
 /* Heavy infinite animations: promote to their own layer */
-.animate-spin,
-.animate-spin-reverse,
 .animate-pulse,
 .animate-ping,
 .animate-float,

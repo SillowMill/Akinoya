@@ -802,20 +802,25 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
       const isLite = perfTierRef.current === 'low';
       const isBalanced = perfTierRef.current === 'medium';
 
-      // 2. Cosmic Background Ambient Gradient
-      const bgGrad = ctx.createRadialGradient(
-        centerX + curPan.x * curZoom * 0.1,
-        centerY + curPan.y * curZoom * 0.1,
-        50,
-        centerX,
-        centerY,
-        Math.max(width, height)
-      );
-      bgGrad.addColorStop(0, '#0a0d1f');
-      bgGrad.addColorStop(0.4, '#04060d');
-      bgGrad.addColorStop(1, '#010206');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, width, height);
+      // 2. Cosmic Background Ambient Gradient (Lightweight flat fill on low-end)
+      if (isLite) {
+        ctx.fillStyle = '#03050c';
+        ctx.fillRect(0, 0, width, height);
+      } else {
+        const bgGrad = ctx.createRadialGradient(
+          centerX + curPan.x * curZoom * 0.1,
+          centerY + curPan.y * curZoom * 0.1,
+          50,
+          centerX,
+          centerY,
+          Math.max(width, height)
+        );
+        bgGrad.addColorStop(0, '#0a0d1f');
+        bgGrad.addColorStop(0.4, '#04060d');
+        bgGrad.addColorStop(1, '#010206');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+      }
 
       // Apply synchronized 2-finger map rotation around screen center
       if (curRot !== 0) {
@@ -824,25 +829,32 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         ctx.translate(-centerX, -centerY);
       }
 
-      // 3. Central Äkinoya Golden Core Glow
+      // 3. Central Äkinoya Golden Core Glow (Optimized for low-end)
       const coreScreenX = centerX + curPan.x * curZoom;
       const coreScreenY = centerY + curPan.y * curZoom;
-      const coreGrad = ctx.createRadialGradient(
-        coreScreenX,
-        coreScreenY,
-        10 * curZoom,
-        coreScreenX,
-        coreScreenY,
-        380 * curZoom
-      );
-      coreGrad.addColorStop(0, 'rgba(251, 191, 36, 0.22)');
-      coreGrad.addColorStop(0.3, 'rgba(245, 158, 11, 0.12)');
-      coreGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.04)');
-      coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = coreGrad;
-      ctx.beginPath();
-      ctx.arc(coreScreenX, coreScreenY, 380 * curZoom, 0, Math.PI * 2);
-      ctx.fill();
+      if (!isLite) {
+        const coreGrad = ctx.createRadialGradient(
+          coreScreenX,
+          coreScreenY,
+          10 * curZoom,
+          coreScreenX,
+          coreScreenY,
+          380 * curZoom
+        );
+        coreGrad.addColorStop(0, 'rgba(251, 191, 36, 0.22)');
+        coreGrad.addColorStop(0.3, 'rgba(245, 158, 11, 0.12)');
+        coreGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.04)');
+        coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(coreScreenX, coreScreenY, 380 * curZoom, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.09)';
+        ctx.beginPath();
+        ctx.arc(coreScreenX, coreScreenY, 160 * curZoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       // 4. Parallax Starfield with Multilayer Depth, Twinkling & Dynamic Capping
       const stars = starsRef.current;
@@ -863,8 +875,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
           Math.cos(time * star.twinkleSpeed * 0.6 + i * 1.7) * 0.12;
         const alpha = Math.max(0.08, Math.min(1, star.baseAlpha + twinkle));
 
-        // On low-tier, draw distant stars with ultra-fast fillRect (zero arc overhead)
-        if (isLite && star.layer === 0) {
+        // On low-tier, draw all stars with ultra-fast fillRect (zero arc overhead)
+        if (isLite) {
           ctx.fillStyle = star.color;
           ctx.globalAlpha = alpha;
           const sz = star.radius * 1.2;
@@ -2155,8 +2167,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
             {/* 2. Tier 1: Outer Astrolabe Ring with 4 Cardinal Star-Diamonds (Clockwise Drift) */}
             <div
-              className="absolute -inset-8 rounded-full border border-amber-400/35 animate-spin pointer-events-none"
-              style={{ animationDuration: '48s', borderRadius: '50%' }}
+              className="absolute -inset-8 rounded-full border border-amber-400/35 galaxy-orbit-spin-slow pointer-events-none"
+              style={{ borderRadius: '50%' }}
             >
               {/* Cardinal Navigation Pips */}
               <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
@@ -2167,8 +2179,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
             {/* 3. Tier 2: Mid Segmented Energy Crest (Counter-Clockwise Rotation) */}
             <div
-              className="absolute -inset-5 rounded-full border border-dashed border-amber-300/60 animate-spin-reverse pointer-events-none"
-              style={{ animationDuration: '32s', borderRadius: '50%' }}
+              className="absolute -inset-5 rounded-full border border-dashed border-amber-300/60 galaxy-orbit-spin-reverse pointer-events-none"
+              style={{ borderRadius: '50%' }}
             />
 
             {/* 4. Tier 3: Concentric Geometric Hairline Resonator */}
@@ -2179,8 +2191,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
 
             {/* 5. Tier 4: Inner High-Precision Dotted Orbital Halo (Clockwise Rotation) */}
             <div
-              className="absolute -inset-1.5 rounded-full border border-dotted border-amber-200/90 animate-spin pointer-events-none"
-              style={{ animationDuration: '18s', borderRadius: '50%' }}
+              className="absolute -inset-1.5 rounded-full border border-dotted border-amber-200/90 galaxy-orbit-spin-fast pointer-events-none"
+              style={{ borderRadius: '50%' }}
             />
 
             {/* 6. Capital Core Planet Orb: Refined 72px Scale with Luminous Gold Border */}
@@ -2307,12 +2319,10 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 {/* 2. Outer Counter-Clockwise Orbit Ring (Exclusively for #01 Founding Pioneer Ämlemi) */}
                 {isAmlemi && (
                   <div
-                    className="absolute -inset-3.5 rounded-full border border-dashed border-amber-400/40 animate-spin-reverse pointer-events-none"
+                    className="absolute -inset-3.5 rounded-full border border-dashed border-amber-400/40 galaxy-orbit-spin-reverse pointer-events-none"
                     style={{
-                      animationDuration: '28s',
                       borderRadius: '50%',
                       WebkitBorderRadius: '50%',
-                      willChange: 'transform',
                     }}
                   />
                 )}
@@ -2322,7 +2332,9 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                 <div
                   className={`absolute ${
                     isAmlemi ? '-inset-1.5' : '-inset-2.5'
-                  } rounded-full border border-dashed pointer-events-none animate-spin ${
+                  } rounded-full border border-dashed pointer-events-none ${
+                    isAmlemi ? 'galaxy-orbit-spin-fast' : 'galaxy-orbit-spin'
+                  } ${
                     isAmlemi
                       ? 'border-amber-300/90 shadow-[0_0_14px_rgba(251,191,36,0.5)]'
                       : isSelected
@@ -2332,10 +2344,8 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
                       : 'border-amber-400/60'
                   }`}
                   style={{
-                    animationDuration: isAmlemi ? '18s' : '24s',
                     borderRadius: '50%',
                     WebkitBorderRadius: '50%',
-                    willChange: 'transform',
                   }}
                 >
                   {/* Cardinal Satellite Pip (Exclusively for #01 Founding Pioneer Ämlemi) */}
