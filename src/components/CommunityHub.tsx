@@ -87,8 +87,6 @@ import {
   isPostLaunch,
   openMembershipGateModal,
   hasPaidMembership,
-  calculateLaunchCountdown,
-  CountdownTime,
 } from '../utils/pioneer';
 import { VAULT_STAGE_FOLDER_IDS, VAULT_STAGE_NAMES, getVaultFolderIdForStage } from '../utils/drive';
 import { scrollElementIntoContainer } from '../utils/scroll';
@@ -249,15 +247,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     }
     return 'Patron Member #042';
   });
-
-  const [launchCountdown, setLaunchCountdown] = useState<CountdownTime>(calculateLaunchCountdown);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setLaunchCountdown(calculateLaunchCountdown());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   const userDisplayName = profile?.first_name
     ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}`
@@ -1717,7 +1706,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               {/* DESKTOP FIXED/STICKY LEFT SIDEBAR NAVIGATION            */}
               {/* ======================================================== */}
               <aside
-                className="sidebar-container sidebar hub-sidebar desktop-landscape-sidebar hidden md:flex w-64 lg:w-72 shrink-0 h-full max-h-[100dvh] flex-col justify-between bg-[#050812] border-r border-white/10 z-40 overscroll-contain community-scroll-container"
+                className="sidebar-container sidebar hub-sidebar desktop-landscape-sidebar hidden md:flex w-64 lg:w-72 shrink-0 h-full max-h-[100dvh] flex-col bg-[#050812] border-r border-white/10 z-40 overscroll-contain community-scroll-container"
                 style={{
                   WebkitOverflowScrolling: 'touch',
                 }}
@@ -1738,8 +1727,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   </div>
                 </div>
 
-                {/* 2. Middle Scrollable Navigation: .sidebar-nav-links (Between header and bottom widget) */}
-                <div className="sidebar-nav-links hub-sidebar-scroll flex-grow min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 pt-3 pb-3 space-y-1.5">
+                {/* 2. Scrollable Navigation: .sidebar-nav-links (Ends cleanly after the last module) */}
+                <div className="sidebar-nav-links hub-sidebar-scroll flex-grow min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 pt-3 pb-6 space-y-1.5">
                   {HUB_TABS.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeSection === tab.id;
@@ -1829,30 +1818,6 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                       </div>
                     );
                   })}
-                </div>
-
-                {/* 3. Compacte Vaste Positionering "System Launch" Widget */}
-                <div className="hub-sidebar-dock widget-container shrink-0 p-3 lg:p-3.5 border-t border-white/10 mt-auto bg-[#050812]">
-                  <div className="p-2.5 rounded-xl bg-[#080d1a] border border-amber-500/30 shadow-[0_0_18px_rgba(0,0,0,0.5)] space-y-2">
-                    {/* Compact Title Header: SYSTEM LAUNCH */}
-                    <div className="flex items-center justify-between text-[10px] font-mono">
-                      <span className="text-white/60 font-bold tracking-wider uppercase">SYSTEM LAUNCH</span>
-                      <span className="text-amber-400 font-extrabold">JAN 9, 2027</span>
-                    </div>
-
-                    {/* Compact Primary Action: "CLAIM YOUR WORLD" Button */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        soundManager.playTone(520, 0.05);
-                        openClaimWorldModal();
-                      }}
-                      className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_14px_rgba(245,158,11,0.3)] transition-all cursor-pointer"
-                    >
-                      <Globe2 className="w-3.5 h-3.5 text-black shrink-0" />
-                      <span>CLAIM YOUR WORLD</span>
-                    </button>
-                  </div>
                 </div>
               </aside>
 
