@@ -3,6 +3,7 @@ import { supabase, isSupabaseConfigured, Profile, UserRole } from '../lib/supaba
 import { soundManager } from '../utils/audio';
 import { isValidPassId } from '../utils/holder';
 import { FOUNDING_PASS_ID } from '../components/UnlockedExperience';
+import { cleanTestAccountState } from '../utils/pioneer';
 import {
   checkVipTokenStatus,
   claimVipTokenForUser,
@@ -232,7 +233,17 @@ const enrichProfile = (
           }
         })()
       : null;
-  const claimedSector = raw.claimed_sector || storedSector || null;
+  let claimedSector = raw.claimed_sector || storedSector || null;
+
+  // Complete reset for test account Hanna RB / Aethelgard: clear any prior sector claim so "Claim Your Free World" is active
+  const isHannaTestAccount =
+    (raw.email || '').toLowerCase().trim() === 'hanna.meers@gmail.com' ||
+    (raw.full_name || '').toLowerCase().includes('hanna rb');
+
+  if (isHannaTestAccount) {
+    claimedSector = null;
+    cleanTestAccountState();
+  }
 
   return {
     id: raw.id,
@@ -426,6 +437,15 @@ const resolveAndLinkVipProfile = async (
   const enriched = enrichProfile(baseData, targetPassCode, targetHasVip);
   enriched.has_submitted_contest = Boolean(rawProfData?.has_submitted_contest);
   enriched.contest_submission_id = rawProfData?.contest_submission_id || null;
+
+  if (
+    (authUser.email || '').toLowerCase().trim() === 'hanna.meers@gmail.com' ||
+    (fullName || '').toLowerCase().includes('hanna rb')
+  ) {
+    enriched.claimed_sector = null;
+    enriched.has_submitted_contest = false;
+    enriched.contest_submission_id = null;
+  }
 
   // Permanently upsert into Supabase public.profiles
   if (isSupabaseConfigured) {

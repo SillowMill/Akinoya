@@ -49,7 +49,7 @@ export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> =
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-300/60 text-[10px] sm:text-[10.5px] font-mono font-extrabold tracking-widest uppercase text-amber-200">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-              Status: {WORLD_QUEUE_STATUS_LABEL}
+              {WORLD_QUEUE_STATUS_LABEL}
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-[10px] sm:text-[10.5px] font-mono font-extrabold tracking-widest uppercase text-cyan-200">
               <CalendarClock className="w-3 h-3 text-cyan-300" />

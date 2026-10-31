@@ -111,8 +111,63 @@ export interface SectorClaimRecord {
   holderEmail?: string;
 }
 
+/**
+ * Ensures test accounts (such as Hanna RB / hanna.meers@gmail.com / Aethelgard)
+ * have all prior test claims, storage locks, and submission states completely wiped
+ * so the onboarding and worldbuilding flow can be re-tested from state zero.
+ */
+export const cleanTestAccountState = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    const rawClaim = localStorage.getItem('sillow_claimed_sector');
+    if (rawClaim) {
+      const lower = rawClaim.toLowerCase();
+      if (lower.includes('aethelgard') || lower.includes('hanna.meers') || lower.includes('hanna rb')) {
+        localStorage.removeItem('sillow_claimed_sector');
+      }
+    }
+    const handover = sessionStorage.getItem('akinoya_worldbuild_handover');
+    if (handover) {
+      const lower = handover.toLowerCase();
+      if (lower.includes('aethelgard') || lower.includes('hanna.meers') || lower.includes('hanna rb')) {
+        sessionStorage.removeItem('akinoya_worldbuild_handover');
+      }
+    }
+    const keysToRemove = [
+      'user_generation_claimed_hanna.meers@gmail.com',
+      'akinoya_own_created_planet_id_hanna.meers@gmail.com',
+      'akinoya_own_created_planet_id_user-hanna-test',
+      'akinoya_own_created_planet_id_user-hannarb-test',
+    ];
+    for (const k of keysToRemove) {
+      localStorage.removeItem(k);
+      sessionStorage.removeItem(k);
+    }
+    const subs = localStorage.getItem('akinoya_planet_submissions');
+    if (subs && (subs.toLowerCase().includes('aethelgard') || subs.toLowerCase().includes('hanna.meers'))) {
+      try {
+        const parsed = JSON.parse(subs);
+        if (Array.isArray(parsed)) {
+          const filtered = parsed.filter(
+            (p: any) =>
+              p.planetName?.toLowerCase() !== 'aethelgard' &&
+              p.authorEmail?.toLowerCase() !== 'hanna.meers@gmail.com'
+          );
+          localStorage.setItem('akinoya_planet_submissions', JSON.stringify(filtered));
+        }
+      } catch {}
+    }
+  } catch {}
+};
+
+// Automatically run on client initialization
+if (typeof window !== 'undefined') {
+  cleanTestAccountState();
+}
+
 export const getStoredSectorClaim = (): SectorClaimRecord | null => {
   if (typeof window === 'undefined') return null;
+  cleanTestAccountState();
   try {
     const raw = localStorage.getItem('sillow_claimed_sector');
     if (raw) return JSON.parse(raw);

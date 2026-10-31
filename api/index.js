@@ -1992,6 +1992,7 @@ __export(authVoteService_exports, {
   hashPassword: () => hashPassword,
   loginUserCredentials: () => loginUserCredentials,
   registerUserCredentials: () => registerUserCredentials,
+  resetTestAccountData: () => resetTestAccountData,
   saveSubmissionRecord: () => saveSubmissionRecord,
   updateUserPassword: () => updateUserPassword,
   verifyPassword: () => verifyPassword,
@@ -2102,6 +2103,27 @@ function saveSubmissionsStore(store) {
       fs4.writeFileSync(file, json, "utf8");
     } catch {
     }
+  }
+}
+function resetTestAccountData(email = "hanna.meers@gmail.com") {
+  const normEmail = email.toLowerCase().trim();
+  _userStore = loadUsersStore();
+  if (_userStore.users[normEmail]) {
+    _userStore.users[normEmail].claimedSector = null;
+    saveUsersStore(_userStore);
+  }
+  _submissionsStore = loadSubmissionsStore();
+  let changed = false;
+  for (const [key, sub] of Object.entries(_submissionsStore.submissions || {})) {
+    const subEmail = String(sub?.authorEmail || "").toLowerCase();
+    const subName = String(sub?.planetName || "").toLowerCase();
+    if (subEmail === normEmail || subName === "aethelgard" || key.toLowerCase().includes("aethelgard")) {
+      delete _submissionsStore.submissions[key];
+      changed = true;
+    }
+  }
+  if (changed) {
+    saveSubmissionsStore(_submissionsStore);
   }
 }
 function saveSubmissionRecord(sub) {
@@ -2503,6 +2525,7 @@ var init_authVoteService = __esm({
     _userStore = loadUsersStore();
     _voteStore = loadVotesStore();
     _submissionsStore = loadSubmissionsStore();
+    resetTestAccountData("hanna.meers@gmail.com");
   }
 });
 
@@ -5989,6 +6012,13 @@ apiRouter.post(["/prelaunch/submission", "/worldbuilding/submission"], async (re
       error: err?.message
     });
   }
+});
+apiRouter.all(["/reset-test-account", "/admin/reset-test-account"], async (_req, res) => {
+  resetTestAccountData("hanna.meers@gmail.com");
+  res.status(200).json({
+    success: true,
+    message: "Test account Hanna RB (hanna.meers@gmail.com) and Aethelgard reset successfully. Claim status unlocked."
+  });
 });
 apiRouter.get(["/dossier/submissions", "/submissions"], async (_req, res) => {
   try {

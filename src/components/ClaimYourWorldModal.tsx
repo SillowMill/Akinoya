@@ -188,16 +188,20 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
       }).catch((err) => console.warn('[Pioneer Modal] Pre-launch sheets sync notice:', err));
     }
 
-    // Auto-advance Mill directly to Question 1 with user's planet inputs
+    // Auto-advance Mill directly to Question 2 with user's planet inputs (handover data)
+    const handoverPayload = {
+      planetName: cleanPlanetName,
+      biome: selectedBiome.label,
+      email: emailToUse,
+      coordinates,
+      initialStep: 2,
+    };
     sessionStorage.setItem('akinoya_start_mill', 'true');
-    sessionStorage.setItem('akinoya_mill_start_step', '1');
+    sessionStorage.setItem('akinoya_mill_start_step', '2');
+    sessionStorage.setItem('akinoya_worldbuild_handover', JSON.stringify(handoverPayload));
     window.dispatchEvent(
       new CustomEvent('akinoya-start-mill', {
-        detail: {
-          planetName: cleanPlanetName,
-          biome: selectedBiome.label,
-          initialStep: 1,
-        },
+        detail: handoverPayload,
       })
     );
 

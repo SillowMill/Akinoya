@@ -18,7 +18,9 @@ import {
   togglePlanetSubmissionVote,
   subscribeToPlanetSubmissions,
   isForbiddenSubmission,
+  isLiveGalaxyWorld,
 } from '../data/contest';
+import { isPreLaunch } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { formatAuthorName } from '../utils/holder';
 
@@ -39,19 +41,28 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetSubmission | null>(null);
 
   useEffect(() => {
+    const isPublicWorld = (s: PlanetSubmission) => {
+      if (isForbiddenSubmission(s)) return false;
+      // Pre-launch (pre-January 9, 2027): user-created pioneer worlds are strictly shielded from public governance voting
+      if (isPreLaunch()) {
+        return isLiveGalaxyWorld(s);
+      }
+      return true;
+    };
+
     // Initial load from local store
-    const initial = getStoredPlanetSubmissions().filter((s) => !isForbiddenSubmission(s));
+    const initial = getStoredPlanetSubmissions().filter(isPublicWorld);
     setContestSubmissions([...initial].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
 
     // Live cloud load from Supabase user_dossiers
     fetchPlanetSubmissions(user?.id, user?.email).then((fresh) => {
-      const valid = fresh.filter((s) => !isForbiddenSubmission(s));
+      const valid = fresh.filter(isPublicWorld);
       setContestSubmissions([...valid].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
     });
 
     // Supabase Realtime Subscription
     const unsubscribe = subscribeToPlanetSubmissions((fresh) => {
-      const valid = fresh.filter((s) => !isForbiddenSubmission(s));
+      const valid = fresh.filter(isPublicWorld);
       setContestSubmissions([...valid].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0)));
     });
 

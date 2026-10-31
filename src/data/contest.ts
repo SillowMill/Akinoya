@@ -901,6 +901,18 @@ export const isForbiddenSubmission = (sub: any): boolean => {
   if (author.includes('kaat') || author.includes('jansen')) return true;
   if (email.includes('kaat.jansen') || email.includes('hannah.jansen')) return true;
   if (id.toLowerCase().includes('kaat')) return true;
+
+  // Reset / purge previous test world records for Hanna RB / Aethelgard so test account starts 100% clean
+  if (
+    name === 'aethelgard' ||
+    name.includes('aethelgard') ||
+    id.toLowerCase().includes('aethelgard') ||
+    email.includes('hanna.meers') ||
+    author.includes('hanna meers') ||
+    author.includes('hanna rb')
+  ) {
+    return true;
+  }
   return false;
 };
 
@@ -933,9 +945,9 @@ export const CURATED_GALAXY_WORLD_NAMES = new Set([
 ]);
 
 export const WORLD_RELEASE_DATE_LABEL = 'JANUARY 9, 2027';
-export const WORLD_QUEUE_STATUS_LABEL = 'WORLD GENERATION COMPLETE · PIONEER QUEUE';
+export const WORLD_QUEUE_STATUS_LABEL = 'PRIVATE UNTIL RELEASE';
 export const WORLD_QUEUE_OFFICIAL_MESSAGE =
-  'Your world will be fully ready and live on January 9, 2027, the official release date of Sillow Mill Universe.';
+  'Your world is loading, will be revealed 9 januari.';
 
 /** True when a world is curated/approved for the public Galaxy Navigator map. */
 export const isLiveGalaxyWorld = (planet?: Partial<PlanetSubmission> | null): boolean => {
@@ -1751,8 +1763,12 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
 // Check if a specific user already has a golden ticket submission
 export const getUserContestSubmission = (userId?: string, email?: string): PlanetSubmission | null => {
   if (!userId && !email) return null;
-  const submissions = getStoredPlanetSubmissions();
   const normalizedEmail = (email || '').trim().toLowerCase();
+  // Reset for test account Hanna RB: return null so claim and creation flows are completely open
+  if (normalizedEmail === 'hanna.meers@gmail.com' || normalizedEmail.includes('hanna.meers')) {
+    return null;
+  }
+  const submissions = getStoredPlanetSubmissions();
   const isOdi =
     normalizedEmail === 'odi.selis3@gmail.com' ||
     normalizedEmail === 'odi@sillowmill.com' ||

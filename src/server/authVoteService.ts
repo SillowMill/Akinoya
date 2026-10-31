@@ -183,6 +183,34 @@ let _userStore: AuthStore = loadUsersStore();
 let _voteStore: VoteStore = loadVotesStore();
 let _submissionsStore: SubmissionStore = loadSubmissionsStore();
 
+/**
+ * Resets test accounts (e.g. Hanna RB / hanna.meers@gmail.com / Aethelgard)
+ * to state zero in user and submission stores so onboarding can be cleanly tested.
+ */
+export function resetTestAccountData(email = 'hanna.meers@gmail.com'): void {
+  const normEmail = email.toLowerCase().trim();
+  _userStore = loadUsersStore();
+  if (_userStore.users[normEmail]) {
+    _userStore.users[normEmail].claimedSector = null;
+    saveUsersStore(_userStore);
+  }
+  _submissionsStore = loadSubmissionsStore();
+  let changed = false;
+  for (const [key, sub] of Object.entries(_submissionsStore.submissions || {})) {
+    const subEmail = String((sub as any)?.authorEmail || '').toLowerCase();
+    const subName = String((sub as any)?.planetName || '').toLowerCase();
+    if (subEmail === normEmail || subName === 'aethelgard' || key.toLowerCase().includes('aethelgard')) {
+      delete _submissionsStore.submissions[key];
+      changed = true;
+    }
+  }
+  if (changed) {
+    saveSubmissionsStore(_submissionsStore);
+  }
+}
+
+resetTestAccountData('hanna.meers@gmail.com');
+
 // ─── Submissions Operations ───────────────────────────────────────────────────
 export function saveSubmissionRecord(sub: any): { success: boolean; submission: any } {
   if (!sub || !sub.id) {

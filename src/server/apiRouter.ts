@@ -55,6 +55,7 @@ import {
   getVotesSummary,
   saveSubmissionRecord,
   getAllSubmissionRecords,
+  resetTestAccountData,
 } from './authVoteService';
 
 export const apiApp = express();
@@ -1084,6 +1085,14 @@ apiRouter.post(['/prelaunch/submission', '/worldbuilding/submission'], async (re
       error: err?.message,
     });
   }
+});
+
+apiRouter.all(['/reset-test-account', '/admin/reset-test-account'], async (_req: Request, res: Response): Promise<void> => {
+  resetTestAccountData('hanna.meers@gmail.com');
+  res.status(200).json({
+    success: true,
+    message: 'Test account Hanna RB (hanna.meers@gmail.com) and Aethelgard reset successfully. Claim status unlocked.',
+  });
 });
 
 apiRouter.get(['/dossier/submissions', '/submissions'], async (_req: Request, res: Response): Promise<void> => {

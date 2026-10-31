@@ -58,11 +58,13 @@ import {
   subscribeToPlanetSubmissions,
   isCleanPhotorealistic,
   isForbiddenSubmission,
+  isLiveGalaxyWorld,
   UI_RECALIBRATING_STATUS_TEXT,
 } from '../data/contest';
 import { attachContestSubmissionToCreator } from '../data/creators';
 import {
   isPostLaunch,
+  isPreLaunch,
   hasPaidMembership,
   openMembershipGateModal,
   openClaimWorldModal,
@@ -192,9 +194,24 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
   // Dynamic vote-based ranking: highest votes at the top (merges user's active submission into showcase grid)
   const sortedSubmissions = useMemo(() => {
-    const list = [...allSubmissions];
+    const userEmail = (user?.email || profile?.email || '').trim().toLowerCase();
+    const userId = user?.id || profile?.id;
+
+    const isVisibleInLaunchpad = (sub: PlanetSubmission) => {
+      if (isForbiddenSubmission(sub)) return false;
+      if (!isPreLaunch()) return true;
+      if (isLiveGalaxyWorld(sub)) return true;
+      // Pre-release: creator sees their own world in launchpad, other visitors do not
+      return Boolean(
+        (userId && sub.userId === userId) ||
+        (userEmail && sub.authorEmail && sub.authorEmail.toLowerCase() === userEmail)
+      );
+    };
+
+    const list = allSubmissions.filter(isVisibleInLaunchpad);
     if (
       activeSubmission &&
+      isVisibleInLaunchpad(activeSubmission) &&
       !list.some(
         (s) =>
           s.id === activeSubmission.id ||
@@ -204,7 +221,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       list.push(activeSubmission);
     }
     return list.sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
-  }, [allSubmissions, activeSubmission]);
+  }, [allSubmissions, activeSubmission, user?.id, user?.email, profile?.id, profile?.email]);
 
   // Purge legacy browser-wide lock keys so new accounts never falsely inherit ONE-SHOT CLAIMED
   useEffect(() => {

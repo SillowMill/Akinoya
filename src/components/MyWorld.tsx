@@ -213,7 +213,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
           {dossier.status === 'QUEUED' || (dossier as any).isWaitlist ? (
             <span className="px-3.5 py-2 rounded-xl bg-amber-950/80 border border-amber-400/50 text-amber-300 text-xs font-mono font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.25)] animate-pulse">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>World will be revealed 9 januari</span>
+              <span>Your world is loading, will be revealed 9 januari</span>
             </span>
           ) : (
             <>
@@ -265,7 +265,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
               </div>
             </div>
             <span className="shrink-0 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider whitespace-nowrap">
-              WORLD WILL BE REVEALED 9 JANUARI 2027
+              PRIVATE UNTIL RELEASE
             </span>
           </div>
         </div>

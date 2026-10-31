@@ -68,6 +68,35 @@ export function parsePlanetNameAndVision(input: string): { planetName: string; v
 }
 
 /**
+ * Retrieves handover data from the "Create Your Free World" widget if available.
+ */
+export function getHandoverData(): { planetName: string; biome: string; email?: string } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem('akinoya_worldbuild_handover');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.planetName && parsed.planetName.trim().length > 1) {
+        return {
+          planetName: formatAkinoyaPlanetName(parsed.planetName, false),
+          biome: parsed.biome || 'Bioluminescent Canopy',
+          email: parsed.email || '',
+        };
+      }
+    }
+  } catch {}
+  const claim = getStoredSectorClaim();
+  if (claim?.sectorName && claim.sectorName.trim().length > 1 && claim.sectorName.toLowerCase() !== 'd') {
+    return {
+      planetName: formatAkinoyaPlanetName(claim.sectorName, false),
+      biome: claim.biome || 'Bioluminescent Canopy',
+      email: claim.holderEmail || '',
+    };
+  }
+  return null;
+}
+
+/**
  * Streamlined 5-Question Personality-Based Planet Generator for Mill
  * Designed around light, fun, and deep human questions to synthesize unique worlds.
  */
@@ -148,23 +177,25 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
 
   const isEffectiveLocked = Boolean(isLocked);
 
-  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
+  // Form-to-Mill Handover detection (from "Create Your Free World" widget)
+  const handover = useMemo(() => getHandoverData(), []);
+  const initialPlanetName = handover?.planetName || (initialClaim?.sectorName && initialClaim.sectorName.length > 1 && initialClaim.sectorName.toLowerCase() !== 'd' ? formatAkinoyaPlanetName(initialClaim.sectorName, false) : '');
+  const initialBiome = handover?.biome || initialClaim?.biome || 'Bioluminescent Canopy';
+  const hasHandover = Boolean(initialPlanetName && initialPlanetName.trim().length > 1);
+
+  // If planetName and biome were already provided in the Claim widget, skip Question 1 and advance directly to Question 2 (Elemental Drive)
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(() => (hasHandover ? 1 : 0));
   const [answers, setAnswers] = useState<WizardAnswers>(() => {
-    const claim = getStoredSectorClaim();
-    const storedSector =
-      claim?.sectorName && claim.sectorName.length > 1 && claim.sectorName.toLowerCase() !== 'd'
-        ? formatAkinoyaPlanetName(claim.sectorName, false)
-        : '';
     return {
       relaxation: '',
       creativeExpression: '',
-      naturalEnvironment: '',
+      naturalEnvironment: hasHandover ? `Calibrated to ${initialBiome}.` : '',
       lifePhilosophy: '',
       admiredCreature: '',
       colorPalette: '',
       resilienceStory: '',
       futurePromise: '',
-      planetName: storedSector || '',
+      planetName: initialPlanetName || '',
       atmosphere: '',
       flora: '',
       fauna: '',
@@ -172,8 +203,8 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       visualAesthetic: '',
       landmark: '',
       additionalNotes: '',
-      biome: claim?.biome || 'Bioluminescent Canopy',
-      sectorName: storedSector || '',
+      biome: initialBiome,
+      sectorName: initialPlanetName || '',
     };
   });
 
@@ -208,22 +239,38 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       setIsMillTyping(false);
       soundManager.playTone(720, 0.06);
 
-      const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nWe will explore 5 light, fun, and deep personality questions to synthesize your custom 5-photo 4K dossier, 9:16 viral trailer, and registered lore.\n\nQuestion 01 of 05 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`;
+      if (hasHandover) {
+        // Form-to-Mill Handover: Mill directly acknowledges the known planet & biome and immediately asks Question 2
+        const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nAh, ik zie dat je "${initialPlanetName}" hebt gekoppeld met de ${initialBiome} biome. Laten we de coördinaten en details verder vormgeven!\n\nQuestion 02 of 05 (${WIZARD_STEPS[1].title}):\n${WIZARD_STEPS[1].prompt}`;
 
-      setMessages([
-        {
-          id: 'msg-greeting',
-          sender: 'mill',
-          text: greetingText,
-          step: 1,
-          exampleToCopy: WIZARD_STEPS[0].helperExample,
-          timestamp: 'Just now',
-        },
-      ]);
+        setMessages([
+          {
+            id: 'msg-greeting',
+            sender: 'mill',
+            text: greetingText,
+            step: 2,
+            exampleToCopy: WIZARD_STEPS[1].helperExample,
+            timestamp: 'Just now',
+          },
+        ]);
+      } else {
+        const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nWe will explore 5 light, fun, and deep personality questions to synthesize your custom 5-photo 4K dossier, 9:16 viral trailer, and registered lore.\n\nQuestion 01 of 05 (${WIZARD_STEPS[0].title}):\n${WIZARD_STEPS[0].prompt}`;
+
+        setMessages([
+          {
+            id: 'msg-greeting',
+            sender: 'mill',
+            text: greetingText,
+            step: 1,
+            exampleToCopy: WIZARD_STEPS[0].helperExample,
+            timestamp: 'Just now',
+          },
+        ]);
+      }
     }, 1100);
 
     return () => clearTimeout(greetingTimer);
-  }, [userDisplayName, isLocked]);
+  }, [userDisplayName, isLocked, hasHandover, initialPlanetName, initialBiome]);
 
   // Auto-scroll chat to bottom on new messages, typing events, or synthesis
   useEffect(() => {
@@ -441,7 +488,49 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
     if (isLocked) return;
     soundManager.playTone(400, 0.06);
     const claim = getStoredSectorClaim();
-    const pName = formatAkinoyaPlanetName(claim?.sectorName || designatedPlanetName, false);
+    const pName = initialPlanetName || formatAkinoyaPlanetName(claim?.sectorName || designatedPlanetName, false);
+    const bName = initialBiome || claim?.biome || 'Bioluminescent Canopy';
+
+    if (hasHandover && pName) {
+      setCurrentStepIndex(1);
+      setAnswers({
+        relaxation: '',
+        creativeExpression: '',
+        naturalEnvironment: `Calibrated to ${bName}.`,
+        lifePhilosophy: '',
+        admiredCreature: '',
+        colorPalette: '',
+        resilienceStory: '',
+        futurePromise: '',
+        planetName: pName,
+        atmosphere: '',
+        flora: '',
+        fauna: '',
+        sonicVibe: '',
+        visualAesthetic: '',
+        landmark: '',
+        additionalNotes: '',
+        biome: bName,
+        sectorName: pName,
+      });
+      setInputVal('');
+      setIsMillTyping(true);
+
+      setTimeout(() => {
+        setIsMillTyping(false);
+        setMessages([
+          {
+            id: `reset-${Date.now()}`,
+            sender: 'mill',
+            text: `Protocol recalibrated for "${pName}". Ah, ik zie dat je "${pName}" hebt gekoppeld met de ${bName} biome. Laten we verder gaan met:\n\nQuestion 02 of 05 (${WIZARD_STEPS[1].title}):\n${WIZARD_STEPS[1].prompt}`,
+            step: 2,
+            exampleToCopy: WIZARD_STEPS[1].helperExample,
+            timestamp: 'Just now',
+          },
+        ]);
+      }, 900);
+      return;
+    }
 
     setCurrentStepIndex(0);
     setAnswers({
@@ -461,7 +550,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
       visualAesthetic: '',
       landmark: '',
       additionalNotes: '',
-      biome: claim?.biome || 'Bioluminescent Canopy',
+      biome: bName,
       sectorName: pName,
     });
     setInputVal('');

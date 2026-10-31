@@ -2807,7 +2807,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       {isQueuedWorld && (
                         <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-amber-500/30 text-amber-300 border border-amber-300/70 flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,158,11,0.4)] animate-pulse">
                           <Sparkles className="w-3 h-3 text-amber-300" />
-                          <span>PIONEER QUEUE · LIVE JANUARY 9, 2027</span>
+                          <span>PRIVATE UNTIL RELEASE</span>
                         </span>
                       )}
                       {isPioneerPlanet(activeWorldDossier) && (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Trophy,
   Crown,
@@ -10,9 +10,16 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
-import { getStoredPlanetSubmissions, togglePlanetSubmissionVote, fetchPlanetSubmissions, subscribeToPlanetSubmissions } from '../data/contest';
+import {
+  getStoredPlanetSubmissions,
+  togglePlanetSubmissionVote,
+  fetchPlanetSubmissions,
+  subscribeToPlanetSubmissions,
+  isForbiddenSubmission,
+  isLiveGalaxyWorld,
+} from '../data/contest';
 import { soundManager } from '../utils/audio';
-import { isFoundingPioneerPlanet, isPioneerPlanet } from '../utils/pioneer';
+import { isFoundingPioneerPlanet, isPioneerPlanet, isPreLaunch } from '../utils/pioneer';
 import { formatAuthorName } from '../utils/holder';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { useAuth } from '../context/AuthContext';
@@ -47,7 +54,11 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
   }, [user?.id, user?.email]);
 
   // Planets data dynamically sorted descending by total votesCount
-  const rankedPlanets = [...planetSubmissions].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+  const rankedPlanets = useMemo(() => {
+    return [...planetSubmissions]
+      .filter((s) => !isForbiddenSubmission(s) && (!isPreLaunch() || isLiveGalaxyWorld(s)))
+      .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
+  }, [planetSubmissions]);
   const topFavoritePlanet = rankedPlanets[0];
 
   const handleOpenPlanetModal = (planet: PlanetSubmission) => {
