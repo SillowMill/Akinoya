@@ -95,7 +95,7 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
     <div className="w-full space-y-6">
       {/* Pure Group's Favorite Planets Spotlight & Rankings */}
       {rankedPlanets.length === 0 ? (
-        <div className="p-8 sm:p-12 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-xl border border-white/10 text-center space-y-4">
+        <div className="community-card p-8 sm:p-12 rounded-2xl bg-gradient-to-br from-cyan-950/35 via-[#060c18]/80 to-[#040812]/90 backdrop-blur-none lg:backdrop-blur-xl border border-white/10 text-center space-y-4">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400">
             <Globe2 className="w-8 h-8" />
           </div>
@@ -119,7 +119,7 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
         <>
           {/* Spotlight Banner: #1 Group's Favorite Planet (Ämlemi) */}
           {topFavoritePlanet && (
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950/75 via-[#070d1b]/85 to-cyan-950/50 backdrop-blur-xl border border-amber-400/50 p-5 sm:p-7 shadow-[0_0_45px_rgba(245,158,11,0.28),inset_0_1px_1px_rgba(255,255,255,0.12)]">
+            <div className="community-card relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950/75 via-[#070d1b]/85 to-cyan-950/50 backdrop-blur-none lg:backdrop-blur-xl border border-amber-400/50 p-5 sm:p-7 shadow-[0_0_45px_rgba(245,158,11,0.28),inset_0_1px_1px_rgba(255,255,255,0.12)]">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/65 to-transparent pointer-events-none" />
               <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/12 rounded-full blur-3xl pointer-events-none" />
 
@@ -202,7 +202,7 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
           )}
 
           {/* Group's Favorite Planets Leaderboard Table / Rankings */}
-          <div className="rounded-3xl bg-gradient-to-br from-cyan-950/35 via-[#070c18]/85 to-[#040812]/90 backdrop-blur-xl border border-cyan-500/30 p-5 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.55)] space-y-4">
+          <div className="community-feed rounded-3xl bg-gradient-to-br from-cyan-950/35 via-[#070c18]/85 to-[#040812]/90 backdrop-blur-none lg:backdrop-blur-xl border border-cyan-500/30 p-5 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.55)] space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <Flame className="w-4 h-4 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
@@ -222,7 +222,7 @@ export const CreatorLeaderboard: React.FC<CreatorLeaderboardProps> = ({
                   <div
                     key={planet.id}
                     onClick={() => handleOpenPlanetModal(planet)}
-                    className={`p-3.5 sm:p-4 rounded-2xl border backdrop-blur-md transition-all cursor-pointer flex items-center justify-between gap-4 group ${
+                    className={`community-card p-3.5 sm:p-4 rounded-2xl border backdrop-blur-none lg:backdrop-blur-md transition-all cursor-pointer flex items-center justify-between gap-4 group ${
                       isFounder
                         ? 'border-amber-400/50 bg-gradient-to-r from-amber-950/35 via-[#070c18]/80 to-[#050914]/90 hover:border-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
                         : 'border-white/10 bg-[#050914]/80 hover:bg-cyan-950/35 hover:border-cyan-400/45'

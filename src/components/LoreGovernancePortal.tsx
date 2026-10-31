@@ -183,11 +183,11 @@ export const LoreGovernancePortal: React.FC<LoreGovernancePortalProps> = ({
             </a>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="community-feed grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {sortedSubmissions.map((sub, idx) => (
               <div
                 key={sub.id}
-                className="rounded-2xl overflow-hidden bg-[#070b16] border border-white/15 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
+                className="community-card rounded-2xl overflow-hidden bg-[#070b16] border border-white/15 hover:border-amber-400/40 transition-all flex flex-col justify-between shadow-lg group"
               >
                 <div
                   onClick={() => handleOpenDossier(sub)}

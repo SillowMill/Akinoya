@@ -129,7 +129,7 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
             </div>
 
             {/* Quick Hero Guide Persona */}
-            <div className="shrink-0 flex items-center gap-3 p-3.5 px-4 rounded-2xl bg-black/70 border border-cyan-500/30 max-w-sm backdrop-blur-md self-start lg:self-auto shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+            <div className="community-card shrink-0 flex items-center gap-3 p-3.5 px-4 rounded-2xl bg-black/70 border border-cyan-500/30 max-w-sm backdrop-blur-none lg:backdrop-blur-md self-start lg:self-auto shadow-[0_0_20px_rgba(0,0,0,0.5)]">
               <div className="relative shrink-0">
                 <img
                   src={millAvatar}

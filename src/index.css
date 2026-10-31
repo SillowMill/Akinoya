@@ -170,6 +170,30 @@
   -webkit-backface-visibility: hidden;
 }
 
+/* Community Hub Safari & Mobile GPU Hardware-Acceleration */
+.community-hub-container,
+.community-card,
+.community-feed {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Strip expensive WebKit filters within Community Hub on mobile & tablet viewports */
+@media (max-width: 1024px) {
+  .community-hub-container,
+  .community-hub-container * {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .community-card {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+}
+
 /* Prevent iOS / Safari auto-zoom on input focus */
 @media screen and (max-width: 768px) {
   input,

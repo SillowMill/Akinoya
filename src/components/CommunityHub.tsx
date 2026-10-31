@@ -557,6 +557,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       }, 60);
     };
 
+    const throttledSaveScroll = rafThrottle(saveScroll);
+
     const handleInstantSaveScroll = () => {
       if (getY() > 0) {
         sessionStorage.setItem('akinoya_hub_scroll_y', String(getY()));
@@ -564,7 +566,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     };
 
     const scrollTarget: HTMLElement | Window = scroller || window;
-    scrollTarget.addEventListener('scroll', saveScroll, { passive: true });
+    scrollTarget.addEventListener('scroll', throttledSaveScroll, { passive: true });
     window.addEventListener('beforeunload', handleInstantSaveScroll);
     window.addEventListener('pagehide', handleInstantSaveScroll);
 
@@ -590,7 +592,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     }
 
     return () => {
-      scrollTarget.removeEventListener('scroll', saveScroll);
+      scrollTarget.removeEventListener('scroll', throttledSaveScroll);
+      throttledSaveScroll.cancel();
       window.removeEventListener('touchstart', markUserInteraction);
       window.removeEventListener('wheel', markUserInteraction);
       window.removeEventListener('beforeunload', handleInstantSaveScroll);
@@ -1444,7 +1447,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   };
 
   return (
-    <div className="app-shell community-app-shell community-scroll-container relative h-[100dvh] w-full overflow-hidden bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="app-shell community-app-shell community-scroll-container community-hub-container relative h-[100dvh] w-full overflow-hidden bg-[#03060c] text-white flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Top Universal Header Bar (static: sits above the internal scroller, never repositions during scroll) */}
       <header
         ref={hubHeaderRef}
@@ -1495,7 +1498,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
       {/* Already Claimed VIP Link Error Banner */}
       {vipLinkError && (
-        <div className="relative z-40 w-full bg-gradient-to-r from-red-950/95 via-rose-950/90 to-red-950/95 border-b border-red-500/50 px-3 sm:px-6 py-2.5 backdrop-blur-xl flex flex-wrap items-center justify-between gap-2 shadow-[0_4px_25px_rgba(239,68,68,0.3)] shrink-0">
+        <div className="relative z-40 w-full bg-gradient-to-r from-red-950/95 via-rose-950/90 to-red-950/95 border-b border-red-500/50 px-3 sm:px-6 py-2.5 backdrop-blur-none lg:backdrop-blur-xl flex flex-wrap items-center justify-between gap-2 shadow-[0_4px_25px_rgba(239,68,68,0.3)] shrink-0">
           <div className="flex items-center gap-2.5 text-xs text-red-200 font-sans min-w-0">
             <span className="p-1 rounded-md bg-red-500/20 text-red-400 shrink-0">
               <AlertCircle className="w-4 h-4 text-red-400" />
@@ -1520,7 +1523,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
       {/* Active VIP Referral Invitation Banner */}
       {!vipLinkError && hasPendingVipInvitation && !isAuthenticated && (
-        <div className="relative z-40 w-full bg-gradient-to-r from-amber-950/95 via-yellow-950/90 to-amber-950/95 border-b border-amber-500/40 px-3 sm:px-6 py-2 sm:py-2.5 backdrop-blur-xl flex flex-wrap items-center justify-between gap-2 shadow-[0_4px_25px_rgba(245,158,11,0.25)] shrink-0">
+        <div className="relative z-40 w-full bg-gradient-to-r from-amber-950/95 via-yellow-950/90 to-amber-950/95 border-b border-amber-500/40 px-3 sm:px-6 py-2 sm:py-2.5 backdrop-blur-none lg:backdrop-blur-xl flex flex-wrap items-center justify-between gap-2 shadow-[0_4px_25px_rgba(245,158,11,0.25)] shrink-0">
           <div className="flex items-center gap-2.5 text-xs text-amber-200 font-sans min-w-0">
             <span className="p-1 rounded-md bg-yellow-400/20 text-yellow-400 shrink-0">
               <Sparkles className="w-3.5 h-3.5 animate-pulse" />
@@ -1887,7 +1890,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               <main
                 ref={hubScrollRef}
                 data-scroll-container="community-hub"
-                className={`hub-main-scroll ${
+                className={`hub-main-scroll community-feed ${
                   activeSection === 'workflows' ? 'portrait-bottom-safe-pad-workflows' : 'portrait-bottom-safe-pad'
                 } relative z-0 isolate flex-1 min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-6 sm:px-6 sm:py-8 lg:p-8 space-y-6 sm:space-y-8`}
                 style={{ contain: 'layout', WebkitOverflowScrolling: 'touch', overflowAnchor: 'none' }}
@@ -2374,7 +2377,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   </div>
 
                   {/* Channel Filtered Message Feed */}
-                  <div className="space-y-4">
+                  <div className="community-feed space-y-4">
                         {channelPosts.length === 0 ? (
                           <div className="p-8 rounded-2xl bg-black/40 border border-white/10 text-center space-y-2">
                             <MessageSquare className="w-8 h-8 text-white/30 mx-auto" />
@@ -2389,7 +2392,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                           channelPosts.map((post) => (
                             <div
                               key={post.id}
-                              className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 hover:border-white/20 transition-all space-y-3 shadow-[0_4px_25px_rgba(0,0,0,0.5)]"
+                              className="community-card p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/10 hover:border-white/20 transition-all space-y-3 shadow-[0_4px_25px_rgba(0,0,0,0.5)]"
                             >
                                 <div className="flex items-center gap-2.5 text-left">
                                   <div
@@ -2922,7 +2925,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 30 }}
-            className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-cyan-950/95 border border-cyan-400 text-white font-mono text-xs shadow-2xl flex items-center gap-3 backdrop-blur-md"
+            className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-cyan-950/95 border border-cyan-400 text-white font-mono text-xs shadow-2xl flex items-center gap-3 backdrop-blur-none lg:backdrop-blur-md"
           >
             <Download className="w-5 h-5 text-cyan-400 animate-bounce" />
             <div>

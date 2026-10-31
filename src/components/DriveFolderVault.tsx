@@ -1035,7 +1035,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                     />
                     {isCharPlate && (
                       <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
-                        <div className="px-5 py-3 rounded-2xl bg-black/85 border border-purple-500/50 backdrop-blur-md shadow-[0_0_25px_rgba(168,85,247,0.4)] space-y-1">
+                        <div className="px-5 py-3 rounded-2xl bg-black/85 border border-purple-500/50 backdrop-blur-none lg:backdrop-blur-md shadow-[0_0_25px_rgba(168,85,247,0.4)] space-y-1">
                           <div className="flex items-center justify-center gap-2 text-purple-300 font-mono text-xs font-bold uppercase tracking-wider">
                             <ShieldCheck className="w-4 h-4 text-purple-400" />
                             <span>ANTI-SCREENSHOT SECURITY BLUR</span>
