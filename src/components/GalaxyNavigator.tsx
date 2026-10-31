@@ -75,7 +75,7 @@ interface CameraTarget {
 export type PerformanceTier = 'high' | 'medium' | 'low';
 
 const ORBITAL_RINGS = [
-  { radius: 300, label: '300 AU · FOUNDATIONAL CAPITAL ORBIT (ÄMLEMI)', color: 'rgba(251, 191, 36, 0.05)' },
+  { radius: 300, label: '300 AU · FOUNDATIONAL CAPITAL ORBIT (ÄMLEMI)', color: 'rgba(255, 255, 255, 0.045)' },
   { radius: 540, label: '540 AU · INNER CORE HARMONIC RING', color: 'rgba(255, 255, 255, 0.04)' },
   { radius: 1000, label: '1000 AU · PIONEER ORBIT', color: 'rgba(255, 255, 255, 0.04)' },
   { radius: 1480, label: '1480 AU · IONIZATION REEF', color: 'rgba(255, 255, 255, 0.035)' },
@@ -606,29 +606,40 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
     };
   }, [user?.id, user?.email]);
 
-  // Initialize rich, deep-space Starfield with adaptive density based on performance tier
+  // Initialize rich, deep-space Starfield with high brightness, opacity and density
   useEffect(() => {
     const stars: Star[] = [];
-    const count = perfTier === 'low' ? 200 : perfTier === 'medium' ? 380 : (isMobile ? 480 : 700);
-    const colors = ['#ffffff', '#bae6fd', '#fef08a', '#e9d5ff', '#67e8f9', '#f0f9ff'];
+    const count = perfTier === 'low' ? 350 : perfTier === 'medium' ? 650 : (isMobile ? 800 : 1200);
+    // Piercing, brilliant celestial palette prioritizing crisp whites, icy cyans, and diamond sparkles
+    const colors = [
+      '#ffffff',
+      '#ffffff',
+      '#ffffff',
+      '#f8fafc',
+      '#e0f2fe',
+      '#bae6fd',
+      '#67e8f9',
+      '#fef08a',
+      '#ffffff',
+    ];
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
       const distance = Math.pow(Math.random(), 0.52) * 4400;
-      const layer = Math.random() < 0.62 ? 0 : Math.random() < 0.88 ? 1 : 2;
+      const layer = Math.random() < 0.52 ? 0 : Math.random() < 0.84 ? 1 : 2;
       const radius =
         layer === 0
-          ? Math.random() * 0.75 + 0.25
+          ? Math.random() * 0.9 + 0.6    // Distant pinpoint stars: crisp, sharp
           : layer === 1
-          ? Math.random() * 1.25 + 0.75
-          : Math.random() * 2.2 + 1.4;
+          ? Math.random() * 1.5 + 1.2    // Midground beacons
+          : Math.random() * 2.2 + 2.0;   // Foreground sparkling celestial giants
 
       stars.push({
         x: Math.cos(angle) * distance,
         y: Math.sin(angle) * distance,
         radius,
-        baseAlpha: layer === 0 ? Math.random() * 0.45 + 0.15 : Math.random() * 0.55 + 0.3,
-        twinkleSpeed: Math.random() * 0.035 + 0.008,
+        baseAlpha: layer === 0 ? Math.random() * 0.35 + 0.55 : Math.random() * 0.3 + 0.72,
+        twinkleSpeed: Math.random() * 0.045 + 0.015,
         color: colors[Math.floor(Math.random() * colors.length)],
         layer,
       });
@@ -829,36 +840,13 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         ctx.translate(-centerX, -centerY);
       }
 
-      // 3. Central Äkinoya Golden Core Glow (Optimized for low-end)
+      // 3. Central Äkinoya Anchor Point (Zero yellow haze, pristine cosmos)
       const coreScreenX = centerX + curPan.x * curZoom;
       const coreScreenY = centerY + curPan.y * curZoom;
-      if (!isLite) {
-        const coreGrad = ctx.createRadialGradient(
-          coreScreenX,
-          coreScreenY,
-          10 * curZoom,
-          coreScreenX,
-          coreScreenY,
-          380 * curZoom
-        );
-        coreGrad.addColorStop(0, 'rgba(251, 191, 36, 0.22)');
-        coreGrad.addColorStop(0.3, 'rgba(245, 158, 11, 0.12)');
-        coreGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.04)');
-        coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = coreGrad;
-        ctx.beginPath();
-        ctx.arc(coreScreenX, coreScreenY, 380 * curZoom, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        ctx.fillStyle = 'rgba(251, 191, 36, 0.09)';
-        ctx.beginPath();
-        ctx.arc(coreScreenX, coreScreenY, 160 * curZoom, 0, Math.PI * 2);
-        ctx.fill();
-      }
 
-      // 4. Parallax Starfield with Multilayer Depth, Twinkling & Dynamic Capping
+      // 4. Parallax Starfield with Multilayer Depth, Piercing Diamond Sparkle & Twinkling
       const stars = starsRef.current;
-      const maxStarCount = isLite ? 160 : isBalanced ? 320 : stars.length;
+      const maxStarCount = isLite ? 350 : isBalanced ? 650 : stars.length;
       const boundMargin = Math.max(width, height) * 0.45;
 
       for (let i = 0; i < maxStarCount; i++) {
@@ -871,32 +859,47 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
         if (sx < -boundMargin || sx > width + boundMargin || sy < -boundMargin || sy > height + boundMargin) continue;
 
         const twinkle =
-          Math.sin(time * star.twinkleSpeed + i) * 0.32 +
-          Math.cos(time * star.twinkleSpeed * 0.6 + i * 1.7) * 0.12;
-        const alpha = Math.max(0.08, Math.min(1, star.baseAlpha + twinkle));
+          Math.sin(time * star.twinkleSpeed + i) * 0.26 +
+          Math.cos(time * star.twinkleSpeed * 0.75 + i * 1.5) * 0.14;
+        const alpha = Math.max(0.45, Math.min(1.0, star.baseAlpha + twinkle));
 
-        // On low-tier, draw all stars with ultra-fast fillRect (zero arc overhead)
+        // On low-tier, draw all stars with ultra-fast fillRect (zero arc overhead, highly visible)
         if (isLite) {
           ctx.fillStyle = star.color;
           ctx.globalAlpha = alpha;
-          const sz = star.radius * 1.2;
+          const sz = star.radius * 1.3;
           ctx.fillRect(sx - sz * 0.5, sy - sz * 0.5, sz, sz);
           continue;
         }
 
-        // Soft radiant glow for foreground stellar beacons on high/medium tier
-        if (!isLite && star.layer === 2 && alpha > 0.55) {
+        // Radiant sparkling stellar halo & 4-point cross diffraction for foreground beacon stars
+        if (!isLite && star.layer === 2 && alpha > 0.6) {
+          const glowRadius = star.radius * 2.6 * Math.min(1.4, Math.max(0.75, curZoom));
           ctx.fillStyle = star.color;
-          ctx.globalAlpha = alpha * 0.2;
+          ctx.globalAlpha = alpha * 0.35;
           ctx.beginPath();
-          ctx.arc(sx, sy, star.radius * 2.4 * Math.min(1.4, Math.max(0.7, curZoom)), 0, Math.PI * 2);
+          ctx.arc(sx, sy, glowRadius, 0, Math.PI * 2);
           ctx.fill();
+
+          // Subtle 4-point cosmic sparkle cross on brightest stars
+          if (alpha > 0.82 && curZoom > 0.55) {
+            ctx.strokeStyle = star.color;
+            ctx.globalAlpha = (alpha - 0.7) * 0.75;
+            ctx.lineWidth = 0.8;
+            const spikeLen = star.radius * 3.4;
+            ctx.beginPath();
+            ctx.moveTo(sx - spikeLen, sy);
+            ctx.lineTo(sx + spikeLen, sy);
+            ctx.moveTo(sx, sy - spikeLen);
+            ctx.lineTo(sx, sy + spikeLen);
+            ctx.stroke();
+          }
         }
 
         ctx.fillStyle = star.color;
         ctx.globalAlpha = alpha;
         ctx.beginPath();
-        ctx.arc(sx, sy, star.radius * Math.min(1.5, Math.max(0.7, curZoom)), 0, Math.PI * 2);
+        ctx.arc(sx, sy, star.radius * Math.min(1.4, Math.max(0.8, curZoom)), 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1.0;
@@ -2155,17 +2158,7 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               backfaceVisibility: 'hidden',
             }}
           >
-            {/* 1. Volumetric Golden Corona & Core Flare */}
-            <div
-              className="absolute -inset-10 rounded-full bg-gradient-to-tr from-amber-500/25 via-yellow-400/15 to-transparent blur-2xl animate-pulse pointer-events-none"
-              style={{ borderRadius: '50%' }}
-            />
-            <div
-              className="absolute -inset-5 rounded-full bg-amber-400/20 blur-lg pointer-events-none"
-              style={{ borderRadius: '50%' }}
-            />
-
-            {/* 2. Tier 1: Outer Astrolabe Ring with 4 Cardinal Star-Diamonds (Clockwise Drift) */}
+            {/* 1. Tier 1: Outer Astrolabe Ring with 4 Cardinal Star-Diamonds (Clockwise Drift) */}
             <div
               className="absolute -inset-8 rounded-full border border-amber-400/35 galaxy-orbit-spin-slow pointer-events-none"
               style={{ borderRadius: '50%' }}
@@ -2177,27 +2170,27 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
               <span className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gradient-to-br from-yellow-100 to-amber-400 shadow-[0_0_8px_#fbbf24]" />
             </div>
 
-            {/* 3. Tier 2: Mid Segmented Energy Crest (Counter-Clockwise Rotation) */}
+            {/* 2. Tier 2: Mid Segmented Energy Crest (Counter-Clockwise Rotation) */}
             <div
               className="absolute -inset-5 rounded-full border border-dashed border-amber-300/60 galaxy-orbit-spin-reverse pointer-events-none"
               style={{ borderRadius: '50%' }}
             />
 
-            {/* 4. Tier 3: Concentric Geometric Hairline Resonator */}
+            {/* 3. Tier 3: Concentric Geometric Hairline Resonator */}
             <div
               className="absolute -inset-3 rounded-full border border-amber-400/25 pointer-events-none"
               style={{ borderRadius: '50%' }}
             />
 
-            {/* 5. Tier 4: Inner High-Precision Dotted Orbital Halo (Clockwise Rotation) */}
+            {/* 4. Tier 4: Inner High-Precision Dotted Orbital Halo (Clockwise Rotation) */}
             <div
               className="absolute -inset-1.5 rounded-full border border-dotted border-amber-200/90 galaxy-orbit-spin-fast pointer-events-none"
               style={{ borderRadius: '50%' }}
             />
 
-            {/* 6. Capital Core Planet Orb: Refined 72px Scale with Luminous Gold Border */}
+            {/* 5. Capital Core Planet Orb: Clean 72px Scale with Luminous Gold Border (Zero Yellow Haze) */}
             <div
-              className="relative w-[70px] h-[70px] sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden border-2 border-amber-300 shadow-[0_0_40px_rgba(245,158,11,0.9),0_0_80px_rgba(251,191,36,0.4),inset_0_0_24px_rgba(245,158,11,0.5)] group-hover:scale-108 transition-all duration-300 bg-black flex items-center justify-center shrink-0"
+              className="relative w-[70px] h-[70px] sm:w-[72px] sm:h-[72px] rounded-full overflow-hidden border-2 border-amber-300 shadow-[0_0_24px_rgba(245,158,11,0.65),inset_0_0_12px_rgba(245,158,11,0.4)] group-hover:scale-108 transition-all duration-300 bg-black flex items-center justify-center shrink-0"
               style={{
                 borderRadius: '50%',
                 WebkitBorderRadius: '50%',
