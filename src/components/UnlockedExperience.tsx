@@ -2027,6 +2027,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     onSelectComicTab={() => {
                       handleSelectTab("edition");
                     }}
+                    onOpenComicReader={() => setShowComicReader(true)}
                     onJoinMemberPass={handlePerksStripeCheckout}
                     isMembershipLaunchLocked={isMembershipLaunchLocked}
                   />
@@ -2701,14 +2702,86 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               }}
               className="space-y-6 md:space-y-7"
             >
-              {/* Official Worlds Onboarding Block: "Explore The 5 Pioneer Worlds" */}
+              {/* Dynamic Status Widget when a new/custom world beyond the 5 Pioneer Worlds has been created */}
+              {isQueuedWorld && userDossier && !isLiveGalaxyWorld(userDossier) && (
+                <div
+                  role="status"
+                  style={{
+                    WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)',
+                  }}
+                  className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-r from-[#0a142d] via-[#060c1d] to-[#121009] bg-clip-padding border-2 border-amber-400/55 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.2)]"
+                >
+                  <div
+                    className="absolute inset-0 rounded-[inherit] pointer-events-none"
+                    style={{
+                      background:
+                        'radial-gradient(circle at 90% 15%, rgba(245, 158, 11, 0.16) 0%, transparent 50%), radial-gradient(circle at 10% 85%, rgba(6, 182, 212, 0.14) 0%, transparent 50%)',
+                    }}
+                  />
+                  <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 via-cyan-400 to-transparent pointer-events-none" />
+
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+                    <div className="space-y-2.5 max-w-2xl">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-500/20 text-amber-300 border border-amber-400/60">
+                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                          <span>PIONEER SECTOR REGISTERED · LAUNCH QUEUE</span>
+                        </span>
+                        {(userDossier?.planetName || claimedSector?.sectorName) && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-cyan-950/90 text-cyan-300 border border-cyan-400/50">
+                            <Globe2 className="w-3 h-3 text-cyan-400 shrink-0" />
+                            <span>
+                              {userDossier?.planetName && userDossier.planetName !== 'Ämlemi'
+                                ? userDossier.planetName
+                                : claimedSector?.sectorName}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide">
+                        Your world is loading, will be revealed 9 January
+                      </h2>
+
+                      <p className="text-xs sm:text-sm font-sans text-cyan-100/80 leading-relaxed">
+                        Your custom planetary coordinates and 4K sector dossier are locked in the Äkinoya Genesis Core ahead of the official January 9, 2027 worldwide launch.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundManager.playTone(620, 0.05);
+                          try {
+                            sessionStorage.setItem('galaxy_return_from', 'worlds');
+                          } catch {}
+                          if (onNavigateToGalaxy) {
+                            onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
+                          } else if (typeof window !== 'undefined') {
+                            window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
+                          }
+                        }}
+                        className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                      >
+                        <Radar className="w-4 h-4 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
+                        <span>View in Äkinoya Galaxy</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Official Worlds Master Block: "Explore The 5 Pioneer Worlds" (Single Unified Widget on Mobile) */}
               <div
                 style={{
                   WebkitMaskImage: '-webkit-radial-gradient(white, black)',
                   transform: 'translateZ(0)',
                   WebkitTransform: 'translateZ(0)',
                 }}
-                className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-b from-[#0a132c] via-[#060c1d] to-[#040814] bg-clip-padding border-2 border-cyan-400/50 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]"
+                className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-b from-[#0a132c] via-[#060c1d] to-[#040814] bg-clip-padding border-2 border-cyan-400/50 p-4 sm:p-6 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]"
               >
                 {/* Sealed internal radial glow (never overflows rounded corners) */}
                 <div
@@ -2860,10 +2933,54 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         );
                       })}
                     </div>
-                    {/* Mobile swipe indicator */}
-                    <div className="flex md:hidden items-center justify-between px-1 text-[10px] font-mono text-white/40">
-                      <span>Swipe or tap to auto-load Pioneer Worlds →</span>
-                      <span>1–5</span>
+                    {/* Visual Swipe Animation Guide (<768px): Animated Hand Wave + Sector Track Pills */}
+                    <div className="flex md:hidden items-center justify-between px-3 py-2 mt-2 rounded-xl bg-black/50 border border-cyan-500/30 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center text-cyan-300 bg-cyan-950/90 border border-cyan-400/50 rounded-full px-2.5 py-1 text-[10px] font-mono font-extrabold tracking-wider shadow-[0_0_12px_rgba(56,189,248,0.3)] shrink-0">
+                          <motion.span
+                            animate={{ x: [-4, 4, -4] }}
+                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                            className="inline-block mr-1 text-xs leading-none"
+                          >
+                            👈👉
+                          </motion.span>
+                          <span>SWIPE TO EXPLORE</span>
+                        </div>
+                        <span className="text-[10.5px] font-mono font-bold text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)] truncate">
+                          {activeWorldDossier?.planetName || 'Ämlemi'}
+                        </span>
+                      </div>
+
+                      {/* 5 Sector Track Interactive Pills */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {INITIAL_SUBMISSIONS.slice(0, 5).map((pioneer, idx) => {
+                          const isSelected =
+                            activeWorldDossier?.id === pioneer.id ||
+                            activeWorldDossier?.planetName?.toLowerCase() === pioneer.planetName?.toLowerCase();
+                          return (
+                            <button
+                              key={pioneer.id}
+                              type="button"
+                              onClick={() => {
+                                soundManager.playTone(600 + idx * 30, 0.04);
+                                setUserDossier(pioneer);
+                                if (mobileCarouselRef.current) {
+                                  const childEl = mobileCarouselRef.current.children[idx] as HTMLElement;
+                                  if (childEl) {
+                                    childEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                                  }
+                                }
+                              }}
+                              className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                isSelected
+                                  ? 'w-6 bg-gradient-to-r from-amber-400 to-yellow-300 ring-2 ring-amber-400/60 shadow-[0_0_10px_rgba(245,158,11,0.7)]'
+                                  : 'w-2.5 bg-white/20 hover:bg-white/40'
+                              }`}
+                              aria-label={`Select ${pioneer.planetName} (Sector ${idx + 1})`}
+                            />
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {/* Desktop & Tablet Pristine Grid (>=768px): multi-card layout intact */}
@@ -2924,89 +3041,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         );
                       })}
                     </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Dynamic Status Widget when a new/custom world beyond the 5 Pioneer Worlds has been created */}
-              {isQueuedWorld && userDossier && !isLiveGalaxyWorld(userDossier) && (
-                <div
-                  role="status"
-                  style={{
-                    WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                    transform: 'translateZ(0)',
-                    WebkitTransform: 'translateZ(0)',
-                  }}
-                  className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-r from-[#0a142d] via-[#060c1d] to-[#121009] bg-clip-padding border-2 border-amber-400/55 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(245,158,11,0.2)]"
-                >
-                  <div
-                    className="absolute inset-0 rounded-[inherit] pointer-events-none"
-                    style={{
-                      background:
-                        'radial-gradient(circle at 90% 15%, rgba(245, 158, 11, 0.16) 0%, transparent 50%), radial-gradient(circle at 10% 85%, rgba(6, 182, 212, 0.14) 0%, transparent 50%)',
-                    }}
-                  />
-                  <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 via-cyan-400 to-transparent pointer-events-none" />
+                    {/* Glowing subtle divider connecting selector to active dossier on mobile & desktop */}
+                    <div className="h-px bg-gradient-to-r from-transparent via-cyan-400/40 via-amber-400/40 to-transparent my-3 sm:my-5 pointer-events-none" />
 
-                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-                    <div className="space-y-2.5 max-w-2xl">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-500/20 text-amber-300 border border-amber-400/60">
-                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                          <span>PIONEER SECTOR REGISTERED · LAUNCH QUEUE</span>
-                        </span>
-                        {(userDossier?.planetName || claimedSector?.sectorName) && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-cyan-950/90 text-cyan-300 border border-cyan-400/50">
-                            <Globe2 className="w-3 h-3 text-cyan-400 shrink-0" />
-                            <span>
-                              {userDossier?.planetName && userDossier.planetName !== 'Ämlemi'
-                                ? userDossier.planetName
-                                : claimedSector?.sectorName}
-                            </span>
-                          </span>
-                        )}
-                      </div>
-
-                      <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide">
-                        Your world is loading, will be revealed 9 January
-                      </h2>
-
-                      <p className="text-xs sm:text-sm font-sans text-cyan-100/80 leading-relaxed">
-                        Your custom planetary coordinates and 4K sector dossier are locked in the Äkinoya Genesis Core ahead of the official January 9, 2027 worldwide launch.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          soundManager.playTone(620, 0.05);
-                          try {
-                            sessionStorage.setItem('galaxy_return_from', 'worlds');
-                          } catch {}
-                          if (onNavigateToGalaxy) {
-                            onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
-                          } else if (typeof window !== 'undefined') {
-                            window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
-                          }
-                        }}
-                        className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                    {/* Active World Dossier Header — Single Unified Widget on Mobile & Desktop */}
+                    {activeWorldDossier && (
+                      <div
+                        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0d1630]/90 via-[#040816]/95 to-[#09152b]/90 border border-cyan-400/35 p-4 sm:p-6 md:p-7 shadow-md"
                       >
-                        <Radar className="w-4 h-4 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
-                        <span>View in Äkinoya Galaxy</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Active or Simulated Planet Dossier Experience */}
-              {activeWorldDossier && (
-              <div className="space-y-6 md:space-y-7">
-                {/* Top Sector Dossier Header Banner — Supreme Galaxy Vibe Glassmorphism with Pioneer Badging & Instant Lightweight Switch */}
-                <div
-                  className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d1630] via-[#040816] to-[#09152b] border border-cyan-400/35 p-5 sm:p-6 md:p-8 shadow-md"
-                >
                   {/* Multi-layered radial nebula glows (lightweight on mobile) */}
                   <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/80 via-amber-300/80 to-transparent pointer-events-none" />
                   <div className="hidden md:block absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-[90px] pointer-events-none" />
@@ -3201,9 +3244,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
                 </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-                {/* 3 Live Social Engagement Metric Cards — Calibrated for iPad Portrait (md:grid-cols-3 md:gap-5 md:p-6) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+        {/* 3 Live Social Engagement Metric Cards & Conversion — Directly Beneath Master Unified Widget */}
+        {activeWorldDossier && (
+          <div className="space-y-6 md:space-y-7">
+            {/* 3 Live Social Engagement Metric Cards — Calibrated for iPad Portrait (md:grid-cols-3 md:gap-5 md:p-6) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                   {/* Metric 1: Likes / Votes Count */}
                   <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#0e172e] via-[#060b17] to-[#03060f] border border-amber-400/40 hover:border-amber-300/70 flex items-center justify-between gap-3.5 shadow-md transition-colors">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent pointer-events-none" />

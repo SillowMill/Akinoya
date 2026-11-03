@@ -26,6 +26,7 @@ import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 
 export interface TwoColumnPricingSectionProps {
   onSelectComicTab?: () => void;
+  onOpenComicReader?: () => void;
   onJoinMemberPass?: () => void;
   isMembershipLaunchLocked?: boolean;
   className?: string;
@@ -59,7 +60,7 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       'Master studio vocal leads (Dry & Wet)',
       'Harmonies, ad-libs, and backing vocoder tracks',
       '24-bit / 48kHz uncompressed WAV stems',
-      'Also included 100% FREE with the Membership Pass',
+      'Also included with the membership pass for a lower price',
     ],
     icon: MicVocal,
   },
@@ -76,7 +77,7 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       'Complete full-color graphic novel',
       'Interactive dual-page flipbook reader',
       'High-DPI PDF storyboard edition',
-      'Included FREE with physical comic OR Membership Pass',
+      'Included with physical comic or Annual Membership Pass',
     ],
     icon: BookOpen,
   },
@@ -98,7 +99,7 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       '03 · Blender 3D Previs & Cockpit Rigs (.blend rigs & geometry nodes)',
       '04 · Audio Masters & Stems (excludes standalone Acapella Pack)',
       '05 · Prompt Engineering Bibles (VFX & cinematic prompt parameters)',
-      'Also included 100% FREE with the Membership Pass',
+      'Also included with the membership pass for a lower price',
     ],
     icon: Sliders,
   },
@@ -106,6 +107,7 @@ const ADDON_PRODUCTS: AddonProduct[] = [
 
 export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = ({
   onSelectComicTab,
+  onOpenComicReader,
   onJoinMemberPass,
   isMembershipLaunchLocked = false,
   className = '',
@@ -138,6 +140,10 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
   const handleComicClick = () => {
     soundManager.playTone(620, 0.05);
+    if (onOpenComicReader) {
+      onOpenComicReader();
+      return;
+    }
     if (!isAuthenticated) {
       if (onOpenAuthModal) {
         onOpenAuthModal();
@@ -287,10 +293,6 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
             {/* Individual Digital Add-ons: 3 Distinct Cards with Clean Inline Drawer Expansion (Zero Modals) */}
             <div className="space-y-3">
-              <div className="text-[11px] font-mono font-bold tracking-wider text-white/50 uppercase">
-                Digital Add-ons
-              </div>
-
               {ADDON_PRODUCTS.map((addon) => {
                 const IconComponent = addon.icon;
                 const isExpanded = expandedAddonId === addon.id;
@@ -371,14 +373,14 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                             </ul>
                           </div>
 
-                          {/* Pro-tip: Included in Member Pass */}
+                          {/* Smart Choice: Bundled with Member Pass */}
                           <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-400/30 space-y-1 text-xs">
                             <div className="font-mono font-bold text-amber-300 flex items-center gap-1.5">
                               <Crown className="w-3.5 h-3.5" />
-                              <span>Pro-tip: Included 100% FREE with Member Pass</span>
+                              <span>Smart Choice: Bundled with Member Pass</span>
                             </div>
                             <p className="text-white/70 font-sans text-[11.5px]">
-                              Join the Annual Member Pass (€60/year) to unlock this pack plus all other digital extras, stems, and monthly drops for free.
+                              Get this pack plus all digital extras, stems, and monthly drops bundled into the Annual Member Pass (€60/yr) at a lower overall price.
                             </p>
                           </div>
 
@@ -433,58 +435,56 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               })}
             </div>
 
-            {/* Unified Physical Product & Lore Widget: Single Cohesive High-End Card with Large Thumbnail */}
+            {/* Streamlined & Compact Physical Print Collector's Item Widget */}
             <div className="pt-2">
-              <div className="rounded-2xl bg-gradient-to-b from-[#09152b] via-[#061122] to-[#040c1a] border-2 border-cyan-400/40 p-4 sm:p-5 lg:p-6 space-y-4 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(56,189,248,0.15)] relative overflow-hidden group">
+              <div className="rounded-2xl bg-gradient-to-b from-[#09152b] via-[#061122] to-[#040c1a] border-2 border-cyan-400/40 p-3.5 sm:p-5 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(56,189,248,0.15)] relative overflow-hidden group">
                 <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none" />
 
-                {/* Top Badge & Price Header */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-mono font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
-                    PHYSICAL PRINT · COLLECTOR'S ITEM
-                  </span>
-                  <div className="text-right">
-                    <span className="text-xl sm:text-2xl font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
-                      <span>€</span>
-                      <span>14.99</span>
-                    </span>
-                  </div>
-                </div>
+                <div className="flex items-center gap-3.5 sm:gap-4">
+                  {/* Thumbnail (Clickable to open reader) */}
+                  <button
+                    type="button"
+                    onClick={handleComicClick}
+                    className="shrink-0 rounded-xl overflow-hidden cursor-pointer group/thumb text-left"
+                    aria-label="Open Bingäa comic reader preview"
+                  >
+                    <img
+                      src={bingaaComicCover}
+                      alt="Sillow Mill — Bingäa Comic Cover"
+                      className="w-16 sm:w-20 md:w-24 h-auto aspect-[3/4] rounded-xl object-cover border border-cyan-400/60 shadow-[0_0_15px_rgba(56,189,248,0.3)] group-hover/thumb:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </button>
 
-                {/* Cover Thumbnail (Scaled Up & Crisp) + Title + Lore Body */}
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
-                  <img
-                    src={bingaaComicCover}
-                    alt="Sillow Mill — Bingäa Comic Cover"
-                    className="w-32 sm:w-36 md:w-44 h-auto aspect-[3/4] rounded-2xl object-cover border-2 border-cyan-400/60 shadow-[0_0_25px_rgba(56,189,248,0.35)] shrink-0 group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  {/* Title, Badge, Price & CTA */}
+                  <div className="space-y-1.5 min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-[9.5px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
+                        PHYSICAL PRINT · COLLECTOR'S ITEM
+                      </span>
+                      <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
+                        <span>€</span>
+                        <span>14.99</span>
+                      </span>
+                    </div>
 
-                  <div className="space-y-2 text-center sm:text-left min-w-0 flex-1">
-                    <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide">
+                    <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide">
                       Sillow Mill — Bingäa (Collector's Graphic Novel)
                     </h4>
-                    <p className="text-xs sm:text-[13px] text-white/75 font-sans leading-relaxed">
-                      The definitive physical graphic story and official 2D blueprint of the Sillow Mill universe. Printed on heavyweight 170gsm archival paper with bioluminescent foil stamping, this collector's volume details the origin story—from an iconic snow dance in Leuven to the first convergence of Sillow, Odi, and Mill on the core world of Äkinoya.
-                    </p>
-                    <p className="text-xs font-sans text-emerald-300 font-bold flex items-center justify-center sm:justify-start gap-1.5 pt-0.5">
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>Includes the Digital Copy of Bingäa for free!</span>
-                    </p>
+
+                    {/* Direct click-through action */}
+                    <button
+                      type="button"
+                      onClick={handleComicClick}
+                      className="w-full mt-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs shadow-[0_0_15px_rgba(56,189,248,0.3)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[40px] transform-gpu hover:scale-[1.01]"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+                      <span>View Comic &amp; Order</span>
+                      <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+                    </button>
                   </div>
                 </div>
-
-                {/* Primary CTA Button: View Comic & Order */}
-                <button
-                  type="button"
-                  onClick={handleComicClick}
-                  className="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_30px_rgba(56,189,248,0.5)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[48px] transform-gpu hover:scale-[1.01]"
-                >
-                  <ShoppingBag className="w-4 h-4 shrink-0" />
-                  <span>View Comic &amp; Order</span>
-                  <ArrowRight className="w-4 h-4 shrink-0" />
-                </button>
               </div>
             </div>
           </div>
@@ -542,9 +542,9 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   <span>/ month)</span>
                 </span>
               </div>
-              <div className="text-[11px] sm:text-xs font-mono text-emerald-300 flex items-center gap-1.5 font-bold flex-wrap">
+              <div className="text-[11px] sm:text-xs font-mono text-emerald-300 flex items-center gap-1.5 font-bold">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Separate digital total is <span className="whitespace-nowrap inline-flex items-baseline gap-0.5"><span>€</span><span>70.97+</span></span> · Save immediately on day one while getting everything all-inclusive</span>
+                <span>Save €14.96+ vs separate prices · All extras bundled into one pass</span>
               </div>
             </div>
 
@@ -560,7 +560,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     ✓
                   </span>
                   <span>
-                    <strong className="text-white">Vocal Acapella &amp; Remix Pack</strong> (Included free)
+                    <strong className="text-white">Vocal Acapella &amp; Remix Pack</strong> (Included in pass)
                   </span>
                 </li>
 
@@ -569,7 +569,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     ✓
                   </span>
                   <span>
-                    <strong className="text-white">Digital Copy of Bingäa</strong> (Full 4K graphic novel included)
+                    <strong className="text-white">Digital Copy of Bingäa</strong> (4K graphic novel included)
                   </span>
                 </li>
 
