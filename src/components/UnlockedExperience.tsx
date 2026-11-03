@@ -72,6 +72,7 @@ import {
   CURATED_GALAXY_WORLD_IDS,
   isLiveGalaxyWorld,
   isQueuedUserWorld,
+  isForbiddenSubmission,
 } from '../data/contest';
 import { getUserStatusConfig, getMobileHeaderRoleConfig } from '../utils/statusPill';
 import {
@@ -404,6 +405,29 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   );
 
   useEffect(() => {
+    // Purge any legacy 'zephyria' mock keys/values across localStorage & sessionStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const testKeys = ['sillow_claimed_sector', 'akinoya_claimed_world', 'akinoya_own_created_planet_id'];
+        for (const k of testKeys) {
+          const val = localStorage.getItem(k) || sessionStorage.getItem(k);
+          if (val && val.toLowerCase().includes('zephyria')) {
+            localStorage.removeItem(k);
+            sessionStorage.removeItem(k);
+          }
+        }
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key) {
+            const val = localStorage.getItem(key) || '';
+            if (key.toLowerCase().includes('zephyria') || val.toLowerCase().includes('zephyria')) {
+              localStorage.removeItem(key);
+            }
+          }
+        }
+      } catch {}
+    }
+
     const syncUserWorldState = () => {
       const claim = getStoredSectorClaim();
       setClaimedSector(claim);
@@ -422,7 +446,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         claim &&
         claim.sectorName &&
         claim.sectorName.toLowerCase() !== 'ämlemi' &&
-        claim.sectorName.toLowerCase() !== 'amlemi'
+        claim.sectorName.toLowerCase() !== 'amlemi' &&
+        !claim.sectorName.toLowerCase().includes('zephyria')
       ) {
         // Look up by claimed sector name in stored submissions
         localMatch =
@@ -483,11 +508,21 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         }
       }
 
-      if (localMatch) {
+      if (
+        localMatch &&
+        !isForbiddenSubmission(localMatch) &&
+        !localMatch.planetName?.toLowerCase().includes('zephyria') &&
+        !localMatch.id?.toLowerCase().includes('zephyria')
+      ) {
         setUserDossier(localMatch);
       } else if (userId || email) {
         fetchUserContestSubmission(userId, email).then((sub) => {
-          if (sub) {
+          if (
+            sub &&
+            !isForbiddenSubmission(sub) &&
+            !sub.planetName?.toLowerCase().includes('zephyria') &&
+            !sub.id?.toLowerCase().includes('zephyria')
+          ) {
             setUserDossier(sub);
           } else {
             // Only fall back to a local custom planet if it was explicitly created by this user account on this device
@@ -501,13 +536,21 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       sessionStorage.getItem(`akinoya_own_created_planet_id_${userIdNorm}`)))
                 : null;
             const ownLocal = ownCreatedId
-              ? storedList.find((p) => p.id === ownCreatedId && !isLiveGalaxyWorld(p))
+              ? storedList.find(
+                  (p) =>
+                    p.id === ownCreatedId &&
+                    !isLiveGalaxyWorld(p) &&
+                    !isForbiddenSubmission(p) &&
+                    !p.planetName?.toLowerCase().includes('zephyria')
+                )
               : undefined;
             if (ownLocal) {
               setUserDossier(ownLocal);
             } else if (emailNorm && isFounderEmail(emailNorm)) {
               const amlemi = storedList.find(
-                (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+                (p) =>
+                  (p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi') &&
+                  !isForbiddenSubmission(p)
               );
               if (amlemi) setUserDossier(amlemi);
             } else {
@@ -522,9 +565,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             ? sessionStorage.getItem('akinoya_own_created_planet_id') ||
               localStorage.getItem('akinoya_own_created_planet_id')
             : null;
-        if (ownCreatedId) {
+        if (ownCreatedId && !ownCreatedId.toLowerCase().includes('zephyria')) {
           const ownLocal = storedList.find(
-            (p) => p.id === ownCreatedId && !CURATED_GALAXY_WORLD_IDS.has(p.id) && !isLiveGalaxyWorld(p)
+            (p) =>
+              p.id === ownCreatedId &&
+              !CURATED_GALAXY_WORLD_IDS.has(p.id) &&
+              !isLiveGalaxyWorld(p) &&
+              !isForbiddenSubmission(p)
           );
           if (ownLocal) {
             setUserDossier(ownLocal);
@@ -532,10 +579,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           }
         }
         const amlemi = storedList.find(
-          (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+          (p) =>
+            (p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi') &&
+            !isForbiddenSubmission(p)
         );
         if (amlemi && typeof window !== 'undefined') {
-          const storedToken = localStorage.getItem('akinoya_patron_token') || sessionStorage.getItem('akinoya_patron_token');
+          const storedToken =
+            localStorage.getItem('akinoya_patron_token') ||
+            sessionStorage.getItem('akinoya_patron_token');
           if (storedToken === FOUNDING_PASS_ID) {
             setUserDossier(amlemi);
             return;
@@ -576,18 +627,33 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const amlemiBenchmarkDossier = useMemo(() => {
     return (
       allCommunityPlanets.find(
-        (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+        (p) =>
+          (p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi') &&
+          !isForbiddenSubmission(p)
       ) ||
       getStoredPlanetSubmissions().find(
-        (p) => p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi'
+        (p) =>
+          (p.id === 'planet-amlemi-genesis-01' || p.planetName === 'Ämlemi') &&
+          !isForbiddenSubmission(p)
       ) ||
-      allCommunityPlanets[0] ||
       INITIAL_SUBMISSIONS[0]
     );
   }, [allCommunityPlanets]);
 
-  const activeWorldDossier = userDossier || amlemiBenchmarkDossier;
-  const isGuestWorldSimulation = !userDossier;
+  const activeWorldDossier = useMemo(() => {
+    if (
+      userDossier &&
+      !isForbiddenSubmission(userDossier) &&
+      userDossier.planetName?.toLowerCase() !== 'zephyria' &&
+      !userDossier.planetName?.toLowerCase().includes('zephyria') &&
+      !userDossier.id?.toLowerCase().includes('zephyria')
+    ) {
+      return userDossier;
+    }
+    return amlemiBenchmarkDossier;
+  }, [userDossier, amlemiBenchmarkDossier]);
+
+  const isGuestWorldSimulation = !userDossier || userDossier.id === 'planet-amlemi-genesis-01';
   // Determine whether the current user/account has actively completed creating/minting a world
   // Note: Having a VIP-pass alone or starting Step 0 sector claim does NOT count until world creation completes.
   const hasUserCreatedWorld = useMemo(() => {
@@ -2607,145 +2673,204 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               }}
               className="space-y-6 md:space-y-7"
             >
-              {/* Conditional World Status: Unclaimed ("Explore The 5 Pioneer Worlds") vs. Created ("Your world is loading, will be revealed 9 januari") */}
-              {!hasUserClaimedWorld ? (
+              {/* Official Worlds Onboarding Block: "Explore The 5 Pioneer Worlds" */}
+              <div
+                style={{
+                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                  transform: 'translateZ(0)',
+                  WebkitTransform: 'translateZ(0)',
+                }}
+                className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-b from-[#0a132c] via-[#060c1d] to-[#040814] bg-clip-padding border-2 border-cyan-400/50 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]"
+              >
+                {/* Sealed internal radial glow (never overflows rounded corners) */}
                 <div
+                  className="absolute inset-0 rounded-[inherit] pointer-events-none"
                   style={{
-                    WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                    transform: 'translateZ(0)',
-                    WebkitTransform: 'translateZ(0)',
+                    background:
+                      'radial-gradient(circle at 92% 8%, rgba(6, 182, 212, 0.16) 0%, transparent 48%), radial-gradient(circle at 8% 92%, rgba(245, 158, 11, 0.12) 0%, transparent 48%)',
                   }}
-                  className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-b from-[#0a132c] via-[#060c1d] to-[#040814] bg-clip-padding border-2 border-cyan-400/50 p-5 sm:p-7 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]"
-                >
-                  {/* Sealed internal radial glow (never overflows rounded corners) */}
-                  <div
-                    className="absolute inset-0 rounded-[inherit] pointer-events-none"
-                    style={{
-                      background:
-                        'radial-gradient(circle at 92% 8%, rgba(6, 182, 212, 0.16) 0%, transparent 48%), radial-gradient(circle at 8% 92%, rgba(245, 158, 11, 0.12) 0%, transparent 48%)',
-                    }}
-                  />
-                  {/* Ambient top glowing beam inset away from rounded corner arcs */}
-                  <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none" />
+                />
+                {/* Ambient top glowing beam inset away from rounded corner arcs */}
+                <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none" />
 
-                  <div className="relative z-10 space-y-5 sm:space-y-6">
-                    {/* Header Block: Title, Vision Narrative & Action Buttons Directly Beneath */}
-                    <div className="space-y-4 pb-1">
-                      <div className="space-y-2.5 max-w-3xl">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
-                            <Radar className="w-3 h-3 text-cyan-300 shrink-0" />
-                            <span>ÄKINOYA CONSTELLATION NAVIGATOR</span>
-                          </span>
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.4)]">
-                            <Sparkles className="w-3 h-3 text-black shrink-0" />
-                            <span>FOUNDING CORE · 5 PIONEER WORLDS</span>
-                          </span>
-                        </div>
-
-                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                          Explore The 5 Pioneer Worlds
-                        </h2>
-
-                        <div className="space-y-1.5 text-xs sm:text-sm font-sans leading-relaxed max-w-2xl">
-                          <p className="font-bold text-white">
-                            Beyond the eleven visualizers, the Äkinoya storyline expands directly into the cosmos you create.
-                          </p>
-                          <p className="italic text-cyan-100/85">
-                            Here, you can craft and mint your own custom world into the 3D galaxy constellation—with Ämlemi serving as Pioneer World #1 as an inspiring example. In the future, we will use the worlds you build to continue the overarching narrative, allow you to design your own characters, and feature your creations directly within the growing Äkinoya universe.
-                          </p>
-                        </div>
+                <div className="relative z-10 space-y-5 sm:space-y-6">
+                  {/* Header Block: Title, Vision Narrative & Action Buttons Directly Beneath */}
+                  <div className="space-y-4 pb-1">
+                    <div className="space-y-2.5 max-w-3xl">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
+                          <Radar className="w-3 h-3 text-cyan-300 shrink-0" />
+                          <span>ÄKINOYA CONSTELLATION NAVIGATOR</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.4)]">
+                          <Sparkles className="w-3 h-3 text-black shrink-0" />
+                          <span>FOUNDING CORE · 5 PIONEER WORLDS</span>
+                        </span>
                       </div>
 
-                      {/* Primary Action Buttons Cleanly Positioned Directly Beneath Text Block */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
-                        {/* Button 1: View in Äkinoya Galaxy */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            soundManager.playTone(620, 0.05);
-                            try {
-                              sessionStorage.setItem('galaxy_return_from', 'worlds');
-                            } catch {}
-                            if (onNavigateToGalaxy) {
-                              onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
-                            } else if (typeof window !== 'undefined') {
-                              window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
-                            }
-                          }}
-                          className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
-                        >
-                          <Radar className="w-4 h-4 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
-                          <span>View in Äkinoya Galaxy</span>
-                        </button>
+                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                        Explore The 5 Pioneer Worlds
+                      </h2>
 
-                        {/* Button 2: Create Your World */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            soundManager.playTone(660, 0.05);
-                            if (onNavigateToContest) {
-                              onNavigateToContest();
-                            } else if (typeof window !== 'undefined') {
-                              window.location.href = '/contest';
-                            }
-                          }}
-                          className="group relative px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_30px_rgba(245,158,11,0.5)] hover:shadow-[0_0_40px_rgba(245,158,11,0.7)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
-                        >
-                          <Sparkles className="w-4 h-4 fill-black text-black shrink-0 group-hover:scale-110 transition-transform duration-200" />
-                          <span>Create Your World</span>
-                        </button>
+                      <div className="space-y-1.5 text-xs sm:text-sm font-sans leading-relaxed max-w-2xl">
+                        <p className="font-bold text-white">
+                          Beyond the eleven visualizers, the Äkinoya storyline expands directly into the cosmos you create.
+                        </p>
+                        <p className="italic text-cyan-100/85">
+                          Here, you can craft and mint your own custom world into the 3D galaxy constellation—with Ämlemi serving as Pioneer World #1 as an inspiring example. In the future, we will use the worlds you build to continue the overarching narrative, allow you to design your own characters, and feature your creations directly within the growing Äkinoya universe.
+                        </p>
                       </div>
                     </div>
 
-                    {/* Primary Visual Card: Full-Color Central Galaxy Navigator Overview Image */}
-                    <div
-                      onClick={() => {
-                        soundManager.playTone(620, 0.05);
-                        try {
-                          sessionStorage.setItem('galaxy_return_from', 'worlds');
-                        } catch {}
-                        if (onNavigateToGalaxy) {
-                          onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
-                        } else if (typeof window !== 'undefined') {
-                          window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
-                        }
-                      }}
-                      style={{
-                        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                      }}
-                      className="group relative isolate overflow-hidden rounded-2xl border-2 border-cyan-400/50 hover:border-cyan-300 bg-[#040917] bg-clip-padding shadow-md md:shadow-[0_15px_45px_rgba(0,0,0,0.85),0_0_30px_rgba(56,189,248,0.25)] transition-all duration-300 cursor-pointer flex items-center justify-center w-full mx-auto"
-                    >
-                      {/* Visual Overview Image (source cropped symmetric around Äkinoya Core: equal Sepplon/Felix margins) */}
-                      <img
-                        src={galaxyOverviewImg}
-                        alt="Äkinoya Galaxy Navigator Overview featuring Äkinoya Core and the 5 Pioneer Worlds"
-                        style={{ objectFit: 'contain', objectPosition: 'center', margin: '0 auto' }}
-                        className="block w-full h-auto max-h-[560px] rounded-[14px] object-contain object-center mx-auto transition-transform duration-500 ease-out origin-center group-hover:scale-[1.015]"
-                        loading="lazy"
-                        decoding="async"
-                        fetchPriority="low"
-                      />
+                    {/* Primary Action Buttons Cleanly Positioned Directly Beneath Text Block */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+                      {/* Button 1: View in Äkinoya Galaxy */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundManager.playTone(620, 0.05);
+                          try {
+                            sessionStorage.setItem('galaxy_return_from', 'worlds');
+                          } catch {}
+                          if (onNavigateToGalaxy) {
+                            onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
+                          } else if (typeof window !== 'undefined') {
+                            window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
+                          }
+                        }}
+                        className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                      >
+                        <Radar className="w-4 h-4 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
+                        <span>View in Äkinoya Galaxy</span>
+                      </button>
 
-                      {/* Subtle bottom-gradient overlay with interactive indicator — hidden on mobile and tablet views for a 100% pristine visual image */}
-                      <div className="hidden lg:flex absolute inset-x-0 bottom-0 p-4 sm:p-5 bg-gradient-to-t from-black/90 via-black/40 to-transparent items-center justify-between gap-3 pointer-events-none">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.9)]" />
-                          <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-cyan-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                            ÄKINOYA GALAXY NAVIGATOR · CENTRAL CORE &amp; 5 PIONEER SECTORS
-                          </span>
-                        </div>
+                      {/* Button 2: Create Your World */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundManager.playTone(660, 0.05);
+                          if (onNavigateToContest) {
+                            onNavigateToContest();
+                          } else if (typeof window !== 'undefined') {
+                            window.location.href = '/contest';
+                          }
+                        }}
+                        className="group relative px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_30px_rgba(245,158,11,0.5)] hover:shadow-[0_0_40px_rgba(245,158,11,0.7)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                      >
+                        <Sparkles className="w-4 h-4 fill-black text-black shrink-0 group-hover:scale-110 transition-transform duration-200" />
+                        <span>Create Your World</span>
+                      </button>
+                    </div>
 
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold tracking-wider group-hover:bg-cyan-950/90 group-hover:border-cyan-300 transition-colors">
-                          <span>Click to enter interactive 3D map</span>
-                          <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                        </div>
+                    {/* The 5 Pioneer Worlds Interactive Quick-Cards Strip */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 pt-2">
+                      {INITIAL_SUBMISSIONS.slice(0, 5).map((pioneer, idx) => {
+                        const isSelected =
+                          activeWorldDossier?.id === pioneer.id ||
+                          activeWorldDossier?.planetName?.toLowerCase() === pioneer.planetName?.toLowerCase();
+                        const photoCards = getPlanetPhotoCards(pioneer);
+                        const thumb = photoCards[0]?.url || pioneer.renders?.hero;
+                        return (
+                          <button
+                            key={pioneer.id}
+                            type="button"
+                            onClick={() => {
+                              soundManager.playTone(600 + idx * 30, 0.04);
+                              setUserDossier(pioneer);
+                            }}
+                            className={`group/card relative p-2.5 sm:p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden min-h-[96px] ${
+                              isSelected
+                                ? 'bg-gradient-to-b from-amber-950/70 via-cyan-950/60 to-black/90 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/80 scale-[1.02]'
+                                : 'bg-[#040917]/80 hover:bg-[#08122c]/90 border-cyan-400/30 hover:border-cyan-300/70'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 w-full mb-1">
+                              <span
+                                className={`text-[9.5px] font-mono font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                  idx === 0
+                                    ? 'bg-amber-400 text-black font-black'
+                                    : 'bg-cyan-950/90 text-cyan-300 border border-cyan-400/40'
+                                }`}
+                              >
+                                {idx === 0 ? '👑 #01 PIONEER' : `#0${idx + 1} PIONEER`}
+                              </span>
+                              <span className="text-[9.5px] font-mono text-white/50 group-hover/card:text-cyan-300 transition-colors">
+                                {pioneer.sectorId || `SEC-0${idx + 1}`}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              {thumb && (
+                                <img
+                                  src={thumb}
+                                  alt={pioneer.planetName}
+                                  className="w-7 h-7 rounded-full object-cover border border-amber-400/40 shrink-0"
+                                  loading="lazy"
+                                />
+                              )}
+                              <div className="min-w-0">
+                                <h4 className="text-xs sm:text-sm font-display font-black text-white group-hover/card:text-amber-200 truncate uppercase tracking-wide">
+                                  {pioneer.planetName}
+                                </h4>
+                                <p className="text-[10.5px] font-mono text-white/60 truncate">
+                                  by {pioneer.authorName}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Primary Visual Card: Full-Color Central Galaxy Navigator Overview Image */}
+                  <div
+                    onClick={() => {
+                      soundManager.playTone(620, 0.05);
+                      try {
+                        sessionStorage.setItem('galaxy_return_from', 'worlds');
+                      } catch {}
+                      if (onNavigateToGalaxy) {
+                        onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
+                      } else if (typeof window !== 'undefined') {
+                        window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
+                      }
+                    }}
+                    style={{
+                      WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                    }}
+                    className="group relative isolate overflow-hidden rounded-2xl border-2 border-cyan-400/50 hover:border-cyan-300 bg-[#040917] bg-clip-padding shadow-md md:shadow-[0_15px_45px_rgba(0,0,0,0.85),0_0_30px_rgba(56,189,248,0.25)] transition-all duration-300 cursor-pointer flex items-center justify-center w-full mx-auto"
+                  >
+                    {/* Visual Overview Image (source cropped symmetric around Äkinoya Core: equal Sepplon/Felix margins) */}
+                    <img
+                      src={galaxyOverviewImg}
+                      alt="Äkinoya Galaxy Navigator Overview featuring Äkinoya Core and the 5 Pioneer Worlds"
+                      style={{ objectFit: 'contain', objectPosition: 'center', margin: '0 auto' }}
+                      className="block w-full h-auto max-h-[560px] rounded-[14px] object-contain object-center mx-auto transition-transform duration-500 ease-out origin-center group-hover:scale-[1.015]"
+                      loading="lazy"
+                      decoding="async"
+                      fetchPriority="low"
+                    />
+
+                    {/* Subtle bottom-gradient overlay with interactive indicator — hidden on mobile and tablet views for a 100% pristine visual image */}
+                    <div className="hidden lg:flex absolute inset-x-0 bottom-0 p-4 sm:p-5 bg-gradient-to-t from-black/90 via-black/40 to-transparent items-center justify-between gap-3 pointer-events-none">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.9)]" />
+                        <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-cyan-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                          ÄKINOYA GALAXY NAVIGATOR · CENTRAL CORE &amp; 5 PIONEER SECTORS
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold tracking-wider group-hover:bg-cyan-950/90 group-hover:border-cyan-300 transition-colors">
+                        <span>Click to enter interactive 3D map</span>
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </div>
                   </div>
                 </div>
-              ) : isQueuedWorld ? (
-                /* Dynamic Status Widget when a new/custom world beyond the 5 Pioneer Worlds has been created */
+              </div>
+
+              {/* Dynamic Status Widget when a new/custom world beyond the 5 Pioneer Worlds has been created */}
+              {isQueuedWorld && userDossier && !isLiveGalaxyWorld(userDossier) && (
                 <div
                   role="status"
                   style={{
@@ -2814,7 +2939,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
                 </div>
-              ) : null}
+              )}
 
               {/* Active or Simulated Planet Dossier Experience */}
               {activeWorldDossier && (

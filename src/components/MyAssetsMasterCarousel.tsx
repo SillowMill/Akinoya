@@ -377,7 +377,9 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
   );
 
   const activePhoto = photoCards[activePhotoIdx] || photoCards[0];
-  const worldNameDisplay = (dossier.planetName || 'ÄMLEMI').toUpperCase();
+  const rawPlanetName = dossier?.planetName;
+  const isZephyria = !rawPlanetName || rawPlanetName.toLowerCase().includes('zephyria');
+  const worldNameDisplay = (isZephyria ? 'ÄMLEMI' : rawPlanetName).toUpperCase();
 
   // Handle slide transitions circularly: Video Trailer (01) -> Story Card (02) -> 4K Archive (03)
   const slideOrder: MasterAssetSlideId[] = ['video_trailer', 'story_card', 'archive_4k'];

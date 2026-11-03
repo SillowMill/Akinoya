@@ -225,14 +225,26 @@ const enrichProfile = (
     typeof window !== 'undefined'
       ? (() => {
           try {
-            const parsed = JSON.parse(localStorage.getItem('sillow_claimed_sector') || '');
-            return parsed?.sectorName || null;
+            const rawSector = localStorage.getItem('sillow_claimed_sector');
+            if (!rawSector) return null;
+            const parsed = JSON.parse(rawSector);
+            const name = (parsed?.sectorName || '').trim();
+            if (name.toLowerCase().includes('zephyria')) {
+              localStorage.removeItem('sillow_claimed_sector');
+              sessionStorage.removeItem('sillow_claimed_sector');
+              return null;
+            }
+            return name || null;
           } catch {
-            return localStorage.getItem('sillow_claimed_sector') || null;
+            return null;
           }
         })()
       : null;
-  const claimedSector = raw.claimed_sector || storedSector || null;
+  const rawClaimed = (raw.claimed_sector || '').trim();
+  const claimedSector =
+    rawClaimed && !rawClaimed.toLowerCase().includes('zephyria')
+      ? rawClaimed
+      : storedSector || null;
 
   return {
     id: raw.id,

@@ -887,10 +887,12 @@ export const isForbiddenSubmission = (sub: any): boolean => {
   }
 
   // Permanently purge and exclude Zephyria / test world entry #6
+  const sector = String(sub.sectorName || sub.sector_name || '').toLowerCase().trim();
   if (
     name === 'zephyria' ||
     name.includes('zephyria') ||
     id.toLowerCase().includes('zephyria') ||
+    sector.includes('zephyria') ||
     (author.includes('architect') && name.includes('zephyria'))
   ) {
     return true;
@@ -1793,7 +1795,13 @@ export const getUserContestSubmission = (userId?: string, email?: string): Plane
       const rawClaim = localStorage.getItem('sillow_claimed_sector');
       if (rawClaim) {
         const parsed = JSON.parse(rawClaim);
-        claimedSectorName = (parsed.sectorName || '').trim().toLowerCase();
+        const name = (parsed.sectorName || '').trim().toLowerCase();
+        if (name && !name.includes('zephyria')) {
+          claimedSectorName = name;
+        } else {
+          localStorage.removeItem('sillow_claimed_sector');
+          sessionStorage.removeItem('sillow_claimed_sector');
+        }
       }
     } catch {}
   }

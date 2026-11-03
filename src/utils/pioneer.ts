@@ -130,7 +130,19 @@ export const getStoredSectorClaim = (): SectorClaimRecord | null => {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem('sillow_claimed_sector');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: SectorClaimRecord = JSON.parse(raw);
+      const name = (parsed?.sectorName || '').toLowerCase().trim();
+      // Purge any stale 'zephyria' mock test records immediately
+      if (!name || name === 'zephyria' || name.includes('zephyria')) {
+        try {
+          localStorage.removeItem('sillow_claimed_sector');
+          sessionStorage.removeItem('sillow_claimed_sector');
+        } catch {}
+        return null;
+      }
+      return parsed;
+    }
   } catch {
     // Ignore parse error
   }
@@ -140,6 +152,12 @@ export const getStoredSectorClaim = (): SectorClaimRecord | null => {
 export const saveSectorClaim = (record: SectorClaimRecord) => {
   if (typeof window === 'undefined') return;
   try {
+    const name = (record?.sectorName || '').toLowerCase().trim();
+    if (name === 'zephyria' || name.includes('zephyria')) {
+      localStorage.removeItem('sillow_claimed_sector');
+      sessionStorage.removeItem('sillow_claimed_sector');
+      return;
+    }
     localStorage.setItem('sillow_claimed_sector', JSON.stringify(record));
     window.dispatchEvent(new CustomEvent('akinoya-sector-claimed', { detail: record }));
   } catch {
