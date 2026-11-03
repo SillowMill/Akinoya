@@ -419,7 +419,7 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
               className="text-cyan-300 hover:text-white flex items-center gap-1 underline transition-colors cursor-pointer"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Comm-Net Chat (8 Channels)</span>
+              <span>Pioneer Lounge &amp; Vault Drops</span>
             </button>
             <span>·</span>
             <button

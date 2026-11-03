@@ -178,7 +178,7 @@ export const CreatorPortfolioView: React.FC<CreatorPortfolioViewProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer min-h-[40px]"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Comm-Net</span>
+            <span>Back to Community Hub</span>
           </button>
 
           <button
