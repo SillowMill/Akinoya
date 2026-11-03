@@ -220,7 +220,7 @@ export const AuthModal: React.FC = () => {
               </div>
               <div className="text-left flex-1 min-w-0">
                 <div className="text-xs font-mono font-bold tracking-wider uppercase text-red-400">
-                  Ai! Deze VIP-pas is al geclaimd.
+                  Notice: VIP Pass Already Claimed
                 </div>
                 <p className="text-xs text-red-200 font-sans mt-1 leading-relaxed font-semibold">
                   {vipLinkError}
@@ -246,8 +246,8 @@ export const AuthModal: React.FC = () => {
                 </div>
                 <p className="text-xs text-cyan-100/90 font-sans mt-1 leading-relaxed">
                   {(typeof window !== 'undefined' && localStorage.getItem('akinoya_pending_vip_pass'))
-                    ? `VIP-pas #${localStorage.getItem('akinoya_pending_vip_pass')} gedetecteerd. Maak een nieuw account aan of log in om deze VIP-pas direct automatisch te claimen en te koppelen.`
-                    : 'Je bent uitgenodigd als VIP-gast. Maak een account aan of log in om direct toegang te krijgen.'}
+                    ? `VIP Pass #${localStorage.getItem('akinoya_pending_vip_pass')} detected. Create a new account or sign in to link this VIP Pass directly to your profile.`
+                    : 'You are invited as a VIP Guest. Create an account or sign in to receive immediate access.'}
                 </p>
               </div>
             </div>
@@ -293,6 +293,21 @@ export const AuthModal: React.FC = () => {
               >
                 Register
               </button>
+            </div>
+          )}
+
+          {/* Never Lose Your Files Guarantee Badge for Signup / Purchases */}
+          {mode === 'signup' && (
+            <div className="mt-3.5 p-3 rounded-xl bg-gradient-to-r from-emerald-950/70 via-cyan-950/50 to-emerald-950/70 border border-emerald-400/40 text-emerald-200 flex items-start gap-2.5 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="text-left text-xs leading-relaxed">
+                <span className="font-mono font-bold uppercase tracking-wider text-emerald-300 block text-[11px]">
+                  Never Lose Your Files Guarantee
+                </span>
+                <span className="text-white/80 font-sans text-[11px]">
+                  All purchased packs, comic copies, and membership assets are permanently linked to your profile. Re-download anytime via the Drive Asset Vault.
+                </span>
+              </div>
             </div>
           )}
 

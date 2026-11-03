@@ -7,6 +7,8 @@ import {
   ShieldCheck,
   Sparkles,
   ChevronDown,
+  ChevronRight,
+  CreditCard,
   ExternalLink,
   Crown,
   Globe2,
@@ -17,13 +19,24 @@ import { soundManager } from '../utils/audio';
 import { getUserStatusConfig } from '../utils/statusPill';
 import { openClaimWorldModal } from '../utils/pioneer';
 import { useIsBelowWidth } from '../utils/performance';
+import { AccountBillingModal } from './AccountBillingModal';
 
 export const AuthHeaderButton: React.FC = () => {
   const { user, profile, role, isAuthenticated, isVip, hasVipPass, isSubscriber, openAuthModal, signOut } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isBillingModalOpen, setIsBillingModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const desktopDropdownRef = useRef<HTMLDivElement>(null);
   const portalModalRef = useRef<HTMLDivElement>(null);
+
+  // Global listener for opening Account & Billing Settings
+  useEffect(() => {
+    const handleOpenBilling = () => {
+      setIsBillingModalOpen(true);
+    };
+    window.addEventListener('akinoya-open-billing-settings', handleOpenBilling);
+    return () => window.removeEventListener('akinoya-open-billing-settings', handleOpenBilling);
+  }, []);
 
   // Close dropdown on outside click or touch
   useEffect(() => {
@@ -230,6 +243,25 @@ export const AuthHeaderButton: React.FC = () => {
         </span>
       </button>
 
+      {/* Account & Billing Settings (Stripe & Retention Flow) */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          soundManager.playTone(560, 0.04);
+          setIsDropdownOpen(false);
+          setIsBillingModalOpen(true);
+        }}
+        className="w-full p-2.5 rounded-xl hover:bg-white/5 active:bg-white/10 text-white/80 hover:text-white font-mono text-[11px] transition-colors cursor-pointer flex items-center justify-between min-h-[48px] select-none"
+      >
+        <span className="flex items-center gap-2">
+          <CreditCard className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Account &amp; Billing Settings</span>
+        </span>
+        <ChevronRight className="w-3 h-3 text-white/40" />
+      </button>
+
       {/* Quick Link to Community Hub */}
       <a
         href="/community"
@@ -361,6 +393,12 @@ export const AuthHeaderButton: React.FC = () => {
           document.body
         )
       }
+
+      {/* Account & Billing Settings Modal */}
+      <AccountBillingModal
+        isOpen={isBillingModalOpen}
+        onClose={() => setIsBillingModalOpen(false)}
+      />
     </div>
   );
 };

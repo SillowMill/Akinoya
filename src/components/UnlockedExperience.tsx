@@ -7,7 +7,6 @@ import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
 import moodboardImg from '../assets/images/Mood.png';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
-import galaxyOverviewImg from '../assets/images/Galaxy.png';
 import dnVideo from '../assets/videos/DNN.mp4';
 import dnThumbnailImg from '../assets/images/dn_thumbnail.png';
 import dontNeedVideo from '../assets/videos/DNN.mp4';
@@ -2819,51 +2818,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           </button>
                         );
                       })}
-                    </div>
-                  </div>
-
-                  {/* Primary Visual Card: Full-Color Central Galaxy Navigator Overview Image */}
-                  <div
-                    onClick={() => {
-                      soundManager.playTone(620, 0.05);
-                      try {
-                        sessionStorage.setItem('galaxy_return_from', 'worlds');
-                      } catch {}
-                      if (onNavigateToGalaxy) {
-                        onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
-                      } else if (typeof window !== 'undefined') {
-                        window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
-                      }
-                    }}
-                    style={{
-                      WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                    }}
-                    className="group relative isolate overflow-hidden rounded-2xl border-2 border-cyan-400/50 hover:border-cyan-300 bg-[#040917] bg-clip-padding shadow-md md:shadow-[0_15px_45px_rgba(0,0,0,0.85),0_0_30px_rgba(56,189,248,0.25)] transition-all duration-300 cursor-pointer flex items-center justify-center w-full mx-auto"
-                  >
-                    {/* Visual Overview Image (source cropped symmetric around Äkinoya Core: equal Sepplon/Felix margins) */}
-                    <img
-                      src={galaxyOverviewImg}
-                      alt="Äkinoya Galaxy Navigator Overview featuring Äkinoya Core and the 5 Pioneer Worlds"
-                      style={{ objectFit: 'contain', objectPosition: 'center', margin: '0 auto' }}
-                      className="block w-full h-auto max-h-[560px] rounded-[14px] object-contain object-center mx-auto transition-transform duration-500 ease-out origin-center group-hover:scale-[1.015]"
-                      loading="lazy"
-                      decoding="async"
-                      fetchPriority="low"
-                    />
-
-                    {/* Subtle bottom-gradient overlay with interactive indicator — hidden on mobile and tablet views for a 100% pristine visual image */}
-                    <div className="hidden lg:flex absolute inset-x-0 bottom-0 p-4 sm:p-5 bg-gradient-to-t from-black/90 via-black/40 to-transparent items-center justify-between gap-3 pointer-events-none">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.9)]" />
-                        <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-cyan-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                          ÄKINOYA GALAXY NAVIGATOR · CENTRAL CORE &amp; 5 PIONEER SECTORS
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold tracking-wider group-hover:bg-cyan-950/90 group-hover:border-cyan-300 transition-colors">
-                        <span>Click to enter interactive 3D map</span>
-                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                      </div>
                     </div>
                   </div>
                 </div>

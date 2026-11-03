@@ -632,7 +632,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-mono text-white/70 min-w-0 truncate">
               <HardDrive className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
               <span className="font-bold text-white truncate">Sillow Mill Drive</span>
-              <span className="text-white/40 hidden md:inline truncate">· macOS / Drive Hybrid Vault</span>
+              <span className="text-white/40 hidden md:inline truncate">· 2D Visualizer Production Workflow &amp; Asset Library</span>
             </div>
           </div>
 
@@ -642,7 +642,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               type="button"
               onClick={() => {
                 setCurrentFolderId('root');
-                setFolderPath([{ id: 'root', name: 'Sillow Mill Production Vault' }]);
+                setFolderPath([{ id: 'root', name: '2D Visualizer Production Workflow' }]);
                 soundManager.playTone(520, 0.05);
               }}
               className="px-3 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_12px_rgba(0,242,254,0.3)] flex items-center gap-1.5"
@@ -671,11 +671,11 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           <div className="flex items-center gap-2 min-w-0">
             <Lock className="w-4 h-4 text-amber-400 shrink-0" />
             <span className="font-bold tracking-wide truncate">
-              ANNUAL PASS REQUIRED — Downloads unlock for Paid Annual Members on January 9, 2027 (€60/year).
+              ANNUAL PASS REQUIRED — 2D Visualizer Production Workflow &amp; Asset Library unlocks on January 9, 2027 (€60/year).
             </span>
           </div>
           <span className="text-[10px] text-amber-400/90 font-bold tracking-wider shrink-0 uppercase">
-            STAGES 01–05 LOCKED PRIOR TO LAUNCH
+            5 PRODUCTION FOLDERS LOCKED PRIOR TO LAUNCH
           </span>
         </div>
 

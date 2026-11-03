@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { openMembershipGateModal } from '../utils/pioneer';
+import { useAuth } from '../context/AuthContext';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 
 export interface TwoColumnPricingSectionProps {
@@ -50,10 +51,22 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
   isLoungeView = false,
   onOpenAuthModal,
 }) => {
+  const { isAuthenticated, openAuthModal } = useAuth();
   const [activeAddonModal, setActiveAddonModal] = useState<AddonModalInfo | null>(null);
 
   const handleJoinPassClick = () => {
     soundManager.playTone(660, 0.08);
+    if (!isAuthenticated) {
+      if (onOpenAuthModal) {
+        onOpenAuthModal();
+      } else {
+        openAuthModal(
+          'signup',
+          'Create your account to secure your purchases with our Never Lose Your Files guarantee.'
+        );
+      }
+      return;
+    }
     if (onJoinMemberPass) {
       onJoinMemberPass();
     } else {
@@ -63,6 +76,17 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
   const handleComicClick = () => {
     soundManager.playTone(620, 0.05);
+    if (!isAuthenticated) {
+      if (onOpenAuthModal) {
+        onOpenAuthModal();
+      } else {
+        openAuthModal(
+          'signup',
+          'Create your account to secure your purchases with our Never Lose Your Files guarantee.'
+        );
+      }
+      return;
+    }
     if (onSelectComicTab) {
       onSelectComicTab();
     } else if (typeof window !== 'undefined') {
@@ -160,7 +184,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   € 74.96
                 </div>
                 <div className="text-[10.5px] font-mono text-cyan-300 font-semibold">
-                  (Digital add-ons alone: € 59.97)
+                  (Digital add-ons alone: € 70.97+)
                 </div>
               </div>
             </div>
@@ -187,7 +211,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                       </span>
                     </div>
                     <p className="text-[11px] sm:text-xs text-white/60 font-sans leading-relaxed">
-                      Dry &amp; wet studio acapellas for Track 1 &amp; 2 from the EP.
+                      Studio Acapellas for the whole Dream of Akainoya song tracklist.
                     </p>
                   </div>
                 </div>
@@ -202,7 +226,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                         badge: 'STUDIO AUDIO STEMS',
                         price: '€ 19.99',
                         description:
-                          'Dry and wet studio vocal stems from Track 1 and Track 2 of the EP, master tempo locked and tuned for remixing and production.',
+                          'Studio Acapellas for the whole Dream of Akainoya song tracklist. Dry and wet studio vocal stems, master tempo locked and tuned for remixing and production.',
                         features: [
                           'Master studio vocal leads (Dry & Wet)',
                           'Harmonies, ad-libs, and backing vocoder tracks',
@@ -283,7 +307,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                       </span>
                     </div>
                     <p className="text-[11px] sm:text-xs text-white/60 font-sans leading-relaxed">
-                      Presets, DAW templates, vocal racks &amp; project breakdowns.
+                      Presets, DAW templates, vocal racks &amp; 2D visualizer behind-the-scenes breakdowns.
                     </p>
                   </div>
                 </div>
@@ -298,11 +322,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                         badge: 'DAW PRESETS & TEMPLATES',
                         price: '€ 29.99',
                         description:
-                          'The complete production architecture used to create the Äkinoya EP: custom Ableton 12 / Bitwig templates, master vocal chain processing, and project breakdowns.',
+                          'The complete 2D visualizer behind-the-scenes production process, structured across the 5 vault folders unlocking on January 9, 2027: Storyboards, Character Anchors, Audio Masters, 3D Previs & Prompt Bibles.',
                         features: [
-                          'Custom DAW project templates (Ableton 12 & Bitwig)',
-                          'Vocal chain effects rack presets (FabFilter, UAD, Native)',
-                          '10-minute workflow breakdown screencasts with Odi',
+                          '01 · Storyboards & Script Blueprints (2.39:1 framing specs)',
+                          '02 · Art Direction & Character Anchors (Turnarounds & moodboards)',
+                          '03 · Audio Masters & DAW Templates (Ableton & Bitwig project files)',
+                          '04 · Blender 3D Previs & Cockpit Rigs (.blend rigs & geometry nodes)',
+                          '05 · Prompt Engineering Bibles (VFX & AI cinematic prompt parameters)',
                           'Also included 100% FREE with the Membership Pass',
                         ],
                       })
@@ -316,58 +342,52 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </div>
             </div>
 
-            {/* Physical Comic Book Section With Styled Blue Accent Lore Widget */}
-            <div className="pt-2 space-y-3">
-              {/* Styled Blue Accent Lore Widget with Comic Cover Thumbnail */}
-              <div className="rounded-2xl bg-gradient-to-r from-cyan-950/70 via-[#071328] to-[#040c1c] border-2 border-cyan-400/40 p-4 sm:p-5 flex flex-col sm:flex-row items-center sm:items-start gap-4 shadow-lg">
-                <img
-                  src={bingaaComicCover}
-                  alt="Bingäa Comic Cover"
-                  className="w-20 sm:w-24 h-auto aspect-[3/4] rounded-xl object-cover border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
-                  loading="lazy"
-                  decoding="async"
-                />
+            {/* Unified Physical Product & Lore Widget: Single Cohesive High-End Card */}
+            <div className="pt-2">
+              <div className="rounded-2xl bg-gradient-to-b from-[#09152b] via-[#061122] to-[#040c1a] border-2 border-cyan-400/40 p-4 sm:p-5 space-y-4 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(56,189,248,0.15)] relative overflow-hidden group">
+                <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none" />
 
-                <div className="space-y-1.5 text-center sm:text-left min-w-0">
-                  <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider inline-block">
-                    ÄKINOYA CANON · GRAPHIC NOVEL ISSUE #01
-                  </span>
-                  <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide">
-                    Bingäa: The Twilight Expedition
-                  </h4>
-                  <p className="text-[11.5px] sm:text-xs text-cyan-100/80 font-sans leading-relaxed">
-                    Follow Mill and Sillow across the twilight sectors of Äkinoya as the planetary constellation awakens. 48 full-color cinematic story pages, authentic holographic serial key, plus the 4K digital edition included free.
-                  </p>
-                </div>
-              </div>
-
-              {/* Physical Comic Product Specifications & CTA Box */}
-              <div className="relative rounded-2xl bg-[#061122]/90 border border-cyan-400/30 p-4 sm:p-5 space-y-3.5 overflow-hidden shadow-[0_0_20px_rgba(56,189,248,0.1)]">
+                {/* Top Badge & Price Header */}
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-mono font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
                     PHYSICAL PRINT · COLLECTOR'S ITEM
                   </span>
-                  <span className="text-base font-display font-extrabold text-cyan-300">€ 14.99</span>
+                  <div className="text-right">
+                    <span className="text-lg sm:text-xl font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)]">
+                      € 14.99
+                    </span>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide">
-                    The Physical Bingäa Comic Book (€ 14.99)
-                  </h4>
-                  <p className="text-xs font-sans text-emerald-300 font-semibold flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Includes the Digital Copy of Bingäa for free!</span>
-                  </p>
-                  <p className="text-[11px] sm:text-xs text-white/65 font-sans leading-relaxed">
-                    First edition collector's softcover print (48 pages, 170gsm matte art paper) with authenticated QR token. Wave 2 allocation with free EU express delivery.
-                  </p>
+                {/* Cover Thumbnail + Title + Lore Body */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                  <img
+                    src={bingaaComicCover}
+                    alt="Sillow Mill — Bingäa Comic Cover"
+                    className="w-20 sm:w-24 h-auto aspect-[3/4] rounded-xl object-cover border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0 group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    decoding="async"
+                  />
+
+                  <div className="space-y-2 text-center sm:text-left min-w-0 flex-1">
+                    <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide">
+                      Sillow Mill — Bingäa (Collector's Graphic Novel)
+                    </h4>
+                    <p className="text-[11px] sm:text-xs text-white/75 font-sans leading-relaxed">
+                      The definitive physical graphic story and official 2D blueprint of the Sillow Mill universe. Printed on heavyweight 170gsm archival paper with bioluminescent foil stamping, this collector's volume details the origin story—from an iconic snow dance in Leuven to the first convergence of Sillow, Odi, and Mill on the core world of Äkinoya.
+                    </p>
+                    <p className="text-[11.5px] font-sans text-emerald-300 font-bold flex items-center justify-center sm:justify-start gap-1.5 pt-0.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>Includes the Digital Copy of Bingäa for free!</span>
+                    </p>
+                  </div>
                 </div>
 
-                {/* Primary CTA: View Comic & Order */}
+                {/* Primary CTA Button: View Comic & Order */}
                 <button
                   type="button"
                   onClick={handleComicClick}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-bold text-xs sm:text-sm shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_30px_rgba(56,189,248,0.45)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[46px]"
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_30px_rgba(56,189,248,0.5)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[46px] transform-gpu hover:scale-[1.01]"
                 >
                   <ShoppingBag className="w-4 h-4 shrink-0" />
                   <span>View Comic &amp; Order</span>
@@ -530,8 +550,21 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
           </div>
 
           <div className="pt-4 mt-4 border-t border-amber-500/20 text-[10.5px] font-mono text-amber-200/60 flex items-center justify-between">
-            <span>Instant Access Upon Launch</span>
-            <span>Secure Checkout with Stripe</span>
+            <span>Auto-renews annually via Stripe (€60/yr)</span>
+            <button
+              type="button"
+              onClick={() => {
+                soundManager.playTone(540, 0.04);
+                if (!isAuthenticated) {
+                  openAuthModal('signin', 'Sign in to access your Account & Billing Settings.');
+                } else {
+                  window.dispatchEvent(new CustomEvent('akinoya-open-billing-settings'));
+                }
+              }}
+              className="hover:text-amber-300 underline underline-offset-2 transition-colors cursor-pointer text-left"
+            >
+              Cancel anytime in Account &amp; Billing
+            </button>
           </div>
         </div>
       </div>
@@ -613,8 +646,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   type="button"
                   onClick={() => {
                     setActiveAddonModal(null);
+                    if (!isAuthenticated) {
+                      if (onOpenAuthModal) onOpenAuthModal();
+                      else openAuthModal('signup', 'Create your account to secure your purchases with our Never Lose Your Files guarantee.');
+                      return;
+                    }
                     alert(
-                      `${activeAddonModal.title} standalone pre-orders unlock on launch day (January 9, 2027). You can secure access today with the Membership Pass.`
+                      `${activeAddonModal.title} (${activeAddonModal.price}) has been reserved and linked to your account with our 'Never Lose Your Files' guarantee. Complete download bundle unlocks on January 9, 2027.`
                     );
                   }}
                   className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-mono text-xs cursor-pointer text-center"
