@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import passCardImg from '../assets/images/akinoya_pass_card_1790852652003.jpg';
@@ -1417,13 +1417,23 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
   const [tappingTab, setTappingTab] = useState<'pass' | 'edition' | 'my-world' | 'galaxy' | 'assets' | null>(null);
   const navTouchStartRef = useRef<{ x: number; y: number; time: number; id: string } | null>(null);
-  const lastTouchNavTimeRef = useRef<number>(0);
+  const lastNavTriggerRef = useRef<number>(0);
 
-  const resetWindowScrollInstant = () => {
-    if (typeof window === 'undefined') return;
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+  const activateNavItem = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy') => {
+    if (id === 'galaxy') {
+      handleTriggerGalaxyNav();
+    } else {
+      handleSelectTab(id);
+    }
+  };
+
+  const triggerNavInstant = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy', e?: React.SyntheticEvent) => {
+    const now = Date.now();
+    if (now - lastNavTriggerRef.current < 250) {
+      return;
+    }
+    lastNavTriggerRef.current = now;
+    activateNavItem(id);
   };
 
   const handleSelectTab = (tab: 'pass' | 'edition' | 'my-world' | 'assets') => {
@@ -1447,20 +1457,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         url.hash = tab;
         window.history.replaceState(null, '', url.toString());
       } catch {}
-      resetWindowScrollInstant();
+
+      // App-like seamless transition: gentle auto scroll only if scrolled down, preventing Safari toolbar jitter
+      if (window.scrollY > 80) {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }
     }
 
     setActiveTab(tab);
     if (tab === 'pass') {
       setPassSubView('overview');
-    }
-
-    if (typeof window !== 'undefined') {
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-      });
     }
   };
 
@@ -1478,24 +1484,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
-  const activateNavItem = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy') => {
-    if (id === 'galaxy') {
-      handleTriggerGalaxyNav();
-    } else {
-      handleSelectTab(id);
-    }
-  };
-
   const getNavButtonTouchHandlers = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy') => ({
+    onPointerDown: () => {
+      setTappingTab(id);
+    },
+    onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => {
+      setTappingTab(null);
+      triggerNavInstant(id, e);
+    },
     onTouchStart: () => {
       setTappingTab(id);
     },
-    onTouchEnd: () => {
+    onTouchEnd: (e: React.TouchEvent<HTMLButtonElement>) => {
       setTappingTab(null);
+      triggerNavInstant(id, e);
     },
     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      activateNavItem(id);
+      triggerNavInstant(id, e);
     },
   });
 
@@ -1509,6 +1515,40 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const handleTrackCardClick = (track: VisualizerTrack) => {
     startTrackStream(track);
   };
+
+  // Mobile Worlds Swipe Carousel Auto-Selection Ref & Handler ("tjak, tjak, tjak")
+  const mobileCarouselRef = useRef<HTMLDivElement>(null);
+  const lastScrolledPlanetIdRef = useRef<string | null>(null);
+
+  const handleMobileCarouselScroll = useCallback(() => {
+    const container = mobileCarouselRef.current;
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.left + containerRect.width / 2;
+
+    const children = Array.from(container.children) as HTMLElement[];
+    let closestPioneer: (typeof INITIAL_SUBMISSIONS)[number] | null = null;
+    let minDistance = Infinity;
+
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index];
+      const pioneer = INITIAL_SUBMISSIONS[index];
+      if (!pioneer || !child) continue;
+      const rect = child.getBoundingClientRect();
+      const childCenter = rect.left + rect.width / 2;
+      const distance = Math.abs(childCenter - containerCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestPioneer = pioneer;
+      }
+    }
+
+    if (closestPioneer && minDistance < 100 && closestPioneer.id !== lastScrolledPlanetIdRef.current) {
+      lastScrolledPlanetIdRef.current = closestPioneer.id;
+      soundManager.playTone(720, 0.03);
+      setUserDossier(closestPioneer);
+    }
+  }, [setUserDossier]);
 
   // Comic Pre-Order Checkout States (Streamlined Stripe Checkout)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -2453,8 +2493,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             <span className="text-emerald-400 font-bold">{waveInventory.available} Available</span>
                           </div>
                           <div className="flex flex-wrap items-baseline gap-2 mt-1">
-                            <span className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight">
-                              €14.99
+                            <span className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight whitespace-nowrap inline-flex items-baseline gap-1">
+                              <span>€</span>
+                              <span>14.99</span>
                             </span>
                             <span className="text-[11px] font-mono text-white/50">
                               incl. VAT · Free Global Shipping
@@ -2749,9 +2790,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </button>
                     </div>
 
-                    {/* Mobile Fluid Swipe Carousel (<768px): smooth swipe without cropped or half-cut widgets */}
+                    {/* Mobile Fluid Swipe Carousel (<768px): smooth swipe with auto-select on swipe ("tjak, tjak, tjak") */}
                     <div
-                      className="flex md:hidden items-stretch gap-3 overflow-x-auto snap-x snap-mandatory pt-2 pb-2 px-0.5 no-scrollbar scroll-smooth touch-pan-x"
+                      ref={mobileCarouselRef}
+                      onScroll={handleMobileCarouselScroll}
+                      className="flex md:hidden items-stretch gap-2.5 overflow-x-auto snap-x snap-mandatory pt-2 pb-2 px-1 no-scrollbar scroll-smooth touch-pan-x"
                       style={{ WebkitOverflowScrolling: 'touch' }}
                     >
                       {INITIAL_SUBMISSIONS.slice(0, 5).map((pioneer, idx) => {
@@ -2765,18 +2808,25 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             key={pioneer.id}
                             type="button"
                             onClick={() => {
+                              lastScrolledPlanetIdRef.current = pioneer.id;
                               soundManager.playTone(600 + idx * 30, 0.04);
                               setUserDossier(pioneer);
+                              if (mobileCarouselRef.current) {
+                                const childEl = mobileCarouselRef.current.children[idx] as HTMLElement;
+                                if (childEl) {
+                                  childEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                                }
+                              }
                             }}
-                            className={`shrink-0 w-[78vw] max-w-[280px] snap-center p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden min-h-[102px] transform-gpu ${
+                            className={`shrink-0 w-[64vw] max-w-[220px] snap-center p-2.5 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden min-h-[82px] transform-gpu ${
                               isSelected
                                 ? 'bg-gradient-to-b from-amber-950/80 via-cyan-950/70 to-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/80'
                                 : 'bg-[#040917]/90 hover:bg-[#08122c] border-cyan-400/30'
                             }`}
                           >
-                            <div className="flex items-center justify-between gap-1 w-full mb-1">
+                            <div className="flex items-center justify-between gap-1 w-full mb-0.5">
                               <span
-                                className={`text-[10px] font-mono font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                className={`text-[9px] font-mono font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                                   idx === 0
                                     ? 'bg-amber-400 text-black font-black'
                                     : 'bg-cyan-950/90 text-cyan-300 border border-cyan-400/40'
@@ -2784,24 +2834,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               >
                                 {idx === 0 ? '👑 #01 PIONEER' : `#0${idx + 1} PIONEER`}
                               </span>
-                              <span className="text-[10px] font-mono text-cyan-300/80 font-bold">
+                              <span className="text-[9.5px] font-mono text-cyan-300/80 font-bold">
                                 {pioneer.sectorId || `SEC-0${idx + 1}`}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2.5 mt-1.5">
+                            <div className="flex items-center gap-2 mt-1">
                               {thumb && (
                                 <img
                                   src={thumb}
                                   alt={pioneer.planetName}
-                                  className="w-8 h-8 rounded-full object-cover border border-amber-400/50 shrink-0"
+                                  className="w-7 h-7 rounded-full object-cover border border-amber-400/50 shrink-0"
                                   loading="lazy"
                                 />
                               )}
                               <div className="min-w-0 flex-1">
-                                <h4 className="text-sm font-display font-black text-white truncate uppercase tracking-wide">
+                                <h4 className="text-xs sm:text-sm font-display font-black text-white truncate uppercase tracking-wide">
                                   {pioneer.planetName}
                                 </h4>
-                                <p className="text-[11px] font-mono text-white/60 truncate">
+                                <p className="text-[10px] font-mono text-white/60 truncate">
                                   by {pioneer.authorName}
                                 </p>
                               </div>
@@ -2812,7 +2862,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                     {/* Mobile swipe indicator */}
                     <div className="flex md:hidden items-center justify-between px-1 text-[10px] font-mono text-white/40">
-                      <span>Swipe to explore Pioneer Worlds →</span>
+                      <span>Swipe or tap to auto-load Pioneer Worlds →</span>
                       <span>1–5</span>
                     </div>
 
@@ -3604,7 +3654,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm sm:text-base font-display font-bold text-cyan-300">€14,99</div>
+                      <div className="text-sm sm:text-base font-display font-bold text-cyan-300 whitespace-nowrap inline-flex items-baseline gap-1">
+                        <span>€</span>
+                        <span>14.99</span>
+                      </div>
                       <div className="text-[10px] font-mono text-emerald-400">Free Express Delivery</div>
                     </div>
                   </div>
@@ -3747,7 +3800,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         </>
                       ) : (
                         <>
-                          <span>CONTINUE TO STRIPE CHECKOUT (€14,99)</span>
+                          <span className="whitespace-nowrap inline-flex items-baseline gap-1">
+                            <span>CONTINUE TO STRIPE CHECKOUT (</span>
+                            <span>€</span>
+                            <span>14.99)</span>
+                          </span>
                           <ArrowRight className="w-4 h-4 text-black" />
                         </>
                       )}
@@ -3853,7 +3910,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               right: 0,
               width: '100%',
               zIndex: 99999,
-              paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom, 0.6rem))',
+              paddingTop: '8px',
+              paddingBottom: 'max(14px, env(safe-area-inset-bottom, 14px))',
               pointerEvents: 'auto',
               touchAction: 'manipulation',
               transform: 'translateZ(0)',

@@ -60,7 +60,7 @@ export interface VaultProduct {
   id: string;
   name: string;
   subtitle?: string;
-  /** Display range for non-members, e.g. "€19,99 – €24,99" */
+  /** Display range for non-members, e.g. "€ 19.99 – € 24.99" */
   priceRangeLabel: string;
   /** Typical separate price used in the value-stack comparison */
   listPrice: number;
@@ -75,7 +75,7 @@ export const VAULT_PRODUCTS: VaultProduct[] = [
   {
     id: 'vocal-acapella-remix-pack',
     name: 'Vocal Acapella & Remix Pack',
-    priceRangeLabel: '€19,99 – €24,99',
+    priceRangeLabel: '€ 19.99 – € 24.99',
     listPrice: 22.99,
     memberLabel: 'FREE',
     memberNote: 'Included',
@@ -86,7 +86,7 @@ export const VAULT_PRODUCTS: VaultProduct[] = [
     id: 'production-workflow-assets',
     name: '2D Visualizer Production & Logic Pro Assets',
     subtitle: 'Presets, vocal chains & Logic Pro template',
-    priceRangeLabel: '€29,99 – €39,99',
+    priceRangeLabel: '€ 29.99 – € 39.99',
     listPrice: 34.99,
     memberLabel: 'FREE',
     memberNote: 'Included',
@@ -96,7 +96,7 @@ export const VAULT_PRODUCTS: VaultProduct[] = [
   {
     id: 'digital-art-book',
     name: 'Digital Art Book & Storyboard PDF',
-    priceRangeLabel: '€9,99 – €14,99',
+    priceRangeLabel: '€ 9.99 – € 14.99',
     listPrice: 12.99,
     memberLabel: 'FREE',
     memberNote: 'Digital download',
@@ -106,9 +106,9 @@ export const VAULT_PRODUCTS: VaultProduct[] = [
   {
     id: 'bingaa-comic-physical',
     name: "The Comic 'Bingäa' (Physical)",
-    priceRangeLabel: '€14,99',
+    priceRangeLabel: '€ 14.99',
     listPrice: 14.99,
-    memberLabel: '€14,99',
+    memberLabel: '€ 14.99',
     memberNote: '+ Exclusive Signed Bookmark',
     isDigital: false,
     kind: 'comic',
@@ -119,7 +119,7 @@ export const getSeparateDigitalTotal = (): number =>
   VAULT_PRODUCTS.filter((p) => p.isDigital).reduce((sum, p) => sum + p.listPrice, 0);
 
 export const formatEuro = (value: number): string =>
-  `€${value.toFixed(2).replace('.', ',')}`;
+  `€ ${value.toFixed(2)}`;
 
 /* ─────────────────────── CONTENT ROTATION (MONTHLY DROPS) ─────────────────────── */
 

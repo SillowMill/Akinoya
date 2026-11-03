@@ -12,7 +12,9 @@ import {
   Lock,
   Mail,
   Check,
-  Sparkles,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
 } from 'lucide-react';
 import { BINGAA_PDF_FILENAME, BINGAA_PDF_URL } from '../utils/certificate';
 
@@ -27,6 +29,8 @@ type PDFDoc = Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>;
 
 /**
  * Interactive page-by-page reader bound directly to /assets/Bingäa.pdf.
+ * Features pinch-to-zoom & interactive zoom controls for reading clarity,
+ * with a fixed layout and zero page-level modal scrolling.
  * For verified holders: full 32-page reader with PDF download.
  * For public / non-VIP visitors: 2-page preview with Page 3 Whitelist Lock overlay.
  */
@@ -34,13 +38,22 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<{ cancel: () => void } | null>(null);
-  const touchStartX = useRef<number | null>(null);
 
   const [doc, setDoc] = useState<PDFDoc | null>(null);
   const [pageNum, setPageNum] = useState(1);
   const [isRendering, setIsRendering] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [stageSize, setStageSize] = useState({ w: 0, h: 0 });
+
+  // Interactive Zoom & Pan States
+  const [zoom, setZoom] = useState<number>(1);
+  const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const initialPinchDistRef = useRef<number | null>(null);
+  const initialPinchZoomRef = useRef<number>(1);
+  const touchStartX = useRef<number | null>(null);
+  const lastTapTimeRef = useRef<number>(0);
 
   // Whitelist capture state for public visitors
   const [whitelistEmail, setWhitelistEmail] = useState('');
@@ -81,6 +94,12 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Reset zoom & pan when page changes
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [pageNum]);
 
   // Render current page, fitted inside the stage at device pixel ratio
   useEffect(() => {
@@ -130,12 +149,48 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
   const goNext = useCallback(() => {
     setPageNum((p) => {
       if (!isVerified) {
-        // Public users can advance from 1 to 2, and 2 to 3 (which triggers the lock)
         return Math.min(3, p + 1);
       }
       return total ? Math.min(total, p + 1) : p;
     });
   }, [isVerified, total]);
+
+  // Zoom controls
+  const handleZoomIn = () => {
+    setZoom((z) => Math.min(2.5, Number((z + 0.35).toFixed(2))));
+  };
+
+  const handleZoomOut = () => {
+    setZoom((z) => {
+      const next = Math.max(1, Number((z - 0.35).toFixed(2)));
+      if (next === 1) setPan({ x: 0, y: 0 });
+      return next;
+    });
+  };
+
+  const handleResetZoom = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  const clampPan = (x: number, y: number, currentZoom: number) => {
+    if (currentZoom <= 1) return { x: 0, y: 0 };
+    const maxPanX = (stageSize.w * (currentZoom - 1)) / 1.8;
+    const maxPanY = (stageSize.h * (currentZoom - 1)) / 1.8;
+    return {
+      x: Math.max(-maxPanX, Math.min(maxPanX, x)),
+      y: Math.max(-maxPanY, Math.min(maxPanY, y)),
+    };
+  };
+
+  const handleDoubleTap = () => {
+    if (zoom > 1) {
+      handleResetZoom();
+    } else {
+      setZoom(1.8);
+      setPan({ x: 0, y: 0 });
+    }
+  };
 
   // Keyboard navigation & scroll lock
   useEffect(() => {
@@ -143,6 +198,9 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       if (e.key === 'ArrowLeft') goPrev();
       else if (e.key === 'ArrowRight') goNext();
       else if (e.key === 'Escape') onClose();
+      else if (e.key === '+' || e.key === '=') handleZoomIn();
+      else if (e.key === '-') handleZoomOut();
+      else if (e.key === '0') handleResetZoom();
     };
     window.addEventListener('keydown', onKey);
     const prevOverflow = document.body.style.overflow;
@@ -151,7 +209,89 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [goPrev, goNext, onClose]);
+  }, [goPrev, goNext, onClose, zoom]);
+
+  // Touch handlers for pinch-to-zoom & smooth panning
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initialPinchDistRef.current = dist;
+      initialPinchZoomRef.current = zoom;
+    } else if (e.touches.length === 1) {
+      const now = Date.now();
+      if (now - lastTapTimeRef.current < 280) {
+        handleDoubleTap();
+        lastTapTimeRef.current = 0;
+        return;
+      }
+      lastTapTimeRef.current = now;
+
+      touchStartX.current = e.touches[0].clientX;
+      if (zoom > 1) {
+        isDraggingRef.current = true;
+        dragStartRef.current = {
+          x: e.touches[0].clientX - pan.x,
+          y: e.touches[0].clientY - pan.y,
+        };
+      }
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialPinchDistRef.current !== null) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const scaleFactor = currentDist / initialPinchDistRef.current;
+      const nextZoom = Math.min(2.5, Math.max(1, Number((initialPinchZoomRef.current * scaleFactor).toFixed(2))));
+      setZoom(nextZoom);
+      if (nextZoom === 1) setPan({ x: 0, y: 0 });
+    } else if (e.touches.length === 1 && zoom > 1 && isDraggingRef.current) {
+      const newX = e.touches[0].clientX - dragStartRef.current.x;
+      const newY = e.touches[0].clientY - dragStartRef.current.y;
+      setPan(clampPan(newX, newY, zoom));
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    initialPinchDistRef.current = null;
+    isDraggingRef.current = false;
+    if (zoom === 1 && touchStartX.current !== null && e.changedTouches.length > 0) {
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      if (Math.abs(dx) > 50) {
+        if (dx < 0) goNext();
+        else goPrev();
+      }
+      touchStartX.current = null;
+    }
+  };
+
+  // Mouse handlers for desktop pan
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoom > 1) {
+      isDraggingRef.current = true;
+      dragStartRef.current = {
+        x: e.clientX - pan.x,
+        y: e.clientY - pan.y,
+      };
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDraggingRef.current && zoom > 1) {
+      const newX = e.clientX - dragStartRef.current.x;
+      const newY = e.clientY - dragStartRef.current.y;
+      setPan(clampPan(newX, newY, zoom));
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+  };
 
   const handleWhitelistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,7 +324,6 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         setWhitelistError(data?.message || 'Failed to join whitelist. Please try again.');
       }
     } catch {
-      // Local state fallback
       setWhitelistSubmitted(true);
       try {
         localStorage.setItem('akinoya_whitelist_subscribed', cleanEmail);
@@ -198,15 +337,53 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     'flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer';
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col bg-black/95 backdrop-blur-md" role="dialog" aria-label="Bingäa Issue #1 reader">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-2.5 sm:py-3 border-b border-white/10 shrink-0">
+    <div
+      className="fixed inset-0 z-[70] flex flex-col bg-black/95 backdrop-blur-md select-none overflow-hidden"
+      role="dialog"
+      aria-label="Bingäa Issue #1 reader"
+    >
+      {/* Header with Integrated Zoom Bar */}
+      <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-2.5 sm:py-3 border-b border-white/10 shrink-0 bg-[#060a14]/90">
         <div className="min-w-0">
           <div className="text-[9px] sm:text-[10px] font-mono tracking-wider text-cyan-300 uppercase">
             {isVerified ? "Collector's Edition · Full Access" : 'Public Preview Edition · Pages 1–2'}
           </div>
           <div className="text-sm sm:text-base font-display font-bold text-white truncate">Bingäa — Issue #1</div>
         </div>
+
+        {/* Center: Interactive Zoom Controls */}
+        {!isLockedPage && !loadError && (
+          <div className="flex items-center gap-1 bg-white/5 border border-white/15 rounded-xl p-1">
+            <button
+              type="button"
+              onClick={handleZoomOut}
+              disabled={zoom <= 1}
+              aria-label="Zoom out"
+              className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleResetZoom}
+              aria-label="Reset zoom"
+              className="px-2 py-0.5 text-[10px] font-mono font-bold text-cyan-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <span>{Math.round(zoom * 100)}%</span>
+              {zoom > 1 && <RotateCcw className="w-2.5 h-2.5 text-cyan-400" />}
+            </button>
+            <button
+              type="button"
+              onClick={handleZoomIn}
+              disabled={zoom >= 2.5}
+              aria-label="Zoom in"
+              className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {isVerified ? (
             <a
@@ -233,17 +410,17 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         </div>
       </div>
 
-      {/* Stage */}
+      {/* Stage (Completely Fixed Container, No Outer Modal Scrolling) */}
       <div
         ref={stageRef}
-        className="relative flex-1 min-h-0 m-2 sm:m-4 flex items-center justify-center select-none"
-        onTouchStart={(e) => (touchStartX.current = e.touches[0].clientX)}
-        onTouchEnd={(e) => {
-          if (touchStartX.current === null) return;
-          const dx = e.changedTouches[0].clientX - touchStartX.current;
-          if (Math.abs(dx) > 50) (dx < 0 ? goNext : goPrev)();
-          touchStartX.current = null;
-        }}
+        className="relative flex-1 min-h-0 m-2 sm:m-4 flex items-center justify-center select-none overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
       >
         {loadError ? (
           <div className="max-w-sm text-center space-y-3 font-mono">
@@ -262,7 +439,6 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         ) : isLockedPage ? (
           /* Non-VIP Page 3 Lock Screen Overlay */
           <div className="w-full max-w-md mx-auto my-auto p-5 sm:p-7 rounded-2xl bg-[#080c14] border border-amber-500/40 shadow-[0_0_50px_rgba(245,158,11,0.2)] text-center relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Ambient background glow */}
             <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="w-12 h-12 rounded-2xl bg-amber-950/70 border border-amber-500/40 text-yellow-400 mx-auto flex items-center justify-center mb-3.5 shadow-[0_0_20px_rgba(245,158,11,0.25)]">
@@ -337,33 +513,46 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
             </div>
           </div>
         ) : (
-          <>
-            <canvas ref={canvasRef} className="rounded-md shadow-2xl bg-white max-w-full max-h-full" />
+          <div
+            className="relative flex items-center justify-center max-w-full max-h-full transition-transform"
+            style={{
+              transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
+              transformOrigin: 'center center',
+              willChange: 'transform',
+              cursor: zoom > 1 ? (isDraggingRef.current ? 'grabbing' : 'grab') : 'default',
+            }}
+            onDoubleClick={handleDoubleTap}
+          >
+            <canvas ref={canvasRef} className="rounded-md shadow-2xl bg-white max-w-full max-h-full select-none" />
             {(isRendering || !doc) && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-md">
                 <Loader2 className="w-7 h-7 text-cyan-300 animate-spin" />
                 <span className="text-[11px] font-mono text-white/60">
                   {doc ? `Loading page ${pageNum}…` : 'Opening Bingäa Issue #1…'}
                 </span>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
       {/* Footer navigation */}
       {!loadError && (
-        <div className="flex items-center justify-center gap-4 sm:gap-6 px-3 py-3 sm:py-4 border-t border-white/10 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-8 py-3 border-t border-white/10 shrink-0 bg-[#060a14]/90">
           <button type="button" onClick={goPrev} disabled={pageNum <= 1} className={navBtn} aria-label="Previous page">
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <span className="min-w-[120px] text-center text-xs sm:text-sm font-mono text-white/80">
-            {isVerified
-              ? total ? `${pageNum} / ${total}` : '— / —'
-              : pageNum <= 2
-              ? `Preview Page ${pageNum} of 2`
-              : 'Page 3 (Locked)'}
-          </span>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs sm:text-sm font-mono text-white/80">
+              {isVerified
+                ? total ? `${pageNum} / ${total}` : '— / —'
+                : pageNum <= 2
+                ? `Preview Page ${pageNum} of 2`
+                : 'Page 3 (Locked)'}
+            </span>
+          </div>
+
           <button
             type="button"
             onClick={goNext}

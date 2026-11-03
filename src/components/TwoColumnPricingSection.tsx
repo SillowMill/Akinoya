@@ -14,12 +14,10 @@ import {
   Check,
   Crown,
   ArrowRight,
-  Lock,
   ShieldCheck,
-  Layers,
-  Info,
+  ChevronDown,
+  ChevronUp,
   X,
-  ExternalLink,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { openMembershipGateModal } from '../utils/pioneer';
@@ -35,13 +33,75 @@ export interface TwoColumnPricingSectionProps {
   onOpenAuthModal?: () => void;
 }
 
-interface AddonModalInfo {
+interface AddonProduct {
+  id: string;
   title: string;
   badge: string;
-  price: string;
+  priceValue: string;
+  category: string;
+  subtitle: string;
   description: string;
   features: string[];
+  icon: React.ComponentType<{ className?: string }>;
 }
+
+const ADDON_PRODUCTS: AddonProduct[] = [
+  {
+    id: 'vocal',
+    title: 'Vocal Acapella & Remix Pack',
+    badge: 'STUDIO AUDIO STEMS',
+    priceValue: '19.99',
+    category: 'WAV STEMS',
+    subtitle: 'Studio Acapellas for the whole Dream of Akainoya song tracklist.',
+    description:
+      'Studio Acapellas for the whole Dream of Akainoya song tracklist. Dry and wet studio vocal stems, master tempo locked and tuned for remixing and production.',
+    features: [
+      'Master studio vocal leads (Dry & Wet)',
+      'Harmonies, ad-libs, and backing vocoder tracks',
+      '24-bit / 48kHz uncompressed WAV stems',
+      'Also included 100% FREE with the Membership Pass',
+    ],
+    icon: MicVocal,
+  },
+  {
+    id: 'comic-digital',
+    title: 'Digital Copy of Bingäa',
+    badge: '4K GRAPHIC NOVEL',
+    priceValue: '9.99',
+    category: '4K PDF',
+    subtitle: 'Complete graphic novel with interactive viewer & 4K download.',
+    description:
+      'The complete digital edition of the Bingäa graphic novel in pristine 4K resolution, readable in browser or downloaded as DRM-free PDF.',
+    features: [
+      'Complete full-color graphic novel',
+      'Interactive dual-page flipbook reader',
+      'High-DPI PDF storyboard edition',
+      'Included FREE with physical comic OR Membership Pass',
+    ],
+    icon: BookOpen,
+  },
+  {
+    id: 'logic-visualizer',
+    title: '2D Visualizer Production & Logic Pro Assets',
+    badge: '2D VISUALIZER WORKFLOW & LOGIC PRO',
+    priceValue: '29.99',
+    category: 'VISUALIZERS & LOGIC PRO',
+    subtitle: '2D visualizer workflow, custom presets, vocal chains & dedicated Logic Pro template.',
+    description:
+      "The complete 2D visualizer workflow and behind-the-scenes production architecture, including production presets, vocal chain setup, and a dedicated Logic Pro template featuring Odi's custom vocal chain routing.",
+    features: [
+      'Dedicated Logic Pro Template with custom vocal chain routing & processing',
+      '2D Visualizer Behind-the-Scenes Production Pipeline',
+      '01 · Storyboards & Script Blueprints (2.39:1 framing specs)',
+      '02 · Art Direction & Character Anchors (Turnarounds & moodboards)',
+      '03 · Audio Masters & Stems',
+      '04 · Blender 3D Previs & Cockpit Rigs (.blend rigs & geometry nodes)',
+      '05 · Prompt Engineering Bibles (VFX & AI cinematic prompt parameters)',
+      'Also included 100% FREE with the Membership Pass',
+    ],
+    icon: Sliders,
+  },
+];
 
 export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = ({
   onSelectComicTab,
@@ -52,7 +112,8 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
   onOpenAuthModal,
 }) => {
   const { isAuthenticated, openAuthModal } = useAuth();
-  const [activeAddonModal, setActiveAddonModal] = useState<AddonModalInfo | null>(null);
+  const [expandedAddonId, setExpandedAddonId] = useState<string | null>(null);
+  const [reservationNotice, setReservationNotice] = useState<string | null>(null);
 
   const handleJoinPassClick = () => {
     soundManager.playTone(660, 0.08);
@@ -95,9 +156,9 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
     }
   };
 
-  const handleAddonClick = (addon: AddonModalInfo) => {
-    soundManager.playTone(540, 0.05);
-    setActiveAddonModal(addon);
+  const toggleExpandAddon = (id: string) => {
+    soundManager.playTone(540, 0.04);
+    setExpandedAddonId((prev) => (prev === id ? null : id));
   };
 
   return (
@@ -105,6 +166,30 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
       aria-label="Pricing and Membership Options"
       className={`w-full max-w-7xl mx-auto space-y-6 transform-gpu ${className}`}
     >
+      {/* Reservation Toast Notice */}
+      <AnimatePresence>
+        {reservationNotice && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-4 rounded-2xl bg-emerald-950/90 border border-emerald-400/50 shadow-[0_0_25px_rgba(16,185,129,0.3)] flex items-center justify-between gap-3 text-emerald-200 text-xs sm:text-sm font-mono"
+          >
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{reservationNotice}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReservationNotice(null)}
+              className="p-1 rounded-md text-emerald-400/70 hover:text-emerald-200 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Upgraded Solid Frosted Glass Header Banner: Optimal Rich Dark Backing, Zero Typography Bleed */}
       {!isLoungeView && (
         <div className="rounded-3xl bg-[#060a14]/95 backdrop-blur-2xl border border-cyan-500/30 p-5 sm:p-6 md:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(56,189,248,0.12)] relative overflow-hidden">
@@ -137,7 +222,11 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-black text-xs shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Crown className="w-3.5 h-3.5 fill-black text-black shrink-0" />
-                <span>Join Member Pass · €60/yr</span>
+                <span className="whitespace-nowrap inline-flex items-baseline gap-1">
+                  <span>Join Member Pass ·</span>
+                  <span>€</span>
+                  <span>60/yr</span>
+                </span>
               </button>
             </div>
           </div>
@@ -180,173 +269,172 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </div>
 
               <div className="text-left sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center gap-2">
-                <div className="text-xl sm:text-2xl font-display font-black text-white line-through decoration-red-400/80 decoration-2">
-                  € 74.96
+                <div className="text-xl sm:text-2xl font-display font-black text-white line-through decoration-red-400/80 decoration-2 whitespace-nowrap inline-flex items-baseline gap-1">
+                  <span>€</span>
+                  <span>74.96</span>
                 </div>
-                <div className="text-[10.5px] font-mono text-cyan-300 font-semibold">
-                  (Digital add-ons alone: € 70.97+)
+                <div className="text-[10.5px] font-mono text-cyan-300 font-semibold whitespace-nowrap inline-flex items-baseline gap-1">
+                  <span>(Digital add-ons alone:</span>
+                  <span className="whitespace-nowrap inline-flex items-baseline gap-0.5">
+                    <span>€</span>
+                    <span>70.97+</span>
+                  </span>
+                  <span>)</span>
                 </div>
               </div>
             </div>
 
-            {/* Individual Digital Add-ons: 3 Distinct Cards */}
+            {/* Individual Digital Add-ons: 3 Distinct Cards with Clean Inline Drawer Expansion (Zero Modals) */}
             <div className="space-y-3">
               <div className="text-[11px] font-mono font-bold tracking-wider text-white/50 uppercase">
                 Digital Add-ons
               </div>
 
-              {/* 1. Vocal Acapella & Remix Pack */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-cyan-400/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 mt-0.5 sm:mt-0">
-                    <MicVocal className="w-4 h-4 text-cyan-300" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
-                        Vocal Acapella &amp; Remix Pack
-                      </h4>
-                      <span className="text-[9.5px] font-mono text-cyan-300/80 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/20 hidden sm:inline">
-                        WAV STEMS
-                      </span>
-                    </div>
-                    <p className="text-[11px] sm:text-xs text-white/60 font-sans leading-relaxed">
-                      Studio Acapellas for the whole Dream of Akainoya song tracklist.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
-                  <span className="text-sm font-mono font-bold text-white">€ 19.99</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleAddonClick({
-                        title: 'Vocal Acapella & Remix Pack',
-                        badge: 'STUDIO AUDIO STEMS',
-                        price: '€ 19.99',
-                        description:
-                          'Studio Acapellas for the whole Dream of Akainoya song tracklist. Dry and wet studio vocal stems, master tempo locked and tuned for remixing and production.',
-                        features: [
-                          'Master studio vocal leads (Dry & Wet)',
-                          'Harmonies, ad-libs, and backing vocoder tracks',
-                          '24-bit / 48kHz uncompressed WAV stems',
-                          'Also included 100% FREE with the Membership Pass',
-                        ],
-                      })
-                    }
-                    className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-cyan-500/15 border border-white/15 hover:border-cyan-400/50 text-white hover:text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] flex items-center gap-1.5"
+              {ADDON_PRODUCTS.map((addon) => {
+                const IconComponent = addon.icon;
+                const isExpanded = expandedAddonId === addon.id;
+                return (
+                  <div
+                    key={addon.id}
+                    className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-cyan-400/40 transition-colors space-y-3 group"
                   >
-                    <span>Pre-Order</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 mt-0.5 sm:mt-0">
+                          <IconComponent className="w-4 h-4 text-cyan-300" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
+                              {addon.title}
+                            </h4>
+                            <span className="text-[9.5px] font-mono text-cyan-300/80 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/20">
+                              {addon.category}
+                            </span>
+                          </div>
+                          <p className="text-[11px] sm:text-xs text-white/60 font-sans leading-relaxed">
+                            {addon.subtitle}
+                          </p>
+                        </div>
+                      </div>
 
-              {/* 2. Digital Copy of Bingäa */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-cyan-400/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 mt-0.5 sm:mt-0">
-                    <BookOpen className="w-4 h-4 text-cyan-300" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
-                        Digital Copy of Bingäa
-                      </h4>
-                      <span className="text-[9.5px] font-mono text-cyan-300/80 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/20 hidden sm:inline">
-                        4K PDF
-                      </span>
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                        <span className="text-sm font-mono font-bold text-white whitespace-nowrap inline-flex items-baseline gap-1">
+                          <span>€</span>
+                          <span>{addon.priceValue}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleExpandAddon(addon.id)}
+                          className={`px-3.5 py-2 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] flex items-center gap-1.5 ${
+                            isExpanded
+                              ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200'
+                              : 'bg-white/5 hover:bg-cyan-500/15 border-white/15 hover:border-cyan-400/50 text-white hover:text-cyan-200'
+                          }`}
+                        >
+                          <span>{isExpanded ? 'Hide Details' : 'Details & Order'}</span>
+                          {isExpanded ? (
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-[11px] sm:text-xs text-white/60 font-sans leading-relaxed">
-                      Complete graphic novel with interactive viewer &amp; 4K download.
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
-                  <span className="text-sm font-mono font-bold text-white">€ 9.99</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleAddonClick({
-                        title: 'Digital Copy of Bingäa',
-                        badge: '4K GRAPHIC NOVEL',
-                        price: '€ 9.99',
-                        description:
-                          'The complete digital edition of the Bingäa graphic novel in pristine 4K resolution, readable in browser or downloaded as DRM-free PDF.',
-                        features: [
-                          'Complete full-color graphic novel',
-                          'Interactive dual-page flipbook reader',
-                          'High-DPI PDF storyboard edition',
-                          'Included FREE with physical comic OR Membership Pass',
-                        ],
-                      })
-                    }
-                    className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-cyan-500/15 border border-white/15 hover:border-cyan-400/50 text-white hover:text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] flex items-center gap-1.5"
-                  >
-                    <span>Pre-Order</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+                    {/* Inline Expandable Drawer: Clean, in-place, zero-modal popup */}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden pt-3 border-t border-white/10 space-y-3"
+                        >
+                          <p className="text-xs text-white/80 font-sans leading-relaxed">
+                            {addon.description}
+                          </p>
 
-              {/* 3. 2D Visualizer Production & Logic Pro Assets */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-cyan-400/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 mt-0.5 sm:mt-0">
-                    <Sliders className="w-4 h-4 text-cyan-300" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
-                        2D Visualizer Production &amp; Logic Pro Assets
-                      </h4>
-                      <span className="text-[9.5px] font-mono text-cyan-300/80 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/20 hidden sm:inline">
-                        VISUALIZERS &amp; LOGIC PRO
-                      </span>
-                    </div>
-                    <p className="text-[11px] sm:text-xs text-white/60 font-sans leading-relaxed">
-                      2D visualizer workflow, custom presets, vocal chains &amp; dedicated Logic Pro template.
-                    </p>
-                  </div>
-                </div>
+                          <div className="space-y-1.5">
+                            <span className="text-[10.5px] font-mono font-bold text-white/50 uppercase">
+                              Included in this pack:
+                            </span>
+                            <ul className="space-y-1 text-xs text-white/80 font-sans">
+                              {addon.features.map((feature, idx) => (
+                                <li key={idx} className="flex items-center gap-2">
+                                  <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                                  <span>{feature}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
 
-                <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
-                  <span className="text-sm font-mono font-bold text-white">€ 29.99</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleAddonClick({
-                        title: '2D Visualizer Production & Logic Pro Assets',
-                        badge: '2D VISUALIZER WORKFLOW & LOGIC PRO',
-                        price: '€ 29.99',
-                        description:
-                          'The complete 2D visualizer workflow and behind-the-scenes production architecture, including production presets, vocal chain setup, and a dedicated Logic Pro template featuring Odi\'s custom vocal chain routing.',
-                        features: [
-                          'Dedicated Logic Pro Template with custom vocal chain routing & processing',
-                          '2D Visualizer Behind-the-Scenes Production Pipeline',
-                          '01 · Storyboards & Script Blueprints (2.39:1 framing specs)',
-                          '02 · Art Direction & Character Anchors (Turnarounds & moodboards)',
-                          '03 · Audio Masters & Stems',
-                          '04 · Blender 3D Previs & Cockpit Rigs (.blend rigs & geometry nodes)',
-                          '05 · Prompt Engineering Bibles (VFX & AI cinematic prompt parameters)',
-                          'Also included 100% FREE with the Membership Pass',
-                        ],
-                      })
-                    }
-                    className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-cyan-500/15 border border-white/15 hover:border-cyan-400/50 text-white hover:text-cyan-200 text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] flex items-center gap-1.5"
-                  >
-                    <span>Pre-Order</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+                          {/* Pro-tip: Included in Member Pass */}
+                          <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-400/30 space-y-1 text-xs">
+                            <div className="font-mono font-bold text-amber-300 flex items-center gap-1.5">
+                              <Crown className="w-3.5 h-3.5" />
+                              <span>Pro-tip: Included 100% FREE with Member Pass</span>
+                            </div>
+                            <p className="text-white/70 font-sans text-[11.5px]">
+                              Join the Annual Member Pass (€60/year) to unlock this pack plus all other digital extras, stems, and monthly drops for free.
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                soundManager.playTone(660, 0.05);
+                                handleJoinPassClick();
+                              }}
+                              className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(245,158,11,0.3)] min-h-[40px]"
+                            >
+                              <Crown className="w-4 h-4 fill-black text-black shrink-0" />
+                              <span className="whitespace-nowrap inline-flex items-baseline gap-1">
+                                <span>Get with Pass (</span>
+                                <span>€</span>
+                                <span>60/yr)</span>
+                              </span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                soundManager.playTone(540, 0.05);
+                                if (!isAuthenticated) {
+                                  if (onOpenAuthModal) onOpenAuthModal();
+                                  else {
+                                    openAuthModal(
+                                      'signup',
+                                      'Create your account to secure your purchases with our Never Lose Your Files guarantee.'
+                                    );
+                                  }
+                                  return;
+                                }
+                                setReservationNotice(
+                                  `${addon.title} (€ ${addon.priceValue}) has been reserved and linked to your account with our 'Never Lose Your Files' guarantee. Complete download bundle unlocks on January 9, 2027.`
+                                );
+                                setTimeout(() => setReservationNotice(null), 6000);
+                              }}
+                              className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-mono text-xs cursor-pointer text-center min-h-[40px] whitespace-nowrap inline-flex items-center justify-center gap-1"
+                            >
+                              <span>Pre-Order Pack Only (</span>
+                              <span>€</span>
+                              <span>{addon.priceValue})</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Unified Physical Product & Lore Widget: Single Cohesive High-End Card */}
+            {/* Unified Physical Product & Lore Widget: Single Cohesive High-End Card with Large Thumbnail */}
             <div className="pt-2">
-              <div className="rounded-2xl bg-gradient-to-b from-[#09152b] via-[#061122] to-[#040c1a] border-2 border-cyan-400/40 p-4 sm:p-5 space-y-4 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(56,189,248,0.15)] relative overflow-hidden group">
+              <div className="rounded-2xl bg-gradient-to-b from-[#09152b] via-[#061122] to-[#040c1a] border-2 border-cyan-400/40 p-4 sm:p-5 lg:p-6 space-y-4 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(56,189,248,0.15)] relative overflow-hidden group">
                 <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none" />
 
                 {/* Top Badge & Price Header */}
@@ -355,30 +443,31 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     PHYSICAL PRINT · COLLECTOR'S ITEM
                   </span>
                   <div className="text-right">
-                    <span className="text-lg sm:text-xl font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)]">
-                      € 14.99
+                    <span className="text-xl sm:text-2xl font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
+                      <span>€</span>
+                      <span>14.99</span>
                     </span>
                   </div>
                 </div>
 
-                {/* Cover Thumbnail + Title + Lore Body */}
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                {/* Cover Thumbnail (Scaled Up & Crisp) + Title + Lore Body */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
                   <img
                     src={bingaaComicCover}
                     alt="Sillow Mill — Bingäa Comic Cover"
-                    className="w-20 sm:w-24 h-auto aspect-[3/4] rounded-xl object-cover border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0 group-hover:scale-105 transition-transform duration-300"
+                    className="w-32 sm:w-36 md:w-44 h-auto aspect-[3/4] rounded-2xl object-cover border-2 border-cyan-400/60 shadow-[0_0_25px_rgba(56,189,248,0.35)] shrink-0 group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                     decoding="async"
                   />
 
                   <div className="space-y-2 text-center sm:text-left min-w-0 flex-1">
-                    <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide">
+                    <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide">
                       Sillow Mill — Bingäa (Collector's Graphic Novel)
                     </h4>
-                    <p className="text-[11px] sm:text-xs text-white/75 font-sans leading-relaxed">
+                    <p className="text-xs sm:text-[13px] text-white/75 font-sans leading-relaxed">
                       The definitive physical graphic story and official 2D blueprint of the Sillow Mill universe. Printed on heavyweight 170gsm archival paper with bioluminescent foil stamping, this collector's volume details the origin story—from an iconic snow dance in Leuven to the first convergence of Sillow, Odi, and Mill on the core world of Äkinoya.
                     </p>
-                    <p className="text-[11.5px] font-sans text-emerald-300 font-bold flex items-center justify-center sm:justify-start gap-1.5 pt-0.5">
+                    <p className="text-xs font-sans text-emerald-300 font-bold flex items-center justify-center sm:justify-start gap-1.5 pt-0.5">
                       <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                       <span>Includes the Digital Copy of Bingäa for free!</span>
                     </p>
@@ -389,7 +478,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 <button
                   type="button"
                   onClick={handleComicClick}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_30px_rgba(56,189,248,0.5)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[46px] transform-gpu hover:scale-[1.01]"
+                  className="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_30px_rgba(56,189,248,0.5)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[48px] transform-gpu hover:scale-[1.01]"
                 >
                   <ShoppingBag className="w-4 h-4 shrink-0" />
                   <span>View Comic &amp; Order</span>
@@ -439,16 +528,22 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
             {/* Price Presentation (Crystal Clear, Large, High-End Typography & Psychological Value Comparison) */}
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#151105] to-black border border-amber-400/40 space-y-2">
               <div className="flex items-baseline gap-2.5 flex-wrap">
-                <span className="text-3xl sm:text-4xl lg:text-5xl font-display font-black text-amber-300 tracking-tight drop-shadow-[0_2px_15px_rgba(245,158,11,0.35)]">
-                  € 60
+                <span className="text-3xl sm:text-4xl lg:text-5xl font-display font-black text-amber-300 tracking-tight drop-shadow-[0_2px_15px_rgba(245,158,11,0.35)] whitespace-nowrap inline-flex items-baseline gap-1.5">
+                  <span>€</span>
+                  <span>60</span>
                 </span>
-                <span className="text-xs sm:text-sm font-mono text-amber-200/80 font-bold uppercase tracking-wider">
-                  / year (~€ 5 / month)
+                <span className="text-xs sm:text-sm font-mono text-amber-200/80 font-bold uppercase tracking-wider whitespace-nowrap inline-flex items-baseline gap-1">
+                  <span>/ year (~</span>
+                  <span className="whitespace-nowrap inline-flex items-baseline gap-0.5">
+                    <span>€</span>
+                    <span>5</span>
+                  </span>
+                  <span>/ month)</span>
                 </span>
               </div>
-              <div className="text-[11px] sm:text-xs font-mono text-emerald-300 flex items-center gap-1.5 font-bold">
+              <div className="text-[11px] sm:text-xs font-mono text-emerald-300 flex items-center gap-1.5 font-bold flex-wrap">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Separate digital total is €70.97+ · Save immediately on day one while getting everything all-inclusive</span>
+                <span>Separate digital total is <span className="whitespace-nowrap inline-flex items-baseline gap-0.5"><span>€</span><span>70.97+</span></span> · Save immediately on day one while getting everything all-inclusive</span>
               </div>
             </div>
 
@@ -552,7 +647,14 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
           </div>
 
           <div className="pt-4 mt-4 border-t border-amber-500/20 text-[10.5px] font-mono text-amber-200/60 flex items-center justify-between">
-            <span>Auto-renews annually via Stripe (€60/yr)</span>
+            <span className="whitespace-nowrap inline-flex items-baseline gap-1">
+              <span>Auto-renews annually via Stripe (</span>
+              <span className="whitespace-nowrap inline-flex items-baseline gap-0.5">
+                <span>€</span>
+                <span>60</span>
+              </span>
+              <span>/yr)</span>
+            </span>
             <button
               type="button"
               onClick={() => {
@@ -570,102 +672,6 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
           </div>
         </div>
       </div>
-
-      {/* Add-on Detail & Pre-Order Modal */}
-      <AnimatePresence>
-        {activeAddonModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="relative w-full max-w-lg bg-[#070b14] border border-cyan-400/40 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4"
-            >
-              <button
-                type="button"
-                onClick={() => setActiveAddonModal(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="space-y-1">
-                <span className="text-[10px] font-mono font-bold text-cyan-300 bg-cyan-950/80 px-2.5 py-0.5 rounded-full border border-cyan-400/30">
-                  {activeAddonModal.badge}
-                </span>
-                <h3 className="text-lg sm:text-xl font-display font-bold text-white pt-1">
-                  {activeAddonModal.title}
-                </h3>
-                <div className="text-xl font-display font-extrabold text-cyan-300">
-                  {activeAddonModal.price}
-                </div>
-              </div>
-
-              <p className="text-xs sm:text-sm text-white/75 font-sans leading-relaxed">
-                {activeAddonModal.description}
-              </p>
-
-              <div className="space-y-2 pt-2 border-t border-white/10">
-                <span className="text-[10.5px] font-mono font-bold text-white/50 uppercase">
-                  Included in this pack:
-                </span>
-                <ul className="space-y-1.5 text-xs text-white/80 font-sans">
-                  {activeAddonModal.features.map((f, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Pro-tip: Included in Member Pass */}
-              <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-400/30 space-y-1 text-xs">
-                <div className="font-mono font-bold text-amber-300 flex items-center gap-1.5">
-                  <Crown className="w-3.5 h-3.5" />
-                  <span>Pro-tip: Included in Member Pass</span>
-                </div>
-                <p className="text-white/70 font-sans text-[11.5px]">
-                  Join the Membership Pass (€60/year) to receive this pack plus all other digital extras and monthly drops for free.
-                </p>
-              </div>
-
-              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveAddonModal(null);
-                    handleJoinPassClick();
-                  }}
-                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-mono font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(245,158,11,0.3)]"
-                >
-                  <Crown className="w-4 h-4" />
-                  <span>Get with Pass (€60/yr)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveAddonModal(null);
-                    if (!isAuthenticated) {
-                      if (onOpenAuthModal) onOpenAuthModal();
-                      else openAuthModal('signup', 'Create your account to secure your purchases with our Never Lose Your Files guarantee.');
-                      return;
-                    }
-                    alert(
-                      `${activeAddonModal.title} (${activeAddonModal.price}) has been reserved and linked to your account with our 'Never Lose Your Files' guarantee. Complete download bundle unlocks on January 9, 2027.`
-                    );
-                  }}
-                  className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-mono text-xs cursor-pointer text-center"
-                >
-                  Pre-Order Pack Only
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </section>
   );
 };

@@ -820,7 +820,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       fileFormat: 'PDF LORE PREVIEW',
       fileSize: '114.8 MB · 300 DPI CMYK',
       description:
-        'Read-only digital lore preview and narrative teaser sequence. Note: The full official 32-page print edition of "Bingäa" is sold separately as a physical collector\'s item (€14,99) and is not included as a free digital download.',
+        'Read-only digital lore preview and narrative teaser sequence. Note: The full official 32-page print edition of "Bingäa" is sold separately as a physical collector\'s item (€ 14.99) and is not included as a free digital download.',
       downloadUrl: BINGAA_PDF_URL,
       fileName: BINGAA_PDF_FILENAME,
       heroBannerUrl: moodboardImg,
