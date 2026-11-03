@@ -52,7 +52,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <header
-      className="hub-sticky-header sticky top-0 z-50 isolate w-full max-w-full box-border border-b border-white/10 bg-[#0a0b10]/90 backdrop-blur-xl px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 xl:px-10 py-2 sm:py-2.5 lg:py-3 transform-gpu will-change-transform [backface-visibility:hidden] [-webkit-backface-visibility:hidden]"
+      className="hub-sticky-header sticky top-0 z-50 isolate w-full max-w-full box-border border-b border-white/15 bg-[#060a14]/98 backdrop-blur-2xl px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 xl:px-10 py-2 sm:py-2.5 lg:py-3 transform-gpu will-change-transform shadow-[0_4px_30px_rgba(0,0,0,0.95)] [backface-visibility:hidden] [-webkit-backface-visibility:hidden]"
       style={{
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',

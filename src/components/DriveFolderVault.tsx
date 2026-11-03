@@ -331,8 +331,8 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       displayName: '03 · Audio Masters & DAW Templates',
       shortName: '03 · Audio Masters',
       richIcon: '🎵',
-      category: 'Studio audio masters & Ableton .als templates',
-      itemCount: 4,
+      category: 'Studio audio masters, Logic Pro & Ableton templates',
+      itemCount: 5,
       totalSize: '537.0 MB',
       isLocked: true,
       files: [
@@ -362,6 +362,17 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         },
         {
           id: 'file-03-3',
+          name: 'Akinoya_Vocal_Chain_Logic_Pro_Template.logicx',
+          extension: 'LOGICX',
+          size: '56 MB',
+          typeBadge: 'Logic Pro Template',
+          badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+          modified: 'Oct 14, 2026',
+          isLocked: true,
+          description: 'Dedicated Logic Pro project template featuring Odi\'s custom vocal chain routing, bus compression, tuned delays, and vocal processing presets.',
+        },
+        {
+          id: 'file-03-4',
           name: 'Akinoya_Modular_Synth_Ableton_Template.als',
           extension: 'ALS',
           size: '48 MB',
@@ -372,7 +383,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           description: 'Production DAW project file with routing, custom operator chains, and analog saturation racks ready to load.',
         },
         {
-          id: 'file-03-4',
+          id: 'file-03-5',
           name: 'Analog_Drones_432Hz_SubBass_Impulse.wav',
           extension: 'WAV',
           size: '64 MB',

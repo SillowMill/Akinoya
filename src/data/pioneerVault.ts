@@ -84,8 +84,8 @@ export const VAULT_PRODUCTS: VaultProduct[] = [
   },
   {
     id: 'production-workflow-assets',
-    name: 'Complete Production & Workflow Assets',
-    subtitle: 'Presets, DAW templates, project breakdowns',
+    name: '2D Visualizer Production & Logic Pro Assets',
+    subtitle: 'Presets, vocal chains & Logic Pro template',
     priceRangeLabel: '€29,99 – €39,99',
     listPrice: 34.99,
     memberLabel: 'FREE',

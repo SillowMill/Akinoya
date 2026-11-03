@@ -221,6 +221,19 @@ const enrichProfile = (
 
   const regDate = raw.created_at || new Date().toISOString();
   const isPioneer = new Date(regDate).getTime() < new Date('2027-01-09T00:00:00+01:00').getTime();
+  const normalizedUserEmail = (raw.email || '').trim().toLowerCase();
+  const normalizedUserFirst = (first || '').trim().toLowerCase();
+  const isOdiProfile =
+    normalizedUserEmail === 'odi.selis3@gmail.com' ||
+    normalizedUserEmail === 'odi@sillowmill.com' ||
+    normalizedUserEmail === 'sillowmill@gmail.com' ||
+    normalizedUserEmail.includes('odi.selis') ||
+    normalizedUserFirst === 'odi';
+  const isEstherProfile =
+    normalizedUserEmail === 'estherphilippen@msn.com' ||
+    normalizedUserEmail.includes('esther') ||
+    normalizedUserFirst.includes('esther');
+
   const storedSector =
     typeof window !== 'undefined'
       ? (() => {
@@ -234,6 +247,10 @@ const enrichProfile = (
               sessionStorage.removeItem('sillow_claimed_sector');
               return null;
             }
+            // Strict account-binding: if the record specifies a holderEmail, it must match this profile
+            if (parsed?.holderEmail && normalizedUserEmail && parsed.holderEmail.toLowerCase().trim() !== normalizedUserEmail) {
+              return null;
+            }
             return name || null;
           } catch {
             return null;
@@ -244,6 +261,10 @@ const enrichProfile = (
   const claimedSector =
     rawClaimed && !rawClaimed.toLowerCase().includes('zephyria')
       ? rawClaimed
+      : isEstherProfile
+      ? 'Felix'
+      : isOdiProfile
+      ? 'Ämlemi'
       : storedSector || null;
 
   return {

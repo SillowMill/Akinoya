@@ -5532,7 +5532,7 @@ apiRouter.post(["/waitlist/submit", "/api/waitlist/submit"], async (req, res) =>
     });
     res.status(200).json({
       success: true,
-      message: "Planet request queued for batch synthesis. World will be revealed 9 januari.",
+      message: "Planet request queued for batch synthesis. World will be revealed 9 January.",
       data: {
         email,
         firstName,

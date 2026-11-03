@@ -938,7 +938,7 @@ export const CURATED_GALAXY_WORLD_NAMES = new Set([
 export const WORLD_RELEASE_DATE_LABEL = 'JANUARY 9, 2027';
 export const WORLD_QUEUE_STATUS_LABEL = 'PRIVATE UNTIL RELEASE';
 export const WORLD_QUEUE_OFFICIAL_MESSAGE =
-  'Your world is loading, will be revealed 9 januari.';
+  'Your world is loading, will be revealed 9 January.';
 
 /**
  * Strictly verifies whether a planet is one of the 5 official canon pioneer worlds
@@ -1766,29 +1766,76 @@ export const fetchPlanetSubmissions = async (voterId?: string, voterEmail?: stri
 };
 
 // Check if a specific user already has a golden ticket submission
-export const getUserContestSubmission = (userId?: string, email?: string): PlanetSubmission | null => {
+export const getUserContestSubmission = (
+  userId?: string,
+  email?: string,
+  nameOrUsername?: string
+): PlanetSubmission | null => {
   const normalizedEmail = (email || '').trim().toLowerCase();
+  const normalizedName = (nameOrUsername || '').trim().toLowerCase();
   const submissions = getStoredPlanetSubmissions();
+
+  // Strict Account Ownership: Odi -> Ämlemi (#01 Founding Core)
   const isOdi =
     normalizedEmail === 'odi.selis3@gmail.com' ||
     normalizedEmail === 'odi@sillowmill.com' ||
     normalizedEmail === 'sillowmill@gmail.com' ||
+    normalizedEmail.includes('odi.selis') ||
+    normalizedName.includes('odi selis') ||
+    normalizedName === 'odiselis' ||
+    normalizedName === 'odi' ||
     userId === 'user-odi-founder' ||
     userId === 'user-odi-genesis';
 
-  // Check explicit own created planet id stored during creation
+  if (isOdi) {
+    const amlemi = submissions.find(
+      (s) =>
+        (s.id === 'planet-amlemi-genesis-01' || s.planetName === 'Ämlemi') &&
+        !isForbiddenSubmission(s)
+    );
+    if (amlemi) return amlemi;
+  }
+
+  // Strict Account Ownership: Esther -> Felix (#02 VIP Frontier)
+  const isEsther =
+    normalizedEmail === 'estherphilippen@msn.com' ||
+    normalizedEmail.includes('esther') ||
+    normalizedName.includes('esther') ||
+    userId === 'user-esther-vip-001';
+
+  if (isEsther) {
+    const felix = submissions.find(
+      (s) =>
+        (s.id === 'planet-felix-vip-02' || s.planetName === 'Felix') &&
+        !isForbiddenSubmission(s)
+    );
+    if (felix) return felix;
+  }
+
+  // Check explicit own created planet id strictly scoped to this user account
   let ownId: string | null = null;
   if (typeof window !== 'undefined') {
     try {
-      ownId =
-        (normalizedEmail && localStorage.getItem(`akinoya_own_created_planet_id_${normalizedEmail}`)) ||
-        (userId && localStorage.getItem(`akinoya_own_created_planet_id_${userId}`)) ||
-        localStorage.getItem('akinoya_own_created_planet_id') ||
-        sessionStorage.getItem('akinoya_own_created_planet_id');
+      if (normalizedEmail) {
+        ownId =
+          localStorage.getItem(`akinoya_own_created_planet_id_${normalizedEmail}`) ||
+          sessionStorage.getItem(`akinoya_own_created_planet_id_${normalizedEmail}`);
+      }
+      if (!ownId && userId) {
+        ownId =
+          localStorage.getItem(`akinoya_own_created_planet_id_${userId}`) ||
+          sessionStorage.getItem(`akinoya_own_created_planet_id_${userId}`);
+      }
+      // Only fall back to un-namespaced local ID if user is completely anonymous/unauthenticated
+      if (!ownId && !normalizedEmail && !userId) {
+        ownId =
+          localStorage.getItem('akinoya_own_created_planet_id') ||
+          sessionStorage.getItem('akinoya_own_created_planet_id');
+      }
     } catch {}
   }
 
-  // Check claimed sector name from local sector reservation
+  // Check claimed sector name from local sector reservation ONLY if matching this account
   let claimedSectorName = '';
   if (typeof window !== 'undefined') {
     try {
@@ -1796,11 +1843,13 @@ export const getUserContestSubmission = (userId?: string, email?: string): Plane
       if (rawClaim) {
         const parsed = JSON.parse(rawClaim);
         const name = (parsed.sectorName || '').trim().toLowerCase();
-        if (name && !name.includes('zephyria')) {
+        const holderEmail = (parsed.holderEmail || '').trim().toLowerCase();
+        if (
+          name &&
+          !name.includes('zephyria') &&
+          (!normalizedEmail || !holderEmail || holderEmail === normalizedEmail)
+        ) {
           claimedSectorName = name;
-        } else {
-          localStorage.removeItem('sillow_claimed_sector');
-          sessionStorage.removeItem('sillow_claimed_sector');
         }
       }
     } catch {}
@@ -1812,14 +1861,17 @@ export const getUserContestSubmission = (userId?: string, email?: string): Plane
       ((userId && s.userId === userId) ||
         (normalizedEmail && s.authorEmail && s.authorEmail.toLowerCase() === normalizedEmail) ||
         (ownId && s.id === ownId) ||
-        (claimedSectorName && s.planetName && s.planetName.toLowerCase() === claimedSectorName) ||
-        (isOdi && (s.id === 'planet-amlemi-genesis-01' || s.planetName === 'Ämlemi')))
+        (claimedSectorName && s.planetName && s.planetName.toLowerCase() === claimedSectorName))
   );
   return match || null;
 };
 
-export const fetchUserContestSubmission = async (userId?: string, email?: string): Promise<PlanetSubmission | null> => {
-  const localMatch = getUserContestSubmission(userId, email);
+export const fetchUserContestSubmission = async (
+  userId?: string,
+  email?: string,
+  nameOrUsername?: string
+): Promise<PlanetSubmission | null> => {
+  const localMatch = getUserContestSubmission(userId, email, nameOrUsername);
   if (localMatch) return localMatch;
 
   if (isSupabaseConfigured && (userId || email)) {

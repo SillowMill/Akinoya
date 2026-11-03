@@ -259,7 +259,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                       </span>
                     </div>
                     <p className="text-[11px] sm:text-xs text-white/60 font-sans leading-relaxed">
-                      Complete 48-page graphic novel with interactive viewer &amp; 4K download.
+                      Complete graphic novel with interactive viewer &amp; 4K download.
                     </p>
                   </div>
                 </div>
@@ -274,9 +274,9 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                         badge: '4K GRAPHIC NOVEL',
                         price: '€ 9.99',
                         description:
-                          'The full 48-page digital edition of the Bingäa graphic novel in pristine 4K resolution, readable in browser or downloaded as DRM-free PDF.',
+                          'The complete digital edition of the Bingäa graphic novel in pristine 4K resolution, readable in browser or downloaded as DRM-free PDF.',
                         features: [
-                          'Complete 48-page full-color graphic novel',
+                          'Complete full-color graphic novel',
                           'Interactive dual-page flipbook reader',
                           'High-DPI PDF storyboard edition',
                           'Included FREE with physical comic OR Membership Pass',
@@ -291,7 +291,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 </div>
               </div>
 
-              {/* 3. Complete Production & Workflow Assets */}
+              {/* 3. 2D Visualizer Production & Logic Pro Assets */}
               <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-cyan-400/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 mt-0.5 sm:mt-0">
@@ -300,14 +300,14 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <h4 className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
-                        Complete Production &amp; Workflow Assets
+                        2D Visualizer Production &amp; Logic Pro Assets
                       </h4>
                       <span className="text-[9.5px] font-mono text-cyan-300/80 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/20 hidden sm:inline">
-                        DAW ASSETS
+                        VISUALIZERS &amp; LOGIC PRO
                       </span>
                     </div>
                     <p className="text-[11px] sm:text-xs text-white/60 font-sans leading-relaxed">
-                      Presets, DAW templates, vocal racks &amp; 2D visualizer behind-the-scenes breakdowns.
+                      2D visualizer workflow, custom presets, vocal chains &amp; dedicated Logic Pro template.
                     </p>
                   </div>
                 </div>
@@ -318,15 +318,17 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     type="button"
                     onClick={() =>
                       handleAddonClick({
-                        title: 'Complete Production & Workflow Assets',
-                        badge: 'DAW PRESETS & TEMPLATES',
+                        title: '2D Visualizer Production & Logic Pro Assets',
+                        badge: '2D VISUALIZER WORKFLOW & LOGIC PRO',
                         price: '€ 29.99',
                         description:
-                          'The complete 2D visualizer behind-the-scenes production process, structured across the 5 vault folders unlocking on January 9, 2027: Storyboards, Character Anchors, Audio Masters, 3D Previs & Prompt Bibles.',
+                          'The complete 2D visualizer workflow and behind-the-scenes production architecture, including production presets, vocal chain setup, and a dedicated Logic Pro template featuring Odi\'s custom vocal chain routing.',
                         features: [
+                          'Dedicated Logic Pro Template with custom vocal chain routing & processing',
+                          '2D Visualizer Behind-the-Scenes Production Pipeline',
                           '01 · Storyboards & Script Blueprints (2.39:1 framing specs)',
                           '02 · Art Direction & Character Anchors (Turnarounds & moodboards)',
-                          '03 · Audio Masters & DAW Templates (Ableton & Bitwig project files)',
+                          '03 · Audio Masters & Stems',
                           '04 · Blender 3D Previs & Cockpit Rigs (.blend rigs & geometry nodes)',
                           '05 · Prompt Engineering Bibles (VFX & AI cinematic prompt parameters)',
                           'Also included 100% FREE with the Membership Pass',
@@ -480,7 +482,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     ✓
                   </span>
                   <span>
-                    <strong className="text-white">Complete Production &amp; Workflow Assets</strong> (Presets, DAW templates, breakdowns)
+                    <strong className="text-white">2D Visualizer Production &amp; Logic Pro Assets</strong> (Presets, vocal chains &amp; Logic Pro template)
                   </span>
                 </li>
 

@@ -435,9 +435,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       const emailNorm = (email || '').toLowerCase().trim();
       const userIdNorm = (userId || '').toLowerCase().trim();
       const storedList = getStoredPlanetSubmissions();
+      const userDisplayName = profile?.full_name || profile?.first_name || '';
 
-      // Check if user has an existing submission or custom created planet
-      let localMatch = getUserContestSubmission(userId, email);
+      // Check if user has an existing submission or custom created planet (strictly account-bound)
+      let localMatch = getUserContestSubmission(userId, email, userDisplayName);
+
+      // Check profile claimed sector
+      if (!localMatch && profile?.claimed_sector) {
+        const sector = profile.claimed_sector.trim().toLowerCase();
+        localMatch =
+          storedList.find(
+            (p) =>
+              p.planetName &&
+              p.planetName.toLowerCase() === sector &&
+              !isForbiddenSubmission(p)
+          ) || null;
+      }
 
       // If no direct submission yet, but user has an active sector claim (e.g. Hout or Aethelgard)
       if (
@@ -515,7 +528,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       ) {
         setUserDossier(localMatch);
       } else if (userId || email) {
-        fetchUserContestSubmission(userId, email).then((sub) => {
+        fetchUserContestSubmission(userId, email, userDisplayName).then((sub) => {
           if (
             sub &&
             !isForbiddenSubmission(sub) &&
@@ -1474,39 +1487,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   };
 
   const getNavButtonTouchHandlers = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy') => ({
-    onMouseDown: (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.preventDefault();
+    onTouchStart: () => {
+      setTappingTab(id);
     },
-    onTouchStart: (e: React.TouchEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-      const t = e.touches[0];
-      if (t) {
-        navTouchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now(), id };
-      }
-    },
-    onTouchEnd: (e: React.TouchEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-      const start = navTouchStartRef.current;
-      navTouchStartRef.current = null;
-      const t = e.changedTouches[0];
-      if (!start || !t || start.id !== id) return;
-      const dx = Math.abs(t.clientX - start.x);
-      const dy = Math.abs(t.clientY - start.y);
-      const dt = Date.now() - start.time;
-      if (dx < 22 && dy < 22 && dt < 700) {
-        if (e.cancelable) {
-          e.preventDefault();
-        }
-        lastTouchNavTimeRef.current = Date.now();
-        activateNavItem(id);
-      }
+    onTouchEnd: () => {
+      setTappingTab(null);
     },
     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      if (Date.now() - lastTouchNavTimeRef.current < 500) {
-        e.preventDefault();
-        return;
-      }
       activateNavItem(id);
     },
   });
@@ -2761,8 +2749,75 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </button>
                     </div>
 
-                    {/* The 5 Pioneer Worlds Interactive Quick-Cards Strip */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 pt-2">
+                    {/* Mobile Fluid Swipe Carousel (<768px): smooth swipe without cropped or half-cut widgets */}
+                    <div
+                      className="flex md:hidden items-stretch gap-3 overflow-x-auto snap-x snap-mandatory pt-2 pb-2 px-0.5 no-scrollbar scroll-smooth touch-pan-x"
+                      style={{ WebkitOverflowScrolling: 'touch' }}
+                    >
+                      {INITIAL_SUBMISSIONS.slice(0, 5).map((pioneer, idx) => {
+                        const isSelected =
+                          activeWorldDossier?.id === pioneer.id ||
+                          activeWorldDossier?.planetName?.toLowerCase() === pioneer.planetName?.toLowerCase();
+                        const photoCards = getPlanetPhotoCards(pioneer);
+                        const thumb = photoCards[0]?.url || pioneer.renders?.hero;
+                        return (
+                          <button
+                            key={pioneer.id}
+                            type="button"
+                            onClick={() => {
+                              soundManager.playTone(600 + idx * 30, 0.04);
+                              setUserDossier(pioneer);
+                            }}
+                            className={`shrink-0 w-[78vw] max-w-[280px] snap-center p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden min-h-[102px] transform-gpu ${
+                              isSelected
+                                ? 'bg-gradient-to-b from-amber-950/80 via-cyan-950/70 to-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/80'
+                                : 'bg-[#040917]/90 hover:bg-[#08122c] border-cyan-400/30'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 w-full mb-1">
+                              <span
+                                className={`text-[10px] font-mono font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                  idx === 0
+                                    ? 'bg-amber-400 text-black font-black'
+                                    : 'bg-cyan-950/90 text-cyan-300 border border-cyan-400/40'
+                                }`}
+                              >
+                                {idx === 0 ? '👑 #01 PIONEER' : `#0${idx + 1} PIONEER`}
+                              </span>
+                              <span className="text-[10px] font-mono text-cyan-300/80 font-bold">
+                                {pioneer.sectorId || `SEC-0${idx + 1}`}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2.5 mt-1.5">
+                              {thumb && (
+                                <img
+                                  src={thumb}
+                                  alt={pioneer.planetName}
+                                  className="w-8 h-8 rounded-full object-cover border border-amber-400/50 shrink-0"
+                                  loading="lazy"
+                                />
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <h4 className="text-sm font-display font-black text-white truncate uppercase tracking-wide">
+                                  {pioneer.planetName}
+                                </h4>
+                                <p className="text-[11px] font-mono text-white/60 truncate">
+                                  by {pioneer.authorName}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Mobile swipe indicator */}
+                    <div className="flex md:hidden items-center justify-between px-1 text-[10px] font-mono text-white/40">
+                      <span>Swipe to explore Pioneer Worlds →</span>
+                      <span>1–5</span>
+                    </div>
+
+                    {/* Desktop & Tablet Pristine Grid (>=768px): multi-card layout intact */}
+                    <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 pt-2">
                       {INITIAL_SUBMISSIONS.slice(0, 5).map((pioneer, idx) => {
                         const isSelected =
                           activeWorldDossier?.id === pioneer.id ||
@@ -2863,7 +2918,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
 
                       <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide">
-                        Your world is loading, will be revealed 9 januari
+                        Your world is loading, will be revealed 9 January
                       </h2>
 
                       <p className="text-xs sm:text-sm font-sans text-cyan-100/80 leading-relaxed">
@@ -3790,19 +3845,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         createPortal(
           <nav
             aria-label="Mobile Sci-Fi Bottom Navigation"
-            className="scifi-bottom-nav scifi-homepage-bottom-nav portrait-mobile-only select-none"
+            className="scifi-bottom-nav scifi-homepage-bottom-nav portrait-mobile-only select-none bg-[#060a14]/98 backdrop-blur-2xl border-t border-cyan-500/35 shadow-[0_-12px_40px_rgba(0,0,0,0.95)]"
             style={{
               position: 'fixed',
               bottom: 0,
               left: 0,
+              right: 0,
               width: '100%',
-              zIndex: 9999,
-              paddingBottom: 'env(safe-area-inset-bottom, 16px)',
+              zIndex: 99999,
+              paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom, 0.6rem))',
               pointerEvents: 'auto',
               touchAction: 'manipulation',
+              transform: 'translateZ(0)',
+              WebkitTransform: 'translateZ(0)',
             }}
-            onTouchStart={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
           >
             {/* Hardware-Accelerated Neon Underline Scanner Beam */}
             <div className="scifi-scanner-track scifi-scanner-track-top">
@@ -3841,8 +3897,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   <button
                     key={id}
                     type="button"
+                    style={{ touchAction: 'manipulation' }}
                     {...getNavButtonTouchHandlers(id)}
-                    className={`scifi-nav-item flex flex-col items-center justify-center gap-1 py-1.5 px-0.5 rounded-xl cursor-pointer min-h-[48px] sm:min-h-[50px] min-w-0 ${
+                    className={`scifi-nav-item flex flex-col items-center justify-center gap-1 py-1 px-0.5 rounded-xl cursor-pointer min-h-[52px] min-w-0 transition-transform active:scale-95 ${
                       isActive ? 'is-active text-cyan-300' : 'text-white/55 hover:text-white/85'
                     } ${isTapping ? 'is-tapping' : ''}`}
                   >

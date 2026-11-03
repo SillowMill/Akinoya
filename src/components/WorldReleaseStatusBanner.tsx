@@ -57,7 +57,7 @@ export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> =
             </span>
           </div>
           <p className="text-xs sm:text-sm text-white/95 font-display font-bold tracking-wide leading-relaxed">
-            Your world is loading, will be revealed 9 januari
+            Your world is loading, will be revealed 9 January
           </p>
           <p className="text-[11px] sm:text-xs text-white/70 font-sans italic leading-relaxed">
             &ldquo;{WORLD_QUEUE_OFFICIAL_MESSAGE}&rdquo;

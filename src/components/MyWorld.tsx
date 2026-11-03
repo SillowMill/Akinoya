@@ -213,7 +213,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
           {dossier.status === 'QUEUED' || (dossier as any).isWaitlist ? (
             <span className="px-3.5 py-2 rounded-xl bg-amber-950/80 border border-amber-400/50 text-amber-300 text-xs font-mono font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.25)] animate-pulse">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Your world is loading, will be revealed 9 januari</span>
+              <span>Your world is loading, will be revealed 9 January</span>
             </span>
           ) : (
             <>
@@ -265,7 +265,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                   PRIVATE PREVIEW · EXPANSION QUEUE
                 </div>
                 <div className="text-xs sm:text-sm text-white/90 font-sans mt-0.5">
-                  Your custom planetary coordinates are safely locked. Full constellation reveal occurs on <strong className="text-amber-300">9 januari 2027</strong>.
+                  Your custom planetary coordinates are safely locked. Full constellation reveal occurs on <strong className="text-amber-300">January 9, 2027</strong>.
                 </div>
               </div>
             </div>
