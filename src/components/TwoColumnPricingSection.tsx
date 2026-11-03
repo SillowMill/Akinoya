@@ -52,9 +52,9 @@ const ADDON_PRODUCTS: AddonProduct[] = [
     badge: 'STUDIO AUDIO STEMS',
     priceValue: '19.99',
     category: 'WAV STEMS',
-    subtitle: 'Studio Acapellas for the whole Dream of Akainoya song tracklist.',
+    subtitle: 'Studio Acapellas of the whole "Dream of Akainoya" tracklist.',
     description:
-      'Studio Acapellas for the whole Dream of Akainoya song tracklist. Dry and wet studio vocal stems, master tempo locked and tuned for remixing and production.',
+      'Studio Acapellas of the whole "Dream of Akainoya" tracklist. Dry and wet studio vocal stems, master tempo locked and tuned for remixing and production.',
     features: [
       'Master studio vocal leads (Dry & Wet)',
       'Harmonies, ad-libs, and backing vocoder tracks',
@@ -86,17 +86,18 @@ const ADDON_PRODUCTS: AddonProduct[] = [
     badge: '2D VISUALIZER WORKFLOW & LOGIC PRO',
     priceValue: '29.99',
     category: 'VISUALIZERS & LOGIC PRO',
-    subtitle: '2D visualizer workflow, custom presets, vocal chains & dedicated Logic Pro template.',
+    subtitle: 'Official 2D visualizer workflow, vocal chain & dedicated Logic Pro template.',
     description:
-      "The complete 2D visualizer workflow and behind-the-scenes production architecture, including production presets, vocal chain setup, and a dedicated Logic Pro template featuring Odi's custom vocal chain routing.",
+      'Full access to the official Community Hub workflow (the Äkinoya workflow), including the 2D visualizer production pipeline, vocal chain (my vocal chain), and dedicated Logic Pro template. (Excludes the separate Vocal Acapella & Remix Pack).',
     features: [
-      'Dedicated Logic Pro Template with custom vocal chain routing & processing',
-      '2D Visualizer Behind-the-Scenes Production Pipeline',
+      'Official Community Hub workflow access (the Äkinoya workflow)',
+      'Dedicated Logic Pro template with vocal chain (my vocal chain)',
+      '2D Visualizer behind-the-scenes production pipeline',
       '01 · Storyboards & Script Blueprints (2.39:1 framing specs)',
       '02 · Art Direction & Character Anchors (Turnarounds & moodboards)',
-      '03 · Audio Masters & Stems',
-      '04 · Blender 3D Previs & Cockpit Rigs (.blend rigs & geometry nodes)',
-      '05 · Prompt Engineering Bibles (VFX & AI cinematic prompt parameters)',
+      '03 · Blender 3D Previs & Cockpit Rigs (.blend rigs & geometry nodes)',
+      '04 · Audio Masters & Stems (excludes standalone Acapella Pack)',
+      '05 · Prompt Engineering Bibles (VFX & cinematic prompt parameters)',
       'Also included 100% FREE with the Membership Pass',
     ],
     icon: Sliders,
@@ -577,7 +578,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     ✓
                   </span>
                   <span>
-                    <strong className="text-white">2D Visualizer Production &amp; Logic Pro Assets</strong> (Presets, vocal chains &amp; Logic Pro template)
+                    <strong className="text-white">2D Visualizer Production &amp; Logic Pro Assets</strong> (Visualizer workflow, vocal chain &amp; Logic Pro template)
                   </span>
                 </li>
 

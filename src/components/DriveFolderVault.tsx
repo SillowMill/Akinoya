@@ -369,7 +369,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
           modified: 'Oct 14, 2026',
           isLocked: true,
-          description: 'Dedicated Logic Pro project template featuring Odi\'s custom vocal chain routing, bus compression, tuned delays, and vocal processing presets.',
+          description: 'Dedicated Logic Pro project template featuring my vocal chain routing, bus compression, tuned delays, and vocal processing.',
         },
         {
           id: 'file-03-4',
