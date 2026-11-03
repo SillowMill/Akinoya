@@ -60,7 +60,6 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       'Master studio vocal leads (Dry & Wet)',
       'Harmonies, ad-libs, and backing vocoder tracks',
       '24-bit / 48kHz uncompressed WAV stems',
-      'Also included with the membership pass for a lower price',
     ],
     icon: MicVocal,
   },
@@ -77,7 +76,7 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       'Complete full-color graphic novel',
       'Interactive dual-page flipbook reader',
       'High-DPI PDF storyboard edition',
-      'Included with physical comic or Annual Membership Pass',
+      'Instant browser reader + DRM-free 4K download',
     ],
     icon: BookOpen,
   },
@@ -99,7 +98,6 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       '03 · Blender 3D Previs & Cockpit Rigs (.blend rigs & geometry nodes)',
       '04 · Audio Masters & Stems (excludes standalone Acapella Pack)',
       '05 · Prompt Engineering Bibles (VFX & cinematic prompt parameters)',
-      'Also included with the membership pass for a lower price',
     ],
     icon: Sliders,
   },
@@ -264,29 +262,24 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
             </div>
 
             {/* Total A La Carte Comparative Worth Banner (Marketing Pricing Trigger) */}
-            <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
-              <div className="space-y-0.5">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 shadow-inner">
+              <div className="space-y-1 min-w-0">
                 <div className="text-[10.5px] font-mono uppercase tracking-wider text-cyan-300 font-extrabold flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                  <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
                   <span>Combined Separate Value</span>
                 </div>
-                <p className="text-xs text-white/75 font-sans leading-relaxed">
+                <p className="text-[11.5px] sm:text-xs text-white/75 font-sans leading-relaxed">
                   Total of all 3 digital packs + physical comic bought separately:
                 </p>
               </div>
 
-              <div className="text-left sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center gap-2">
-                <div className="text-xl sm:text-2xl font-display font-black text-white line-through decoration-red-400/80 decoration-2 whitespace-nowrap inline-flex items-baseline gap-1">
-                  <span>€</span>
-                  <span>74.96</span>
+              {/* Clean Vertical Hierarchy: Total price on its own clear line, qualifying text underneath */}
+              <div className="pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 flex flex-col items-start sm:items-end justify-center shrink-0">
+                <div className="text-2xl sm:text-3xl font-display font-black text-white line-through decoration-rose-400 decoration-2 tracking-tight">
+                  € 74.96
                 </div>
-                <div className="text-[10.5px] font-mono text-cyan-300 font-semibold whitespace-nowrap inline-flex items-baseline gap-1">
-                  <span>(Digital add-ons alone:</span>
-                  <span className="whitespace-nowrap inline-flex items-baseline gap-0.5">
-                    <span>€</span>
-                    <span>70.97+</span>
-                  </span>
-                  <span>)</span>
+                <div className="text-[11px] sm:text-xs font-mono text-cyan-300/90 font-medium pt-0.5">
+                  (Digital add-ons alone: <span className="font-bold text-white">€ 70.97+</span>)
                 </div>
               </div>
             </div>

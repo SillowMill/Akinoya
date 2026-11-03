@@ -1806,7 +1806,7 @@ export const getUserContestSubmission = (
   if (isEsther) {
     const felix = submissions.find(
       (s) =>
-        (s.id === 'planet-felix-vip-02' || s.planetName === 'Felix') &&
+        (s.id === 'planet-felix-test-01' || s.id === 'planet-felix-vip-02' || s.planetName === 'Felix') &&
         !isForbiddenSubmission(s)
     );
     if (felix) return felix;

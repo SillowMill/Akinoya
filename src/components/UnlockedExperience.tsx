@@ -394,7 +394,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   }, []);
 
   const { user, isVip: authIsVip, profile, role, isAuthenticated, openAuthModal } = useAuth();
+  const authHolderName = profile?.first_name ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}` : profile?.full_name || null;
+  const userEmail = (user?.email || profile?.email || '').toLowerCase().trim();
+  const isOdiUser = isFounderEmail(userEmail);
+  const isEstherUser = userEmail === 'estherphilippen@msn.com' || Boolean(authHolderName && authHolderName.toLowerCase().includes('esther'));
+
   const [userDossier, setUserDossier] = useState<PlanetSubmission | null>(null);
+  const [browsedWorldDossier, setBrowsedWorldDossier] = useState<PlanetSubmission | null>(null);
   const [claimedSector, setClaimedSector] = useState<SectorClaimRecord | null>(() => getStoredSectorClaim());
   const [selectedDossierModal, setSelectedDossierModal] = useState<PlanetSubmission | null>(null);
   const [isCopiedDossierLink, setIsCopiedDossierLink] = useState(false);
@@ -652,7 +658,21 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     );
   }, [allCommunityPlanets]);
 
-  const activeWorldDossier = useMemo(() => {
+  // User's strictly account-bound planet dossier (always fetched/bound for My Assets)
+  const accountBoundDossier = useMemo<PlanetSubmission>(() => {
+    // 1. Esther Philippen's account -> Felix (#02 Pioneer)
+    if (isEstherUser) {
+      const felix = allCommunityPlanets.find(
+        (p) =>
+          (p.id === 'planet-felix-test-01' || p.id === 'planet-felix-vip-02' || p.planetName === 'Felix') &&
+          !isForbiddenSubmission(p)
+      ) || INITIAL_SUBMISSIONS.find(
+        (p) => p.id === 'planet-felix-test-01' || p.planetName === 'Felix'
+      );
+      if (felix) return felix;
+    }
+
+    // 2. Logged-in user's custom created/submitted world
     if (
       userDossier &&
       !isForbiddenSubmission(userDossier) &&
@@ -662,10 +682,26 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     ) {
       return userDossier;
     }
-    return amlemiBenchmarkDossier;
-  }, [userDossier, amlemiBenchmarkDossier]);
 
-  const isGuestWorldSimulation = !userDossier || userDossier.id === 'planet-amlemi-genesis-01';
+    // 3. Odi Selis / Founding Benchmark -> Ämlemi (#01 Founding Benchmark)
+    return amlemiBenchmarkDossier;
+  }, [isEstherUser, userDossier, allCommunityPlanets, amlemiBenchmarkDossier]);
+
+  // Pioneer Worlds browsing dossier (strictly for browsing/swiping without modifying accountBoundDossier)
+  const activeBrowseDossier = useMemo<PlanetSubmission>(() => {
+    if (
+      browsedWorldDossier &&
+      !isForbiddenSubmission(browsedWorldDossier) &&
+      browsedWorldDossier.planetName?.toLowerCase() !== 'zephyria'
+    ) {
+      return browsedWorldDossier;
+    }
+    return INITIAL_SUBMISSIONS[0] || amlemiBenchmarkDossier;
+  }, [browsedWorldDossier, amlemiBenchmarkDossier]);
+
+  // Active dossier for the Pioneer Worlds browser
+  const activeWorldDossier = activeBrowseDossier;
+
   // Determine whether the current user/account has actively completed creating/minting a world
   // Note: Having a VIP-pass alone or starting Step 0 sector claim does NOT count until world creation completes.
   const hasUserCreatedWorld = useMemo(() => {
@@ -704,6 +740,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     user?.email,
     user?.id,
   ]);
+
+  const isGuestWorldSimulation = !hasUserCreatedWorld && !isOdiUser && !isEstherUser;
 
   // Master Check: Determine whether the logged-in user (such as Odi as worldbuilder/maker and other VIP pioneers)
   // has claimed a world (user.hasClaimedWorld === true or equivalent status).
@@ -881,17 +919,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
-  const authHolderName = profile?.first_name ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name : ''}` : profile?.full_name || null;
-  const userEmail = (user?.email || profile?.email || '').toLowerCase().trim();
-  const isOdiUser = isFounderEmail(userEmail);
-  const isEstherUser = userEmail === 'estherphilippen@msn.com' || Boolean(authHolderName && authHolderName.toLowerCase().includes('esther'));
-
   const sortedCommunityPlanets = useMemo(() => {
     return [...allCommunityPlanets].sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0));
   }, [allCommunityPlanets]);
   const planetRank = activeWorldDossier
     ? sortedCommunityPlanets.findIndex((p) => p.id === activeWorldDossier.id) + 1
     : 1;
+  const accountBoundRank = accountBoundDossier
+    ? sortedCommunityPlanets.findIndex((p) => p.id === accountBoundDossier.id) + 1
+    : (isEstherUser ? 2 : 1);
   const isVipMode = Boolean(
     Boolean(user || profile) && (
       isVip ||
@@ -1546,9 +1582,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     if (closestPioneer && minDistance < 100 && closestPioneer.id !== lastScrolledPlanetIdRef.current) {
       lastScrolledPlanetIdRef.current = closestPioneer.id;
       soundManager.playTone(720, 0.03);
-      setUserDossier(closestPioneer);
+      setBrowsedWorldDossier(closestPioneer);
     }
-  }, [setUserDossier]);
+  }, [setBrowsedWorldDossier]);
 
   // Comic Pre-Order Checkout States (Streamlined Stripe Checkout)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -2797,23 +2833,28 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 <div className="relative z-10 space-y-5 sm:space-y-6">
                   {/* Header Block: Title, Vision Narrative & Action Buttons Directly Beneath */}
                   <div className="space-y-4 pb-1">
-                    <div className="space-y-2.5 max-w-3xl">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
+                    <div className="space-y-2 max-w-3xl">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
                           <Radar className="w-3 h-3 text-cyan-300 shrink-0" />
                           <span>ÄKINOYA CONSTELLATION NAVIGATOR</span>
                         </span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.4)]">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.4)]">
                           <Sparkles className="w-3 h-3 text-black shrink-0" />
-                          <span>FOUNDING CORE · 5 PIONEER WORLDS</span>
+                          <span>5 PIONEER WORLDS</span>
                         </span>
                       </div>
 
-                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                      <h2 className="text-xl sm:text-3xl md:text-4xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
                         Explore The 5 Pioneer Worlds
                       </h2>
 
-                      <div className="space-y-1.5 text-xs sm:text-sm font-sans leading-relaxed max-w-2xl">
+                      {/* Concise narrative on mobile to save vertical viewport space; full narrative on desktop */}
+                      <p className="block md:hidden text-[11.5px] font-sans text-cyan-100/85 leading-snug">
+                        The Äkinoya cosmos expands beyond the visualizers. Explore the 5 founding pioneer sectors or craft your own world into the 3D galaxy.
+                      </p>
+
+                      <div className="hidden md:block space-y-1.5 text-xs sm:text-sm font-sans leading-relaxed max-w-2xl">
                         <p className="font-bold text-white">
                           Beyond the eleven visualizers, the Äkinoya storyline expands directly into the cosmos you create.
                         </p>
@@ -2823,8 +2864,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
                     </div>
 
-                    {/* Primary Action Buttons Cleanly Positioned Directly Beneath Text Block */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+                    {/* Primary Action Buttons: Compact row on mobile, full size on desktop */}
+                    <div className="flex flex-row items-center gap-2 sm:gap-3 pt-0.5 sm:pt-1">
                       {/* Button 1: View in Äkinoya Galaxy */}
                       <button
                         type="button"
@@ -2839,10 +2880,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
                           }
                         }}
-                        className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:shadow-[0_0_35px_rgba(56,189,248,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                        className="flex-1 sm:flex-initial px-3 sm:px-5 py-2 sm:py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-[11px] sm:text-xs md:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2.5 min-h-[38px] sm:min-h-[48px]"
                       >
-                        <Radar className="w-4 h-4 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
-                        <span>View in Äkinoya Galaxy</span>
+                        <Radar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-300 shrink-0" />
+                        <span>Äkinoya Galaxy</span>
                       </button>
 
                       {/* Button 2: Create Your World */}
@@ -2856,10 +2897,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             window.location.href = '/contest';
                           }
                         }}
-                        className="group relative px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_30px_rgba(245,158,11,0.5)] hover:shadow-[0_0_40px_rgba(245,158,11,0.7)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                        className="flex-1 sm:flex-initial px-3 sm:px-6 py-2 sm:py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-[11px] sm:text-xs md:text-sm shadow-[0_0_30px_rgba(245,158,11,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2.5 min-h-[38px] sm:min-h-[48px]"
                       >
-                        <Sparkles className="w-4 h-4 fill-black text-black shrink-0 group-hover:scale-110 transition-transform duration-200" />
-                        <span>Create Your World</span>
+                        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black shrink-0" />
+                        <span>Create World</span>
                       </button>
                     </div>
 
@@ -2867,7 +2908,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <div
                       ref={mobileCarouselRef}
                       onScroll={handleMobileCarouselScroll}
-                      className="flex md:hidden items-stretch gap-2.5 overflow-x-auto snap-x snap-mandatory pt-2 pb-2 px-1 no-scrollbar scroll-smooth touch-pan-x"
+                      className="flex md:hidden items-stretch gap-2 overflow-x-auto snap-x snap-mandatory pt-1.5 pb-1 px-0.5 no-scrollbar scroll-smooth touch-pan-x"
                       style={{ WebkitOverflowScrolling: 'touch' }}
                     >
                       {INITIAL_SUBMISSIONS.slice(0, 5).map((pioneer, idx) => {
@@ -2883,7 +2924,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             onClick={() => {
                               lastScrolledPlanetIdRef.current = pioneer.id;
                               soundManager.playTone(600 + idx * 30, 0.04);
-                              setUserDossier(pioneer);
+                              setBrowsedWorldDossier(pioneer);
                               if (mobileCarouselRef.current) {
                                 const childEl = mobileCarouselRef.current.children[idx] as HTMLElement;
                                 if (childEl) {
@@ -2891,15 +2932,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 }
                               }
                             }}
-                            className={`shrink-0 w-[64vw] max-w-[220px] snap-center p-2.5 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden min-h-[82px] transform-gpu ${
+                            className={`shrink-0 w-[46vw] max-w-[170px] snap-center p-2 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden min-h-[64px] transform-gpu ${
                               isSelected
-                                ? 'bg-gradient-to-b from-amber-950/80 via-cyan-950/70 to-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/80'
+                                ? 'bg-gradient-to-b from-amber-950/80 via-cyan-950/70 to-black border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/80'
                                 : 'bg-[#040917]/90 hover:bg-[#08122c] border-cyan-400/30'
                             }`}
                           >
                             <div className="flex items-center justify-between gap-1 w-full mb-0.5">
                               <span
-                                className={`text-[9px] font-mono font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                                className={`text-[8.5px] font-mono font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                                   idx === 0
                                     ? 'bg-amber-400 text-black font-black'
                                     : 'bg-cyan-950/90 text-cyan-300 border border-cyan-400/40'
@@ -2907,24 +2948,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               >
                                 {idx === 0 ? '👑 #01 PIONEER' : `#0${idx + 1} PIONEER`}
                               </span>
-                              <span className="text-[9.5px] font-mono text-cyan-300/80 font-bold">
+                              <span className="text-[9px] font-mono text-cyan-300/80 font-bold">
                                 {pioneer.sectorId || `SEC-0${idx + 1}`}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-1.5 mt-0.5">
                               {thumb && (
                                 <img
                                   src={thumb}
                                   alt={pioneer.planetName}
-                                  className="w-7 h-7 rounded-full object-cover border border-amber-400/50 shrink-0"
+                                  className="w-6 h-6 rounded-full object-cover border border-amber-400/50 shrink-0"
                                   loading="lazy"
                                 />
                               )}
                               <div className="min-w-0 flex-1">
-                                <h4 className="text-xs sm:text-sm font-display font-black text-white truncate uppercase tracking-wide">
+                                <h4 className="text-xs font-display font-black text-white truncate uppercase tracking-wide">
                                   {pioneer.planetName}
                                 </h4>
-                                <p className="text-[10px] font-mono text-white/60 truncate">
+                                <p className="text-[9.5px] font-mono text-white/60 truncate">
                                   by {pioneer.authorName}
                                 </p>
                               </div>
@@ -2933,25 +2974,27 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         );
                       })}
                     </div>
-                    {/* Visual Swipe Animation Guide (<768px): Animated Hand Wave + Sector Track Pills */}
-                    <div className="flex md:hidden items-center justify-between px-3 py-2 mt-2 rounded-xl bg-black/50 border border-cyan-500/30 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="flex items-center text-cyan-300 bg-cyan-950/90 border border-cyan-400/50 rounded-full px-2.5 py-1 text-[10px] font-mono font-extrabold tracking-wider shadow-[0_0_12px_rgba(56,189,248,0.3)] shrink-0">
-                          <motion.span
-                            animate={{ x: [-4, 4, -4] }}
-                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                            className="inline-block mr-1 text-xs leading-none"
-                          >
-                            👈👉
-                          </motion.span>
-                          <span>SWIPE TO EXPLORE</span>
-                        </div>
-                        <span className="text-[10.5px] font-mono font-bold text-amber-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)] truncate">
+
+                    {/* Visual Swipe Animation Guide (<768px): Ultra-Compact, Subtle & Non-Overlapping */}
+                    <div className="flex md:hidden items-center justify-between px-2.5 py-1 mt-0.5 rounded-lg bg-black/40 border border-cyan-500/25 backdrop-blur-sm">
+                      {/* Left: Subtle animated directional cues pointing to top cards */}
+                      <div className="flex items-center gap-1.5 text-[9.5px] font-mono text-cyan-300/85 font-bold tracking-wider">
+                        <motion.span
+                          animate={{ x: [-2, 2, -2] }}
+                          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                          className="inline-flex items-center gap-0.5 text-cyan-400 font-extrabold"
+                        >
+                          <span>←</span>
+                          <span>SWIPE CARDS</span>
+                          <span>→</span>
+                        </motion.span>
+                        <span className="text-white/30 text-[9px]">·</span>
+                        <span className="text-amber-300 font-extrabold truncate max-w-[95px]">
                           {activeWorldDossier?.planetName || 'Ämlemi'}
                         </span>
                       </div>
 
-                      {/* 5 Sector Track Interactive Pills */}
+                      {/* Right: 5 Non-Overlapping Interactive Status Dots */}
                       <div className="flex items-center gap-1.5 shrink-0">
                         {INITIAL_SUBMISSIONS.slice(0, 5).map((pioneer, idx) => {
                           const isSelected =
@@ -2963,7 +3006,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               type="button"
                               onClick={() => {
                                 soundManager.playTone(600 + idx * 30, 0.04);
-                                setUserDossier(pioneer);
+                                setBrowsedWorldDossier(pioneer);
                                 if (mobileCarouselRef.current) {
                                   const childEl = mobileCarouselRef.current.children[idx] as HTMLElement;
                                   if (childEl) {
@@ -2971,10 +3014,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                   }
                                 }
                               }}
-                              className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                              className={`h-1.5 rounded-full transition-all duration-200 cursor-pointer ${
                                 isSelected
-                                  ? 'w-6 bg-gradient-to-r from-amber-400 to-yellow-300 ring-2 ring-amber-400/60 shadow-[0_0_10px_rgba(245,158,11,0.7)]'
-                                  : 'w-2.5 bg-white/20 hover:bg-white/40'
+                                  ? 'w-4 bg-gradient-to-r from-amber-400 to-yellow-300 shadow-[0_0_8px_rgba(245,158,11,0.8)]'
+                                  : 'w-1.5 bg-white/25 hover:bg-white/45'
                               }`}
                               aria-label={`Select ${pioneer.planetName} (Sector ${idx + 1})`}
                             />
@@ -2997,7 +3040,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             type="button"
                             onClick={() => {
                               soundManager.playTone(600 + idx * 30, 0.04);
-                              setUserDossier(pioneer);
+                              setBrowsedWorldDossier(pioneer);
                             }}
                             className={`group/card relative p-2.5 sm:p-3 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden min-h-[96px] ${
                               isSelected
@@ -3207,24 +3250,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </p>
                     </div>
 
-                    {/* Stacked Action Buttons: Responsive Column Layout for Touch Interaction on Tablet Portrait */}
+                    {/* Action Buttons: Responsive row on mobile, full size on desktop */}
                     <div
-                      className="w-full max-w-sm sm:max-w-md xl:max-w-none xl:w-auto mx-auto xl:mx-0 flex flex-col xl:flex-row items-stretch xl:items-center gap-3 xl:shrink-0 pt-2 xl:pt-0"
+                      className="w-full xl:w-auto flex flex-row items-center justify-center gap-2 sm:gap-3 xl:shrink-0 pt-1 sm:pt-2 xl:pt-0"
                     >
                       <button
                         type="button"
                         onClick={handleShareDossier}
-                        className="w-full xl:w-auto px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/90 hover:text-white border border-white/20 font-mono text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[48px] shadow-sm active:scale-[0.99]"
+                        className="px-3 sm:px-5 py-2 sm:py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 text-white/90 hover:text-white border border-white/20 font-mono text-[11px] sm:text-xs md:text-sm font-semibold flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer min-h-[38px] sm:min-h-[48px] shadow-sm active:scale-[0.99]"
                       >
                         {isCopiedDossierLink ? (
                           <>
-                            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                            <span className="text-emerald-400 font-bold">Link Copied!</span>
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span className="text-emerald-400 font-bold">Copied!</span>
                           </>
                         ) : (
                           <>
-                            <Share2 className="w-4 h-4 shrink-0" />
-                            <span>Share Dossier</span>
+                            <Share2 className="w-3.5 h-3.5 shrink-0" />
+                            <span>Share</span>
                           </>
                         )}
                       </button>
@@ -3235,11 +3278,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           soundManager.playTone(660, 0.05);
                           setSelectedDossierModal(activeWorldDossier);
                         }}
-                        className="w-full xl:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black font-mono text-xs sm:text-sm font-extrabold shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2.5 transition-all cursor-pointer min-h-[48px]"
+                        className="flex-1 xl:flex-initial px-3 sm:px-6 py-2 sm:py-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black font-mono text-[11px] sm:text-xs md:text-sm font-extrabold shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center gap-1.5 sm:gap-2.5 transition-all cursor-pointer min-h-[38px] sm:min-h-[48px]"
                       >
-                        <Camera className="w-4 h-4 shrink-0" />
+                        <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                         <span>Inspect 5-Photo Dossier</span>
-                        <ArrowRight className="w-4 h-4 shrink-0" />
+                        <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                       </button>
                     </div>
                   </div>
@@ -3409,14 +3452,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
               {/* Asset 01: Differentiated Master Multi-Media Carousel (4K Archive, 9:16 Story Card, 9:16 MP4 Trailer) */}
               <div className="space-y-4">
-                {activeWorldDossier && isQueuedWorld && !isLiveGalaxyWorld(activeWorldDossier) && (
-                  <WorldReleaseStatusBanner dossier={activeWorldDossier} />
+                {accountBoundDossier && isQueuedWorld && !isLiveGalaxyWorld(accountBoundDossier) && (
+                  <WorldReleaseStatusBanner dossier={accountBoundDossier} />
                 )}
-                {activeWorldDossier && (
+                {accountBoundDossier && (
                   <MyAssetsMasterCarousel
-                    dossier={activeWorldDossier}
-                    editionRank={planetRank > 0 ? planetRank : 1}
-                    isSimulationMode={isGuestWorldSimulation}
+                    dossier={accountBoundDossier}
+                    editionRank={accountBoundRank > 0 ? accountBoundRank : (isEstherUser ? 2 : 1)}
+                    isSimulationMode={!isEstherUser && !isOdiUser && !hasUserCreatedWorld}
                     onUnlockSimulation={() => {
                       soundManager.playTone(660, 0.05);
                       if (onNavigateToContest) {

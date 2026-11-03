@@ -1,6 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
-import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -8,10 +6,7 @@ import {
   ChevronRight,
   Download,
   Loader2,
-  AlertCircle,
-  ExternalLink,
   Lock,
-  Check,
   ZoomIn,
   ZoomOut,
   RotateCcw,
@@ -20,31 +15,33 @@ import {
 } from 'lucide-react';
 import { BINGAA_PDF_FILENAME, BINGAA_PDF_URL } from '../utils/certificate';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
-
-interface BingaaComicReaderProps {
+export interface BingaaComicReaderProps {
   onClose: () => void;
   isVerified?: boolean;
 }
 
-type PDFDoc = Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>;
+const TOTAL_PAGES = 10;
+const FREE_PREVIEW_PAGES = 2;
+
+const getPageUrl = (pageIndex: number): string => {
+  const padded = String(pageIndex).padStart(2, '0');
+  return `/assets/comic/page-${padded}.jpg`;
+};
 
 /**
- * Immersive Full-Screen Comic Reader Overlay (Mobile & Tablet)
- * Pure full-screen presentation with backdrop blur, zero clunky containers,
- * floating controls, clear page navigation arrows (Page 1 -> 2),
- * and direct zoom buttons for crystal-clear readability.
+ * Rebuilt High-Performance Immersive Comic Reader Overlay (Mobile, Tablet & Desktop)
+ * - Native hardware-accelerated image presentation (zero PDF parsing freeze)
+ * - Instant page-flipping with preloading (0ms delay)
+ * - Smooth "Ploep" scale & blur entrance transition
+ * - Edge-to-edge full-screen viewing with responsive viewport constraints
+ * - Pinch-to-zoom, double-tap zoom, and floating zoom controls
+ * - Streamlined page navigation arrows (Page 1 ➔ 2 for preview, 1 ➔ 10 for verified)
+ * - Non-blocking, dismissible Chapter 2 lock screen for visitors
  */
 const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerified = false }) => {
-  const stageRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const renderTaskRef = useRef<{ cancel: () => void } | null>(null);
-
-  const [doc, setDoc] = useState<PDFDoc | null>(null);
   const [pageNum, setPageNum] = useState(1);
-  const [isRendering, setIsRendering] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [stageSize, setStageSize] = useState({ w: 0, h: 0 });
+  const [isLoadingPage, setIsLoadingPage] = useState(false);
+  const [showLockedOverlay, setShowLockedOverlay] = useState(false);
 
   // Interactive Zoom & Pan States
   const [zoom, setZoom] = useState<number>(1);
@@ -54,89 +51,46 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
   const initialPinchDistRef = useRef<number | null>(null);
   const initialPinchZoomRef = useRef<number>(1);
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
   const lastTapTimeRef = useRef<number>(0);
 
-  // Locked chapter overlay state for public visitors
-  const [showLockedOverlay, setShowLockedOverlay] = useState(false);
+  const maxPages = isVerified ? TOTAL_PAGES : FREE_PREVIEW_PAGES;
 
-  const total = doc?.numPages ?? 20;
-
-  // Load PDF document
+  // Preload neighboring pages for instant page-flip
   useEffect(() => {
-    let cancelled = false;
-    const task = pdfjsLib.getDocument({ url: BINGAA_PDF_URL, disableAutoFetch: true });
-    task.promise
-      .then((pdf) => {
-        if (!cancelled) setDoc(pdf);
-      })
-      .catch((err) => {
-        console.error('[Reader] Failed to load PDF:', err);
-        if (!cancelled) setLoadError('The comic could not be loaded in the reader.');
-      });
-    return () => {
-      cancelled = true;
-      task.destroy();
-    };
-  }, []);
+    const pagesToPreload = [pageNum, pageNum + 1, pageNum - 1].filter(
+      (p) => p >= 1 && p <= TOTAL_PAGES
+    );
+    pagesToPreload.forEach((p) => {
+      const img = new Image();
+      img.src = getPageUrl(p);
+    });
+  }, [pageNum]);
 
-  // Track stage size dynamically with window resize
-  useEffect(() => {
-    const updateSize = () => {
-      if (typeof window !== 'undefined') {
-        setStageSize({ w: window.innerWidth, h: window.innerHeight });
-      }
-    };
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
-  }, []);
-
-  // Reset zoom & pan when page changes
+  // Reset zoom & pan when switching page
   useEffect(() => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
   }, [pageNum]);
 
-  // Render current page, fitted cleanly edge-to-edge inside the viewport
+  // Keyboard navigation on desktop
   useEffect(() => {
-    if (!doc || !canvasRef.current || stageSize.w === 0 || stageSize.h === 0) return;
-
-    let cancelled = false;
-    setIsRendering(true);
-
-    doc.getPage(pageNum).then((page) => {
-      if (cancelled || !canvasRef.current) return;
-      const base = page.getViewport({ scale: 1 });
-      // Full-screen fit with minimal safe padding for floating controls
-      const maxAvailableW = Math.max(300, stageSize.w - 16);
-      const maxAvailableH = Math.max(400, stageSize.h - 20);
-      const fit = Math.min(maxAvailableW / base.width, maxAvailableH / base.height);
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const viewport = page.getViewport({ scale: fit * dpr });
-
-      const canvas = canvasRef.current;
-      canvas.width = Math.floor(viewport.width);
-      canvas.height = Math.floor(viewport.height);
-      canvas.style.width = `${Math.floor(viewport.width / dpr)}px`;
-      canvas.style.height = `${Math.floor(viewport.height / dpr)}px`;
-
-      renderTaskRef.current?.cancel();
-      const task = page.render({ canvasContext: canvas.getContext('2d')!, viewport });
-      renderTaskRef.current = task;
-      task.promise
-        .then(() => {
-          if (!cancelled) setIsRendering(false);
-        })
-        .catch((err: any) => {
-          if (err?.name !== 'RenderingCancelledException') console.error('[Reader] Render error:', err);
-        });
-    });
-
-    return () => {
-      cancelled = true;
-      renderTaskRef.current?.cancel();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showLockedOverlay) {
+          setShowLockedOverlay(false);
+        } else {
+          onClose();
+        }
+      } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        goNext();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        goPrev();
+      }
     };
-  }, [doc, pageNum, stageSize.w, stageSize.h]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, showLockedOverlay, pageNum, isVerified]);
 
   const goPrev = useCallback(() => {
     setShowLockedOverlay(false);
@@ -144,14 +98,14 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
   }, []);
 
   const goNext = useCallback(() => {
-    if (!isVerified && pageNum >= 2) {
+    if (!isVerified && pageNum >= FREE_PREVIEW_PAGES) {
       setShowLockedOverlay(true);
       return;
     }
-    setPageNum((p) => Math.min(total, p + 1));
-  }, [isVerified, pageNum, total]);
+    setPageNum((p) => Math.min(maxPages, p + 1));
+  }, [isVerified, pageNum, maxPages]);
 
-  // Zoom controls
+  // Direct Zoom Controls
   const handleZoomIn = () => {
     setZoom((z) => Math.min(2.5, Number((z + 0.35).toFixed(2))));
   };
@@ -171,54 +125,34 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
   const clampPan = (x: number, y: number, currentZoom: number) => {
     if (currentZoom <= 1) return { x: 0, y: 0 };
-    const maxPanX = (stageSize.w * (currentZoom - 1)) / 1.8;
-    const maxPanY = (stageSize.h * (currentZoom - 1)) / 1.8;
+    const maxBoundX = (window.innerWidth * (currentZoom - 1)) / 1.7;
+    const maxBoundY = (window.innerHeight * (currentZoom - 1)) / 1.7;
     return {
-      x: Math.max(-maxPanX, Math.min(maxPanX, x)),
-      y: Math.max(-maxPanY, Math.min(maxPanY, y)),
+      x: Math.max(-maxBoundX, Math.min(maxBoundX, x)),
+      y: Math.max(-maxBoundY, Math.min(maxBoundY, y)),
     };
   };
 
+  // Double-tap or double-click to toggle zoom
   const handleDoubleTap = () => {
     if (zoom > 1) {
       handleResetZoom();
     } else {
-      setZoom(1.8);
-      setPan({ x: 0, y: 0 });
+      setZoom(1.85);
     }
   };
 
-  // Keyboard navigation & scroll lock
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') goPrev();
-      else if (e.key === 'ArrowRight') goNext();
-      else if (e.key === 'Escape') onClose();
-      else if (e.key === '+' || e.key === '=') handleZoomIn();
-      else if (e.key === '-') handleZoomOut();
-      else if (e.key === '0') handleResetZoom();
-    };
-    window.addEventListener('keydown', onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [goPrev, goNext, onClose]);
-
-  // Touch handlers for pinch-to-zoom & smooth panning
+  // Touch handlers for mobile pan & pinch
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
-      const dist = Math.hypot(
+      initialPinchDistRef.current = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      initialPinchDistRef.current = dist;
       initialPinchZoomRef.current = zoom;
     } else if (e.touches.length === 1) {
       const now = Date.now();
-      if (now - lastTapTimeRef.current < 280) {
+      if (now - lastTapTimeRef.current < 300) {
         handleDoubleTap();
         lastTapTimeRef.current = 0;
         return;
@@ -226,6 +160,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       lastTapTimeRef.current = now;
 
       touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
       if (zoom > 1) {
         isDraggingRef.current = true;
         dragStartRef.current = {
@@ -258,11 +193,14 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     isDraggingRef.current = false;
     if (zoom === 1 && touchStartX.current !== null && e.changedTouches.length > 0) {
       const dx = e.changedTouches[0].clientX - touchStartX.current;
-      if (Math.abs(dx) > 40) {
+      const dy = Math.abs(e.changedTouches[0].clientY - (touchStartY.current || 0));
+      // Horizontal swipe threshold
+      if (Math.abs(dx) > 45 && dy < 80) {
         if (dx < 0) goNext();
         else goPrev();
       }
       touchStartX.current = null;
+      touchStartY.current = null;
     }
   };
 
@@ -294,8 +232,8 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
-      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 backdrop-blur-2xl select-none overflow-hidden touch-none"
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-2xl select-none overflow-hidden"
       role="dialog"
       aria-label="Bingäa Comic Reader"
     >
@@ -304,16 +242,21 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       {/* ───────────────────────────────────────────────────────────── */}
       <div className="absolute top-3 inset-x-3 sm:top-5 sm:inset-x-6 z-30 flex items-center justify-between gap-2 pointer-events-none">
         {/* Left: Compact Title & Page Indicator Pill */}
-        <div className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+        <div className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
           <span className="text-xs font-display font-black tracking-wide text-white">Bingäa</span>
           <span className="text-white/30 text-xs">·</span>
           <span className="text-xs font-mono font-bold text-cyan-300">
-            {isVerified ? `Page ${pageNum} of ${total || 20}` : `Page ${pageNum} of 2`}
+            Page {pageNum} of {maxPages}
           </span>
+          {!isVerified && (
+            <span className="text-[9.5px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-400 text-black font-extrabold ml-1">
+              Preview
+            </span>
+          )}
         </div>
 
         {/* Center: Direct Zoom Floating Controls */}
-        <div className="pointer-events-auto flex items-center gap-0.5 bg-black/60 backdrop-blur-xl border border-white/20 rounded-full p-1 shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+        <div className="pointer-events-auto flex items-center gap-0.5 bg-black/70 backdrop-blur-xl border border-white/20 rounded-full p-1 shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
           <button
             type="button"
             onClick={handleZoomOut}
@@ -349,7 +292,8 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
             <a
               href={BINGAA_PDF_URL}
               download={BINGAA_PDF_FILENAME}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-mono font-semibold text-cyan-300 border border-cyan-500/40 bg-black/60 backdrop-blur-xl hover:bg-cyan-950/70 transition-colors shadow-lg"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-mono font-semibold text-cyan-300 border border-cyan-500/40 bg-black/70 backdrop-blur-xl hover:bg-cyan-950/70 transition-colors shadow-lg"
+              title="Download Master Archival PDF"
             >
               <Download className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">PDF</span>
@@ -358,7 +302,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.6)] transition-transform active:scale-95"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/70 backdrop-blur-xl border border-white/20 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.6)] transition-transform active:scale-95"
             aria-label="Close reader"
           >
             <X className="w-4 h-4" />
@@ -375,7 +319,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         onClick={goPrev}
         disabled={pageNum <= 1}
         aria-label="Previous page"
-        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/65 backdrop-blur-xl border border-white/25 hover:border-cyan-400 text-white flex items-center justify-center shadow-[0_4px_25px_rgba(0,0,0,0.7)] transition-all active:scale-90 hover:scale-110 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
+        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/70 backdrop-blur-xl border border-white/25 hover:border-cyan-400 text-white flex items-center justify-center shadow-[0_4px_25px_rgba(0,0,0,0.7)] transition-all active:scale-90 hover:scale-105 disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
       >
         <ChevronLeft className="w-6 h-6 text-white" />
       </button>
@@ -384,9 +328,9 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       <button
         type="button"
         onClick={goNext}
-        disabled={isVerified && pageNum >= total}
+        disabled={isVerified && pageNum >= TOTAL_PAGES}
         aria-label="Next page"
-        className={`absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/65 backdrop-blur-xl border border-white/25 hover:border-cyan-400 text-white flex items-center justify-center shadow-[0_4px_25px_rgba(0,0,0,0.7)] transition-all active:scale-90 hover:scale-110 cursor-pointer ${
+        className={`absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/70 backdrop-blur-xl border border-white/25 hover:border-cyan-400 text-white flex items-center justify-center shadow-[0_4px_25px_rgba(0,0,0,0.7)] transition-all active:scale-90 hover:scale-105 cursor-pointer ${
           !isVerified && pageNum === 1 ? 'ring-2 ring-cyan-400/60 shadow-[0_0_20px_rgba(56,189,248,0.4)]' : ''
         }`}
       >
@@ -397,8 +341,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       {/* STAGE: Edge-to-Edge Comic Presentation (Zero Boxy Containers)  */}
       {/* ───────────────────────────────────────────────────────────── */}
       <div
-        ref={stageRef}
-        className="relative w-full h-full flex items-center justify-center select-none overflow-hidden"
+        className="relative w-full h-full flex items-center justify-center select-none overflow-hidden p-2 sm:p-4 pt-14 pb-8"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -407,45 +350,35 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
-        {loadError ? (
-          <div className="max-w-sm text-center space-y-3 font-mono p-6 bg-black/80 rounded-2xl border border-rose-500/40">
-            <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
-            <p className="text-xs text-white/70">{loadError}</p>
-            <a
-              href={BINGAA_PDF_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-black bg-cyan-400 hover:bg-cyan-300"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              Open PDF directly
-            </a>
-          </div>
-        ) : (
-          <div
-            className="relative flex items-center justify-center max-w-full max-h-full transition-transform"
-            style={{
-              transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
-              transformOrigin: 'center center',
-              willChange: 'transform',
-              cursor: zoom > 1 ? (isDraggingRef.current ? 'grabbing' : 'grab') : 'default',
-            }}
-            onDoubleClick={handleDoubleTap}
-          >
-            <canvas
-              ref={canvasRef}
-              className="rounded-xl shadow-[0_10px_50px_rgba(0,0,0,0.85)] bg-white max-w-full max-h-full select-none"
-            />
-            {isRendering && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-xl">
-                <Loader2 className="w-7 h-7 text-cyan-300 animate-spin" />
-                <span className="text-[11px] font-mono text-white/70">
-                  Loading page {pageNum}…
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+        <div
+          className="relative flex items-center justify-center max-w-full max-h-full transition-transform"
+          style={{
+            transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
+            transformOrigin: 'center center',
+            willChange: 'transform',
+            cursor: zoom > 1 ? (isDraggingRef.current ? 'grabbing' : 'grab') : 'default',
+          }}
+          onDoubleClick={handleDoubleTap}
+        >
+          <img
+            key={pageNum}
+            src={getPageUrl(pageNum)}
+            alt={`Bingäa Graphic Novel — Page ${pageNum}`}
+            onLoad={() => setIsLoadingPage(false)}
+            onLoadStart={() => setIsLoadingPage(true)}
+            className="rounded-xl shadow-[0_10px_50px_rgba(0,0,0,0.85)] max-h-[85vh] sm:max-h-[88vh] max-w-[92vw] sm:max-w-[85vw] object-contain select-none pointer-events-none"
+            draggable={false}
+          />
+
+          {isLoadingPage && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-xl">
+              <Loader2 className="w-7 h-7 text-cyan-300 animate-spin" />
+              <span className="text-[11px] font-mono text-white/70">
+                Loading page {pageNum}…
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ───────────────────────────────────────────────────────────── */}
@@ -462,10 +395,10 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
             <div className="space-y-0.5 min-w-0">
               <div className="text-amber-300 font-bold flex items-center gap-1.5 text-[11px]">
                 <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>Chapter 2 Locked (Pages 3–{total})</span>
+                <span>Chapter 2 Locked (Pages 3–{TOTAL_PAGES})</span>
               </div>
               <p className="text-[10.5px] text-white/70 truncate">
-                Full 20-page novel in print edition &amp; Pass.
+                Full 10-page novel in print edition &amp; Pass.
               </p>
             </div>
             <button
@@ -483,6 +416,11 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowLockedOverlay(false);
+              }
+            }}
             className="absolute inset-0 z-40 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
           >
             <div className="relative w-full max-w-sm p-6 rounded-3xl bg-[#080d1a] border border-amber-400/60 shadow-[0_0_50px_rgba(245,158,11,0.3)] text-center space-y-4">
@@ -490,6 +428,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
                 type="button"
                 onClick={() => setShowLockedOverlay(false)}
                 className="absolute top-4 right-4 p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 cursor-pointer"
+                aria-label="Close locked screen"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -506,7 +445,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
                   Sillow Mill — Bingäa
                 </h3>
                 <p className="text-xs text-white/75 font-sans leading-relaxed">
-                  Pages 3 through {total || 20} are included with the Physical Graphic Novel and the Annual Member Pass.
+                  Pages 3 through {TOTAL_PAGES} are included with the Physical Graphic Novel and the Annual Member Pass.
                 </p>
               </div>
 
