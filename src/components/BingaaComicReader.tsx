@@ -78,6 +78,8 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
   // Spread Mode: 'auto' | 'dual' | 'single'
   const [spreadModeOverride, setSpreadModeOverride] = useState<'auto' | 'dual' | 'single'>('auto');
+  // Mobile Fit Mode: 'fill' (zero letterboxing, edge-to-edge) vs 'contain'
+  const [mobileFitMode, setMobileFitMode] = useState<'fill' | 'contain'>('fill');
 
   // Compute whether dual-spread layout is active
   const isDualSpread = useMemo(() => {
@@ -861,7 +863,11 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
                 alt={`Bingäa Graphic Novel — Page ${pageNum}`}
                 onLoad={() => setIsLoadingPage(false)}
                 onLoadStart={() => setIsLoadingPage(true)}
-                className="h-[100dvh] max-h-[100dvh] w-auto max-w-[100vw] object-contain select-none pointer-events-none drop-shadow-[0_10px_40px_rgba(0,0,0,0.85)]"
+                className={`select-none pointer-events-none drop-shadow-[0_10px_40px_rgba(0,0,0,0.85)] ${
+                  viewport.isMobile && mobileFitMode === 'fill'
+                    ? 'w-full h-[100dvh] object-cover object-top'
+                    : 'h-[100dvh] max-h-[100dvh] w-auto max-w-[100vw] object-contain'
+                }`}
                 draggable={false}
                 loading="eager"
               />
@@ -933,6 +939,21 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
               className="px-2 py-0.5 rounded-full bg-white/10 text-[10.5px] font-mono font-bold text-amber-300 active:scale-95 transition-transform"
             >
               {zoom > 1 ? '1.0x' : '1.8x'}
+            </button>
+
+            <span className="w-px h-3.5 bg-white/20 mx-0.5" />
+
+            {/* Zero-Letterbox Fit Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                soundManager.playTone(540, 0.04);
+                setMobileFitMode((m) => (m === 'fill' ? 'contain' : 'fill'));
+              }}
+              className="px-2 py-0.5 rounded-full bg-white/10 text-[10.5px] font-mono font-bold text-cyan-300 active:scale-95 transition-transform"
+              title="Toggle Zero-Letterbox Fill vs Full Page Contain"
+            >
+              {mobileFitMode === 'fill' ? 'Fill' : 'Page'}
             </button>
 
             <span className="w-px h-3.5 bg-white/20 mx-0.5" />

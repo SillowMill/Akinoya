@@ -155,26 +155,20 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
   const handleComicClick = () => {
     soundManager.playTone(620, 0.05);
-    if (onOpenComicReader) {
-      onOpenComicReader();
-      return;
-    }
-    if (!isAuthenticated) {
-      if (onOpenAuthModal) {
-        onOpenAuthModal();
-      } else {
-        openAuthModal(
-          'signup',
-          'Create your account to secure your purchases with our Never Lose Your Files guarantee.'
-        );
-      }
-      return;
-    }
     if (onSelectComicTab) {
       onSelectComicTab();
-    } else if (typeof window !== 'undefined') {
-      window.location.hash = '#edition';
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        window.location.hash = '#comic';
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        const el = document.getElementById('comic') || document.getElementById('edition') || document.getElementById('akinoya-tabs-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch {
+        window.location.hash = '#comic';
+      }
     }
   };
 
