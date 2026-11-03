@@ -11,7 +11,6 @@ import dnVideo from '../assets/videos/DNN.mp4';
 import dnThumbnailImg from '../assets/images/dn_thumbnail.png';
 import dontNeedVideo from '../assets/videos/DNN.mp4';
 import bingaaLoopVideo from '../assets/videos/Bingaaloop.mp4';
-import { BingaaBookWidget } from './BingaaBookWidget';
 import {
   Lock,
   Unlock,
@@ -2294,15 +2293,437 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 WebkitBackfaceVisibility: 'hidden',
                 overflowAnchor: 'none',
               }}
-              className="space-y-4"
+              className="space-y-4 lg:space-y-6"
             >
-              <BingaaBookWidget
-                onOpenFullscreen={() => setShowComicReader(true)}
-                onOrderPhysical={() => setIsCheckoutOpen(true)}
-                isVerified={Boolean(isVipMode)}
-                editionDisplay={editionDisplay}
-                isFoundersPass={isFoundersPass}
-              />
+              <div className="bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-7 lg:p-8 xl:p-9 relative overflow-hidden shadow-xl">
+                {/* Ambient Twinkling White Stars Across Product Showcase Container (CSS-Only, GPU-Composited) */}
+                <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="bingaa-twinkle-star absolute top-5 right-8 w-3 h-3 text-white/85"
+                    style={{ '--twinkle-duration': '3.8s', '--twinkle-delay': '0.3s' } as React.CSSProperties}
+                  >
+                    <path d="M12 1L14.1 9.9L23 12L14.1 14.1L12 23L9.9 14.1L1 12L9.9 9.9L12 1Z" fill="currentColor" />
+                  </svg>
+                  <span
+                    className="bingaa-twinkle-star bingaa-twinkle-star-extra absolute top-14 right-24 w-1.5 h-1.5 rounded-full bg-white/80"
+                    style={{ '--twinkle-duration': '4.4s', '--twinkle-delay': '1.5s' } as React.CSSProperties}
+                  />
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="bingaa-twinkle-star bingaa-twinkle-star-extra absolute bottom-6 right-12 w-2.5 h-2.5 text-white/75"
+                    style={{ '--twinkle-duration': '4.1s', '--twinkle-delay': '2.2s' } as React.CSSProperties}
+                  >
+                    <path d="M12 1L14.1 9.9L23 12L14.1 14.1L12 23L9.9 14.1L1 12L9.9 9.9L12 1Z" fill="currentColor" />
+                  </svg>
+                </div>
+
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-center">
+                  {/* Left: Dedicated Comic Cover Showcase with Isolated Artwork, Twinkling White Star Accents & Custom Widgets */}
+                  <div className="lg:col-span-5 relative flex flex-col items-center w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[300px] xl:max-w-[330px] mx-auto space-y-3">
+                    {/* Top Information Widget (Above Artwork) */}
+                    <div className="w-full bg-[#050505] border border-white/15 rounded-xl px-3.5 py-2.5 flex items-center justify-between shadow-md">
+                      <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono font-semibold text-white/90">
+                        <Sparkles className="w-3.5 h-3.5 text-white/80 shrink-0" />
+                        <span>FIRST EDITION · ISSUE #01</span>
+                      </div>
+                      <span className="text-[9px] font-mono tracking-widest uppercase text-white/50 border border-white/10 px-1.5 py-0.5 rounded bg-white/5">
+                        SILLOW MILL
+                      </span>
+                    </div>
+
+                    {/* Central Cover Art Wrapper with Subtle Twinkling White Star Constellation */}
+                    <div className="relative w-full">
+                      {/* Lightweight CSS-only twinkling white stars around the Bingää comic book cover */}
+                      <div className="absolute -inset-3 sm:-inset-4 pointer-events-none select-none z-20" aria-hidden="true">
+                        {/* Top-left 4-point white star */}
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="bingaa-twinkle-star absolute -top-1.5 -left-1.5 w-3.5 h-3.5 text-white"
+                          style={{ '--twinkle-duration': '3.4s', '--twinkle-delay': '0s' } as React.CSSProperties}
+                        >
+                          <path d="M12 1L14.2 9.8L23 12L14.2 14.2L12 23L9.8 14.2L1 12L9.8 9.8L12 1Z" fill="currentColor" />
+                        </svg>
+                        {/* Top-right 4-point white star */}
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="bingaa-twinkle-star absolute -top-2 right-3 w-3 h-3 text-white/90"
+                          style={{ '--twinkle-duration': '4.0s', '--twinkle-delay': '1.1s' } as React.CSSProperties}
+                        >
+                          <path d="M12 1L14.2 9.8L23 12L14.2 14.2L12 23L9.8 14.2L1 12L9.8 9.8L12 1Z" fill="currentColor" />
+                        </svg>
+                        {/* Mid-left pinpoint starlight */}
+                        <span
+                          className="bingaa-twinkle-star absolute top-1/3 -left-2 w-1.5 h-1.5 rounded-full bg-white"
+                          style={{ '--twinkle-duration': '3.2s', '--twinkle-delay': '0.7s' } as React.CSSProperties}
+                        />
+                        {/* Mid-right 4-point white star */}
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="bingaa-twinkle-star absolute top-1/2 -right-2.5 w-3.5 h-3.5 text-white"
+                          style={{ '--twinkle-duration': '3.7s', '--twinkle-delay': '1.8s' } as React.CSSProperties}
+                        >
+                          <path d="M12 1L14.2 9.8L23 12L14.2 14.2L12 23L9.8 14.2L1 12L9.8 9.8L12 1Z" fill="currentColor" />
+                        </svg>
+                        {/* Upper-right pinpoint starlight (auto-scales down on lite devices) */}
+                        <span
+                          className="bingaa-twinkle-star bingaa-twinkle-star-extra absolute top-1/4 -right-1.5 w-1.5 h-1.5 rounded-full bg-white/85"
+                          style={{ '--twinkle-duration': '4.3s', '--twinkle-delay': '0.4s' } as React.CSSProperties}
+                        />
+                        {/* Lower-left 4-point white star */}
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="bingaa-twinkle-star absolute bottom-8 -left-2.5 w-3 h-3 text-white/90"
+                          style={{ '--twinkle-duration': '4.2s', '--twinkle-delay': '2.4s' } as React.CSSProperties}
+                        >
+                          <path d="M12 1L14.2 9.8L23 12L14.2 14.2L12 23L9.8 14.2L1 12L9.8 9.8L12 1Z" fill="currentColor" />
+                        </svg>
+                        {/* Bottom-right pinpoint starlight */}
+                        <span
+                          className="bingaa-twinkle-star bingaa-twinkle-star-extra absolute -bottom-1.5 right-4 w-1.5 h-1.5 rounded-full bg-white/90"
+                          style={{ '--twinkle-duration': '3.6s', '--twinkle-delay': '1.4s' } as React.CSSProperties}
+                        />
+                        {/* Bottom-left pinpoint starlight */}
+                        <span
+                          className="bingaa-twinkle-star bingaa-twinkle-star-extra absolute -bottom-1 left-6 w-1 h-1 rounded-full bg-white/80"
+                          style={{ '--twinkle-duration': '3.9s', '--twinkle-delay': '2.0s' } as React.CSSProperties}
+                        />
+                      </div>
+
+                      {/* Central Cover Art: Clean Graphic Novel Cover with interactive reader trigger */}
+                      <button
+                        type="button"
+                        onClick={() => setShowComicReader(true)}
+                        className="relative group w-full aspect-[3/4] rounded-2xl overflow-hidden border border-white/20 shadow-[0_14px_40px_rgba(0,0,0,0.85)] bg-[#050505] transition-transform duration-500 hover:scale-[1.02] cursor-pointer text-left block"
+                        aria-label="Open Bingäa comic reader"
+                      >
+                        <img
+                          src={BINGAA_COVER_URL}
+                          alt="Sillow Mill — Bingäa (Collector's Graphic Novel) Cover"
+                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                        />
+
+                        <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
+
+                        {/* Hover action prompt overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3 px-2">
+                          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#060a14] border border-white/25 text-[11px] font-mono font-semibold text-white shadow-lg">
+                            <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+                            <span>{isVipMode && bingaaCertificate ? 'Read Full Comic' : 'Read 2-Page Preview'}</span>
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Bottom Information Widget (Below Artwork) */}
+                    <div className="w-full bg-[#050505] border border-white/15 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-[10px] sm:text-[11px] font-mono shadow-md">
+                      <span className="flex items-center gap-1.5 text-white/90 font-medium">
+                        <QrCode className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                        <span>QR VERIFIED PHYSICAL DROP</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-emerald-400 font-semibold bg-emerald-950/70 border border-emerald-500/30 px-2 py-0.5 rounded">
+                        170 GSM
+                      </span>
+                    </div>
+
+                    {/* Technical details note */}
+                    <div className="flex items-center justify-center gap-1.5 text-[11px] font-mono text-white/50 pt-0.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <span>Foil-Embossed Collector's Hardcover / Softcover</span>
+                    </div>
+                  </div>
+
+                  {/* Right: Product Details, Pricing (€14,99) & Pre-Order Flow */}
+                  <div className="lg:col-span-7 space-y-4 lg:space-y-5 lg:pl-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-cyan-400" />
+                        <span className="text-[11px] sm:text-xs font-mono text-cyan-300 uppercase tracking-wider font-semibold">
+                          2027 LIMITED COMIC DROP
+                        </span>
+                      </div>
+                      {isVipMode ? (
+                        <span className="text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-bold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-amber-300 bg-amber-950/80 border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)] animate-pulse shrink-0" />
+                          <span className="truncate">{isFoundersPass ? '• YOU OWN FOUNDERS PASS (#0)' : `• YOU OWN EDITION #${editionDisplay} OF 100`}</span>
+                        </span>
+                      ) : (
+                        <span className="text-[9.5px] xs:text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-semibold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)] shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)] animate-pulse shrink-0" />
+                          <span className="truncate">• COMICBOOKS 100 / 100 CLAIMED</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="text-xl sm:text-2xl font-display font-bold text-white mb-1">
+                        Sillow Mill — Bingäa (Collector's Graphic Novel)
+                      </h3>
+                      <div className="text-xs font-mono text-cyan-400 mb-3">
+                        ISSUE #01: THE ORIGIN OF BINGÄA
+                      </div>
+                      <div className="space-y-3 text-xs sm:text-sm text-white/80 leading-relaxed font-sans">
+                        <p>
+                          The definitive physical graphic story and official 2D blueprint of the Sillow Mill universe. Printed on heavyweight 170gsm archival paper with bioluminescent foil stamping, this collector's volume details the origin story—from an iconic snow dance in Leuven to the first convergence of Sillow, Odi, and Mill on the core world of Äkinoya.
+                        </p>
+
+                        <div className="pt-1">
+                          <span className="font-semibold text-white tracking-wide block mb-1.5 font-display text-xs sm:text-sm">
+                            Key Features:
+                          </span>
+                          <ul className="space-y-2 text-white/70 text-xs sm:text-[13px]">
+                            <li className="flex items-start gap-2">
+                              <span className="text-cyan-400 mt-1 shrink-0 text-sm leading-none">•</span>
+                              <span>
+                                <strong className="text-white font-medium">The Origin Story:</strong> Features hand-drawn 2D blueprint panels, production sketches, and final 3D character renders.
+                              </span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-cyan-400 mt-1 shrink-0 text-sm leading-none">•</span>
+                              <span>
+                                <strong className="text-white font-medium">Integrated Lore:</strong> Explains the foundational lore driving all upcoming EPs and animated releases.
+                              </span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-cyan-400 mt-1 shrink-0 text-sm leading-none">•</span>
+                              <span>
+                                <strong className="text-white font-medium">Äkinoya Pass Access:</strong> Embedded QR code verification protocol grants priority access to confidential lore, animated visualizers ("Don't Need" &amp; "Bingäa"), unreleased music, and future wave drops.
+                              </span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dynamic VIP Ownership or Public Pre-Order Bar */}
+                    {isVipMode ? (
+                      <div className="p-4 sm:p-5 lg:p-6 rounded-xl bg-gradient-to-br from-amber-950/30 via-black/70 to-black/90 border border-amber-500/40 flex flex-col gap-4 shadow-[0_0_25px_rgba(245,158,11,0.15)]">
+                        <div>
+                          <div className="text-[10px] font-mono text-amber-300 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                            <span>FOUNDING MEMBER ASSET · INCLUDED WITH PASS</span>
+                          </div>
+                          <div className="flex flex-wrap items-baseline gap-2 mt-1">
+                            <span className="text-lg sm:text-xl font-display font-extrabold text-white tracking-tight">
+                              {isFoundersPass ? 'Founders Pass (#0) Owned' : `Edition #${editionDisplay} of 100 Owned`}
+                            </span>
+                            <span className="text-[11px] font-mono text-emerald-400 font-semibold bg-emerald-950/70 border border-emerald-500/30 px-2 py-0.5 rounded">
+                              ● ACCESS UNLOCKED
+                            </span>
+                          </div>
+                          <p className="text-[11px] sm:text-xs font-mono text-white/60 mt-1">
+                            Your physical hardcover copy is included with your Äkinoya Founding Pass. Read the full high-res digital release now.
+                          </p>
+                        </div>
+
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setShowComicReader(true)}
+                            className="w-full py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-bold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[46px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                          >
+                            <BookOpen className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
+                            <span>READ YOUR DIGITAL COMIC</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Public Guest: Price & Order Action Bar */
+                      <div className="p-4 sm:p-5 lg:p-6 rounded-xl bg-gradient-to-br from-cyan-950/50 via-black/70 to-black/90 border border-cyan-500/30 flex flex-col gap-4 shadow-[0_0_20px_rgba(56,189,248,0.12)]">
+                        <div>
+                          <div className="text-[10px] font-mono text-cyan-400/90 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                            <span>Wave 2 — Pre-Order Now</span>
+                            <span className="text-white/30">·</span>
+                            <span className="text-emerald-400 font-bold">{waveInventory.available} Available</span>
+                          </div>
+                          <div className="flex flex-wrap items-baseline gap-2 mt-1">
+                            <span className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight whitespace-nowrap inline-flex items-baseline gap-1">
+                              <span>€</span>
+                              <span>14.99</span>
+                            </span>
+                            <span className="text-[11px] font-mono text-white/50">
+                              incl. VAT · Free Global Shipping
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-2.5">
+                          <button
+                            onClick={() => {
+                              setIsCheckoutOpen(true);
+                              soundManager.playTone(660, 0.08);
+                            }}
+                            className="flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
+                          >
+                            <ShoppingBag className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
+                            <span>PRE-ORDER NOW — €14.99</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowComicReader(true)}
+                            className="py-3.5 px-5 rounded-xl text-xs sm:text-sm font-mono font-semibold text-cyan-300 hover:text-white bg-black/60 hover:bg-cyan-950/80 border border-cyan-500/40 hover:border-cyan-400 transition-all cursor-pointer min-h-[44px] flex items-center justify-center gap-2 group shadow-[0_0_15px_rgba(56,189,248,0.12)]"
+                          >
+                            <BookOpen className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                            <span>Preview Comic (Pgs 1–2)</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Wave 1 / Wave 2 Metrics Grid */}
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 lg:p-5 rounded-xl bg-cyan-950/30 border border-cyan-500/20 text-center sm:text-left">
+                      <div>
+                        <div className="text-[10px] font-mono text-white/50">FOUNDING RUN</div>
+                        <div className="text-xs sm:text-sm font-semibold text-amber-400">
+                          {isVipMode ? (isFoundersPass ? 'Founders Pass (#0) (Owned)' : `Edition #${editionDisplay} (Owned)`) : '100 / 100 Claimed'}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-mono text-white/50">NEXT WAVE</div>
+                        <div className="text-xs sm:text-sm font-semibold text-cyan-200">Wave 2</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-mono text-white/50">INVENTORY</div>
+                        <div className="text-xs sm:text-sm font-semibold text-emerald-400 flex items-center justify-center sm:justify-start gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+                          <span>{waveInventory.available} Available</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Wave 2 Notification / Waitlist Primary CTA */}
+                    <div className="pt-1.5">
+                      {!showWaitlistForm && !isWaitlistSubmitted ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowWaitlistForm(true);
+                            soundManager.playTone(580, 0.06);
+                          }}
+                          className="w-full p-3.5 sm:px-5 sm:py-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-cyan-500/15 to-amber-500/20 hover:from-amber-500/30 hover:via-cyan-500/25 hover:to-amber-500/30 border-2 border-amber-400/60 hover:border-amber-300 shadow-[0_0_24px_rgba(245,158,11,0.25)] hover:shadow-[0_0_32px_rgba(245,158,11,0.4)] transition-all flex items-center justify-between gap-3 cursor-pointer group min-h-[52px]"
+                        >
+                          <div className="flex items-center gap-3 min-w-0 text-left">
+                            <div className="w-9 h-9 rounded-lg bg-amber-400/20 border border-amber-300/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-transform">
+                              <Bell className="w-4 h-4 text-amber-300 animate-pulse" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
+                                <span>WHEN IS THE NEXT WAVE? · PRIORITY WHITELIST</span>
+                              </div>
+                              <div className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-amber-100 tracking-wide truncate">
+                                Get notified when it's the next wave
+                              </div>
+                            </div>
+                          </div>
+                          <span className="shrink-0 px-3 py-1.5 rounded-lg bg-amber-400 group-hover:bg-amber-300 text-black font-mono text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_14px_rgba(245,158,11,0.4)] transition-all">
+                            <span>NOTIFY ME</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </span>
+                        </button>
+                      ) : isWaitlistSubmitted ? (
+                        <div className="p-4 rounded-xl bg-emerald-950/80 border-2 border-emerald-500/50 text-emerald-200 flex items-center gap-3 text-xs font-mono shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center shrink-0">
+                            <Check className="w-4 h-4 text-emerald-400" />
+                          </div>
+                          <div>
+                            <div className="font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
+                              WAVE 2 PRIORITY WHITELIST CONFIRMED
+                            </div>
+                            <div className="text-white/80 text-[11px] mt-0.5">
+                              You're registered on the official Wave 2 Whitelist! We'll email you first as soon as the next drop opens.
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            const cleanEmail = waitlistEmail.trim().toLowerCase();
+                            if (!cleanEmail || !cleanEmail.includes('@')) {
+                              setWaitlistError('Please enter a valid email address.');
+                              return;
+                            }
+                            setIsSubmittingWaitlist(true);
+                            setWaitlistError(null);
+                            try {
+                              const res = await fetch('/api/whitelist/subscribe', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  email: cleanEmail,
+                                  source: 'Comic Drop Showcase — Next Wave CTA',
+                                  chapter: 'Bingäa Issue #1 — Wave 2 Drop Notification',
+                                }),
+                              });
+                              const data = await res.json().catch(() => ({}));
+                              if (res.ok && data?.success) {
+                                setIsWaitlistSubmitted(true);
+                                try {
+                                  localStorage.setItem('akinoya_wave2_waitlist_subscribed', cleanEmail);
+                                  localStorage.setItem('akinoya_whitelist_subscribed', cleanEmail);
+                                } catch {}
+                                soundManager.playUnlockChime();
+                              } else {
+                                setWaitlistError(data?.message || 'Could not register email. Please try again.');
+                              }
+                            } catch {
+                              setIsWaitlistSubmitted(true);
+                              try {
+                                localStorage.setItem('akinoya_wave2_waitlist_subscribed', cleanEmail);
+                              } catch {}
+                              soundManager.playUnlockChime();
+                            } finally {
+                              setIsSubmittingWaitlist(false);
+                            }
+                          }}
+                          className="p-3.5 sm:p-4 rounded-xl bg-[#090e1a] border-2 border-amber-400/50 shadow-[0_0_24px_rgba(245,158,11,0.2)] space-y-2.5"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10.5px] font-mono font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                              <Bell className="w-3.5 h-3.5 text-amber-400" />
+                              <span>WAVE 2 DROP NOTIFICATION &amp; PRIORITY WHITELIST</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setShowWaitlistForm(false)}
+                              className="text-white/40 hover:text-white text-xs font-mono cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="relative flex-1">
+                              <Mail className="w-4 h-4 text-amber-300/70 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              <input
+                                type="email"
+                                required
+                                value={waitlistEmail}
+                                onChange={(e) => {
+                                  setWaitlistEmail(e.target.value);
+                                  if (waitlistError) setWaitlistError(null);
+                                }}
+                                placeholder="Enter your email for Wave 2 priority access..."
+                                className="w-full bg-black/90 border border-amber-400/40 focus:border-amber-300 rounded-xl pl-10 pr-3.5 py-2.5 text-base sm:text-xs text-white placeholder-white/40 outline-none font-mono"
+                              />
+                            </div>
+                            <button
+                              type="submit"
+                              disabled={isSubmittingWaitlist}
+                              className="px-5 py-2.5 rounded-xl text-xs font-mono font-extrabold uppercase tracking-wider bg-amber-400 hover:bg-amber-300 text-black transition-all cursor-pointer whitespace-nowrap min-h-[42px] shadow-[0_0_15px_rgba(245,158,11,0.35)] disabled:opacity-50"
+                            >
+                              {isSubmittingWaitlist ? 'Registering...' : 'Notify Me →'}
+                            </button>
+                          </div>
+                          {waitlistError && (
+                            <p className="text-[10.5px] font-mono text-rose-400">{waitlistError}</p>
+                          )}
+                        </form>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           )}
 
