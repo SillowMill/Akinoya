@@ -221,6 +221,7 @@ interface UnlockedExperienceProps {
   onNavigateToPassport?: () => void;
   onNavigateToContest?: () => void;
   onNavigateToGalaxy?: (planetId?: string, from?: string) => void;
+  onNavigateToCommunity?: () => void;
 }
 
 export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
@@ -232,6 +233,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   onNavigateToPassport,
   onNavigateToContest,
   onNavigateToGalaxy,
+  onNavigateToCommunity,
 }) => {
   const [activeTab, setActiveTab] = useState<'pass' | 'edition' | 'my-world' | 'assets'>(() => {
     if (typeof window !== 'undefined') {
@@ -2066,6 +2068,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     onOpenComicReader={() => setShowComicReader(true)}
                     onJoinMemberPass={handlePerksStripeCheckout}
                     isMembershipLaunchLocked={isMembershipLaunchLocked}
+                    onNavigateToCommunity={onNavigateToCommunity}
                   />
                 </motion.div>
               ) : (

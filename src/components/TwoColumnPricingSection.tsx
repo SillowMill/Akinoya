@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  Users,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { openMembershipGateModal } from '../utils/pioneer';
@@ -32,6 +33,7 @@ export interface TwoColumnPricingSectionProps {
   className?: string;
   isLoungeView?: boolean;
   onOpenAuthModal?: () => void;
+  onNavigateToCommunity?: () => void;
 }
 
 interface AddonProduct {
@@ -111,10 +113,25 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
   className = '',
   isLoungeView = false,
   onOpenAuthModal,
+  onNavigateToCommunity,
 }) => {
   const { isAuthenticated, openAuthModal } = useAuth();
   const [expandedAddonId, setExpandedAddonId] = useState<string | null>(null);
   const [reservationNotice, setReservationNotice] = useState<string | null>(null);
+
+  const handleCommunityClick = () => {
+    soundManager.playTone(600, 0.04);
+    if (onNavigateToCommunity) {
+      onNavigateToCommunity();
+      return;
+    }
+    try {
+      window.history.pushState({}, '', '/community');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    } catch {
+      window.location.assign('/community');
+    }
+  };
 
   const handleJoinPassClick = () => {
     soundManager.playTone(660, 0.08);
@@ -220,11 +237,27 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </p>
             </div>
 
-            <div className="shrink-0 flex items-center gap-2">
+            <div className="shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
+              {/* Luminous Cyberpunk Blue Community Hub Action Button */}
+              <button
+                type="button"
+                onClick={handleCommunityClick}
+                className="group relative px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/85 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 text-cyan-200 hover:text-white border-2 border-cyan-400/60 hover:border-cyan-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(56,189,248,0.35)] hover:shadow-[0_0_32px_rgba(56,189,248,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-300" />
+                </span>
+                <Users className="w-3.5 h-3.5 text-cyan-300 group-hover:scale-110 transition-transform duration-200 shrink-0" />
+                <span className="tracking-wider uppercase whitespace-nowrap">Community Hub</span>
+                <ArrowRight className="w-3.5 h-3.5 text-cyan-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
+              </button>
+
+              {/* Join Member Pass Button */}
               <button
                 type="button"
                 onClick={handleJoinPassClick}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-black text-xs shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-black text-xs shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
               >
                 <Crown className="w-3.5 h-3.5 fill-black text-black shrink-0" />
                 <span className="whitespace-nowrap inline-flex items-baseline gap-1">

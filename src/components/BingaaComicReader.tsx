@@ -777,12 +777,11 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
       {/* ───────────────────────────────────────────────────────────── */}
       {/* MAIN COMIC STAGE (Single Page vs Dual Spread)                 */}
+      {/* Fluid Edge-to-Edge Canvas: Zero Letterboxing / Zero Dead Space */}
       {/* ───────────────────────────────────────────────────────────── */}
       <div
         ref={containerRef}
-        className={`relative w-full h-full flex items-center justify-center select-none overflow-hidden ${
-          viewport.isMobile ? 'p-0 pt-0 pb-0' : 'p-2 sm:p-6 md:p-8 pt-12 pb-12'
-        }`}
+        className="relative w-full h-[100dvh] flex items-center justify-center select-none overflow-hidden p-0 m-0"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -792,7 +791,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         onMouseLeave={handleMouseUp}
       >
         <div
-          className="relative flex items-center justify-center max-w-full max-h-full transition-transform"
+          className="relative flex items-center justify-center w-full h-[100dvh] transition-transform"
           style={{
             transform: `translate3d(${pan.x + swipeOffset}px, ${pan.y}px, 0) scale(${zoom})`,
             transformOrigin: 'center center',
@@ -803,16 +802,17 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         >
           {/* ========================================================= */}
           {/* MODE A: DUAL-PAGE SPREAD (Desktop & Landscape Tablet)     */}
+          {/* Fluid Full-Height Edge-to-Edge Spread (Zero Letterboxing) */}
           {/* ========================================================= */}
           {isDualSpread ? (
-            <div className="relative flex items-center justify-center max-w-[94vw] max-h-[88vh] rounded-2xl shadow-[0_25px_90px_rgba(0,0,0,0.95)] overflow-hidden">
+            <div className="relative flex items-center justify-center w-full h-[100dvh] max-h-[100dvh] overflow-hidden">
               {/* Left Page (e.g. Page 1, Page 3, Page 5) */}
-              <div className="relative flex-1 max-h-[88vh] flex items-center justify-end overflow-hidden rounded-l-2xl border-y border-l border-white/10 bg-black">
+              <div className="relative h-[100dvh] flex-1 flex items-center justify-end overflow-hidden">
                 <img
                   key={`spread-left-${leftPageNum}`}
                   src={getPageUrl(leftPageNum)}
                   alt={`Bingäa Graphic Novel — Page ${leftPageNum}`}
-                  className="max-h-[88vh] w-auto object-contain select-none pointer-events-none"
+                  className="h-[100dvh] max-h-[100dvh] w-auto max-w-[50vw] object-contain select-none pointer-events-none drop-shadow-[0_10px_35px_rgba(0,0,0,0.85)]"
                   draggable={false}
                   loading="eager"
                 />
@@ -821,21 +821,21 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
                   className="absolute inset-y-0 right-0 w-8 sm:w-16 pointer-events-none"
                   style={{
                     background:
-                      'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.85) 100%)',
+                      'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.9) 100%)',
                   }}
                 />
               </div>
 
               {/* Physical Center Crease / Spine Divider */}
-              <div className="w-[3px] self-stretch bg-gradient-to-b from-black via-[#0a0a0c] to-black relative z-20 shrink-0 shadow-[0_0_12px_rgba(0,0,0,0.9)]" />
+              <div className="w-[2px] sm:w-[3px] self-stretch bg-gradient-to-b from-black via-[#0a0a0c] to-black relative z-20 shrink-0 shadow-[0_0_12px_rgba(0,0,0,0.9)]" />
 
               {/* Right Page (e.g. Page 2, Page 4, Page 6) */}
-              <div className="relative flex-1 max-h-[88vh] flex items-center justify-start overflow-hidden rounded-r-2xl border-y border-r border-white/10 bg-black">
+              <div className="relative h-[100dvh] flex-1 flex items-center justify-start overflow-hidden">
                 <img
                   key={`spread-right-${rightPageNum}`}
                   src={getPageUrl(rightPageNum)}
                   alt={`Bingäa Graphic Novel — Page ${rightPageNum}`}
-                  className="max-h-[88vh] w-auto object-contain select-none pointer-events-none"
+                  className="h-[100dvh] max-h-[100dvh] w-auto max-w-[50vw] object-contain select-none pointer-events-none drop-shadow-[0_10px_35px_rgba(0,0,0,0.85)]"
                   draggable={false}
                   loading="eager"
                 />
@@ -844,7 +844,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
                   className="absolute inset-y-0 left-0 w-8 sm:w-16 pointer-events-none"
                   style={{
                     background:
-                      'linear-gradient(to left, transparent 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.85) 100%)',
+                      'linear-gradient(to left, transparent 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.9) 100%)',
                   }}
                 />
               </div>
@@ -852,25 +852,22 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           ) : (
             /* ========================================================= */
             /* MODE B: SINGLE-PAGE VIEW (Mobile Portrait & Tablet Port.) */
+            /* Fluid Full-Height Edge-to-Edge Single Page                */
             /* ========================================================= */
-            <div className="relative flex items-center justify-center max-w-full max-h-full">
+            <div className="relative flex items-center justify-center w-full h-[100dvh] max-h-[100dvh] overflow-hidden">
               <img
                 key={`single-${pageNum}`}
                 src={getPageUrl(pageNum)}
                 alt={`Bingäa Graphic Novel — Page ${pageNum}`}
                 onLoad={() => setIsLoadingPage(false)}
                 onLoadStart={() => setIsLoadingPage(true)}
-                className={`select-none pointer-events-none object-contain ${
-                  viewport.isMobile
-                    ? 'h-[100dvh] max-h-[100dvh] w-auto max-w-[100vw] rounded-none'
-                    : 'rounded-xl shadow-[0_15px_60px_rgba(0,0,0,0.9)] max-h-[88vh] max-w-[90vw]'
-                }`}
+                className="h-[100dvh] max-h-[100dvh] w-auto max-w-[100vw] object-contain select-none pointer-events-none drop-shadow-[0_10px_40px_rgba(0,0,0,0.85)]"
                 draggable={false}
                 loading="eager"
               />
 
               {isLoadingPage && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-xl">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs">
                   <Loader2 className="w-7 h-7 text-cyan-300 animate-spin" />
                   <span className="text-[11px] font-mono text-white/70">
                     Loading page {pageNum}…

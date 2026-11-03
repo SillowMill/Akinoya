@@ -697,6 +697,7 @@ export default function App() {
                     onNavigateToVerify={() => setVipSubView('passport')}
                     onNavigateToContest={() => navigateTo('contest', '/contest')}
                     onNavigateToGalaxy={(id, from) => navigateToGalaxy(id, from)}
+                    onNavigateToCommunity={() => navigateTo('community', '/community')}
                   />
               </div>
             )}
@@ -768,6 +769,7 @@ export default function App() {
                     onNavigateToVerify={() => navigateTo('verify', '/verify')}
                     onNavigateToContest={() => navigateTo('contest', '/contest')}
                     onNavigateToGalaxy={(id, from) => navigateToGalaxy(id, from)}
+                    onNavigateToCommunity={() => navigateTo('community', '/community')}
                   />
                 </motion.div>
               )}
