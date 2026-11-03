@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { openMembershipGateModal } from '../utils/pioneer';
+import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 
 export interface TwoColumnPricingSectionProps {
   onSelectComicTab?: () => void;
@@ -80,25 +81,41 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
       aria-label="Pricing and Membership Options"
       className={`w-full max-w-7xl mx-auto space-y-6 transform-gpu ${className}`}
     >
-      {/* Optional Top Section Sub-Header (Only shown on homepage to anchor below visualizers) */}
+      {/* Upgraded Solid Frosted Glass Header Banner: Optimal Rich Dark Backing, Zero Typography Bleed */}
       {!isLoungeView && (
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-2 border-b border-white/10">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-semibold tracking-wider flex items-center gap-1.5 shadow-[0_0_8px_rgba(56,189,248,0.15)]">
-                <Sparkles className="w-3 h-3 text-cyan-400" />
-                OFFICIAL RELEASES &amp; VAULT
-              </span>
-              <span className="text-[10px] font-mono text-amber-300 font-semibold">
-                ALL DIGITAL EXTRAS INCLUDED IN PASS
-              </span>
+        <div className="rounded-3xl bg-[#060a14]/95 backdrop-blur-2xl border border-cyan-500/30 p-5 sm:p-6 md:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(56,189,248,0.12)] relative overflow-hidden">
+          {/* Subtle Ambient Gold & Cyan Dual-Glow Beam */}
+          <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none" />
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 font-bold tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(56,189,248,0.2)]">
+                  <Sparkles className="w-3 h-3 text-cyan-400" />
+                  OFFICIAL RELEASES &amp; VAULT
+                </span>
+                <span className="text-[10px] font-mono text-amber-300 font-bold px-2.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-400/40">
+                  ALL DIGITAL EXTRAS INCLUDED IN PASS
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-display font-black text-white tracking-wide">
+                Packs, Comic &amp; Membership
+              </h2>
+              <p className="text-xs sm:text-sm font-sans text-white/75 max-w-2xl leading-relaxed">
+                Order standalone production packs and the physical graphic novel, or join the Annual Member Pass for complete, all-inclusive access.
+              </p>
             </div>
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-display font-extrabold text-white tracking-wide">
-              Packs, Comic &amp; Membership
-            </h2>
-            <p className="text-xs sm:text-sm font-sans text-white/70 mt-1 max-w-2xl leading-relaxed">
-              Order standalone production packs and the physical graphic novel, or join the Annual Member Pass for complete, all-inclusive access.
-            </p>
+
+            <div className="shrink-0 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleJoinPassClick}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-black text-xs shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Crown className="w-3.5 h-3.5 fill-black text-black shrink-0" />
+                <span>Join Member Pass · €60/yr</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -124,6 +141,28 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               <p className="text-xs sm:text-sm font-sans text-white/65 mt-1 leading-relaxed">
                 Purchase dedicated production packs separately, or order the limited physical graphic novel.
               </p>
+            </div>
+
+            {/* Total A La Carte Comparative Worth Banner (Marketing Pricing Trigger) */}
+            <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
+              <div className="space-y-0.5">
+                <div className="text-[10.5px] font-mono uppercase tracking-wider text-cyan-300 font-extrabold flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Combined Separate Value</span>
+                </div>
+                <p className="text-xs text-white/75 font-sans leading-relaxed">
+                  Total of all 3 digital packs + physical comic bought separately:
+                </p>
+              </div>
+
+              <div className="text-left sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center gap-2">
+                <div className="text-xl sm:text-2xl font-display font-black text-white line-through decoration-red-400/80 decoration-2">
+                  € 74.96
+                </div>
+                <div className="text-[10.5px] font-mono text-cyan-300 font-semibold">
+                  (Digital add-ons alone: € 59.97)
+                </div>
+              </div>
             </div>
 
             {/* Individual Digital Add-ons: 3 Distinct Cards */}
@@ -277,17 +316,41 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </div>
             </div>
 
-            {/* Physical Product Section */}
-            <div className="pt-2">
-              <div className="relative rounded-2xl bg-gradient-to-br from-cyan-950/50 via-[#061122] to-black border-2 border-cyan-400/40 p-4 sm:p-5 space-y-3.5 overflow-hidden shadow-[0_0_25px_rgba(56,189,248,0.12)]">
+            {/* Physical Comic Book Section With Styled Blue Accent Lore Widget */}
+            <div className="pt-2 space-y-3">
+              {/* Styled Blue Accent Lore Widget with Comic Cover Thumbnail */}
+              <div className="rounded-2xl bg-gradient-to-r from-cyan-950/70 via-[#071328] to-[#040c1c] border-2 border-cyan-400/40 p-4 sm:p-5 flex flex-col sm:flex-row items-center sm:items-start gap-4 shadow-lg">
+                <img
+                  src={bingaaComicCover}
+                  alt="Bingäa Comic Cover"
+                  className="w-20 sm:w-24 h-auto aspect-[3/4] rounded-xl object-cover border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
+                  loading="lazy"
+                  decoding="async"
+                />
+
+                <div className="space-y-1.5 text-center sm:text-left min-w-0">
+                  <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider inline-block">
+                    ÄKINOYA CANON · GRAPHIC NOVEL ISSUE #01
+                  </span>
+                  <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide">
+                    Bingäa: The Twilight Expedition
+                  </h4>
+                  <p className="text-[11.5px] sm:text-xs text-cyan-100/80 font-sans leading-relaxed">
+                    Follow Mill and Sillow across the twilight sectors of Äkinoya as the planetary constellation awakens. 48 full-color cinematic story pages, authentic holographic serial key, plus the 4K digital edition included free.
+                  </p>
+                </div>
+              </div>
+
+              {/* Physical Comic Product Specifications & CTA Box */}
+              <div className="relative rounded-2xl bg-[#061122]/90 border border-cyan-400/30 p-4 sm:p-5 space-y-3.5 overflow-hidden shadow-[0_0_20px_rgba(56,189,248,0.1)]">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-mono font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
-                    PHYSICAL PRODUCT · COLLECTOR'S ITEM
+                    PHYSICAL PRINT · COLLECTOR'S ITEM
                   </span>
                   <span className="text-base font-display font-extrabold text-cyan-300">€ 14.99</span>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide">
                     The Physical Bingäa Comic Book (€ 14.99)
                   </h4>
@@ -327,20 +390,22 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
           {/* Top Gold Glowing Highlight Bar */}
           <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 via-yellow-400 to-transparent pointer-events-none" />
 
-          {/* Floating Best Value Badge */}
-          <div className="absolute top-4 right-4 sm:top-5 sm:right-5">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black text-[10px] sm:text-[11px] font-mono font-black tracking-wider uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)]">
-              <Crown className="w-3.5 h-3.5 fill-black text-black shrink-0" />
-              <span>ALL-INCLUSIVE PASS</span>
-            </span>
-          </div>
-
           <div className="space-y-5">
-            {/* Column 2 Header */}
-            <div className="pr-24 sm:pr-28">
-              <span className="text-[10px] font-mono font-extrabold tracking-widest text-amber-300 uppercase px-2.5 py-0.5 rounded-full bg-amber-950/80 border border-amber-400/50 inline-block mb-2">
-                SMARTEST CHOICE · MAXIMUM VALUE
+            {/* Column 2 Header Badge Row: Stacked Vertically or Wrapped Dynamically on Mobile with Zero Badge Collision */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <span className="text-[10px] font-mono font-extrabold tracking-widest text-amber-300 uppercase px-2.5 py-1 rounded-full bg-amber-950/80 border border-amber-400/50 inline-flex items-center gap-1.5 w-fit">
+                <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+                <span>SMARTEST CHOICE · MAXIMUM VALUE</span>
               </span>
+
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black text-[10px] sm:text-[11px] font-mono font-black tracking-wider uppercase shadow-[0_0_15px_rgba(245,158,11,0.5)] w-fit shrink-0">
+                <Crown className="w-3.5 h-3.5 fill-black text-black shrink-0" />
+                <span>ALL-INCLUSIVE PASS</span>
+              </span>
+            </div>
+
+            {/* Column 2 Title & Subtitle */}
+            <div>
               <h3 className="text-xl sm:text-2xl font-display font-black text-white tracking-wide">
                 The Membership Pass
               </h3>
@@ -349,7 +414,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </p>
             </div>
 
-            {/* Price Presentation (Crystal Clear, Large, High-End Typography) */}
+            {/* Price Presentation (Crystal Clear, Large, High-End Typography & Psychological Value Comparison) */}
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#151105] to-black border border-amber-400/40 space-y-2">
               <div className="flex items-baseline gap-2.5 flex-wrap">
                 <span className="text-3xl sm:text-4xl lg:text-5xl font-display font-black text-amber-300 tracking-tight drop-shadow-[0_2px_15px_rgba(245,158,11,0.35)]">
@@ -359,9 +424,9 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   / year (~€ 5 / month)
                 </span>
               </div>
-              <div className="text-[11px] sm:text-xs font-mono text-emerald-300 flex items-center gap-1.5">
+              <div className="text-[11px] sm:text-xs font-mono text-emerald-300 flex items-center gap-1.5 font-bold">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Separate digital total is €70.97+ · Save immediately on day one</span>
+                <span>Separate digital total is €70.97+ · Save immediately on day one while getting everything all-inclusive</span>
               </div>
             </div>
 
@@ -423,6 +488,15 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   </span>
                   <span>
                     <strong className="text-white">Exclusive Pioneer Lounge</strong> (Access to #announcements, #the-vault &amp; #community-feedback)
+                  </span>
+                </li>
+
+                <li className="flex items-start gap-2.5">
+                  <span className="w-4 h-4 rounded-full bg-amber-400/20 border border-amber-400/70 text-amber-300 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-black">
+                    ✓
+                  </span>
+                  <span>
+                    <strong className="text-white">VIP Pass &amp; Member Lounge Access:</strong> VIP Pass holders and Annual Members get full, unrestricted access to the Pioneer Lounge.
                   </span>
                 </li>
 

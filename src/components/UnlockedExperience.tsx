@@ -2816,8 +2816,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 </div>
               ) : null}
 
-              /* Active or Simulated Planet Dossier Experience */
-              {hasUserClaimedWorld && activeWorldDossier && (
+              {/* Active or Simulated Planet Dossier Experience */}
+              {activeWorldDossier && (
               <div className="space-y-6 md:space-y-7">
                 {/* Top Sector Dossier Header Banner — Supreme Galaxy Vibe Glassmorphism with Pioneer Badging & Instant Lightweight Switch */}
                 <div
