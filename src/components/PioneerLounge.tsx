@@ -22,6 +22,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
+import { TwoColumnPricingSection } from './TwoColumnPricingSection';
 import {
   ANNOUNCEMENTS,
   DROP_SCHEDULE,
@@ -239,6 +240,60 @@ export const PioneerLounge: React.FC<PioneerLoungeProps> = ({
         <ArrowRight className="w-4 h-4 shrink-0" />
       </button>
     );
+
+  // Non-members strictly see the clean two-column visual presentation behind an exclusive login prompt.
+  // Upon logging in as an active member, the quiet, asynchronous lounge opens with #announcements, #the-vault, and #community-feedback.
+  if (!isAuthenticated || !isMember) {
+    return (
+      <div className="space-y-6 transform-gpu">
+        {/* Exclusive Member Lock Header */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1322] via-[#070b14] to-[#04060c] border border-amber-400/40 p-6 sm:p-8 space-y-4 text-center shadow-xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/40 text-amber-300 text-xs font-mono font-bold uppercase tracking-wider">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Pioneer Lounge · Member Restricted Area</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-wide">
+            Exclusive Lounge Behind Active Login
+          </h2>
+          <p className="text-xs sm:text-sm text-white/70 font-sans max-w-xl mx-auto leading-relaxed">
+            The Pioneer Lounge is an exclusive, quiet space with monthly drops in <strong className="text-cyan-300">#announcements</strong>, instant downloads in <strong className="text-cyan-300">#the-vault</strong>, and weekly feedback reviews in <strong className="text-cyan-300">#community-feedback</strong>. Active membership is required to enter.
+          </p>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            {!isAuthenticated && (
+              <button
+                type="button"
+                onClick={onOpenAuthModal}
+                className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-mono font-bold text-xs sm:text-sm shadow-[0_0_15px_rgba(56,189,248,0.3)] transition-all cursor-pointer"
+              >
+                Sign In to Your Account
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={openUpgrade}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-black text-xs sm:text-sm shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Crown className="w-4 h-4 fill-black" />
+              <span>Join Member Pass (€60/year)</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Clean Two-Column Visual Presentation for Non-Members */}
+        <TwoColumnPricingSection
+          onSelectComicTab={() => {
+            if (typeof window !== "undefined") {
+              window.location.hash = "#edition";
+              window.dispatchEvent(new HashChangeEvent("hashchange"));
+            }
+          }}
+          onJoinMemberPass={openUpgrade}
+          isMembershipLaunchLocked={false}
+          isLoungeView={true}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 transform-gpu">

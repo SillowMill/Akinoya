@@ -11,6 +11,9 @@
     font-family: var(--font-sans);
     background-color: #050505;
     color: #f1f5f9;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, .font-display {

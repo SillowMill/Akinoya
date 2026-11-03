@@ -88,6 +88,7 @@ import { PlanetDossierModal } from './PlanetDossierModal';
 import { VisualizerPlayerModal } from './VisualizerPlayerModal';
 import { MyAssetsMasterCarousel } from './MyAssetsMasterCarousel';
 import { WorldReleaseStatusBanner } from './WorldReleaseStatusBanner';
+import { TwoColumnPricingSection } from './TwoColumnPricingSection';
 import {
   BINGAA_PDF_URL,
   BINGAA_PDF_FILENAME,
@@ -1928,148 +1929,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     </div>
                   </div>
 
-                  {/* Master Widget: COMMUNITY PERKS & HUB */}
-                  <div className="bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-5 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)] space-y-5 sm:space-y-6">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-56 h-56 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-
-                    {/* Header & Access / Pricing Bar */}
-                    <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-5 border-b border-white/10 w-full max-w-full overflow-visible">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-semibold tracking-wider flex items-center gap-1.5 shadow-[0_0_8px_rgba(56,189,248,0.15)]">
-                            <Sparkles className="w-3 h-3 text-cyan-400" />
-                            COMMUNITY PORTAL
-                          </span>
-                          <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                            4 MEMBER ENTITLEMENTS
-                          </span>
-                        </div>
-                        <h2 className="text-lg sm:text-xl lg:text-2xl font-display font-extrabold text-white tracking-wide">
-                          COMMUNITY PERKS &amp; HUB
-                        </h2>
-                        <p className="text-xs sm:text-sm font-sans text-white/70 mt-1 max-w-xl">
-                          Exclusive Annual Membership Pass (€60/year, equivalent to just €5/month). Unlocks full 3D visualizer breakdowns, unreleased audio masters, lore governance &amp; 4K assets on January 9, 2027.
-                        </p>
-                      </div>
-
-                      {/* Access / Pricing Bar inside widget top */}
-                      <div className="flex flex-wrap items-center gap-3 w-full max-w-full overflow-visible">
-                        <a
-                          href="/contest"
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-[1.01]"
-                        >
-                          <Trophy className="w-4 h-4 text-black shrink-0" />
-                          <span>WORLDBUILDING CONTEST →</span>
-                        </a>
-
-                        <a
-                          href="/community"
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:scale-[1.01]"
-                        >
-                          <Sparkles className="w-4 h-4 text-black shrink-0" />
-                          <span>COMMUNITY HUB →</span>
-                        </a>
-
-                        <button
-                          type="button"
-                          disabled={isMembershipLaunchLocked || isSubscribing}
-                          onClick={handlePerksStripeCheckout}
-                          title={isMembershipLaunchLocked ? 'Membership pass opens January 9, 2027' : undefined}
-                          className={
-                            isMembershipLaunchLocked
-                              ? 'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-semibold text-amber-300 bg-amber-950/60 border border-amber-500/40 cursor-not-allowed min-h-[44px] shadow-sm select-none max-w-full break-words'
-                              : 'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-bold text-black bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:scale-[1.01] max-w-full break-words'
-                          }
-                        >
-                          {isMembershipLaunchLocked ? (
-                            <Lock className="w-4 h-4 text-yellow-400 shrink-0" />
-                          ) : (
-                            <CreditCard className="w-4 h-4 text-black shrink-0" />
-                          )}
-                          <span className="max-w-full truncate sm:whitespace-normal break-words text-center leading-snug">
-                            {isMembershipLaunchLocked
-                              ? 'LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)'
-                              : isSubscribing
-                              ? 'INITIALIZING STRIPE...'
-                              : 'ACCESS NOW · €60/YEAR (~€5/MONTH)'}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* 4 Glassmorphic VIP Community Perk Widgets (01 to 04) */}
-                    <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 lg:gap-5">
-                      {PERK_MODULES.map((perk) => {
-                        const Icon = perk.icon;
-
-                        return (
-                          <motion.div
-                            key={perk.id}
-                            whileHover={{ y: -5, scale: 1.015 }}
-                            whileTap={{ y: -2, scale: 0.995 }}
-                            transition={{ type: 'spring', stiffness: 340, damping: 24 }}
-                            className="p-4 sm:p-5 lg:p-6 rounded-2xl bg-gradient-to-br from-cyan-950/45 via-[#050a14]/75 to-black/80 backdrop-blur-xl border border-cyan-500/30 hover:border-cyan-300/65 active:border-amber-400/60 transition-colors duration-300 flex flex-col justify-between shadow-[0_8px_30px_rgba(0,0,0,0.55),0_0_22px_rgba(56,189,248,0.12),inset_0_1px_0_rgba(255,255,255,0.08)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.75),0_0_32px_rgba(56,189,248,0.28),0_0_15px_rgba(245,158,11,0.12),inset_0_1px_0_rgba(103,232,249,0.25)] relative overflow-hidden group transform-gpu"
-                          >
-                            {/* Top Specular Glass Highlight Line */}
-                            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent opacity-75 group-hover:opacity-100 group-hover:via-amber-300/70 transition-all duration-300 pointer-events-none" />
-
-                            {/* Ambient Glass Glow Orbs */}
-                            <div className="absolute -top-10 -right-10 w-36 h-36 bg-cyan-400/10 group-hover:bg-cyan-400/20 rounded-full blur-2xl pointer-events-none transition-all duration-500" />
-                            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-400/5 group-hover:bg-amber-400/15 rounded-full blur-2xl pointer-events-none transition-all duration-500" />
-
-                            <div className="relative z-10">
-                              {/* Header Row: Icon + Number + Title (Left) | Refined Category Badge (Right) */}
-                              <div className="flex items-start sm:items-center justify-between gap-2.5 mb-3.5">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-950/90 to-[#06101e]/90 backdrop-blur-md border border-cyan-400/40 group-hover:border-amber-300/60 flex items-center justify-center text-cyan-300 group-hover:text-amber-300 shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.25)] group-hover:shadow-[0_0_16px_rgba(245,158,11,0.3)] transition-all duration-300">
-                                    <Icon className="w-4 h-4 text-cyan-300 group-hover:text-amber-300 transition-colors" />
-                                  </div>
-                                  <span className="text-xs font-mono text-amber-300 font-extrabold shrink-0 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">
-                                    {perk.number}.
-                                  </span>
-                                  <h4 className="text-xs sm:text-sm font-display font-bold text-white tracking-wide truncate group-hover:text-cyan-100 transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
-                                    {perk.title}
-                                  </h4>
-                                </div>
-
-                                <div className="shrink-0">
-                                  <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-gradient-to-r from-cyan-950/90 via-[#081526]/90 to-cyan-950/80 backdrop-blur-md border border-cyan-400/45 group-hover:border-amber-300/60 text-cyan-200 group-hover:text-amber-200 text-[9.5px] sm:text-[10px] font-mono tracking-[0.11em] font-bold uppercase whitespace-nowrap shadow-[0_0_14px_rgba(56,189,248,0.22),inset_0_1px_0_rgba(255,255,255,0.12)] group-hover:shadow-[0_0_18px_rgba(245,158,11,0.28)] transition-all duration-300">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 group-hover:bg-amber-300 shadow-[0_0_6px_rgba(34,211,238,0.9)] transition-colors shrink-0" />
-                                    <span>{perk.category}</span>
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Bulleted Value Triggers with Exquisite Luminous Gold Checkmarks */}
-                              <ul className="space-y-2 mb-4 text-[11px] sm:text-xs text-white/85 font-sans">
-                                {perk.bullets.map((b, idx) => (
-                                  <li key={idx} className="flex items-start gap-2.5 group/item">
-                                    <span
-                                      className="inline-flex items-center justify-center w-4 h-4 rounded-full border text-[10px] font-extrabold shrink-0 mt-0.5 transition-all duration-300 bg-gradient-to-br from-amber-400/25 via-yellow-500/20 to-amber-600/25 border-amber-400/70 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.5)] drop-shadow-[0_0_6px_rgba(251,191,36,0.95)] group-hover:border-amber-300 group-hover:shadow-[0_0_16px_rgba(251,191,36,0.75)]"
-                                    >
-                                      ✓
-                                    </span>
-                                    <span className="text-white/85 group-hover:text-white transition-colors leading-relaxed">
-                                      {b}
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            {/* Clean Status Line highlighting €60/year annual pass */}
-                            <div className="relative z-10 pt-3 border-t border-cyan-500/15 group-hover:border-cyan-400/30 mt-auto flex items-center justify-between text-[10.5px] font-mono text-cyan-300/90 group-hover:text-amber-200/95 transition-colors">
-                              <span className="flex items-center gap-1.5">
-                                <Sparkles className="w-3 h-3 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]" />
-                                <span>INCLUDED WITH ANNUAL PASS (€60/YR · ~€5/MO)</span>
-                              </span>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  {/* HOMEPAGE PRICING SECTION: TWO VISUAL COLUMNS (English) */}
+                  <TwoColumnPricingSection
+                    onSelectComicTab={() => {
+                      handleSelectTab("edition");
+                    }}
+                    onJoinMemberPass={handlePerksStripeCheckout}
+                    isMembershipLaunchLocked={isMembershipLaunchLocked}
+                  />
                 </motion.div>
               ) : (
                 /* Unlocked Visualizer Hub View */
@@ -2723,7 +2590,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           )}
 
           {/* Tab 3: My World — User's 5-Photo Cinematic Sci-Fi Dossier, 9:16 Story Verification Badge & Guest Simulation Mode */}
-          {activeTab === 'my-world' && activeWorldDossier && (
+          {activeTab === 'my-world' && (
             <motion.div
               key="my-world-view"
               initial={{ opacity: 0 }}
@@ -2949,7 +2816,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 </div>
               ) : null}
 
-              {/* Active or Simulated Planet Dossier Experience */}
+              /* Active or Simulated Planet Dossier Experience */
+              {hasUserClaimedWorld && activeWorldDossier && (
               <div className="space-y-6 md:space-y-7">
                 {/* Top Sector Dossier Header Banner — Supreme Galaxy Vibe Glassmorphism with Pioneer Badging & Instant Lightweight Switch */}
                 <div
@@ -3266,6 +3134,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   </div>
                 )}
               </div>
+            )}
             </motion.div>
           )}
 
