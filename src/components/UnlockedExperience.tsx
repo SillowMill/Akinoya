@@ -111,7 +111,7 @@ const BingaaComicReader = lazy(() => import('./BingaaComicReader'));
 
 export const FOUNDING_PASS_ID = 'AKN-VIP-2027-X0914';
 export const MEMBERSHIP_LAUNCH_DATE = new Date('2027-01-09T00:00:00Z');
-export const isMembershipLaunchLocked = new Date() < MEMBERSHIP_LAUNCH_DATE;
+export const isMembershipLaunchLocked = false;
 
 export interface VisualizerTrack {
   id: string;
@@ -507,7 +507,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             futurePromise: 'Pioneer frontier reserved for launch.',
             isPioneer: true,
             isVipPioneer: isVipMode,
-            pioneerBadge: claim.pioneerBadge || 'PIONEER 2027 · PRE-RELEASE',
+            pioneerBadge: claim.pioneerBadge || (isVipMode ? 'VIP PIONEER · ARCHIVE' : 'PIONEER MEMBER · ARCHIVE'),
             videoUrl: '',
             videoStatus: 'QUEUED_PENDING',
             sfxAudioUrl: '',
@@ -1815,22 +1815,25 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10 page-transition-container"
     >
       {/* Minified Low-Profile Status Bar Header with Inline Service View Toggle */}
-      <div className={`relative isolate overflow-hidden flex items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-5 bg-[#060c18] bg-gradient-to-r ${mobileRoleConfig.containerBg} border ${mobileRoleConfig.borderColor} rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 ${mobileRoleConfig.glowColor}`}>
-        <div className="relative z-10 flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-black/60 border ${mobileRoleConfig.shieldBorderColor} flex items-center justify-center ${mobileRoleConfig.shieldTextColor} shadow-[0_0_12px_rgba(56,189,248,0.22)] shrink-0`}>
-            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+      <div className={`relative isolate overflow-hidden flex items-center justify-between gap-1.5 sm:gap-3 mb-4 sm:mb-5 bg-[#060c18] bg-gradient-to-r ${mobileRoleConfig.containerBg} border ${mobileRoleConfig.borderColor} rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2.5 ${mobileRoleConfig.glowColor}`}>
+        <div className="relative z-10 flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1">
+          <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-black/60 border ${mobileRoleConfig.shieldBorderColor} flex items-center justify-center ${mobileRoleConfig.shieldTextColor} shadow-[0_0_12px_rgba(56,189,248,0.22)] shrink-0`}>
+            <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4" />
           </div>
-          <div className="min-w-0 flex-1 flex items-center gap-1.5 sm:gap-3">
-            <h2 className="text-xs sm:text-sm lg:text-base font-display font-bold text-white tracking-wide shrink-0 drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
+          <div className="min-w-0 flex items-center gap-1.5 sm:gap-2.5 overflow-hidden">
+            <h2 className="text-[11px] sm:text-sm lg:text-base font-display font-bold text-white tracking-wide shrink-0 drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
               <span className="sm:hidden">Welcome</span>
               <span className="hidden sm:inline lg:hidden">Welcome to Äkinoya</span>
               <span className="hidden lg:inline">Welcome to Äkinoya – Unlocked</span>
             </h2>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className={`w-1.5 h-1.5 rounded-full ${mobileRoleConfig.dotColor} animate-pulse shrink-0`} />
-              <span className="text-[10px] sm:text-[10.5px] font-mono font-semibold tracking-wider whitespace-nowrap shrink-0">
-                <span className={`sm:hidden ${mobileRoleConfig.textColor}`}>{mobileRoleConfig.label}</span>
-                <span className="hidden sm:inline text-cyan-400">PORTAL ACTIVE</span>
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 shrink">
+              {/* Scaled-down subtle user status badge (VIP / Member / Holder / Guest) */}
+              <span className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md font-mono text-[8.5px] sm:text-[10px] font-bold tracking-wider uppercase border shrink-0 ${mobileRoleConfig.badgeClassName}`}>
+                <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${mobileRoleConfig.dotColor} animate-pulse shrink-0`} />
+                <span>{mobileRoleConfig.label}</span>
+              </span>
+              <span className="hidden sm:inline-flex items-center text-cyan-400 font-mono text-[10px] tracking-wider font-semibold whitespace-nowrap shrink-0">
+                PORTAL ACTIVE
               </span>
               <span className="hidden md:inline text-white/30 text-[10px] shrink-0">·</span>
               <span className="hidden md:inline text-[10.5px] text-white/65 font-mono truncate">
@@ -1841,22 +1844,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         </div>
 
         {/* Inline Service View Toggle (Distinct Sliders / Eye Icon — never duplicates Worlds Globe2 icon) */}
-        <div className="relative z-10 flex items-center shrink-0">
+        <div className="relative z-10 flex items-center shrink-0 ml-auto pl-1 sm:pl-2">
           <button
             type="button"
             onClick={() => onToggleViewMode(currentViewMode === 'orbit' ? 'surface' : 'orbit')}
             title={currentViewMode === 'orbit' ? 'Switch to Service View' : 'Switch to Planet View'}
-            className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-950/95 border border-cyan-500/40 hover:border-cyan-400/70 rounded-lg transition-all cursor-pointer min-h-[34px] sm:min-h-[36px] whitespace-nowrap"
+            className="flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-[9px] sm:text-xs font-mono text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-950/95 border border-cyan-500/40 hover:border-cyan-400/70 rounded-lg transition-all cursor-pointer min-h-[30px] sm:min-h-[36px] whitespace-nowrap shrink-0 shadow-sm"
           >
             {currentViewMode === 'orbit' ? (
               <>
-                <Sliders className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>Service View</span>
+                <Sliders className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-cyan-400 shrink-0" />
+                <span className="leading-none">Service View</span>
               </>
             ) : (
               <>
-                <Eye className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>Planet View</span>
+                <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-cyan-400 shrink-0" />
+                <span className="leading-none">Planet View</span>
               </>
             )}
           </button>
@@ -2708,8 +2711,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             {isFoundingPioneerPlanet(activeWorldDossier)
                               ? `FOUNDING PIONEER · #01 · ${formatTitleCaseUserName(activeWorldDossier.authorName).toUpperCase()}`
                               : isVipPioneerPlanet(activeWorldDossier)
-                              ? 'VIP PIONEER · 2027 ARCHIVE'
-                              : activeWorldDossier.pioneerBadge || 'PIONEER 2027 · PRE-RELEASE'}
+                              ? 'VIP PIONEER · ARCHIVE'
+                              : activeWorldDossier.pioneerBadge || 'PIONEER MEMBER · ARCHIVE'}
                           </span>
                         </span>
                       )}

@@ -9,7 +9,7 @@ export type UserStatusTier = 'VISITOR' | 'FREE' | 'CREW' | 'VIP';
 
 export interface UserStatusPillConfig {
   tier: UserStatusTier;
-  pillLabel: 'PUBLIC GUEST' | 'ACCOUNT HOLDER' | 'CREW MEMBER' | 'VIP';
+  pillLabel: 'PUBLIC GUEST' | 'ACCOUNT HOLDER' | 'MEMBER' | 'CREW MEMBER' | 'VIP';
   indicatorLabel: 'PUBLIC ACCESS' | 'ACCESS GRANTED';
   pillClassName: string;
   indicatorClassName: string;
@@ -26,38 +26,51 @@ export function getUserStatusConfig(
   const isActuallyAuthenticated = Boolean(isAuthenticated && (user || profile));
 
   const effectiveIsVip = Boolean(
-    isActuallyAuthenticated &&
+    isVip ||
     (
-      isVip ||
-      profile?.has_vip_pass === true ||
-      profile?.is_vip === true ||
-      role === 'VIP_GUEST' ||
-      role === 'CREATOR' ||
-      Boolean(profile?.vip_code_redeemed) ||
-      (typeof window !== 'undefined' &&
-        (Boolean(localStorage.getItem('akinoya_patron_token')) ||
-         Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
-         Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
-         Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
-         Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
-         localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
-         localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
+      isActuallyAuthenticated &&
+      (
+        profile?.has_vip_pass === true ||
+        profile?.is_vip === true ||
+        role === 'VIP_GUEST' ||
+        role === 'CREATOR' ||
+        Boolean(profile?.vip_code_redeemed) ||
+        (typeof window !== 'undefined' &&
+          (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+           Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+           Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+           Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+           Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
+           localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
+           localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
+      )
+    ) ||
+    Boolean(
+      typeof window !== 'undefined' &&
+      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+       Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+       Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+       Boolean(localStorage.getItem('sillow_vip_bound_token')))
     )
   );
 
   const effectiveIsCrew = Boolean(
-    isActuallyAuthenticated &&
     !effectiveIsVip &&
     (
       hasPaidMembership(user, profile, role) ||
       role === 'ANNUAL_PASS' ||
       role === 'SUBSCRIBER' ||
+      role === 'MEMBER' ||
       profile?.is_annual_member === true ||
       profile?.is_subscriber === true ||
       profile?.subscription_status === 'active' ||
       (typeof window !== 'undefined' &&
         (localStorage.getItem('akinoya_patron_role') === 'ANNUAL_PASS' ||
-         localStorage.getItem('akinoya_patron_role') === 'SUBSCRIBER'))
+         localStorage.getItem('akinoya_patron_role') === 'SUBSCRIBER' ||
+         localStorage.getItem('akinoya_patron_role') === 'MEMBER' ||
+         localStorage.getItem('akinoya_member_pass') === 'true' ||
+         sessionStorage.getItem('akinoya_member_pass') === 'true'))
     )
   );
 
@@ -83,7 +96,7 @@ export function getUserStatusConfig(
   if (effectiveIsCrew) {
     return {
       tier: 'CREW',
-      pillLabel: 'CREW MEMBER',
+      pillLabel: 'MEMBER',
       indicatorLabel: 'ACCESS GRANTED',
       pillClassName:
         'bg-emerald-950/80 border border-[#10b981]/70 text-[#10b981] font-mono font-bold shadow-[0_0_12px_rgba(16,185,129,0.35)]',
@@ -123,6 +136,7 @@ export function getUserStatusConfig(
 export interface MobileHeaderRoleConfig {
   role: 'GUEST' | 'HOLDER' | 'MEMBER' | 'VIP';
   label: 'GUEST' | 'HOLDER' | 'MEMBER' | 'VIP' | 'VIP OWNER';
+  mobileLabel: 'GUEST' | 'HOLDER' | 'MEMBER' | 'VIP';
   textColor: string;
   dotColor: string;
   borderColor: string;
@@ -130,6 +144,7 @@ export interface MobileHeaderRoleConfig {
   shieldBorderColor: string;
   shieldTextColor: string;
   containerBg: string;
+  badgeClassName: string;
 }
 
 export function getMobileHeaderRoleConfig(
@@ -143,8 +158,10 @@ export function getMobileHeaderRoleConfig(
   const isActuallyAuthenticated = Boolean(isAuthenticated && (user || profile));
 
   const effectiveIsVip = Boolean(
-    (isActuallyAuthenticated &&
-      (isVip ||
+    isVip ||
+    (
+      isActuallyAuthenticated &&
+      (
         profile?.has_vip_pass === true ||
         profile?.is_vip === true ||
         role === 'VIP_GUEST' ||
@@ -157,33 +174,50 @@ export function getMobileHeaderRoleConfig(
             Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
             Boolean(localStorage.getItem('sillow_vip_bound_token')) ||
             localStorage.getItem('akinoya_patron_role') === 'CREATOR' ||
-            localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST')))) ||
-      hasCreatedWorld
+            localStorage.getItem('akinoya_patron_role') === 'VIP_GUEST'))
+      )
+    ) ||
+    Boolean(
+      typeof window !== 'undefined' &&
+      (Boolean(localStorage.getItem('akinoya_patron_token')) ||
+       Boolean(sessionStorage.getItem('akinoya_patron_token')) ||
+       Boolean(localStorage.getItem('sillow_vip_device_access') === 'true') ||
+       Boolean(sessionStorage.getItem('akinoya_vip_unlocked') === 'true') ||
+       Boolean(localStorage.getItem('sillow_vip_bound_token')))
+    ) ||
+    Boolean(hasCreatedWorld)
   );
 
   const effectiveIsCrew = Boolean(
-    isActuallyAuthenticated &&
-      !effectiveIsVip &&
-      (hasPaidMembership(user, profile, role) ||
-        role === 'ANNUAL_PASS' ||
-        role === 'SUBSCRIBER' ||
-        profile?.is_annual_member === true ||
-        profile?.is_subscriber === true ||
-        profile?.subscription_status === 'active' ||
-        (typeof window !== 'undefined' &&
-          (localStorage.getItem('akinoya_patron_role') === 'ANNUAL_PASS' ||
-            localStorage.getItem('akinoya_patron_role') === 'SUBSCRIBER')))
+    !effectiveIsVip &&
+    (
+      hasPaidMembership(user, profile, role) ||
+      role === 'ANNUAL_PASS' ||
+      role === 'SUBSCRIBER' ||
+      role === 'MEMBER' ||
+      profile?.is_annual_member === true ||
+      profile?.is_subscriber === true ||
+      profile?.subscription_status === 'active' ||
+      (typeof window !== 'undefined' &&
+        (localStorage.getItem('akinoya_patron_role') === 'ANNUAL_PASS' ||
+          localStorage.getItem('akinoya_patron_role') === 'SUBSCRIBER' ||
+          localStorage.getItem('akinoya_patron_role') === 'MEMBER' ||
+          localStorage.getItem('akinoya_member_pass') === 'true' ||
+          sessionStorage.getItem('akinoya_member_pass') === 'true'))
+    )
   );
 
   const effectiveIsAccount = Boolean(
     isActuallyAuthenticated && !effectiveIsVip && !effectiveIsCrew
   );
 
-  // 4. VIP / Owner (VIP Pass Holder or World Owner) — Gold (Vibrant Gold)
+  // 4. VIP (VIP Pass Holder or Pioneer World Holder) — Luxe Amber/Gold
+  // Mobile requirement: strictly 'VIP' (dropping 'OWNER' to prevent collision)
   if (effectiveIsVip) {
     return {
       role: 'VIP',
-      label: hasCreatedWorld ? 'VIP OWNER' : 'VIP',
+      label: 'VIP',
+      mobileLabel: 'VIP',
       textColor: 'text-amber-400',
       dotColor: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]',
       borderColor: 'border-amber-500/40',
@@ -191,14 +225,16 @@ export function getMobileHeaderRoleConfig(
       shieldBorderColor: 'border-amber-400/40',
       shieldTextColor: 'text-amber-300',
       containerBg: 'from-amber-950/40 via-[#060c18] to-[#040710]',
+      badgeClassName: 'bg-amber-950/80 border-amber-400/50 text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.25)]',
     };
   }
 
-  // 3. Member (Active Membership Subscriber) — Green (Neon/Emerald Green)
+  // 3. Member (Active Membership Subscriber) — Neon Emerald Green
   if (effectiveIsCrew) {
     return {
       role: 'MEMBER',
       label: 'MEMBER',
+      mobileLabel: 'MEMBER',
       textColor: 'text-emerald-400',
       dotColor: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]',
       borderColor: 'border-emerald-500/40',
@@ -206,6 +242,7 @@ export function getMobileHeaderRoleConfig(
       shieldBorderColor: 'border-emerald-400/40',
       shieldTextColor: 'text-emerald-300',
       containerBg: 'from-emerald-950/40 via-[#060c18] to-[#040710]',
+      badgeClassName: 'bg-emerald-950/80 border-[#10b981]/50 text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.25)]',
     };
   }
 
@@ -214,6 +251,7 @@ export function getMobileHeaderRoleConfig(
     return {
       role: 'HOLDER',
       label: 'HOLDER',
+      mobileLabel: 'HOLDER',
       textColor: 'text-indigo-400',
       dotColor: 'bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.9)]',
       borderColor: 'border-indigo-500/40',
@@ -221,6 +259,7 @@ export function getMobileHeaderRoleConfig(
       shieldBorderColor: 'border-indigo-400/40',
       shieldTextColor: 'text-indigo-300',
       containerBg: 'from-indigo-950/40 via-[#060c18] to-[#040710]',
+      badgeClassName: 'bg-indigo-950/80 border-indigo-400/50 text-indigo-300 shadow-[0_0_8px_rgba(99,102,241,0.2)]',
     };
   }
 
@@ -228,6 +267,7 @@ export function getMobileHeaderRoleConfig(
   return {
     role: 'GUEST',
     label: 'GUEST',
+    mobileLabel: 'GUEST',
     textColor: 'text-cyan-400',
     dotColor: 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.85)]',
     borderColor: 'border-cyan-500/35',
@@ -235,5 +275,6 @@ export function getMobileHeaderRoleConfig(
     shieldBorderColor: 'border-cyan-400/40',
     shieldTextColor: 'text-cyan-300',
     containerBg: 'from-cyan-950/50 via-[#060c18] to-[#040710]',
+    badgeClassName: 'bg-cyan-950/70 border-cyan-400/40 text-cyan-300 shadow-[0_0_8px_rgba(56,189,248,0.15)]',
   };
 }
