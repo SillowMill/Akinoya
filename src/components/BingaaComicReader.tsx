@@ -424,7 +424,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       {/* Stage (Completely Fixed Container, No Outer Modal Scrolling) */}
       <div
         ref={stageRef}
-        className="relative flex-1 min-h-0 m-2 sm:m-4 flex items-center justify-center select-none overflow-hidden"
+        className="relative flex-1 min-h-0 m-0 lg:m-4 p-0 flex items-start lg:items-center justify-center select-none overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -434,7 +434,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         onMouseLeave={handleMouseUp}
       >
         {loadError ? (
-          <div className="max-w-sm text-center space-y-3 font-mono">
+          <div className="max-w-sm text-center space-y-3 font-mono my-auto mx-auto">
             <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
             <p className="text-xs text-white/70">{loadError}</p>
             <a
@@ -525,18 +525,18 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           </div>
         ) : (
           <div
-            className="relative flex items-center justify-center max-w-full max-h-full transition-transform"
+            className="relative flex items-start lg:items-center justify-center max-w-full max-h-full transition-transform"
             style={{
               transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
-              transformOrigin: 'center center',
+              transformOrigin: stageSize.w > 0 && stageSize.w < 1024 ? 'top center' : 'center center',
               willChange: 'transform',
               cursor: zoom > 1 ? (isDraggingRef.current ? 'grabbing' : 'grab') : 'default',
             }}
             onDoubleClick={handleDoubleTap}
           >
-            <canvas ref={canvasRef} className="rounded-md shadow-2xl bg-white max-w-full max-h-full select-none" />
+            <canvas ref={canvasRef} className="rounded-none lg:rounded-md shadow-2xl bg-white max-w-full max-h-full select-none block" />
             {(isRendering || !doc) && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-md">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-none lg:rounded-md">
                 <Loader2 className="w-7 h-7 text-cyan-300 animate-spin" />
                 <span className="text-[11px] font-mono text-white/60">
                   {doc ? `Loading page ${pageNum}…` : 'Opening Bingäa Issue #1…'}
