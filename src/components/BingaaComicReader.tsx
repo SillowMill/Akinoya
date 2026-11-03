@@ -384,7 +384,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-12 lg:pr-0">
           {isVerified ? (
             <a
               href={BINGAA_PDF_URL}
@@ -399,16 +399,27 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
               PREVIEW MODE
             </span>
           )}
+          {/* Desktop Exit Button: completely unchanged on >=1024px */}
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="hidden lg:flex items-center justify-center p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             aria-label="Close reader"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
       </div>
+
+      {/* Persistent Floating Sticky Exit Button for Mobile & Tablet Viewports (<1024px) */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close reader"
+        className="fixed top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-[90] lg:hidden flex items-center justify-center min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-black/85 hover:bg-black active:bg-cyan-950/90 backdrop-blur-xl border border-white/25 hover:border-cyan-400/60 text-white shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.3)] transition-all cursor-pointer touch-manipulation active:scale-95"
+      >
+        <X className="w-5 h-5 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
+      </button>
 
       {/* Stage (Completely Fixed Container, No Outer Modal Scrolling) */}
       <div
