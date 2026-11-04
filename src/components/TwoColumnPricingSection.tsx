@@ -369,11 +369,11 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
                   {/* Title, Badge, Price & Desktop CTA */}
                   <div className="space-y-2 sm:space-y-1.5 min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
                       <span className="text-[9.5px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
                         PHYSICAL PRINT · COLLECTOR'S ITEM
                       </span>
-                      <span className="text-lg sm:text-base md:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
+                      <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
                         <span>€</span>
                         <span>14.99</span>
                       </span>
