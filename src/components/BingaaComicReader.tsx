@@ -390,7 +390,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex flex-col bg-black/95 backdrop-blur-md select-none overflow-hidden"
+      className="fixed inset-0 z-[70] flex flex-col bg-[#04060d] backdrop-blur-xl select-none overflow-hidden"
       role="dialog"
       aria-label="Bingäa Issue #1 reader"
     >
@@ -466,11 +466,20 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       </div>
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* MOBILE & TABLET FLOATING TOP HUD (< 1024px)                   */}
+      {/* PERMANENT FIXED EXIT BUTTON FOR MOBILE & TABLET (< 1024px)   */}
       {/* ───────────────────────────────────────────────────────────── */}
-      <div className="lg:hidden fixed top-3 inset-x-3 z-[90] flex items-center justify-between pointer-events-none">
-        {/* Left: Floating Title Pill */}
-        <div className="pointer-events-auto flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.7),0_0_15px_rgba(6,182,212,0.18)]">
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close reader"
+        className="fixed top-3.5 right-3.5 z-[100] lg:hidden flex items-center justify-center min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-black/85 hover:bg-black active:bg-cyan-950/90 backdrop-blur-2xl border border-white/25 hover:border-cyan-400/60 text-white shadow-[0_4px_24px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.35)] transition-all cursor-pointer touch-manipulation active:scale-95"
+      >
+        <X className="w-5 h-5 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
+      </button>
+
+      {/* Persistent Floating Quick Pill (Title & Zoom Reset) for Mobile & Tablet (< 1024px) */}
+      <div className="fixed top-3.5 left-3.5 z-[90] lg:hidden flex items-center gap-2 pointer-events-auto">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-2xl border border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.7),0_0_15px_rgba(6,182,212,0.18)]">
           <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
           <span className="text-xs font-display font-bold text-white tracking-wide">Bingäa #1</span>
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-cyan-300 uppercase">
@@ -478,35 +487,23 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           </span>
         </div>
 
-        {/* Right: Quick actions + Persistent Floating Exit Button */}
-        <div className="pointer-events-auto flex items-center gap-2">
-          {zoom > 1 && (
-            <button
-              type="button"
-              onClick={handleResetZoom}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-black/80 active:bg-cyan-950 backdrop-blur-xl border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold shadow-[0_4px_16px_rgba(0,0,0,0.7)] cursor-pointer"
-              aria-label="Reset zoom"
-            >
-              <span>{Math.round(zoom * 100)}%</span>
-              <RotateCcw className="w-2.5 h-2.5" />
-            </button>
-          )}
-
+        {zoom > 1 && (
           <button
             type="button"
-            onClick={onClose}
-            aria-label="Close reader"
-            className="flex items-center justify-center min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-black/85 hover:bg-black active:bg-cyan-950/90 backdrop-blur-xl border border-white/25 hover:border-cyan-400/60 text-white shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.3)] transition-all cursor-pointer touch-manipulation active:scale-95"
+            onClick={handleResetZoom}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-black/80 active:bg-cyan-950 backdrop-blur-2xl border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold shadow-[0_4px_16px_rgba(0,0,0,0.7)] cursor-pointer active:scale-95"
+            aria-label="Reset zoom"
           >
-            <X className="w-5 h-5 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
+            <span>{Math.round(zoom * 100)}%</span>
+            <RotateCcw className="w-2.5 h-2.5" />
           </button>
-        </div>
+        )}
       </div>
 
-      {/* Stage (Completely Fixed Container, No Outer Modal Scrolling) */}
+      {/* Stage (Strict Container Cropping: Zero vertical voids, exact PDF aspect ratio) */}
       <div
         ref={stageRef}
-        className="relative flex-1 min-h-0 m-0 p-3 pt-16 pb-20 sm:p-4 sm:pt-16 sm:pb-24 lg:m-4 lg:p-4 flex items-center justify-center select-none overflow-hidden"
+        className="relative flex-1 min-h-0 m-0 p-0 lg:m-4 lg:p-4 flex items-center justify-center select-none overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -653,7 +650,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
               type="button"
               onClick={goPrev}
               aria-label="Previous page"
-              className="lg:hidden fixed left-2 top-1/2 -translate-y-1/2 z-[75] w-9 h-14 rounded-r-xl bg-black/60 active:bg-cyan-950/80 backdrop-blur-md border-y border-r border-white/15 flex items-center justify-center text-white/70 active:text-white shadow-[0_4px_16px_rgba(0,0,0,0.6)] transition-all cursor-pointer touch-manipulation"
+              className="lg:hidden fixed left-2 top-1/2 -translate-y-1/2 z-[90] w-9 h-14 rounded-r-xl bg-black/60 active:bg-cyan-950/80 backdrop-blur-md border-y border-r border-white/15 flex items-center justify-center text-white/70 active:text-white shadow-[0_4px_16px_rgba(0,0,0,0.6)] transition-all cursor-pointer touch-manipulation"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -664,7 +661,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
               type="button"
               onClick={goNext}
               aria-label="Next page"
-              className="lg:hidden fixed right-2 top-1/2 -translate-y-1/2 z-[75] w-9 h-14 rounded-l-xl bg-black/60 active:bg-cyan-950/80 backdrop-blur-md border-y border-l border-white/15 flex items-center justify-center text-white/70 active:text-white shadow-[0_4px_16px_rgba(0,0,0,0.6)] transition-all cursor-pointer touch-manipulation"
+              className="lg:hidden fixed right-2 top-1/2 -translate-y-1/2 z-[90] w-9 h-14 rounded-l-xl bg-black/60 active:bg-cyan-950/80 backdrop-blur-md border-y border-l border-white/15 flex items-center justify-center text-white/70 active:text-white shadow-[0_4px_16px_rgba(0,0,0,0.6)] transition-all cursor-pointer touch-manipulation"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -674,7 +671,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
       {/* Subtle First-Load Instruction Hint for Mobile & Tablet */}
       {showHint && !loadError && !isLockedPage && (
-        <div className="lg:hidden fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-[80] pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="lg:hidden fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-[95] pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div
             onClick={dismissHint}
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a101d]/90 backdrop-blur-xl border border-cyan-400/35 text-white/90 shadow-[0_4px_24px_rgba(0,0,0,0.7),0_0_16px_rgba(6,182,212,0.25)] text-[11px] font-mono cursor-pointer active:scale-95 transition-all select-none whitespace-nowrap"
@@ -700,7 +697,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       {/* MOBILE & TABLET FLOATING BOTTOM HUD (< 1024px)                */}
       {/* ───────────────────────────────────────────────────────────── */}
       {!loadError && (
-        <div className="lg:hidden fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-[85] pointer-events-auto">
+        <div className="lg:hidden fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-[90] pointer-events-auto">
           <div className="flex items-center gap-3 sm:gap-4 px-3.5 py-2 rounded-full bg-black/85 backdrop-blur-2xl border border-white/20 shadow-[0_10px_35px_rgba(0,0,0,0.85),0_0_24px_rgba(6,182,212,0.25)]">
             <button
               type="button"
