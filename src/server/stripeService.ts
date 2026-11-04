@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
+import { updateUserSubscription } from './authVoteService';
 
 dotenv.config();
 
@@ -50,6 +51,10 @@ export interface ComicOrder {
   paymentMethod?: string;
   product?: string;
   productTitle?: string;
+  isSubscription?: boolean;
+  subscriptionId?: string;
+  customerId?: string;
+  billingInterval?: string;
 }
 
 export function loadOrders(): ComicOrder[] {
@@ -175,6 +180,8 @@ export async function createStripeCheckoutSession(params: {
     unitAmount = Math.round(params.amount * 100);
   }
 
+  const isSubscription = productId === 'membership';
+
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
     {
       price_data: {
@@ -185,13 +192,21 @@ export async function createStripeCheckoutSession(params: {
           images: [productImage],
         },
         unit_amount: unitAmount,
+        ...(isSubscription
+          ? {
+              recurring: {
+                interval: 'year',
+                interval_count: 1,
+              },
+            }
+          : {}),
       },
       quantity: 1,
     },
   ];
 
   const sessionConfig: Stripe.Checkout.SessionCreateParams = {
-    mode: 'payment',
+    mode: isSubscription ? 'subscription' : 'payment',
     line_items: lineItems,
     customer_email: sanitizedEmail,
     metadata: {
@@ -203,11 +218,44 @@ export async function createStripeCheckoutSession(params: {
       apartment_bus: truncate(sanitizedLine2 || ''),
       shipping_city: truncate(parsedCity),
       shipping_postal: truncate(parsedPostal),
+      billing_scheme: isSubscription ? 'annual_recurring_subscription' : 'one_time_payment',
     },
     success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/?canceled=true`,
     billing_address_collection: 'auto',
   };
+
+  // Automated recurring retention configuration for Annual Pioneer Pass
+  if (isSubscription) {
+    sessionConfig.payment_method_collection = 'always';
+    sessionConfig.subscription_data = {
+      description: 'Sillow Mill - Annual Pioneer Member Pass Recurring Subscription (€60.00/year)',
+      metadata: {
+        product: 'membership',
+        wave: 'Wave 2',
+        product_title: truncate(productName),
+        customer_name: truncate(sanitizedName || ''),
+        customer_email: truncate(sanitizedEmail || ''),
+        billing_interval: 'year',
+      },
+    };
+  }
+
+  // Consolidate customer profile if customer already exists in Stripe
+  if (sanitizedEmail) {
+    try {
+      const existingCustomers = await stripe.customers.list({
+        email: sanitizedEmail,
+        limit: 1,
+      });
+      if (existingCustomers.data && existingCustomers.data.length > 0) {
+        sessionConfig.customer = existingCustomers.data[0].id;
+        delete sessionConfig.customer_email;
+      }
+    } catch (custErr) {
+      console.warn('[StripeService] Customer consolidation note:', custErr);
+    }
+  }
 
   if (isPhysical) {
     sessionConfig.shipping_address_collection = {
@@ -234,12 +282,17 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
 
   const email = session.customer_details?.email || session.customer_email || 'unknown@sillowmill.com';
   const name = session.customer_details?.name || session.metadata?.customer_name || 'Collector';
-  const passId = `PASS-BINGAA-${session.id.slice(-8).toUpperCase()}`;
+  const productId = session.metadata?.product || 'comic';
+  const isSubscription = session.mode === 'subscription' || productId === 'membership';
+  const passId = `PASS-${productId.toUpperCase()}-${session.id.slice(-8).toUpperCase()}`;
+
+  const customerId = (typeof session.customer === 'string' ? session.customer : session.customer?.id) || undefined;
+  const subscriptionId = (typeof session.subscription === 'string' ? session.subscription : session.subscription?.id) || undefined;
 
   const newOrder: ComicOrder = {
     id: session.id,
     date: new Date().toISOString(),
-    amount: (session.amount_total || 1499) / 100,
+    amount: (session.amount_total || (isSubscription ? 6000 : 1499)) / 100,
     currency: (session.currency || 'eur').toUpperCase(),
     customerEmail: email,
     customerName: name,
@@ -251,12 +304,110 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
     passId,
     entitled: true,
     paymentMethod: session.payment_method_types?.[0] || 'stripe',
-    product: session.metadata?.product || 'comic',
-    productTitle: session.metadata?.product_title || 'Sillow Mill - Bingaa (Collectors Graphic Novel)',
+    product: productId,
+    productTitle: session.metadata?.product_title || (isSubscription ? 'Sillow Mill - Annual Pioneer Member Pass' : 'Sillow Mill Order'),
+    isSubscription,
+    subscriptionId,
+    customerId,
+    billingInterval: isSubscription ? 'year' : undefined,
   };
 
   orders.push(newOrder);
   saveOrders(orders);
 
+  // Automatically grant Annual Pass entitlements and record renewal schedule
+  if (isSubscription || productId === 'membership') {
+    try {
+      const renewalDate = new Date();
+      renewalDate.setFullYear(renewalDate.getFullYear() + 1);
+
+      updateUserSubscription(email, {
+        role: 'ANNUAL_PASS',
+        subscriptionStatus: 'active',
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+        subscriptionRenewalDate: renewalDate.toISOString(),
+        subscriptionCancelAtPeriodEnd: false,
+        hasVipPass: true,
+      });
+    } catch (uErr) {
+      console.warn('[StripeService] Profile auto-update notice:', uErr);
+    }
+  }
+
   return newOrder;
+}
+
+/**
+ * Handles automated annual renewal invoice payments from Stripe (SEPA direct debit / card domiciliëring).
+ * Renews access, updates order records, and extends subscription expiration.
+ */
+export async function processSubscriptionInvoice(invoice: Stripe.Invoice): Promise<ComicOrder | null> {
+  const invoiceId = invoice.id;
+  if (!invoiceId) return null;
+
+  const orders = loadOrders();
+  const existingOrder = orders.find((o) => o.id === invoiceId);
+  if (existingOrder) {
+    return existingOrder;
+  }
+
+  const email = invoice.customer_email || 'unknown@sillowmill.com';
+  const name = invoice.customer_name || 'Annual Member';
+  const rawSub = (invoice as any).subscription ?? (invoice as any).parent?.subscription_details?.subscription;
+  const subscriptionId = (typeof rawSub === 'string' ? rawSub : rawSub?.id) || undefined;
+  const rawCust = invoice.customer;
+  const customerId = (typeof rawCust === 'string' ? rawCust : (rawCust as any)?.id) || undefined;
+
+  let renewalDateStr: string;
+  const periodEndUnix = invoice.lines?.data?.[0]?.period?.end;
+  if (periodEndUnix) {
+    renewalDateStr = new Date(periodEndUnix * 1000).toISOString();
+  } else {
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    renewalDateStr = nextYear.toISOString();
+  }
+
+  const passId = `PASS-RENEWAL-${invoiceId.slice(-8).toUpperCase()}`;
+
+  const renewalOrder: ComicOrder = {
+    id: invoiceId,
+    date: new Date().toISOString(),
+    amount: (invoice.amount_paid || 6000) / 100,
+    currency: (invoice.currency || 'eur').toUpperCase(),
+    customerEmail: email,
+    customerName: name,
+    status: 'paid',
+    wave: 'Wave 2',
+    passId,
+    entitled: true,
+    paymentMethod: 'automated_annual_renewal',
+    product: 'membership',
+    productTitle: 'Sillow Mill - Annual Pioneer Member Pass (Automated Annual Renewal)',
+    isSubscription: true,
+    subscriptionId,
+    customerId,
+    billingInterval: 'year',
+  };
+
+  orders.push(renewalOrder);
+  saveOrders(orders);
+
+  // Extend active Annual Pass role and update next annual renewal timestamp
+  try {
+    updateUserSubscription(email, {
+      role: 'ANNUAL_PASS',
+      subscriptionStatus: 'active',
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subscriptionId,
+      subscriptionRenewalDate: renewalDateStr,
+      subscriptionCancelAtPeriodEnd: false,
+      hasVipPass: true,
+    });
+  } catch (uErr) {
+    console.warn('[StripeService] Invoice renewal profile update notice:', uErr);
+  }
+
+  return renewalOrder;
 }

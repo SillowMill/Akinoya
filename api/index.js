@@ -13,6 +13,1145 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
+// src/lib/supabaseClient.ts
+import { createClient } from "@supabase/supabase-js";
+var supabaseUrl, supabaseKey, isSupabaseConfigured, supabase;
+var init_supabaseClient = __esm({
+  "src/lib/supabaseClient.ts"() {
+    supabaseUrl = import.meta.env?.VITE_SUPABASE_URL || (typeof process !== "undefined" ? process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL : "") || "https://placeholder-project.supabase.co";
+    supabaseKey = import.meta.env?.VITE_SUPABASE_ANON_KEY || (typeof process !== "undefined" ? process.env?.VITE_SUPABASE_ANON_KEY || process.env?.SUPABASE_ANON_KEY : "") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder";
+    isSupabaseConfigured = Boolean(supabaseUrl) && !supabaseUrl.includes("placeholder-project") && Boolean(supabaseKey) && !supabaseKey.includes("placeholder");
+    supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: typeof window !== "undefined" ? window.localStorage : void 0
+      }
+    });
+  }
+});
+
+// src/lib/supabase.ts
+var init_supabase = __esm({
+  "src/lib/supabase.ts"() {
+    init_supabaseClient();
+  }
+});
+
+// src/utils/holder.ts
+import { useEffect, useState } from "react";
+var PASS_ID_PATTERNS, isValidPassId;
+var init_holder = __esm({
+  "src/utils/holder.ts"() {
+    PASS_ID_PATTERNS = [
+      /^AKN-VIP-\d{4}-[A-Z]\d{3,4}$/,
+      // AKN-VIP-2027-X0914, AKN-VIP-2027-X001..X100
+      /^AKN-\d{4}$/,
+      // AKN-9941
+      /^SM\d{3}-[A-Z0-9]{4}$/
+      // SM001-A9B2
+    ];
+    isValidPassId = (raw) => {
+      if (!raw || typeof raw !== "string") return false;
+      const clean = raw.trim().toUpperCase().replace(/^#/, "");
+      if (clean.length > 32) return false;
+      return PASS_ID_PATTERNS.some((re) => re.test(clean));
+    };
+  }
+});
+
+// src/data/vipTokens.ts
+var PRIMARY_FOUNDER_EMAIL, FOUNDER_PASS_TOKEN, PASS_ALREADY_CLAIMED_ERROR, LOCAL_STORAGE_CLAIMED_KEY, VIP_REGISTRY_REFRESH_VERSION_KEY, CURRENT_VIP_REFRESH_VERSION, INITIAL_VIP_TOKEN_REGISTRY, ensureVipTokenRegistryRefresh, getLocalClaimedMap, setLocalClaim, normalizeVipToken, isFounderEmail, isRecognizedVipTokenPattern, checkVipTokenStatus, claimVipTokenForUser, resetAllVipTokens;
+var init_vipTokens = __esm({
+  "src/data/vipTokens.ts"() {
+    init_supabase();
+    init_holder();
+    PRIMARY_FOUNDER_EMAIL = "odi.selis3@gmail.com";
+    FOUNDER_PASS_TOKEN = "AKN-VIP-2027-X0914";
+    PASS_ALREADY_CLAIMED_ERROR = "Ai! Deze VIP-pas is al geclaimd.";
+    LOCAL_STORAGE_CLAIMED_KEY = "sillow_claimed_vip_tokens";
+    VIP_REGISTRY_REFRESH_VERSION_KEY = "sillow_vip_registry_refresh_version";
+    CURRENT_VIP_REFRESH_VERSION = "2027-vip-reset-v4-clean-email-bind";
+    INITIAL_VIP_TOKEN_REGISTRY = (() => {
+      const reg = {
+        [FOUNDER_PASS_TOKEN]: {
+          tokenCode: FOUNDER_PASS_TOKEN,
+          editionNumber: 0,
+          isFounderPass: true,
+          isClaimed: true,
+          boundEmail: PRIMARY_FOUNDER_EMAIL,
+          holderName: "Odi Selis",
+          claimedAt: null
+        }
+      };
+      for (let i = 1; i <= 100; i++) {
+        const code = `AKN-VIP-2027-X${String(i).padStart(3, "0")}`;
+        reg[code] = {
+          tokenCode: code,
+          editionNumber: i,
+          isFounderPass: false,
+          isClaimed: false,
+          boundEmail: null,
+          holderName: null,
+          claimedAt: null
+        };
+      }
+      return reg;
+    })();
+    ensureVipTokenRegistryRefresh = () => {
+      if (typeof window === "undefined") return;
+      try {
+        const appliedVersion = localStorage.getItem(VIP_REGISTRY_REFRESH_VERSION_KEY);
+        if (appliedVersion !== CURRENT_VIP_REFRESH_VERSION) {
+          localStorage.removeItem(LOCAL_STORAGE_CLAIMED_KEY);
+          localStorage.removeItem("sillow_vip_bound_token");
+          sessionStorage.removeItem("sillow_vip_bound_token");
+          localStorage.removeItem("sillow_vip_device_access");
+          sessionStorage.removeItem("sillow_vip_device_access");
+          localStorage.removeItem("akinoya_vip_unlocked");
+          sessionStorage.removeItem("akinoya_vip_unlocked");
+          localStorage.removeItem("akinoya_patron_token");
+          sessionStorage.removeItem("akinoya_patron_token");
+          localStorage.removeItem("akinoya_patron_role");
+          sessionStorage.removeItem("akinoya_patron_role");
+          localStorage.removeItem("pending_vip_pass");
+          localStorage.removeItem("akinoya_pending_vip_pass");
+          sessionStorage.removeItem("pending_vip_code");
+          localStorage.removeItem("pending_role");
+          sessionStorage.removeItem("pending_role");
+          localStorage.removeItem("akinoya_bingaa_certificates");
+          localStorage.removeItem("akinoya_holder_name");
+          localStorage.removeItem("user_generation_claimed");
+          localStorage.removeItem("akinoya_guest_generations");
+          const rawProf = localStorage.getItem("akinoya_auth_profile");
+          if (rawProf) {
+            try {
+              const parsed = JSON.parse(rawProf);
+              const email = String(parsed?.email || "").trim().toLowerCase();
+              if (email && email !== PRIMARY_FOUNDER_EMAIL) {
+                parsed.has_vip_pass = false;
+                parsed.is_vip = false;
+                parsed.vip_code_redeemed = null;
+                if (parsed.role === "VIP_GUEST" || parsed.role === "CREATOR") {
+                  parsed.role = "FREE";
+                }
+                localStorage.setItem("akinoya_auth_profile", JSON.stringify(parsed));
+              }
+            } catch {
+            }
+          }
+          Object.keys(localStorage).forEach((k) => {
+            if (k.startsWith("akinoya_holder_name_") || k.startsWith("akinoya_pending_")) {
+              localStorage.removeItem(k);
+            }
+          });
+          localStorage.setItem(VIP_REGISTRY_REFRESH_VERSION_KEY, CURRENT_VIP_REFRESH_VERSION);
+        }
+      } catch {
+      }
+    };
+    ensureVipTokenRegistryRefresh();
+    getLocalClaimedMap = () => {
+      if (typeof window === "undefined") return {};
+      ensureVipTokenRegistryRefresh();
+      try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_CLAIMED_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    };
+    setLocalClaim = (token, userId, holderEmail, holderName) => {
+      if (typeof window === "undefined") return;
+      try {
+        const map = getLocalClaimedMap();
+        map[token] = {
+          is_claimed: true,
+          claimed_by_user_id: userId,
+          claimed_holder_email: holderEmail ? holderEmail.trim().toLowerCase() : void 0,
+          claimed_holder_name: holderName ? holderName.trim() : void 0,
+          claimed_at: (/* @__PURE__ */ new Date()).toISOString()
+        };
+        localStorage.setItem(LOCAL_STORAGE_CLAIMED_KEY, JSON.stringify(map));
+      } catch {
+      }
+    };
+    normalizeVipToken = (raw) => {
+      return String(raw || "").trim().toUpperCase().replace(/^#/, "");
+    };
+    isFounderEmail = (email) => {
+      if (!email) return false;
+      const clean = email.trim().toLowerCase();
+      return clean === PRIMARY_FOUNDER_EMAIL;
+    };
+    isRecognizedVipTokenPattern = (token) => {
+      const clean = normalizeVipToken(token);
+      if (!clean) return false;
+      if (clean === FOUNDER_PASS_TOKEN) {
+        return true;
+      }
+      return isValidPassId(clean);
+    };
+    checkVipTokenStatus = async (rawToken, currentUserId, currentUserEmail) => {
+      const clean = normalizeVipToken(rawToken);
+      const cleanEmail = (currentUserEmail || "").trim().toLowerCase();
+      if (!clean) {
+        return {
+          valid: false,
+          allowed: false,
+          isAlreadyClaimed: false,
+          isClaimedByMe: false,
+          tokenCode: "",
+          error: "Please enter a valid VIP token."
+        };
+      }
+      const isMasterToken = clean === FOUNDER_PASS_TOKEN || clean === "AKN-2027" || clean === "AKN-VIP-2027";
+      if (isMasterToken) {
+        if (cleanEmail && !isFounderEmail(cleanEmail)) {
+          return {
+            valid: true,
+            allowed: false,
+            isAlreadyClaimed: true,
+            isClaimedByMe: false,
+            tokenCode: clean,
+            boundEmail: PRIMARY_FOUNDER_EMAIL,
+            error: PASS_ALREADY_CLAIMED_ERROR
+          };
+        }
+        if (cleanEmail && isFounderEmail(cleanEmail)) {
+          return {
+            valid: true,
+            allowed: true,
+            isAlreadyClaimed: true,
+            isClaimedByMe: true,
+            tokenCode: clean,
+            boundEmail: PRIMARY_FOUNDER_EMAIL
+          };
+        }
+      }
+      if (isSupabaseConfigured) {
+        try {
+          const { data, error } = await supabase.from("vip_tokens").select("*").eq("token_code", clean).maybeSingle();
+          if (!error && data) {
+            const tokenRecord = data;
+            const boundEmail = (tokenRecord.claimed_holder_email || "").trim().toLowerCase();
+            if (tokenRecord.is_claimed || boundEmail) {
+              const isSameEmail = Boolean(cleanEmail && boundEmail && cleanEmail === boundEmail);
+              const isSameUserNoEmailConflict = Boolean(
+                !boundEmail && currentUserId && tokenRecord.claimed_by_user_id === currentUserId
+              );
+              const isOwner = isSameEmail || isSameUserNoEmailConflict;
+              if (isOwner) {
+                return {
+                  valid: true,
+                  allowed: true,
+                  isAlreadyClaimed: true,
+                  isClaimedByMe: true,
+                  tokenCode: clean,
+                  boundEmail: boundEmail || null,
+                  record: tokenRecord
+                };
+              }
+              return {
+                valid: true,
+                allowed: false,
+                isAlreadyClaimed: true,
+                isClaimedByMe: false,
+                tokenCode: clean,
+                boundEmail: boundEmail || null,
+                error: PASS_ALREADY_CLAIMED_ERROR,
+                record: tokenRecord
+              };
+            }
+            return {
+              valid: true,
+              allowed: true,
+              isAlreadyClaimed: false,
+              isClaimedByMe: false,
+              tokenCode: clean,
+              boundEmail: null,
+              record: tokenRecord
+            };
+          }
+        } catch (err) {
+          console.warn("[VipTokens] Database check exception:", err);
+        }
+      }
+      const localMap = getLocalClaimedMap();
+      const localRecord = localMap[clean];
+      if (localRecord && (localRecord.is_claimed || localRecord.claimed_holder_email)) {
+        const localBoundEmail = (localRecord.claimed_holder_email || "").trim().toLowerCase();
+        const isSameEmail = Boolean(cleanEmail && localBoundEmail && cleanEmail === localBoundEmail);
+        const isSameUser = Boolean(
+          !localBoundEmail && currentUserId && localRecord.claimed_by_user_id === currentUserId
+        );
+        if (isSameEmail || isSameUser) {
+          return {
+            valid: true,
+            allowed: true,
+            isAlreadyClaimed: true,
+            isClaimedByMe: true,
+            tokenCode: clean,
+            boundEmail: localBoundEmail || null
+          };
+        }
+        return {
+          valid: true,
+          allowed: false,
+          isAlreadyClaimed: true,
+          isClaimedByMe: false,
+          tokenCode: clean,
+          boundEmail: localBoundEmail || null,
+          error: PASS_ALREADY_CLAIMED_ERROR
+        };
+      }
+      if (isRecognizedVipTokenPattern(clean)) {
+        return {
+          valid: true,
+          allowed: true,
+          isAlreadyClaimed: false,
+          isClaimedByMe: false,
+          tokenCode: clean,
+          boundEmail: null
+        };
+      }
+      return {
+        valid: false,
+        allowed: false,
+        isAlreadyClaimed: false,
+        isClaimedByMe: false,
+        tokenCode: clean,
+        error: "Unrecognized VIP token."
+      };
+    };
+    claimVipTokenForUser = async (rawToken, userId, holderName, holderEmail) => {
+      const clean = normalizeVipToken(rawToken);
+      const cleanEmail = (holderEmail || "").trim().toLowerCase();
+      if (!clean || !userId && !cleanEmail) {
+        return { success: false, error: "Token and User Email/ID are required." };
+      }
+      const isMasterToken = clean === FOUNDER_PASS_TOKEN || clean === "AKN-2027" || clean === "AKN-VIP-2027";
+      if (isMasterToken) {
+        if (!isFounderEmail(cleanEmail)) {
+          return {
+            success: false,
+            error: PASS_ALREADY_CLAIMED_ERROR,
+            message: PASS_ALREADY_CLAIMED_ERROR
+          };
+        }
+        const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+        const updateData = {
+          is_claimed: true,
+          claimed_by_user_id: userId,
+          claimed_holder_name: holderName || "Odi Selis",
+          claimed_holder_email: PRIMARY_FOUNDER_EMAIL,
+          claimed_at: nowIso,
+          updated_at: nowIso
+        };
+        if (isSupabaseConfigured) {
+          try {
+            const { data: existing } = await supabase.from("vip_tokens").select("id").eq("token_code", clean).maybeSingle();
+            if (existing) {
+              await supabase.from("vip_tokens").update(updateData).eq("token_code", clean);
+            } else {
+              await supabase.from("vip_tokens").insert({ token_code: clean, ...updateData });
+            }
+          } catch (err) {
+            console.warn("[VipTokens] Founder token update notice:", err);
+          }
+        }
+        setLocalClaim(clean, userId, PRIMARY_FOUNDER_EMAIL, holderName || "Odi Selis");
+        return {
+          success: true,
+          message: "Founders Pass (#0) bound to odi.selis3@gmail.com."
+        };
+      }
+      const status = await checkVipTokenStatus(clean, userId, cleanEmail);
+      if (!status.valid) {
+        return {
+          success: false,
+          error: status.error || "Unrecognized VIP token.",
+          message: status.error || "Unrecognized VIP token."
+        };
+      }
+      if (status.isAlreadyClaimed) {
+        if (status.isClaimedByMe) {
+          return {
+            success: true,
+            message: "VIP Pass already bound to your account.",
+            record: status.record
+          };
+        }
+        return {
+          success: false,
+          error: PASS_ALREADY_CLAIMED_ERROR,
+          message: PASS_ALREADY_CLAIMED_ERROR
+        };
+      }
+      if (isSupabaseConfigured) {
+        try {
+          const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+          const { data: existing } = await supabase.from("vip_tokens").select("*").eq("token_code", clean).maybeSingle();
+          if (existing) {
+            const existingBoundEmail = (existing.claimed_holder_email || "").trim().toLowerCase();
+            if (existing.is_claimed || existingBoundEmail) {
+              const isSameEmail = Boolean(cleanEmail && existingBoundEmail && cleanEmail === existingBoundEmail);
+              const isSameUser = Boolean(!existingBoundEmail && userId && existing.claimed_by_user_id === userId);
+              if (isSameEmail || isSameUser) {
+                return {
+                  success: true,
+                  message: "VIP Pass already bound to your account.",
+                  record: existing
+                };
+              }
+              return {
+                success: false,
+                error: PASS_ALREADY_CLAIMED_ERROR,
+                message: PASS_ALREADY_CLAIMED_ERROR
+              };
+            }
+            const updateData = {
+              is_claimed: true,
+              claimed_by_user_id: userId,
+              claimed_at: nowIso,
+              updated_at: nowIso
+            };
+            if (holderName) updateData.claimed_holder_name = holderName.trim();
+            if (cleanEmail) updateData.claimed_holder_email = cleanEmail;
+            const { data: updated, error: updateErr } = await supabase.from("vip_tokens").update(updateData).eq("token_code", clean).select().single();
+            if (updateErr) {
+              console.warn("[VipTokens] Update error:", updateErr.message);
+            } else if (updated) {
+              await supabase.from("profiles").update({
+                has_vip_pass: true,
+                is_vip: true,
+                role: clean === FOUNDER_PASS_TOKEN ? "CREATOR" : "VIP_GUEST",
+                vip_code_redeemed: clean,
+                updated_at: nowIso
+              }).eq("id", userId);
+              setLocalClaim(clean, userId, cleanEmail, holderName);
+              return {
+                success: true,
+                message: "VIP Pass officially bound to your account.",
+                record: updated
+              };
+            }
+          } else {
+            const insertData = {
+              token_code: clean,
+              is_claimed: true,
+              claimed_by_user_id: userId,
+              claimed_at: nowIso,
+              updated_at: nowIso
+            };
+            if (holderName) insertData.claimed_holder_name = holderName.trim();
+            if (cleanEmail) insertData.claimed_holder_email = cleanEmail;
+            const { data: inserted, error: insertErr } = await supabase.from("vip_tokens").insert(insertData).select().single();
+            if (insertErr) {
+              console.warn("[VipTokens] Insert error:", insertErr.message);
+            } else if (inserted) {
+              await supabase.from("profiles").update({
+                has_vip_pass: true,
+                is_vip: true,
+                role: clean === FOUNDER_PASS_TOKEN ? "CREATOR" : "VIP_GUEST",
+                vip_code_redeemed: clean,
+                updated_at: nowIso
+              }).eq("id", userId);
+              setLocalClaim(clean, userId, cleanEmail, holderName);
+              return {
+                success: true,
+                message: "VIP Pass officially bound to your account.",
+                record: inserted
+              };
+            }
+          }
+        } catch (err) {
+          console.warn("[VipTokens] Claim exception:", err);
+        }
+      }
+      setLocalClaim(clean, userId, cleanEmail, holderName);
+      return {
+        success: true,
+        message: "VIP Pass officially bound to your account."
+      };
+    };
+    resetAllVipTokens = async () => {
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.removeItem(VIP_REGISTRY_REFRESH_VERSION_KEY);
+          ensureVipTokenRegistryRefresh();
+        } catch {
+        }
+      }
+      if (isSupabaseConfigured) {
+        try {
+          const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+          const { data, error } = await supabase.from("vip_tokens").update({
+            is_claimed: false,
+            claimed_by_user_id: null,
+            claimed_holder_name: null,
+            claimed_holder_email: null,
+            claimed_at: null,
+            updated_at: nowIso
+          }).neq("token_code", FOUNDER_PASS_TOKEN).select();
+          await supabase.from("vip_tokens").upsert(
+            {
+              token_code: FOUNDER_PASS_TOKEN,
+              is_claimed: true,
+              claimed_holder_name: "Odi Selis",
+              claimed_holder_email: PRIMARY_FOUNDER_EMAIL,
+              updated_at: nowIso
+            },
+            { onConflict: "token_code" }
+          );
+          await supabase.from("profiles").update({
+            vip_code_redeemed: null,
+            has_vip_pass: false,
+            is_vip: false,
+            role: "FREE",
+            updated_at: nowIso
+          }).neq("email", PRIMARY_FOUNDER_EMAIL);
+          if (error) {
+            console.warn("[VipTokens] Supabase reset error:", error.message);
+            return { success: false, error: error.message };
+          }
+          return { success: true, count: data?.length || 100 };
+        } catch (err) {
+          return { success: false, error: err.message };
+        }
+      }
+      return { success: true, count: 100 };
+    };
+  }
+});
+
+// src/lib/vipTokens.ts
+var init_vipTokens2 = __esm({
+  "src/lib/vipTokens.ts"() {
+    init_vipTokens();
+  }
+});
+
+// src/server/authVoteService.ts
+var authVoteService_exports = {};
+__export(authVoteService_exports, {
+  castSubmissionVote: () => castSubmissionVote,
+  createSessionToken: () => createSessionToken,
+  getAllSubmissionRecords: () => getAllSubmissionRecords,
+  getUserByEmail: () => getUserByEmail,
+  getUserByStripeCustomerId: () => getUserByStripeCustomerId,
+  getUserFromSessionToken: () => getUserFromSessionToken,
+  getVotesSummary: () => getVotesSummary,
+  hashPassword: () => hashPassword,
+  loginUserCredentials: () => loginUserCredentials,
+  registerUserCredentials: () => registerUserCredentials,
+  resetTestAccountData: () => resetTestAccountData,
+  saveSubmissionRecord: () => saveSubmissionRecord,
+  updateUserPassword: () => updateUserPassword,
+  updateUserSubscription: () => updateUserSubscription,
+  verifyPassword: () => verifyPassword,
+  verifySessionToken: () => verifySessionToken
+});
+import fs from "fs";
+import path from "path";
+import crypto from "crypto";
+function loadUsersStore() {
+  const merged = { users: {} };
+  let found = false;
+  for (const file of [LOCAL_USERS_FILE, TMP_USERS_FILE]) {
+    if (fs.existsSync(file)) {
+      try {
+        const raw = fs.readFileSync(file, "utf8");
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.users === "object") {
+          Object.assign(merged.users, parsed.users);
+          found = true;
+        }
+      } catch {
+      }
+    }
+  }
+  return found ? merged : { users: {} };
+}
+function saveUsersStore(store) {
+  const json = JSON.stringify(store, null, 2);
+  const targets = [TMP_USERS_FILE, LOCAL_USERS_FILE];
+  for (const file of targets) {
+    try {
+      const dir = path.dirname(file);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(file, json, "utf8");
+    } catch {
+    }
+  }
+}
+function loadVotesStore() {
+  const merged = { votes: {} };
+  let found = false;
+  for (const file of [LOCAL_VOTES_FILE, TMP_VOTES_FILE]) {
+    if (fs.existsSync(file)) {
+      try {
+        const raw = fs.readFileSync(file, "utf8");
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.votes === "object") {
+          for (const [key, val] of Object.entries(parsed.votes)) {
+            if (!merged.votes[key]) {
+              merged.votes[key] = val;
+            } else {
+              const existing = merged.votes[key];
+              const combinedVoters = Array.from(/* @__PURE__ */ new Set([...existing.voters || [], ...val.voters || []]));
+              merged.votes[key] = {
+                ...existing,
+                ...val,
+                voters: combinedVoters,
+                votesCount: Math.max(val.votesCount || 0, existing.votesCount || 0),
+                updatedAt: val.updatedAt || existing.updatedAt
+              };
+            }
+          }
+          found = true;
+        }
+      } catch {
+      }
+    }
+  }
+  return found ? merged : { votes: {} };
+}
+function saveVotesStore(store) {
+  const json = JSON.stringify(store, null, 2);
+  const targets = [TMP_VOTES_FILE, LOCAL_VOTES_FILE];
+  for (const file of targets) {
+    try {
+      const dir = path.dirname(file);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(file, json, "utf8");
+    } catch {
+    }
+  }
+}
+function loadSubmissionsStore() {
+  const merged = { submissions: {} };
+  let found = false;
+  for (const file of [LOCAL_SUBMISSIONS_FILE, TMP_SUBMISSIONS_FILE]) {
+    if (fs.existsSync(file)) {
+      try {
+        const raw = fs.readFileSync(file, "utf8");
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.submissions === "object") {
+          Object.assign(merged.submissions, parsed.submissions);
+          found = true;
+        }
+      } catch {
+      }
+    }
+  }
+  return found ? merged : { submissions: {} };
+}
+function saveSubmissionsStore(store) {
+  const json = JSON.stringify(store, null, 2);
+  const targets = [TMP_SUBMISSIONS_FILE, LOCAL_SUBMISSIONS_FILE];
+  for (const file of targets) {
+    try {
+      const dir = path.dirname(file);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(file, json, "utf8");
+    } catch {
+    }
+  }
+}
+function resetTestAccountData(email = "hanna.meers@gmail.com") {
+  const normEmail = email.toLowerCase().trim();
+  _userStore = loadUsersStore();
+  if (_userStore.users[normEmail]) {
+    _userStore.users[normEmail].claimedSector = null;
+    saveUsersStore(_userStore);
+  }
+  _submissionsStore = loadSubmissionsStore();
+  let changed = false;
+  for (const [key, sub] of Object.entries(_submissionsStore.submissions || {})) {
+    const subEmail = String(sub?.authorEmail || "").toLowerCase();
+    const subName = String(sub?.planetName || "").toLowerCase();
+    if (subEmail === normEmail || subName === "aethelgard" || key.toLowerCase().includes("aethelgard")) {
+      delete _submissionsStore.submissions[key];
+      changed = true;
+    }
+  }
+  if (changed) {
+    saveSubmissionsStore(_submissionsStore);
+  }
+}
+function saveSubmissionRecord(sub) {
+  if (!sub || !sub.id) {
+    return { success: false, submission: sub };
+  }
+  _submissionsStore = loadSubmissionsStore();
+  _submissionsStore.submissions[sub.id] = sub;
+  saveSubmissionsStore(_submissionsStore);
+  _voteStore = loadVotesStore();
+  const existingVote = _voteStore.votes[sub.id];
+  const authorEmail = (sub.authorEmail || sub.humanAnswers?.email || "").trim().toLowerCase();
+  const authorUsername = (sub.authorUsername || "").trim().toLowerCase().replace(/^@/, "");
+  const authorId = sub.userId || null;
+  if (existingVote) {
+    if (authorId) existingVote.authorId = authorId;
+    if (authorEmail) existingVote.authorEmail = authorEmail;
+    if (authorUsername) existingVote.authorUsername = authorUsername;
+    existingVote.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+    _voteStore.votes[sub.id] = existingVote;
+  } else {
+    _voteStore.votes[sub.id] = {
+      submissionId: sub.id,
+      voters: [],
+      baselineVotes: sub.id === "planet-amlemi-genesis-01" ? 3 : 1,
+      votesCount: sub.id === "planet-amlemi-genesis-01" ? 3 : Math.max(1, sub.votesCount || 1),
+      authorId,
+      authorEmail: authorEmail || null,
+      authorUsername: authorUsername || null,
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+  }
+  saveVotesStore(_voteStore);
+  return { success: true, submission: sub };
+}
+function getAllSubmissionRecords() {
+  _submissionsStore = loadSubmissionsStore();
+  return Object.values(_submissionsStore.submissions || {});
+}
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  return { salt, hash };
+}
+function verifyPassword(password, salt, expectedHash) {
+  try {
+    const derivedHash = crypto.scryptSync(password, salt, 64);
+    const expectedBuf = Buffer.from(expectedHash, "hex");
+    return crypto.timingSafeEqual(derivedHash, expectedBuf);
+  } catch {
+    return false;
+  }
+}
+function createSessionToken(userId, email) {
+  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+  const exp = Math.floor(Date.now() / 1e3) + 30 * 24 * 60 * 60;
+  const payload = Buffer.from(JSON.stringify({ sub: userId, email, exp })).toString("base64url");
+  const signature = crypto.createHmac("sha256", SESSION_SECRET).update(`${header}.${payload}`).digest("base64url");
+  return `${header}.${payload}.${signature}`;
+}
+function verifySessionToken(token) {
+  if (!token || typeof token !== "string") return { valid: false };
+  const parts = token.split(".");
+  if (parts.length !== 3) return { valid: false };
+  const [header, payload, signature] = parts;
+  const expectedSig = crypto.createHmac("sha256", SESSION_SECRET).update(`${header}.${payload}`).digest("base64url");
+  try {
+    const a = Buffer.from(signature);
+    const b = Buffer.from(expectedSig);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      return { valid: false };
+    }
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (data.exp && data.exp < Math.floor(Date.now() / 1e3)) {
+      return { valid: false };
+    }
+    return { valid: true, userId: data.sub, email: data.email };
+  } catch {
+    return { valid: false };
+  }
+}
+function recordToProfile(u) {
+  return {
+    id: u.id,
+    first_name: u.firstName,
+    last_name: u.lastName,
+    full_name: u.fullName,
+    email: u.email,
+    role: u.role,
+    has_vip_pass: u.hasVipPass,
+    subscription_status: u.subscriptionStatus,
+    vip_code_redeemed: u.vipCodeRedeemed || null,
+    is_vip: u.hasVipPass || u.role === "VIP_GUEST" || u.role === "CREATOR",
+    is_subscriber: u.subscriptionStatus === "active" || u.role === "SUBSCRIBER" || u.role === "ANNUAL_PASS" || u.role === "CREATOR",
+    is_annual_member: u.role === "ANNUAL_PASS" || u.subscriptionStatus === "active" && u.role !== "FREE",
+    stripe_customer_id: u.stripeCustomerId,
+    stripe_subscription_id: u.stripeSubscriptionId,
+    subscription_renewal_date: u.subscriptionRenewalDate,
+    subscription_cancel_at_period_end: u.subscriptionCancelAtPeriodEnd,
+    is_pioneer: u.isPioneer,
+    pioneer_badge: u.pioneerBadge || (u.hasVipPass || u.role === "VIP_GUEST" || u.role === "CREATOR" ? "[VIP-PIONEER-2027]" : "[PIONEER-2027]"),
+    claimed_sector: u.claimedSector || null,
+    created_at: u.createdAt,
+    updated_at: u.updatedAt
+  };
+}
+function getUserByEmail(email) {
+  const cleanEmail = (email || "").trim().toLowerCase();
+  if (!cleanEmail) return null;
+  _userStore = loadUsersStore();
+  return _userStore.users[cleanEmail] || null;
+}
+function getUserByStripeCustomerId(customerId) {
+  if (!customerId) return null;
+  _userStore = loadUsersStore();
+  for (const user of Object.values(_userStore.users)) {
+    if (user.stripeCustomerId === customerId) {
+      return user;
+    }
+  }
+  return null;
+}
+function updateUserSubscription(email, updates) {
+  const cleanEmail = (email || "").trim().toLowerCase();
+  if (!cleanEmail) return false;
+  _userStore = loadUsersStore();
+  let user = _userStore.users[cleanEmail];
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  if (!user) {
+    const userId = `usr_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const namePart = cleanEmail.split("@")[0] || "Collector";
+    const { salt, hash } = hashPassword(crypto.randomBytes(16).toString("hex"));
+    user = {
+      id: userId,
+      email: cleanEmail,
+      firstName: namePart,
+      lastName: "",
+      fullName: namePart,
+      salt,
+      passwordHash: hash,
+      role: updates.role || "ANNUAL_PASS",
+      hasVipPass: updates.hasVipPass ?? true,
+      subscriptionStatus: updates.subscriptionStatus,
+      isPioneer: true,
+      pioneerBadge: "[VIP-PIONEER-2027]",
+      stripeCustomerId: updates.stripeCustomerId,
+      stripeSubscriptionId: updates.stripeSubscriptionId,
+      subscriptionRenewalDate: updates.subscriptionRenewalDate,
+      subscriptionCancelAtPeriodEnd: updates.subscriptionCancelAtPeriodEnd ?? false,
+      createdAt: now,
+      updatedAt: now
+    };
+  } else {
+    if (updates.role) user.role = updates.role;
+    user.subscriptionStatus = updates.subscriptionStatus;
+    if (updates.stripeCustomerId) user.stripeCustomerId = updates.stripeCustomerId;
+    if (updates.stripeSubscriptionId) user.stripeSubscriptionId = updates.stripeSubscriptionId;
+    if (updates.subscriptionRenewalDate !== void 0) user.subscriptionRenewalDate = updates.subscriptionRenewalDate;
+    if (updates.subscriptionCancelAtPeriodEnd !== void 0) user.subscriptionCancelAtPeriodEnd = updates.subscriptionCancelAtPeriodEnd;
+    if (updates.hasVipPass !== void 0) user.hasVipPass = updates.hasVipPass;
+    if (user.role === "ANNUAL_PASS" || updates.subscriptionStatus === "active") {
+      user.hasVipPass = true;
+      user.pioneerBadge = "[VIP-PIONEER-2027]";
+    }
+    user.updatedAt = now;
+  }
+  _userStore.users[cleanEmail] = user;
+  saveUsersStore(_userStore);
+  return true;
+}
+async function registerUserCredentials(params) {
+  const cleanEmail = params.email.trim().toLowerCase();
+  const cleanFirst = params.firstName.trim();
+  const cleanLast = (params.lastName || "").trim();
+  if (!cleanEmail || !cleanEmail.includes("@")) {
+    return { success: false, error: "Please enter a valid email address." };
+  }
+  if (!params.password || params.password.length < 6) {
+    return { success: false, error: "Password must be at least 6 characters." };
+  }
+  if (!cleanFirst) {
+    return { success: false, error: "First name is required." };
+  }
+  _userStore = loadUsersStore();
+  if (_userStore.users[cleanEmail]) {
+    return { success: false, error: "An account with this email already exists. Please sign in." };
+  }
+  const { salt, hash } = hashPassword(params.password);
+  const isFounder = isFounderEmail(cleanEmail);
+  const role = isFounder ? "CREATOR" : params.role || "FREE";
+  const hasVipPass = Boolean(isFounder || role === "VIP_GUEST" || role === "CREATOR" || params.passCode);
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const userId = `usr_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+  const newRecord = {
+    id: userId,
+    email: cleanEmail,
+    firstName: cleanFirst,
+    lastName: cleanLast,
+    fullName: `${cleanFirst} ${cleanLast}`.trim(),
+    salt,
+    passwordHash: hash,
+    role,
+    hasVipPass,
+    vipCodeRedeemed: isFounder ? FOUNDING_PASS_ID : params.passCode || null,
+    subscriptionStatus: isFounder ? "active" : "inactive",
+    isPioneer: true,
+    pioneerBadge: hasVipPass || role === "VIP_GUEST" || role === "CREATOR" ? "[VIP-PIONEER-2027]" : "[PIONEER-2027]",
+    claimedSector: isFounder ? "\xC4mlemi" : null,
+    createdAt: now,
+    updatedAt: now
+  };
+  _userStore.users[cleanEmail] = newRecord;
+  saveUsersStore(_userStore);
+  const profile = recordToProfile(newRecord);
+  const sessionToken = createSessionToken(newRecord.id, newRecord.email);
+  const user = {
+    id: newRecord.id,
+    email: newRecord.email,
+    user_metadata: {
+      first_name: newRecord.firstName,
+      last_name: newRecord.lastName,
+      full_name: newRecord.fullName
+    }
+  };
+  return {
+    success: true,
+    user,
+    profile,
+    sessionToken
+  };
+}
+async function loginUserCredentials(email, password) {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail || !cleanEmail.includes("@")) {
+    return { success: false, error: "Please enter a valid email address." };
+  }
+  if (!password) {
+    return { success: false, error: "Please enter your password." };
+  }
+  _userStore = loadUsersStore();
+  const existing = _userStore.users[cleanEmail];
+  if (!existing) {
+    return { success: false, error: "Invalid email or password." };
+  }
+  const isMatch = verifyPassword(password, existing.salt, existing.passwordHash);
+  if (!isMatch) {
+    return { success: false, error: "Invalid email or password." };
+  }
+  const profile = recordToProfile(existing);
+  const sessionToken = createSessionToken(existing.id, existing.email);
+  const user = {
+    id: existing.id,
+    email: existing.email,
+    user_metadata: {
+      first_name: existing.firstName,
+      last_name: existing.lastName,
+      full_name: existing.fullName
+    }
+  };
+  return {
+    success: true,
+    user,
+    profile,
+    sessionToken
+  };
+}
+async function updateUserPassword(email, newPassword) {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail || !cleanEmail.includes("@")) {
+    return { success: false, error: "Please enter a valid email address." };
+  }
+  if (!newPassword || newPassword.length < 6) {
+    return { success: false, error: "Password must be at least 6 characters." };
+  }
+  _userStore = loadUsersStore();
+  const existing = _userStore.users[cleanEmail];
+  const { salt, hash } = hashPassword(newPassword);
+  if (!existing) {
+    const isFounder = isFounderEmail(cleanEmail);
+    const role = isFounder ? "CREATOR" : "FREE";
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const userId = `usr_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const newRecord = {
+      id: userId,
+      email: cleanEmail,
+      firstName: cleanEmail.split("@")[0],
+      lastName: "",
+      fullName: cleanEmail.split("@")[0],
+      salt,
+      passwordHash: hash,
+      role,
+      hasVipPass: isFounder,
+      subscriptionStatus: isFounder ? "active" : "inactive",
+      isPioneer: true,
+      pioneerBadge: isFounder ? "[VIP-PIONEER-2027]" : "[PIONEER-2027]",
+      createdAt: now,
+      updatedAt: now
+    };
+    _userStore.users[cleanEmail] = newRecord;
+    saveUsersStore(_userStore);
+    return { success: true };
+  }
+  existing.salt = salt;
+  existing.passwordHash = hash;
+  existing.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+  _userStore.users[cleanEmail] = existing;
+  saveUsersStore(_userStore);
+  return { success: true };
+}
+async function getUserFromSessionToken(token) {
+  const verified = verifySessionToken(token);
+  if (!verified.valid || !verified.email) {
+    return { success: false, error: "Invalid or expired session token." };
+  }
+  _userStore = loadUsersStore();
+  const existing = _userStore.users[verified.email.toLowerCase()];
+  if (!existing) {
+    return { success: false, error: "User record not found." };
+  }
+  return {
+    success: true,
+    user: {
+      id: existing.id,
+      email: existing.email,
+      user_metadata: {
+        first_name: existing.firstName,
+        last_name: existing.lastName,
+        full_name: existing.fullName
+      }
+    },
+    profile: recordToProfile(existing)
+  };
+}
+function castSubmissionVote(params) {
+  const {
+    submissionId,
+    voterId,
+    voterEmail,
+    voterUsername,
+    submissionAuthorId,
+    submissionAuthorEmail,
+    submissionAuthorUsername,
+    baseVotes
+  } = params;
+  if (!submissionId) {
+    return { success: false, newVotesCount: 1, hasVoted: false, error: "Missing submission ID." };
+  }
+  if (!voterId) {
+    return { success: false, newVotesCount: 1, hasVoted: false, error: "Voter identification required." };
+  }
+  _voteStore = loadVotesStore();
+  _submissionsStore = loadSubmissionsStore();
+  const storedSub = _submissionsStore.submissions[submissionId];
+  const existingVote = _voteStore.votes[submissionId] || {
+    submissionId,
+    voters: [],
+    baselineVotes: submissionId === "planet-amlemi-genesis-01" ? 3 : 1,
+    votesCount: submissionId === "planet-amlemi-genesis-01" ? 3 : Math.max(1, baseVotes || 1),
+    authorId: submissionAuthorId || storedSub?.userId || null,
+    authorEmail: submissionAuthorEmail || storedSub?.authorEmail || storedSub?.humanAnswers?.email || null,
+    authorUsername: submissionAuthorUsername || storedSub?.authorUsername || null,
+    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  const cleanVoterEmail = voterEmail?.trim().toLowerCase();
+  const cleanAuthorEmail = (submissionAuthorEmail || existingVote.authorEmail || storedSub?.authorEmail || storedSub?.humanAnswers?.email || "").trim().toLowerCase();
+  const cleanVoterUser = voterUsername?.trim().toLowerCase().replace(/^@/, "");
+  const cleanAuthorUser = (submissionAuthorUsername || existingVote.authorUsername || storedSub?.authorUsername || "").trim().toLowerCase().replace(/^@/, "");
+  const effectiveAuthorId = submissionAuthorId || existingVote.authorId || storedSub?.userId;
+  const voterUserRecord = cleanVoterEmail ? _userStore.users[cleanVoterEmail] : null;
+  const isSelfById = Boolean(effectiveAuthorId && voterId && (effectiveAuthorId === voterId || effectiveAuthorId === `id:${voterId}`));
+  const isSelfByEmail = Boolean(cleanVoterEmail && cleanAuthorEmail && cleanVoterEmail === cleanAuthorEmail);
+  const isSelfByUsername = Boolean(cleanVoterUser && cleanAuthorUser && cleanVoterUser === cleanAuthorUser);
+  const isSelfByRegisteredId = Boolean(voterUserRecord?.id && effectiveAuthorId && voterUserRecord.id === effectiveAuthorId);
+  const isSelfByAuthorUser = Boolean(cleanAuthorEmail && voterUserRecord && voterUserRecord.email === cleanAuthorEmail);
+  if (isSelfById || isSelfByEmail || isSelfByUsername || isSelfByRegisteredId || isSelfByAuthorUser) {
+    return {
+      success: false,
+      newVotesCount: existingVote.votesCount || baseVotes || 1,
+      hasVoted: false,
+      error: "Self-voting is not allowed: You cannot vote for your own world submission."
+    };
+  }
+  const isVoterMatch = (entry) => {
+    if (!entry) return false;
+    if (entry === voterId || entry === `id:${voterId}`) return true;
+    if (cleanVoterEmail && (entry === cleanVoterEmail || entry === `email:${cleanVoterEmail}`)) return true;
+    if (voterUserRecord?.id && (entry === voterUserRecord.id || entry === `id:${voterUserRecord.id}`)) return true;
+    return false;
+  };
+  const hasAlreadyVoted = existingVote.voters.some(isVoterMatch);
+  let hasVoted = false;
+  if (hasAlreadyVoted) {
+    existingVote.voters = existingVote.voters.filter((v) => !isVoterMatch(v));
+    hasVoted = false;
+  } else {
+    const canonicalKey = cleanVoterEmail ? `email:${cleanVoterEmail}` : `id:${voterId}`;
+    existingVote.voters.push(canonicalKey);
+    hasVoted = true;
+  }
+  const isAmlemi = submissionId === "planet-amlemi-genesis-01";
+  const baseline = isAmlemi ? 3 : existingVote.baselineVotes || 1;
+  existingVote.baselineVotes = baseline;
+  const calculatedVotes = baseline + existingVote.voters.length;
+  existingVote.votesCount = calculatedVotes;
+  existingVote.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+  if (submissionAuthorId) existingVote.authorId = submissionAuthorId;
+  if (cleanAuthorEmail) existingVote.authorEmail = cleanAuthorEmail;
+  if (cleanAuthorUser) existingVote.authorUsername = cleanAuthorUser;
+  _voteStore.votes[submissionId] = existingVote;
+  saveVotesStore(_voteStore);
+  if (isSupabaseConfigured) {
+    Promise.resolve(
+      supabase.from("user_dossiers").update({ votes_count: calculatedVotes }).eq("id", submissionId)
+    ).catch((err) => console.warn("[Vote] Supabase sync notice:", err));
+  }
+  return {
+    success: true,
+    newVotesCount: calculatedVotes,
+    hasVoted
+  };
+}
+function getVotesSummary(voterId, voterEmail, persistentVoterId) {
+  _voteStore = loadVotesStore();
+  const cleanVoterEmail = voterEmail?.trim().toLowerCase();
+  const voterUser = cleanVoterEmail ? _userStore.users[cleanVoterEmail] : null;
+  const isVoterMatch = (entry) => {
+    if (!entry) return false;
+    if (voterId && (entry === voterId || entry === `id:${voterId}`)) return true;
+    if (persistentVoterId && (entry === persistentVoterId || entry === `id:${persistentVoterId}`)) return true;
+    if (cleanVoterEmail && (entry === cleanVoterEmail || entry === `email:${cleanVoterEmail}`)) return true;
+    if (voterUser && (entry === voterUser.id || entry === `id:${voterUser.id}`)) return true;
+    return false;
+  };
+  const votesCountByDossier = {};
+  const userVotedIds = [];
+  for (const [subId, record] of Object.entries(_voteStore.votes)) {
+    votesCountByDossier[subId] = record.votesCount;
+    if (record.voters.some(isVoterMatch)) {
+      userVotedIds.push(subId);
+    }
+  }
+  if (votesCountByDossier["planet-amlemi-genesis-01"] === void 0) {
+    votesCountByDossier["planet-amlemi-genesis-01"] = 3;
+  }
+  return { votesCountByDossier, userVotedIds };
+}
+var FOUNDING_PASS_ID, DATA_DIR, TMP_DIR, LOCAL_USERS_FILE, TMP_USERS_FILE, LOCAL_VOTES_FILE, TMP_VOTES_FILE, LOCAL_SUBMISSIONS_FILE, TMP_SUBMISSIONS_FILE, SESSION_SECRET, _userStore, _voteStore, _submissionsStore;
+var init_authVoteService = __esm({
+  "src/server/authVoteService.ts"() {
+    init_supabase();
+    init_vipTokens2();
+    FOUNDING_PASS_ID = "AKN-VIP-2027-X0914";
+    DATA_DIR = path.resolve(process.cwd(), "data");
+    TMP_DIR = "/tmp";
+    LOCAL_USERS_FILE = path.join(DATA_DIR, "auth_users.json");
+    TMP_USERS_FILE = path.join(TMP_DIR, "sillow_auth_users.json");
+    LOCAL_VOTES_FILE = path.join(DATA_DIR, "votes_store.json");
+    TMP_VOTES_FILE = path.join(TMP_DIR, "sillow_votes_store.json");
+    LOCAL_SUBMISSIONS_FILE = path.join(DATA_DIR, "submissions_store.json");
+    TMP_SUBMISSIONS_FILE = path.join(TMP_DIR, "sillow_submissions_store.json");
+    if (!fs.existsSync(DATA_DIR)) {
+      try {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      } catch {
+      }
+    }
+    SESSION_SECRET = process.env.AUTH_SECRET || process.env.STRIPE_SECRET_KEY || "sillow-mill-akinoya-secure-session-secret-2027";
+    _userStore = loadUsersStore();
+    _voteStore = loadVotesStore();
+    _submissionsStore = loadSubmissionsStore();
+  }
+});
+
 // api/nfc/_googleSheetsSync.js
 var googleSheetsSync_exports = {};
 __export(googleSheetsSync_exports, {
@@ -28,9 +1167,9 @@ __export(googleSheetsSync_exports, {
   syncPassClaimToGoogleSheets: () => syncPassClaimToGoogleSheets,
   syncSubscriberRowToGoogleSheets: () => syncSubscriberRowToGoogleSheets
 });
-import fs2 from "fs";
-import path2 from "path";
-import crypto from "crypto";
+import fs3 from "fs";
+import path3 from "path";
+import crypto2 from "crypto";
 function sanitizePrivateKey(rawKey) {
   if (!rawKey) return "";
   let key = String(rawKey).trim();
@@ -55,7 +1194,7 @@ function createServiceAccountJwt(clientEmail, privateKey) {
   const encodedHeader = Buffer.from(JSON.stringify(header)).toString("base64url");
   const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const unsignedToken = `${encodedHeader}.${encodedPayload}`;
-  const signer = crypto.createSign("RSA-SHA256");
+  const signer = crypto2.createSign("RSA-SHA256");
   signer.update(unsignedToken);
   const cleanKey = sanitizePrivateKey(privateKey);
   const signature = signer.sign(cleanKey, "base64url");
@@ -98,15 +1237,15 @@ function getOAuthCredentials() {
   let refreshToken = cleanEnvValue(process.env.GOOGLE_SHEETS_REFRESH_TOKEN);
   if (!clientId || !clientSecret || !refreshToken) {
     const envFiles = [
-      path2.resolve(process.cwd(), ".env.vercel"),
-      path2.resolve(process.cwd(), ".env.production.local"),
-      path2.resolve(process.cwd(), ".env.local"),
-      path2.resolve(process.cwd(), ".env")
+      path3.resolve(process.cwd(), ".env.vercel"),
+      path3.resolve(process.cwd(), ".env.production.local"),
+      path3.resolve(process.cwd(), ".env.local"),
+      path3.resolve(process.cwd(), ".env")
     ];
     for (const envPath of envFiles) {
       try {
-        if (fs2.existsSync(envPath)) {
-          const content = fs2.readFileSync(envPath, "utf8");
+        if (fs3.existsSync(envPath)) {
+          const content = fs3.readFileSync(envPath, "utf8");
           for (const line of content.split(/\r?\n/)) {
             const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
             if (!match) continue;
@@ -125,12 +1264,12 @@ function getOAuthCredentials() {
   if (!clientId || !clientSecret || !refreshToken) {
     const localTokenPaths = [
       "/Users/odi/.gemini/antigravity/plugin_data/gsheets/token.json",
-      path2.resolve(process.cwd(), ".gsheets_token.json")
+      path3.resolve(process.cwd(), ".gsheets_token.json")
     ];
     for (const p of localTokenPaths) {
       try {
-        if (fs2.existsSync(p)) {
-          const data = JSON.parse(fs2.readFileSync(p, "utf8"));
+        if (fs3.existsSync(p)) {
+          const data = JSON.parse(fs3.readFileSync(p, "utf8"));
           clientId = clientId || cleanEnvValue(data.client_id);
           clientSecret = clientSecret || cleanEnvValue(data.client_secret);
           refreshToken = refreshToken || cleanEnvValue(data.token && data.token.refresh_token);
@@ -694,14 +1833,14 @@ async function appendWhitelistEmailToGoogleSheets({
     status: "Whitelisted \u2014 Wave 2 Priority",
     notes
   };
-  for (const filePath of ["/tmp/sillow_whitelist.json", path2.resolve(process.cwd(), "data", "whitelist.json")]) {
+  for (const filePath of ["/tmp/sillow_whitelist.json", path3.resolve(process.cwd(), "data", "whitelist.json")]) {
     try {
-      const dir = path2.dirname(filePath);
-      if (fs2.existsSync(dir)) {
+      const dir = path3.dirname(filePath);
+      if (fs3.existsSync(dir)) {
         let list = [];
-        if (fs2.existsSync(filePath)) {
+        if (fs3.existsSync(filePath)) {
           try {
-            list = JSON.parse(fs2.readFileSync(filePath, "utf8"));
+            list = JSON.parse(fs3.readFileSync(filePath, "utf8"));
             if (!Array.isArray(list)) list = [];
           } catch {
             list = [];
@@ -713,7 +1852,7 @@ async function appendWhitelistEmailToGoogleSheets({
         } else {
           list.push(entry);
         }
-        fs2.writeFileSync(filePath, JSON.stringify(list, null, 2), "utf8");
+        fs3.writeFileSync(filePath, JSON.stringify(list, null, 2), "utf8");
       }
     } catch {
     }
@@ -847,14 +1986,14 @@ async function appendWaitlistSubmissionToGoogleSheets({
   const cleanFirst = String(firstName || "").trim();
   const cleanLastInitial = String(lastInitial || "").trim().toUpperCase().replace(/\.$/, "");
   const responsesJson = typeof questionnaireResponses === "string" ? questionnaireResponses : JSON.stringify(questionnaireResponses || {});
-  const waitlistFile = path2.resolve(process.cwd(), "data/waitlist_store.json");
+  const waitlistFile = path3.resolve(process.cwd(), "data/waitlist_store.json");
   try {
-    const dir = path2.dirname(waitlistFile);
-    if (!fs2.existsSync(dir)) fs2.mkdirSync(dir, { recursive: true });
+    const dir = path3.dirname(waitlistFile);
+    if (!fs3.existsSync(dir)) fs3.mkdirSync(dir, { recursive: true });
     let existingEntries = [];
-    if (fs2.existsSync(waitlistFile)) {
+    if (fs3.existsSync(waitlistFile)) {
       try {
-        existingEntries = JSON.parse(fs2.readFileSync(waitlistFile, "utf8"));
+        existingEntries = JSON.parse(fs3.readFileSync(waitlistFile, "utf8"));
       } catch {
       }
     }
@@ -869,7 +2008,7 @@ async function appendWaitlistSubmissionToGoogleSheets({
     };
     const filtered = existingEntries.filter((e) => e && e.email !== cleanEmail);
     filtered.push(newEntry);
-    fs2.writeFileSync(waitlistFile, JSON.stringify(filtered, null, 2), "utf8");
+    fs3.writeFileSync(waitlistFile, JSON.stringify(filtered, null, 2), "utf8");
     console.log(`[Waitlist Store] Recorded submission for ${cleanEmail} in ${waitlistFile}`);
   } catch (storeErr) {
     console.warn("[Waitlist Store Notice]:", storeErr);
@@ -1000,14 +2139,14 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
     q5,
     status
   ];
-  const localFile = path2.resolve(process.cwd(), "data/prelaunch_submissions.json");
+  const localFile = path3.resolve(process.cwd(), "data/prelaunch_submissions.json");
   try {
-    const dir = path2.dirname(localFile);
-    if (!fs2.existsSync(dir)) fs2.mkdirSync(dir, { recursive: true });
+    const dir = path3.dirname(localFile);
+    if (!fs3.existsSync(dir)) fs3.mkdirSync(dir, { recursive: true });
     let existingList = [];
-    if (fs2.existsSync(localFile)) {
+    if (fs3.existsSync(localFile)) {
       try {
-        existingList = JSON.parse(fs2.readFileSync(localFile, "utf8"));
+        existingList = JSON.parse(fs3.readFileSync(localFile, "utf8"));
       } catch {
       }
     }
@@ -1027,7 +2166,7 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
     };
     const filtered = existingList.filter((e) => !(e.email === cleanEmail && e.worldName === worldName));
     filtered.push(storeEntry);
-    fs2.writeFileSync(localFile, JSON.stringify(filtered, null, 2), "utf8");
+    fs3.writeFileSync(localFile, JSON.stringify(filtered, null, 2), "utf8");
     console.log(`[Pre-Launch Store] Recorded entry for ${cleanEmail} (${worldName}) in ${localFile}`);
   } catch (storeErr) {
     console.warn("[Pre-Launch Store Notice]:", storeErr);
@@ -1119,13 +2258,13 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
       const errText = await appendRes.text();
       console.warn("[Pre-Launch Sheets] Append failed:", appendRes.status, errText);
       try {
-        const failQueueFile = path2.resolve(process.cwd(), "data/prelaunch_queue_failed.json");
+        const failQueueFile = path3.resolve(process.cwd(), "data/prelaunch_queue_failed.json");
         let failedList = [];
-        if (fs2.existsSync(failQueueFile)) {
-          failedList = JSON.parse(fs2.readFileSync(failQueueFile, "utf8"));
+        if (fs3.existsSync(failQueueFile)) {
+          failedList = JSON.parse(fs3.readFileSync(failQueueFile, "utf8"));
         }
         failedList.push({ timestamp: (/* @__PURE__ */ new Date()).toISOString(), record, rowValues, error: errText });
-        fs2.writeFileSync(failQueueFile, JSON.stringify(failedList, null, 2), "utf8");
+        fs3.writeFileSync(failQueueFile, JSON.stringify(failedList, null, 2), "utf8");
       } catch {
       }
       return {
@@ -1172,7 +2311,7 @@ __export(certificateService_exports, {
   handleCertificateAction: () => handleCertificateAction,
   isEmailOtpConfigured: () => isEmailOtpConfigured,
   isValidEmail: () => isValidEmail,
-  isValidPassId: () => isValidPassId,
+  isValidPassId: () => isValidPassId2,
   issueCertificate: () => issueCertificate,
   normalizePassId: () => normalizePassId,
   sanitizeHolderName: () => sanitizeHolderName,
@@ -1181,14 +2320,14 @@ __export(certificateService_exports, {
   verifyCardPin: () => verifyCardPin,
   verifyEmailOtp: () => verifyEmailOtp
 });
-import crypto2 from "crypto";
+import crypto3 from "crypto";
 function normalizePassId(raw) {
   if (!raw || typeof raw !== "string") return "";
   return raw.trim().toUpperCase().replace(/^#/, "");
 }
-function isValidPassId(raw) {
+function isValidPassId2(raw) {
   const clean = normalizePassId(raw);
-  return clean.length > 0 && clean.length <= 32 && PASS_ID_PATTERNS.some((re) => re.test(clean));
+  return clean.length > 0 && clean.length <= 32 && PASS_ID_PATTERNS2.some((re) => re.test(clean));
 }
 function deriveEditionNumber(passId) {
   const clean = normalizePassId(passId);
@@ -1273,7 +2412,7 @@ async function sendEmailOtp(passId, email) {
 }
 async function sendEmailCardPin(passId, email, holderName = "Founding Holder") {
   const normalizedId = normalizePassId(passId);
-  if (!isValidPassId(normalizedId)) {
+  if (!isValidPassId2(normalizedId)) {
     return { success: false, status: 400, error: "INVALID_PASS", message: "This Pass ID is not recognized." };
   }
   if (!isValidEmail(email)) {
@@ -1387,7 +2526,7 @@ async function handleCertificateAction(body = {}) {
   const action = body.action;
   const passId = normalizePassId(body.token || body.passId || body.id);
   const email = normalizeEmail(body.email || body.ownerEmail || body.holderEmail);
-  if (!isValidPassId(passId)) {
+  if (!isValidPassId2(passId)) {
     return { status: 400, body: { success: false, error: "INVALID_PASS", message: "This Pass ID is not recognized." } };
   }
   if (action === "send-pin") {
@@ -1440,7 +2579,7 @@ async function handleCertificateAction(body = {}) {
   }
   return { status: 400, body: { success: false, error: "UNKNOWN_ACTION", message: "Unsupported certificate action." } };
 }
-var TOTAL_EDITION_LIMIT, OTP_WINDOW_MS, PIN_SECRET, CERT_SECRET, OTP_SECRET, PASS_ID_PATTERNS, hmacHex, sixDigits, safeEqual, normalizeEmail, isValidEmail;
+var TOTAL_EDITION_LIMIT, OTP_WINDOW_MS, PIN_SECRET, CERT_SECRET, OTP_SECRET, PASS_ID_PATTERNS2, hmacHex, sixDigits, safeEqual, normalizeEmail, isValidEmail;
 var init_certificateService = __esm({
   "api/nfc/_certificateService.js"() {
     TOTAL_EDITION_LIMIT = 100;
@@ -1448,1083 +2587,16 @@ var init_certificateService = __esm({
     PIN_SECRET = process.env.PASS_PIN_SECRET || "akinoya-founding-pass-pin-v1";
     CERT_SECRET = process.env.CERT_SIGNING_SECRET || "akinoya-bingaa-coa-signing-v1";
     OTP_SECRET = process.env.OTP_SECRET || `${PIN_SECRET}:otp`;
-    PASS_ID_PATTERNS = [/^AKN-VIP-\d{4}-[A-Z]\d{3,4}$/, /^AKN-\d{4}$/, /^SM\d{3}-[A-Z0-9]{4}$/];
-    hmacHex = (secret, payload) => crypto2.createHmac("sha256", secret).update(payload).digest("hex");
+    PASS_ID_PATTERNS2 = [/^AKN-VIP-\d{4}-[A-Z]\d{3,4}$/, /^AKN-\d{4}$/, /^SM\d{3}-[A-Z0-9]{4}$/];
+    hmacHex = (secret, payload) => crypto3.createHmac("sha256", secret).update(payload).digest("hex");
     sixDigits = (hex) => String(parseInt(hex.slice(0, 12), 16) % 1e6).padStart(6, "0");
     safeEqual = (a, b) => {
       const ab = Buffer.from(String(a));
       const bb = Buffer.from(String(b));
-      return ab.length === bb.length && crypto2.timingSafeEqual(ab, bb);
+      return ab.length === bb.length && crypto3.timingSafeEqual(ab, bb);
     };
     normalizeEmail = (email) => String(email || "").trim().toLowerCase();
     isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalizeEmail(email));
-  }
-});
-
-// src/lib/supabaseClient.ts
-import { createClient } from "@supabase/supabase-js";
-var supabaseUrl, supabaseKey, isSupabaseConfigured, supabase;
-var init_supabaseClient = __esm({
-  "src/lib/supabaseClient.ts"() {
-    supabaseUrl = import.meta.env?.VITE_SUPABASE_URL || (typeof process !== "undefined" ? process.env?.VITE_SUPABASE_URL || process.env?.SUPABASE_URL : "") || "https://placeholder-project.supabase.co";
-    supabaseKey = import.meta.env?.VITE_SUPABASE_ANON_KEY || (typeof process !== "undefined" ? process.env?.VITE_SUPABASE_ANON_KEY || process.env?.SUPABASE_ANON_KEY : "") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder";
-    isSupabaseConfigured = Boolean(supabaseUrl) && !supabaseUrl.includes("placeholder-project") && Boolean(supabaseKey) && !supabaseKey.includes("placeholder");
-    supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storage: typeof window !== "undefined" ? window.localStorage : void 0
-      }
-    });
-  }
-});
-
-// src/lib/supabase.ts
-var init_supabase = __esm({
-  "src/lib/supabase.ts"() {
-    init_supabaseClient();
-  }
-});
-
-// src/utils/holder.ts
-import { useEffect, useState } from "react";
-var PASS_ID_PATTERNS3, isValidPassId3;
-var init_holder = __esm({
-  "src/utils/holder.ts"() {
-    PASS_ID_PATTERNS3 = [
-      /^AKN-VIP-\d{4}-[A-Z]\d{3,4}$/,
-      // AKN-VIP-2027-X0914, AKN-VIP-2027-X001..X100
-      /^AKN-\d{4}$/,
-      // AKN-9941
-      /^SM\d{3}-[A-Z0-9]{4}$/
-      // SM001-A9B2
-    ];
-    isValidPassId3 = (raw) => {
-      if (!raw || typeof raw !== "string") return false;
-      const clean = raw.trim().toUpperCase().replace(/^#/, "");
-      if (clean.length > 32) return false;
-      return PASS_ID_PATTERNS3.some((re) => re.test(clean));
-    };
-  }
-});
-
-// src/data/vipTokens.ts
-var PRIMARY_FOUNDER_EMAIL, FOUNDER_PASS_TOKEN, PASS_ALREADY_CLAIMED_ERROR, LOCAL_STORAGE_CLAIMED_KEY, VIP_REGISTRY_REFRESH_VERSION_KEY, CURRENT_VIP_REFRESH_VERSION, INITIAL_VIP_TOKEN_REGISTRY, ensureVipTokenRegistryRefresh, getLocalClaimedMap, setLocalClaim, normalizeVipToken, isFounderEmail, isRecognizedVipTokenPattern, checkVipTokenStatus, claimVipTokenForUser, resetAllVipTokens;
-var init_vipTokens = __esm({
-  "src/data/vipTokens.ts"() {
-    init_supabase();
-    init_holder();
-    PRIMARY_FOUNDER_EMAIL = "odi.selis3@gmail.com";
-    FOUNDER_PASS_TOKEN = "AKN-VIP-2027-X0914";
-    PASS_ALREADY_CLAIMED_ERROR = "Ai! Deze VIP-pas is al geclaimd.";
-    LOCAL_STORAGE_CLAIMED_KEY = "sillow_claimed_vip_tokens";
-    VIP_REGISTRY_REFRESH_VERSION_KEY = "sillow_vip_registry_refresh_version";
-    CURRENT_VIP_REFRESH_VERSION = "2027-vip-reset-v4-clean-email-bind";
-    INITIAL_VIP_TOKEN_REGISTRY = (() => {
-      const reg = {
-        [FOUNDER_PASS_TOKEN]: {
-          tokenCode: FOUNDER_PASS_TOKEN,
-          editionNumber: 0,
-          isFounderPass: true,
-          isClaimed: true,
-          boundEmail: PRIMARY_FOUNDER_EMAIL,
-          holderName: "Odi Selis",
-          claimedAt: null
-        }
-      };
-      for (let i = 1; i <= 100; i++) {
-        const code = `AKN-VIP-2027-X${String(i).padStart(3, "0")}`;
-        reg[code] = {
-          tokenCode: code,
-          editionNumber: i,
-          isFounderPass: false,
-          isClaimed: false,
-          boundEmail: null,
-          holderName: null,
-          claimedAt: null
-        };
-      }
-      return reg;
-    })();
-    ensureVipTokenRegistryRefresh = () => {
-      if (typeof window === "undefined") return;
-      try {
-        const appliedVersion = localStorage.getItem(VIP_REGISTRY_REFRESH_VERSION_KEY);
-        if (appliedVersion !== CURRENT_VIP_REFRESH_VERSION) {
-          localStorage.removeItem(LOCAL_STORAGE_CLAIMED_KEY);
-          localStorage.removeItem("sillow_vip_bound_token");
-          sessionStorage.removeItem("sillow_vip_bound_token");
-          localStorage.removeItem("sillow_vip_device_access");
-          sessionStorage.removeItem("sillow_vip_device_access");
-          localStorage.removeItem("akinoya_vip_unlocked");
-          sessionStorage.removeItem("akinoya_vip_unlocked");
-          localStorage.removeItem("akinoya_patron_token");
-          sessionStorage.removeItem("akinoya_patron_token");
-          localStorage.removeItem("akinoya_patron_role");
-          sessionStorage.removeItem("akinoya_patron_role");
-          localStorage.removeItem("pending_vip_pass");
-          localStorage.removeItem("akinoya_pending_vip_pass");
-          sessionStorage.removeItem("pending_vip_code");
-          localStorage.removeItem("pending_role");
-          sessionStorage.removeItem("pending_role");
-          localStorage.removeItem("akinoya_bingaa_certificates");
-          localStorage.removeItem("akinoya_holder_name");
-          localStorage.removeItem("user_generation_claimed");
-          localStorage.removeItem("akinoya_guest_generations");
-          const rawProf = localStorage.getItem("akinoya_auth_profile");
-          if (rawProf) {
-            try {
-              const parsed = JSON.parse(rawProf);
-              const email = String(parsed?.email || "").trim().toLowerCase();
-              if (email && email !== PRIMARY_FOUNDER_EMAIL) {
-                parsed.has_vip_pass = false;
-                parsed.is_vip = false;
-                parsed.vip_code_redeemed = null;
-                if (parsed.role === "VIP_GUEST" || parsed.role === "CREATOR") {
-                  parsed.role = "FREE";
-                }
-                localStorage.setItem("akinoya_auth_profile", JSON.stringify(parsed));
-              }
-            } catch {
-            }
-          }
-          Object.keys(localStorage).forEach((k) => {
-            if (k.startsWith("akinoya_holder_name_") || k.startsWith("akinoya_pending_")) {
-              localStorage.removeItem(k);
-            }
-          });
-          localStorage.setItem(VIP_REGISTRY_REFRESH_VERSION_KEY, CURRENT_VIP_REFRESH_VERSION);
-        }
-      } catch {
-      }
-    };
-    ensureVipTokenRegistryRefresh();
-    getLocalClaimedMap = () => {
-      if (typeof window === "undefined") return {};
-      ensureVipTokenRegistryRefresh();
-      try {
-        const raw = localStorage.getItem(LOCAL_STORAGE_CLAIMED_KEY);
-        return raw ? JSON.parse(raw) : {};
-      } catch {
-        return {};
-      }
-    };
-    setLocalClaim = (token, userId, holderEmail, holderName) => {
-      if (typeof window === "undefined") return;
-      try {
-        const map = getLocalClaimedMap();
-        map[token] = {
-          is_claimed: true,
-          claimed_by_user_id: userId,
-          claimed_holder_email: holderEmail ? holderEmail.trim().toLowerCase() : void 0,
-          claimed_holder_name: holderName ? holderName.trim() : void 0,
-          claimed_at: (/* @__PURE__ */ new Date()).toISOString()
-        };
-        localStorage.setItem(LOCAL_STORAGE_CLAIMED_KEY, JSON.stringify(map));
-      } catch {
-      }
-    };
-    normalizeVipToken = (raw) => {
-      return String(raw || "").trim().toUpperCase().replace(/^#/, "");
-    };
-    isFounderEmail = (email) => {
-      if (!email) return false;
-      const clean = email.trim().toLowerCase();
-      return clean === PRIMARY_FOUNDER_EMAIL;
-    };
-    isRecognizedVipTokenPattern = (token) => {
-      const clean = normalizeVipToken(token);
-      if (!clean) return false;
-      if (clean === FOUNDER_PASS_TOKEN) {
-        return true;
-      }
-      return isValidPassId3(clean);
-    };
-    checkVipTokenStatus = async (rawToken, currentUserId, currentUserEmail) => {
-      const clean = normalizeVipToken(rawToken);
-      const cleanEmail = (currentUserEmail || "").trim().toLowerCase();
-      if (!clean) {
-        return {
-          valid: false,
-          allowed: false,
-          isAlreadyClaimed: false,
-          isClaimedByMe: false,
-          tokenCode: "",
-          error: "Please enter a valid VIP token."
-        };
-      }
-      const isMasterToken = clean === FOUNDER_PASS_TOKEN || clean === "AKN-2027" || clean === "AKN-VIP-2027";
-      if (isMasterToken) {
-        if (cleanEmail && !isFounderEmail(cleanEmail)) {
-          return {
-            valid: true,
-            allowed: false,
-            isAlreadyClaimed: true,
-            isClaimedByMe: false,
-            tokenCode: clean,
-            boundEmail: PRIMARY_FOUNDER_EMAIL,
-            error: PASS_ALREADY_CLAIMED_ERROR
-          };
-        }
-        if (cleanEmail && isFounderEmail(cleanEmail)) {
-          return {
-            valid: true,
-            allowed: true,
-            isAlreadyClaimed: true,
-            isClaimedByMe: true,
-            tokenCode: clean,
-            boundEmail: PRIMARY_FOUNDER_EMAIL
-          };
-        }
-      }
-      if (isSupabaseConfigured) {
-        try {
-          const { data, error } = await supabase.from("vip_tokens").select("*").eq("token_code", clean).maybeSingle();
-          if (!error && data) {
-            const tokenRecord = data;
-            const boundEmail = (tokenRecord.claimed_holder_email || "").trim().toLowerCase();
-            if (tokenRecord.is_claimed || boundEmail) {
-              const isSameEmail = Boolean(cleanEmail && boundEmail && cleanEmail === boundEmail);
-              const isSameUserNoEmailConflict = Boolean(
-                !boundEmail && currentUserId && tokenRecord.claimed_by_user_id === currentUserId
-              );
-              const isOwner = isSameEmail || isSameUserNoEmailConflict;
-              if (isOwner) {
-                return {
-                  valid: true,
-                  allowed: true,
-                  isAlreadyClaimed: true,
-                  isClaimedByMe: true,
-                  tokenCode: clean,
-                  boundEmail: boundEmail || null,
-                  record: tokenRecord
-                };
-              }
-              return {
-                valid: true,
-                allowed: false,
-                isAlreadyClaimed: true,
-                isClaimedByMe: false,
-                tokenCode: clean,
-                boundEmail: boundEmail || null,
-                error: PASS_ALREADY_CLAIMED_ERROR,
-                record: tokenRecord
-              };
-            }
-            return {
-              valid: true,
-              allowed: true,
-              isAlreadyClaimed: false,
-              isClaimedByMe: false,
-              tokenCode: clean,
-              boundEmail: null,
-              record: tokenRecord
-            };
-          }
-        } catch (err) {
-          console.warn("[VipTokens] Database check exception:", err);
-        }
-      }
-      const localMap = getLocalClaimedMap();
-      const localRecord = localMap[clean];
-      if (localRecord && (localRecord.is_claimed || localRecord.claimed_holder_email)) {
-        const localBoundEmail = (localRecord.claimed_holder_email || "").trim().toLowerCase();
-        const isSameEmail = Boolean(cleanEmail && localBoundEmail && cleanEmail === localBoundEmail);
-        const isSameUser = Boolean(
-          !localBoundEmail && currentUserId && localRecord.claimed_by_user_id === currentUserId
-        );
-        if (isSameEmail || isSameUser) {
-          return {
-            valid: true,
-            allowed: true,
-            isAlreadyClaimed: true,
-            isClaimedByMe: true,
-            tokenCode: clean,
-            boundEmail: localBoundEmail || null
-          };
-        }
-        return {
-          valid: true,
-          allowed: false,
-          isAlreadyClaimed: true,
-          isClaimedByMe: false,
-          tokenCode: clean,
-          boundEmail: localBoundEmail || null,
-          error: PASS_ALREADY_CLAIMED_ERROR
-        };
-      }
-      if (isRecognizedVipTokenPattern(clean)) {
-        return {
-          valid: true,
-          allowed: true,
-          isAlreadyClaimed: false,
-          isClaimedByMe: false,
-          tokenCode: clean,
-          boundEmail: null
-        };
-      }
-      return {
-        valid: false,
-        allowed: false,
-        isAlreadyClaimed: false,
-        isClaimedByMe: false,
-        tokenCode: clean,
-        error: "Unrecognized VIP token."
-      };
-    };
-    claimVipTokenForUser = async (rawToken, userId, holderName, holderEmail) => {
-      const clean = normalizeVipToken(rawToken);
-      const cleanEmail = (holderEmail || "").trim().toLowerCase();
-      if (!clean || !userId && !cleanEmail) {
-        return { success: false, error: "Token and User Email/ID are required." };
-      }
-      const isMasterToken = clean === FOUNDER_PASS_TOKEN || clean === "AKN-2027" || clean === "AKN-VIP-2027";
-      if (isMasterToken) {
-        if (!isFounderEmail(cleanEmail)) {
-          return {
-            success: false,
-            error: PASS_ALREADY_CLAIMED_ERROR,
-            message: PASS_ALREADY_CLAIMED_ERROR
-          };
-        }
-        const nowIso = (/* @__PURE__ */ new Date()).toISOString();
-        const updateData = {
-          is_claimed: true,
-          claimed_by_user_id: userId,
-          claimed_holder_name: holderName || "Odi Selis",
-          claimed_holder_email: PRIMARY_FOUNDER_EMAIL,
-          claimed_at: nowIso,
-          updated_at: nowIso
-        };
-        if (isSupabaseConfigured) {
-          try {
-            const { data: existing } = await supabase.from("vip_tokens").select("id").eq("token_code", clean).maybeSingle();
-            if (existing) {
-              await supabase.from("vip_tokens").update(updateData).eq("token_code", clean);
-            } else {
-              await supabase.from("vip_tokens").insert({ token_code: clean, ...updateData });
-            }
-          } catch (err) {
-            console.warn("[VipTokens] Founder token update notice:", err);
-          }
-        }
-        setLocalClaim(clean, userId, PRIMARY_FOUNDER_EMAIL, holderName || "Odi Selis");
-        return {
-          success: true,
-          message: "Founders Pass (#0) bound to odi.selis3@gmail.com."
-        };
-      }
-      const status = await checkVipTokenStatus(clean, userId, cleanEmail);
-      if (!status.valid) {
-        return {
-          success: false,
-          error: status.error || "Unrecognized VIP token.",
-          message: status.error || "Unrecognized VIP token."
-        };
-      }
-      if (status.isAlreadyClaimed) {
-        if (status.isClaimedByMe) {
-          return {
-            success: true,
-            message: "VIP Pass already bound to your account.",
-            record: status.record
-          };
-        }
-        return {
-          success: false,
-          error: PASS_ALREADY_CLAIMED_ERROR,
-          message: PASS_ALREADY_CLAIMED_ERROR
-        };
-      }
-      if (isSupabaseConfigured) {
-        try {
-          const nowIso = (/* @__PURE__ */ new Date()).toISOString();
-          const { data: existing } = await supabase.from("vip_tokens").select("*").eq("token_code", clean).maybeSingle();
-          if (existing) {
-            const existingBoundEmail = (existing.claimed_holder_email || "").trim().toLowerCase();
-            if (existing.is_claimed || existingBoundEmail) {
-              const isSameEmail = Boolean(cleanEmail && existingBoundEmail && cleanEmail === existingBoundEmail);
-              const isSameUser = Boolean(!existingBoundEmail && userId && existing.claimed_by_user_id === userId);
-              if (isSameEmail || isSameUser) {
-                return {
-                  success: true,
-                  message: "VIP Pass already bound to your account.",
-                  record: existing
-                };
-              }
-              return {
-                success: false,
-                error: PASS_ALREADY_CLAIMED_ERROR,
-                message: PASS_ALREADY_CLAIMED_ERROR
-              };
-            }
-            const updateData = {
-              is_claimed: true,
-              claimed_by_user_id: userId,
-              claimed_at: nowIso,
-              updated_at: nowIso
-            };
-            if (holderName) updateData.claimed_holder_name = holderName.trim();
-            if (cleanEmail) updateData.claimed_holder_email = cleanEmail;
-            const { data: updated, error: updateErr } = await supabase.from("vip_tokens").update(updateData).eq("token_code", clean).select().single();
-            if (updateErr) {
-              console.warn("[VipTokens] Update error:", updateErr.message);
-            } else if (updated) {
-              await supabase.from("profiles").update({
-                has_vip_pass: true,
-                is_vip: true,
-                role: clean === FOUNDER_PASS_TOKEN ? "CREATOR" : "VIP_GUEST",
-                vip_code_redeemed: clean,
-                updated_at: nowIso
-              }).eq("id", userId);
-              setLocalClaim(clean, userId, cleanEmail, holderName);
-              return {
-                success: true,
-                message: "VIP Pass officially bound to your account.",
-                record: updated
-              };
-            }
-          } else {
-            const insertData = {
-              token_code: clean,
-              is_claimed: true,
-              claimed_by_user_id: userId,
-              claimed_at: nowIso,
-              updated_at: nowIso
-            };
-            if (holderName) insertData.claimed_holder_name = holderName.trim();
-            if (cleanEmail) insertData.claimed_holder_email = cleanEmail;
-            const { data: inserted, error: insertErr } = await supabase.from("vip_tokens").insert(insertData).select().single();
-            if (insertErr) {
-              console.warn("[VipTokens] Insert error:", insertErr.message);
-            } else if (inserted) {
-              await supabase.from("profiles").update({
-                has_vip_pass: true,
-                is_vip: true,
-                role: clean === FOUNDER_PASS_TOKEN ? "CREATOR" : "VIP_GUEST",
-                vip_code_redeemed: clean,
-                updated_at: nowIso
-              }).eq("id", userId);
-              setLocalClaim(clean, userId, cleanEmail, holderName);
-              return {
-                success: true,
-                message: "VIP Pass officially bound to your account.",
-                record: inserted
-              };
-            }
-          }
-        } catch (err) {
-          console.warn("[VipTokens] Claim exception:", err);
-        }
-      }
-      setLocalClaim(clean, userId, cleanEmail, holderName);
-      return {
-        success: true,
-        message: "VIP Pass officially bound to your account."
-      };
-    };
-    resetAllVipTokens = async () => {
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.removeItem(VIP_REGISTRY_REFRESH_VERSION_KEY);
-          ensureVipTokenRegistryRefresh();
-        } catch {
-        }
-      }
-      if (isSupabaseConfigured) {
-        try {
-          const nowIso = (/* @__PURE__ */ new Date()).toISOString();
-          const { data, error } = await supabase.from("vip_tokens").update({
-            is_claimed: false,
-            claimed_by_user_id: null,
-            claimed_holder_name: null,
-            claimed_holder_email: null,
-            claimed_at: null,
-            updated_at: nowIso
-          }).neq("token_code", FOUNDER_PASS_TOKEN).select();
-          await supabase.from("vip_tokens").upsert(
-            {
-              token_code: FOUNDER_PASS_TOKEN,
-              is_claimed: true,
-              claimed_holder_name: "Odi Selis",
-              claimed_holder_email: PRIMARY_FOUNDER_EMAIL,
-              updated_at: nowIso
-            },
-            { onConflict: "token_code" }
-          );
-          await supabase.from("profiles").update({
-            vip_code_redeemed: null,
-            has_vip_pass: false,
-            is_vip: false,
-            role: "FREE",
-            updated_at: nowIso
-          }).neq("email", PRIMARY_FOUNDER_EMAIL);
-          if (error) {
-            console.warn("[VipTokens] Supabase reset error:", error.message);
-            return { success: false, error: error.message };
-          }
-          return { success: true, count: data?.length || 100 };
-        } catch (err) {
-          return { success: false, error: err.message };
-        }
-      }
-      return { success: true, count: 100 };
-    };
-  }
-});
-
-// src/lib/vipTokens.ts
-var init_vipTokens2 = __esm({
-  "src/lib/vipTokens.ts"() {
-    init_vipTokens();
-  }
-});
-
-// src/server/authVoteService.ts
-var authVoteService_exports = {};
-__export(authVoteService_exports, {
-  castSubmissionVote: () => castSubmissionVote,
-  createSessionToken: () => createSessionToken,
-  getAllSubmissionRecords: () => getAllSubmissionRecords,
-  getUserFromSessionToken: () => getUserFromSessionToken,
-  getVotesSummary: () => getVotesSummary,
-  hashPassword: () => hashPassword,
-  loginUserCredentials: () => loginUserCredentials,
-  registerUserCredentials: () => registerUserCredentials,
-  resetTestAccountData: () => resetTestAccountData,
-  saveSubmissionRecord: () => saveSubmissionRecord,
-  updateUserPassword: () => updateUserPassword,
-  verifyPassword: () => verifyPassword,
-  verifySessionToken: () => verifySessionToken
-});
-import fs4 from "fs";
-import path4 from "path";
-import crypto4 from "crypto";
-function loadUsersStore() {
-  const merged = { users: {} };
-  let found = false;
-  for (const file of [LOCAL_USERS_FILE, TMP_USERS_FILE]) {
-    if (fs4.existsSync(file)) {
-      try {
-        const raw = fs4.readFileSync(file, "utf8");
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed.users === "object") {
-          Object.assign(merged.users, parsed.users);
-          found = true;
-        }
-      } catch {
-      }
-    }
-  }
-  return found ? merged : { users: {} };
-}
-function saveUsersStore(store) {
-  const json = JSON.stringify(store, null, 2);
-  const targets = [TMP_USERS_FILE, LOCAL_USERS_FILE];
-  for (const file of targets) {
-    try {
-      const dir = path4.dirname(file);
-      if (!fs4.existsSync(dir)) fs4.mkdirSync(dir, { recursive: true });
-      fs4.writeFileSync(file, json, "utf8");
-    } catch {
-    }
-  }
-}
-function loadVotesStore() {
-  const merged = { votes: {} };
-  let found = false;
-  for (const file of [LOCAL_VOTES_FILE, TMP_VOTES_FILE]) {
-    if (fs4.existsSync(file)) {
-      try {
-        const raw = fs4.readFileSync(file, "utf8");
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed.votes === "object") {
-          for (const [key, val] of Object.entries(parsed.votes)) {
-            if (!merged.votes[key]) {
-              merged.votes[key] = val;
-            } else {
-              const existing = merged.votes[key];
-              const combinedVoters = Array.from(/* @__PURE__ */ new Set([...existing.voters || [], ...val.voters || []]));
-              merged.votes[key] = {
-                ...existing,
-                ...val,
-                voters: combinedVoters,
-                votesCount: Math.max(val.votesCount || 0, existing.votesCount || 0),
-                updatedAt: val.updatedAt || existing.updatedAt
-              };
-            }
-          }
-          found = true;
-        }
-      } catch {
-      }
-    }
-  }
-  return found ? merged : { votes: {} };
-}
-function saveVotesStore(store) {
-  const json = JSON.stringify(store, null, 2);
-  const targets = [TMP_VOTES_FILE, LOCAL_VOTES_FILE];
-  for (const file of targets) {
-    try {
-      const dir = path4.dirname(file);
-      if (!fs4.existsSync(dir)) fs4.mkdirSync(dir, { recursive: true });
-      fs4.writeFileSync(file, json, "utf8");
-    } catch {
-    }
-  }
-}
-function loadSubmissionsStore() {
-  const merged = { submissions: {} };
-  let found = false;
-  for (const file of [LOCAL_SUBMISSIONS_FILE, TMP_SUBMISSIONS_FILE]) {
-    if (fs4.existsSync(file)) {
-      try {
-        const raw = fs4.readFileSync(file, "utf8");
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed.submissions === "object") {
-          Object.assign(merged.submissions, parsed.submissions);
-          found = true;
-        }
-      } catch {
-      }
-    }
-  }
-  return found ? merged : { submissions: {} };
-}
-function saveSubmissionsStore(store) {
-  const json = JSON.stringify(store, null, 2);
-  const targets = [TMP_SUBMISSIONS_FILE, LOCAL_SUBMISSIONS_FILE];
-  for (const file of targets) {
-    try {
-      const dir = path4.dirname(file);
-      if (!fs4.existsSync(dir)) fs4.mkdirSync(dir, { recursive: true });
-      fs4.writeFileSync(file, json, "utf8");
-    } catch {
-    }
-  }
-}
-function resetTestAccountData(email = "hanna.meers@gmail.com") {
-  const normEmail = email.toLowerCase().trim();
-  _userStore = loadUsersStore();
-  if (_userStore.users[normEmail]) {
-    _userStore.users[normEmail].claimedSector = null;
-    saveUsersStore(_userStore);
-  }
-  _submissionsStore = loadSubmissionsStore();
-  let changed = false;
-  for (const [key, sub] of Object.entries(_submissionsStore.submissions || {})) {
-    const subEmail = String(sub?.authorEmail || "").toLowerCase();
-    const subName = String(sub?.planetName || "").toLowerCase();
-    if (subEmail === normEmail || subName === "aethelgard" || key.toLowerCase().includes("aethelgard")) {
-      delete _submissionsStore.submissions[key];
-      changed = true;
-    }
-  }
-  if (changed) {
-    saveSubmissionsStore(_submissionsStore);
-  }
-}
-function saveSubmissionRecord(sub) {
-  if (!sub || !sub.id) {
-    return { success: false, submission: sub };
-  }
-  _submissionsStore = loadSubmissionsStore();
-  _submissionsStore.submissions[sub.id] = sub;
-  saveSubmissionsStore(_submissionsStore);
-  _voteStore = loadVotesStore();
-  const existingVote = _voteStore.votes[sub.id];
-  const authorEmail = (sub.authorEmail || sub.humanAnswers?.email || "").trim().toLowerCase();
-  const authorUsername = (sub.authorUsername || "").trim().toLowerCase().replace(/^@/, "");
-  const authorId = sub.userId || null;
-  if (existingVote) {
-    if (authorId) existingVote.authorId = authorId;
-    if (authorEmail) existingVote.authorEmail = authorEmail;
-    if (authorUsername) existingVote.authorUsername = authorUsername;
-    existingVote.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
-    _voteStore.votes[sub.id] = existingVote;
-  } else {
-    _voteStore.votes[sub.id] = {
-      submissionId: sub.id,
-      voters: [],
-      baselineVotes: sub.id === "planet-amlemi-genesis-01" ? 3 : 1,
-      votesCount: sub.id === "planet-amlemi-genesis-01" ? 3 : Math.max(1, sub.votesCount || 1),
-      authorId,
-      authorEmail: authorEmail || null,
-      authorUsername: authorUsername || null,
-      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-    };
-  }
-  saveVotesStore(_voteStore);
-  return { success: true, submission: sub };
-}
-function getAllSubmissionRecords() {
-  _submissionsStore = loadSubmissionsStore();
-  return Object.values(_submissionsStore.submissions || {});
-}
-function hashPassword(password) {
-  const salt = crypto4.randomBytes(16).toString("hex");
-  const hash = crypto4.scryptSync(password, salt, 64).toString("hex");
-  return { salt, hash };
-}
-function verifyPassword(password, salt, expectedHash) {
-  try {
-    const derivedHash = crypto4.scryptSync(password, salt, 64);
-    const expectedBuf = Buffer.from(expectedHash, "hex");
-    return crypto4.timingSafeEqual(derivedHash, expectedBuf);
-  } catch {
-    return false;
-  }
-}
-function createSessionToken(userId, email) {
-  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
-  const exp = Math.floor(Date.now() / 1e3) + 30 * 24 * 60 * 60;
-  const payload = Buffer.from(JSON.stringify({ sub: userId, email, exp })).toString("base64url");
-  const signature = crypto4.createHmac("sha256", SESSION_SECRET).update(`${header}.${payload}`).digest("base64url");
-  return `${header}.${payload}.${signature}`;
-}
-function verifySessionToken(token) {
-  if (!token || typeof token !== "string") return { valid: false };
-  const parts = token.split(".");
-  if (parts.length !== 3) return { valid: false };
-  const [header, payload, signature] = parts;
-  const expectedSig = crypto4.createHmac("sha256", SESSION_SECRET).update(`${header}.${payload}`).digest("base64url");
-  try {
-    const a = Buffer.from(signature);
-    const b = Buffer.from(expectedSig);
-    if (a.length !== b.length || !crypto4.timingSafeEqual(a, b)) {
-      return { valid: false };
-    }
-    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
-    if (data.exp && data.exp < Math.floor(Date.now() / 1e3)) {
-      return { valid: false };
-    }
-    return { valid: true, userId: data.sub, email: data.email };
-  } catch {
-    return { valid: false };
-  }
-}
-function recordToProfile(u) {
-  return {
-    id: u.id,
-    first_name: u.firstName,
-    last_name: u.lastName,
-    full_name: u.fullName,
-    email: u.email,
-    role: u.role,
-    has_vip_pass: u.hasVipPass,
-    subscription_status: u.subscriptionStatus,
-    vip_code_redeemed: u.vipCodeRedeemed || null,
-    is_vip: u.hasVipPass || u.role === "VIP_GUEST" || u.role === "CREATOR",
-    is_subscriber: u.subscriptionStatus === "active" || u.role === "SUBSCRIBER" || u.role === "ANNUAL_PASS" || u.role === "CREATOR",
-    is_pioneer: u.isPioneer,
-    pioneer_badge: u.pioneerBadge || (u.hasVipPass || u.role === "VIP_GUEST" || u.role === "CREATOR" ? "[VIP-PIONEER-2027]" : "[PIONEER-2027]"),
-    claimed_sector: u.claimedSector || null,
-    created_at: u.createdAt,
-    updated_at: u.updatedAt
-  };
-}
-async function registerUserCredentials(params) {
-  const cleanEmail = params.email.trim().toLowerCase();
-  const cleanFirst = params.firstName.trim();
-  const cleanLast = (params.lastName || "").trim();
-  if (!cleanEmail || !cleanEmail.includes("@")) {
-    return { success: false, error: "Please enter a valid email address." };
-  }
-  if (!params.password || params.password.length < 6) {
-    return { success: false, error: "Password must be at least 6 characters." };
-  }
-  if (!cleanFirst) {
-    return { success: false, error: "First name is required." };
-  }
-  _userStore = loadUsersStore();
-  if (_userStore.users[cleanEmail]) {
-    return { success: false, error: "An account with this email already exists. Please sign in." };
-  }
-  const { salt, hash } = hashPassword(params.password);
-  const isFounder = isFounderEmail(cleanEmail);
-  const role = isFounder ? "CREATOR" : params.role || "FREE";
-  const hasVipPass = Boolean(isFounder || role === "VIP_GUEST" || role === "CREATOR" || params.passCode);
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  const userId = `usr_${Date.now()}_${crypto4.randomBytes(4).toString("hex")}`;
-  const newRecord = {
-    id: userId,
-    email: cleanEmail,
-    firstName: cleanFirst,
-    lastName: cleanLast,
-    fullName: `${cleanFirst} ${cleanLast}`.trim(),
-    salt,
-    passwordHash: hash,
-    role,
-    hasVipPass,
-    vipCodeRedeemed: isFounder ? FOUNDING_PASS_ID : params.passCode || null,
-    subscriptionStatus: isFounder ? "active" : "inactive",
-    isPioneer: true,
-    pioneerBadge: hasVipPass || role === "VIP_GUEST" || role === "CREATOR" ? "[VIP-PIONEER-2027]" : "[PIONEER-2027]",
-    claimedSector: isFounder ? "\xC4mlemi" : null,
-    createdAt: now,
-    updatedAt: now
-  };
-  _userStore.users[cleanEmail] = newRecord;
-  saveUsersStore(_userStore);
-  const profile = recordToProfile(newRecord);
-  const sessionToken = createSessionToken(newRecord.id, newRecord.email);
-  const user = {
-    id: newRecord.id,
-    email: newRecord.email,
-    user_metadata: {
-      first_name: newRecord.firstName,
-      last_name: newRecord.lastName,
-      full_name: newRecord.fullName
-    }
-  };
-  return {
-    success: true,
-    user,
-    profile,
-    sessionToken
-  };
-}
-async function loginUserCredentials(email, password) {
-  const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail || !cleanEmail.includes("@")) {
-    return { success: false, error: "Please enter a valid email address." };
-  }
-  if (!password) {
-    return { success: false, error: "Please enter your password." };
-  }
-  _userStore = loadUsersStore();
-  const existing = _userStore.users[cleanEmail];
-  if (!existing) {
-    return { success: false, error: "Invalid email or password." };
-  }
-  const isMatch = verifyPassword(password, existing.salt, existing.passwordHash);
-  if (!isMatch) {
-    return { success: false, error: "Invalid email or password." };
-  }
-  const profile = recordToProfile(existing);
-  const sessionToken = createSessionToken(existing.id, existing.email);
-  const user = {
-    id: existing.id,
-    email: existing.email,
-    user_metadata: {
-      first_name: existing.firstName,
-      last_name: existing.lastName,
-      full_name: existing.fullName
-    }
-  };
-  return {
-    success: true,
-    user,
-    profile,
-    sessionToken
-  };
-}
-async function updateUserPassword(email, newPassword) {
-  const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail || !cleanEmail.includes("@")) {
-    return { success: false, error: "Please enter a valid email address." };
-  }
-  if (!newPassword || newPassword.length < 6) {
-    return { success: false, error: "Password must be at least 6 characters." };
-  }
-  _userStore = loadUsersStore();
-  const existing = _userStore.users[cleanEmail];
-  const { salt, hash } = hashPassword(newPassword);
-  if (!existing) {
-    const isFounder = isFounderEmail(cleanEmail);
-    const role = isFounder ? "CREATOR" : "FREE";
-    const now = (/* @__PURE__ */ new Date()).toISOString();
-    const userId = `usr_${Date.now()}_${crypto4.randomBytes(4).toString("hex")}`;
-    const newRecord = {
-      id: userId,
-      email: cleanEmail,
-      firstName: cleanEmail.split("@")[0],
-      lastName: "",
-      fullName: cleanEmail.split("@")[0],
-      salt,
-      passwordHash: hash,
-      role,
-      hasVipPass: isFounder,
-      subscriptionStatus: isFounder ? "active" : "inactive",
-      isPioneer: true,
-      pioneerBadge: isFounder ? "[VIP-PIONEER-2027]" : "[PIONEER-2027]",
-      createdAt: now,
-      updatedAt: now
-    };
-    _userStore.users[cleanEmail] = newRecord;
-    saveUsersStore(_userStore);
-    return { success: true };
-  }
-  existing.salt = salt;
-  existing.passwordHash = hash;
-  existing.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
-  _userStore.users[cleanEmail] = existing;
-  saveUsersStore(_userStore);
-  return { success: true };
-}
-async function getUserFromSessionToken(token) {
-  const verified = verifySessionToken(token);
-  if (!verified.valid || !verified.email) {
-    return { success: false, error: "Invalid or expired session token." };
-  }
-  _userStore = loadUsersStore();
-  const existing = _userStore.users[verified.email.toLowerCase()];
-  if (!existing) {
-    return { success: false, error: "User record not found." };
-  }
-  return {
-    success: true,
-    user: {
-      id: existing.id,
-      email: existing.email,
-      user_metadata: {
-        first_name: existing.firstName,
-        last_name: existing.lastName,
-        full_name: existing.fullName
-      }
-    },
-    profile: recordToProfile(existing)
-  };
-}
-function castSubmissionVote(params) {
-  const {
-    submissionId,
-    voterId,
-    voterEmail,
-    voterUsername,
-    submissionAuthorId,
-    submissionAuthorEmail,
-    submissionAuthorUsername,
-    baseVotes
-  } = params;
-  if (!submissionId) {
-    return { success: false, newVotesCount: 1, hasVoted: false, error: "Missing submission ID." };
-  }
-  if (!voterId) {
-    return { success: false, newVotesCount: 1, hasVoted: false, error: "Voter identification required." };
-  }
-  _voteStore = loadVotesStore();
-  _submissionsStore = loadSubmissionsStore();
-  const storedSub = _submissionsStore.submissions[submissionId];
-  const existingVote = _voteStore.votes[submissionId] || {
-    submissionId,
-    voters: [],
-    baselineVotes: submissionId === "planet-amlemi-genesis-01" ? 3 : 1,
-    votesCount: submissionId === "planet-amlemi-genesis-01" ? 3 : Math.max(1, baseVotes || 1),
-    authorId: submissionAuthorId || storedSub?.userId || null,
-    authorEmail: submissionAuthorEmail || storedSub?.authorEmail || storedSub?.humanAnswers?.email || null,
-    authorUsername: submissionAuthorUsername || storedSub?.authorUsername || null,
-    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-  };
-  const cleanVoterEmail = voterEmail?.trim().toLowerCase();
-  const cleanAuthorEmail = (submissionAuthorEmail || existingVote.authorEmail || storedSub?.authorEmail || storedSub?.humanAnswers?.email || "").trim().toLowerCase();
-  const cleanVoterUser = voterUsername?.trim().toLowerCase().replace(/^@/, "");
-  const cleanAuthorUser = (submissionAuthorUsername || existingVote.authorUsername || storedSub?.authorUsername || "").trim().toLowerCase().replace(/^@/, "");
-  const effectiveAuthorId = submissionAuthorId || existingVote.authorId || storedSub?.userId;
-  const voterUserRecord = cleanVoterEmail ? _userStore.users[cleanVoterEmail] : null;
-  const isSelfById = Boolean(effectiveAuthorId && voterId && (effectiveAuthorId === voterId || effectiveAuthorId === `id:${voterId}`));
-  const isSelfByEmail = Boolean(cleanVoterEmail && cleanAuthorEmail && cleanVoterEmail === cleanAuthorEmail);
-  const isSelfByUsername = Boolean(cleanVoterUser && cleanAuthorUser && cleanVoterUser === cleanAuthorUser);
-  const isSelfByRegisteredId = Boolean(voterUserRecord?.id && effectiveAuthorId && voterUserRecord.id === effectiveAuthorId);
-  const isSelfByAuthorUser = Boolean(cleanAuthorEmail && voterUserRecord && voterUserRecord.email === cleanAuthorEmail);
-  if (isSelfById || isSelfByEmail || isSelfByUsername || isSelfByRegisteredId || isSelfByAuthorUser) {
-    return {
-      success: false,
-      newVotesCount: existingVote.votesCount || baseVotes || 1,
-      hasVoted: false,
-      error: "Self-voting is not allowed: You cannot vote for your own world submission."
-    };
-  }
-  const isVoterMatch = (entry) => {
-    if (!entry) return false;
-    if (entry === voterId || entry === `id:${voterId}`) return true;
-    if (cleanVoterEmail && (entry === cleanVoterEmail || entry === `email:${cleanVoterEmail}`)) return true;
-    if (voterUserRecord?.id && (entry === voterUserRecord.id || entry === `id:${voterUserRecord.id}`)) return true;
-    return false;
-  };
-  const hasAlreadyVoted = existingVote.voters.some(isVoterMatch);
-  let hasVoted = false;
-  if (hasAlreadyVoted) {
-    existingVote.voters = existingVote.voters.filter((v) => !isVoterMatch(v));
-    hasVoted = false;
-  } else {
-    const canonicalKey = cleanVoterEmail ? `email:${cleanVoterEmail}` : `id:${voterId}`;
-    existingVote.voters.push(canonicalKey);
-    hasVoted = true;
-  }
-  const isAmlemi = submissionId === "planet-amlemi-genesis-01";
-  const baseline = isAmlemi ? 3 : existingVote.baselineVotes || 1;
-  existingVote.baselineVotes = baseline;
-  const calculatedVotes = baseline + existingVote.voters.length;
-  existingVote.votesCount = calculatedVotes;
-  existingVote.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
-  if (submissionAuthorId) existingVote.authorId = submissionAuthorId;
-  if (cleanAuthorEmail) existingVote.authorEmail = cleanAuthorEmail;
-  if (cleanAuthorUser) existingVote.authorUsername = cleanAuthorUser;
-  _voteStore.votes[submissionId] = existingVote;
-  saveVotesStore(_voteStore);
-  if (isSupabaseConfigured) {
-    Promise.resolve(
-      supabase.from("user_dossiers").update({ votes_count: calculatedVotes }).eq("id", submissionId)
-    ).catch((err) => console.warn("[Vote] Supabase sync notice:", err));
-  }
-  return {
-    success: true,
-    newVotesCount: calculatedVotes,
-    hasVoted
-  };
-}
-function getVotesSummary(voterId, voterEmail, persistentVoterId) {
-  _voteStore = loadVotesStore();
-  const cleanVoterEmail = voterEmail?.trim().toLowerCase();
-  const voterUser = cleanVoterEmail ? _userStore.users[cleanVoterEmail] : null;
-  const isVoterMatch = (entry) => {
-    if (!entry) return false;
-    if (voterId && (entry === voterId || entry === `id:${voterId}`)) return true;
-    if (persistentVoterId && (entry === persistentVoterId || entry === `id:${persistentVoterId}`)) return true;
-    if (cleanVoterEmail && (entry === cleanVoterEmail || entry === `email:${cleanVoterEmail}`)) return true;
-    if (voterUser && (entry === voterUser.id || entry === `id:${voterUser.id}`)) return true;
-    return false;
-  };
-  const votesCountByDossier = {};
-  const userVotedIds = [];
-  for (const [subId, record] of Object.entries(_voteStore.votes)) {
-    votesCountByDossier[subId] = record.votesCount;
-    if (record.voters.some(isVoterMatch)) {
-      userVotedIds.push(subId);
-    }
-  }
-  if (votesCountByDossier["planet-amlemi-genesis-01"] === void 0) {
-    votesCountByDossier["planet-amlemi-genesis-01"] = 3;
-  }
-  return { votesCountByDossier, userVotedIds };
-}
-var FOUNDING_PASS_ID, DATA_DIR, TMP_DIR, LOCAL_USERS_FILE, TMP_USERS_FILE, LOCAL_VOTES_FILE, TMP_VOTES_FILE, LOCAL_SUBMISSIONS_FILE, TMP_SUBMISSIONS_FILE, SESSION_SECRET, _userStore, _voteStore, _submissionsStore;
-var init_authVoteService = __esm({
-  "src/server/authVoteService.ts"() {
-    init_supabase();
-    init_vipTokens2();
-    FOUNDING_PASS_ID = "AKN-VIP-2027-X0914";
-    DATA_DIR = path4.resolve(process.cwd(), "data");
-    TMP_DIR = "/tmp";
-    LOCAL_USERS_FILE = path4.join(DATA_DIR, "auth_users.json");
-    TMP_USERS_FILE = path4.join(TMP_DIR, "sillow_auth_users.json");
-    LOCAL_VOTES_FILE = path4.join(DATA_DIR, "votes_store.json");
-    TMP_VOTES_FILE = path4.join(TMP_DIR, "sillow_votes_store.json");
-    LOCAL_SUBMISSIONS_FILE = path4.join(DATA_DIR, "submissions_store.json");
-    TMP_SUBMISSIONS_FILE = path4.join(TMP_DIR, "sillow_submissions_store.json");
-    if (!fs4.existsSync(DATA_DIR)) {
-      try {
-        fs4.mkdirSync(DATA_DIR, { recursive: true });
-      } catch {
-      }
-    }
-    SESSION_SECRET = process.env.AUTH_SECRET || process.env.STRIPE_SECRET_KEY || "sillow-mill-akinoya-secure-session-secret-2027";
-    _userStore = loadUsersStore();
-    _voteStore = loadVotesStore();
-    _submissionsStore = loadSubmissionsStore();
   }
 });
 
@@ -2586,9 +2658,10 @@ var buildPrelaunchBlockedResponse = (extra = {}) => ({
 installFalNetworkGuard();
 
 // src/server/stripeService.ts
+init_authVoteService();
 import Stripe from "stripe";
-import fs from "fs";
-import path from "path";
+import fs2 from "fs";
+import path2 from "path";
 import dotenv from "dotenv";
 dotenv.config();
 var _stripeInstance = null;
@@ -2605,12 +2678,12 @@ function getStripe() {
   });
   return _stripeInstance;
 }
-var ORDERS_FILE = path.resolve(process.cwd(), "data/orders.json");
+var ORDERS_FILE = path2.resolve(process.cwd(), "data/orders.json");
 var INITIAL_WAVE_INVENTORY = 100;
 function loadOrders() {
   try {
-    if (fs.existsSync(ORDERS_FILE)) {
-      const data = fs.readFileSync(ORDERS_FILE, "utf-8");
+    if (fs2.existsSync(ORDERS_FILE)) {
+      const data = fs2.readFileSync(ORDERS_FILE, "utf-8");
       return JSON.parse(data);
     }
   } catch (err) {
@@ -2620,11 +2693,11 @@ function loadOrders() {
 }
 function saveOrders(orders) {
   try {
-    const dir = path.dirname(ORDERS_FILE);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    const dir = path2.dirname(ORDERS_FILE);
+    if (!fs2.existsSync(dir)) {
+      fs2.mkdirSync(dir, { recursive: true });
     }
-    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
+    fs2.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
   } catch (err) {
     console.warn("[StripeService] Read-only filesystem, skipped file write:", err);
   }
@@ -2696,6 +2769,7 @@ async function createStripeCheckoutSession(params) {
     productName = sanitizeStripeString(params.productTitle);
     unitAmount = Math.round(params.amount * 100);
   }
+  const isSubscription = productId === "membership";
   const lineItems = [
     {
       price_data: {
@@ -2705,13 +2779,19 @@ async function createStripeCheckoutSession(params) {
           description: productDescription,
           images: [productImage]
         },
-        unit_amount: unitAmount
+        unit_amount: unitAmount,
+        ...isSubscription ? {
+          recurring: {
+            interval: "year",
+            interval_count: 1
+          }
+        } : {}
       },
       quantity: 1
     }
   ];
   const sessionConfig = {
-    mode: "payment",
+    mode: isSubscription ? "subscription" : "payment",
     line_items: lineItems,
     customer_email: sanitizedEmail,
     metadata: {
@@ -2722,12 +2802,41 @@ async function createStripeCheckoutSession(params) {
       shipping_address: truncate(sanitizedLine1 || ""),
       apartment_bus: truncate(sanitizedLine2 || ""),
       shipping_city: truncate(parsedCity),
-      shipping_postal: truncate(parsedPostal)
+      shipping_postal: truncate(parsedPostal),
+      billing_scheme: isSubscription ? "annual_recurring_subscription" : "one_time_payment"
     },
     success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/?canceled=true`,
     billing_address_collection: "auto"
   };
+  if (isSubscription) {
+    sessionConfig.payment_method_collection = "always";
+    sessionConfig.subscription_data = {
+      description: "Sillow Mill - Annual Pioneer Member Pass Recurring Subscription (\u20AC60.00/year)",
+      metadata: {
+        product: "membership",
+        wave: "Wave 2",
+        product_title: truncate(productName),
+        customer_name: truncate(sanitizedName || ""),
+        customer_email: truncate(sanitizedEmail || ""),
+        billing_interval: "year"
+      }
+    };
+  }
+  if (sanitizedEmail) {
+    try {
+      const existingCustomers = await stripe.customers.list({
+        email: sanitizedEmail,
+        limit: 1
+      });
+      if (existingCustomers.data && existingCustomers.data.length > 0) {
+        sessionConfig.customer = existingCustomers.data[0].id;
+        delete sessionConfig.customer_email;
+      }
+    } catch (custErr) {
+      console.warn("[StripeService] Customer consolidation note:", custErr);
+    }
+  }
   if (isPhysical) {
     sessionConfig.shipping_address_collection = {
       allowed_countries: [
@@ -2766,11 +2875,15 @@ async function processCompletedCheckout(session) {
   }
   const email = session.customer_details?.email || session.customer_email || "unknown@sillowmill.com";
   const name = session.customer_details?.name || session.metadata?.customer_name || "Collector";
-  const passId = `PASS-BINGAA-${session.id.slice(-8).toUpperCase()}`;
+  const productId = session.metadata?.product || "comic";
+  const isSubscription = session.mode === "subscription" || productId === "membership";
+  const passId = `PASS-${productId.toUpperCase()}-${session.id.slice(-8).toUpperCase()}`;
+  const customerId = (typeof session.customer === "string" ? session.customer : session.customer?.id) || void 0;
+  const subscriptionId = (typeof session.subscription === "string" ? session.subscription : session.subscription?.id) || void 0;
   const newOrder = {
     id: session.id,
     date: (/* @__PURE__ */ new Date()).toISOString(),
-    amount: (session.amount_total || 1499) / 100,
+    amount: (session.amount_total || (isSubscription ? 6e3 : 1499)) / 100,
     currency: (session.currency || "eur").toUpperCase(),
     customerEmail: email,
     customerName: name,
@@ -2782,20 +2895,101 @@ async function processCompletedCheckout(session) {
     passId,
     entitled: true,
     paymentMethod: session.payment_method_types?.[0] || "stripe",
-    product: session.metadata?.product || "comic",
-    productTitle: session.metadata?.product_title || "Sillow Mill - Bingaa (Collectors Graphic Novel)"
+    product: productId,
+    productTitle: session.metadata?.product_title || (isSubscription ? "Sillow Mill - Annual Pioneer Member Pass" : "Sillow Mill Order"),
+    isSubscription,
+    subscriptionId,
+    customerId,
+    billingInterval: isSubscription ? "year" : void 0
   };
   orders.push(newOrder);
   saveOrders(orders);
+  if (isSubscription || productId === "membership") {
+    try {
+      const renewalDate = /* @__PURE__ */ new Date();
+      renewalDate.setFullYear(renewalDate.getFullYear() + 1);
+      updateUserSubscription(email, {
+        role: "ANNUAL_PASS",
+        subscriptionStatus: "active",
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+        subscriptionRenewalDate: renewalDate.toISOString(),
+        subscriptionCancelAtPeriodEnd: false,
+        hasVipPass: true
+      });
+    } catch (uErr) {
+      console.warn("[StripeService] Profile auto-update notice:", uErr);
+    }
+  }
   return newOrder;
+}
+async function processSubscriptionInvoice(invoice) {
+  const invoiceId = invoice.id;
+  if (!invoiceId) return null;
+  const orders = loadOrders();
+  const existingOrder = orders.find((o) => o.id === invoiceId);
+  if (existingOrder) {
+    return existingOrder;
+  }
+  const email = invoice.customer_email || "unknown@sillowmill.com";
+  const name = invoice.customer_name || "Annual Member";
+  const rawSub = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
+  const subscriptionId = (typeof rawSub === "string" ? rawSub : rawSub?.id) || void 0;
+  const rawCust = invoice.customer;
+  const customerId = (typeof rawCust === "string" ? rawCust : rawCust?.id) || void 0;
+  let renewalDateStr;
+  const periodEndUnix = invoice.lines?.data?.[0]?.period?.end;
+  if (periodEndUnix) {
+    renewalDateStr = new Date(periodEndUnix * 1e3).toISOString();
+  } else {
+    const nextYear = /* @__PURE__ */ new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    renewalDateStr = nextYear.toISOString();
+  }
+  const passId = `PASS-RENEWAL-${invoiceId.slice(-8).toUpperCase()}`;
+  const renewalOrder = {
+    id: invoiceId,
+    date: (/* @__PURE__ */ new Date()).toISOString(),
+    amount: (invoice.amount_paid || 6e3) / 100,
+    currency: (invoice.currency || "eur").toUpperCase(),
+    customerEmail: email,
+    customerName: name,
+    status: "paid",
+    wave: "Wave 2",
+    passId,
+    entitled: true,
+    paymentMethod: "automated_annual_renewal",
+    product: "membership",
+    productTitle: "Sillow Mill - Annual Pioneer Member Pass (Automated Annual Renewal)",
+    isSubscription: true,
+    subscriptionId,
+    customerId,
+    billingInterval: "year"
+  };
+  orders.push(renewalOrder);
+  saveOrders(orders);
+  try {
+    updateUserSubscription(email, {
+      role: "ANNUAL_PASS",
+      subscriptionStatus: "active",
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subscriptionId,
+      subscriptionRenewalDate: renewalDateStr,
+      subscriptionCancelAtPeriodEnd: false,
+      hasVipPass: true
+    });
+  } catch (uErr) {
+    console.warn("[StripeService] Invoice renewal profile update notice:", uErr);
+  }
+  return renewalOrder;
 }
 
 // src/server/nfcDnaService.ts
-import fs3 from "fs";
-import path3 from "path";
-import crypto3 from "crypto";
+import fs4 from "fs";
+import path4 from "path";
+import crypto4 from "crypto";
 var TMP_FILE = "/tmp/sillow_nfc_passport_data.json";
-var LOCAL_FILE = path3.resolve(process.cwd(), "data/nfc_passport_data.json");
+var LOCAL_FILE = path4.resolve(process.cwd(), "data/nfc_passport_data.json");
 var AES_MASTER_KEY = Buffer.from(
   process.env.NTAG_AES_KEY || "a8f192b03c4d5e6f7a8b9c0d1e2f3a4b",
   "hex"
@@ -2814,7 +3008,7 @@ function normalizeTokenId(raw) {
   }
   return clean;
 }
-var PASS_ID_PATTERNS2 = [
+var PASS_ID_PATTERNS3 = [
   /^AKN-VIP-\d{4}-[A-Z]\d{3,4}$/,
   // AKN-VIP-2027-X0914 or AKN-VIP-2027-X001..X100
   /^AKN-\d{4}$/,
@@ -2822,13 +3016,13 @@ var PASS_ID_PATTERNS2 = [
   /^SM\d{3}-[A-Z0-9]{4}$/
   // SM001-A9B2
 ];
-function isValidPassId2(raw) {
+function isValidPassId3(raw) {
   if (!raw || typeof raw !== "string") return false;
   const clean = raw.trim().toUpperCase().replace(/^#/, "");
   if (clean.length > 32) return false;
   const allowlist = (process.env.NFC_VALID_PASS_IDS || "").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
   if (allowlist.length > 0) return allowlist.includes(clean);
-  return PASS_ID_PATTERNS2.some((re) => re.test(clean));
+  return PASS_ID_PATTERNS3.some((re) => re.test(clean));
 }
 function deriveEdition(tokenId) {
   const clean = normalizeTokenId(tokenId);
@@ -2883,8 +3077,8 @@ function createDefaultPassRecord(tokenId) {
 }
 function loadStore() {
   try {
-    if (fs3.existsSync(TMP_FILE)) {
-      const data = JSON.parse(fs3.readFileSync(TMP_FILE, "utf8"));
+    if (fs4.existsSync(TMP_FILE)) {
+      const data = JSON.parse(fs4.readFileSync(TMP_FILE, "utf8"));
       if (data && data.passes) {
         _store = data;
         _store.claimedKeys = Array.isArray(_store.claimedKeys) ? _store.claimedKeys : [];
@@ -2897,8 +3091,8 @@ function loadStore() {
     console.warn("[Passport] Error reading from /tmp:", err);
   }
   try {
-    if (fs3.existsSync(LOCAL_FILE)) {
-      const data = JSON.parse(fs3.readFileSync(LOCAL_FILE, "utf8"));
+    if (fs4.existsSync(LOCAL_FILE)) {
+      const data = JSON.parse(fs4.readFileSync(LOCAL_FILE, "utf8"));
       if (data && data.passes) {
         _store = data;
         _store.claimedKeys = Array.isArray(_store.claimedKeys) ? _store.claimedKeys : [];
@@ -2922,10 +3116,10 @@ function loadStore() {
 }
 function saveStore() {
   try {
-    fs3.writeFileSync(TMP_FILE, JSON.stringify(_store, null, 2), "utf8");
+    fs4.writeFileSync(TMP_FILE, JSON.stringify(_store, null, 2), "utf8");
     try {
-      if (fs3.existsSync(path3.dirname(LOCAL_FILE))) {
-        fs3.writeFileSync(LOCAL_FILE, JSON.stringify(_store, null, 2), "utf8");
+      if (fs4.existsSync(path4.dirname(LOCAL_FILE))) {
+        fs4.writeFileSync(LOCAL_FILE, JSON.stringify(_store, null, 2), "utf8");
       }
     } catch {
     }
@@ -3034,7 +3228,7 @@ function verifyDnaCipher(tokenId, enc, cmac) {
   }
   try {
     const encryptedBuf = Buffer.from(cleanEnc.slice(0, 32), "hex");
-    const decipher = crypto3.createDecipheriv("aes-128-cbc", AES_MASTER_KEY, AES_IV);
+    const decipher = crypto4.createDecipheriv("aes-128-cbc", AES_MASTER_KEY, AES_IV);
     decipher.setAutoPadding(false);
     const decrypted = Buffer.concat([decipher.update(encryptedBuf), decipher.final()]);
     let counter = pass.lastCounter + 1;
@@ -3075,11 +3269,11 @@ function generateAuthenticDnaCipher(tokenId, counterOverride) {
   const counter = counterOverride || pass.lastCounter + 1;
   const piccData = Buffer.alloc(16, 0);
   piccData[0] = 199;
-  const hash = crypto3.createHash("sha256").update(pass.normalizedId).digest();
+  const hash = crypto4.createHash("sha256").update(pass.normalizedId).digest();
   hash.copy(piccData, 1, 0, 7);
   piccData.writeUIntLE(counter, 8, 3);
-  crypto3.randomBytes(5).copy(piccData, 11);
-  const cipher = crypto3.createCipheriv("aes-128-cbc", AES_MASTER_KEY, AES_IV);
+  crypto4.randomBytes(5).copy(piccData, 11);
+  const cipher = crypto4.createCipheriv("aes-128-cbc", AES_MASTER_KEY, AES_IV);
   cipher.setAutoPadding(false);
   const encrypted = Buffer.concat([cipher.update(piccData), cipher.final()]);
   return encrypted.toString("hex");
@@ -5211,6 +5405,7 @@ apiApp.post(
         const order = await processCompletedCheckout(session);
         res.status(200).json({
           received: true,
+          type: "checkout.session.completed",
           orderId: order.id,
           passId: order.passId,
           waveRemaining: getInventoryStatus().available
@@ -5219,6 +5414,68 @@ apiApp.post(
       } catch (err) {
         console.error("[API Webhook] Error processing checkout completion:", err);
         res.status(500).json({ error: "Failed to process order" });
+        return;
+      }
+    }
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object;
+      try {
+        const order = await processSubscriptionInvoice(invoice);
+        res.status(200).json({
+          received: true,
+          type: "invoice.payment_succeeded",
+          orderId: order?.id,
+          renewed: Boolean(order)
+        });
+        return;
+      } catch (err) {
+        console.error("[API Webhook] Error processing subscription invoice payment:", err);
+        res.status(500).json({ error: "Failed to process invoice payment" });
+        return;
+      }
+    }
+    if (event.type === "customer.subscription.updated") {
+      const subscription = event.data.object;
+      try {
+        const customerId = typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id;
+        const user = getUserByStripeCustomerId(customerId);
+        if (user) {
+          const cancelAtPeriodEnd = Boolean(subscription.cancel_at_period_end);
+          const status = subscription.status === "active" ? "active" : subscription.status || "inactive";
+          const renewalDate = subscription.current_period_end ? new Date(subscription.current_period_end * 1e3).toISOString() : void 0;
+          updateUserSubscription(user.email, {
+            subscriptionStatus: status,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: subscription.id,
+            subscriptionRenewalDate: renewalDate,
+            subscriptionCancelAtPeriodEnd: cancelAtPeriodEnd
+          });
+        }
+        res.status(200).json({ received: true, type: "customer.subscription.updated" });
+        return;
+      } catch (err) {
+        console.error("[API Webhook] Error updating subscription:", err);
+        res.status(500).json({ error: "Failed to update subscription" });
+        return;
+      }
+    }
+    if (event.type === "customer.subscription.deleted") {
+      const subscription = event.data.object;
+      try {
+        const customerId = typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id;
+        const user = getUserByStripeCustomerId(customerId);
+        if (user) {
+          updateUserSubscription(user.email, {
+            role: user.hasVipPass ? "VIP_GUEST" : "FREE",
+            subscriptionStatus: "canceled",
+            subscriptionCancelAtPeriodEnd: false
+          });
+        }
+        res.status(200).json({ received: true, type: "customer.subscription.deleted" });
+        return;
+      } catch (err) {
+        console.error("[API Webhook] Error processing subscription deletion:", err);
+        res.status(500).json({ error: "Failed to delete subscription" });
         return;
       }
     }
@@ -5326,7 +5583,7 @@ apiRouter.all(["/nfc/redeem", "/nfc/verify"], (req, res) => {
     });
     return;
   }
-  if (!isValidPassId2(token)) {
+  if (!isValidPassId3(token)) {
     res.status(403).json({
       success: false,
       error: "INVALID_PASS_ID",
@@ -5372,7 +5629,7 @@ apiRouter.all("/nfc/verify-dna", (req, res) => {
   const token = req.body?.token || req.body?.id || req.query?.token || req.query?.id;
   const enc = req.body?.enc || req.query?.enc;
   const cmac = req.body?.cmac || req.query?.cmac;
-  if (!isValidPassId2(token)) {
+  if (!isValidPassId3(token)) {
     res.status(403).json({
       valid: false,
       isAuthentic: false,
@@ -5490,7 +5747,7 @@ apiRouter.post("/nfc/register", async (req, res) => {
 });
 apiRouter.all("/nfc/reset-pass", async (req, res) => {
   const token = (req.body?.token || req.body?.id || req.query?.token || req.query?.id || "AKN-VIP-2027-X001").trim().toUpperCase();
-  if (!isValidPassId2(token)) {
+  if (!isValidPassId3(token)) {
     res.status(400).json({
       success: false,
       error: "INVALID_PASS_ID",
@@ -5999,6 +6256,149 @@ apiRouter.post("/auth/update-password", async (req, res) => {
     res.status(result.success ? 200 : 400).json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: err?.message || "Password update failed" });
+  }
+});
+async function resolveUserFromReq(req) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.slice(7).trim();
+    const sessionRes = await getUserFromSessionToken(token);
+    if (sessionRes.success && sessionRes.user?.email) {
+      return getUserByEmail(sessionRes.user.email);
+    }
+  }
+  const email = (req.body?.email || req.query?.email)?.trim().toLowerCase();
+  if (email) {
+    return getUserByEmail(email);
+  }
+  return null;
+}
+apiRouter.all(["/subscription/status", "/api/subscription/status"], async (req, res) => {
+  try {
+    const user = await resolveUserFromReq(req);
+    if (!user) {
+      res.status(401).json({ success: false, error: "Authentication required" });
+      return;
+    }
+    const isAnnualMember = user.role === "ANNUAL_PASS" || user.subscriptionStatus === "active";
+    res.status(200).json({
+      success: true,
+      email: user.email,
+      role: user.role,
+      subscriptionStatus: user.subscriptionStatus,
+      isAnnualMember,
+      annualAmount: 60,
+      currency: "EUR",
+      billingFrequency: "Annual Recurring",
+      renewalDate: user.subscriptionRenewalDate || null,
+      cancelAtPeriodEnd: Boolean(user.subscriptionCancelAtPeriodEnd),
+      hasStripeCustomer: Boolean(user.stripeCustomerId)
+    });
+  } catch (err) {
+    console.error("[API] subscription/status error:", err);
+    res.status(500).json({ success: false, error: err?.message || "Failed to fetch subscription status" });
+  }
+});
+apiRouter.post(["/subscription/cancel-renewal", "/api/subscription/cancel-renewal"], async (req, res) => {
+  try {
+    const user = await resolveUserFromReq(req);
+    if (!user) {
+      res.status(401).json({ success: false, error: "Authentication required" });
+      return;
+    }
+    if (user.stripeSubscriptionId) {
+      try {
+        const stripe = getStripe();
+        await stripe.subscriptions.update(user.stripeSubscriptionId, {
+          cancel_at_period_end: true
+        });
+      } catch (stripeErr) {
+        console.warn("[Subscription] Stripe auto-renewal pause note:", stripeErr?.message);
+      }
+    }
+    updateUserSubscription(user.email, {
+      subscriptionStatus: "active",
+      subscriptionCancelAtPeriodEnd: true
+    });
+    res.status(200).json({
+      success: true,
+      message: "Automatic annual renewal turned off. Your membership remains active until the end of your current annual billing cycle.",
+      cancelAtPeriodEnd: true
+    });
+  } catch (err) {
+    console.error("[API] subscription/cancel-renewal error:", err);
+    res.status(500).json({ success: false, error: err?.message || "Failed to cancel auto-renewal" });
+  }
+});
+apiRouter.post(["/subscription/reactivate-renewal", "/api/subscription/reactivate-renewal"], async (req, res) => {
+  try {
+    const user = await resolveUserFromReq(req);
+    if (!user) {
+      res.status(401).json({ success: false, error: "Authentication required" });
+      return;
+    }
+    if (user.stripeSubscriptionId) {
+      try {
+        const stripe = getStripe();
+        await stripe.subscriptions.update(user.stripeSubscriptionId, {
+          cancel_at_period_end: false
+        });
+      } catch (stripeErr) {
+        console.warn("[Subscription] Stripe reactivate renewal note:", stripeErr?.message);
+      }
+    }
+    updateUserSubscription(user.email, {
+      subscriptionStatus: "active",
+      subscriptionCancelAtPeriodEnd: false
+    });
+    res.status(200).json({
+      success: true,
+      message: "Automatic annual renewal reactivated successfully.",
+      cancelAtPeriodEnd: false
+    });
+  } catch (err) {
+    console.error("[API] subscription/reactivate-renewal error:", err);
+    res.status(500).json({ success: false, error: err?.message || "Failed to reactivate auto-renewal" });
+  }
+});
+apiRouter.post(["/subscription/create-portal-session", "/api/subscription/create-portal-session"], async (req, res) => {
+  try {
+    const user = await resolveUserFromReq(req);
+    if (!user) {
+      res.status(401).json({ success: false, error: "Authentication required" });
+      return;
+    }
+    const stripe = getStripe();
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const list = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (list.data && list.data.length > 0) {
+        customerId = list.data[0].id;
+        updateUserSubscription(user.email, {
+          subscriptionStatus: user.subscriptionStatus,
+          stripeCustomerId: customerId
+        });
+      }
+    }
+    if (!customerId) {
+      res.status(404).json({
+        success: false,
+        error: "No active Stripe billing profile found. Please purchase the Annual Pass first to activate your billing portal."
+      });
+      return;
+    }
+    const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : "https://sillowmill.com");
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${origin}/`
+    });
+    res.status(200).json({
+      success: true,
+      url: portalSession.url
+    });
+  } catch (err) {
+    console.error("[API] create-portal-session error:", err);
+    res.status(500).json({ success: false, error: err?.message || "Failed to initialize Stripe billing portal" });
   }
 });
 apiRouter.post(["/dossier/vote", "/vote"], async (req, res) => {

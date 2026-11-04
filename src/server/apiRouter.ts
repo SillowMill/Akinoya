@@ -9,6 +9,7 @@ import {
   getStripe,
   createComicCheckoutSession,
   processCompletedCheckout,
+  processSubscriptionInvoice,
   getInventoryStatus,
   loadOrders,
 } from './stripeService';
@@ -51,6 +52,9 @@ import {
   loginUserCredentials,
   getUserFromSessionToken,
   updateUserPassword,
+  updateUserSubscription,
+  getUserByEmail,
+  getUserByStripeCustomerId,
   castSubmissionVote,
   getVotesSummary,
   saveSubmissionRecord,
@@ -106,6 +110,7 @@ apiApp.post(
         const order = await processCompletedCheckout(session);
         res.status(200).json({
           received: true,
+          type: 'checkout.session.completed',
           orderId: order.id,
           passId: order.passId,
           waveRemaining: getInventoryStatus().available,
@@ -114,6 +119,77 @@ apiApp.post(
       } catch (err: any) {
         console.error('[API Webhook] Error processing checkout completion:', err);
         res.status(500).json({ error: 'Failed to process order' });
+        return;
+      }
+    }
+
+    // ── Automated Annual Renewal (SEPA Direct Debit / Saved Card Domiciliëring) ──
+    if (event.type === 'invoice.payment_succeeded') {
+      const invoice = event.data.object;
+      try {
+        const order = await processSubscriptionInvoice(invoice);
+        res.status(200).json({
+          received: true,
+          type: 'invoice.payment_succeeded',
+          orderId: order?.id,
+          renewed: Boolean(order),
+        });
+        return;
+      } catch (err: any) {
+        console.error('[API Webhook] Error processing subscription invoice payment:', err);
+        res.status(500).json({ error: 'Failed to process invoice payment' });
+        return;
+      }
+    }
+
+    // ── Subscription Status Updates (Cancellations, Renewals, Active Status) ──
+    if (event.type === 'customer.subscription.updated') {
+      const subscription = event.data.object;
+      try {
+        const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id;
+        const user = getUserByStripeCustomerId(customerId);
+        if (user) {
+          const cancelAtPeriodEnd = Boolean(subscription.cancel_at_period_end);
+          const status = subscription.status === 'active' ? 'active' : (subscription.status || 'inactive');
+          const renewalDate = subscription.current_period_end
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : undefined;
+
+          updateUserSubscription(user.email, {
+            subscriptionStatus: status,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: subscription.id,
+            subscriptionRenewalDate: renewalDate,
+            subscriptionCancelAtPeriodEnd: cancelAtPeriodEnd,
+          });
+        }
+        res.status(200).json({ received: true, type: 'customer.subscription.updated' });
+        return;
+      } catch (err: any) {
+        console.error('[API Webhook] Error updating subscription:', err);
+        res.status(500).json({ error: 'Failed to update subscription' });
+        return;
+      }
+    }
+
+    // ── Subscription Termination (Expired or Revoked) ──
+    if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object;
+      try {
+        const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id;
+        const user = getUserByStripeCustomerId(customerId);
+        if (user) {
+          updateUserSubscription(user.email, {
+            role: user.hasVipPass ? 'VIP_GUEST' : 'FREE',
+            subscriptionStatus: 'canceled',
+            subscriptionCancelAtPeriodEnd: false,
+          });
+        }
+        res.status(200).json({ received: true, type: 'customer.subscription.deleted' });
+        return;
+      } catch (err: any) {
+        console.error('[API Webhook] Error processing subscription deletion:', err);
+        res.status(500).json({ error: 'Failed to delete subscription' });
         return;
       }
     }
@@ -1030,6 +1106,169 @@ apiRouter.post('/auth/update-password', async (req: Request, res: Response): Pro
     res.status(result.success ? 200 : 400).json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'Password update failed' });
+  }
+});
+
+// ─── Helper: Resolve User from Request Authorization or Body ──────────────────
+async function resolveUserFromReq(req: Request) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim();
+    const sessionRes = await getUserFromSessionToken(token);
+    if (sessionRes.success && sessionRes.user?.email) {
+      return getUserByEmail(sessionRes.user.email);
+    }
+  }
+  const email = ((req.body?.email || req.query?.email) as string)?.trim().toLowerCase();
+  if (email) {
+    return getUserByEmail(email);
+  }
+  return null;
+}
+
+// ─── 13b. Automated Annual Subscription & Retention Controls ──────────────────
+apiRouter.all(['/subscription/status', '/api/subscription/status'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await resolveUserFromReq(req);
+    if (!user) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const isAnnualMember = user.role === 'ANNUAL_PASS' || user.subscriptionStatus === 'active';
+    res.status(200).json({
+      success: true,
+      email: user.email,
+      role: user.role,
+      subscriptionStatus: user.subscriptionStatus,
+      isAnnualMember,
+      annualAmount: 60.0,
+      currency: 'EUR',
+      billingFrequency: 'Annual Recurring',
+      renewalDate: user.subscriptionRenewalDate || null,
+      cancelAtPeriodEnd: Boolean(user.subscriptionCancelAtPeriodEnd),
+      hasStripeCustomer: Boolean(user.stripeCustomerId),
+    });
+  } catch (err: any) {
+    console.error('[API] subscription/status error:', err);
+    res.status(500).json({ success: false, error: err?.message || 'Failed to fetch subscription status' });
+  }
+});
+
+apiRouter.post(['/subscription/cancel-renewal', '/api/subscription/cancel-renewal'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await resolveUserFromReq(req);
+    if (!user) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    // Pause auto-renewal on Stripe if active subscription exists
+    if (user.stripeSubscriptionId) {
+      try {
+        const stripe = getStripe();
+        await stripe.subscriptions.update(user.stripeSubscriptionId, {
+          cancel_at_period_end: true,
+        });
+      } catch (stripeErr: any) {
+        console.warn('[Subscription] Stripe auto-renewal pause note:', stripeErr?.message);
+      }
+    }
+
+    updateUserSubscription(user.email, {
+      subscriptionStatus: 'active',
+      subscriptionCancelAtPeriodEnd: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Automatic annual renewal turned off. Your membership remains active until the end of your current annual billing cycle.',
+      cancelAtPeriodEnd: true,
+    });
+  } catch (err: any) {
+    console.error('[API] subscription/cancel-renewal error:', err);
+    res.status(500).json({ success: false, error: err?.message || 'Failed to cancel auto-renewal' });
+  }
+});
+
+apiRouter.post(['/subscription/reactivate-renewal', '/api/subscription/reactivate-renewal'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await resolveUserFromReq(req);
+    if (!user) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    if (user.stripeSubscriptionId) {
+      try {
+        const stripe = getStripe();
+        await stripe.subscriptions.update(user.stripeSubscriptionId, {
+          cancel_at_period_end: false,
+        });
+      } catch (stripeErr: any) {
+        console.warn('[Subscription] Stripe reactivate renewal note:', stripeErr?.message);
+      }
+    }
+
+    updateUserSubscription(user.email, {
+      subscriptionStatus: 'active',
+      subscriptionCancelAtPeriodEnd: false,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Automatic annual renewal reactivated successfully.',
+      cancelAtPeriodEnd: false,
+    });
+  } catch (err: any) {
+    console.error('[API] subscription/reactivate-renewal error:', err);
+    res.status(500).json({ success: false, error: err?.message || 'Failed to reactivate auto-renewal' });
+  }
+});
+
+apiRouter.post(['/subscription/create-portal-session', '/api/subscription/create-portal-session'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await resolveUserFromReq(req);
+    if (!user) {
+      res.status(401).json({ success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const stripe = getStripe();
+    let customerId = user.stripeCustomerId;
+
+    if (!customerId) {
+      const list = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (list.data && list.data.length > 0) {
+        customerId = list.data[0].id;
+        updateUserSubscription(user.email, {
+          subscriptionStatus: user.subscriptionStatus,
+          stripeCustomerId: customerId,
+        });
+      }
+    }
+
+    if (!customerId) {
+      res.status(404).json({
+        success: false,
+        error: 'No active Stripe billing profile found. Please purchase the Annual Pass first to activate your billing portal.',
+      });
+      return;
+    }
+
+    const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : 'https://sillowmill.com');
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${origin}/`,
+    });
+
+    res.status(200).json({
+      success: true,
+      url: portalSession.url,
+    });
+  } catch (err: any) {
+    console.error('[API] create-portal-session error:', err);
+    res.status(500).json({ success: false, error: err?.message || 'Failed to initialize Stripe billing portal' });
   }
 });
 

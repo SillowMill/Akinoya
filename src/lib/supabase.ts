@@ -16,6 +16,10 @@ export interface Profile {
   is_vip?: boolean;
   is_subscriber?: boolean;
   is_annual_member?: boolean;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  subscription_renewal_date?: string;
+  subscription_cancel_at_period_end?: boolean;
   unlocked_assets?: string[];
   contest_submission_id?: string | null;
   has_submitted_contest?: boolean;

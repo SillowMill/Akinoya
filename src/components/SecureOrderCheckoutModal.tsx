@@ -475,17 +475,19 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                       </div>
 
                       <p className="text-xs text-white/70 font-mono leading-relaxed">
-                        Instant verification with Bancontact, iDEAL, Apple Pay, Google Pay, or Credit/Debit card.
+                        {checkoutProduct.id === 'membership'
+                          ? 'Automated recurring annual billing (€60.00/yr) via SEPA Direct Debit (domiciliëring), Apple Pay, Google Pay, or Credit/Debit Card. Renews annually until cancelled in your billing settings.'
+                          : 'Instant verification with Bancontact, iDEAL, Apple Pay, Google Pay, or Credit/Debit card.'}
                       </p>
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-center">
                         <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
-                          <span className="text-cyan-400 font-bold">Bancontact</span>
-                          <span className="text-[9px] text-white/40">Instant BE</span>
+                          <span className="text-cyan-400 font-bold">{checkoutProduct.id === 'membership' ? 'SEPA Debit' : 'Bancontact'}</span>
+                          <span className="text-[9px] text-white/40">{checkoutProduct.id === 'membership' ? 'Domiciliëring' : 'Instant BE'}</span>
                         </div>
                         <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
-                          <span className="text-purple-400 font-bold">iDEAL</span>
-                          <span className="text-[9px] text-white/40">Netherlands</span>
+                          <span className="text-purple-400 font-bold">{checkoutProduct.id === 'membership' ? 'Direct Debit' : 'iDEAL'}</span>
+                          <span className="text-[9px] text-white/40">{checkoutProduct.id === 'membership' ? 'EU Recurring' : 'Netherlands'}</span>
                         </div>
                         <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
                           <span className="text-emerald-400 font-bold">Apple / GPay</span>
@@ -691,7 +693,9 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                             <span className="whitespace-nowrap inline-flex items-baseline gap-1">
                               <span>CONTINUE TO STRIPE CHECKOUT (</span>
                               <span>€</span>
-                              <span>{checkoutProduct.priceValue})</span>
+                              <span>{checkoutProduct.priceValue}</span>
+                              {checkoutProduct.id === 'membership' && <span className="text-[10px] text-black/70 font-mono">/YR</span>}
+                              <span>)</span>
                             </span>
                             <ArrowRight className="w-4 h-4 text-black" />
                           </>

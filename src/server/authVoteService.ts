@@ -41,6 +41,10 @@ export interface AuthUserRecord {
   isPioneer: boolean;
   pioneerBadge?: string;
   claimedSector?: string | null;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  subscriptionRenewalDate?: string;
+  subscriptionCancelAtPeriodEnd?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -323,12 +327,100 @@ function recordToProfile(u: AuthUserRecord): Profile {
     vip_code_redeemed: u.vipCodeRedeemed || null,
     is_vip: u.hasVipPass || u.role === 'VIP_GUEST' || u.role === 'CREATOR',
     is_subscriber: u.subscriptionStatus === 'active' || u.role === 'SUBSCRIBER' || u.role === 'ANNUAL_PASS' || u.role === 'CREATOR',
+    is_annual_member: u.role === 'ANNUAL_PASS' || (u.subscriptionStatus === 'active' && u.role !== 'FREE'),
+    stripe_customer_id: u.stripeCustomerId,
+    stripe_subscription_id: u.stripeSubscriptionId,
+    subscription_renewal_date: u.subscriptionRenewalDate,
+    subscription_cancel_at_period_end: u.subscriptionCancelAtPeriodEnd,
     is_pioneer: u.isPioneer,
     pioneer_badge: u.pioneerBadge || (u.hasVipPass || u.role === 'VIP_GUEST' || u.role === 'CREATOR' ? '[VIP-PIONEER-2027]' : '[PIONEER-2027]'),
     claimed_sector: u.claimedSector || null,
     created_at: u.createdAt,
     updated_at: u.updatedAt,
   };
+}
+
+export function getUserByEmail(email: string): AuthUserRecord | null {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (!cleanEmail) return null;
+  _userStore = loadUsersStore();
+  return _userStore.users[cleanEmail] || null;
+}
+
+export function getUserByStripeCustomerId(customerId: string): AuthUserRecord | null {
+  if (!customerId) return null;
+  _userStore = loadUsersStore();
+  for (const user of Object.values(_userStore.users)) {
+    if (user.stripeCustomerId === customerId) {
+      return user;
+    }
+  }
+  return null;
+}
+
+export function updateUserSubscription(
+  email: string,
+  updates: {
+    role?: UserRole;
+    subscriptionStatus: string;
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
+    subscriptionRenewalDate?: string;
+    subscriptionCancelAtPeriodEnd?: boolean;
+    hasVipPass?: boolean;
+  }
+): boolean {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (!cleanEmail) return false;
+
+  _userStore = loadUsersStore();
+  let user = _userStore.users[cleanEmail];
+
+  const now = new Date().toISOString();
+
+  if (!user) {
+    const userId = `usr_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const namePart = cleanEmail.split('@')[0] || 'Collector';
+    const { salt, hash } = hashPassword(crypto.randomBytes(16).toString('hex'));
+
+    user = {
+      id: userId,
+      email: cleanEmail,
+      firstName: namePart,
+      lastName: '',
+      fullName: namePart,
+      salt,
+      passwordHash: hash,
+      role: updates.role || 'ANNUAL_PASS',
+      hasVipPass: updates.hasVipPass ?? true,
+      subscriptionStatus: updates.subscriptionStatus,
+      isPioneer: true,
+      pioneerBadge: '[VIP-PIONEER-2027]',
+      stripeCustomerId: updates.stripeCustomerId,
+      stripeSubscriptionId: updates.stripeSubscriptionId,
+      subscriptionRenewalDate: updates.subscriptionRenewalDate,
+      subscriptionCancelAtPeriodEnd: updates.subscriptionCancelAtPeriodEnd ?? false,
+      createdAt: now,
+      updatedAt: now,
+    };
+  } else {
+    if (updates.role) user.role = updates.role;
+    user.subscriptionStatus = updates.subscriptionStatus;
+    if (updates.stripeCustomerId) user.stripeCustomerId = updates.stripeCustomerId;
+    if (updates.stripeSubscriptionId) user.stripeSubscriptionId = updates.stripeSubscriptionId;
+    if (updates.subscriptionRenewalDate !== undefined) user.subscriptionRenewalDate = updates.subscriptionRenewalDate;
+    if (updates.subscriptionCancelAtPeriodEnd !== undefined) user.subscriptionCancelAtPeriodEnd = updates.subscriptionCancelAtPeriodEnd;
+    if (updates.hasVipPass !== undefined) user.hasVipPass = updates.hasVipPass;
+    if (user.role === 'ANNUAL_PASS' || updates.subscriptionStatus === 'active') {
+      user.hasVipPass = true;
+      user.pioneerBadge = '[VIP-PIONEER-2027]';
+    }
+    user.updatedAt = now;
+  }
+
+  _userStore.users[cleanEmail] = user;
+  saveUsersStore(_userStore);
+  return true;
 }
 
 // ─── Authentication Operations ────────────────────────────────────────────────

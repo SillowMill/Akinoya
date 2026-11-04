@@ -30,14 +30,40 @@ export const AccountBillingModal: React.FC<AccountBillingModalProps> = ({ isOpen
   const [showPreferences, setShowPreferences] = useState(false);
   const [cancellationStep, setCancellationStep] = useState<'idle' | 'confirm' | 'cancelled'>('idle');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessingPortal, setIsProcessingPortal] = useState(false);
+
+  // Dynamic renewal date calculation (1 year from recorded renewal date or account creation)
+  const renewalDateText = React.useMemo(() => {
+    if (profile?.subscription_renewal_date) {
+      try {
+        return new Date(profile.subscription_renewal_date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      } catch {}
+    }
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, [profile?.subscription_renewal_date]);
 
   // Reset cancellation step when opened
   useEffect(() => {
     if (isOpen) {
-      setCancellationStep('idle');
+      const isLocallyCancelled = localStorage.getItem('akinoya_renewal_preference') === 'cancelled';
+      if (profile?.subscription_cancel_at_period_end || isLocallyCancelled) {
+        setCancellationStep('cancelled');
+      } else {
+        setCancellationStep('idle');
+      }
       setShowPreferences(false);
     }
-  }, [isOpen]);
+  }, [isOpen, profile?.subscription_cancel_at_period_end]);
 
   // Listen to escape key
   useEffect(() => {
@@ -59,12 +85,19 @@ export const AccountBillingModal: React.FC<AccountBillingModalProps> = ({ isOpen
     setIsProcessing(true);
     soundManager.playTone(440, 0.05);
 
-    // Simulate safe API call / Stripe subscription schedule update
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
     try {
+      await fetch('/api/subscription/cancel-renewal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {}),
+        },
+        body: JSON.stringify({ email }),
+      });
       localStorage.setItem('akinoya_renewal_preference', 'cancelled');
-    } catch {}
+    } catch (err) {
+      console.warn('[Billing] Cancel renewal request note:', err);
+    }
 
     setIsProcessing(false);
     setCancellationStep('cancelled');
@@ -75,15 +108,46 @@ export const AccountBillingModal: React.FC<AccountBillingModalProps> = ({ isOpen
     setIsProcessing(true);
     soundManager.playTone(660, 0.05);
 
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
     try {
+      await fetch('/api/subscription/reactivate-renewal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {}),
+        },
+        body: JSON.stringify({ email }),
+      });
       localStorage.removeItem('akinoya_renewal_preference');
-    } catch {}
+    } catch (err) {
+      console.warn('[Billing] Reactivate renewal request note:', err);
+    }
 
     setIsProcessing(false);
     setCancellationStep('idle');
     soundManager.playTone(720, 0.08);
+  };
+
+  const handleOpenStripePortal = async () => {
+    setIsProcessingPortal(true);
+    soundManager.playTone(600, 0.05);
+    try {
+      const res = await fetch('/api/subscription/create-portal-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {}),
+        },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.warn('[Billing] Failed to initialize Stripe portal:', err);
+    } finally {
+      setIsProcessingPortal(false);
+    }
   };
 
   const modalContent = (
@@ -209,7 +273,9 @@ export const AccountBillingModal: React.FC<AccountBillingModalProps> = ({ isOpen
                 <span>Next Scheduled Renewal:</span>
               </span>
               <span className="font-semibold text-white">
-                {cancellationStep === 'cancelled' ? 'Ends January 9, 2028 (No further charge)' : 'January 9, 2028 (€60.00)'}
+                {cancellationStep === 'cancelled'
+                  ? `Ends ${renewalDateText} (No further charge)`
+                  : `${renewalDateText} (€60.00)`}
               </span>
             </div>
 
@@ -218,7 +284,24 @@ export const AccountBillingModal: React.FC<AccountBillingModalProps> = ({ isOpen
                 <Lock className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                 <span>Payment Processing:</span>
               </span>
-              <span className="font-semibold text-white">Stripe Encrypted Checkout</span>
+              <span className="font-semibold text-white">Stripe Encrypted (SEPA / Cards)</span>
+            </div>
+
+            <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+              <span className="text-[11px] font-mono text-white/50">Direct Debit &amp; Card Management:</span>
+              <button
+                type="button"
+                onClick={handleOpenStripePortal}
+                disabled={isProcessingPortal}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-300 hover:text-white border border-cyan-400/30 text-xs font-mono font-medium transition-colors cursor-pointer"
+              >
+                {isProcessingPortal ? (
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-3 h-3" />
+                )}
+                <span>Stripe Billing Portal</span>
+              </button>
             </div>
           </div>
         </div>
@@ -290,7 +373,7 @@ export const AccountBillingModal: React.FC<AccountBillingModalProps> = ({ isOpen
                       <span>Confirm Cancellation of Auto-Renewal?</span>
                     </div>
                     <p className="text-[11px] text-red-200/80 leading-relaxed">
-                      Your access will remain active until January 9, 2028. After that date, you will not receive new monthly drops or Pioneer Lounge updates. All previously unlocked assets remain yours forever.
+                      Your access will remain active until {renewalDateText}. After that date, you will not receive new monthly drops or Pioneer Lounge updates. All previously unlocked assets remain yours forever.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
@@ -324,7 +407,7 @@ export const AccountBillingModal: React.FC<AccountBillingModalProps> = ({ isOpen
                       <span>Auto-Renewal Successfully Cancelled</span>
                     </div>
                     <p className="text-[11px] text-white/80 leading-relaxed">
-                      Your card will not be charged again. Your full access remains intact until January 9, 2028. You can re-enable auto-renewal anytime below.
+                      Your card will not be charged again. Your full access remains intact until {renewalDateText}. You can re-enable auto-renewal anytime below.
                     </p>
 
                     <button
