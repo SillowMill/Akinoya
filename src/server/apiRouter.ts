@@ -128,13 +128,24 @@ apiApp.use(express.json());
 // ─── 1. Create Checkout Session ───────────────────────────────────────────────
 apiRouter.post('/create-checkout-session', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { customerEmail, customerName, shippingAddress, shippingCity, apartmentBus } = req.body || {};
+    const {
+      customerEmail,
+      customerName,
+      shippingAddress,
+      shippingCity,
+      apartmentBus,
+      productId,
+      productTitle,
+      amount,
+      isPhysical,
+    } = req.body || {};
     const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
 
-    const isMembership = req.body?.plan === 'membership' || req.body?.product === 'community_membership';
+    const isMembership = req.body?.plan === 'membership' || req.body?.product === 'community_membership' || productId === 'membership';
     if (isMembership) {
       res.status(403).json({
         error: 'Community membership pass public checkout is locked until launch on 09/01/2027.',
+        isLocked: true,
       });
       return;
     }
@@ -145,6 +156,10 @@ apiRouter.post('/create-checkout-session', async (req: Request, res: Response): 
       shippingAddress,
       shippingCity,
       apartmentBus,
+      productId,
+      productTitle,
+      amount,
+      isPhysical,
       origin,
     });
 
@@ -185,10 +200,12 @@ apiRouter.get('/checkout/session/:id', async (req: Request, res: Response): Prom
       order: matchedOrder || null,
       passId: matchedOrder
         ? matchedOrder.passId
-        : `PASS-BINGAA-${session.id.slice(-8).toUpperCase()}`,
+        : `PASS-${(session.metadata?.product || 'BINGAA').toUpperCase()}-${session.id.slice(-8).toUpperCase()}`,
       status: session.payment_status,
       customerEmail: session.customer_details?.email,
       customerName: session.customer_details?.name,
+      productTitle: matchedOrder?.productTitle || session.metadata?.product_title || 'Sillow Mill Order',
+      amount: session.amount_total ? session.amount_total / 100 : undefined,
     });
   } catch (err: any) {
     console.error('[API] Retrieve session error:', err);

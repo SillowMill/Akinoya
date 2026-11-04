@@ -28,11 +28,13 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
   onClose: controlledOnClose,
 }) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const [statusNotice, setStatusNotice] = useState<string | null>(null);
   const isModalOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
 
   useEffect(() => {
     const handleGlobalOpen = () => {
       setInternalIsOpen(true);
+      setStatusNotice(null);
       soundManager.playTone(440, 0.08);
     };
 
@@ -41,6 +43,7 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
   }, []);
 
   const handleClose = () => {
+    setStatusNotice(null);
     if (controlledOnClose) {
       controlledOnClose();
     } else {
@@ -50,6 +53,7 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
 
   const handleUpgradeCheckout = async () => {
     soundManager.playTone(660, 0.08);
+    setStatusNotice(null);
     try {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -68,10 +72,10 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
         }
       }
 
-      // If backend reports checkout locked or offline, notify user politely
-      alert('Annual Membership public checkout is initializing. For immediate manual provisioning, please contact Odi@sillowmill.com');
+      // Display polite in-modal status notice without any OS error ping
+      setStatusNotice('Hé, de Annual Member Pass (€60/jaar) wordt officieel gelanceerd op 9 januari 2027. Voor vroege handmatige provisioning kun je contact opnemen via Odi@sillowmill.com.');
     } catch {
-      alert('Unable to connect to membership checkout. Please contact Odi@sillowmill.com');
+      setStatusNotice('Annual Membership public checkout initialiseert voor de officiële launch op 9 januari 2027.');
     }
   };
 
@@ -154,6 +158,14 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* In-Modal Polite Status Notice */}
+          {statusNotice && (
+            <div className="p-3.5 rounded-xl bg-amber-950/80 border border-amber-400/50 text-amber-200 text-xs font-mono leading-relaxed text-left flex items-start gap-2.5">
+              <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 animate-pulse" />
+              <span>{statusNotice}</span>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="space-y-2.5 pt-1">

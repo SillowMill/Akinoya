@@ -48,6 +48,8 @@ export interface ComicOrder {
   passId: string;
   entitled: boolean;
   paymentMethod?: string;
+  product?: string;
+  productTitle?: string;
 }
 
 export function loadOrders(): ComicOrder[] {
@@ -118,12 +120,16 @@ function sanitizeStripeString(s: string): string {
     .trim();
 }
 
-export async function createComicCheckoutSession(params: {
+export async function createStripeCheckoutSession(params: {
   customerEmail?: string;
   customerName?: string;
   shippingAddress?: string;
   apartmentBus?: string;
   shippingCity?: string;
+  productId?: string;
+  productTitle?: string;
+  amount?: number;
+  isPhysical?: boolean;
   origin?: string;
 }) {
   const stripe = getStripe();
@@ -139,16 +145,46 @@ export async function createComicCheckoutSession(params: {
 
   const truncate = (s: string, max = 480) => (s || '').slice(0, max);
 
+  const productId = params.productId || 'comic';
+  const isPhysical = params.isPhysical ?? (productId === 'comic');
+
+  // Dynamic product mapping
+  let productName = 'Sillow Mill - Bingaa (Collectors Graphic Novel)';
+  let productDescription = 'Physical First Edition Graphic Novel Drop with Scannable QR Priority Verification (Wave 2)';
+  let unitAmount = 1499; // €14,99
+  let productImage = `${baseUrl}/images/bingaa_comic_cover.jpg`;
+
+  if (productId === 'vocal') {
+    productName = 'Sillow Mill - Vocal Acapella & Remix Pack';
+    productDescription = 'Studio Acapellas of the whole "Dream of Akainoya" tracklist. 24-bit / 48kHz uncompressed WAV stems.';
+    unitAmount = params.amount ? Math.round(params.amount * 100) : 1999;
+  } else if (productId === 'logic-visualizer' || productId === 'enerwise') {
+    productName = 'Sillow Mill - 2D Visualizer Production & Logic Pro Assets';
+    productDescription = 'Official 2D visualizer workflow, Enerwise sound architecture, vocal chain & dedicated Logic Pro template.';
+    unitAmount = params.amount ? Math.round(params.amount * 100) : 2999;
+  } else if (productId === 'comic-digital') {
+    productName = 'Sillow Mill - Digital Copy of Bingaa';
+    productDescription = 'Complete graphic novel with interactive dual-page flipbook reader & DRM-free 4K download.';
+    unitAmount = params.amount ? Math.round(params.amount * 100) : 999;
+  } else if (productId === 'membership') {
+    productName = 'Sillow Mill - Annual Pioneer Member Pass';
+    productDescription = 'Annual all-inclusive pass: all digital packs, stems, comic & monthly drops.';
+    unitAmount = params.amount ? Math.round(params.amount * 100) : 6000;
+  } else if (params.productTitle && params.amount) {
+    productName = sanitizeStripeString(params.productTitle);
+    unitAmount = Math.round(params.amount * 100);
+  }
+
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
     {
       price_data: {
         currency: 'eur',
         product_data: {
-          name: 'Sillow Mill - Bingaa (Collectors Graphic Novel)',
-          description: 'Physical First Edition Graphic Novel Drop with Scannable QR Priority Verification (Wave 2)',
-          images: [`${baseUrl}/images/bingaa_comic_cover.jpg`],
+          name: productName,
+          description: productDescription,
+          images: [productImage],
         },
-        unit_amount: 1499, // €14,99
+        unit_amount: unitAmount,
       },
       quantity: 1,
     },
@@ -160,7 +196,8 @@ export async function createComicCheckoutSession(params: {
     customer_email: sanitizedEmail,
     metadata: {
       wave: 'Wave 2',
-      product: 'bingaa_comic_drop',
+      product: productId,
+      product_title: truncate(productName),
       customer_name: truncate(sanitizedName || ''),
       shipping_address: truncate(sanitizedLine1 || ''),
       apartment_bus: truncate(sanitizedLine2 || ''),
@@ -170,17 +207,22 @@ export async function createComicCheckoutSession(params: {
     success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/?canceled=true`,
     billing_address_collection: 'auto',
-    shipping_address_collection: {
+  };
+
+  if (isPhysical) {
+    sessionConfig.shipping_address_collection = {
       allowed_countries: [
         'BE', 'NL', 'DE', 'FR', 'LU', 'GB', 'US', 'ES', 'IT', 'CH', 'AT',
         'DK', 'SE', 'NO', 'FI', 'IE', 'PT', 'CA', 'AU', 'JP',
       ],
-    },
-  };
+    };
+  }
 
   const session = await stripe.checkout.sessions.create(sessionConfig);
   return session;
 }
+
+export const createComicCheckoutSession = createStripeCheckoutSession;
 
 export async function processCompletedCheckout(session: Stripe.Checkout.Session): Promise<ComicOrder> {
   const orders = loadOrders();
@@ -209,6 +251,8 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
     passId,
     entitled: true,
     paymentMethod: session.payment_method_types?.[0] || 'stripe',
+    product: session.metadata?.product || 'comic',
+    productTitle: session.metadata?.product_title || 'Sillow Mill - Bingaa (Collectors Graphic Novel)',
   };
 
   orders.push(newOrder);

@@ -52,6 +52,7 @@ import {
   Share2,
   Radar,
   Sliders,
+  Crown,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
@@ -1151,42 +1152,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             signature: 'Sillow Mill · Creative Syndicate',
           });
 
-  const handlePerksStripeCheckout = async () => {
-    if (isMembershipLaunchLocked) {
-      soundManager.playTone(330, 0.08);
-      return;
-    }
-    setIsSubscribing(true);
-    soundManager.playTone(660, 0.08);
-
-    try {
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: 'membership',
-          product: 'community_membership',
-          customerName: holderName || 'Community Member',
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-
-      if (data?.error) {
-        soundManager.playError();
-        alert(`Checkout Notice: ${data.error}`);
-      }
-    } catch {
-      soundManager.playError();
-      alert('Stripe subscription endpoint initializing.');
-    } finally {
-      setIsSubscribing(false);
-    }
-  };
   const [showComicReader, setShowComicReader] = useState(false);
   const [showCoverPreview, setShowCoverPreview] = useState(false);
   const [isReserved, setIsReserved] = useState(false);
@@ -1588,8 +1553,31 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   }, [setBrowsedWorldDossier]);
 
-  // Comic Pre-Order Checkout States (Streamlined Stripe Checkout)
+  // Comic & Add-on Pre-Order Checkout States (Dynamic Stripe Checkout)
+  interface CheckoutProductInfo {
+    id: string;
+    title: string;
+    subtitle: string;
+    badge: string;
+    priceValue: string;
+    isPhysical?: boolean;
+    image?: string;
+    allocationNotice?: string;
+    deliveryNotice?: string;
+  }
+
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [checkoutProduct, setCheckoutProduct] = useState<CheckoutProductInfo>({
+    id: 'comic',
+    title: "Sillow Mill — Bingäa (Collector's Graphic Novel)",
+    subtitle: "Bingäa Issue #01 — Collector's Print",
+    badge: "PHYSICAL PRINT · COLLECTOR'S ITEM",
+    priceValue: "14.99",
+    isPhysical: true,
+    image: bingaaComicCover,
+    allocationNotice: "Wave 2 Allocation · QR Code Verified",
+    deliveryNotice: "Free Express Delivery",
+  });
   const [checkoutName, setCheckoutName] = useState("");
   const [checkoutEmail, setCheckoutEmail] = useState("");
   const [checkoutAddress, setCheckoutAddress] = useState("");
@@ -1601,6 +1589,89 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     total: 100,
     available: 100,
   });
+
+  const handleOpenCheckout = (product?: Partial<CheckoutProductInfo>) => {
+    if (product) {
+      setCheckoutProduct((prev) => ({
+        ...prev,
+        ...product,
+        isPhysical: product.isPhysical ?? (product.id === 'comic' || !product.id),
+      }));
+    }
+    // Pre-fill user details if logged in
+    if (user) {
+      if (user.email && !checkoutEmail) setCheckoutEmail(user.email);
+      const uName = (user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata?.last_name || ''}`.trim() : user.user_metadata?.full_name) || '';
+      if (uName && !checkoutName) setCheckoutName(uName);
+    }
+    setCheckoutError("");
+    setIsOrderProcessing(false);
+    setIsCheckoutOpen(true);
+    soundManager.playTone(660, 0.08);
+  };
+
+  const handlePerksStripeCheckout = () => {
+    handleOpenCheckout({
+      id: 'membership',
+      title: 'Sillow Mill — Annual Pioneer Member Pass',
+      subtitle: 'Complete Vault Access · All Digital Packs, Stems & Comic Included',
+      badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
+      priceValue: '60.00',
+      isPhysical: false,
+      allocationNotice: 'All-Inclusive Pass · Releases January 9, 2027',
+      deliveryNotice: 'Permanent Account Linking · Never Lose Your Files Guarantee',
+    });
+  };
+
+  // Strict Scroll Lock & Safari Mobile Viewport Stabilization when Checkout is open
+  useEffect(() => {
+    if (!isCheckoutOpen) return;
+
+    const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyPosition = document.body.style.position;
+    const originalBodyTop = document.body.style.top;
+    const originalBodyWidth = document.body.style.width;
+    const originalTouchAction = document.body.style.touchAction;
+
+    document.body.classList.add('checkout-modal-open');
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.touchAction = 'none';
+
+    const preventTouch = (e: TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest?.('.checkout-modal-scrollable')) {
+        if (e.cancelable) e.preventDefault();
+      }
+    };
+    document.addEventListener('touchmove', preventTouch, { passive: false });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleResetCheckout();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.classList.remove('checkout-modal-open');
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.position = originalBodyPosition;
+      document.body.style.top = originalBodyTop;
+      document.body.style.width = originalBodyWidth;
+      document.body.style.touchAction = originalTouchAction;
+      document.removeEventListener('touchmove', preventTouch);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.scrollTo(0, scrollY);
+    };
+  }, [isCheckoutOpen]);
 
   // Load real-time inventory from server — safe JSON parsing guards against plain-text errors
   useEffect(() => {
@@ -1642,14 +1713,23 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         setCheckoutError('Please enter your full name.');
         return;
       }
-      if (!sanitizedAddress) {
-        setIsOrderProcessing(false);
-        setCheckoutError('Please enter your street and house number.');
-        return;
+
+      if (checkoutProduct.isPhysical) {
+        if (!sanitizedAddress) {
+          setIsOrderProcessing(false);
+          setCheckoutError('Please enter your street and house number.');
+          return;
+        }
+        if (!sanitizedCity) {
+          setIsOrderProcessing(false);
+          setCheckoutError('Please enter your city and postal code.');
+          return;
+        }
       }
-      if (!sanitizedCity) {
+
+      if (checkoutProduct.id === 'membership' && isMembershipLaunchLocked) {
         setIsOrderProcessing(false);
-        setCheckoutError('Please enter your city and postal code.');
+        setCheckoutError('Hé, de Annual Member Pass wordt officieel gelanceerd op 9 januari 2027. Maak alvast gratis je account aan om je VIP-status te waarborgen!');
         return;
       }
 
@@ -1661,6 +1741,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          productId: checkoutProduct.id,
+          productTitle: checkoutProduct.title,
+          amount: parseFloat(checkoutProduct.priceValue),
+          isPhysical: Boolean(checkoutProduct.isPhysical),
           customerEmail: sanitizedEmail,
           customerName: sanitizedName,
           shippingAddress: fullAddress,
@@ -2071,6 +2155,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     }}
                     onOpenComicReader={() => setShowComicReader(true)}
                     onJoinMemberPass={handlePerksStripeCheckout}
+                    onOpenCheckout={handleOpenCheckout}
                     isMembershipLaunchLocked={isMembershipLaunchLocked}
                     onNavigateToCommunity={onNavigateToCommunity}
                   />
@@ -2576,8 +2661,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         <div className="flex flex-col sm:flex-row gap-2.5">
                           <button
                             onClick={() => {
-                              setIsCheckoutOpen(true);
-                              soundManager.playTone(660, 0.08);
+                              handleOpenCheckout({
+                                id: 'comic',
+                                title: "Sillow Mill — Bingäa (Collector's Graphic Novel)",
+                                subtitle: "Bingäa Issue #01 — Collector's Print",
+                                badge: "PHYSICAL PRINT · COLLECTOR'S ITEM",
+                                priceValue: "14.99",
+                                isPhysical: true,
+                                image: bingaaComicCover,
+                                allocationNotice: "Wave 2 Allocation · QR Code Verified",
+                                deliveryNotice: "Free Express Delivery",
+                              });
                             }}
                             className="flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
                           >
@@ -3729,227 +3823,309 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         }}
       />
 
-      {/* Modal 3: Unified Comic Pre-Order Checkout Modal */}
-      <AnimatePresence>
-        {isCheckoutOpen && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-4 md:p-6 bg-black/95 overflow-y-auto pb-16 sm:pb-6">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.25 }}
-              style={{
-                transform: 'translateZ(0)',
-                WebkitTransform: 'translateZ(0)',
-                willChange: 'transform, opacity',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-              }}
-              className="relative w-full max-w-xl md:max-w-2xl bg-[#070b12] border border-cyan-500/40 rounded-2xl p-5 sm:p-7 lg:p-8 shadow-[0_0_60px_rgba(56,189,248,0.25)] overflow-hidden my-6 mb-12 sm:mb-6 modal-surface"
-            >
-              <button
-                onClick={handleResetCheckout}
-                className="absolute top-4 right-4 p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer z-10"
+      {/* Modal 3: Unified Dynamic Secure Order Checkout Modal */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {isCheckoutOpen && (
+              <div
+                className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/90 backdrop-blur-xl overflow-hidden select-none"
+                style={{
+                  zIndex: 100000,
+                  touchAction: 'none',
+                  paddingBottom: 'max(24px, calc(env(safe-area-inset-bottom, 0px) + 20px))',
+                }}
               >
-                <X className="w-5 h-5" />
-              </button>
+                {/* Backdrop click to dismiss */}
+                <div
+                  className="fixed inset-0 bg-transparent cursor-pointer"
+                  onClick={handleResetCheckout}
+                  aria-hidden="true"
+                />
 
-              <div>
-                  {/* Header */}
-                  <div className="flex items-center gap-2 mb-1">
-                    <ShoppingBag className="w-4 h-4 text-cyan-400" />
-                    <span className="text-[11px] font-mono text-cyan-300 uppercase tracking-wider font-semibold">
-                      SECURE ORDER CHECKOUT
-                    </span>
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-display font-bold text-white mb-4">
-                    Sillow Mill — Bingäa (Collector's Graphic Novel)
-                  </h3>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: 14 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 14 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="checkout-modal-card relative z-10 w-full max-w-xl md:max-w-2xl flex flex-col bg-[#070b12] border border-cyan-500/40 rounded-2xl sm:rounded-3xl shadow-[0_0_60px_rgba(56,189,248,0.25)] overflow-hidden my-auto overscroll-contain select-text"
+                  style={{
+                    maxHeight: 'min(88dvh, 760px)',
+                    touchAction: 'pan-y',
+                  }}
+                >
+                  {/* Ambient Glow */}
+                  <div className="absolute top-0 right-0 w-44 h-44 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-44 h-44 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                  {/* Order Summary Line */}
-                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-black/60 border border-white/10 mb-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={bingaaComicCover}
-                        alt="Comic cover"
-                        className="w-11 h-14 object-cover rounded-lg border border-cyan-500/30"
-                      />
-                      <div>
-                        <div className="text-xs sm:text-sm font-semibold text-white">Bingäa Issue #01 — Collector's Print</div>
-                        <div className="text-[10px] font-mono text-white/50">Wave 2 Allocation · QR Code Verified</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm sm:text-base font-display font-bold text-cyan-300 whitespace-nowrap inline-flex items-baseline gap-1">
-                        <span>€</span>
-                        <span>14.99</span>
-                      </div>
-                      <div className="text-[10px] font-mono text-emerald-400">Free Express Delivery</div>
-                    </div>
-                  </div>
-
-                  {/* Stripe Supported Payment Methods Showcase */}
-                  <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-b from-cyan-950/40 via-black/80 to-black border border-cyan-500/30 shadow-[0_0_20px_rgba(56,189,248,0.12)] mb-4 space-y-2.5">
-                    <div className="flex items-center justify-between text-[11px] font-mono">
-                      <div className="flex items-center gap-1.5 text-cyan-300 font-bold">
-                        <CreditCard className="w-3.5 h-3.5 text-cyan-400" />
-                        <span>POWERED BY STRIPE CHECKOUT</span>
-                      </div>
-                      <span className="text-[9px] text-white/50 font-mono flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3 text-cyan-400" />
-                        <span>256-Bit TLS</span>
+                  {/* Pinned Top Bar with Close Button */}
+                  <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-white/10 bg-[#070b12]/95 backdrop-blur-md z-20">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <ShoppingBag className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <span className="text-[11px] font-mono text-cyan-300 uppercase tracking-wider font-semibold truncate">
+                        SECURE ORDER CHECKOUT · {checkoutProduct.badge}
                       </span>
                     </div>
 
-                    <p className="text-xs text-white/70 font-mono leading-relaxed">
-                      Instant verification with Bancontact, iDEAL, Apple Pay, Google Pay, or Credit/Debit card.
-                    </p>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-center">
-                      <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
-                        <span className="text-cyan-400 font-bold">Bancontact</span>
-                        <span className="text-[9px] text-white/40">Instant BE</span>
-                      </div>
-                      <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
-                        <span className="text-purple-400 font-bold">iDEAL</span>
-                        <span className="text-[9px] text-white/40">Netherlands</span>
-                      </div>
-                      <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
-                        <span className="text-emerald-400 font-bold">Apple / GPay</span>
-                        <span className="text-[9px] text-white/40">1-Touch Pay</span>
-                      </div>
-                      <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
-                        <span className="text-white font-bold">Cards</span>
-                        <span className="text-[9px] text-white/40">Visa / MC / Amex</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Checkout Form */}
-                  <form onSubmit={handlePreOrderSubmit} className="space-y-3.5">
-                    {/* Contact & Shipping Details */}
-                    <div className="space-y-2.5">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
-                            FULL NAME
-                          </label>
-                          <input
-                            type="text"
-                            autoComplete="name"
-                            value={checkoutName}
-                            onChange={(e) => setCheckoutName(e.target.value)}
-                            placeholder="Alex Thorne"
-                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
-                            EMAIL ADDRESS
-                          </label>
-                          <input
-                            type="text"
-                            inputMode="email"
-                            autoComplete="email"
-                            value={checkoutEmail}
-                            onChange={(e) => setCheckoutEmail(e.target.value)}
-                            placeholder="alex@example.com"
-                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Street & House No. + Bus/Apt */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <div className="sm:col-span-2">
-                          <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
-                            STREET & HOUSE NO.
-                          </label>
-                          <input
-                            type="text"
-                            autoComplete="street-address"
-                            value={checkoutAddress}
-                            onChange={(e) => setCheckoutAddress(e.target.value)}
-                            placeholder="Street & House No. (e.g. Keizersstraat 10)"
-                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
-                            BUS / APT (OPTIONAL)
-                          </label>
-                          <input
-                            type="text"
-                            autoComplete="address-line2"
-                            value={checkoutAptBus}
-                            onChange={(e) => setCheckoutAptBus(e.target.value)}
-                            placeholder="Bus / Apt (Optional)"
-                            className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      {/* City & Postal Code */}
-                      <div>
-                        <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
-                          CITY & POSTAL CODE
-                        </label>
-                        <input
-                          type="text"
-                          autoComplete="postal-code"
-                          value={checkoutCity}
-                          onChange={(e) => setCheckoutCity(e.target.value)}
-                          placeholder="e.g. 2000 Antwerpen"
-                          className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Inline Error Message */}
-                    {checkoutError && (
-                      <div className="p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-xs font-mono flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                        <div className="flex-1 leading-relaxed">{checkoutError}</div>
-                      </div>
-                    )}
-
-                    {/* Submit Action Button */}
                     <button
-                      type="submit"
-                      disabled={isOrderProcessing}
-                      className="w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 disabled:bg-cyan-800 disabled:cursor-not-allowed text-black transition-all cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.3)] flex items-center justify-center gap-2 mt-2"
+                      type="button"
+                      onClick={handleResetCheckout}
+                      className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center touch-manipulation ml-2 shrink-0"
+                      aria-label="Close checkout"
                     >
-                      {isOrderProcessing ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                          <span>INITIALIZING STRIPE CHECKOUT...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="whitespace-nowrap inline-flex items-baseline gap-1">
-                            <span>CONTINUE TO STRIPE CHECKOUT (</span>
-                            <span>€</span>
-                            <span>14.99)</span>
-                          </span>
-                          <ArrowRight className="w-4 h-4 text-black" />
-                        </>
-                      )}
+                      <X className="w-5 h-5" />
                     </button>
-                  </form>
-
-                  {/* Legal Footprint */}
-                  <div className="mt-4 pt-3 border-t border-white/10 text-center text-[10px] font-mono text-white/40 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-                    <span>KBO: 1041.720.513</span>
-                    <span className="text-white/20">·</span>
-                    <span>VAT: BE 1041.720.513</span>
-                    <span className="text-white/20">·</span>
-                    <span>Support: <a href="mailto:Odi@sillowmill.com" className="text-cyan-300 hover:underline">Odi@sillowmill.com</a></span>
                   </div>
-                </div>
-            </motion.div>
-          </div>
+
+                  {/* Scrollable Content Body with Internal Overflow */}
+                  <div
+                    className="checkout-modal-scrollable flex-1 overflow-y-auto px-4 sm:px-6 md:px-7 py-4 space-y-4 overscroll-contain [scrollbar-width:thin] touch-pan-y"
+                    style={{
+                      WebkitOverflowScrolling: 'touch',
+                      paddingBottom: 'max(28px, calc(env(safe-area-inset-bottom, 0px) + 24px))',
+                    }}
+                  >
+                    {/* Header Item Title */}
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-display font-bold text-white mb-3">
+                        {checkoutProduct.title}
+                      </h3>
+
+                      {/* Dynamic Order Summary Card */}
+                      <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-black/60 border border-white/10 mb-4">
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <img
+                            src={checkoutProduct.image || bingaaComicCover}
+                            alt={checkoutProduct.title}
+                            className="w-12 h-15 object-cover rounded-lg border border-cyan-500/30 shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <div className="text-xs sm:text-sm font-semibold text-white truncate">
+                              {checkoutProduct.subtitle}
+                            </div>
+                            <div className="text-[10px] font-mono text-cyan-300/80 truncate mt-0.5">
+                              {checkoutProduct.allocationNotice || "Direct Digital Provisioning · Never Lose Your Files Guarantee"}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0 pl-3">
+                          <div className="text-sm sm:text-base font-display font-bold text-cyan-300 whitespace-nowrap inline-flex items-baseline gap-1">
+                            <span>€</span>
+                            <span>{checkoutProduct.priceValue}</span>
+                          </div>
+                          <div className="text-[10px] font-mono text-emerald-400">
+                            {checkoutProduct.deliveryNotice || (checkoutProduct.isPhysical ? "Free Express Delivery" : "Instant Digital Sync")}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Pre-launch Membership Information if membership is selected */}
+                      {checkoutProduct.id === 'membership' && isMembershipLaunchLocked && (
+                        <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/80 via-yellow-950/50 to-amber-950/80 border border-amber-400/50 text-amber-200 flex items-start gap-3 shadow-[0_0_20px_rgba(245,158,11,0.2)] mb-4">
+                          <div className="p-1.5 rounded-lg bg-amber-400/20 text-amber-400 shrink-0 mt-0.5">
+                            <Crown className="w-4 h-4 text-amber-300" />
+                          </div>
+                          <div className="text-left text-xs leading-relaxed space-y-0.5">
+                            <span className="font-mono font-bold uppercase tracking-wider text-amber-300 block text-[11px]">
+                              Annual Member Pass · Launching January 9, 2027
+                            </span>
+                            <span className="text-amber-100/90 font-sans text-[11.5px] block leading-normal">
+                              Hé, de Annual Member Pass (€60/jaar) wordt officieel gelanceerd op 9 januari 2027. Alle vroege reserveringen worden automatisch gekoppeld aan je gratis Sillow Mill account!
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Digital Delivery Assurance for non-physical products */}
+                      {!checkoutProduct.isPhysical && checkoutProduct.id !== 'membership' && (
+                        <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/70 via-cyan-950/40 to-emerald-950/70 border border-emerald-400/40 text-emerald-200 flex items-start gap-3 shadow-[0_0_20px_rgba(16,185,129,0.15)] mb-4">
+                          <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 shrink-0 mt-0.5">
+                            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                          </div>
+                          <div className="text-left text-xs leading-relaxed space-y-0.5">
+                            <span className="font-mono font-bold uppercase tracking-wider text-emerald-300 block text-[11px]">
+                              Never Lose Your Files Guarantee
+                            </span>
+                            <span className="text-emerald-100/90 font-sans text-[11.5px] block leading-normal">
+                              Directe digitale levering naar je e-mailadres en permanente koppeling aan je account. Herdownload je stems en assets altijd in de Asset Vault.
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stripe Supported Payment Methods Showcase */}
+                      <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-b from-cyan-950/40 via-black/80 to-black border border-cyan-500/30 shadow-[0_0_20px_rgba(56,189,248,0.12)] mb-4 space-y-2.5">
+                        <div className="flex items-center justify-between text-[11px] font-mono">
+                          <div className="flex items-center gap-1.5 text-cyan-300 font-bold">
+                            <CreditCard className="w-3.5 h-3.5 text-cyan-400" />
+                            <span>POWERED BY STRIPE CHECKOUT</span>
+                          </div>
+                          <span className="text-[9px] text-white/50 font-mono flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3 text-cyan-400" />
+                            <span>256-Bit TLS</span>
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-white/70 font-mono leading-relaxed">
+                          Instant verification with Bancontact, iDEAL, Apple Pay, Google Pay, or Credit/Debit card.
+                        </p>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-center">
+                          <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
+                            <span className="text-cyan-400 font-bold">Bancontact</span>
+                            <span className="text-[9px] text-white/40">Instant BE</span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
+                            <span className="text-purple-400 font-bold">iDEAL</span>
+                            <span className="text-[9px] text-white/40">Netherlands</span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
+                            <span className="text-emerald-400 font-bold">Apple / GPay</span>
+                            <span className="text-[9px] text-white/40">1-Touch Pay</span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-black/60 border border-white/10 text-white/80 flex flex-col items-center justify-center">
+                            <span className="text-white font-bold">Cards</span>
+                            <span className="text-[9px] text-white/40">Visa / MC / Amex</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Checkout Form */}
+                      <form onSubmit={handlePreOrderSubmit} className="space-y-3.5">
+                        {/* Contact Details */}
+                        <div className="space-y-2.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
+                                FULL NAME <span className="text-cyan-400">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                autoComplete="name"
+                                value={checkoutName}
+                                onChange={(e) => setCheckoutName(e.target.value)}
+                                placeholder="Alex Thorne"
+                                className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
+                                EMAIL ADDRESS <span className="text-cyan-400">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                inputMode="email"
+                                autoComplete="email"
+                                value={checkoutEmail}
+                                onChange={(e) => setCheckoutEmail(e.target.value)}
+                                placeholder="alex@example.com"
+                                className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Physical Shipping Fields (Only for Physical Comic / physical items) */}
+                          {checkoutProduct.isPhysical && (
+                            <>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <div className="sm:col-span-2">
+                                  <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
+                                    STREET &amp; HOUSE NO. <span className="text-cyan-400">*</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    required
+                                    autoComplete="street-address"
+                                    value={checkoutAddress}
+                                    onChange={(e) => setCheckoutAddress(e.target.value)}
+                                    placeholder="Street &amp; House No. (e.g. Keizersstraat 10)"
+                                    className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
+                                    BUS / APT (OPTIONAL)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    autoComplete="address-line2"
+                                    value={checkoutAptBus}
+                                    onChange={(e) => setCheckoutAptBus(e.target.value)}
+                                    placeholder="Bus / Apt"
+                                    className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
+                                  CITY &amp; POSTAL CODE <span className="text-cyan-400">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  required
+                                  autoComplete="postal-code"
+                                  value={checkoutCity}
+                                  onChange={(e) => setCheckoutCity(e.target.value)}
+                                  placeholder="e.g. 2000 Antwerpen"
+                                  className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Inline Error Message */}
+                        {checkoutError && (
+                          <div className="p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-xs font-mono flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                            <div className="flex-1 leading-relaxed">{checkoutError}</div>
+                          </div>
+                        )}
+
+                        {/* Submit Action Button */}
+                        <button
+                          type="submit"
+                          disabled={isOrderProcessing}
+                          className="w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 disabled:bg-cyan-800 disabled:cursor-not-allowed text-black transition-all cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.3)] flex items-center justify-center gap-2 mt-2"
+                        >
+                          {isOrderProcessing ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                              <span>INITIALIZING STRIPE CHECKOUT...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="whitespace-nowrap inline-flex items-baseline gap-1">
+                                <span>CONTINUE TO STRIPE CHECKOUT (</span>
+                                <span>€</span>
+                                <span>{checkoutProduct.priceValue})</span>
+                              </span>
+                              <ArrowRight className="w-4 h-4 text-black" />
+                            </>
+                          )}
+                        </button>
+                      </form>
+
+                      {/* Legal Footprint */}
+                      <div className="mt-4 pt-3 border-t border-white/10 text-center text-[10px] font-mono text-white/40 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+                        <span>KBO: 1041.720.513</span>
+                        <span className="text-white/20">·</span>
+                        <span>VAT: BE 1041.720.513</span>
+                        <span className="text-white/20">·</span>
+                        <span>Support: <a href="mailto:Odi@sillowmill.com" className="text-cyan-300 hover:underline">Odi@sillowmill.com</a></span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
 
 
 

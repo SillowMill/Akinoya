@@ -987,15 +987,18 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     soundManager.playTone(330, 0.08);
   };
 
+  const [upgradeNotice, setUpgradeNotice] = useState<string | null>(null);
+
   // Stripe Checkout Handler for Annual Pass (€60/Year)
   const handleStripeUpgrade = async () => {
     if (isMembershipLaunchLocked) {
       soundManager.playTone(330, 0.08);
-      alert('Community membership pass public checkout launches on 09/01/2027.');
+      setUpgradeNotice('Hé, de Annual Member Pass (€60/jaar) wordt officieel gelanceerd op 9 januari 2027.');
       return;
     }
     setIsSubscribing(true);
     soundManager.playTone(660, 0.08);
+    setUpgradeNotice(null);
 
     try {
       const res = await fetch('/api/create-checkout-session', {
@@ -1015,12 +1018,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
       }
 
       if (data?.error) {
-        soundManager.playError();
-        alert(`Checkout Notice: ${data.error}`);
+        setUpgradeNotice(`Checkout Notice: ${data.error}`);
       }
     } catch {
-      soundManager.playError();
-      alert('Stripe subscription endpoint initializing.');
+      setUpgradeNotice('Stripe subscription endpoint initialiseert voor launch.');
     } finally {
       setIsSubscribing(false);
     }
@@ -1838,6 +1839,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
               {/* Actions */}
               <div className="space-y-3 pt-2">
+                {upgradeNotice && (
+                  <div className="p-3 rounded-xl bg-amber-950/70 border border-amber-400/40 text-amber-200 text-xs font-mono leading-relaxed text-left flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5 animate-pulse" />
+                    <span>{upgradeNotice}</span>
+                  </div>
+                )}
                 <button
                   type="button"
                   disabled={isMembershipLaunchLocked || isSubscribing}

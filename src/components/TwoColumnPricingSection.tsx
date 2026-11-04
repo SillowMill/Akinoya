@@ -25,10 +25,23 @@ import { openMembershipGateModal } from '../utils/pioneer';
 import { useAuth } from '../context/AuthContext';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 
+export interface CheckoutProductPayload {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  priceValue: string;
+  isPhysical?: boolean;
+  image?: string;
+  allocationNotice?: string;
+  deliveryNotice?: string;
+}
+
 export interface TwoColumnPricingSectionProps {
   onSelectComicTab?: () => void;
   onOpenComicReader?: () => void;
   onJoinMemberPass?: () => void;
+  onOpenCheckout?: (product: CheckoutProductPayload) => void;
   isMembershipLaunchLocked?: boolean;
   className?: string;
   isLoungeView?: boolean;
@@ -88,9 +101,9 @@ const ADDON_PRODUCTS: AddonProduct[] = [
     badge: '2D VISUALIZER WORKFLOW & LOGIC PRO',
     priceValue: '29.99',
     category: 'VISUALIZERS & LOGIC PRO',
-    subtitle: 'Official 2D visualizer workflow, vocal chain & dedicated Logic Pro template.',
+    subtitle: 'Official 2D visualizer workflow, Enerwise sound architecture, vocal chain & dedicated Logic Pro template.',
     description:
-      'Full access to the official Community Hub workflow (the Äkinoya workflow), including the 2D visualizer production pipeline, vocal chain (my vocal chain), and dedicated Logic Pro template. (Excludes the separate Vocal Acapella & Remix Pack).',
+      'Full access to the official Community Hub workflow (the Äkinoya workflow), including the 2D visualizer production pipeline, Enerwise sound architecture, vocal chain (my vocal chain), and dedicated Logic Pro template. (Excludes the separate Vocal Acapella & Remix Pack).',
     features: [
       'Official Community Hub workflow access (the Äkinoya workflow)',
       'Dedicated Logic Pro template with vocal chain (my vocal chain)',
@@ -109,6 +122,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
   onSelectComicTab,
   onOpenComicReader,
   onJoinMemberPass,
+  onOpenCheckout,
   isMembershipLaunchLocked = false,
   className = '',
   isLoungeView = false,
@@ -135,6 +149,19 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
   const handleJoinPassClick = () => {
     soundManager.playTone(660, 0.08);
+    if (onOpenCheckout) {
+      onOpenCheckout({
+        id: 'membership',
+        title: 'Sillow Mill — Annual Pioneer Member Pass',
+        subtitle: 'Complete Vault Access · All Digital Packs, Stems & Comic Included',
+        badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
+        priceValue: '60.00',
+        isPhysical: false,
+        allocationNotice: 'All-Inclusive Pass · Releases January 9, 2027',
+        deliveryNotice: 'Permanent Account Linking · Never Lose Your Files Guarantee',
+      });
+      return;
+    }
     if (!isAuthenticated) {
       if (onOpenAuthModal) {
         onOpenAuthModal();
@@ -364,7 +391,24 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     {/* Desktop / Tablet CTA Button (Preserved inside right column on sm+) */}
                     <button
                       type="button"
-                      onClick={handleComicClick}
+                      onClick={() => {
+                        soundManager.playTone(660, 0.08);
+                        if (onOpenCheckout) {
+                          onOpenCheckout({
+                            id: 'comic',
+                            title: "Sillow Mill — Bingäa (Collector's Graphic Novel)",
+                            subtitle: "Bingäa Issue #01 — Collector's Print",
+                            badge: "PHYSICAL PRINT · COLLECTOR'S ITEM",
+                            priceValue: "14.99",
+                            isPhysical: true,
+                            image: bingaaComicCover,
+                            allocationNotice: "Wave 2 Allocation · QR Code Verified",
+                            deliveryNotice: "Free Express Delivery",
+                          });
+                        } else {
+                          handleComicClick();
+                        }
+                      }}
                       className="hidden sm:flex w-full mt-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs shadow-[0_0_15px_rgba(56,189,248,0.3)] transition-all cursor-pointer items-center justify-center gap-2 min-h-[40px] transform-gpu hover:scale-[1.01]"
                     >
                       <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
@@ -377,7 +421,24 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 {/* Mobile Full-Width CTA Button (Exclusively on mobile < sm) */}
                 <button
                   type="button"
-                  onClick={handleComicClick}
+                  onClick={() => {
+                    soundManager.playTone(660, 0.08);
+                    if (onOpenCheckout) {
+                      onOpenCheckout({
+                        id: 'comic',
+                        title: "Sillow Mill — Bingäa (Collector's Graphic Novel)",
+                        subtitle: "Bingäa Issue #01 — Collector's Print",
+                        badge: "PHYSICAL PRINT · COLLECTOR'S ITEM",
+                        priceValue: "14.99",
+                        isPhysical: true,
+                        image: bingaaComicCover,
+                        allocationNotice: "Wave 2 Allocation · QR Code Verified",
+                        deliveryNotice: "Free Express Delivery",
+                      });
+                    } else {
+                      handleComicClick();
+                    }
+                  }}
                   className="sm:hidden w-full mt-1 py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 active:from-cyan-400 active:to-indigo-500 text-white font-mono font-extrabold text-xs shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.99]"
                 >
                   <ShoppingBag className="w-4 h-4 shrink-0" />
@@ -501,6 +562,25 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                               type="button"
                               onClick={() => {
                                 soundManager.playTone(540, 0.05);
+                                if (onOpenCheckout) {
+                                  onOpenCheckout({
+                                    id: addon.id,
+                                    title: `Sillow Mill — ${addon.title}`,
+                                    subtitle: addon.subtitle,
+                                    badge: addon.badge,
+                                    priceValue: addon.priceValue,
+                                    isPhysical: false,
+                                    image: addon.id === 'comic-digital' ? bingaaComicCover : undefined,
+                                    allocationNotice:
+                                      addon.id === 'vocal'
+                                        ? 'Instant Master Stems · 24-bit / 48kHz WAV'
+                                        : addon.id === 'logic-visualizer'
+                                        ? 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template'
+                                        : 'Pristine 4K Resolution · Web Reader + Offline PDF',
+                                    deliveryNotice: 'Instant Digital Delivery · Vault Access',
+                                  });
+                                  return;
+                                }
                                 if (!isAuthenticated) {
                                   if (onOpenAuthModal) onOpenAuthModal();
                                   else {

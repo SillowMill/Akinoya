@@ -18,6 +18,7 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
     passId?: string;
     amount?: number;
     status?: string;
+    productTitle?: string;
   }>({});
 
   useEffect(() => {
@@ -54,8 +55,9 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
               customerName: data.customerName || data.session?.customer_details?.name || 'Collector',
               customerEmail: data.customerEmail || data.session?.customer_details?.email,
               passId: data.passId,
-              amount: (data.session?.amount_total || 1499) / 100,
+              amount: data.amount || (data.session?.amount_total ? data.session.amount_total / 100 : 14.99),
               status: data.status || 'paid',
+              productTitle: data.productTitle || data.session?.metadata?.product_title || data.session?.line_items?.data?.[0]?.description,
             });
             // Automatically grant VIP portal unlock in sessionStorage
             try {
@@ -113,7 +115,7 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
           </h1>
 
           <p className="text-xs sm:text-sm text-white/70 font-mono max-w-lg mx-auto leading-relaxed">
-            Your pre-order for <strong className="text-white">Sillow Mill — Bingäa (Collector's Graphic Novel)</strong> (€ 14.99) has been verified via Stripe.
+            Your order for <strong className="text-white">{orderDetails.productTitle || "Sillow Mill — Bingäa (Collector's Graphic Novel)"}</strong> (€ {(orderDetails.amount || 14.99).toFixed(2)}) has been verified via Stripe.
           </p>
         </div>
 
