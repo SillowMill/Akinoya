@@ -17,7 +17,6 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
-import { showLaunchNotice } from '../utils/pioneer';
 
 export interface MembershipGateModalProps {
   isOpen?: boolean;
@@ -69,12 +68,10 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
         }
       }
 
-      // If backend reports checkout locked or offline, notify user politely via visual HUD notice
-      showLaunchNotice('Hé, het wordt pas gelanceerd op 9 januari 2027 · De volledige Member Pass ontgrendelt op de officiële launch.');
-      handleClose();
+      // If backend reports checkout locked or offline, notify user politely
+      alert('Annual Membership public checkout is initializing. For immediate manual provisioning, please contact Odi@sillowmill.com');
     } catch {
-      showLaunchNotice('Hé, het wordt pas gelanceerd op 9 januari 2027 · De volledige Member Pass ontgrendelt op de officiële launch.');
-      handleClose();
+      alert('Unable to connect to membership checkout. Please contact Odi@sillowmill.com');
     }
   };
 

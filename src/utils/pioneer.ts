@@ -102,20 +102,6 @@ export const openMembershipGateModal = () => {
   }
 };
 
-export const showLaunchNotice = (message?: string) => {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(
-      new CustomEvent('akinoya-launch-notice', {
-        detail: {
-          message:
-            message ||
-            'Hé, het wordt pas gelanceerd op 9 januari 2027 · De volledige Member Pass & alle downloads ontgrendelen op de officiële launch.',
-        },
-      })
-    );
-  }
-};
-
 export interface SectorClaimRecord {
   sectorName: string;
   biome: string;

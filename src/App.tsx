@@ -25,7 +25,6 @@ import { GalaxyNavigator } from './components/GalaxyNavigator';
 import { PioneerCampaignBanner } from './components/PioneerCampaignBanner';
 import { ClaimYourWorldModal } from './components/ClaimYourWorldModal';
 import { MembershipGateModal } from './components/MembershipGateModal';
-import { LaunchNoticeHudToast } from './components/LaunchNoticeHudToast';
 import { useAuth } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { hasAnyStoredCertificate } from './utils/certificate';
@@ -843,9 +842,6 @@ export default function App() {
 
       {/* Post-Launch Membership Gate Modal */}
       <MembershipGateModal />
-
-      {/* Global Pre-Launch / Jan 9, 2027 Release Protocol Notice Toast */}
-      <LaunchNoticeHudToast />
     </main>
   );
 }
