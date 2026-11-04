@@ -288,7 +288,77 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </p>
             </div>
 
-            {/* Total A La Carte Comparative Worth Banner (Marketing Pricing Trigger) */}
+            {/* 1. PHYSICAL PRINT COLLECTOR'S ITEM (Top Priority Product) */}
+            <div className="rounded-2xl bg-gradient-to-b from-[#09152b] via-[#061122] to-[#040c1a] border-2 border-cyan-400/40 p-3.5 sm:p-5 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(56,189,248,0.15)] relative overflow-hidden group">
+              <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none" />
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4">
+                {/* Top Row on Mobile: Enlarged Thumbnail + Info */}
+                <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+                  {/* Thumbnail (Clickable to open reader) */}
+                  <button
+                    type="button"
+                    onClick={handleComicClick}
+                    className="shrink-0 rounded-xl overflow-hidden cursor-pointer group/thumb text-left"
+                    aria-label="Open Bingäa comic reader preview"
+                  >
+                    <img
+                      src={bingaaComicCover}
+                      alt="Sillow Mill — Bingäa Comic Cover"
+                      className="w-24 xs:w-28 sm:w-20 md:w-24 h-auto aspect-[3/4] rounded-xl object-cover border border-cyan-400/60 shadow-[0_0_20px_rgba(56,189,248,0.3)] group-hover/thumb:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </button>
+
+                  {/* Title, Badge, Price & Desktop CTA */}
+                  <div className="space-y-2 sm:space-y-1.5 min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-[9.5px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
+                        PHYSICAL PRINT · COLLECTOR'S ITEM
+                      </span>
+                      <span className="text-lg sm:text-base md:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
+                        <span>€</span>
+                        <span>14.99</span>
+                      </span>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide leading-snug">
+                        Sillow Mill — Bingäa
+                      </h4>
+                      <p className="text-[11px] sm:text-xs font-mono font-medium text-cyan-200/80 leading-normal">
+                        Collector's Graphic Novel
+                      </p>
+                    </div>
+
+                    {/* Desktop / Tablet CTA Button (Preserved inside right column on sm+) */}
+                    <button
+                      type="button"
+                      onClick={handleComicClick}
+                      className="hidden sm:flex w-full mt-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs shadow-[0_0_15px_rgba(56,189,248,0.3)] transition-all cursor-pointer items-center justify-center gap-2 min-h-[40px] transform-gpu hover:scale-[1.01]"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+                      <span>View Comic &amp; Order</span>
+                      <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile Full-Width CTA Button (Exclusively on mobile < sm) */}
+                <button
+                  type="button"
+                  onClick={handleComicClick}
+                  className="sm:hidden w-full mt-1 py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 active:from-cyan-400 active:to-indigo-500 text-white font-mono font-extrabold text-xs shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.99]"
+                >
+                  <ShoppingBag className="w-4 h-4 shrink-0" />
+                  <span>View Comic &amp; Order</span>
+                  <ArrowRight className="w-4 h-4 shrink-0" />
+                </button>
+              </div>
+            </div>
+
+            {/* 2. COMBINED SEPARATE VALUE SUMMARY WIDGET (Marketing Pricing Trigger) */}
             <div className="p-3.5 sm:p-4 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 shadow-inner">
               <div className="space-y-1 min-w-0">
                 <div className="text-[10.5px] font-mono uppercase tracking-wider text-cyan-300 font-extrabold flex items-center gap-1.5">
@@ -311,7 +381,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </div>
             </div>
 
-            {/* Individual Digital Add-ons: 3 Distinct Cards with Clean Inline Drawer Expansion (Zero Modals) */}
+            {/* 3. INDIVIDUAL DIGITAL ADD-ONS: 3 Distinct Cards with Clean Inline Drawer Expansion */}
             <div className="space-y-3">
               {ADDON_PRODUCTS.map((addon) => {
                 const IconComponent = addon.icon;
@@ -453,78 +523,6 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   </div>
                 );
               })}
-            </div>
-
-            {/* Streamlined & Compact Physical Print Collector's Item Widget */}
-            <div className="pt-2">
-              <div className="rounded-2xl bg-gradient-to-b from-[#09152b] via-[#061122] to-[#040c1a] border-2 border-cyan-400/40 p-3.5 sm:p-5 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(56,189,248,0.15)] relative overflow-hidden group">
-                <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none" />
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4">
-                  {/* Top Row on Mobile: Enlarged Thumbnail + Info */}
-                  <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
-                    {/* Thumbnail (Clickable to open reader) */}
-                    <button
-                      type="button"
-                      onClick={handleComicClick}
-                      className="shrink-0 rounded-xl overflow-hidden cursor-pointer group/thumb text-left"
-                      aria-label="Open Bingäa comic reader preview"
-                    >
-                      <img
-                        src={bingaaComicCover}
-                        alt="Sillow Mill — Bingäa Comic Cover"
-                        className="w-24 xs:w-28 sm:w-20 md:w-24 h-auto aspect-[3/4] rounded-xl object-cover border border-cyan-400/60 shadow-[0_0_20px_rgba(56,189,248,0.3)] group-hover/thumb:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </button>
-
-                    {/* Title, Badge, Price & Desktop CTA */}
-                    <div className="space-y-2 sm:space-y-1.5 min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className="text-[9.5px] font-mono font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
-                          PHYSICAL PRINT · COLLECTOR'S ITEM
-                        </span>
-                        <span className="text-lg sm:text-base md:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
-                          <span>€</span>
-                          <span>14.99</span>
-                        </span>
-                      </div>
-
-                      <div className="space-y-0.5">
-                        <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide leading-snug">
-                          Sillow Mill — Bingäa
-                        </h4>
-                        <p className="text-[11px] sm:text-xs font-mono font-medium text-cyan-200/80 leading-normal">
-                          Collector's Graphic Novel
-                        </p>
-                      </div>
-
-                      {/* Desktop / Tablet CTA Button (Preserved inside right column on sm+) */}
-                      <button
-                        type="button"
-                        onClick={handleComicClick}
-                        className="hidden sm:flex w-full mt-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs shadow-[0_0_15px_rgba(56,189,248,0.3)] transition-all cursor-pointer items-center justify-center gap-2 min-h-[40px] transform-gpu hover:scale-[1.01]"
-                      >
-                        <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
-                        <span>View Comic &amp; Order</span>
-                        <ArrowRight className="w-3.5 h-3.5 shrink-0" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Mobile Full-Width CTA Button (Exclusively on mobile < sm) */}
-                  <button
-                    type="button"
-                    onClick={handleComicClick}
-                    className="sm:hidden w-full mt-1 py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 active:from-cyan-400 active:to-indigo-500 text-white font-mono font-extrabold text-xs shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.99]"
-                  >
-                    <ShoppingBag className="w-4 h-4 shrink-0" />
-                    <span>View Comic &amp; Order</span>
-                    <ArrowRight className="w-4 h-4 shrink-0" />
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 
