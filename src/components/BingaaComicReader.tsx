@@ -499,21 +499,26 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
         {/* ── PERMANENT FIXED SCREEN CORNER CONTROLS (Zero Scroll Friction) ── */}
 
-        {/* Top-Right: Permanent Fixed Exit Button */}
+        {/* Top-Right: Persistent Floating Exit Button (Exclusively Mobile < 768px) */}
         <button
           type="button"
           onClick={onClose}
           aria-label="Close reader"
-          style={{ top: 'max(12px, env(safe-area-inset-top, 12px))' }}
-          className="fixed right-3 z-50 flex items-center justify-center w-11 h-11 rounded-full bg-black/85 active:bg-cyan-950 backdrop-blur-2xl border border-white/25 text-white shadow-[0_4px_24px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.35)] cursor-pointer touch-manipulation active:scale-95"
+          style={{
+            position: 'fixed',
+            top: 'max(16px, env(safe-area-inset-top, 16px))',
+            right: 'max(16px, env(safe-area-inset-right, 16px))',
+            zIndex: 9999,
+          }}
+          className="fixed top-4 right-4 z-[9999] flex items-center justify-center w-12 h-12 rounded-full bg-black/85 active:bg-cyan-950 backdrop-blur-2xl border border-white/30 text-white shadow-[0_4px_24px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.35)] cursor-pointer touch-manipulation active:scale-95"
         >
-          <X className="w-5 h-5 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
+          <X className="w-6 h-6 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
         </button>
 
         {/* Top-Left: Fixed Floating Title & Status Badge */}
         <div
-          style={{ top: 'max(12px, env(safe-area-inset-top, 12px))' }}
-          className="fixed left-3 z-40 flex items-center gap-2 pointer-events-auto"
+          style={{ top: 'max(16px, env(safe-area-inset-top, 16px))' }}
+          className="fixed left-4 z-40 flex items-center gap-2 pointer-events-auto"
         >
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
@@ -632,7 +637,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         <div
           ref={stageRef}
           style={{
-            paddingTop: 'calc(max(12px, env(safe-area-inset-top, 12px)) + 52px)',
+            paddingTop: 'calc(max(16px, env(safe-area-inset-top, 16px)) + 52px)',
             paddingBottom: 'calc(max(16px, env(safe-area-inset-bottom, 16px)) + 56px)',
           }}
           className="relative w-full h-full flex flex-col items-center justify-start select-none overflow-hidden"
