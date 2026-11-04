@@ -12,6 +12,7 @@ import {
   Unlock,
   Eye,
   ChevronRight,
+  ChevronLeft,
   ChevronDown,
   Search,
   Grid,
@@ -101,7 +102,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
   // Navigation State (Drive Path Navigation)
   const [currentFolderId, setCurrentFolderId] = useState<string>('root');
   const [folderPath, setFolderPath] = useState<Array<{ id: string; name: string }>>([
-    { id: 'root', name: 'Sillow Mill Production Vault' },
+    { id: 'root', name: 'Sillow Mill Drive' },
   ]);
 
   // View Mode: 'list' or 'grid' (Apple Finder style)
@@ -784,7 +785,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
 
     if (initialFolderId === 'root') {
       setCurrentFolderId('root');
-      setFolderPath([{ id: 'root', name: 'Sillow Mill Production Vault' }]);
+      setFolderPath([{ id: 'root', name: 'Sillow Mill Drive' }]);
       return;
     }
 
@@ -798,7 +799,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       ) {
         setCurrentFolderId(root.id);
         setFolderPath([
-          { id: 'root', name: 'Sillow Mill Production Vault' },
+          { id: 'root', name: 'Sillow Mill Drive' },
           { id: root.id, name: root.displayName },
         ]);
         return;
@@ -814,7 +815,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           ) {
             setCurrentFolderId(sub.id);
             setFolderPath([
-              { id: 'root', name: 'Sillow Mill Production Vault' },
+              { id: 'root', name: 'Sillow Mill Drive' },
               { id: root.id, name: root.displayName },
               { id: sub.id, name: sub.displayName },
             ]);
@@ -930,7 +931,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               type="button"
               onClick={() => {
                 setCurrentFolderId('root');
-                setFolderPath([{ id: 'root', name: 'Sillow Mill Production Vault' }]);
+                setFolderPath([{ id: 'root', name: 'Sillow Mill Drive' }]);
                 soundManager.playTone(520, 0.05);
               }}
               className="px-3 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_12px_rgba(0,242,254,0.3)] flex items-center gap-1.5"
@@ -981,29 +982,45 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           </div>
         )}
 
-        {/* Finder Toolbar: Search & Breadcrumbs */}
+        {/* Finder Toolbar: Search & High-Contrast Breadcrumbs */}
         <div className="p-3 sm:p-4 bg-black/40 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {/* Breadcrumbs Navigation */}
-          <div className="flex items-center gap-1.5 text-xs font-mono overflow-x-auto [scrollbar-width:none] py-0.5">
-            {folderPath.map((item, index) => {
-              const isLast = index === folderPath.length - 1;
-              return (
-                <React.Fragment key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => handleNavigateBreadcrumb(index)}
-                    className={`transition-colors truncate max-w-[200px] cursor-pointer ${
-                      isLast
-                        ? 'text-cyan-300 font-bold pointer-events-none'
-                        : 'text-white/60 hover:text-white'
-                    }`}
-                  >
-                    {item.name}
-                  </button>
-                  {!isLast && <ChevronRight className="w-3.5 h-3.5 text-white/30 shrink-0" />}
-                </React.Fragment>
-              );
-            })}
+          {/* High-Contrast Breadcrumbs Navigation */}
+          <div className="flex items-center gap-1.5 text-xs font-mono overflow-x-auto [scrollbar-width:none] py-1 max-w-full">
+            <span className="text-[10px] text-white/40 uppercase tracking-widest font-semibold shrink-0 hidden md:inline">
+              PATH:
+            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {folderPath.map((item, index) => {
+                const isLast = index === folderPath.length - 1;
+                const isRoot = index === 0;
+
+                return (
+                  <React.Fragment key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => !isLast && handleNavigateBreadcrumb(index)}
+                      disabled={isLast}
+                      className={`transition-all rounded-lg text-xs font-mono flex items-center gap-1.5 shrink-0 ${
+                        isLast
+                          ? 'text-cyan-200 font-bold bg-cyan-950/80 border border-cyan-400/50 shadow-[0_0_12px_rgba(56,189,248,0.25)] px-2.5 py-1 cursor-default'
+                          : 'text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1 cursor-pointer active:scale-[0.98]'
+                      }`}
+                      title={isLast ? `Current location: ${item.name}` : `Navigate back to ${item.name}`}
+                    >
+                      {isRoot ? (
+                        <HardDrive className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      ) : (
+                        <Folder className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      )}
+                      <span className="truncate max-w-[170px] sm:max-w-[240px]">{item.name}</span>
+                    </button>
+                    {!isLast && (
+                      <ChevronRight className="w-3.5 h-3.5 text-cyan-400/70 shrink-0" />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
           </div>
 
           {/* Right Toolbar Controls: Search and View Mode */}
@@ -1057,6 +1074,46 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
 
         {/* Finder Content Area */}
         <div className="p-4 sm:p-6 space-y-6 min-h-[420px]">
+          {/* Prominent Directory Return Header: Positioned at top-left of file/folder view when inside any sub-folder */}
+          {folderPath.length > 1 && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:px-4 sm:py-3 rounded-2xl bg-gradient-to-r from-cyan-950/70 via-[#091424] to-black border border-cyan-500/40 shadow-[0_0_20px_rgba(56,189,248,0.15)]">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Prominent Back to Vault Folders CTA */}
+                <button
+                  type="button"
+                  onClick={() => handleNavigateBreadcrumb(0)}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-bold text-xs sm:text-sm shadow-[0_0_15px_rgba(56,189,248,0.35)] transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98] group"
+                  title="Return to main 3 Master Folders overview"
+                >
+                  <ArrowLeft className="w-4 h-4 text-white group-hover:-translate-x-0.5 transition-transform" />
+                  <span>← Back to Vault Folders</span>
+                </button>
+
+                {/* If nested deeper than 1 level, also provide Up One Level */}
+                {folderPath.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => handleNavigateBreadcrumb(folderPath.length - 2)}
+                    className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white/80 hover:text-white font-mono text-xs transition-colors flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
+                    title={`Go up one level to ${folderPath[folderPath.length - 2].name}`}
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5 text-white/50" />
+                    <span>Up one level</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Active Current Directory Status Badge */}
+              <div className="flex items-center gap-2 text-xs font-mono">
+                <span className="text-white/40 hidden md:inline">Viewing Folder:</span>
+                <span className="px-2.5 py-1 rounded-lg bg-black/70 border border-cyan-400/30 text-cyan-200 font-bold flex items-center gap-1.5 truncate max-w-[280px]">
+                  <FolderOpen className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span className="truncate">{folderPath[folderPath.length - 1].name}</span>
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Folders Group */}
           {filteredFolders.length > 0 && (
             <div className="space-y-3">
@@ -1065,16 +1122,6 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                   <Folder className="w-3.5 h-3.5 text-cyan-400" />
                   Folders ({filteredFolders.length})
                 </span>
-                {folderPath.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleNavigateBreadcrumb(folderPath.length - 2)}
-                    className="text-[11px] font-mono text-cyan-300 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <ArrowLeft className="w-3 h-3" />
-                    <span>Back up</span>
-                  </button>
-                )}
               </div>
 
               <div
