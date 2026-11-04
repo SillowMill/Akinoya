@@ -212,8 +212,8 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
           {/* Subtle Ambient Gold & Cyan Dual-Glow Beam */}
           <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none" />
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
+            <div className="space-y-2 flex-1 min-w-0 max-w-2xl xl:max-w-3xl">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 font-bold tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(56,189,248,0.2)]">
                   <Sparkles className="w-3 h-3 text-cyan-400" />
@@ -223,57 +223,63 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   ALL DIGITAL EXTRAS INCLUDED IN PASS
                 </span>
               </div>
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-display font-black text-white tracking-wide">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-display font-black text-white tracking-wide leading-tight">
                 Packs, Comic &amp; Membership
               </h2>
-              <p className="text-xs sm:text-sm font-sans text-white/75 max-w-2xl leading-relaxed">
+              <p className="text-xs sm:text-sm font-sans text-white/75 leading-relaxed">
                 Order standalone production packs and the physical graphic novel, or join the Annual Member Pass for complete, all-inclusive access.
               </p>
             </div>
 
-            <div className="shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
-              {/* Luminous Cyberpunk Blue Community Hub Action Button */}
-              <button
-                type="button"
-                onClick={handleCommunityClick}
-                className="group relative px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/85 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 text-cyan-200 hover:text-white border-2 border-cyan-400/60 hover:border-cyan-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(56,189,248,0.35)] hover:shadow-[0_0_32px_rgba(56,189,248,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-300" />
-                </span>
-                <Users className="w-3.5 h-3.5 text-cyan-300 group-hover:scale-110 transition-transform duration-200 shrink-0" />
-                <span className="tracking-wider uppercase whitespace-nowrap">Community Hub</span>
-                <ArrowRight className="w-3.5 h-3.5 text-cyan-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
-              </button>
+            {/* Desktop Pyramid Button Structure / Responsive Mobile & Tablet Stack */}
+            <div className="shrink-0 flex flex-col items-center gap-2.5 w-full lg:w-auto">
+              {/* Pyramid Apex: Community Hub centered */}
+              <div className="w-full flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleCommunityClick}
+                  className="w-full sm:w-auto group relative px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/85 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 text-cyan-200 hover:text-white border-2 border-cyan-400/60 hover:border-cyan-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(56,189,248,0.35)] hover:shadow-[0_0_32px_rgba(56,189,248,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-300" />
+                  </span>
+                  <Users className="w-3.5 h-3.5 text-cyan-300 group-hover:scale-110 transition-transform duration-200 shrink-0" />
+                  <span className="tracking-wider uppercase whitespace-nowrap">Community Hub</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-cyan-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
+                </button>
+              </div>
 
-              {/* À La Carte Section Quick Navigation Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  soundManager.playTone(580, 0.04);
-                  const el = document.getElementById('alacarte-section');
-                  if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }
-                }}
-                className="group relative px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#071324]/90 via-[#0a1829]/85 to-[#071324]/90 hover:from-cyan-950/90 hover:to-[#0c1f38]/90 text-cyan-200 hover:text-white border-2 border-cyan-400/60 hover:border-cyan-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(56,189,248,0.25)] hover:shadow-[0_0_32px_rgba(56,189,248,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
-              >
-                <ShoppingBag className="w-3.5 h-3.5 text-cyan-300 group-hover:scale-110 transition-transform duration-200 shrink-0" />
-                <span className="tracking-wider uppercase whitespace-nowrap">À La Carte</span>
-                <ArrowRight className="w-3.5 h-3.5 text-cyan-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
-              </button>
+              {/* Pyramid Base: À La Carte and Join Member Pass side-by-side */}
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full lg:w-auto justify-center">
+                {/* À La Carte Section Quick Navigation Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundManager.playTone(580, 0.04);
+                    const el = document.getElementById('alacarte-section');
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="w-full sm:w-auto group relative px-4 sm:px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-[#071324]/90 via-[#0a1829]/85 to-[#071324]/90 hover:from-cyan-950/90 hover:to-[#0c1f38]/90 text-cyan-200 hover:text-white border-2 border-cyan-400/60 hover:border-cyan-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(56,189,248,0.25)] hover:shadow-[0_0_32px_rgba(56,189,248,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5 text-cyan-300 group-hover:scale-110 transition-transform duration-200 shrink-0" />
+                  <span className="tracking-wider uppercase whitespace-nowrap">À La Carte</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-cyan-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
+                </button>
 
-              {/* Join Member Pass Button (Identical High-End Build to Community Hub) */}
-              <button
-                type="button"
-                onClick={handleJoinPassClick}
-                className="group relative px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
-              >
-                <Crown className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                <span className="tracking-wider uppercase whitespace-nowrap">Join Member Pass · €60/yr</span>
-                <ArrowRight className="w-3.5 h-3.5 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
-              </button>
+                {/* Join Member Pass Button (Identical High-End Build to Community Hub) */}
+                <button
+                  type="button"
+                  onClick={handleJoinPassClick}
+                  className="w-full sm:w-auto group relative px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
+                >
+                  <Crown className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                  <span className="tracking-wider uppercase whitespace-nowrap">Join Member Pass · €60/yr</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
