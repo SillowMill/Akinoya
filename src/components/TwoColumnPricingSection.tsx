@@ -358,30 +358,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </div>
             </div>
 
-            {/* 2. COMBINED SEPARATE VALUE SUMMARY WIDGET (Marketing Pricing Trigger) */}
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 shadow-inner">
-              <div className="space-y-1 min-w-0">
-                <div className="text-[10.5px] font-mono uppercase tracking-wider text-cyan-300 font-extrabold flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span>Combined Separate Value</span>
-                </div>
-                <p className="text-[11.5px] sm:text-xs text-white/75 font-sans leading-relaxed">
-                  Total of all 3 digital packs + physical comic bought separately:
-                </p>
-              </div>
-
-              {/* Clean Vertical Hierarchy: Total price on its own clear line, qualifying text underneath */}
-              <div className="pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 flex flex-col items-start sm:items-end justify-center shrink-0">
-                <div className="text-2xl sm:text-3xl font-display font-black text-white line-through decoration-rose-400 decoration-2 tracking-tight">
-                  € 74.96
-                </div>
-                <div className="text-[11px] sm:text-xs font-mono text-cyan-300/90 font-medium pt-0.5">
-                  (Digital add-ons alone: <span className="font-bold text-white">€ 70.97+</span>)
-                </div>
-              </div>
-            </div>
-
-            {/* 3. INDIVIDUAL DIGITAL ADD-ONS: 3 Distinct Cards with Clean Inline Drawer Expansion */}
+            {/* 2. INDIVIDUAL DIGITAL ADD-ONS: 3 Distinct Cards with Clean Inline Drawer Expansion */}
             <div className="space-y-3">
               {ADDON_PRODUCTS.map((addon) => {
                 const IconComponent = addon.icon;
@@ -523,6 +500,88 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   </div>
                 );
               })}
+            </div>
+
+            {/* 3. MEMBERSHIP UPSELL ENGINE (Bottom Conversion Anchor) */}
+            <div className="rounded-2xl bg-gradient-to-br from-[#141006] via-[#0b0c16] to-[#04060f] border-2 border-amber-400/60 p-4 sm:p-5 shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_25px_rgba(245,158,11,0.18)] relative overflow-hidden group space-y-3.5">
+              {/* Luminous Top Gold Beam */}
+              <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/80 to-transparent pointer-events-none" />
+
+              {/* Header Badge & Value Framing */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/40 tracking-wider flex items-center gap-1.5 w-fit shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                  <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>SMART BUYER UPSELL · MEMBERSHIP VALUE ANCHOR</span>
+                </span>
+
+                <div className="flex items-baseline gap-1.5 font-mono text-xs text-amber-200/90 font-bold">
+                  <span className="text-white/50 uppercase text-[10px]">Save Day One:</span>
+                  <span className="text-emerald-400 font-extrabold text-sm">€ 14.96+</span>
+                </div>
+              </div>
+
+              {/* Transparent Breakdown & Comparison Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 sm:p-3.5 rounded-xl bg-black/60 border border-white/10">
+                {/* Left: A La Carte Cost */}
+                <div className="space-y-1 sm:border-r sm:border-white/10 sm:pr-3">
+                  <div className="text-[10px] font-mono uppercase text-white/50 tracking-wider font-semibold flex items-center justify-between">
+                    <span>A La Carte Total</span>
+                    <span className="text-rose-400 font-bold text-[9.5px]">Separate Items</span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-display font-black text-white/70 line-through decoration-rose-400 decoration-2">
+                      € 74.96
+                    </span>
+                  </div>
+                  <p className="text-[10.5px] font-mono text-white/50 leading-tight">
+                    3 Digital Packs (€59.97) + Physical Comic (€14.99)
+                  </p>
+                </div>
+
+                {/* Right: Membership Pass Advantage */}
+                <div className="space-y-1 sm:pl-1">
+                  <div className="text-[10px] font-mono uppercase text-amber-300 tracking-wider font-bold flex items-center justify-between">
+                    <span>Membership Pass</span>
+                    <span className="text-emerald-400 font-extrabold text-[9.5px]">Best Value</span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-display font-black text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]">
+                      € 60
+                    </span>
+                    <span className="text-xs font-mono font-bold text-amber-200/80 uppercase">
+                      / year (~€5/mo)
+                    </span>
+                  </div>
+                  <p className="text-[10.5px] font-mono text-amber-200/80 leading-tight">
+                    All digital items unlocked + future monthly drops
+                  </p>
+                </div>
+              </div>
+
+              {/* Value Proposition Framing Callout */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-cyan-950/30 border border-amber-400/30 text-xs text-white/85 font-sans leading-relaxed flex items-start gap-2.5">
+                <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-white font-medium">Why buy separately? </strong>
+                  Get <strong className="text-amber-300">EVERYTHING</strong> unlocked instantly—including all 3 digital production packs, unreleased audio masters, visualizer workflows, exclusive Pioneer Lounge access, and fresh monthly drops starting January 9, 2027—for just <strong className="text-white">€60/year</strong> (Save €14.96+ on day one!).
+                </div>
+              </div>
+
+              {/* Direct High-Converting Membership CTA Button */}
+              <button
+                type="button"
+                onClick={handleJoinPassClick}
+                className="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black font-mono font-black text-xs sm:text-sm tracking-wide shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.6)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[46px]"
+              >
+                <Crown className="w-4 h-4 fill-black text-black shrink-0" />
+                <span>Skip A La Carte — Unlock All With Member Pass</span>
+                <ArrowRight className="w-4 h-4 text-black shrink-0" />
+              </button>
+
+              <div className="flex items-center justify-center gap-1.5 text-[10.5px] font-mono text-emerald-300 font-bold text-center">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Save €14.96+ instantly vs separate purchases · Instant access</span>
+              </div>
             </div>
           </div>
 
