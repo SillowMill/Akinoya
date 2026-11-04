@@ -394,13 +394,15 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       role="dialog"
       aria-label="Bingäa Issue #1 reader"
     >
-      {/* Header with Integrated Zoom Bar */}
-      <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-2.5 sm:py-3 border-b border-white/10 shrink-0 bg-[#060a14]/90">
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* DESKTOP HEADER BAR (Unchanged for >= 1024px)                  */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      <div className="hidden lg:flex items-center justify-between gap-3 px-5 py-3 border-b border-white/10 shrink-0 bg-[#060a14]/90 z-20">
         <div className="min-w-0">
-          <div className="text-[9px] sm:text-[10px] font-mono tracking-wider text-cyan-300 uppercase">
+          <div className="text-[10px] font-mono tracking-wider text-cyan-300 uppercase">
             {isVerified ? "Collector's Edition · Full Access" : 'Public Preview Edition · Pages 1–2'}
           </div>
-          <div className="text-sm sm:text-base font-display font-bold text-white truncate">Bingäa — Issue #1</div>
+          <div className="text-base font-display font-bold text-white truncate">Bingäa — Issue #1</div>
         </div>
 
         {/* Center: Interactive Zoom Controls */}
@@ -436,15 +438,15 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-12 lg:pr-0">
+        <div className="flex items-center gap-2 shrink-0">
           {isVerified ? (
             <a
               href={BINGAA_PDF_URL}
               download={BINGAA_PDF_FILENAME}
-              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg text-[11px] font-mono font-semibold text-cyan-300 border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-950/70 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-mono font-semibold text-cyan-300 border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-950/70 transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline">Download PDF</span>
+              <span>Download PDF</span>
             </a>
           ) : (
             <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-medium text-amber-300 bg-amber-950/50 border border-amber-500/30">
@@ -455,7 +457,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           <button
             type="button"
             onClick={onClose}
-            className="hidden lg:flex items-center justify-center p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="flex items-center justify-center p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             aria-label="Close reader"
           >
             <X className="w-5 h-5" />
@@ -463,20 +465,48 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         </div>
       </div>
 
-      {/* Persistent Floating Sticky Exit Button for Mobile & Tablet Viewports (<1024px) */}
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Close reader"
-        className="fixed top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-[90] lg:hidden flex items-center justify-center min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-black/85 hover:bg-black active:bg-cyan-950/90 backdrop-blur-xl border border-white/25 hover:border-cyan-400/60 text-white shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.3)] transition-all cursor-pointer touch-manipulation active:scale-95"
-      >
-        <X className="w-5 h-5 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
-      </button>
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* MOBILE & TABLET FLOATING TOP HUD (< 1024px)                   */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      <div className="lg:hidden fixed top-3 inset-x-3 z-[90] flex items-center justify-between pointer-events-none">
+        {/* Left: Floating Title Pill */}
+        <div className="pointer-events-auto flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.7),0_0_15px_rgba(6,182,212,0.18)]">
+          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="text-xs font-display font-bold text-white tracking-wide">Bingäa #1</span>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-cyan-300 uppercase">
+            {isVerified ? 'VIP' : 'Preview'}
+          </span>
+        </div>
+
+        {/* Right: Quick actions + Persistent Floating Exit Button */}
+        <div className="pointer-events-auto flex items-center gap-2">
+          {zoom > 1 && (
+            <button
+              type="button"
+              onClick={handleResetZoom}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-black/80 active:bg-cyan-950 backdrop-blur-xl border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold shadow-[0_4px_16px_rgba(0,0,0,0.7)] cursor-pointer"
+              aria-label="Reset zoom"
+            >
+              <span>{Math.round(zoom * 100)}%</span>
+              <RotateCcw className="w-2.5 h-2.5" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close reader"
+            className="flex items-center justify-center min-w-[44px] min-h-[44px] w-11 h-11 rounded-full bg-black/85 hover:bg-black active:bg-cyan-950/90 backdrop-blur-xl border border-white/25 hover:border-cyan-400/60 text-white shadow-[0_4px_20px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.3)] transition-all cursor-pointer touch-manipulation active:scale-95"
+          >
+            <X className="w-5 h-5 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
+          </button>
+        </div>
+      </div>
 
       {/* Stage (Completely Fixed Container, No Outer Modal Scrolling) */}
       <div
         ref={stageRef}
-        className="relative flex-1 min-h-0 m-0 lg:m-4 p-2 sm:p-4 flex items-center justify-center select-none overflow-hidden"
+        className="relative flex-1 min-h-0 m-0 p-3 pt-16 pb-20 sm:p-4 sm:pt-16 sm:pb-24 lg:m-4 lg:p-4 flex items-center justify-center select-none overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -615,9 +645,36 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         )}
       </div>
 
+      {/* Edge Touch Chevrons for Mobile & Tablet (< 1024px) */}
+      {!loadError && !isLockedPage && (
+        <>
+          {pageNum > 1 && (
+            <button
+              type="button"
+              onClick={goPrev}
+              aria-label="Previous page"
+              className="lg:hidden fixed left-2 top-1/2 -translate-y-1/2 z-[75] w-9 h-14 rounded-r-xl bg-black/60 active:bg-cyan-950/80 backdrop-blur-md border-y border-r border-white/15 flex items-center justify-center text-white/70 active:text-white shadow-[0_4px_16px_rgba(0,0,0,0.6)] transition-all cursor-pointer touch-manipulation"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+
+          {(!isVerified ? pageNum < 3 : (total ? pageNum < total : true)) && (
+            <button
+              type="button"
+              onClick={goNext}
+              aria-label="Next page"
+              className="lg:hidden fixed right-2 top-1/2 -translate-y-1/2 z-[75] w-9 h-14 rounded-l-xl bg-black/60 active:bg-cyan-950/80 backdrop-blur-md border-y border-l border-white/15 flex items-center justify-center text-white/70 active:text-white shadow-[0_4px_16px_rgba(0,0,0,0.6)] transition-all cursor-pointer touch-manipulation"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
+        </>
+      )}
+
       {/* Subtle First-Load Instruction Hint for Mobile & Tablet */}
       {showHint && !loadError && !isLockedPage && (
-        <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 z-[80] pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="lg:hidden fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-[80] pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div
             onClick={dismissHint}
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a101d]/90 backdrop-blur-xl border border-cyan-400/35 text-white/90 shadow-[0_4px_24px_rgba(0,0,0,0.7),0_0_16px_rgba(6,182,212,0.25)] text-[11px] font-mono cursor-pointer active:scale-95 transition-all select-none whitespace-nowrap"
@@ -639,15 +696,56 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         </div>
       )}
 
-      {/* Footer navigation */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* MOBILE & TABLET FLOATING BOTTOM HUD (< 1024px)                */}
+      {/* ───────────────────────────────────────────────────────────── */}
       {!loadError && (
-        <div className="flex items-center justify-between px-4 sm:px-8 py-3 border-t border-white/10 shrink-0 bg-[#060a14]/90">
+        <div className="lg:hidden fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-[85] pointer-events-auto">
+          <div className="flex items-center gap-3 sm:gap-4 px-3.5 py-2 rounded-full bg-black/85 backdrop-blur-2xl border border-white/20 shadow-[0_10px_35px_rgba(0,0,0,0.85),0_0_24px_rgba(6,182,212,0.25)]">
+            <button
+              type="button"
+              onClick={goPrev}
+              disabled={pageNum <= 1}
+              className="flex items-center justify-center min-w-[40px] min-h-[40px] w-10 h-10 rounded-full bg-white/10 active:bg-cyan-500/30 border border-white/15 text-white disabled:opacity-25 transition-all cursor-pointer touch-manipulation"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            <div className="px-2 min-w-[70px] text-center">
+              <span className="text-xs sm:text-sm font-mono font-semibold text-white tracking-wider">
+                {isVerified
+                  ? total ? `${pageNum} / ${total}` : '— / —'
+                  : pageNum <= 2
+                  ? `${pageNum} / 2`
+                  : 'Locked'}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={goNext}
+              disabled={!isVerified ? pageNum >= 3 : (!total || pageNum >= total)}
+              className="flex items-center justify-center min-w-[40px] min-h-[40px] w-10 h-10 rounded-full bg-white/10 active:bg-cyan-500/30 border border-white/15 text-white disabled:opacity-25 transition-all cursor-pointer touch-manipulation"
+              aria-label="Next page"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* DESKTOP FOOTER NAVIGATION (Unchanged for >= 1024px)           */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {!loadError && (
+        <div className="hidden lg:flex items-center justify-between px-8 py-3 border-t border-white/10 shrink-0 bg-[#060a14]/90 z-20">
           <button type="button" onClick={goPrev} disabled={pageNum <= 1} className={navBtn} aria-label="Previous page">
             <ChevronLeft className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs sm:text-sm font-mono text-white/80">
+            <span className="text-sm font-mono text-white/80">
               {isVerified
                 ? total ? `${pageNum} / ${total}` : '— / —'
                 : pageNum <= 2
