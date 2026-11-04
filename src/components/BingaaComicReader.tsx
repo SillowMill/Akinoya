@@ -46,6 +46,20 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
   const [loadError, setLoadError] = useState<string | null>(null);
   const [stageSize, setStageSize] = useState({ w: 0, h: 0 });
 
+  // Dedicated responsive viewport tracking (< 768px: Mobile, >= 768px: Tablet & Desktop)
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Interactive Zoom, Pan & Fluid Swipe States
   const [zoom, setZoom] = useState<number>(1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -118,7 +132,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [isMobile]);
 
   // Reset zoom & pan when page changes
   useEffect(() => {
@@ -137,8 +151,10 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     doc.getPage(pageNum).then((page) => {
       if (cancelled || !canvasRef.current) return;
       const base = page.getViewport({ scale: 1 });
-      // Authentic native PDF dimensions: strictly preserve aspect ratio with zero distortion or cropping
-      const fit = Math.min(stageSize.w / base.width, stageSize.h / base.height);
+      // Fit calculation: On mobile smartphones (< 768px), fit cleanly within visible viewport with clearance for HUD overlays
+      const fit = isMobile
+        ? Math.min(Math.max(1, stageSize.w - 16) / base.width, Math.max(1, stageSize.h - 104) / base.height)
+        : Math.min(stageSize.w / base.width, stageSize.h / base.height);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const viewport = page.getViewport({ scale: fit * dpr });
 
@@ -176,7 +192,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       cancelled = true;
       renderTaskRef.current?.cancel();
     };
-  }, [doc, pageNum, stageSize.w, stageSize.h, isLockedPage]);
+  }, [doc, pageNum, stageSize.w, stageSize.h, isLockedPage, isMobile]);
 
   const total = doc?.numPages ?? 0;
 
@@ -388,6 +404,249 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
   const navBtn =
     'flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer';
 
+  // ─────────────────────────────────────────────────────────────────
+  // 1. DEDICATED MOBILE-ONLY READER INTERFACE (< 768px SMARTPHONES)
+  // Fit-to-screen PDF container, zero vertical scroll, fixed HUD
+  // ─────────────────────────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <div
+        className="fixed inset-0 z-[70] w-full h-[100dvh] flex items-center justify-center bg-[#02050c] select-none overflow-hidden touch-none"
+        role="dialog"
+        aria-label="Bingäa Issue #1 mobile reader"
+      >
+        {/* Ambient Dynamic Background Glow */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none select-none flex items-center justify-center">
+          <canvas
+            ref={ambientCanvasRef}
+            className="w-full h-full object-cover blur-3xl opacity-30 scale-125 transition-opacity duration-700"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#02050c]/85 via-transparent to-[#02050c]/90 pointer-events-none" />
+        </div>
+
+        {/* ── PERMANENT FIXED SCREEN CORNER CONTROLS (Zero Scroll Friction) ── */}
+
+        {/* Top-Right: Permanent Fixed Exit Button */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close reader"
+          className="fixed top-3 right-3 z-50 flex items-center justify-center w-11 h-11 rounded-full bg-black/85 active:bg-cyan-950 backdrop-blur-2xl border border-white/25 text-white shadow-[0_4px_24px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.35)] cursor-pointer touch-manipulation active:scale-95"
+        >
+          <X className="w-5 h-5 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
+        </button>
+
+        {/* Top-Left: Fixed Floating Title & Status Badge */}
+        <div className="fixed top-3 left-3 z-40 flex items-center gap-2 pointer-events-auto">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-xs font-display font-bold text-white tracking-wide">Bingäa #1</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-cyan-300 uppercase">
+              {isVerified ? 'VIP' : 'Preview'}
+            </span>
+          </div>
+
+          {zoom > 1 && (
+            <button
+              type="button"
+              onClick={handleResetZoom}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-black/80 active:bg-cyan-950 backdrop-blur-xl border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold shadow-[0_4px_16px_rgba(0,0,0,0.7)] cursor-pointer active:scale-95"
+              aria-label="Reset zoom"
+            >
+              <span>{Math.round(zoom * 100)}%</span>
+              <RotateCcw className="w-2.5 h-2.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Fixed Mid-Screen Edge Chevrons: Instant Page Turn */}
+        {!loadError && !isLockedPage && (
+          <>
+            {pageNum > 1 && (
+              <button
+                type="button"
+                onClick={goPrev}
+                aria-label="Previous page"
+                className="fixed left-2 top-1/2 -translate-y-1/2 z-40 w-10 h-16 rounded-r-2xl bg-black/70 active:bg-cyan-950/90 backdrop-blur-md border-y border-r border-white/20 flex items-center justify-center text-white/80 active:text-cyan-300 shadow-[0_4px_16px_rgba(0,0,0,0.6)] cursor-pointer touch-manipulation active:scale-95"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+            )}
+
+            {(!isVerified ? pageNum < 3 : (total ? pageNum < total : true)) && (
+              <button
+                type="button"
+                onClick={goNext}
+                aria-label="Next page"
+                className="fixed right-2 top-1/2 -translate-y-1/2 z-40 w-10 h-16 rounded-l-2xl bg-black/70 active:bg-cyan-950/90 backdrop-blur-md border-y border-l border-white/20 flex items-center justify-center text-white/80 active:text-cyan-300 shadow-[0_4px_16px_rgba(0,0,0,0.6)] cursor-pointer touch-manipulation active:scale-95"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            )}
+          </>
+        )}
+
+        {/* Bottom Floating Navigation Dock (Thumb-First Zone) */}
+        {!loadError && !isLockedPage && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
+            <div className="flex items-center gap-4 px-4 py-2 rounded-full bg-black/85 backdrop-blur-2xl border border-white/25 shadow-[0_10px_35px_rgba(0,0,0,0.9),0_0_20px_rgba(6,182,212,0.25)]">
+              <button
+                type="button"
+                onClick={goPrev}
+                disabled={pageNum <= 1}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 active:bg-cyan-500/30 border border-white/15 text-white disabled:opacity-25 transition-all cursor-pointer touch-manipulation"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <span className="text-xs font-mono font-semibold text-white tracking-wider px-2">
+                {isVerified
+                  ? total ? `${pageNum} / ${total}` : '— / —'
+                  : pageNum <= 2
+                  ? `${pageNum} / 2`
+                  : 'Locked'}
+              </span>
+
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={!isVerified ? pageNum >= 3 : (!total || pageNum >= total)}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 active:bg-cyan-500/30 border border-white/15 text-white disabled:opacity-25 transition-all cursor-pointer touch-manipulation"
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Subtle First-Load Instruction Hint */}
+        {showHint && !loadError && !isLockedPage && (
+          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div
+              onClick={dismissHint}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a101d]/90 backdrop-blur-xl border border-cyan-400/35 text-white/90 shadow-[0_4px_24px_rgba(0,0,0,0.7),0_0_16px_rgba(6,182,212,0.25)] text-[11px] font-mono cursor-pointer active:scale-95 transition-all select-none whitespace-nowrap"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span>Swipe or tap sides · Pinch to zoom</span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dismissHint();
+                }}
+                className="ml-1 p-0.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                aria-label="Dismiss hint"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── FIT-TO-SCREEN COMIC STAGE (Single-Screen Container, Zero Scroll) ── */}
+        <div
+          ref={stageRef}
+          className="relative w-full h-full flex items-center justify-center select-none overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {loadError ? (
+            <div className="max-w-xs text-center space-y-3 font-mono p-5 rounded-2xl bg-[#080c14]/95 border border-rose-500/30 shadow-[0_0_40px_rgba(244,63,94,0.15)]">
+              <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
+              <p className="text-xs text-white/70">{loadError}</p>
+              <a
+                href={BINGAA_PDF_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-black bg-cyan-400 hover:bg-cyan-300"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Open PDF directly
+              </a>
+            </div>
+          ) : isLockedPage ? (
+            /* Non-VIP Page 3 Lock Screen Overlay on Mobile */
+            <div className="w-[90vw] max-w-sm p-5 rounded-2xl bg-[#080c14]/95 border border-amber-500/40 shadow-[0_0_50px_rgba(245,158,11,0.2)] text-center relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="w-10 h-10 rounded-xl bg-amber-950/70 border border-amber-500/40 text-yellow-400 mx-auto flex items-center justify-center mb-2.5">
+                <Lock className="w-5 h-5 text-yellow-400" />
+              </div>
+              <h3 className="text-sm font-display font-bold text-white uppercase mb-1">
+                FOUNDING EDITION FULLY CLAIMED
+              </h3>
+              <p className="text-[11px] text-white/60 mb-4 font-sans">
+                Pages 3–{total || 32} are strictly reserved for verified Äkinoya Founding Pass holders.
+              </p>
+              {whitelistSubmitted ? (
+                <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs font-mono">
+                  ✓ Whitelist Spot Confirmed
+                </div>
+              ) : (
+                <form onSubmit={handleWhitelistSubmit} className="space-y-2">
+                  <input
+                    type="email"
+                    required
+                    value={whitelistEmail}
+                    onChange={(e) => setWhitelistEmail(e.target.value)}
+                    placeholder="Enter email address"
+                    className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-xs text-white outline-none font-mono"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSubmittingWhitelist || !whitelistEmail.trim()}
+                    className="w-full py-2.5 rounded-xl font-mono text-xs font-bold bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+                  >
+                    {isSubmittingWhitelist ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                    <span>Join Whitelist</span>
+                  </button>
+                </form>
+              )}
+              <button
+                type="button"
+                onClick={() => setPageNum(2)}
+                className="mt-4 text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center justify-center gap-1 mx-auto cursor-pointer"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Back to Page 2 Preview</span>
+              </button>
+            </div>
+          ) : (
+            /* Fit-to-Screen Mobile Canvas: Native scale + Pinch-to-zoom */
+            <div
+              className="relative flex items-center justify-center transition-transform shrink-0"
+              style={{
+                transform: `translate3d(${pan.x + swipeOffset}px, ${pan.y}px, 0) scale(${zoom})`,
+                transformOrigin: 'center center',
+                willChange: 'transform',
+                transition: isSwiping ? 'none' : 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1)',
+              }}
+              onDoubleClick={handleDoubleTap}
+            >
+              <canvas
+                ref={canvasRef}
+                className="rounded-xl shadow-[0_15px_50px_rgba(0,0,0,0.9),0_0_25px_rgba(6,182,212,0.2)] ring-1 ring-white/15 bg-white select-none block"
+              />
+              {(isRendering || !doc) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-xl">
+                  <Loader2 className="w-7 h-7 text-cyan-300 animate-spin" />
+                  <span className="text-[11px] font-mono text-white/60">
+                    {doc ? `Loading page ${pageNum}…` : 'Opening Bingäa Issue #1…'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // 2. TABLET & DESKTOP READER (>= 768px: Strictly Preserved / Untouched)
+  // ─────────────────────────────────────────────────────────────────
   return (
     <div
       className="fixed inset-0 z-[70] flex flex-col bg-[#04060d] backdrop-blur-xl select-none overflow-hidden"
