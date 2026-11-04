@@ -37,6 +37,7 @@ type PDFDoc = Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>;
 const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerified = false }) => {
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ambientCanvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<{ cancel: () => void } | null>(null);
 
   const [doc, setDoc] = useState<PDFDoc | null>(null);
@@ -45,15 +46,39 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
   const [loadError, setLoadError] = useState<string | null>(null);
   const [stageSize, setStageSize] = useState({ w: 0, h: 0 });
 
-  // Interactive Zoom & Pan States
+  // Interactive Zoom, Pan & Fluid Swipe States
   const [zoom, setZoom] = useState<number>(1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [swipeOffset, setSwipeOffset] = useState<number>(0);
+  const [isSwiping, setIsSwiping] = useState<boolean>(false);
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const initialPinchDistRef = useRef<number | null>(null);
   const initialPinchZoomRef = useRef<number>(1);
   const touchStartX = useRef<number | null>(null);
   const lastTapTimeRef = useRef<number>(0);
+
+  // First-load gesture helper for mobile/tablet
+  const [showHint, setShowHint] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return !localStorage.getItem('akinoya_reader_hint_dismissed');
+  });
+
+  const dismissHint = useCallback(() => {
+    setShowHint(false);
+    try {
+      localStorage.setItem('akinoya_reader_hint_dismissed', '1');
+    } catch {}
+  }, []);
+
+  // Auto-dismiss gesture hint after 5 seconds
+  useEffect(() => {
+    if (!showHint) return;
+    const timer = setTimeout(() => {
+      setShowHint(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [showHint]);
 
   // Whitelist capture state for public visitors
   const [whitelistEmail, setWhitelistEmail] = useState('');
@@ -112,10 +137,8 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     doc.getPage(pageNum).then((page) => {
       if (cancelled || !canvasRef.current) return;
       const base = page.getViewport({ scale: 1 });
-      const isMobileOrTablet = stageSize.w > 0 && stageSize.w < 1024;
-      const fit = isMobileOrTablet
-        ? stageSize.h / base.height
-        : Math.min(stageSize.w / base.width, stageSize.h / base.height);
+      // Authentic native PDF dimensions: strictly preserve aspect ratio with zero distortion or cropping
+      const fit = Math.min(stageSize.w / base.width, stageSize.h / base.height);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const viewport = page.getViewport({ scale: fit * dpr });
 
@@ -130,7 +153,19 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       renderTaskRef.current = task;
       task.promise
         .then(() => {
-          if (!cancelled) setIsRendering(false);
+          if (!cancelled) {
+            setIsRendering(false);
+            // Render ambient blurred backdrop reflecting dynamic page colors
+            const ambCanvas = ambientCanvasRef.current;
+            if (ambCanvas && canvas) {
+              ambCanvas.width = 64;
+              ambCanvas.height = 80;
+              const ambCtx = ambCanvas.getContext('2d');
+              if (ambCtx) {
+                ambCtx.drawImage(canvas, 0, 0, 64, 80);
+              }
+            }
+          }
         })
         .catch((err: any) => {
           if (err?.name !== 'RenderingCancelledException') console.error('[Reader] Render error:', err);
@@ -214,9 +249,13 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     };
   }, [goPrev, goNext, onClose, zoom]);
 
-  // Touch handlers for pinch-to-zoom & smooth panning
+  // Touch handlers for pinch-to-zoom, smooth panning & fluid swipe page-turning
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (showHint) dismissHint();
+
     if (e.touches.length === 2) {
+      setIsSwiping(false);
+      setSwipeOffset(0);
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
@@ -239,6 +278,8 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           x: e.touches[0].clientX - pan.x,
           y: e.touches[0].clientY - pan.y,
         };
+      } else {
+        setIsSwiping(true);
       }
     }
   };
@@ -257,20 +298,28 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       const newX = e.touches[0].clientX - dragStartRef.current.x;
       const newY = e.touches[0].clientY - dragStartRef.current.y;
       setPan(clampPan(newX, newY, zoom));
+    } else if (e.touches.length === 1 && zoom === 1 && touchStartX.current !== null) {
+      const dx = e.touches[0].clientX - touchStartX.current;
+      // Damped elastic feedback when swiping between pages
+      setSwipeOffset(dx * 0.45);
     }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     initialPinchDistRef.current = null;
     isDraggingRef.current = false;
+    setIsSwiping(false);
+
     if (zoom === 1 && touchStartX.current !== null && e.changedTouches.length > 0) {
       const dx = e.changedTouches[0].clientX - touchStartX.current;
-      if (Math.abs(dx) > 50) {
-        if (dx < 0) goNext();
-        else goPrev();
+      if (dx < -40) {
+        goNext();
+      } else if (dx > 40) {
+        goPrev();
       }
       touchStartX.current = null;
     }
+    setSwipeOffset(0);
   };
 
   // Mouse handlers for desktop pan
@@ -427,7 +476,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       {/* Stage (Completely Fixed Container, No Outer Modal Scrolling) */}
       <div
         ref={stageRef}
-        className="relative flex-1 min-h-0 m-0 lg:m-4 p-0 flex items-center justify-center select-none overflow-hidden"
+        className="relative flex-1 min-h-0 m-0 lg:m-4 p-2 sm:p-4 flex items-center justify-center select-none overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -436,6 +485,18 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
+        {/* Ambient Background Blur Canvas (Dynamic page color reflection & cybernetic aura) */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none select-none flex items-center justify-center">
+          <canvas
+            ref={ambientCanvasRef}
+            className="w-full h-full object-cover blur-3xl opacity-35 scale-125 transition-opacity duration-700"
+            aria-hidden="true"
+          />
+          {/* Cyberpunk Atmospheric Gradient Vignette Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#030712]/70 via-transparent to-[#030712]/85 pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.14)_0%,transparent_75%)] pointer-events-none" />
+        </div>
+
         {loadError ? (
           <div className="max-w-sm text-center space-y-3 font-mono my-auto mx-auto">
             <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
@@ -528,18 +589,22 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           </div>
         ) : (
           <div
-            className="relative flex items-center justify-center lg:max-w-full max-h-full transition-transform shrink-0"
+            className="relative flex items-center justify-center max-w-full max-h-full transition-transform shrink-0"
             style={{
-              transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
+              transform: `translate3d(${pan.x + swipeOffset}px, ${pan.y}px, 0) scale(${zoom})`,
               transformOrigin: 'center center',
               willChange: 'transform',
+              transition: isSwiping ? 'none' : 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1)',
               cursor: zoom > 1 ? (isDraggingRef.current ? 'grabbing' : 'grab') : 'default',
             }}
             onDoubleClick={handleDoubleTap}
           >
-            <canvas ref={canvasRef} className="rounded-none lg:rounded-md shadow-2xl bg-white lg:max-w-full max-h-full select-none block" />
+            <canvas
+              ref={canvasRef}
+              className="rounded-lg shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(6,182,212,0.18)] ring-1 ring-white/15 bg-white max-w-full max-h-full select-none block"
+            />
             {(isRendering || !doc) && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-none lg:rounded-md">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-lg">
                 <Loader2 className="w-7 h-7 text-cyan-300 animate-spin" />
                 <span className="text-[11px] font-mono text-white/60">
                   {doc ? `Loading page ${pageNum}…` : 'Opening Bingäa Issue #1…'}
@@ -549,6 +614,30 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           </div>
         )}
       </div>
+
+      {/* Subtle First-Load Instruction Hint for Mobile & Tablet */}
+      {showHint && !loadError && !isLockedPage && (
+        <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 z-[80] pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div
+            onClick={dismissHint}
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a101d]/90 backdrop-blur-xl border border-cyan-400/35 text-white/90 shadow-[0_4px_24px_rgba(0,0,0,0.7),0_0_16px_rgba(6,182,212,0.25)] text-[11px] font-mono cursor-pointer active:scale-95 transition-all select-none whitespace-nowrap"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span>Swipe to turn pages · Pinch to zoom</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                dismissHint();
+              }}
+              className="ml-1 p-0.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              aria-label="Dismiss hint"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer navigation */}
       {!loadError && (
