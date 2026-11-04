@@ -499,26 +499,10 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
         {/* ── PERMANENT FIXED SCREEN CORNER CONTROLS (Zero Scroll Friction) ── */}
 
-        {/* Top-Right: Persistent Floating Exit Button (Exclusively Mobile < 768px) */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close reader"
-          style={{
-            position: 'fixed',
-            top: 'max(16px, env(safe-area-inset-top, 16px))',
-            right: 'max(16px, env(safe-area-inset-right, 16px))',
-            zIndex: 9999,
-          }}
-          className="fixed top-4 right-4 z-[9999] flex items-center justify-center w-12 h-12 rounded-full bg-black/85 active:bg-cyan-950 backdrop-blur-2xl border border-white/30 text-white shadow-[0_4px_24px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.35)] cursor-pointer touch-manipulation active:scale-95"
-        >
-          <X className="w-6 h-6 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
-        </button>
-
         {/* Top-Left: Fixed Floating Title & Status Badge */}
         <div
-          style={{ top: 'max(16px, env(safe-area-inset-top, 16px))' }}
-          className="fixed left-4 z-40 flex items-center gap-2 pointer-events-auto"
+          style={{ top: 'max(12px, env(safe-area-inset-top, 12px))' }}
+          className="fixed left-3 z-40 flex items-center gap-2 pointer-events-auto"
         >
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
@@ -637,7 +621,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
         <div
           ref={stageRef}
           style={{
-            paddingTop: 'calc(max(16px, env(safe-area-inset-top, 16px)) + 52px)',
+            paddingTop: 'calc(max(12px, env(safe-area-inset-top, 12px)) + 40px)',
             paddingBottom: 'calc(max(16px, env(safe-area-inset-bottom, 16px)) + 56px)',
           }}
           className="relative w-full h-full flex flex-col items-center justify-start select-none overflow-hidden"
@@ -646,7 +630,17 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           onTouchEnd={handleTouchEnd}
         >
           {loadError ? (
-            <div className="max-w-xs text-center space-y-3 font-mono p-5 rounded-2xl bg-[#080c14]/95 border border-rose-500/30 shadow-[0_0_40px_rgba(244,63,94,0.15)] my-auto">
+            <div className="max-w-xs text-center space-y-3 font-mono p-5 rounded-2xl bg-[#080c14]/95 border border-rose-500/30 shadow-[0_0_40px_rgba(244,63,94,0.15)] my-auto relative">
+              {/* In-Frame Floating Circular Exit Button */}
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Exit reader"
+                title="Exit"
+                className="absolute top-3 right-3 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-black/80 hover:bg-black/90 active:bg-cyan-950/90 backdrop-blur-xl border border-white/35 text-white shadow-[0_4px_16px_rgba(0,0,0,0.85)] cursor-pointer touch-manipulation active:scale-90 transition-all"
+              >
+                <X className="w-4.5 h-4.5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" />
+              </button>
               <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
               <p className="text-xs text-white/70">{loadError}</p>
               <a
@@ -662,6 +656,16 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           ) : isLockedPage ? (
             /* Non-VIP Page 3 Lock Screen Overlay on Mobile */
             <div className="w-[90vw] max-w-sm p-5 rounded-2xl bg-[#080c14]/95 border border-amber-500/40 shadow-[0_0_50px_rgba(245,158,11,0.2)] text-center relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
+              {/* In-Frame Floating Circular Exit Button */}
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Exit reader"
+                title="Exit"
+                className="absolute top-3 right-3 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-black/80 hover:bg-black/90 active:bg-cyan-950/90 backdrop-blur-xl border border-white/35 active:border-amber-400 text-white shadow-[0_4px_16px_rgba(0,0,0,0.85)] cursor-pointer touch-manipulation active:scale-90 transition-all"
+              >
+                <X className="w-4.5 h-4.5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" />
+              </button>
               <div className="w-10 h-10 rounded-xl bg-amber-950/70 border border-amber-500/40 text-yellow-400 mx-auto flex items-center justify-center mb-2.5">
                 <Lock className="w-5 h-5 text-yellow-400" />
               </div>
@@ -720,6 +724,21 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
                 ref={canvasRef}
                 className="rounded-xl shadow-[0_15px_50px_rgba(0,0,0,0.9),0_0_25px_rgba(6,182,212,0.2)] ring-1 ring-white/15 bg-white select-none block"
               />
+
+              {/* In-Frame Floating Circular Exit Button (Directly inside top-right corner of comic frame) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                }}
+                aria-label="Exit reader"
+                title="Exit"
+                className="absolute top-2.5 right-2.5 z-50 flex items-center justify-center w-9 h-9 rounded-full bg-black/80 hover:bg-black/90 active:bg-cyan-950/90 backdrop-blur-xl border border-white/35 active:border-cyan-400 text-white shadow-[0_4px_16px_rgba(0,0,0,0.85),0_0_12px_rgba(6,182,212,0.35)] cursor-pointer touch-manipulation active:scale-90 transition-all select-none"
+              >
+                <X className="w-4.5 h-4.5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" />
+              </button>
+
               {(isRendering || !doc) && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-xl">
                   <Loader2 className="w-7 h-7 text-cyan-300 animate-spin" />
