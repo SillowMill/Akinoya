@@ -61,6 +61,35 @@ export const AuthModal: React.FC = () => {
     }
   }, [authModalMode, isAuthModalOpen, authErrorMessage]);
 
+  // Robust Body Scroll Lock on Mobile & Desktop when Auth Gateway is open
+  React.useEffect(() => {
+    if (!isAuthModalOpen) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+
+    // Keyboard support: Escape closes modal
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeAuthModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isAuthModalOpen, closeAuthModal]);
+
   if (!isAuthModalOpen) return null;
 
   const handleGoogleAuth = async () => {
@@ -178,23 +207,32 @@ export const AuthModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/95 overflow-y-auto">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/90 backdrop-blur-md overflow-hidden"
+        style={{ touchAction: 'none' }}
+      >
         {/* Backdrop click */}
-        <div className="fixed inset-0" onClick={closeAuthModal} />
+        <div
+          className="fixed inset-0 bg-transparent cursor-pointer"
+          onClick={closeAuthModal}
+          aria-hidden="true"
+        />
 
         <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.96 }}
+          initial={{ opacity: 0, y: 16, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 30, scale: 0.96 }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 w-full sm:max-w-md bg-[#050811] border-t sm:border border-cyan-500/30 rounded-t-3xl sm:rounded-2xl p-5 sm:p-7 shadow-[0_0_50px_rgba(56,189,248,0.2)] overflow-hidden my-0 sm:my-auto"
+          exit={{ opacity: 0, y: 16, scale: 0.96 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          onClick={(e) => e.stopPropagation()}
+          className="auth-gateway relative z-10 w-full sm:max-w-md max-h-[92dvh] sm:max-h-[88vh] flex flex-col bg-[#050811] border border-cyan-500/40 rounded-2xl sm:rounded-3xl shadow-[0_0_50px_rgba(56,189,248,0.25)] overflow-hidden my-auto overscroll-contain"
+          style={{ touchAction: 'pan-y' }}
         >
           {/* Ambient Glow */}
           <div className="absolute top-0 right-0 w-44 h-44 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-44 h-44 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Top Bar / Close Button */}
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+          {/* Pinned Top Bar / Close Button */}
+          <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-white/10 bg-[#050811]/95 backdrop-blur-md z-20">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
               <span className="text-xs font-display font-extrabold tracking-wider text-white uppercase">
@@ -205,96 +243,98 @@ export const AuthModal: React.FC = () => {
             <button
               type="button"
               onClick={closeAuthModal}
-              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center touch-manipulation"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Already Claimed / Other Account VIP Link Notice Banner */}
-          {vipLinkError && (
-            <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-red-950/90 via-rose-950/85 to-red-950/90 border border-red-500/60 text-red-200 shadow-[0_0_25px_rgba(239,68,68,0.3)] flex items-start gap-3 select-none">
-              <div className="p-1.5 rounded-lg bg-red-500/20 text-red-400 shrink-0 mt-0.5">
-                <AlertCircle className="w-5 h-5 text-red-400" />
-              </div>
-              <div className="text-left flex-1 min-w-0">
-                <div className="text-xs font-mono font-bold tracking-wider uppercase text-red-400">
-                  Notice: VIP Pass Already Claimed
+          {/* Scrollable Content Body with Internal Overflow */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 overscroll-contain [scrollbar-width:thin] touch-pan-y pb-6">
+            {/* Already Claimed / Other Account VIP Link Notice Banner */}
+            {vipLinkError && (
+              <div className="p-4 rounded-xl bg-gradient-to-r from-red-950/90 via-rose-950/85 to-red-950/90 border border-red-500/60 text-red-200 shadow-[0_0_25px_rgba(239,68,68,0.3)] flex items-start gap-3 select-none">
+                <div className="p-1.5 rounded-lg bg-red-500/20 text-red-400 shrink-0 mt-0.5">
+                  <AlertCircle className="w-5 h-5 text-red-400" />
                 </div>
-                <p className="text-xs text-red-200 font-sans mt-1 leading-relaxed font-semibold">
-                  {vipLinkError}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Active VIP Referral / Pass Invitation Banner */}
-          {!vipLinkError && (hasPendingVipInvitation || (typeof window !== 'undefined' && Boolean(localStorage.getItem('akinoya_pending_vip_pass')))) && (
-            <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/60 via-emerald-950/50 to-cyan-950/60 border border-cyan-500/40 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.15)] flex items-start gap-3">
-              <div className="p-1.5 rounded-lg bg-cyan-400/20 text-cyan-400 shrink-0 mt-0.5">
-                <Sparkles className="w-4 h-4 animate-pulse" />
-              </div>
-              <div className="text-left flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-cyan-300">
-                    VIP Invitation Active
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-extrabold bg-cyan-400 text-black">
-                    {(typeof window !== 'undefined' && localStorage.getItem('akinoya_pending_vip_pass')) || 'VIP_GUEST'}
-                  </span>
+                <div className="text-left flex-1 min-w-0">
+                  <div className="text-xs font-mono font-bold tracking-wider uppercase text-red-400">
+                    Notice: VIP Pass Already Claimed
+                  </div>
+                  <p className="text-xs text-red-200 font-sans mt-1 leading-relaxed font-semibold">
+                    {vipLinkError}
+                  </p>
                 </div>
-                <p className="text-xs text-cyan-100/90 font-sans mt-1 leading-relaxed">
-                  {(typeof window !== 'undefined' && localStorage.getItem('akinoya_pending_vip_pass'))
-                    ? `VIP Pass #${localStorage.getItem('akinoya_pending_vip_pass')} detected. Create a new account or sign in to link this VIP Pass directly to your profile.`
-                    : 'You are invited as a VIP Guest. Create an account or sign in to receive immediate access.'}
-                </p>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Mode Switcher Tabs: Strictly 2 Clean Tabs (grid-cols-2) */}
-          {(mode === 'signin' || mode === 'signup') && (
-            <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#080d1a] rounded-xl border border-white/10 mt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('signin');
-                  setError(null);
-                  setSuccess(null);
-                  setConfirmPassword('');
-                  setShowConfirmPassword(false);
-                  soundManager.playTone(560, 0.04);
-                }}
-                className={`min-h-[48px] py-2 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  mode === 'signin'
-                    ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(56,189,248,0.35)] font-bold'
-                    : 'text-white/60 hover:text-white'
-                }`}
-              >
-                Sign In
-              </button>
+            {/* Active VIP Referral / Pass Invitation Banner */}
+            {!vipLinkError && (hasPendingVipInvitation || (typeof window !== 'undefined' && Boolean(localStorage.getItem('akinoya_pending_vip_pass')))) && (
+              <div className="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/60 via-emerald-950/50 to-cyan-950/60 border border-cyan-500/40 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.15)] flex items-start gap-3">
+                <div className="p-1.5 rounded-lg bg-cyan-400/20 text-cyan-400 shrink-0 mt-0.5">
+                  <Sparkles className="w-4 h-4 animate-pulse" />
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-cyan-300">
+                      VIP Invitation Active
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-extrabold bg-cyan-400 text-black">
+                      {(typeof window !== 'undefined' && localStorage.getItem('akinoya_pending_vip_pass')) || 'VIP_GUEST'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-cyan-100/90 font-sans mt-1 leading-relaxed">
+                    {(typeof window !== 'undefined' && localStorage.getItem('akinoya_pending_vip_pass'))
+                      ? `VIP Pass #${localStorage.getItem('akinoya_pending_vip_pass')} detected. Create a new account or sign in to link this VIP Pass directly to your profile.`
+                      : 'You are invited as a VIP Guest. Create an account or sign in to receive immediate access.'}
+                  </p>
+                </div>
+              </div>
+            )}
 
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('signup');
-                  setError(null);
-                  setSuccess(null);
-                  setConfirmPassword('');
-                  setShowConfirmPassword(false);
-                  soundManager.playTone(560, 0.04);
-                }}
-                className={`min-h-[48px] py-2 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  mode === 'signup'
-                    ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(56,189,248,0.35)] font-bold'
-                    : 'text-white/60 hover:text-white'
-                }`}
-              >
-                Register
-              </button>
-            </div>
-          )}
+            {/* Mode Switcher Tabs: Strictly 2 Clean Tabs (grid-cols-2) with Instant Touch-Responsiveness */}
+            {(mode === 'signin' || mode === 'signup') && (
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#080d1a] rounded-xl border border-white/10">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('signin');
+                    setError(null);
+                    setSuccess(null);
+                    setConfirmPassword('');
+                    setShowConfirmPassword(false);
+                    soundManager.playTone(560, 0.04);
+                  }}
+                  className={`min-h-[44px] py-2 px-3 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 touch-manipulation select-none active:scale-[0.98] ${
+                    mode === 'signin'
+                      ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(56,189,248,0.35)] font-bold'
+                      : 'text-white/60 hover:text-white hover:bg-white/5 active:bg-white/10'
+                  }`}
+                >
+                  Sign In
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('signup');
+                    setError(null);
+                    setSuccess(null);
+                    setConfirmPassword('');
+                    setShowConfirmPassword(false);
+                    soundManager.playTone(560, 0.04);
+                  }}
+                  className={`min-h-[44px] py-2 px-3 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 touch-manipulation select-none active:scale-[0.98] ${
+                    mode === 'signup'
+                      ? 'bg-cyan-500 text-black shadow-[0_0_12px_rgba(56,189,248,0.35)] font-bold'
+                      : 'text-white/60 hover:text-white hover:bg-white/5 active:bg-white/10'
+                  }`}
+                >
+                  Register
+                </button>
+              </div>
+            )}
 
           {/* Never Lose Your Files Guarantee Badge for Signup / Purchases */}
           {mode === 'signup' && (
@@ -414,7 +454,7 @@ export const AuthModal: React.FC = () => {
                     type="button"
                     onClick={handleGoogleAuth}
                     disabled={isSubmitting}
-                    className="w-full min-h-[48px] px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-black font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-3 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:scale-[1.01] active:scale-[0.99] border border-white/20"
+                    className="w-full min-h-[48px] px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-black font-sans font-semibold text-xs sm:text-sm flex items-center justify-center gap-3 transition-all cursor-pointer shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:scale-[1.01] active:scale-[0.99] border border-white/20 touch-manipulation select-none"
                   >
                     {/* Official Google G Logo SVG */}
                     <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -654,7 +694,7 @@ export const AuthModal: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full min-h-[48px] mt-2 px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs sm:text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all cursor-pointer disabled:opacity-50"
+                  className="w-full min-h-[48px] mt-2 px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 text-black font-mono font-bold text-xs sm:text-sm tracking-wider uppercase flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all cursor-pointer disabled:opacity-50 touch-manipulation active:scale-[0.99] select-none"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
@@ -706,10 +746,11 @@ export const AuthModal: React.FC = () => {
             </div>
           )}
 
-          {/* GDPR / Privacy Compliance Footer */}
-          <div className="mt-5 pt-3 border-t border-white/5 text-center text-[10px] font-mono text-white/40 flex items-center justify-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-            <span>100% GDPR / AVG Compliant · Salted Auth &amp; Encrypted Sync</span>
+            {/* GDPR / Privacy Compliance Footer */}
+            <div className="pt-3 border-t border-white/5 text-center text-[10px] font-mono text-white/40 flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span>100% GDPR / AVG Compliant · Salted Auth &amp; Encrypted Sync</span>
+            </div>
           </div>
         </motion.div>
       </div>

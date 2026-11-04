@@ -41,6 +41,14 @@
   background: rgba(103, 232, 249, 0.4);
 }
 
+/* Auth Gateway Mobile Viewport & Scroll Containment */
+.auth-gateway {
+  max-height: 92vh;
+  max-height: 92dvh;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Bioluminescent cyan glow utilities */
 .glow-cyan {
   box-shadow: 0 0 40px -10px rgba(56, 189, 248, 0.35);
