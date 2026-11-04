@@ -2385,9 +2385,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           <span className="truncate">{isFoundersPass ? '• YOU OWN FOUNDERS PASS (#0)' : `• YOU OWN EDITION #${editionDisplay} OF 100`}</span>
                         </span>
                       ) : (
-                        <span className="text-[9.5px] xs:text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-semibold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-amber-300 bg-amber-950/70 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)] shrink-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)] animate-pulse shrink-0" />
-                          <span className="truncate">• COMICBOOKS 100 / 100 CLAIMED</span>
+                        <span className="text-[9.5px] xs:text-[10px] sm:text-xs font-mono px-3 py-1 rounded-full font-semibold inline-flex items-center justify-center gap-1.5 backdrop-blur-sm text-emerald-300 bg-emerald-950/70 border border-emerald-400/40 shadow-[0_0_12px_rgba(16,185,129,0.25)] shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse shrink-0" />
+                          <span className="truncate">• {waveInventory?.available ? `${waveInventory.available} AVAILABLE` : '100 AVAILABLE'}</span>
                         </span>
                       )}
                     </div>
