@@ -564,7 +564,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                               }}
                               className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-mono text-xs cursor-pointer text-center min-h-[40px] whitespace-nowrap inline-flex items-center justify-center gap-1"
                             >
-                              <span>Pre-Order Pack Only (</span>
+                              <span>Order Pack Only (</span>
                               <span>€</span>
                               <span>{addon.priceValue})</span>
                             </button>

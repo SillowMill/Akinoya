@@ -2469,7 +2469,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <div className="p-4 sm:p-5 lg:p-6 rounded-xl bg-gradient-to-br from-cyan-950/50 via-black/70 to-black/90 border border-cyan-500/30 flex flex-col gap-4 shadow-[0_0_20px_rgba(56,189,248,0.12)]">
                         <div>
                           <div className="text-[10px] font-mono text-cyan-400/90 uppercase tracking-wider font-semibold flex items-center gap-1.5">
-                            <span>Wave 2 — Pre-Order Now</span>
+                            <span>Wave 2 — Order Now</span>
                             <span className="text-white/30">·</span>
                             <span className="text-emerald-400 font-bold">{waveInventory.available} Available</span>
                           </div>
@@ -2502,7 +2502,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             className="flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
                           >
                             <ShoppingBag className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
-                            <span>PRE-ORDER NOW — €14.99</span>
+                            <span>ORDER NOW — €14.99</span>
                           </button>
                           <button
                             type="button"
