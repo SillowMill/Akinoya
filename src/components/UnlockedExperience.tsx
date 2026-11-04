@@ -2106,48 +2106,27 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     {/* Clean Header: Äkinoya Visualizer Hub (Open Access) */}
                     <div
                       id="akinoya-visualizer-archive-header"
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3.5 sm:pb-4 mb-4 sm:mb-5 scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
+                      className="flex items-center justify-between gap-3 border-b border-white/10 pb-3 sm:pb-4 mb-4 sm:mb-5 scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
                     >
-                      <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
-                        <div className="space-y-1 min-w-0 flex-1 sm:flex-initial">
-                          {/* Badges in a clean row: consistent micro-pills */}
-                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                            <span className="text-[9px] xs:text-[9.5px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/35 text-cyan-300 font-bold tracking-wider uppercase inline-flex items-center gap-1 shadow-sm">
-                              11 PROJECT VISUALIZERS
-                            </span>
-                            <span className="text-[9px] xs:text-[9.5px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/35 text-emerald-300 font-bold tracking-wider uppercase inline-flex items-center gap-1.5 shadow-sm">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                              <span>OPEN ACCESS</span>
-                            </span>
-                          </div>
-
-                          {/* Compact, responsive title that scales cleanly without clumsy wrapping */}
-                          <h2 className="text-base xs:text-lg sm:text-xl lg:text-2xl font-display font-black text-white tracking-wide leading-tight truncate sm:whitespace-normal">
-                            Äkinoya Visualizer Hub
-                          </h2>
+                      <div className="space-y-1 min-w-0">
+                        {/* Badges in a tight, clean row */}
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <span className="text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/35 text-cyan-300 font-bold tracking-wider uppercase whitespace-nowrap shadow-sm">
+                            11 PROJECT VISUALIZERS
+                          </span>
+                          <span className="text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/35 text-emerald-300 font-bold tracking-wider uppercase inline-flex items-center gap-1 whitespace-nowrap shadow-sm">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                            <span>OPEN ACCESS</span>
+                          </span>
                         </div>
 
-                        {/* Back Button on Mobile: Compact and neatly aligned */}
-                        <button
-                          onClick={() => {
-                            setPassSubView('overview');
-                            try {
-                              sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
-                              const url = new URL(window.location.href);
-                              url.searchParams.delete('subview');
-                              url.searchParams.delete('track');
-                              url.hash = 'pass';
-                              window.history.replaceState(null, '', url.toString());
-                            } catch {}
-                          }}
-                          className="sm:hidden self-center shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-[11px] font-mono transition-colors cursor-pointer active:scale-95"
-                        >
-                          <ArrowLeft className="w-3 h-3" />
-                          <span>Back</span>
-                        </button>
+                        {/* Title: perfectly scaled, never wraps clumsily or breaks proportion */}
+                        <h2 className="text-sm xs:text-base sm:text-xl lg:text-2xl font-display font-black text-white tracking-tight sm:tracking-wide leading-tight whitespace-nowrap">
+                          Äkinoya Visualizer Hub
+                        </h2>
                       </div>
 
-                      {/* Back Button for Tablet / Desktop */}
+                      {/* Back Button */}
                       <button
                         onClick={() => {
                           setPassSubView('overview');
@@ -2160,7 +2139,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             window.history.replaceState(null, '', url.toString());
                           } catch {}
                         }}
-                        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer shrink-0 active:scale-95"
+                        className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-[11px] sm:text-xs font-mono transition-colors cursor-pointer shrink-0 active:scale-95"
                       >
                         <ArrowLeft className="w-3.5 h-3.5" />
                         <span>Back</span>
@@ -2218,7 +2197,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
                             {/* Active 16:9 Artwork Preview / Video Loop Container */}
                             {hasArtwork && (track.videoUrl || track.artworkUrl) && (
-                              <div className="w-full aspect-video rounded-xl overflow-hidden my-2 relative group/thumb border border-cyan-500/35 bg-black/90 shadow-[0_4px_25px_rgba(0,0,0,0.7),0_0_20px_rgba(56,189,248,0.15)]">
+                              <div className="w-full aspect-video rounded-xl overflow-hidden my-2 relative group/thumb border border-cyan-500/35 group-hover:border-cyan-300/80 bg-black/60 shadow-[0_4px_25px_rgba(0,0,0,0.6),0_0_15px_rgba(56,189,248,0.12)] group-hover:shadow-[0_4px_30px_rgba(0,0,0,0.7),0_0_25px_rgba(56,189,248,0.3)] transition-all duration-300">
                                 {track.videoUrl ? (
                                   <video
                                     ref={(el) => {
@@ -2262,9 +2241,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                   />
                                 )}
 
-                                {/* Cinematic Vignette & 4K Visualizer Overlay Badge */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-                                <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md border border-white/15 text-[9.5px] font-mono font-bold text-cyan-300 tracking-wider flex items-center gap-1.5 pointer-events-none shadow-sm">
+                                {/* Subtle Bottom Grounding (Ultra-Light, Zero Dark Veil) */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
+
+                                {/* Subtle Luminous Light Accent on Hover (Crisp Edge Illumination, No Dark Veil) */}
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ring-1 ring-inset ring-white/20 bg-gradient-to-t from-cyan-400/10 via-transparent to-white/5 rounded-xl" />
+
+                                <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md border border-white/20 text-[9px] font-mono font-bold text-cyan-200 tracking-wider flex items-center gap-1.5 pointer-events-none shadow-sm">
                                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_6px_rgba(34,211,238,0.8)]" />
                                   <span>4K REACTIVE VISUALIZER</span>
                                 </div>

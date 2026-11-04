@@ -247,20 +247,14 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 <ArrowRight className="w-3.5 h-3.5 text-cyan-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
               </button>
 
-              {/* Join Member Pass Button (High-End Dark Cyberpunk Glassmorphic Style) */}
+              {/* Join Member Pass Button (Identical High-End Build to Community Hub) */}
               <button
                 type="button"
                 onClick={handleJoinPassClick}
-                className="group relative overflow-hidden px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-950/90 via-[#1c1608]/85 to-amber-950/90 hover:from-amber-900/90 hover:to-[#281f0b]/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(245,158,11,0.3)] hover:shadow-[0_0_32px_rgba(245,158,11,0.5)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
+                className="group relative px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
               >
-                {/* Ambient Shimmer Flare */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-300/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out pointer-events-none" />
-                <Crown className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 group-hover:text-amber-200 transition-all shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                <span className="whitespace-nowrap inline-flex items-baseline gap-1 tracking-wider drop-shadow-[0_0_8px_rgba(245,158,11,0.35)]">
-                  <span>Join Member Pass ·</span>
-                  <span>€</span>
-                  <span>60/yr</span>
-                </span>
+                <Crown className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                <span className="tracking-wider uppercase whitespace-nowrap">Join Member Pass · €60/yr</span>
                 <ArrowRight className="w-3.5 h-3.5 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
               </button>
             </div>
@@ -505,13 +499,10 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               })}
             </div>
 
-            {/* 3. STREAMLINED MEMBERSHIP UPSELL WIDGET */}
-            <div className="rounded-2xl bg-gradient-to-br from-[#120d04]/80 via-[#0a0c16]/90 to-[#04060f]/95 backdrop-blur-md border border-amber-400/40 hover:border-amber-400/60 p-3 sm:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.12)] relative overflow-hidden group space-y-3 transition-all">
-              {/* Luminous Top Gold Beam */}
-              <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/70 to-transparent pointer-events-none" />
-
-              {/* Retained Explanatory Info Block */}
-              <div className="p-3 sm:p-3.5 rounded-xl bg-gradient-to-r from-amber-950/30 via-amber-900/15 to-cyan-950/20 border border-amber-400/25 text-xs text-white/85 font-sans leading-relaxed flex items-start gap-2.5">
+            {/* 3. STREAMLINED MEMBERSHIP UPSELL SECTION (Seamlessly Integrated, Zero Nested Box Artifacts) */}
+            <div className="pt-2 space-y-3">
+              {/* Explanatory Info: Clean, seamless text with no clumsy nested border-box */}
+              <div className="text-xs text-white/80 font-sans leading-relaxed flex items-start gap-2.5 px-1">
                 <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-[11.5px] sm:text-xs">
                   <strong className="text-white font-medium">Why buy separately? </strong>
@@ -519,20 +510,18 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 </div>
               </div>
 
-              {/* High-End Cyberpunk Glassmorphic CTA Button */}
+              {/* High-End Cyberpunk Glassmorphic CTA Button (Matching Community Hub's clean build) */}
               <button
                 type="button"
                 onClick={handleJoinPassClick}
-                className="relative group/btn overflow-hidden w-full py-3 sm:py-3.5 px-4 sm:px-5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-yellow-500/20 hover:from-amber-400/35 hover:via-yellow-400/40 hover:to-amber-400/30 backdrop-blur-xl border border-amber-400/60 hover:border-amber-300 text-amber-100 hover:text-white font-mono font-black text-xs sm:text-[13px] tracking-wide shadow-[0_0_20px_rgba(245,158,11,0.25),inset_0_1px_1px_rgba(255,255,255,0.2)] hover:shadow-[0_0_35px_rgba(245,158,11,0.5),inset_0_1px_2px_rgba(255,255,255,0.3)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 min-h-[46px] active:scale-[0.98]"
+                className="group relative w-full py-3.5 px-4 sm:px-5 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-xs sm:text-[13px] tracking-wide shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98] min-h-[46px]"
               >
-                {/* Ambient Shimmer Flare */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-300/10 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-in-out pointer-events-none" />
-                <Crown className="w-4 h-4 text-amber-300 group-hover/btn:text-amber-200 shrink-0 transition-colors" />
-                <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Skip A La Carte — Unlock All With Member Pass</span>
-                <ArrowRight className="w-4 h-4 text-amber-300 group-hover/btn:translate-x-0.5 transition-transform shrink-0" />
+                <Crown className="w-4 h-4 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                <span className="tracking-wider uppercase whitespace-nowrap">Skip A La Carte — Unlock All With Member Pass</span>
+                <ArrowRight className="w-4 h-4 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
               </button>
 
-              {/* Green Checkmarks Line (Card ends tightly under here) */}
+              {/* Green Checkmarks Line */}
               <div className="flex items-center justify-center gap-1.5 text-[10.5px] font-mono text-emerald-300 font-bold text-center pt-0.5">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>Save €14.96+ instantly vs separate purchases · Instant access</span>
