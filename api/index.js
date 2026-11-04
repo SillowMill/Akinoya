@@ -2671,7 +2671,7 @@ async function createStripeCheckoutSession(params) {
   const { city: parsedCity, postalCode: parsedPostal } = parseCityPostal(rawCityPostal);
   const truncate = (s, max = 480) => (s || "").slice(0, max);
   const productId = params.productId || "comic";
-  const isPhysical = params.isPhysical ?? productId === "comic";
+  const isPhysical = params.isPhysical ?? (productId === "comic" || productId === "membership");
   let productName = "Sillow Mill - Bingaa (Collectors Graphic Novel)";
   let productDescription = "Physical First Edition Graphic Novel Drop with Scannable QR Priority Verification (Wave 2)";
   let unitAmount = 1499;
@@ -2689,8 +2689,8 @@ async function createStripeCheckoutSession(params) {
     productDescription = "Complete graphic novel with interactive dual-page flipbook reader & DRM-free 4K download.";
     unitAmount = params.amount ? Math.round(params.amount * 100) : 999;
   } else if (productId === "membership") {
-    productName = "Sillow Mill - Annual Pioneer Member Pass";
-    productDescription = "Annual all-inclusive pass: all digital packs, stems, comic & monthly drops.";
+    productName = "Sillow Mill - Annual Pioneer Member Pass (All-Inclusive)";
+    productDescription = "Annual Pioneer Member Pass with Physical Welcome Booklet, Collector Pass Card, Signed Bookmark & Full Digital Vault Access";
     unitAmount = params.amount ? Math.round(params.amount * 100) : 6e3;
   } else if (params.productTitle && params.amount) {
     productName = sanitizeStripeString(params.productTitle);
@@ -5240,21 +5240,13 @@ apiRouter.post("/create-checkout-session", async (req, res) => {
       isPhysical
     } = req.body || {};
     const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : void 0);
-    const isMembership = req.body?.plan === "membership" || req.body?.product === "community_membership" || productId === "membership";
-    if (isMembership) {
-      res.status(403).json({
-        error: "Community membership pass public checkout is locked until launch on 09/01/2027.",
-        isLocked: true
-      });
-      return;
-    }
     const session = await createComicCheckoutSession({
       customerEmail,
       customerName,
       shippingAddress,
       shippingCity,
       apartmentBus,
-      productId,
+      productId: productId || (req.body?.plan === "membership" ? "membership" : void 0),
       productTitle,
       amount,
       isPhysical,

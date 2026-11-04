@@ -159,7 +159,8 @@ export const AuthModal: React.FC = () => {
           setError(res.error || 'Registration failed.');
           soundManager.playError();
         } else {
-          setSuccess('Your submission has been received! Your world will be available on the ninth of January.');
+          soundManager.playUnlockChime();
+          setSuccess('Account created successfully! You are now logged in.');
           try {
             sessionStorage.setItem('akinoya_portal_active_tab', 'pass');
             sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
@@ -598,7 +599,7 @@ export const AuthModal: React.FC = () => {
                       <input
                         type={showPassword ? 'text' : 'password'}
                         required
-                        minLength={mode === 'signup' || mode === 'update_password' ? 8 : 6}
+                        minLength={6}
                         value={password}
                         onChange={(e) => {
                           setPassword(e.target.value);
@@ -648,6 +649,7 @@ export const AuthModal: React.FC = () => {
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
                         required
+                        minLength={6}
                         value={confirmPassword}
                         onChange={(e) => {
                           setConfirmPassword(e.target.value);

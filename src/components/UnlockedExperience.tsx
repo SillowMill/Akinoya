@@ -1595,15 +1595,34 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
       setCheckoutProduct((prev) => ({
         ...prev,
         ...product,
-        isPhysical: product.isPhysical ?? (product.id === 'comic' || !product.id),
+        isPhysical: product.isPhysical ?? (product.id === 'comic' || product.id === 'membership' || !product.id),
       }));
     }
-    // Pre-fill user details if logged in
-    if (user) {
-      if (user.email && !checkoutEmail) setCheckoutEmail(user.email);
-      const uName = (user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata?.last_name || ''}`.trim() : user.user_metadata?.full_name) || '';
-      if (uName && !checkoutName) setCheckoutName(uName);
-    }
+
+    // Smart auto-fill for existing accounts and previous purchases
+    const savedEmail = (typeof window !== 'undefined' ? localStorage.getItem('sillow_checkout_email') : '') || '';
+    const savedName = (typeof window !== 'undefined' ? localStorage.getItem('sillow_checkout_name') : '') || '';
+    const savedAddress = (typeof window !== 'undefined' ? localStorage.getItem('sillow_checkout_address') : '') || '';
+    const savedCity = (typeof window !== 'undefined' ? localStorage.getItem('sillow_checkout_city') : '') || '';
+    const savedAptBus = (typeof window !== 'undefined' ? localStorage.getItem('sillow_checkout_apt_bus') : '') || '';
+
+    const uName = (
+      profile?.full_name ||
+      (user?.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata?.last_name || ''}`.trim() : user?.user_metadata?.full_name) ||
+      ''
+    ).trim();
+    const uEmail = (profile?.email || user?.email || '').trim();
+
+    const finalEmail = uEmail || savedEmail;
+    if (finalEmail) setCheckoutEmail(finalEmail);
+
+    const finalName = uName || savedName;
+    if (finalName) setCheckoutName(finalName);
+
+    if (savedAddress) setCheckoutAddress(savedAddress);
+    if (savedCity) setCheckoutCity(savedCity);
+    if (savedAptBus) setCheckoutAptBus(savedAptBus);
+
     setCheckoutError("");
     setIsOrderProcessing(false);
     setIsCheckoutOpen(true);
@@ -1614,14 +1633,25 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     handleOpenCheckout({
       id: 'membership',
       title: 'Sillow Mill — Annual Pioneer Member Pass',
-      subtitle: 'Complete Vault Access · All Digital Packs, Stems & Comic Included',
+      subtitle: 'Pioneer Pass, Physical Welcome Booklet & Signed Bookmark',
       badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
       priceValue: '60.00',
-      isPhysical: false,
-      allocationNotice: 'All-Inclusive Pass · Releases January 9, 2027',
-      deliveryNotice: 'Permanent Account Linking · Never Lose Your Files Guarantee',
+      isPhysical: true,
+      allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
+      deliveryNotice: 'Free Express Delivery · Physical Shipping + Digital Sync',
     });
   };
+
+  // Global Checkout Open Listener (routes any member pass or add-on checkout request)
+  useEffect(() => {
+    const handleGlobalCheckout = (e: Event) => {
+      const customEvent = e as CustomEvent<Partial<CheckoutProductInfo>>;
+      handleOpenCheckout(customEvent.detail);
+    };
+
+    window.addEventListener('akinoya-open-checkout', handleGlobalCheckout);
+    return () => window.removeEventListener('akinoya-open-checkout', handleGlobalCheckout);
+  }, [user, profile]);
 
   // Strict Scroll Lock & Safari Mobile Viewport Stabilization when Checkout is open
   useEffect(() => {
@@ -1727,11 +1757,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         }
       }
 
-      if (checkoutProduct.id === 'membership' && isMembershipLaunchLocked) {
-        setIsOrderProcessing(false);
-        setCheckoutError('Hé, de Annual Member Pass wordt officieel gelanceerd op 9 januari 2027. Maak alvast gratis je account aan om je VIP-status te waarborgen!');
-        return;
-      }
+      // Persist customer shipping details in localStorage for seamless smart auto-fill
+      try {
+        localStorage.setItem('sillow_checkout_email', sanitizedEmail);
+        localStorage.setItem('sillow_checkout_name', sanitizedName);
+        if (sanitizedAddress) localStorage.setItem('sillow_checkout_address', sanitizedAddress);
+        if (sanitizedCity) localStorage.setItem('sillow_checkout_city', sanitizedCity);
+        if (sanitizedAptBus) localStorage.setItem('sillow_checkout_apt_bus', sanitizedAptBus);
+      } catch {}
 
       const fullAddress = sanitizedAptBus
         ? `${sanitizedAddress}, ${sanitizedAptBus}`
@@ -3920,18 +3953,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         </div>
                       </div>
 
-                      {/* Pre-launch Membership Information if membership is selected */}
-                      {checkoutProduct.id === 'membership' && isMembershipLaunchLocked && (
+                      {/* Membership Physical Welcome Booklet & Pass Assurance */}
+                      {checkoutProduct.id === 'membership' && (
                         <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/80 via-yellow-950/50 to-amber-950/80 border border-amber-400/50 text-amber-200 flex items-start gap-3 shadow-[0_0_20px_rgba(245,158,11,0.2)] mb-4">
                           <div className="p-1.5 rounded-lg bg-amber-400/20 text-amber-400 shrink-0 mt-0.5">
                             <Crown className="w-4 h-4 text-amber-300" />
                           </div>
                           <div className="text-left text-xs leading-relaxed space-y-0.5">
                             <span className="font-mono font-bold uppercase tracking-wider text-amber-300 block text-[11px]">
-                              Annual Member Pass · Launching January 9, 2027
+                              Annual Member Pass · Physical Collector Edition
                             </span>
                             <span className="text-amber-100/90 font-sans text-[11.5px] block leading-normal">
-                              Hé, de Annual Member Pass (€60/jaar) wordt officieel gelanceerd op 9 januari 2027. Alle vroege reserveringen worden automatisch gekoppeld aan je gratis Sillow Mill account!
+                              Your Annual Pioneer Membership includes the physical collector welcome booklet, pass card &amp; signed bookmark shipped directly to your address, plus instant digital vault linking.
                             </span>
                           </div>
                         </div>

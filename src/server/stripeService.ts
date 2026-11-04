@@ -146,7 +146,7 @@ export async function createStripeCheckoutSession(params: {
   const truncate = (s: string, max = 480) => (s || '').slice(0, max);
 
   const productId = params.productId || 'comic';
-  const isPhysical = params.isPhysical ?? (productId === 'comic');
+  const isPhysical = params.isPhysical ?? (productId === 'comic' || productId === 'membership');
 
   // Dynamic product mapping
   let productName = 'Sillow Mill - Bingaa (Collectors Graphic Novel)';
@@ -167,8 +167,8 @@ export async function createStripeCheckoutSession(params: {
     productDescription = 'Complete graphic novel with interactive dual-page flipbook reader & DRM-free 4K download.';
     unitAmount = params.amount ? Math.round(params.amount * 100) : 999;
   } else if (productId === 'membership') {
-    productName = 'Sillow Mill - Annual Pioneer Member Pass';
-    productDescription = 'Annual all-inclusive pass: all digital packs, stems, comic & monthly drops.';
+    productName = 'Sillow Mill - Annual Pioneer Member Pass (All-Inclusive)';
+    productDescription = 'Annual Pioneer Member Pass with Physical Welcome Booklet, Collector Pass Card, Signed Bookmark & Full Digital Vault Access';
     unitAmount = params.amount ? Math.round(params.amount * 100) : 6000;
   } else if (params.productTitle && params.amount) {
     productName = sanitizeStripeString(params.productTitle);

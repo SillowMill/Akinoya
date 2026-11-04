@@ -577,10 +577,22 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
   };
 
   const handleDownloadFile = (file: DriveFile) => {
-    soundManager.playTone(330, 0.08);
-    alert(
-      `ANNUAL PASS REQUIRED — Downloads unlock for Paid Annual Members on January 9, 2027 (€60/year).\n\nFile: ${file.name} (${file.size})`
-    );
+    soundManager.playTone(660, 0.08);
+    if (!file.isLocked || isMember) {
+      if (file.downloadUrl) {
+        const a = document.createElement('a');
+        a.href = file.downloadUrl;
+        a.download = file.downloadFileName || file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+      }
+      if (file.previewImg) {
+        setSelectedFileForPreview(file);
+        return;
+      }
+    }
     if (!isMember && onOpenAuthModal) {
       onOpenAuthModal();
     }
@@ -964,10 +976,23 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                         <button
                           type="button"
                           onClick={() => handleDownloadFile(file)}
-                          className="px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300"
+                          className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            !file.isLocked || isMember
+                              ? 'bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-300'
+                              : 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300'
+                          }`}
                         >
-                          <Lock className="w-3 h-3 text-amber-400" />
-                          <span>LOCKED · JAN 9</span>
+                          {!file.isLocked || isMember ? (
+                            <>
+                              <Download className="w-3 h-3 text-cyan-400" />
+                              <span>DOWNLOAD</span>
+                            </>
+                          ) : (
+                            <>
+                              <Lock className="w-3 h-3 text-amber-400" />
+                              <span>LOCKED · JAN 9</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -1073,10 +1098,23 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                 <button
                   type="button"
                   onClick={() => handleDownloadFile(selectedFileForPreview)}
-                  className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300 font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-2"
+                  className={`px-4 py-2 rounded-xl font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                    !selectedFileForPreview.isLocked || isMember
+                      ? 'bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-300'
+                      : 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300'
+                  }`}
                 >
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>ANNUAL PASS REQUIRED (€60/YEAR)</span>
+                  {!selectedFileForPreview.isLocked || isMember ? (
+                    <>
+                      <Download className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>DOWNLOAD FILE</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-3.5 h-3.5 text-amber-400" />
+                      <span>ANNUAL PASS REQUIRED (€60/YEAR)</span>
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>

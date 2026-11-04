@@ -153,12 +153,12 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
       onOpenCheckout({
         id: 'membership',
         title: 'Sillow Mill — Annual Pioneer Member Pass',
-        subtitle: 'Complete Vault Access · All Digital Packs, Stems & Comic Included',
+        subtitle: 'Pioneer Pass, Physical Welcome Booklet & Signed Bookmark',
         badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
         priceValue: '60.00',
-        isPhysical: false,
-        allocationNotice: 'All-Inclusive Pass · Releases January 9, 2027',
-        deliveryNotice: 'Permanent Account Linking · Never Lose Your Files Guarantee',
+        isPhysical: true,
+        allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
+        deliveryNotice: 'Free Express Delivery · Physical Shipping + Digital Sync',
       });
       return;
     }
@@ -391,24 +391,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     {/* Desktop / Tablet CTA Button (Preserved inside right column on sm+) */}
                     <button
                       type="button"
-                      onClick={() => {
-                        soundManager.playTone(660, 0.08);
-                        if (onOpenCheckout) {
-                          onOpenCheckout({
-                            id: 'comic',
-                            title: "Sillow Mill — Bingäa (Collector's Graphic Novel)",
-                            subtitle: "Bingäa Issue #01 — Collector's Print",
-                            badge: "PHYSICAL PRINT · COLLECTOR'S ITEM",
-                            priceValue: "14.99",
-                            isPhysical: true,
-                            image: bingaaComicCover,
-                            allocationNotice: "Wave 2 Allocation · QR Code Verified",
-                            deliveryNotice: "Free Express Delivery",
-                          });
-                        } else {
-                          handleComicClick();
-                        }
-                      }}
+                      onClick={handleComicClick}
                       className="hidden sm:flex w-full mt-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs shadow-[0_0_15px_rgba(56,189,248,0.3)] transition-all cursor-pointer items-center justify-center gap-2 min-h-[40px] transform-gpu hover:scale-[1.01]"
                     >
                       <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
@@ -421,24 +404,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 {/* Mobile Full-Width CTA Button (Exclusively on mobile < sm) */}
                 <button
                   type="button"
-                  onClick={() => {
-                    soundManager.playTone(660, 0.08);
-                    if (onOpenCheckout) {
-                      onOpenCheckout({
-                        id: 'comic',
-                        title: "Sillow Mill — Bingäa (Collector's Graphic Novel)",
-                        subtitle: "Bingäa Issue #01 — Collector's Print",
-                        badge: "PHYSICAL PRINT · COLLECTOR'S ITEM",
-                        priceValue: "14.99",
-                        isPhysical: true,
-                        image: bingaaComicCover,
-                        allocationNotice: "Wave 2 Allocation · QR Code Verified",
-                        deliveryNotice: "Free Express Delivery",
-                      });
-                    } else {
-                      handleComicClick();
-                    }
-                  }}
+                  onClick={handleComicClick}
                   className="sm:hidden w-full mt-1 py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 active:from-cyan-400 active:to-indigo-500 text-white font-mono font-extrabold text-xs shadow-[0_0_20px_rgba(56,189,248,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.99]"
                 >
                   <ShoppingBag className="w-4 h-4 shrink-0" />

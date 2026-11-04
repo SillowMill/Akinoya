@@ -51,31 +51,24 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
     }
   };
 
-  const handleUpgradeCheckout = async () => {
+  const handleUpgradeCheckout = () => {
     soundManager.playTone(660, 0.08);
-    setStatusNotice(null);
-    try {
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: 'membership',
-          product: 'community_membership',
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-          return;
-        }
-      }
-
-      // Display polite in-modal status notice without any OS error ping
-      setStatusNotice('Hé, de Annual Member Pass (€60/jaar) wordt officieel gelanceerd op 9 januari 2027. Voor vroege handmatige provisioning kun je contact opnemen via Odi@sillowmill.com.');
-    } catch {
-      setStatusNotice('Annual Membership public checkout initialiseert voor de officiële launch op 9 januari 2027.');
+    handleClose();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('akinoya-open-checkout', {
+          detail: {
+            id: 'membership',
+            title: 'Sillow Mill — Annual Pioneer Member Pass',
+            subtitle: 'Pioneer Pass, Physical Welcome Booklet & Signed Bookmark',
+            badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
+            priceValue: '60.00',
+            isPhysical: true,
+            allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
+            deliveryNotice: 'Free Express Delivery · Physical Shipping + Digital Sync',
+          },
+        })
+      );
     }
   };
 

@@ -141,22 +141,13 @@ apiRouter.post('/create-checkout-session', async (req: Request, res: Response): 
     } = req.body || {};
     const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
 
-    const isMembership = req.body?.plan === 'membership' || req.body?.product === 'community_membership' || productId === 'membership';
-    if (isMembership) {
-      res.status(403).json({
-        error: 'Community membership pass public checkout is locked until launch on 09/01/2027.',
-        isLocked: true,
-      });
-      return;
-    }
-
     const session = await createComicCheckoutSession({
       customerEmail,
       customerName,
       shippingAddress,
       shippingCity,
       apartmentBus,
-      productId,
+      productId: productId || (req.body?.plan === 'membership' ? 'membership' : undefined),
       productTitle,
       amount,
       isPhysical,
