@@ -34,7 +34,7 @@ export const isPhysicalProduct = (product?: Partial<CheckoutProductInfo> | null)
   // If explicitly specified as false (e.g. Digital Copy of Bingäa €9.99, Vocal Pack €19.99), it is strictly digital
   if (product.isPhysical === false) return false;
   // Digital add-on product IDs are never physical
-  if (product.id === 'comic-digital' || product.id === 'vocal' || product.id === 'logic-visualizer') {
+  if (product.id === 'comic-digital' || product.id === 'vocal' || product.id === 'workflow' || product.id === 'logic-visualizer') {
     return false;
   }
   // Physical deliveries: Annual Member Pass (€60) & Physical Comic Hardcover/Softcover Print (€14.99)

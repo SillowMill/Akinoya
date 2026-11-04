@@ -85,7 +85,7 @@ export const VAULT_PRODUCTS: VaultProduct[] = [
   },
   {
     id: 'production-workflow-assets',
-    name: '2D Visualizer Production & Logic Pro Assets',
+    name: 'Workflow',
     subtitle: 'Visualizer workflow, vocal chain & Logic Pro template',
     priceRangeLabel: '€ 29.99 – € 39.99',
     listPrice: 34.99,

@@ -122,7 +122,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         if (list.includes('membership') || list.includes('all-inclusive')) return true;
         if (item.productId && list.includes(item.productId)) return true;
         if ((item.productId === 'comic' || item.productId === 'comic-digital') && (list.includes('comic') || list.includes('comic-digital'))) return true;
-        if ((item.productId === 'membership' || item.productId === 'logic-visualizer') && (list.includes('membership') || list.includes('logic-visualizer'))) return true;
+        if ((item.productId === 'workflow' || item.productId === 'logic-visualizer') && (list.includes('workflow') || list.includes('logic-visualizer'))) return true;
       }
     } catch {}
     return false;
@@ -168,17 +168,39 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         allocationNotice: 'Pristine 4K Resolution + Physical Collector Softcover Book',
         deliveryNotice: 'Free Express Delivery · Physical Shipping + Instant Digital Sync',
       };
-    } else {
-      // Folder 1 (2D Production Logo & Logic Pro Assets) & Annual Member Pass
+    } else if (productId === 'workflow' || productId === 'logic-visualizer') {
+      productDetails = {
+        id: 'workflow',
+        title: 'Sillow Mill — Workflow',
+        subtitle: 'Official 2D visualizer workflow, Enerwise sound architecture, vocal chain & dedicated Logic Pro template',
+        badge: 'WORKFLOW & LOGIC PRO · €29.99',
+        priceValue: '29.99',
+        isPhysical: false,
+        deliveryNotice: 'Instant Digital Delivery · Vault Access',
+        allocationNotice: 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template',
+      };
+    } else if (productId === 'membership') {
       productDetails = {
         id: 'membership',
         title: 'Sillow Mill — Annual Pioneer Member Pass',
-        subtitle: 'Folder 1 (2D & Logic Assets), all 3 Master Folders + Physical Welcome Booklet',
+        subtitle: 'Folder 1 (Workflow), all 3 Master Folders + Physical Welcome Booklet',
         badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
         priceValue: '60.00',
         isPhysical: true,
         allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
         deliveryNotice: 'Free Express Delivery · Physical Shipping + Digital Sync',
+      };
+    } else {
+      // Default / Folder 1 -> Workflow add-on (€29.99, digital)
+      productDetails = {
+        id: 'workflow',
+        title: 'Sillow Mill — Workflow',
+        subtitle: 'Official 2D visualizer workflow, Enerwise sound architecture, vocal chain & dedicated Logic Pro template',
+        badge: 'WORKFLOW & LOGIC PRO · €29.99',
+        priceValue: '29.99',
+        isPhysical: false,
+        deliveryNotice: 'Instant Digital Delivery · Vault Access',
+        allocationNotice: 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template',
       };
     }
 
@@ -190,19 +212,19 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
   // Reorganized Top-Level Master Folders & Dissected Pipeline Structure
   const DRIVE_HIERARCHY: DriveFolder[] = [
     // ═══════════════════════════════════════════════════════════════════════
-    // MASTER FOLDER 1: 2D Production Logo & Logic Pro Assets
+    // MASTER FOLDER 1: Workflow
     // ═══════════════════════════════════════════════════════════════════════
     {
       id: 'folder-01',
-      name: '01_2D_Production_Logo_Logic_Pro_Assets',
-      displayName: 'Folder 1 · 2D Production Logo & Logic Pro Assets',
-      shortName: '01 · 2D & Logic Pro Assets',
+      name: '01_Workflow',
+      displayName: 'Folder 1 · Workflow',
+      shortName: '01 · Workflow',
       richIcon: '🎛️',
       category: 'Dissected 5-Stage Production Pipeline, Storyboards & DAW Templates',
       itemCount: 23,
       totalSize: '1.28 GB',
       isLocked: true,
-      productId: 'membership',
+      productId: 'workflow',
       subfolders: [
         {
           id: 'stage-01',
@@ -214,7 +236,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           itemCount: 6,
           totalSize: '33.1 MB',
           isLocked: true,
-          productId: 'membership',
+          productId: 'workflow',
           files: [
             {
               id: 'file-01-1',
@@ -225,7 +247,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
               modified: 'Oct 12, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage01Img,
               description: 'Official 18-panel director breakdown with scene annotations, camera focal notes, and timing charts.',
             },
@@ -238,7 +260,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
               modified: 'Oct 11, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage01Img,
               description: 'Raw text notes from Odi detailing character motivation, pacing beats, and cinematic lighting cues.',
             },
@@ -251,7 +273,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
               modified: 'Oct 10, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage01Img,
               description: 'High-resolution CinemaScope letterbox keyframe grids with safety margins and title-safe overlays.',
             },
@@ -264,7 +286,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
               modified: 'Oct 09, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage01Img,
               description: 'Frame-by-frame beat breakdown of the emotional dance in the snow, translated into camera focal lengths.',
             },
@@ -277,7 +299,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
               modified: 'Oct 08, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage01Img,
               description: 'Mathematical tension curve tracking shot duration, camera velocity, and audio frequency peaks.',
             },
@@ -290,7 +312,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
               modified: 'Oct 07, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage01Img,
               description: 'Visual storyboard summary with shot descriptions, camera directions, and scene transitions.',
             },
@@ -306,7 +328,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           itemCount: 6,
           totalSize: '52.6 MB',
           isLocked: true,
-          productId: 'membership',
+          productId: 'workflow',
           files: [
             {
               id: 'file-02-1',
@@ -317,7 +339,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
               modified: 'Oct 14, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: sillowCharacterImg,
               description: 'The lead planetary explorer styled with distinct dreadlocks and a tactical harness.',
             },
@@ -330,7 +352,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
               modified: 'Oct 14, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: odiCharacterImg,
               description: 'The scout mechanic without dreadlocks, wearing tactical reconnaissance armor.',
             },
@@ -343,7 +365,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
               modified: 'Oct 14, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: millCharacterImg,
               description: 'The alien bio-analyst in her environmental suit with the mushroom helmet archetype.',
             },
@@ -356,7 +378,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
               modified: 'Oct 10, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: moodboardImg,
               description: 'Official Mood.png reference used to condition all atmospheric lighting and creature designs.',
             },
@@ -369,7 +391,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
               modified: 'Oct 09, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: akinoyaVistaImg,
               description: 'Master orbital perspective reference for Äkinoya twilight atmospheric curvature.',
             },
@@ -382,7 +404,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
               modified: 'Oct 08, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               description: 'Digital color swatch palette containing locked hex values: #00f2fe (Cyan Galaxy), #b142f0 (Purple Void).',
             },
           ],
@@ -397,7 +419,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           itemCount: 3,
           totalSize: '108.5 MB',
           isLocked: true,
-          productId: 'membership',
+          productId: 'workflow',
           files: [
             {
               id: 'file-03-1',
@@ -408,7 +430,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
               modified: 'Oct 14, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               description: 'Dedicated Logic Pro project template featuring Enerwise sound architecture, my vocal chain routing, bus compression, and spatial imaging.',
             },
             {
@@ -420,7 +442,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
               modified: 'Oct 12, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               description: 'Production DAW project file with routing, custom operator chains, and analog saturation racks ready to load.',
             },
             {
@@ -432,7 +454,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
               modified: 'Oct 11, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               description: 'Official Enerwise sound architecture channel strip preset for Logic Pro, delivering pristine spectral clarity and warmth.',
             },
           ],
@@ -447,7 +469,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           itemCount: 4,
           totalSize: '601.4 MB',
           isLocked: true,
-          productId: 'membership',
+          productId: 'workflow',
           files: [
             {
               id: 'file-04-1',
@@ -458,7 +480,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
               modified: 'Oct 14, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage03Img,
               description: 'Fully rigged 3D cockpit scene with animated camera tracking curves (CAM_TRAJ_A) and forward velocity paths.',
             },
@@ -471,7 +493,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
               modified: 'Oct 12, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage03Img,
               description: 'High-speed hyperspace warp tunnel polygonal mesh with vertex color coordinates for emissive shader passes.',
             },
@@ -484,7 +506,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
               modified: 'Oct 11, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage03Img,
               description: 'Uncompressed 16-bit float depth and normal map sequence for multi-modal ControlNet video conditioning.',
             },
@@ -497,7 +519,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
               modified: 'Oct 10, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               description: 'Synthesized camera tracking coordinate points formatted for import into Nuke, After Effects, and Blender.',
             },
           ],
@@ -512,7 +534,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           itemCount: 4,
           totalSize: '90.7 MB',
           isLocked: true,
-          productId: 'membership',
+          productId: 'workflow',
           files: [
             {
               id: 'file-05-1',
@@ -523,7 +545,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
               modified: 'Oct 14, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage04Img,
               description: 'Centralized database containing 120 production-tested 4-block syntax prompts for Gemini 1.5 Pro and Imagen 3.',
             },
@@ -536,7 +558,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
               modified: 'Oct 12, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage04Img,
               description: 'Weighted negative token array designed to suppress digital plastic shaders, deformed geometry, and edge noise.',
             },
@@ -549,7 +571,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
               modified: 'Oct 10, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               description: 'Verified deterministic seed numbers yielding photorealistic results across Äkinoya cosmic planetary landscapes.',
             },
             {
@@ -561,7 +583,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
               modified: 'Oct 09, 2026',
               isLocked: true,
-              productId: 'membership',
+              productId: 'workflow',
               previewImg: stage05Img,
               description: 'Official 65x65x65 3D LUT cube calibrated for ACEScc and Rec.709 color spaces with custom film print density.',
             },

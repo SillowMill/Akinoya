@@ -4,6 +4,7 @@
  */
 
 export const MASTER_VAULT_FOLDER_IDS = {
+  WORKFLOW: 'folder-01',
   LOGIC_2D: 'folder-01',
   VOCAL_PACK: 'folder-02',
   BINGAA_DIGITAL: 'folder-03',

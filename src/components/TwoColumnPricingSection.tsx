@@ -96,11 +96,11 @@ const ADDON_PRODUCTS: AddonProduct[] = [
     icon: BookOpen,
   },
   {
-    id: 'logic-visualizer',
-    title: '2D Visualizer Production & Logic Pro Assets',
-    badge: '2D VISUALIZER WORKFLOW & LOGIC PRO',
+    id: 'workflow',
+    title: 'Workflow',
+    badge: 'WORKFLOW & LOGIC PRO',
     priceValue: '29.99',
-    category: 'VISUALIZERS & LOGIC PRO',
+    category: 'WORKFLOW & LOGIC PRO',
     subtitle: 'Official 2D visualizer workflow, Enerwise sound architecture, vocal chain & dedicated Logic Pro template.',
     description:
       'Full access to the official Community Hub workflow (the Äkinoya workflow), including the 2D visualizer production pipeline, Enerwise sound architecture, vocal chain (my vocal chain), and dedicated Logic Pro template. (Excludes the separate Vocal Acapella & Remix Pack).',
@@ -319,7 +319,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
       )}
 
       {/* Two-Column Responsive Grid: Side-by-side on desktop (lg:grid-cols-2), cleanly stacked on tablet/mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
         {/* ========================================================= */}
         {/* COLUMN 1: Individual Add-ons & Physical Product (À La Carte) */}
         {/* ========================================================= */}
@@ -540,7 +540,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                                     allocationNotice:
                                       addon.id === 'vocal'
                                         ? 'Instant Master Stems · 24-bit / 48kHz WAV'
-                                        : addon.id === 'logic-visualizer'
+                                        : addon.id === 'workflow' || addon.id === 'logic-visualizer'
                                         ? 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template'
                                         : 'Pristine 4K Resolution · Web Reader + Offline PDF',
                                     deliveryNotice: 'Instant Digital Delivery · Vault Access',
@@ -616,7 +616,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
         {/* ========================================================= */}
         <div
           id="membership-pass-section"
-          className="relative flex flex-col rounded-3xl bg-gradient-to-b from-[#100d05] via-[#090804] to-black border-2 border-amber-400/80 p-4 xs:p-5 sm:p-7 lg:p-8 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.22)] scroll-mt-24"
+          className="relative flex flex-col rounded-3xl bg-gradient-to-b from-[#100d05] via-[#090804] to-black border-2 border-amber-400/80 p-4 xs:p-5 sm:p-7 lg:p-8 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.22)] scroll-mt-24 self-start h-fit w-full"
         >
           {/* Top Gold Glowing Highlight Bar */}
           <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 via-yellow-400 to-transparent pointer-events-none" />
@@ -724,7 +724,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     ✓
                   </span>
                   <span>
-                    <strong className="text-white">2D Visualizer Production &amp; Logic Pro Assets</strong> (Visualizer workflow, vocal chain &amp; Logic Pro template)
+                    <strong className="text-white">Workflow</strong> (Visualizer workflow, vocal chain &amp; Logic Pro template)
                   </span>
                 </li>
 
