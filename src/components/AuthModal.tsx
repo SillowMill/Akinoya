@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -65,13 +66,30 @@ export const AuthModal: React.FC = () => {
   React.useEffect(() => {
     if (!isAuthModalOpen) return;
 
+    const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
     const originalBodyOverflow = document.body.style.overflow;
     const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyPosition = document.body.style.position;
+    const originalBodyTop = document.body.style.top;
+    const originalBodyWidth = document.body.style.width;
     const originalTouchAction = document.body.style.touchAction;
 
+    document.body.classList.add('auth-modal-open');
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
     document.body.style.touchAction = 'none';
+
+    // Touch event listener to prevent background rubber-banding/scrolling on iOS
+    const preventTouch = (e: TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest?.('.auth-gateway-scrollable')) {
+        if (e.cancelable) e.preventDefault();
+      }
+    };
+    document.addEventListener('touchmove', preventTouch, { passive: false });
 
     // Keyboard support: Escape closes modal
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -83,10 +101,16 @@ export const AuthModal: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      document.body.classList.remove('auth-modal-open');
       document.body.style.overflow = originalBodyOverflow;
       document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.position = originalBodyPosition;
+      document.body.style.top = originalBodyTop;
+      document.body.style.width = originalBodyWidth;
       document.body.style.touchAction = originalTouchAction;
+      document.removeEventListener('touchmove', preventTouch);
       window.removeEventListener('keydown', handleKeyDown);
+      window.scrollTo(0, scrollY);
     };
   }, [isAuthModalOpen, closeAuthModal]);
 
@@ -205,11 +229,15 @@ export const AuthModal: React.FC = () => {
     }
   };
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/90 backdrop-blur-md overflow-hidden"
-        style={{ touchAction: 'none' }}
+        className="fixed inset-0 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/90 backdrop-blur-md overflow-hidden select-none"
+        style={{
+          zIndex: 100000,
+          touchAction: 'none',
+          paddingBottom: 'max(24px, calc(env(safe-area-inset-bottom, 0px) + 20px))',
+        }}
       >
         {/* Backdrop click */}
         <div
@@ -224,8 +252,11 @@ export const AuthModal: React.FC = () => {
           exit={{ opacity: 0, y: 16, scale: 0.96 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="auth-gateway relative z-10 w-full sm:max-w-md max-h-[92dvh] sm:max-h-[88vh] flex flex-col bg-[#050811] border border-cyan-500/40 rounded-2xl sm:rounded-3xl shadow-[0_0_50px_rgba(56,189,248,0.25)] overflow-hidden my-auto overscroll-contain"
-          style={{ touchAction: 'pan-y' }}
+          className="auth-gateway relative z-10 w-full sm:max-w-md flex flex-col bg-[#050811] border border-cyan-500/40 rounded-2xl sm:rounded-3xl shadow-[0_0_50px_rgba(56,189,248,0.25)] overflow-hidden my-auto overscroll-contain select-text"
+          style={{
+            maxHeight: 'min(86dvh, 720px)',
+            touchAction: 'pan-y',
+          }}
         >
           {/* Ambient Glow */}
           <div className="absolute top-0 right-0 w-44 h-44 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -251,7 +282,13 @@ export const AuthModal: React.FC = () => {
           </div>
 
           {/* Scrollable Content Body with Internal Overflow */}
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 overscroll-contain [scrollbar-width:thin] touch-pan-y pb-6">
+          <div
+            className="auth-gateway-scrollable flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 overscroll-contain [scrollbar-width:thin] touch-pan-y"
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              paddingBottom: 'max(28px, calc(env(safe-area-inset-bottom, 0px) + 24px))',
+            }}
+          >
             {/* Already Claimed / Other Account VIP Link Notice Banner */}
             {vipLinkError && (
               <div className="p-4 rounded-xl bg-gradient-to-r from-red-950/90 via-rose-950/85 to-red-950/90 border border-red-500/60 text-red-200 shadow-[0_0_25px_rgba(239,68,68,0.3)] flex items-start gap-3 select-none">
@@ -336,16 +373,18 @@ export const AuthModal: React.FC = () => {
               </div>
             )}
 
-          {/* Never Lose Your Files Guarantee Badge for Signup / Purchases */}
+          {/* Never Lose Your Files Guarantee Badge for Signup */}
           {mode === 'signup' && (
-            <div className="mt-3.5 p-3 rounded-xl bg-gradient-to-r from-emerald-950/70 via-cyan-950/50 to-emerald-950/70 border border-emerald-400/40 text-emerald-200 flex items-start gap-2.5 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <div className="text-left text-xs leading-relaxed">
-                <span className="font-mono font-bold uppercase tracking-wider text-emerald-300 block text-[11px]">
-                  Never Lose Your Files Guarantee
+            <div className="mt-3.5 p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/80 via-cyan-950/50 to-emerald-950/80 border border-emerald-400/50 text-emerald-200 flex items-start gap-3 shadow-[0_0_25px_rgba(16,185,129,0.2)]">
+              <div className="p-2 rounded-xl bg-emerald-500/20 border border-emerald-400/60 text-emerald-300 shrink-0 mt-0.5 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="text-left text-xs leading-relaxed space-y-0.5 flex-1 min-w-0">
+                <span className="font-mono font-black uppercase tracking-wider text-emerald-300 block text-xs">
+                  Never lose your files
                 </span>
-                <span className="text-white/80 font-sans text-[11px]">
-                  All purchased packs, comic copies, and membership assets are permanently linked to your profile. Re-download anytime via the Drive Asset Vault.
+                <span className="text-emerald-100/90 font-sans text-[11.5px] block leading-normal">
+                  Do the drive as it falls
                 </span>
               </div>
             </div>
@@ -756,4 +795,6 @@ export const AuthModal: React.FC = () => {
       </div>
     </AnimatePresence>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

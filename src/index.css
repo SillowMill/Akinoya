@@ -888,6 +888,14 @@ canvas {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Ensure mobile bottom navigation stays completely hidden when Auth Gateway modal is active */
+body.auth-modal-open .scifi-bottom-nav {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 /* Horizontal Thumb-Swipe Container inside Bottom Tray */
 .scifi-bottom-tray-scroll {
   display: flex;
