@@ -2537,7 +2537,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
                     </div>
 
-                    {/* Wave 2 Notification / Waitlist Primary CTA */}
+                    {/* Sillow Mill Newsletter / Dispatch List Primary CTA */}
                     <div className="pt-1.5">
                       {!showWaitlistForm && !isWaitlistSubmitted ? (
                         <button
@@ -2546,24 +2546,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             setShowWaitlistForm(true);
                             soundManager.playTone(580, 0.06);
                           }}
-                          className="w-full p-3.5 sm:px-5 sm:py-4 rounded-xl bg-gradient-to-r from-amber-500/20 via-cyan-500/15 to-amber-500/20 hover:from-amber-500/30 hover:via-cyan-500/25 hover:to-amber-500/30 border-2 border-amber-400/60 hover:border-amber-300 shadow-[0_0_24px_rgba(245,158,11,0.25)] hover:shadow-[0_0_32px_rgba(245,158,11,0.4)] transition-all flex items-center justify-between gap-3 cursor-pointer group min-h-[52px]"
+                          className="w-full p-3.5 sm:px-5 sm:py-4 rounded-xl bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-cyan-500/20 hover:from-cyan-500/30 hover:via-blue-500/25 hover:to-cyan-500/30 border-2 border-cyan-400/50 hover:border-cyan-300 shadow-[0_0_24px_rgba(56,189,248,0.2)] hover:shadow-[0_0_32px_rgba(56,189,248,0.35)] transition-all flex items-center justify-between gap-3 cursor-pointer group min-h-[52px]"
                         >
                           <div className="flex items-center gap-3 min-w-0 text-left">
-                            <div className="w-9 h-9 rounded-lg bg-amber-400/20 border border-amber-300/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-transform">
-                              <Bell className="w-4 h-4 text-amber-300 animate-pulse" />
+                            <div className="w-9 h-9 rounded-lg bg-cyan-400/20 border border-cyan-300/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.3)] group-hover:scale-105 transition-transform">
+                              <Mail className="w-4 h-4 text-cyan-300 animate-pulse" />
                             </div>
                             <div className="min-w-0">
-                              <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping inline-block" />
-                                <span>WHEN IS THE NEXT WAVE? · PRIORITY WHITELIST</span>
+                              <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-cyan-300 uppercase tracking-wider">
+                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping inline-block" />
+                                <span>STAY UPDATED · DISPATCH LIST</span>
                               </div>
-                              <div className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-amber-100 tracking-wide truncate">
-                                Get notified when it's the next wave
+                              <div className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-cyan-100 tracking-wide truncate">
+                                Subscribe to the Sillow Mill newsletter for drop alerts and updates
                               </div>
                             </div>
                           </div>
-                          <span className="shrink-0 px-3 py-1.5 rounded-lg bg-amber-400 group-hover:bg-amber-300 text-black font-mono text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_14px_rgba(245,158,11,0.4)] transition-all">
-                            <span>NOTIFY ME</span>
+                          <span className="shrink-0 px-3.5 py-1.5 rounded-lg bg-cyan-400 group-hover:bg-cyan-300 text-black font-mono text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_14px_rgba(56,189,248,0.4)] transition-all">
+                            <span>SUBSCRIBE</span>
                             <ArrowRight className="w-3.5 h-3.5" />
                           </span>
                         </button>
@@ -2574,10 +2574,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           </div>
                           <div>
                             <div className="font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
-                              WAVE 2 PRIORITY WHITELIST CONFIRMED
+                              NEWSLETTER SUBSCRIPTION CONFIRMED
                             </div>
                             <div className="text-white/80 text-[11px] mt-0.5">
-                              You're registered on the official Wave 2 Whitelist! We'll email you first as soon as the next drop opens.
+                              You're subscribed to the official Sillow Mill dispatch list! You'll receive drop alerts, production logs, and project updates directly in your inbox.
                             </div>
                           </div>
                         </div>
@@ -2598,37 +2598,37 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                   email: cleanEmail,
-                                  source: 'Comic Drop Showcase — Next Wave CTA',
-                                  chapter: 'Bingäa Issue #1 — Wave 2 Drop Notification',
+                                  source: 'Comic Drop Showcase — Newsletter Dispatch List',
+                                  chapter: 'Sillow Mill Newsletter & Drop Alerts',
                                 }),
                               });
                               const data = await res.json().catch(() => ({}));
                               if (res.ok && data?.success) {
                                 setIsWaitlistSubmitted(true);
                                 try {
-                                  localStorage.setItem('akinoya_wave2_waitlist_subscribed', cleanEmail);
+                                  localStorage.setItem('akinoya_newsletter_subscribed', cleanEmail);
                                   localStorage.setItem('akinoya_whitelist_subscribed', cleanEmail);
                                 } catch {}
                                 soundManager.playUnlockChime();
                               } else {
-                                setWaitlistError(data?.message || 'Could not register email. Please try again.');
+                                setWaitlistError(data?.message || 'Could not subscribe. Please try again.');
                               }
                             } catch {
                               setIsWaitlistSubmitted(true);
                               try {
-                                localStorage.setItem('akinoya_wave2_waitlist_subscribed', cleanEmail);
+                                localStorage.setItem('akinoya_newsletter_subscribed', cleanEmail);
                               } catch {}
                               soundManager.playUnlockChime();
                             } finally {
                               setIsSubmittingWaitlist(false);
                             }
                           }}
-                          className="p-3.5 sm:p-4 rounded-xl bg-[#090e1a] border-2 border-amber-400/50 shadow-[0_0_24px_rgba(245,158,11,0.2)] space-y-2.5"
+                          className="p-3.5 sm:p-4 rounded-xl bg-[#090e1a] border-2 border-cyan-400/50 shadow-[0_0_24px_rgba(56,189,248,0.2)] space-y-2.5"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[10.5px] font-mono font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                              <Bell className="w-3.5 h-3.5 text-amber-400" />
-                              <span>WAVE 2 DROP NOTIFICATION &amp; PRIORITY WHITELIST</span>
+                            <span className="text-[10.5px] font-mono font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                              <Mail className="w-3.5 h-3.5 text-cyan-400" />
+                              <span>STAY UPDATED · DISPATCH LIST</span>
                             </span>
                             <button
                               type="button"
@@ -2640,7 +2640,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                           </div>
                           <div className="flex flex-col sm:flex-row gap-2">
                             <div className="relative flex-1">
-                              <Mail className="w-4 h-4 text-amber-300/70 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              <Mail className="w-4 h-4 text-cyan-300/70 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                               <input
                                 type="email"
                                 required
@@ -2649,16 +2649,16 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                   setWaitlistEmail(e.target.value);
                                   if (waitlistError) setWaitlistError(null);
                                 }}
-                                placeholder="Enter your email for Wave 2 priority access..."
-                                className="w-full bg-black/90 border border-amber-400/40 focus:border-amber-300 rounded-xl pl-10 pr-3.5 py-2.5 text-base sm:text-xs text-white placeholder-white/40 outline-none font-mono"
+                                placeholder="Enter your email for drop alerts and updates..."
+                                className="w-full bg-black/90 border border-cyan-400/40 focus:border-cyan-300 rounded-xl pl-10 pr-3.5 py-2.5 text-base sm:text-xs text-white placeholder-white/40 outline-none font-mono"
                               />
                             </div>
                             <button
                               type="submit"
                               disabled={isSubmittingWaitlist}
-                              className="px-5 py-2.5 rounded-xl text-xs font-mono font-extrabold uppercase tracking-wider bg-amber-400 hover:bg-amber-300 text-black transition-all cursor-pointer whitespace-nowrap min-h-[42px] shadow-[0_0_15px_rgba(245,158,11,0.35)] disabled:opacity-50"
+                              className="px-5 py-2.5 rounded-xl text-xs font-mono font-extrabold uppercase tracking-wider bg-cyan-400 hover:bg-cyan-300 text-black transition-all cursor-pointer whitespace-nowrap min-h-[42px] shadow-[0_0_15px_rgba(56,189,248,0.35)] disabled:opacity-50 flex items-center justify-center gap-1.5"
                             >
-                              {isSubmittingWaitlist ? 'Registering...' : 'Notify Me →'}
+                              {isSubmittingWaitlist ? 'Subscribing...' : 'SUBSCRIBE'}
                             </button>
                           </div>
                           {waitlistError && (
