@@ -91,6 +91,7 @@ import {
   isPostLaunch,
   openMembershipGateModal,
   hasPaidMembership,
+  showLaunchNotice,
 } from '../utils/pioneer';
 import { VAULT_STAGE_FOLDER_IDS, VAULT_STAGE_NAMES, getVaultFolderIdForStage } from '../utils/drive';
 import { scrollElementIntoContainer } from '../utils/scroll';
@@ -989,41 +990,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
   // Stripe Checkout Handler for Annual Pass (€60/Year)
   const handleStripeUpgrade = async () => {
-    if (isMembershipLaunchLocked) {
-      soundManager.playTone(330, 0.08);
-      alert('Community membership pass public checkout launches on 09/01/2027.');
-      return;
-    }
-    setIsSubscribing(true);
-    soundManager.playTone(660, 0.08);
-
-    try {
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: 'membership',
-          product: 'community_membership',
-          customerName: patronName || 'Community Member',
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-
-      if (data?.error) {
-        soundManager.playError();
-        alert(`Checkout Notice: ${data.error}`);
-      }
-    } catch {
-      soundManager.playError();
-      alert('Stripe subscription endpoint initializing.');
-    } finally {
-      setIsSubscribing(false);
-    }
+    soundManager.playTone(660, 0.05);
+    showLaunchNotice(
+      'Hé, het wordt pas gelanceerd op 9 januari 2027 · De volledige Member Pass, downloads en master visualizer packs ontgrendelen op de officiële launch.'
+    );
   };
 
   // Asset Vault Action Handler (Navigates internally to Drive Asset Vault)

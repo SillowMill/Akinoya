@@ -83,6 +83,7 @@ import {
   SectorClaimRecord,
   isOdiFounderAccount,
   isVipAccount,
+  showLaunchNotice,
 } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { VisualizerPlayerModal } from './VisualizerPlayerModal';
@@ -1152,40 +1153,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           });
 
   const handlePerksStripeCheckout = async () => {
-    if (isMembershipLaunchLocked) {
-      soundManager.playTone(330, 0.08);
-      return;
-    }
-    setIsSubscribing(true);
-    soundManager.playTone(660, 0.08);
-
-    try {
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: 'membership',
-          product: 'community_membership',
-          customerName: holderName || 'Community Member',
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-
-      if (data?.error) {
-        soundManager.playError();
-        alert(`Checkout Notice: ${data.error}`);
-      }
-    } catch {
-      soundManager.playError();
-      alert('Stripe subscription endpoint initializing.');
-    } finally {
-      setIsSubscribing(false);
-    }
+    soundManager.playTone(660, 0.05);
+    showLaunchNotice(
+      'Hé, het wordt pas gelanceerd op 9 januari 2027 · De volledige Member Pass, downloads en master visualizer packs ontgrendelen op de officiële launch.'
+    );
   };
   const [showComicReader, setShowComicReader] = useState(false);
   const [showCoverPreview, setShowCoverPreview] = useState(false);

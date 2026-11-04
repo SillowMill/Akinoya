@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   MicVocal,
@@ -21,7 +21,7 @@ import {
   Users,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
-import { openMembershipGateModal } from '../utils/pioneer';
+import { openMembershipGateModal, showLaunchNotice } from '../utils/pioneer';
 import { useAuth } from '../context/AuthContext';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 
@@ -118,6 +118,44 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
   const { isAuthenticated, openAuthModal } = useAuth();
   const [expandedAddonId, setExpandedAddonId] = useState<string | null>(null);
   const [reservationNotice, setReservationNotice] = useState<string | null>(null);
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showNotice = (msg: string) => {
+    soundManager.playTone(660, 0.05);
+    setReservationNotice(msg);
+    if (noticeTimerRef.current) {
+      clearTimeout(noticeTimerRef.current);
+    }
+    noticeTimerRef.current = setTimeout(() => {
+      setReservationNotice(null);
+    }, 6500);
+  };
+
+  useEffect(() => {
+    const handleLaunchNotice = (e: Event) => {
+      const customEvent = e as CustomEvent<{ message?: string }>;
+      showNotice(
+        customEvent.detail?.message ||
+          'Hé, het wordt pas gelanceerd op 9 januari 2027 · De volledige Member Pass & alle downloads ontgrendelen op de officiële launch.'
+      );
+    };
+
+    window.addEventListener('akinoya-launch-notice', handleLaunchNotice);
+    return () => {
+      window.removeEventListener('akinoya-launch-notice', handleLaunchNotice);
+      if (noticeTimerRef.current) {
+        clearTimeout(noticeTimerRef.current);
+      }
+    };
+  }, []);
+
+  const scrollToMembershipPass = () => {
+    soundManager.playTone(660, 0.04);
+    const el = document.getElementById('membership-pass-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const handleCommunityClick = () => {
     soundManager.playTone(600, 0.04);
@@ -134,23 +172,10 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
   };
 
   const handleJoinPassClick = () => {
-    soundManager.playTone(660, 0.08);
-    if (!isAuthenticated) {
-      if (onOpenAuthModal) {
-        onOpenAuthModal();
-      } else {
-        openAuthModal(
-          'signup',
-          'Create your account to secure your purchases with our Never Lose Your Files guarantee.'
-        );
-      }
-      return;
-    }
-    if (onJoinMemberPass) {
-      onJoinMemberPass();
-    } else {
-      openMembershipGateModal();
-    }
+    // Elegant visual notice matching desktop pre-launch protocol, zero harsh buzzers
+    showNotice(
+      'Hé, het wordt pas gelanceerd op 9 januari 2027 · De volledige Member Pass, downloads en master visualizer packs ontgrendelen op de officiële launch.'
+    );
   };
 
   const handleComicClick = () => {
@@ -182,26 +207,46 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
       aria-label="Pricing and Membership Options"
       className={`w-full max-w-7xl mx-auto space-y-6 transform-gpu ${className}`}
     >
-      {/* Reservation Toast Notice */}
+      {/* High-End Floating HUD Toast Notice (Always visible on mobile, tablet & desktop) */}
       <AnimatePresence>
         {reservationNotice && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="p-4 rounded-2xl bg-emerald-950/90 border border-emerald-400/50 shadow-[0_0_25px_rgba(16,185,129,0.3)] flex items-center justify-between gap-3 text-emerald-200 text-xs sm:text-sm font-mono"
+            initial={{ opacity: 0, y: -24, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-[150] max-w-xl w-[92vw] sm:w-auto pointer-events-auto"
           >
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>{reservationNotice}</span>
+            <div className="relative overflow-hidden rounded-2xl px-4 sm:px-5 py-3.5 backdrop-blur-2xl bg-[#080d1a]/95 border-2 border-amber-400/70 shadow-[0_12px_45px_rgba(0,0,0,0.9),0_0_35px_rgba(245,158,11,0.4)] flex items-center justify-between gap-3 sm:gap-4 text-white">
+              {/* Gold & Cyan Dual Glow */}
+              <div className="absolute inset-0 pointer-events-none opacity-20 bg-gradient-to-r from-amber-500/30 via-yellow-400/20 to-cyan-500/20" />
+              <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-300 to-transparent pointer-events-none" />
+
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-amber-950/90 border border-amber-400/60 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.4)] text-amber-300">
+                  <Sparkles className="w-4 h-4 animate-pulse" />
+                </div>
+                <div className="space-y-0.5 text-left min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-amber-300">
+                      Release Protocol · 9 Januari 2027
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm font-sans text-white/95 font-medium leading-snug">
+                    {reservationNotice}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setReservationNotice(null)}
+                className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+                aria-label="Sluit melding"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setReservationNotice(null)}
-              className="p-1 rounded-md text-emerald-400/70 hover:text-emerald-200 cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -269,10 +314,10 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   <ArrowRight className="w-3.5 h-3.5 text-cyan-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
                 </button>
 
-                {/* Join Member Pass Button (Identical High-End Build to Community Hub) */}
+                {/* Join Member Pass Button (Smooth Anchor Scroll to Membership Pass Section) */}
                 <button
                   type="button"
-                  onClick={handleJoinPassClick}
+                  onClick={scrollToMembershipPass}
                   className="w-full sm:w-auto group relative px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
                 >
                   <Crown className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
@@ -477,10 +522,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                           <div className="flex flex-col sm:flex-row gap-2 pt-1">
                             <button
                               type="button"
-                              onClick={() => {
-                                soundManager.playTone(660, 0.05);
-                                handleJoinPassClick();
-                              }}
+                              onClick={scrollToMembershipPass}
                               className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(245,158,11,0.3)] min-h-[40px]"
                             >
                               <Crown className="w-4 h-4 fill-black text-black shrink-0" />
@@ -505,10 +547,9 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                                   }
                                   return;
                                 }
-                                setReservationNotice(
+                                showNotice(
                                   `${addon.title} (€ ${addon.priceValue}) has been reserved and linked to your account with our 'Never Lose Your Files' guarantee. Complete download bundle unlocks on January 9, 2027.`
                                 );
-                                setTimeout(() => setReservationNotice(null), 6000);
                               }}
                               className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-mono text-xs cursor-pointer text-center min-h-[40px] whitespace-nowrap inline-flex items-center justify-center gap-1"
                             >
@@ -539,10 +580,10 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 </div>
               </div>
 
-              {/* High-End Cyberpunk Glassmorphic CTA Button (Mobile-Optimized Typography, Zero Overflow) */}
+              {/* High-End Cyberpunk Glassmorphic CTA Button (Smooth Anchor Scroll to Membership Pass Section) */}
               <button
                 type="button"
-                onClick={handleJoinPassClick}
+                onClick={scrollToMembershipPass}
                 className="group relative w-full py-3.5 px-3 sm:px-5 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-[11px] xs:text-xs sm:text-[13px] tracking-wide shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98] min-h-[46px]"
               >
                 <Crown className="w-4 h-4 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
@@ -562,7 +603,10 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
         {/* ========================================================= */}
         {/* COLUMN 2: The Membership Pass (€ 60 / year) – All Included */}
         {/* ========================================================= */}
-        <div className="relative flex flex-col rounded-3xl bg-gradient-to-b from-[#100d05] via-[#090804] to-black border-2 border-amber-400/80 p-4 xs:p-5 sm:p-7 lg:p-8 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.22)]">
+        <div
+          id="membership-pass-section"
+          className="relative flex flex-col rounded-3xl bg-gradient-to-b from-[#100d05] via-[#090804] to-black border-2 border-amber-400/80 p-4 xs:p-5 sm:p-7 lg:p-8 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.22)] scroll-mt-24"
+        >
           {/* Top Gold Glowing Highlight Bar */}
           <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 via-yellow-400 to-transparent pointer-events-none" />
 
