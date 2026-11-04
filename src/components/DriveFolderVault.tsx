@@ -144,7 +144,19 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         deliveryNotice: 'Instant Digital Delivery · Vault Access',
         allocationNotice: 'Instant Master Stems · 24-bit / 48kHz WAV',
       };
-    } else if (productId === 'comic' || productId === 'comic-digital') {
+    } else if (productId === 'comic-digital') {
+      productDetails = {
+        id: 'comic-digital',
+        title: 'Sillow Mill — Digital Copy of Bingäa',
+        subtitle: 'Pristine 4K digital copy, flipbook reader & print-ready assets',
+        badge: 'DIGITAL GRAPHIC NOVEL · 4K MASTER · €9.99',
+        priceValue: '9.99',
+        isPhysical: false,
+        image: bingaaComicCover,
+        deliveryNotice: 'Instant Digital Delivery · Vault Access',
+        allocationNotice: 'Pristine 4K Resolution · Web Reader + Offline PDF',
+      };
+    } else if (productId === 'comic') {
       productDetails = {
         id: 'comic',
         title: "Sillow Mill — Bingäa (Collector's Graphic Novel)",
@@ -667,7 +679,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       itemCount: 4,
       totalSize: '285.4 MB',
       isLocked: true,
-      productId: 'comic',
+      productId: 'comic-digital',
       files: [
         {
           id: 'file-comic-1',
@@ -678,7 +690,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
           modified: 'Oct 14, 2026',
           isLocked: true,
-          productId: 'comic',
+          productId: 'comic-digital',
           downloadUrl: BINGAA_PDF_URL,
           downloadFileName: BINGAA_PDF_FILENAME,
           previewImg: bingaaComicCover,
@@ -693,7 +705,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
           modified: 'Oct 14, 2026',
           isLocked: true,
-          productId: 'comic',
+          productId: 'comic-digital',
           previewImg: bingaaComicCover,
           description: 'Offline dual-page flipbook reader assets and uncompressed page plate exports for iPad, tablets, and desktop viewers.',
         },
@@ -706,7 +718,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
           modified: 'Oct 12, 2026',
           isLocked: true,
-          productId: 'comic',
+          productId: 'comic-digital',
           previewImg: bingaaComicCover,
           description: 'Commercial printing press master TIFF file of the official Bingäa Issue #01 cover art at 300 DPI with bleed margins.',
         },
@@ -719,7 +731,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
           modified: 'Oct 11, 2026',
           isLocked: true,
-          productId: 'comic',
+          productId: 'comic-digital',
           previewImg: stage01Img,
           description: 'Full-color director script with dialogue passages, camera angle cues, and behind-the-scenes panel commentary.',
         },

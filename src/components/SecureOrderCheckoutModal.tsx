@@ -29,6 +29,21 @@ export interface CheckoutProductInfo {
   deliveryNotice?: string;
 }
 
+export const isPhysicalProduct = (product?: Partial<CheckoutProductInfo> | null): boolean => {
+  if (!product) return false;
+  // If explicitly specified as false (e.g. Digital Copy of Bingäa €9.99, Vocal Pack €19.99), it is strictly digital
+  if (product.isPhysical === false) return false;
+  // Digital add-on product IDs are never physical
+  if (product.id === 'comic-digital' || product.id === 'vocal' || product.id === 'logic-visualizer') {
+    return false;
+  }
+  // Physical deliveries: Annual Member Pass (€60) & Physical Comic Hardcover/Softcover Print (€14.99)
+  if (product.isPhysical === true || product.id === 'membership' || product.id === 'comic') {
+    return true;
+  }
+  return false;
+};
+
 export interface SecureOrderCheckoutModalProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -76,10 +91,11 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
 
   const handleOpenCheckout = (prod?: Partial<CheckoutProductInfo>) => {
     if (prod) {
+      const isPhys = isPhysicalProduct(prod);
       setCheckoutProduct((prev) => ({
         ...prev,
         ...prod,
-        isPhysical: prod.isPhysical ?? (prod.id === 'comic' || prod.id === 'membership' || !prod.id),
+        isPhysical: isPhys,
       }));
     }
 
@@ -137,10 +153,11 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
   // Sync controlled product if provided
   useEffect(() => {
     if (controlledProduct) {
+      const isPhys = isPhysicalProduct(controlledProduct);
       setCheckoutProduct((prev) => ({
         ...prev,
         ...controlledProduct,
-        isPhysical: controlledProduct.isPhysical ?? (controlledProduct.id === 'comic' || controlledProduct.id === 'membership' || !controlledProduct.id),
+        isPhysical: isPhys,
       }));
     }
   }, [controlledProduct]);
@@ -285,9 +302,9 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
           customerEmail: sanitizedEmail,
           customerName: sanitizedName,
           customerPassword: checkoutPassword || undefined,
-          shippingAddress: fullAddress,
-          apartmentBus: sanitizedAptBus,
-          shippingCity: sanitizedCity,
+          shippingAddress: checkoutProduct.isPhysical ? fullAddress : undefined,
+          apartmentBus: checkoutProduct.isPhysical ? (sanitizedAptBus || undefined) : undefined,
+          shippingCity: checkoutProduct.isPhysical ? (sanitizedCity || undefined) : undefined,
         }),
       });
 
@@ -591,9 +608,12 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                           </div>
                         )}
 
-                        {/* Physical Shipping Fields (Only for Physical Comic / physical items) */}
-                        {checkoutProduct.isPhysical && (
-                          <>
+                        {/* Physical Shipping Fields (Strictly for Physical Deliveries: Annual Member Pass €60 & Physical Bingäa Hardcover Print €14.99) */}
+                        {checkoutProduct.isPhysical ? (
+                          <div className="space-y-2.5 pt-2 border-t border-white/10">
+                            <div className="text-[10px] font-mono text-cyan-300 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                              <span>PHYSICAL DELIVERY SHIPPING ADDRESS</span>
+                            </div>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                               <div className="sm:col-span-2">
                                 <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
@@ -638,7 +658,12 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                                 className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl px-3 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
                               />
                             </div>
-                          </>
+                          </div>
+                        ) : (
+                          <div className="p-2.5 rounded-xl bg-cyan-950/25 border border-cyan-500/20 text-[11px] font-mono text-cyan-300 flex items-center gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                            <span>Instant Digital Vault Download · No physical shipping required.</span>
+                          </div>
                         )}
                       </div>
 
