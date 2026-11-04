@@ -663,7 +663,7 @@ export const VisualizerPlayerModal: React.FC<VisualizerPlayerModalProps> = React
                     {currentIndex + 1} OF {totalTracks}
                   </span>
                 </div>
-                <h2 className="text-xs sm:text-base font-display font-bold text-white whitespace-nowrap">
+                <h2 className="text-xs sm:text-base font-display font-bold text-white leading-tight break-words">
                   {activeTrack.title}
                 </h2>
               </div>

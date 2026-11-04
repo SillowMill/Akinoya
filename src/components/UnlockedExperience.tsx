@@ -142,12 +142,12 @@ const VISUALIZER_TRACKS: VisualizerTrack[] = [
     artworkUrl: moodboardImg,
     videoUrl: BINGAA_LOOP_VIDEO_URL,
   },
-  { id: '03', title: "Memories", code: 'MEMORIES' },
-  { id: '04', title: "Hurry", code: 'HURRY' },
-  { id: '05', title: "Know Me", code: 'KNOWME' },
-  { id: '06', title: "Bignäa II", code: 'BIGNAA2' },
-  { id: '07', title: "Everyday", code: 'EVERYDAY' },
-  { id: '08', title: "Could Forget", code: 'COULDFORGET' },
+  { id: '03', title: "Could Forget", code: 'COULDFORGET' },
+  { id: '04', title: "Memories", code: 'MEMORIES' },
+  { id: '05', title: "Hurry", code: 'HURRY' },
+  { id: '06', title: "Know Me", code: 'KNOWME' },
+  { id: '07', title: "Bignäa II", code: 'BIGNAA2' },
+  { id: '08', title: "Everyday", code: 'EVERYDAY' },
   { id: '09', title: "Yea Yeah Yeah", code: 'YEAYEAHYEAH' },
   { id: '10', title: "Sideways", code: 'SIDEWAYS' },
   { id: '11', title: "Goodbye", code: 'GOODBYE' },
@@ -2106,44 +2106,46 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     {/* Clean Header: Äkinoya Visualizer Hub (Open Access) */}
                     <div
                       id="akinoya-visualizer-archive-header"
-                      className="flex items-center justify-between gap-3 border-b border-white/10 pb-3 sm:pb-4 mb-4 sm:mb-5 scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/10 pb-3.5 sm:pb-4 mb-4 sm:mb-5 scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
                     >
-                      <div className="space-y-1 min-w-0">
+                      <div className="space-y-1.5 min-w-0">
                         {/* Badges in a tight, clean row */}
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <span className="text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/35 text-cyan-300 font-bold tracking-wider uppercase whitespace-nowrap shadow-sm">
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                          <span className="text-[9.5px] sm:text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/35 text-cyan-300 font-bold tracking-wider uppercase whitespace-nowrap shadow-sm">
                             11 PROJECT VISUALIZERS
                           </span>
-                          <span className="text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/35 text-emerald-300 font-bold tracking-wider uppercase inline-flex items-center gap-1 whitespace-nowrap shadow-sm">
+                          <span className="text-[9.5px] sm:text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/35 text-emerald-300 font-bold tracking-wider uppercase inline-flex items-center gap-1.5 whitespace-nowrap shadow-sm">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                             <span>OPEN ACCESS</span>
                           </span>
                         </div>
 
-                        {/* Title: perfectly scaled, never wraps clumsily or breaks proportion */}
-                        <h2 className="text-sm xs:text-base sm:text-xl lg:text-2xl font-display font-black text-white tracking-tight sm:tracking-wide leading-tight whitespace-nowrap">
+                        {/* Title: prominent, beautifully scaled and never overlaps with Back button */}
+                        <h2 className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-display font-black text-white tracking-wide leading-tight">
                           Äkinoya Visualizer Hub
                         </h2>
                       </div>
 
-                      {/* Back Button */}
-                      <button
-                        onClick={() => {
-                          setPassSubView('overview');
-                          try {
-                            sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
-                            const url = new URL(window.location.href);
-                            url.searchParams.delete('subview');
-                            url.searchParams.delete('track');
-                            url.hash = 'pass';
-                            window.history.replaceState(null, '', url.toString());
-                          } catch {}
-                        }}
-                        className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-[11px] sm:text-xs font-mono transition-colors cursor-pointer shrink-0 active:scale-95"
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                        <span>Back</span>
-                      </button>
+                      {/* Back Button: prominently styled in characteristic portal blue */}
+                      <div className="shrink-0 flex items-center self-start sm:self-auto">
+                        <button
+                          onClick={() => {
+                            setPassSubView('overview');
+                            try {
+                              sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
+                              const url = new URL(window.location.href);
+                              url.searchParams.delete('subview');
+                              url.searchParams.delete('track');
+                              url.hash = 'pass';
+                              window.history.replaceState(null, '', url.toString());
+                            } catch {}
+                          }}
+                          className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-950/90 via-[#0a1829] to-cyan-950/90 hover:from-cyan-900/90 hover:to-cyan-800/90 text-cyan-200 hover:text-white border-2 border-cyan-400/60 hover:border-cyan-300 font-mono font-bold text-xs shadow-[0_0_18px_rgba(56,189,248,0.3)] hover:shadow-[0_0_26px_rgba(56,189,248,0.5)] transition-all cursor-pointer shrink-0 active:scale-95 backdrop-blur-md"
+                        >
+                          <ArrowLeft className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+                          <span className="tracking-wider uppercase">Back</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Visualizer Track Cards: 16:9 Artwork/Video Previews (Tracks 01 & 02) followed by Compact Scheduled Tracks */}
@@ -2177,21 +2179,21 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             {/* Subtle Ambient Top Border Highlight */}
                             <div className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300" />
 
-                            {/* Card Header: Track Number, Full Name (No Ellipsis) & Sleek High-End Stream Button */}
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2 shrink min-w-0">
+                            {/* Card Header: Track Number, Name & Sleek High-End Stream Button */}
+                            <div className="flex items-center justify-between gap-2.5">
+                              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
                                 <span className="text-[10px] sm:text-[11px] font-mono text-cyan-300 font-black px-2 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-400/35 tracking-wider shrink-0 shadow-[0_0_8px_rgba(56,189,248,0.2)]">
                                   #{track.id}
                                 </span>
-                                <h4 className="text-xs sm:text-sm font-display font-black text-white tracking-wide whitespace-nowrap group-hover:text-cyan-200 transition-colors drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                                <h4 className="text-[11.5px] xs:text-xs sm:text-sm font-display font-bold text-white tracking-tight sm:tracking-normal group-hover:text-cyan-200 transition-colors drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] leading-snug break-words">
                                   {track.title}
                                 </h4>
                               </div>
 
-                              {/* High-End Stream Button (Pure White & Luminous, Never Turns Black) */}
-                              <div className="shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white/10 group-hover:bg-white/20 text-white group-hover:text-white border border-white/20 group-hover:border-cyan-300/80 text-[10px] sm:text-[11px] font-mono font-bold tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0.06)] group-hover:shadow-[0_0_16px_rgba(255,255,255,0.35)]">
-                                <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white text-white ml-0.5 shrink-0 group-hover:scale-110 transition-transform drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]" />
-                                <span className="text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.3)]">STREAM</span>
+                              {/* High-End Deep Blue Stream Button (Matching #03 Badge Styling, Luminous on Hover, Never Turns Black) */}
+                              <div className="shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-cyan-950/80 group-hover:bg-cyan-900/80 text-cyan-200 group-hover:text-white border border-cyan-400/40 group-hover:border-cyan-300/80 text-[10px] sm:text-[11px] font-mono font-bold tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(56,189,248,0.2)] group-hover:shadow-[0_0_18px_rgba(56,189,248,0.5)]">
+                                <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current ml-0.5 shrink-0 group-hover:scale-110 transition-transform" />
+                                <span className="tracking-wider">STREAM</span>
                               </div>
                             </div>
 
@@ -2247,11 +2249,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 {/* Subtle Luminous Light Accent on Hover (Crisp Edge Illumination, No Dark Veil) */}
                                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ring-1 ring-inset ring-white/20 bg-gradient-to-t from-cyan-400/10 via-transparent to-white/5 rounded-xl" />
 
-                                <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md border border-white/20 text-[9px] font-mono font-bold text-cyan-200 tracking-wider flex items-center gap-1.5 pointer-events-none shadow-sm">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_6px_rgba(34,211,238,0.8)]" />
-                                  <span>4K REACTIVE VISUALIZER</span>
-                                </div>
-
                                 {!track.videoUrl && (
                                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity pointer-events-none">
                                     <div className="w-10 h-10 rounded-full bg-cyan-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.4)]">
@@ -2289,7 +2286,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             </div>
                           )}
 
-                          {/* Compact Scheduled Tracks (Collapsed clean proportions for Memories, Hurry, Know Me, Bignäa II, etc.) */}
+                          {/* Compact Scheduled Tracks (Collapsed clean proportions for Could Forget, Memories, Hurry, Know Me, Bignäa II, etc.) */}
                           {scheduledTracks.length > 0 && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                               {scheduledTracks.map((track, index) =>
