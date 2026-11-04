@@ -46,8 +46,13 @@ class PortalEffectsAudio {
     }
   }
 
-  // Play single tone helper
+  // Play single tone helper (pleasant navigation/interaction chimes only)
   public playTone(freq: number = 880, duration: number = 0.1) {
+    // Suppress low/dull error, buzzer, or rejection tones (< 400Hz)
+    if (freq < 400) {
+      return;
+    }
+
     try {
       this.init();
       if (!this.ctx) return;
@@ -74,37 +79,14 @@ class PortalEffectsAudio {
     }
   }
 
-  // Play access deny tone on invalid attempt
+  // Access deny tone - COMPLETELY MUTED across the portal to eliminate all jarring error/rejection sounds
   public playDenyTone() {
-    try {
-      this.init();
-      if (!this.ctx) return;
-      if (this.ctx.state === 'suspended') {
-        this.ctx.resume();
-      }
-
-      const now = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(130, now);
-      osc.frequency.linearRampToValueAtTime(80, now + 0.25);
-
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.linearRampToValueAtTime(0.0001, now + 0.3);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.32);
-    } catch {
-      // Audio fallback
-    }
+    // Intentionally silent: zero error buzzers or harsh feedback
   }
 
+  // Error tone - COMPLETELY MUTED across the portal
   public playError() {
-    this.playDenyTone();
+    // Intentionally silent: zero error audio feedback
   }
 
   // Play smooth sci-fi frequency sweep (dual-tone acoustic feedback)
