@@ -53,6 +53,7 @@ import {
   Radar,
   Sliders,
   Crown,
+  EyeOff,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
@@ -1583,8 +1584,17 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
   const [checkoutAddress, setCheckoutAddress] = useState("");
   const [checkoutAptBus, setCheckoutAptBus] = useState("");
   const [checkoutCity, setCheckoutCity] = useState("");
+  const [checkoutPassword, setCheckoutPassword] = useState("");
+  const [checkoutConfirmPassword, setCheckoutConfirmPassword] = useState("");
+  const [showCheckoutPassword, setShowCheckoutPassword] = useState(false);
+  const [showCheckoutConfirmPassword, setShowCheckoutConfirmPassword] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   const [isOrderProcessing, setIsOrderProcessing] = useState(false);
+
+  const isPasswordReady = Boolean(
+    isAuthenticated ||
+    (checkoutPassword.length >= 6 && checkoutPassword === checkoutConfirmPassword)
+  );
   const [waveInventory, setWaveInventory] = useState<{ total: number; available: number }>({
     total: 100,
     available: 100,
@@ -1744,6 +1754,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         return;
       }
 
+      // Validate embedded password setup for automated account creation
+      if (!isAuthenticated) {
+        if (!checkoutPassword || checkoutPassword.length < 6) {
+          setIsOrderProcessing(false);
+          setCheckoutError('Password must contain at least 6 characters.');
+          return;
+        }
+        if (checkoutPassword !== checkoutConfirmPassword) {
+          setIsOrderProcessing(false);
+          setCheckoutError('Passwords do not match. Please ensure both passwords match exactly.');
+          return;
+        }
+      }
+
       if (checkoutProduct.isPhysical) {
         if (!sanitizedAddress) {
           setIsOrderProcessing(false);
@@ -1764,7 +1788,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         if (sanitizedAddress) localStorage.setItem('sillow_checkout_address', sanitizedAddress);
         if (sanitizedCity) localStorage.setItem('sillow_checkout_city', sanitizedCity);
         if (sanitizedAptBus) localStorage.setItem('sillow_checkout_apt_bus', sanitizedAptBus);
+
+        const storedOwned = localStorage.getItem('akinoya_owned_products');
+        const ownedList: string[] = storedOwned ? JSON.parse(storedOwned) : [];
+        if (!ownedList.includes(checkoutProduct.id)) {
+          ownedList.push(checkoutProduct.id);
+          localStorage.setItem('akinoya_owned_products', JSON.stringify(ownedList));
+        }
       } catch {}
+
+      // Automatically register user session if credentials supplied
+      if (!isAuthenticated && checkoutPassword) {
+        const parts = sanitizedName.split(' ');
+        const first = parts[0] || 'Collector';
+        const last = parts.slice(1).join(' ') || '';
+        await signUpWithEmail(sanitizedEmail, checkoutPassword, first, last).catch(() => {});
+      }
 
       const fullAddress = sanitizedAptBus
         ? `${sanitizedAddress}, ${sanitizedAptBus}`
@@ -1780,6 +1819,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           isPhysical: Boolean(checkoutProduct.isPhysical),
           customerEmail: sanitizedEmail,
           customerName: sanitizedName,
+          customerPassword: checkoutPassword || undefined,
           shippingAddress: fullAddress,
           apartmentBus: sanitizedAptBus,
           shippingCity: sanitizedCity,
@@ -1814,6 +1854,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     setIsOrderProcessing(false);
     setCheckoutError("");
     setCheckoutAptBus("");
+    setCheckoutPassword("");
+    setCheckoutConfirmPassword("");
   };
 
   const renderPassCardWidget = () => (
@@ -3970,22 +4012,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         </div>
                       )}
 
-                      {/* Digital Delivery Assurance for non-physical products */}
-                      {!checkoutProduct.isPhysical && checkoutProduct.id !== 'membership' && (
-                        <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/70 via-cyan-950/40 to-emerald-950/70 border border-emerald-400/40 text-emerald-200 flex items-start gap-3 shadow-[0_0_20px_rgba(16,185,129,0.15)] mb-4">
-                          <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 shrink-0 mt-0.5">
-                            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                          </div>
-                          <div className="text-left text-xs leading-relaxed space-y-0.5">
-                            <span className="font-mono font-bold uppercase tracking-wider text-emerald-300 block text-[11px]">
-                              Never Lose Your Files Guarantee
-                            </span>
-                            <span className="text-emerald-100/90 font-sans text-[11.5px] block leading-normal">
-                              Directe digitale levering naar je e-mailadres en permanente koppeling aan je account. Herdownload je stems en assets altijd in de Asset Vault.
-                            </span>
-                          </div>
+                      {/* Never Lose Your Files Guarantee Widget (Strict English Copy) */}
+                      <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/70 via-cyan-950/40 to-emerald-950/70 border border-emerald-400/40 text-emerald-200 flex items-start gap-3 shadow-[0_0_20px_rgba(16,185,129,0.15)] mb-4">
+                        <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 shrink-0 mt-0.5">
+                          <ShieldCheck className="w-4 h-4 text-emerald-400" />
                         </div>
-                      )}
+                        <div className="text-left text-xs leading-relaxed space-y-0.5">
+                          <span className="font-mono font-bold uppercase tracking-wider text-emerald-300 block text-[11px]">
+                            NEVER LOSE YOUR FILES GUARANTEE
+                          </span>
+                          <span className="text-emerald-100/90 font-sans text-[11.5px] block leading-normal">
+                            By entering your details below and setting up your password, a free Sillow Mill account will automatically be created. Your purchased stems, comics, and assets will be instantly and permanently linked to your profile, accessible anytime via the Drive Asset Vault.
+                          </span>
+                        </div>
+                      </div>
 
                       {/* Stripe Supported Payment Methods Showcase */}
                       <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-b from-cyan-950/40 via-black/80 to-black border border-cyan-500/30 shadow-[0_0_20px_rgba(56,189,248,0.12)] mb-4 space-y-2.5">
@@ -4060,6 +4100,80 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             </div>
                           </div>
 
+                          {/* Embedded Password Setup for Automated Account Creation */}
+                          {!isAuthenticated ? (
+                            <div className="space-y-2 pt-1 border-t border-white/10 mt-1">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                  <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
+                                    ACCOUNT PASSWORD <span className="text-cyan-400">*</span>
+                                  </label>
+                                  <div className="relative flex items-center">
+                                    <input
+                                      type={showCheckoutPassword ? 'text' : 'password'}
+                                      required
+                                      minLength={6}
+                                      value={checkoutPassword}
+                                      onChange={(e) => setCheckoutPassword(e.target.value)}
+                                      placeholder="Min. 6 characters"
+                                      className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-3 pr-9 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowCheckoutPassword(!showCheckoutPassword)}
+                                      className="absolute right-2.5 text-white/40 hover:text-white p-1 cursor-pointer"
+                                      aria-label={showCheckoutPassword ? 'Hide password' : 'Show password'}
+                                    >
+                                      {showCheckoutPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="text-[10px] font-mono uppercase text-white/50 block mb-1">
+                                    CONFIRM PASSWORD <span className="text-cyan-400">*</span>
+                                  </label>
+                                  <div className="relative flex items-center">
+                                    <input
+                                      type={showCheckoutConfirmPassword ? 'text' : 'password'}
+                                      required
+                                      minLength={6}
+                                      value={checkoutConfirmPassword}
+                                      onChange={(e) => setCheckoutConfirmPassword(e.target.value)}
+                                      placeholder="Repeat password"
+                                      className="w-full bg-black/80 border border-white/20 focus:border-cyan-400 rounded-xl pl-3 pr-9 py-2 text-base sm:text-xs text-white placeholder-white/30 outline-none font-mono"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowCheckoutConfirmPassword(!showCheckoutConfirmPassword)}
+                                      className="absolute right-2.5 text-white/40 hover:text-white p-1 cursor-pointer"
+                                      aria-label={showCheckoutConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                                    >
+                                      {showCheckoutConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Real-time UX Password Validation Checklist */}
+                              <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono px-0.5">
+                                <div className={`flex items-center gap-1.5 transition-colors ${checkoutPassword.length >= 6 ? 'text-emerald-400 font-bold' : 'text-white/40'}`}>
+                                  {checkoutPassword.length >= 6 ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> : <span className="w-1.5 h-1.5 rounded-full bg-white/30" />}
+                                  <span>At least 6 characters</span>
+                                </div>
+                                <div className={`flex items-center gap-1.5 transition-colors ${checkoutPassword && checkoutPassword === checkoutConfirmPassword ? 'text-emerald-400 font-bold' : checkoutConfirmPassword ? 'text-rose-400 font-medium' : 'text-white/40'}`}>
+                                  {checkoutPassword && checkoutPassword === checkoutConfirmPassword ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> : <span className="w-1.5 h-1.5 rounded-full bg-white/30" />}
+                                  <span>Passwords match</span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 flex items-center gap-2 text-xs font-mono text-cyan-200 mt-1">
+                              <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                              <span className="truncate">Active Account Linked: <strong className="text-white">{user?.email}</strong> (Vault sync active)</span>
+                            </div>
+                          )}
+
                           {/* Physical Shipping Fields (Only for Physical Comic / physical items) */}
                           {checkoutProduct.isPhysical && (
                             <>
@@ -4122,8 +4236,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         {/* Submit Action Button */}
                         <button
                           type="submit"
-                          disabled={isOrderProcessing}
-                          className="w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 disabled:bg-cyan-800 disabled:cursor-not-allowed text-black transition-all cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.3)] flex items-center justify-center gap-2 mt-2"
+                          disabled={isOrderProcessing || !isPasswordReady}
+                          className="w-full py-3.5 px-4 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 disabled:bg-cyan-950/60 disabled:border disabled:border-cyan-500/20 disabled:text-white/30 disabled:cursor-not-allowed text-black transition-all cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.3)] flex items-center justify-center gap-2 mt-2"
                         >
                           {isOrderProcessing ? (
                             <>

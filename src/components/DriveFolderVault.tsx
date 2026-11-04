@@ -33,6 +33,7 @@ import {
   Laptop,
   Box,
   Disc,
+  ShoppingBag,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
@@ -44,6 +45,7 @@ import stage02Img from '../assets/images/stage_02_character_reference_sheet.jpg'
 import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
 import stage04Img from '../assets/images/stage_04_cybernetic_prompt_datastream.jpg';
 import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
+import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 
 // Character Locking Master Assets (from Character Locking folder)
 import millCharacterImg from '../assets/images/character_locking/MilLLL.PNG';
@@ -67,7 +69,8 @@ export interface DriveFile {
   typeBadge: string;
   badgeColor: string;
   modified: string;
-  isLocked: boolean; // locked for free users (Stages 3-5 or full downloads)
+  isLocked: boolean;
+  productId?: string;
   downloadUrl?: string;
   downloadFileName?: string;
   previewImg?: string;
@@ -84,7 +87,8 @@ export interface DriveFolder {
   category: string;
   itemCount: number;
   totalSize: string;
-  isLocked: boolean; // Root folders 04, 05 locked until Jan 9, 2027
+  isLocked: boolean;
+  productId?: string;
   subfolders?: DriveFolder[];
   files?: DriveFile[];
 }
@@ -106,28 +110,95 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
   const [selectedFileForPreview, setSelectedFileForPreview] = useState<DriveFile | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
 
-  // Workflow-Mapped Apple & Google Drive Directory Hierarchy
+  // Check if item or folder is unlocked for the user
+  const isItemUnlocked = (item?: { isLocked?: boolean; productId?: string } | null): boolean => {
+    if (!item) return false;
+    if (isMember) return true;
+    if (!item.isLocked) return true;
+    try {
+      const owned = localStorage.getItem('akinoya_owned_products');
+      if (owned) {
+        const list: string[] = JSON.parse(owned);
+        if (item.productId && list.includes(item.productId)) return true;
+      }
+    } catch {}
+    return false;
+  };
+
+  // Trigger Checkout for Gated Deliverables
+  const handleTriggerCheckoutForProduct = (productId?: string) => {
+    soundManager.playTone(660, 0.08);
+    let productDetails: any = null;
+
+    if (productId === 'vocal') {
+      productDetails = {
+        id: 'vocal',
+        title: 'Sillow Mill — Vocal Acapella & Remix Pack',
+        subtitle: 'Studio acapellas (dry/wet), stems & remix audio',
+        badge: 'VOCAL ACAPELLAS & STEMS',
+        priceValue: '19.99',
+        isPhysical: false,
+        deliveryNotice: 'Instant Digital Delivery · Vault Access',
+        allocationNotice: 'Instant Master Stems · 24-bit / 48kHz WAV',
+      };
+    } else if (productId === 'comic-digital' || productId === 'comic') {
+      productDetails = {
+        id: 'comic-digital',
+        title: 'Sillow Mill — Bingäa (Digital Graphic Novel & 4K Stems)',
+        subtitle: 'Pristine 4K digital copy, flipbook reader & print-ready assets',
+        badge: 'DIGITAL GRAPHIC NOVEL · 4K MASTER',
+        priceValue: '9.99',
+        isPhysical: false,
+        image: bingaaComicCover,
+        deliveryNotice: 'Instant Digital Delivery · Vault Access',
+        allocationNotice: 'Pristine 4K Resolution · Web Reader + Offline PDF',
+      };
+    } else {
+      productDetails = {
+        id: 'logic-visualizer',
+        title: 'Sillow Mill — 2D Visualizer Workflow & Logic Pro',
+        subtitle: 'Official 2D visualizer workflow, Enerwise sound architecture, vocal chain & Logic Pro template',
+        badge: '2D VISUALIZER WORKFLOW & LOGIC PRO',
+        priceValue: '29.99',
+        isPhysical: false,
+        deliveryNotice: 'Instant Digital Delivery · Vault Access',
+        allocationNotice: 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template',
+      };
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('akinoya-open-checkout', { detail: productDetails }));
+    }
+  };
+
+  // Reorganized Top-Level Master Folders & Dissected Pipeline Structure
   const DRIVE_HIERARCHY: DriveFolder[] = [
+    // ═══════════════════════════════════════════════════════════════════════
+    // MASTER FOLDER 1: 2D Production Logo & Logic Pro Assets
+    // ═══════════════════════════════════════════════════════════════════════
     {
       id: 'folder-01',
-      name: '01_Storyboards_Script_Blueprints',
-      displayName: '01 · Storyboards & Script Blueprints',
-      shortName: '01 · Storyboards',
-      richIcon: '🎬',
-      category: 'Storyboards & 2.39:1 framing specs',
-      itemCount: 6,
-      totalSize: '33.1 MB',
+      name: '01_2D_Production_Logo_Logic_Pro_Assets',
+      displayName: 'Folder 1 · 2D Production Logo & Logic Pro Assets',
+      shortName: '01 · 2D & Logic Pro Assets',
+      richIcon: '🎛️',
+      category: 'Dissected 5-Stage Production Pipeline, Storyboards & DAW Templates',
+      itemCount: 23,
+      totalSize: '1.28 GB',
       isLocked: true,
+      productId: 'logic-visualizer',
       subfolders: [
         {
-          id: 'subfolder-01-1',
-          name: 'Bingaa_Comic_Script_Breakdown',
-          displayName: 'Bingaa_Comic_Script_Breakdown',
-          richIcon: '📄',
-          category: 'Director Script & Panels',
-          itemCount: 3,
-          totalSize: '20.6 MB',
+          id: 'stage-01',
+          name: '01_Storyboards_Script_Blueprints',
+          displayName: '01 · Storyboards & Script Blueprints',
+          shortName: '01 · Storyboards',
+          richIcon: '🎬',
+          category: 'Storyboards & 2.39:1 framing specs',
+          itemCount: 6,
+          totalSize: '33.1 MB',
           isLocked: true,
+          productId: 'logic-visualizer',
           files: [
             {
               id: 'file-01-1',
@@ -138,6 +209,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
               modified: 'Oct 12, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: stage01Img,
               description: 'Official 18-panel director breakdown with scene annotations, camera focal notes, and timing charts.',
             },
@@ -150,6 +222,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
               modified: 'Oct 11, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: stage01Img,
               description: 'Raw text notes from Odi detailing character motivation, pacing beats, and cinematic lighting cues.',
             },
@@ -162,21 +235,10 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
               modified: 'Oct 10, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: stage01Img,
               description: 'High-resolution CinemaScope letterbox keyframe grids with safety margins and title-safe overlays.',
             },
-          ],
-        },
-        {
-          id: 'subfolder-01-2',
-          name: 'Framing_Beat_Sheets',
-          displayName: 'Framing_Beat_Sheets',
-          richIcon: '📐',
-          category: 'Pacing & Beat Timelines',
-          itemCount: 3,
-          totalSize: '12.5 MB',
-          isLocked: true,
-          files: [
             {
               id: 'file-01-4',
               name: 'Leuven_Snow_Dance_Sequence_Sheet.pdf',
@@ -186,6 +248,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
               modified: 'Oct 09, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: stage01Img,
               description: 'Frame-by-frame beat breakdown of the emotional dance in the snow, translated into camera focal lengths.',
             },
@@ -198,6 +261,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
               modified: 'Oct 08, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: stage01Img,
               description: 'Mathematical tension curve tracking shot duration, camera velocity, and audio frequency peaks.',
             },
@@ -210,33 +274,23 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
               modified: 'Oct 07, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: stage01Img,
               description: 'Visual storyboard summary with shot descriptions, camera directions, and scene transitions.',
             },
           ],
         },
-      ],
-    },
-    {
-      id: 'folder-02',
-      name: '02_ArtDirection_Character_Anchors',
-      displayName: '02 · Art Direction & Character Anchors',
-      shortName: '02 · Art Direction',
-      richIcon: '🎨',
-      category: 'Character sheets, brand assets & mood anchors',
-      itemCount: 6,
-      totalSize: '52.6 MB',
-      isLocked: true,
-      subfolders: [
         {
-          id: 'subfolder-02-1',
-          name: 'Character_Sheets_Sillow_Odi_Mill',
-          displayName: 'Character_Sheets_Sillow_Odi_Mill',
-          richIcon: '👤',
-          category: 'Character Turnarounds',
-          itemCount: 3,
-          totalSize: '40.6 MB',
+          id: 'stage-02',
+          name: '02_ArtDirection_Character_Anchors',
+          displayName: '02 · Art Direction & Character Anchors',
+          shortName: '02 · Art Direction',
+          richIcon: '🎨',
+          category: 'Character Turnarounds, Mood Anchors & Swatches',
+          itemCount: 6,
+          totalSize: '52.6 MB',
           isLocked: true,
+          productId: 'logic-visualizer',
           files: [
             {
               id: 'file-02-1',
@@ -247,6 +301,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
               modified: 'Oct 14, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: sillowCharacterImg,
               description: 'The lead planetary explorer styled with distinct dreadlocks and a tactical harness.',
             },
@@ -259,6 +314,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
               modified: 'Oct 14, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: odiCharacterImg,
               description: 'The scout mechanic without dreadlocks, wearing tactical reconnaissance armor.',
             },
@@ -271,21 +327,10 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
               modified: 'Oct 14, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: millCharacterImg,
               description: 'The alien bio-analyst in her environmental suit with the mushroom helmet archetype.',
             },
-          ],
-        },
-        {
-          id: 'subfolder-02-2',
-          name: 'Chromatic_Color_Profiles',
-          displayName: 'Chromatic_Color_Profiles',
-          richIcon: '🌈',
-          category: 'Color Palettes & Swatches',
-          itemCount: 3,
-          totalSize: '12.0 MB',
-          isLocked: true,
-          files: [
             {
               id: 'file-02-4',
               name: 'Mood_Primary_Atmospheric_Anchor.png',
@@ -295,6 +340,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
               modified: 'Oct 10, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: moodboardImg,
               description: 'Official Mood.png reference used to condition all atmospheric lighting and creature designs.',
             },
@@ -307,6 +353,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
               modified: 'Oct 09, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               previewImg: akinoyaVistaImg,
               description: 'Master orbital perspective reference for Äkinoya twilight atmospheric curvature.',
             },
@@ -319,25 +366,250 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
               modified: 'Oct 08, 2026',
               isLocked: true,
+              productId: 'logic-visualizer',
               description: 'Digital color swatch palette containing locked hex values: #00f2fe (Cyan Galaxy), #b142f0 (Purple Void).',
+            },
+          ],
+        },
+        {
+          id: 'stage-03',
+          name: '03_Logic_Pro_Sound_Architecture',
+          displayName: '03 · Logic Pro Project & DAW Architecture',
+          shortName: '03 · DAW Architecture',
+          richIcon: '🎹',
+          category: 'Logic Pro Template, Enerwise Architecture & Presets',
+          itemCount: 3,
+          totalSize: '108.5 MB',
+          isLocked: true,
+          productId: 'logic-visualizer',
+          files: [
+            {
+              id: 'file-03-1',
+              name: 'Akinoya_Vocal_Chain_Logic_Pro_Template.logicx',
+              extension: 'LOGICX',
+              size: '56.0 MB',
+              typeBadge: 'Logic Pro Project',
+              badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+              modified: 'Oct 14, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              description: 'Dedicated Logic Pro project template featuring Enerwise sound architecture, my vocal chain routing, bus compression, and spatial imaging.',
+            },
+            {
+              id: 'file-03-2',
+              name: 'Akinoya_Modular_Synth_Ableton_Template.als',
+              extension: 'ALS',
+              size: '48.0 MB',
+              typeBadge: 'Ableton Live 11/12',
+              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+              modified: 'Oct 12, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              description: 'Production DAW project file with routing, custom operator chains, and analog saturation racks ready to load.',
+            },
+            {
+              id: 'file-03-3',
+              name: 'Enerwise_Mastering_Channel_Strip_Preset.cst',
+              extension: 'CST',
+              size: '4.5 MB',
+              typeBadge: 'Channel Strip',
+              badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+              modified: 'Oct 11, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              description: 'Official Enerwise sound architecture channel strip preset for Logic Pro, delivering pristine spectral clarity and warmth.',
+            },
+          ],
+        },
+        {
+          id: 'stage-04',
+          name: '04_Blender_3D_Previs_Cockpit_Rigs',
+          displayName: '04 · Blender 3D Previs & Cockpit Rigs',
+          shortName: '04 · 3D Previs & Rigs',
+          richIcon: '🧊',
+          category: '3D Cockpit, EXR Sequences & Camera Trajectories',
+          itemCount: 4,
+          totalSize: '601.4 MB',
+          isLocked: true,
+          productId: 'logic-visualizer',
+          files: [
+            {
+              id: 'file-04-1',
+              name: 'Cockpit_Camera_Velocity_Rig.blend',
+              extension: 'BLEND',
+              size: '148 MB',
+              typeBadge: 'Blender 3.6+ Project',
+              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+              modified: 'Oct 14, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              previewImg: stage03Img,
+              description: 'Fully rigged 3D cockpit scene with animated camera tracking curves (CAM_TRAJ_A) and forward velocity paths.',
+            },
+            {
+              id: 'file-04-2',
+              name: 'Warp_Tunnel_Kinematic_Curves.fbx',
+              extension: 'FBX',
+              size: '32 MB',
+              typeBadge: '3D Geometry',
+              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+              modified: 'Oct 12, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              previewImg: stage03Img,
+              description: 'High-speed hyperspace warp tunnel polygonal mesh with vertex color coordinates for emissive shader passes.',
+            },
+            {
+              id: 'file-04-3',
+              name: '16bit_ZDepth_Normal_Pass_Sequence.exr',
+              extension: 'EXR',
+              size: '420 MB',
+              typeBadge: 'OpenEXR Sequence',
+              badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+              modified: 'Oct 11, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              previewImg: stage03Img,
+              description: 'Uncompressed 16-bit float depth and normal map sequence for multi-modal ControlNet video conditioning.',
+            },
+            {
+              id: 'file-04-4',
+              name: 'Anamorphic_Lens_Camera_Tracking_Data.json',
+              extension: 'JSON',
+              size: '1.4 MB',
+              typeBadge: 'Tracker Data',
+              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+              modified: 'Oct 10, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              description: 'Synthesized camera tracking coordinate points formatted for import into Nuke, After Effects, and Blender.',
+            },
+          ],
+        },
+        {
+          id: 'stage-05',
+          name: '05_Prompt_Engineering_Bibles',
+          displayName: '05 · Prompt Engineering Bibles & LUTs',
+          shortName: '05 · Prompt Bibles',
+          richIcon: '⚡',
+          category: 'Multi-Block Prompt Databases & ACEScc 3D LUTs',
+          itemCount: 4,
+          totalSize: '90.7 MB',
+          isLocked: true,
+          productId: 'logic-visualizer',
+          files: [
+            {
+              id: 'file-05-1',
+              name: 'Master_Prompt_Vault_120_Templates.json',
+              extension: 'JSON',
+              size: '2.1 MB',
+              typeBadge: 'JSON Schema',
+              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+              modified: 'Oct 14, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              previewImg: stage04Img,
+              description: 'Centralized database containing 120 production-tested 4-block syntax prompts for Gemini 1.5 Pro and Imagen 3.',
+            },
+            {
+              id: 'file-05-2',
+              name: 'Negative_Token_Suppression_Dictionary.txt',
+              extension: 'TXT',
+              size: '180 KB',
+              typeBadge: 'Negative Token Dictionary',
+              badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+              modified: 'Oct 12, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              previewImg: stage04Img,
+              description: 'Weighted negative token array designed to suppress digital plastic shaders, deformed geometry, and edge noise.',
+            },
+            {
+              id: 'file-05-3',
+              name: 'Gemini_Imagen3_Seed_Matrix.json',
+              extension: 'JSON',
+              size: '840 KB',
+              typeBadge: 'Seed Matrix',
+              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+              modified: 'Oct 10, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              description: 'Verified deterministic seed numbers yielding photorealistic results across Äkinoya cosmic planetary landscapes.',
+            },
+            {
+              id: 'file-05-4',
+              name: 'Akinoya_ACEScc_PrintFilm_Emulation.cube',
+              extension: 'CUBE',
+              size: '84.2 MB',
+              typeBadge: '3D LUT Cube',
+              badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+              modified: 'Oct 09, 2026',
+              isLocked: true,
+              productId: 'logic-visualizer',
+              previewImg: stage05Img,
+              description: 'Official 65x65x65 3D LUT cube calibrated for ACEScc and Rec.709 color spaces with custom film print density.',
             },
           ],
         },
       ],
     },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MASTER FOLDER 2: Vocal Acapella & Remix Pack
+    // ═══════════════════════════════════════════════════════════════════════
     {
-      id: 'folder-03',
-      name: '03_AudioMasters_DAW_Templates',
-      displayName: '03 · Audio Masters & DAW Templates',
-      shortName: '03 · Audio Masters',
-      richIcon: '🎵',
-      category: 'Studio audio masters, Logic Pro & Ableton templates',
-      itemCount: 5,
-      totalSize: '537.0 MB',
+      id: 'folder-02',
+      name: '02_Vocal_Acapella_Remix_Pack',
+      displayName: 'Folder 2 · Vocal Acapella & Remix Pack',
+      shortName: '02 · Vocal & Remix Pack',
+      richIcon: '🎙️',
+      category: 'Studio Acapellas, Dry/Wet Vocal Stems & Remix Audio',
+      itemCount: 6,
+      totalSize: '645.0 MB',
       isLocked: true,
+      productId: 'vocal',
       files: [
         {
-          id: 'file-03-1',
+          id: 'file-vocal-1',
+          name: 'Sillow_Mill_Studio_Lead_Acapella_Dry_96kHz.wav',
+          extension: 'WAV',
+          size: '142 MB',
+          typeBadge: '24-bit 96kHz Dry Vocal',
+          badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+          modified: 'Oct 14, 2026',
+          isLocked: true,
+          isAudio: true,
+          productId: 'vocal',
+          previewImg: stage05Img,
+          description: 'Pristine raw studio lead vocal stems recorded through custom tube preamp, 100% dry and uncompressed for remixing.',
+        },
+        {
+          id: 'file-vocal-2',
+          name: 'Sillow_Mill_Vocal_Harmony_Adlibs_Wet_96kHz.wav',
+          extension: 'WAV',
+          size: '168 MB',
+          typeBadge: '96kHz Wet Harmonies',
+          badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+          modified: 'Oct 14, 2026',
+          isLocked: true,
+          isAudio: true,
+          productId: 'vocal',
+          description: 'Full stereophonic vocal backing tracks, octave harmonies, atmospheric ad-libs, and celestial reverb tails.',
+        },
+        {
+          id: 'file-vocal-3',
+          name: 'Bingaa_Atmospheric_Stem_Pack_128BPM.zip',
+          extension: 'ZIP',
+          size: '240 MB',
+          typeBadge: 'Full Track Stems (128 BPM)',
+          badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+          modified: 'Oct 13, 2026',
+          isLocked: true,
+          productId: 'vocal',
+          description: 'Isolated stems: Sub-Bass, Analog Arp, Modular Drones, Granular FX, and Cinematic Percussion at 128 BPM.',
+        },
+        {
+          id: 'file-vocal-4',
           name: 'Sillow_Mill_Teaser_Audio_Master_96kHz.wav',
           extension: 'WAV',
           size: '185 MB',
@@ -346,44 +618,12 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           modified: 'Oct 14, 2026',
           isLocked: true,
           isAudio: true,
+          productId: 'vocal',
           previewImg: stage05Img,
           description: 'Uncompressed studio master recording featuring modular analog synthesis, 432Hz harmonic drones, and sub-bass impact.',
         },
         {
-          id: 'file-03-2',
-          name: 'Bingaa_Atmospheric_Stem_Pack_128BPM.zip',
-          extension: 'ZIP',
-          size: '240 MB',
-          typeBadge: 'Studio Stems Bundle',
-          badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
-          modified: 'Oct 13, 2026',
-          isLocked: true,
-          description: 'Isolated stems: Sub-Bass, Analog Arp, Modular Drones, Granular FX, and Cinematic Percussion at 128 BPM.',
-        },
-        {
-          id: 'file-03-3',
-          name: 'Akinoya_Vocal_Chain_Logic_Pro_Template.logicx',
-          extension: 'LOGICX',
-          size: '56 MB',
-          typeBadge: 'Logic Pro Template',
-          badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
-          modified: 'Oct 14, 2026',
-          isLocked: true,
-          description: 'Dedicated Logic Pro project template featuring my vocal chain routing, bus compression, tuned delays, and vocal processing.',
-        },
-        {
-          id: 'file-03-4',
-          name: 'Akinoya_Modular_Synth_Ableton_Template.als',
-          extension: 'ALS',
-          size: '48 MB',
-          typeBadge: 'Ableton Live 11/12',
-          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-          modified: 'Oct 12, 2026',
-          isLocked: true,
-          description: 'Production DAW project file with routing, custom operator chains, and analog saturation racks ready to load.',
-        },
-        {
-          id: 'file-03-5',
+          id: 'file-vocal-5',
           name: 'Analog_Drones_432Hz_SubBass_Impulse.wav',
           extension: 'WAV',
           size: '64 MB',
@@ -392,127 +632,92 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           modified: 'Oct 11, 2026',
           isLocked: true,
           isAudio: true,
+          productId: 'vocal',
           description: 'Sub-bass celestial resonance impulse calibrated to 432Hz fundamental frequency for sci-fi atmosphere.',
         },
+        {
+          id: 'file-vocal-6',
+          name: 'Vocal_Pitch_Key_Guide_MIDI_Files.zip',
+          extension: 'ZIP',
+          size: '12 MB',
+          typeBadge: 'MIDI & Key Guide',
+          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+          modified: 'Oct 10, 2026',
+          isLocked: true,
+          productId: 'vocal',
+          description: 'MIDI files, chord progressions, tempo maps, and vocal tuning guides for Ableton, FL Studio, and Logic Pro.',
+        },
       ],
     },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MASTER FOLDER 3: Digital Copy of Bingäa
+    // ═══════════════════════════════════════════════════════════════════════
     {
-      id: 'folder-04',
-      name: '04_Blender_3D_Previs_Cockpit_Rigs',
-      displayName: '04 · Blender 3D Previs & Cockpit Rigs',
-      shortName: '04 · 3D Previs & Rigs',
-      richIcon: '🧊',
-      category: '3D cockpit & warp rigs — Locked',
+      id: 'folder-03',
+      name: '03_Digital_Copy_of_Bingaa',
+      displayName: 'Folder 3 · Digital Copy of Bingäa',
+      shortName: '03 · Digital Copy of Bingäa',
+      richIcon: '📖',
+      category: 'Pristine 4K Graphic Novel Files, Web Reader Assets & Offline Editions',
       itemCount: 4,
-      totalSize: '601.4 MB',
+      totalSize: '285.4 MB',
       isLocked: true,
+      productId: 'comic-digital',
       files: [
         {
-          id: 'file-04-1',
-          name: 'Cockpit_Camera_Velocity_Rig.blend',
-          extension: 'BLEND',
-          size: '148 MB',
-          typeBadge: 'Blender 3.6+ Project',
-          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+          id: 'file-comic-1',
+          name: 'Bingaa_Collector_Graphic_Novel_Issue01_4K_Master.pdf',
+          extension: 'PDF',
+          size: '184 MB',
+          typeBadge: '4K Master Edition',
+          badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
           modified: 'Oct 14, 2026',
           isLocked: true,
-          previewImg: stage03Img,
-          description: 'Fully rigged 3D cockpit scene with animated camera tracking curves (CAM_TRAJ_A) and forward velocity paths.',
+          productId: 'comic-digital',
+          downloadUrl: BINGAA_PDF_URL,
+          downloadFileName: BINGAA_PDF_FILENAME,
+          previewImg: bingaaComicCover,
+          description: 'Pristine full-resolution 4K digital print master of Bingäa Issue #01 with interactive double-page spread formatting.',
         },
         {
-          id: 'file-04-2',
-          name: 'Warp_Tunnel_Kinematic_Curves.fbx',
-          extension: 'FBX',
-          size: '32 MB',
-          typeBadge: '3D Geometry',
-          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+          id: 'file-comic-2',
+          name: 'Bingaa_Digital_Flipbook_DualPage_Reader_Assets.zip',
+          extension: 'ZIP',
+          size: '64 MB',
+          typeBadge: 'Web Reader Bundle',
+          badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+          modified: 'Oct 14, 2026',
+          isLocked: true,
+          productId: 'comic-digital',
+          previewImg: bingaaComicCover,
+          description: 'Offline dual-page flipbook reader assets and uncompressed page plate exports for iPad, tablets, and desktop viewers.',
+        },
+        {
+          id: 'file-comic-3',
+          name: 'Bingaa_Cover_Art_Print_Ready_300DPI.tiff',
+          extension: 'TIFF',
+          size: '25 MB',
+          typeBadge: '300 DPI CMYK Print',
+          badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
           modified: 'Oct 12, 2026',
           isLocked: true,
-          previewImg: stage03Img,
-          description: 'High-speed hyperspace warp tunnel polygonal mesh with vertex color coordinates for emissive shader passes.',
+          productId: 'comic-digital',
+          previewImg: bingaaComicCover,
+          description: 'Commercial printing press master TIFF file of the official Bingäa Issue #01 cover art at 300 DPI with bleed margins.',
         },
         {
-          id: 'file-04-3',
-          name: '16bit_ZDepth_Normal_Pass_Sequence.exr',
-          extension: 'EXR',
-          size: '420 MB',
-          typeBadge: 'OpenEXR Sequence',
-          badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+          id: 'file-comic-4',
+          name: 'Bingaa_Issue01_Director_Script_FullColor.pdf',
+          extension: 'PDF',
+          size: '12.4 MB',
+          typeBadge: 'Script & Illustrated Panels',
+          badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
           modified: 'Oct 11, 2026',
           isLocked: true,
-          previewImg: stage03Img,
-          description: 'Uncompressed 16-bit float depth and normal map sequence for multi-modal ControlNet video conditioning.',
-        },
-        {
-          id: 'file-04-4',
-          name: 'Anamorphic_Lens_Camera_Tracking_Data.json',
-          extension: 'JSON',
-          size: '1.4 MB',
-          typeBadge: 'Tracker Data',
-          badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-          modified: 'Oct 10, 2026',
-          isLocked: true,
-          description: 'Synthesized camera tracking coordinate points formatted for import into Nuke, After Effects, and Blender.',
-        },
-      ],
-    },
-    {
-      id: 'folder-05',
-      name: '05_Prompt_Engineering_Bibles',
-      displayName: '05 · Prompt Engineering Bibles',
-      shortName: '05 · Prompt Bibles',
-      richIcon: '⚡',
-      category: 'Multi-block prompt json vaults — Locked',
-      itemCount: 4,
-      totalSize: '90.7 MB',
-      isLocked: true,
-      files: [
-        {
-          id: 'file-05-1',
-          name: 'Master_Prompt_Vault_120_Templates.json',
-          extension: 'JSON',
-          size: '2.1 MB',
-          typeBadge: 'JSON Schema',
-          badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-          modified: 'Oct 14, 2026',
-          isLocked: true,
-          previewImg: stage04Img,
-          description: 'Centralized database containing 120 production-tested 4-block syntax prompts for Gemini 1.5 Pro and Imagen 3.',
-        },
-        {
-          id: 'file-05-2',
-          name: 'Negative_Token_Suppression_Dictionary.txt',
-          extension: 'TXT',
-          size: '180 KB',
-          typeBadge: 'Negative Token Dictionary',
-          badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-          modified: 'Oct 12, 2026',
-          isLocked: true,
-          previewImg: stage04Img,
-          description: 'Weighted negative token array designed to suppress digital plastic shaders, deformed geometry, and edge noise.',
-        },
-        {
-          id: 'file-05-3',
-          name: 'Gemini_Imagen3_Seed_Matrix.json',
-          extension: 'JSON',
-          size: '840 KB',
-          typeBadge: 'Seed Matrix',
-          badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-          modified: 'Oct 10, 2026',
-          isLocked: true,
-          description: 'Verified deterministic seed numbers yielding photorealistic results across Äkinoya cosmic planetary landscapes.',
-        },
-        {
-          id: 'file-05-4',
-          name: 'Akinoya_ACEScc_PrintFilm_Emulation.cube',
-          extension: 'CUBE',
-          size: '84.2 MB',
-          typeBadge: '3D LUT Cube',
-          badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-          modified: 'Oct 09, 2026',
-          isLocked: true,
-          previewImg: stage05Img,
-          description: 'Official 65x65x65 3D LUT cube calibrated for ACEScc and Rec.709 color spaces with custom film print density.',
+          productId: 'comic-digital',
+          previewImg: stage01Img,
+          description: 'Full-color director script with dialogue passages, camera angle cues, and behind-the-scenes panel commentary.',
         },
       ],
     },
@@ -545,20 +750,40 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       return;
     }
 
-    const target = DRIVE_HIERARCHY.find(
-      (f) =>
-        f.id === initialFolderId ||
-        f.name.toLowerCase().includes(initialFolderId.toLowerCase()) ||
-        f.displayName.toLowerCase().includes(initialFolderId.toLowerCase()) ||
-        f.shortName?.toLowerCase().includes(initialFolderId.toLowerCase())
-    );
+    // Match initialFolderId against top-level master folders and subfolders
+    for (const root of DRIVE_HIERARCHY) {
+      if (
+        root.id === initialFolderId ||
+        root.name.toLowerCase().includes(initialFolderId.toLowerCase()) ||
+        root.displayName.toLowerCase().includes(initialFolderId.toLowerCase()) ||
+        root.shortName?.toLowerCase().includes(initialFolderId.toLowerCase())
+      ) {
+        setCurrentFolderId(root.id);
+        setFolderPath([
+          { id: 'root', name: 'Sillow Mill Production Vault' },
+          { id: root.id, name: root.displayName },
+        ]);
+        return;
+      }
 
-    if (target) {
-      setCurrentFolderId(target.id);
-      setFolderPath([
-        { id: 'root', name: 'Sillow Mill Production Vault' },
-        { id: target.id, name: target.displayName },
-      ]);
+      if (root.subfolders) {
+        for (const sub of root.subfolders) {
+          if (
+            sub.id === initialFolderId ||
+            sub.name.toLowerCase().includes(initialFolderId.toLowerCase()) ||
+            sub.displayName.toLowerCase().includes(initialFolderId.toLowerCase()) ||
+            sub.shortName?.toLowerCase().includes(initialFolderId.toLowerCase())
+          ) {
+            setCurrentFolderId(sub.id);
+            setFolderPath([
+              { id: 'root', name: 'Sillow Mill Production Vault' },
+              { id: root.id, name: root.displayName },
+              { id: sub.id, name: sub.displayName },
+            ]);
+            return;
+          }
+        }
+      }
     }
   }, [initialFolderId]);
 
@@ -578,7 +803,9 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
 
   const handleDownloadFile = (file: DriveFile) => {
     soundManager.playTone(660, 0.08);
-    if (!file.isLocked || isMember) {
+    const unlocked = isItemUnlocked(file);
+
+    if (unlocked) {
       if (file.downloadUrl) {
         const a = document.createElement('a');
         a.href = file.downloadUrl;
@@ -592,9 +819,9 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         setSelectedFileForPreview(file);
         return;
       }
-    }
-    if (!isMember && onOpenAuthModal) {
-      onOpenAuthModal();
+    } else {
+      // Route to checkout for locked asset
+      handleTriggerCheckoutForProduct(file.productId);
     }
   };
 
@@ -655,7 +882,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-mono text-white/70 min-w-0 truncate">
               <HardDrive className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
               <span className="font-bold text-white truncate">Sillow Mill Drive</span>
-              <span className="text-white/40 hidden md:inline truncate">· 2D Visualizer Production Workflow &amp; Asset Library</span>
+              <span className="text-white/40 hidden md:inline truncate">· 3 Production Master Folders &amp; Asset Vault</span>
             </div>
           </div>
 
@@ -665,7 +892,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               type="button"
               onClick={() => {
                 setCurrentFolderId('root');
-                setFolderPath([{ id: 'root', name: '2D Visualizer Production Workflow' }]);
+                setFolderPath([{ id: 'root', name: 'Sillow Mill Production Vault' }]);
                 soundManager.playTone(520, 0.05);
               }}
               className="px-3 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono text-xs font-bold transition-all cursor-pointer shadow-[0_0_12px_rgba(0,242,254,0.3)] flex items-center gap-1.5"
@@ -676,108 +903,113 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
             {isMember ? (
               <span className="text-[9.5px] sm:text-[10px] font-mono px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold flex items-center gap-1 shadow-sm whitespace-nowrap">
                 <Crown className="w-3 h-3 text-emerald-400 shrink-0" />
-                <span className="hidden xs:inline">PAID SUBSCRIBER ACTIVE</span>
-                <span className="xs:hidden">SUBSCRIBER</span>
+                <span className="hidden xs:inline">ALL-INCLUSIVE PASS ACTIVE</span>
+                <span className="xs:hidden">PASS ACTIVE</span>
               </span>
             ) : (
               <span className="text-[9.5px] sm:text-[10px] font-mono px-2 sm:px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold flex items-center gap-1 shadow-sm whitespace-nowrap">
                 <Lock className="w-3 h-3 text-amber-400 shrink-0" />
-                <span className="hidden xs:inline">VIEW-ONLY PREVIEWS · GATED</span>
-                <span className="xs:hidden">GATED</span>
+                <span className="hidden xs:inline">SECURE ASSET VAULT</span>
+                <span className="xs:hidden">VAULT</span>
               </span>
             )}
           </div>
         </div>
 
-        {/* Strict 100% Asset Vault Locking Notice Banner */}
-        <div className="px-4 py-2.5 bg-amber-950/60 border-b border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-amber-300">
-          <div className="flex items-center gap-2 min-w-0">
-            <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-            <span className="font-bold tracking-wide truncate">
-              ANNUAL PASS REQUIRED — 2D Visualizer Production Workflow &amp; Asset Library unlocks on January 9, 2027 (€60/year).
+        {/* Dynamic Asset Vault Notice Banner */}
+        {isMember ? (
+          <div className="px-4 py-2.5 bg-emerald-950/60 border-b border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-emerald-300">
+            <div className="flex items-center gap-2 min-w-0">
+              <Crown className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="font-bold tracking-wide truncate">
+                ALL-INCLUSIVE VAULT ACCESS ACTIVE — All 3 Master Folders, Acapellas &amp; 4K Deliverables Unlocked.
+              </span>
+            </div>
+            <span className="text-[10px] text-emerald-400/90 font-bold tracking-wider shrink-0 uppercase">
+              DIRECT DOWNLOADS ACTIVE
             </span>
           </div>
-          <span className="text-[10px] text-amber-400/90 font-bold tracking-wider shrink-0 uppercase">
-            5 PRODUCTION FOLDERS LOCKED PRIOR TO LAUNCH
-          </span>
-        </div>
+        ) : (
+          <div className="px-4 py-2.5 bg-cyan-950/60 border-b border-cyan-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono text-cyan-300">
+            <div className="flex items-center gap-2 min-w-0">
+              <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span className="font-bold tracking-wide truncate">
+                SILLOW MILL ASSET VAULT — Dissected into 3 Dedicated Master Production Folders.
+              </span>
+            </div>
+            <span className="text-[10px] text-cyan-400/90 font-bold tracking-wider shrink-0 uppercase">
+              OWNED ASSETS UNLOCKED · GATED ASSETS AVAILABLE À LA CARTE
+            </span>
+          </div>
+        )}
 
-        {/* macOS Toolbar (Search, Breadcrumbs & View Toggle) */}
-        <div className="p-4 bg-black/40 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Breadcrumb Path */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs font-mono text-white/70">
+        {/* Finder Toolbar: Search & Breadcrumbs */}
+        <div className="p-3 sm:p-4 bg-black/40 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Breadcrumbs Navigation */}
+          <div className="flex items-center gap-1.5 text-xs font-mono overflow-x-auto [scrollbar-width:none] py-0.5">
             {folderPath.map((item, index) => {
               const isLast = index === folderPath.length - 1;
               return (
                 <React.Fragment key={item.id}>
-                  {index > 0 && <ChevronRight className="w-3 h-3 text-white/30 shrink-0" />}
                   <button
                     type="button"
                     onClick={() => handleNavigateBreadcrumb(index)}
-                    className={`hover:text-cyan-300 transition-colors cursor-pointer whitespace-nowrap ${
+                    className={`transition-colors truncate max-w-[200px] cursor-pointer ${
                       isLast
-                        ? 'text-cyan-300 font-bold underline underline-offset-4 decoration-cyan-400'
-                        : 'text-white/60'
+                        ? 'text-cyan-300 font-bold pointer-events-none'
+                        : 'text-white/60 hover:text-white'
                     }`}
                   >
                     {item.name}
                   </button>
+                  {!isLast && <ChevronRight className="w-3.5 h-3.5 text-white/30 shrink-0" />}
                 </React.Fragment>
               );
             })}
           </div>
 
-          {/* Search & View Switcher */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            <div className="relative min-w-[190px] sm:min-w-[220px]">
-              <Search className="w-3.5 h-3.5 text-cyan-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          {/* Right Toolbar Controls: Search and View Mode */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Search Box */}
+            <div className="relative flex items-center">
+              <Search className="w-3.5 h-3.5 text-white/40 absolute left-2.5 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search vault files..."
-                className="w-full bg-black/60 border border-white/15 focus:border-cyan-400 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white outline-none font-sans"
+                placeholder="Search stems, presets, comics..."
+                className="pl-8 pr-7 py-1.5 text-xs rounded-xl bg-white/5 border border-white/10 focus:border-cyan-400 text-white placeholder-white/40 outline-none w-48 sm:w-56 font-mono"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                  className="absolute right-2 text-white/40 hover:text-white"
                 >
-                  ✕
+                  <X className="w-3 h-3" />
                 </button>
               )}
             </div>
 
-            {/* Apple View Mode Switch */}
-            <div className="flex items-center bg-black/60 border border-white/15 rounded-xl p-0.5">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-white/5 rounded-xl border border-white/10 p-0.5">
               <button
                 type="button"
-                onClick={() => {
-                  soundManager.playTone(480, 0.04);
-                  setViewMode('list');
-                }}
+                onClick={() => setViewMode('list')}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'list'
-                    ? 'bg-cyan-400 text-black shadow-sm'
-                    : 'text-white/50 hover:text-white'
+                  viewMode === 'list' ? 'bg-cyan-500/20 text-cyan-300' : 'text-white/50 hover:text-white'
                 }`}
-                title="List View"
+                title="List view"
               >
                 <List className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  soundManager.playTone(480, 0.04);
-                  setViewMode('grid');
-                }}
+                onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'grid'
-                    ? 'bg-cyan-400 text-black shadow-sm'
-                    : 'text-white/50 hover:text-white'
+                  viewMode === 'grid' ? 'bg-cyan-500/20 text-cyan-300' : 'text-white/50 hover:text-white'
                 }`}
-                title="Grid View"
+                title="Grid view"
               >
                 <Grid className="w-3.5 h-3.5" />
               </button>
@@ -785,8 +1017,8 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           </div>
         </div>
 
-        {/* Directory Content Area */}
-        <div className="p-5 sm:p-6 space-y-6">
+        {/* Finder Content Area */}
+        <div className="p-4 sm:p-6 space-y-6 min-h-[420px]">
           {/* Folders Group */}
           {filteredFolders.length > 0 && (
             <div className="space-y-3">
@@ -815,7 +1047,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                 }
               >
                 {filteredFolders.map((folder) => {
-                  const isLockedForUser = folder.isLocked && !isMember;
+                  const isUnlocked = isItemUnlocked(folder);
 
                   return (
                     <div
@@ -826,8 +1058,8 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                           ? 'p-4 space-y-3'
                           : 'p-3.5 flex items-center justify-between gap-3'
                       } ${
-                        isLockedForUser
-                          ? 'bg-black/40 border-white/10 hover:border-amber-400/40 opacity-70 hover:opacity-85'
+                        !isUnlocked
+                          ? 'bg-black/40 border-white/10 hover:border-amber-400/40 opacity-80 hover:opacity-100'
                           : 'bg-[#0a0e1b]/80 border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(0,242,254,0.15)] hover:scale-[1.01]'
                       }`}
                     >
@@ -835,12 +1067,12 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                         {/* Rich Folder Emoji / Icon */}
                         <div
                           className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl transition-transform group-hover:scale-105 ${
-                            isLockedForUser
+                            !isUnlocked
                               ? 'bg-amber-950/40 border border-amber-400/30 shadow-sm'
                               : 'bg-cyan-950/60 border border-cyan-400/40 shadow-[0_0_12px_rgba(0,242,254,0.2)]'
                           }`}
                         >
-                          {isLockedForUser ? '🔒' : folder.richIcon}
+                          {folder.richIcon}
                         </div>
 
                         <div className="min-w-0 space-y-0.5">
@@ -859,10 +1091,27 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold flex items-center gap-1">
-                          <Lock className="w-3 h-3 text-amber-400" />
-                          <span>LOCKED · JAN 9</span>
-                        </span>
+                        {isUnlocked ? (
+                          <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                            <Unlock className="w-3 h-3 text-emerald-400" />
+                            <span>UNLOCKED</span>
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold flex items-center gap-1">
+                              <Lock className="w-3 h-3 text-amber-400" />
+                              <span>STILL LOCKED</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleTriggerCheckoutForProduct(folder.productId)}
+                              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-mono font-bold text-[10px] shadow-[0_0_12px_rgba(56,189,248,0.3)] transition-all flex items-center gap-1 cursor-pointer"
+                            >
+                              <ShoppingBag className="w-3 h-3" />
+                              <span>BUY NOW</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -887,6 +1136,8 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                 }
               >
                 {filteredFiles.map((file) => {
+                  const isFileUnlocked = isItemUnlocked(file);
+
                   return (
                     <div
                       key={file.id}
@@ -907,6 +1158,9 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                           {file.extension === 'CUBE' && <Sliders className="w-5 h-5 text-purple-400" />}
                           {file.extension === 'WAV' && <Music className="w-5 h-5 text-teal-400" />}
                           {file.extension === 'ALS' && <Disc className="w-5 h-5 text-amber-400" />}
+                          {file.extension === 'LOGICX' && <Music className="w-5 h-5 text-indigo-400" />}
+                          {file.extension === 'TIFF' && <Film className="w-5 h-5 text-purple-400" />}
+                          {file.extension === 'ZIP' && <Box className="w-5 h-5 text-teal-400" />}
                           {file.extension !== 'PDF' &&
                             file.extension !== 'PNG' &&
                             file.extension !== 'JPG' &&
@@ -914,7 +1168,10 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                             file.extension !== 'JSON' &&
                             file.extension !== 'CUBE' &&
                             file.extension !== 'WAV' &&
-                            file.extension !== 'ALS' && (
+                            file.extension !== 'ALS' &&
+                            file.extension !== 'LOGICX' &&
+                            file.extension !== 'TIFF' &&
+                            file.extension !== 'ZIP' && (
                               <File className="w-5 h-5 text-white/60" />
                             )}
                         </div>
@@ -973,27 +1230,37 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                           </button>
                         )}
 
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadFile(file)}
-                          className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                            !file.isLocked || isMember
-                              ? 'bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-300'
-                              : 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300'
-                          }`}
-                        >
-                          {!file.isLocked || isMember ? (
-                            <>
+                        {isFileUnlocked ? (
+                          <>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold flex items-center gap-1">
+                              <Unlock className="w-3 h-3 text-emerald-400" />
+                              <span className="hidden sm:inline">UNLOCKED</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadFile(file)}
+                              className="px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-300"
+                            >
                               <Download className="w-3 h-3 text-cyan-400" />
                               <span>DOWNLOAD</span>
-                            </>
-                          ) : (
-                            <>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold flex items-center gap-1">
                               <Lock className="w-3 h-3 text-amber-400" />
-                              <span>LOCKED · JAN 9</span>
-                            </>
-                          )}
-                        </button>
+                              <span className="hidden sm:inline">STILL LOCKED</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleTriggerCheckoutForProduct(file.productId)}
+                              className="px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-[0_0_15px_rgba(56,189,248,0.35)]"
+                            >
+                              <ShoppingBag className="w-3 h-3" />
+                              <span>GET ACCESS NOW</span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   );
@@ -1023,7 +1290,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedFileForPreview(null)}
-              className="fixed inset-0 bg-black/95"
+              className="fixed inset-0 bg-black/95 backdrop-blur-md"
             />
 
             <motion.div
@@ -1095,27 +1362,35 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                   Size: {selectedFileForPreview.size} · Modified: {selectedFileForPreview.modified}
                 </span>
 
-                <button
-                  type="button"
-                  onClick={() => handleDownloadFile(selectedFileForPreview)}
-                  className={`px-4 py-2 rounded-xl font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
-                    !selectedFileForPreview.isLocked || isMember
-                      ? 'bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-300'
-                      : 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300'
-                  }`}
-                >
-                  {!selectedFileForPreview.isLocked || isMember ? (
-                    <>
-                      <Download className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>DOWNLOAD FILE</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-3.5 h-3.5 text-amber-400" />
-                      <span>ANNUAL PASS REQUIRED (€60/YEAR)</span>
-                    </>
-                  )}
-                </button>
+                {isItemUnlocked(selectedFileForPreview) ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadFile(selectedFileForPreview)}
+                    className="px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-300 font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center gap-2 shadow-[0_0_15px_rgba(56,189,248,0.25)]"
+                  >
+                    <Download className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>DOWNLOAD FILE</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-amber-400" />
+                      <span>STILL LOCKED</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const pid = selectedFileForPreview.productId;
+                        setSelectedFileForPreview(null);
+                        handleTriggerCheckoutForProduct(pid);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-mono font-bold text-xs tracking-wider shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all cursor-pointer flex items-center gap-2"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <span>GET ACCESS NOW</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

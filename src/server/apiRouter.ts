@@ -131,6 +131,7 @@ apiRouter.post('/create-checkout-session', async (req: Request, res: Response): 
     const {
       customerEmail,
       customerName,
+      customerPassword,
       shippingAddress,
       shippingCity,
       apartmentBus,
@@ -140,6 +141,25 @@ apiRouter.post('/create-checkout-session', async (req: Request, res: Response): 
       isPhysical,
     } = req.body || {};
     const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
+
+    // Automated account creation upon checkout submission
+    if (customerPassword && customerPassword.length >= 6 && customerEmail) {
+      try {
+        const parts = (customerName || '').trim().split(' ');
+        const firstName = parts[0] || 'Collector';
+        const lastName = parts.slice(1).join(' ') || '';
+        const role = (productId === 'membership' ? 'ANNUAL_PASS' : 'VIP_GUEST') as any;
+        await registerUserCredentials({
+          email: customerEmail,
+          password: customerPassword,
+          firstName,
+          lastName,
+          role,
+        }).catch(() => {});
+      } catch (regErr) {
+        console.warn('[Checkout] Account auto-registration notice:', regErr);
+      }
+    }
 
     const session = await createComicCheckoutSession({
       customerEmail,
@@ -195,6 +215,7 @@ apiRouter.get('/checkout/session/:id', async (req: Request, res: Response): Prom
       status: session.payment_status,
       customerEmail: session.customer_details?.email,
       customerName: session.customer_details?.name,
+      product: matchedOrder?.product || session.metadata?.product || 'comic',
       productTitle: matchedOrder?.productTitle || session.metadata?.product_title || 'Sillow Mill Order',
       amount: session.amount_total ? session.amount_total / 100 : undefined,
     });
