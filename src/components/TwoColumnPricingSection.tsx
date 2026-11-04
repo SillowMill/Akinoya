@@ -502,86 +502,32 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               })}
             </div>
 
-            {/* 3. MEMBERSHIP UPSELL ENGINE (Bottom Conversion Anchor) */}
-            <div className="rounded-2xl bg-gradient-to-br from-[#141006] via-[#0b0c16] to-[#04060f] border-2 border-amber-400/60 p-4 sm:p-5 shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_25px_rgba(245,158,11,0.18)] relative overflow-hidden group space-y-3.5">
+            {/* 3. STREAMLINED MEMBERSHIP UPSELL WIDGET */}
+            <div className="rounded-2xl bg-gradient-to-br from-[#120d04]/80 via-[#0a0c16]/90 to-[#04060f]/95 backdrop-blur-md border border-amber-400/40 hover:border-amber-400/60 p-3 sm:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.12)] relative overflow-hidden group space-y-3 transition-all">
               {/* Luminous Top Gold Beam */}
-              <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/80 to-transparent pointer-events-none" />
+              <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/70 to-transparent pointer-events-none" />
 
-              {/* Header Badge & Value Framing */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-[10px] font-mono font-black uppercase px-2.5 py-1 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/40 tracking-wider flex items-center gap-1.5 w-fit shadow-[0_0_12px_rgba(245,158,11,0.2)]">
-                  <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>SMART BUYER UPSELL · MEMBERSHIP VALUE ANCHOR</span>
-                </span>
-
-                <div className="flex items-baseline gap-1.5 font-mono text-xs text-amber-200/90 font-bold">
-                  <span className="text-white/50 uppercase text-[10px]">Save Day One:</span>
-                  <span className="text-emerald-400 font-extrabold text-sm">€ 14.96+</span>
-                </div>
-              </div>
-
-              {/* Transparent Breakdown & Comparison Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 sm:p-3.5 rounded-xl bg-black/60 border border-white/10">
-                {/* Left: A La Carte Cost */}
-                <div className="space-y-1 sm:border-r sm:border-white/10 sm:pr-3">
-                  <div className="text-[10px] font-mono uppercase text-white/50 tracking-wider font-semibold flex items-center justify-between">
-                    <span>A La Carte Total</span>
-                    <span className="text-rose-400 font-bold text-[9.5px]">Separate Items</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-display font-black text-white/70 line-through decoration-rose-400 decoration-2">
-                      € 74.96
-                    </span>
-                  </div>
-                  <p className="text-[10.5px] font-mono text-white/50 leading-tight">
-                    3 Digital Packs (€59.97) + Physical Comic (€14.99)
-                  </p>
-                </div>
-
-                {/* Right: Membership Pass Advantage */}
-                <div className="space-y-1 sm:pl-1">
-                  <div className="text-[10px] font-mono uppercase text-amber-300 tracking-wider font-bold flex items-center justify-between">
-                    <span>Membership Pass</span>
-                    <span className="text-emerald-400 font-extrabold text-[9.5px]">Best Value</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-display font-black text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.4)]">
-                      € 60
-                    </span>
-                    <span className="text-xs font-mono font-bold text-amber-200/80 uppercase">
-                      / year (~€5/mo)
-                    </span>
-                  </div>
-                  <p className="text-[10.5px] font-mono text-amber-200/80 leading-tight">
-                    All digital items unlocked + future monthly drops
-                  </p>
-                </div>
-              </div>
-
-              {/* Value Proposition Framing Callout */}
-              <div className="p-3 rounded-xl bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-cyan-950/30 border border-amber-400/30 text-xs text-white/85 font-sans leading-relaxed flex items-start gap-2.5">
+              {/* Retained Explanatory Info Block */}
+              <div className="p-3 sm:p-3.5 rounded-xl bg-gradient-to-r from-amber-950/30 via-amber-900/15 to-cyan-950/20 border border-amber-400/25 text-xs text-white/85 font-sans leading-relaxed flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <div>
+                <div className="text-[11.5px] sm:text-xs">
                   <strong className="text-white font-medium">Why buy separately? </strong>
                   Get <strong className="text-amber-300">EVERYTHING</strong> unlocked instantly—including all 3 digital production packs, unreleased audio masters, visualizer workflows, exclusive Pioneer Lounge access, and fresh monthly drops starting January 9, 2027—for just <strong className="text-white">€60/year</strong> (Save €14.96+ on day one!).
                 </div>
               </div>
 
-              {/* Direct High-Converting Membership CTA Button */}
+              {/* High-End Cyberpunk Glassmorphic CTA Button */}
               <button
                 type="button"
                 onClick={handleJoinPassClick}
-                className="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 active:scale-[0.98] text-black font-mono font-black text-xs sm:text-sm tracking-wide shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.6)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[46px]"
+                className="relative group/btn overflow-hidden w-full py-3 sm:py-3.5 px-4 sm:px-5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-yellow-500/20 hover:from-amber-400/35 hover:via-yellow-400/40 hover:to-amber-400/30 backdrop-blur-xl border border-amber-400/60 hover:border-amber-300 text-amber-100 hover:text-white font-mono font-black text-xs sm:text-[13px] tracking-wide shadow-[0_0_20px_rgba(245,158,11,0.25),inset_0_1px_1px_rgba(255,255,255,0.2)] hover:shadow-[0_0_35px_rgba(245,158,11,0.5),inset_0_1px_2px_rgba(255,255,255,0.3)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 min-h-[46px] active:scale-[0.98]"
               >
-                <Crown className="w-4 h-4 fill-black text-black shrink-0" />
-                <span>Skip A La Carte — Unlock All With Member Pass</span>
-                <ArrowRight className="w-4 h-4 text-black shrink-0" />
+                {/* Ambient Shimmer Flare */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-300/10 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-in-out pointer-events-none" />
+                <Crown className="w-4 h-4 text-amber-300 group-hover/btn:text-amber-200 shrink-0 transition-colors" />
+                <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Skip A La Carte — Unlock All With Member Pass</span>
+                <ArrowRight className="w-4 h-4 text-amber-300 group-hover/btn:translate-x-0.5 transition-transform shrink-0" />
               </button>
-
-              <div className="flex items-center justify-center gap-1.5 text-[10.5px] font-mono text-emerald-300 font-bold text-center">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Save €14.96+ instantly vs separate purchases · Instant access</span>
-              </div>
             </div>
           </div>
 
