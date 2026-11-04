@@ -503,7 +503,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                               <span>Smart Choice: Bundled with Member Pass</span>
                             </div>
                             <p className="text-white/70 font-sans text-[11.5px]">
-                              Get this pack plus all digital extras, stems, and monthly drops bundled into the Annual Member Pass (€60/yr) at a lower overall price.
+                              Get this pack plus all digital extras, stems, and monthly drops bundled into the Annual Member Pass (€60 per year) at a lower overall price.
                             </p>
                           </div>
 
@@ -587,7 +587,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-[11.5px] sm:text-xs">
                   <strong className="text-white font-medium">Why buy separately? </strong>
-                  Get <strong className="text-amber-300">EVERYTHING</strong> unlocked instantly—including all 3 digital production packs, unreleased audio masters, visualizer workflows, exclusive Pioneer Lounge access, and fresh monthly drops starting January 9, 2027—for just <strong className="text-white">€60/year</strong> (Save €14.96+ on day one!).
+                  Get <strong className="text-amber-300">EVERYTHING</strong> unlocked instantly—including all 3 digital production packs, unreleased audio masters, visualizer workflows, exclusive Pioneer Lounge access, and fresh monthly drops starting January 9, 2027—for just <strong className="text-white">€60 per year</strong> (Save €14.96+ on day one!).
                 </div>
               </div>
 
@@ -645,50 +645,28 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </p>
             </div>
 
-            {/* Mobile Streamlined SaaS Pricing Display (sm:hidden - exclusively mobile) */}
-            <div className="sm:hidden p-4 rounded-2xl bg-gradient-to-r from-amber-950/50 via-[#171206] to-black border border-amber-400/40 space-y-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl font-display font-black text-amber-300 tracking-tight drop-shadow-[0_2px_12px_rgba(245,158,11,0.4)]">
-                    €60
-                  </span>
-                  <span className="text-xs font-mono font-bold text-amber-200/70 uppercase tracking-wider">
-                    / year
-                  </span>
-                </div>
-
-                {/* Polished SaaS pass badge */}
-                <div className="px-2.5 py-1 rounded-full bg-amber-400/15 border border-amber-400/40 shadow-sm flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                  <span className="text-[11px] font-mono font-extrabold text-amber-300 uppercase tracking-wide">
-                    €5 / month
-                  </span>
-                </div>
-              </div>
-
-              <div className="text-[11px] font-mono text-emerald-300 flex items-center gap-1.5 font-bold pt-1.5 border-t border-amber-500/15">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Save €14.96+ vs separate prices · All extras bundled</span>
-              </div>
-            </div>
-
-            {/* Desktop & Tablet Price Presentation (sm: and up - strictly preserved) */}
-            <div className="hidden sm:block p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#151105] to-black border border-amber-400/40 space-y-2">
-              <div className="flex items-baseline gap-2.5 flex-wrap">
-                <span className="text-3xl sm:text-4xl lg:text-5xl font-display font-black text-amber-300 tracking-tight drop-shadow-[0_2px_15px_rgba(245,158,11,0.35)] whitespace-nowrap inline-flex items-baseline gap-1.5">
+            {/* Clean, Flat Price Presentation directly on Main Widget Background */}
+            <div className="space-y-2.5 pt-1">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Large Clean €60 Price Display */}
+                <span className="text-4xl sm:text-5xl font-display font-black text-amber-300 tracking-tight drop-shadow-[0_2px_18px_rgba(245,158,11,0.35)] whitespace-nowrap inline-flex items-baseline gap-1">
                   <span>€</span>
                   <span>60</span>
                 </span>
-                <span className="text-xs sm:text-sm font-mono text-amber-200/80 font-bold uppercase tracking-wider whitespace-nowrap inline-flex items-baseline gap-1">
-                  <span>/ year (~</span>
-                  <span className="whitespace-nowrap inline-flex items-baseline gap-0.5">
-                    <span>€</span>
-                    <span>5</span>
+
+                {/* Sleek Pill Badges without raw slashes */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-300 font-mono text-xs font-bold uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                    <span>€60 PER YEAR</span>
                   </span>
-                  <span>/ month)</span>
-                </span>
+                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-amber-200/80 font-mono text-xs font-semibold tracking-wide">
+                    ~ €5 PER MONTH
+                  </span>
+                </div>
               </div>
-              <div className="text-[11px] sm:text-xs font-mono text-emerald-300 flex items-center gap-1.5 font-bold">
+
+              <div className="text-[11.5px] sm:text-xs font-mono text-emerald-300 flex items-center gap-1.5 font-bold">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>Save €14.96+ vs separate prices · All extras bundled into one pass</span>
               </div>

@@ -1862,10 +1862,10 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                   )}
                   <span className="whitespace-normal break-words text-center leading-snug">
                     {isMembershipLaunchLocked
-                      ? 'LAUNCHES 09/01/2027 · €60/YEAR (~€5/MONTH)'
+                      ? 'LAUNCHES 09/01/2027 · €60 PER YEAR (~ €5 PER MONTH)'
                       : isSubscribing
                       ? 'INITIALIZING STRIPE...'
-                      : 'ACTIVATE ANNUAL MEMBERSHIP · €60/YEAR (~€5/MONTH)'}
+                      : 'ACTIVATE ANNUAL MEMBERSHIP · €60 PER YEAR (~ €5 PER MONTH)'}
                   </span>
                 </button>
 

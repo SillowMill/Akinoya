@@ -127,9 +127,14 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
               <span className="text-xs font-mono font-bold text-amber-300 uppercase tracking-wider">
                 Full Pioneer Entitlements Included:
               </span>
-              <span className="text-xs font-mono font-black text-white">
-                €60 / YEAR <span className="text-white/50 font-normal">(~€5/mo)</span>
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-300 font-mono text-[11px] font-bold">
+                  €60 PER YEAR
+                </span>
+                <span className="text-white/50 font-mono text-[10.5px]">
+                  (~ €5 PER MONTH)
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-mono text-white/80">
