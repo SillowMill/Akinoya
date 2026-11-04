@@ -247,6 +247,23 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 <ArrowRight className="w-3.5 h-3.5 text-cyan-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
               </button>
 
+              {/* À La Carte Section Quick Navigation Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  soundManager.playTone(580, 0.04);
+                  const el = document.getElementById('alacarte-section');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
+                className="group relative px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#071324]/90 via-[#0a1829]/85 to-[#071324]/90 hover:from-cyan-950/90 hover:to-[#0c1f38]/90 text-cyan-200 hover:text-white border-2 border-cyan-400/60 hover:border-cyan-300 font-mono font-extrabold text-xs shadow-[0_0_22px_rgba(56,189,248,0.25)] hover:shadow-[0_0_32px_rgba(56,189,248,0.45)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98]"
+              >
+                <ShoppingBag className="w-3.5 h-3.5 text-cyan-300 group-hover:scale-110 transition-transform duration-200 shrink-0" />
+                <span className="tracking-wider uppercase whitespace-nowrap">À La Carte</span>
+                <ArrowRight className="w-3.5 h-3.5 text-cyan-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
+              </button>
+
               {/* Join Member Pass Button (Identical High-End Build to Community Hub) */}
               <button
                 type="button"
@@ -265,9 +282,12 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
       {/* Two-Column Responsive Grid: Side-by-side on desktop (lg:grid-cols-2), cleanly stacked on tablet/mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
         {/* ========================================================= */}
-        {/* COLUMN 1: Individual Add-ons & Physical Product            */}
+        {/* COLUMN 1: Individual Add-ons & Physical Product (À La Carte) */}
         {/* ========================================================= */}
-        <div className="flex flex-col rounded-3xl bg-gradient-to-b from-[#090e1a] via-[#060a14] to-[#04070e] border border-white/15 p-4 xs:p-5 sm:p-7 lg:p-8 relative overflow-hidden shadow-2xl">
+        <div
+          id="alacarte-section"
+          className="flex flex-col rounded-3xl bg-gradient-to-b from-[#090e1a] via-[#060a14] to-[#04070e] border border-white/15 p-4 xs:p-5 sm:p-7 lg:p-8 relative overflow-hidden shadow-2xl scroll-mt-20 sm:scroll-mt-24"
+        >
           {/* Subtle Ambient Top Border Highlight */}
           <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent pointer-events-none" />
 
@@ -499,10 +519,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               })}
             </div>
 
-            {/* 3. STREAMLINED MEMBERSHIP UPSELL SECTION (Seamlessly Integrated, Zero Nested Box Artifacts) */}
-            <div className="pt-2 space-y-3">
-              {/* Explanatory Info: Clean, seamless text with no clumsy nested border-box */}
-              <div className="text-xs text-white/80 font-sans leading-relaxed flex items-start gap-2.5 px-1">
+            {/* 3. STREAMLINED MEMBERSHIP UPSELL SECTION (Clean High-End Card Container) */}
+            <div className="rounded-2xl bg-gradient-to-br from-[#120d04]/80 via-[#0a0c16]/90 to-[#04060f]/95 backdrop-blur-md border border-amber-400/40 p-3.5 sm:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.12)] relative overflow-hidden space-y-3">
+              {/* Luminous Top Gold Beam */}
+              <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/70 to-transparent pointer-events-none" />
+
+              {/* Explanatory Info */}
+              <div className="text-xs text-white/80 font-sans leading-relaxed flex items-start gap-2.5 px-0.5">
                 <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-[11.5px] sm:text-xs">
                   <strong className="text-white font-medium">Why buy separately? </strong>
@@ -510,14 +533,14 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 </div>
               </div>
 
-              {/* High-End Cyberpunk Glassmorphic CTA Button (Matching Community Hub's clean build) */}
+              {/* High-End Cyberpunk Glassmorphic CTA Button (Mobile-Optimized Typography, Zero Overflow) */}
               <button
                 type="button"
                 onClick={handleJoinPassClick}
-                className="group relative w-full py-3.5 px-4 sm:px-5 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-xs sm:text-[13px] tracking-wide shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98] min-h-[46px]"
+                className="group relative w-full py-3.5 px-3 sm:px-5 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-[11px] xs:text-xs sm:text-[13px] tracking-wide shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98] min-h-[46px]"
               >
                 <Crown className="w-4 h-4 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                <span className="tracking-wider uppercase whitespace-nowrap">Skip A La Carte — Unlock All With Member Pass</span>
+                <span className="tracking-wider uppercase text-center leading-tight">Skip A La Carte — Unlock All With Member Pass</span>
                 <ArrowRight className="w-4 h-4 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
               </button>
 

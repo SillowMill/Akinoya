@@ -2177,21 +2177,21 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             {/* Subtle Ambient Top Border Highlight */}
                             <div className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300" />
 
-                            {/* Card Header: Track Number, Name & Sleek High-End Stream Button */}
-                            <div className="flex items-center justify-between gap-2.5">
-                              <div className="flex items-center gap-2 min-w-0">
+                            {/* Card Header: Track Number, Full Name (No Ellipsis) & Sleek High-End Stream Button */}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 shrink min-w-0">
                                 <span className="text-[10px] sm:text-[11px] font-mono text-cyan-300 font-black px-2 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-400/35 tracking-wider shrink-0 shadow-[0_0_8px_rgba(56,189,248,0.2)]">
                                   #{track.id}
                                 </span>
-                                <h4 className="text-xs sm:text-sm font-display font-black text-white tracking-wide truncate group-hover:text-cyan-200 transition-colors drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                                <h4 className="text-xs sm:text-sm font-display font-black text-white tracking-wide whitespace-nowrap group-hover:text-cyan-200 transition-colors drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                                   {track.title}
                                 </h4>
                               </div>
 
-                              {/* High-End Cyberpunk Stream Button */}
-                              <div className="shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-gradient-to-r from-cyan-950/80 via-[#0a1829] to-cyan-950/90 group-hover:from-cyan-400 group-hover:to-cyan-300 text-cyan-300 group-hover:text-black border border-cyan-400/40 group-hover:border-cyan-300 text-[10px] sm:text-[11px] font-mono font-black tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(0,240,255,0.12),inset_0_1px_0_rgba(255,255,255,0.12)] group-hover:shadow-[0_0_20px_rgba(0,240,255,0.6)]">
-                                <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current ml-0.5 shrink-0 group-hover:scale-110 transition-transform" />
-                                <span>STREAM</span>
+                              {/* High-End Stream Button (Pure White & Luminous, Never Turns Black) */}
+                              <div className="shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white/10 group-hover:bg-white/20 text-white group-hover:text-white border border-white/20 group-hover:border-cyan-300/80 text-[10px] sm:text-[11px] font-mono font-bold tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0.06)] group-hover:shadow-[0_0_16px_rgba(255,255,255,0.35)]">
+                                <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white text-white ml-0.5 shrink-0 group-hover:scale-110 transition-transform drop-shadow-[0_0_4px_rgba(255,255,255,0.5)]" />
+                                <span className="text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.3)]">STREAM</span>
                               </div>
                             </div>
 
