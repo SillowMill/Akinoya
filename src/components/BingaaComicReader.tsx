@@ -112,7 +112,10 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     doc.getPage(pageNum).then((page) => {
       if (cancelled || !canvasRef.current) return;
       const base = page.getViewport({ scale: 1 });
-      const fit = Math.min(stageSize.w / base.width, stageSize.h / base.height);
+      const isMobileOrTablet = stageSize.w > 0 && stageSize.w < 1024;
+      const fit = isMobileOrTablet
+        ? stageSize.h / base.height
+        : Math.min(stageSize.w / base.width, stageSize.h / base.height);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const viewport = page.getViewport({ scale: fit * dpr });
 
@@ -424,7 +427,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       {/* Stage (Completely Fixed Container, No Outer Modal Scrolling) */}
       <div
         ref={stageRef}
-        className="relative flex-1 min-h-0 m-0 lg:m-4 p-0 flex items-start lg:items-center justify-center select-none overflow-hidden"
+        className="relative flex-1 min-h-0 m-0 lg:m-4 p-0 flex items-center justify-center select-none overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -525,16 +528,16 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           </div>
         ) : (
           <div
-            className="relative flex items-start lg:items-center justify-center max-w-full max-h-full transition-transform"
+            className="relative flex items-center justify-center lg:max-w-full max-h-full transition-transform shrink-0"
             style={{
               transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
-              transformOrigin: stageSize.w > 0 && stageSize.w < 1024 ? 'top center' : 'center center',
+              transformOrigin: 'center center',
               willChange: 'transform',
               cursor: zoom > 1 ? (isDraggingRef.current ? 'grabbing' : 'grab') : 'default',
             }}
             onDoubleClick={handleDoubleTap}
           >
-            <canvas ref={canvasRef} className="rounded-none lg:rounded-md shadow-2xl bg-white max-w-full max-h-full select-none block" />
+            <canvas ref={canvasRef} className="rounded-none lg:rounded-md shadow-2xl bg-white lg:max-w-full max-h-full select-none block" />
             {(isRendering || !doc) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none bg-black/40 backdrop-blur-xs rounded-none lg:rounded-md">
                 <Loader2 className="w-7 h-7 text-cyan-300 animate-spin" />
