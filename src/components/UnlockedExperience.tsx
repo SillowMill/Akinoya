@@ -2028,17 +2028,18 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       {/* Track Metadata & Action Controls */}
                       <div className="flex-1 flex flex-col justify-between w-full space-y-3 sm:space-y-4">
                         <div>
-                          <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/90 border border-cyan-400/40 text-cyan-300 font-semibold tracking-wider flex items-center gap-1.5 shadow-[0_0_10px_rgba(56,189,248,0.2)]">
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1.5">
+                            <span className="text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/35 text-cyan-300 font-bold tracking-wider flex items-center gap-1.5 shadow-sm">
                               <AudioWaveform className="w-3 h-3 text-cyan-400" />
                               VISUALIZER HUB
                             </span>
-                            <span className="text-[10px] font-mono text-emerald-400 font-semibold">
-                              OPEN ACCESS · 11 TRACKS
+                            <span className="text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/35 text-emerald-300 font-bold tracking-wider uppercase flex items-center gap-1.5 shadow-sm">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                              <span>OPEN ACCESS · 11 TRACKS</span>
                             </span>
                           </div>
 
-                          <h3 className="text-lg sm:text-xl lg:text-2xl font-display font-bold text-white tracking-wide leading-tight">
+                          <h3 className="text-base sm:text-xl lg:text-2xl font-display font-black text-white tracking-wide leading-tight">
                             Äkinoya Visualizer Hub
                           </h3>
                           <p className="text-xs sm:text-sm font-sans text-white/70 leading-relaxed mt-1.5">
@@ -2105,25 +2106,48 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     {/* Clean Header: Äkinoya Visualizer Hub (Open Access) */}
                     <div
                       id="akinoya-visualizer-archive-header"
-                      className="flex items-center justify-between gap-3 border-b border-white/10 pb-4 mb-5 scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3.5 sm:pb-4 mb-4 sm:mb-5 scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)] shrink-0" />
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-semibold tracking-wider uppercase">
+                      <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+                        <div className="space-y-1 min-w-0 flex-1 sm:flex-initial">
+                          {/* Badges in a clean row: consistent micro-pills */}
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <span className="text-[9px] xs:text-[9.5px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/35 text-cyan-300 font-bold tracking-wider uppercase inline-flex items-center gap-1 shadow-sm">
                               11 PROJECT VISUALIZERS
                             </span>
-                            <span className="text-[10px] font-mono text-emerald-400 font-semibold uppercase">
-                              OPEN ACCESS
+                            <span className="text-[9px] xs:text-[9.5px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/35 text-emerald-300 font-bold tracking-wider uppercase inline-flex items-center gap-1.5 shadow-sm">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                              <span>OPEN ACCESS</span>
                             </span>
                           </div>
-                          <h2 className="text-lg sm:text-xl lg:text-2xl font-display font-extrabold text-white tracking-wide">
+
+                          {/* Compact, responsive title that scales cleanly without clumsy wrapping */}
+                          <h2 className="text-base xs:text-lg sm:text-xl lg:text-2xl font-display font-black text-white tracking-wide leading-tight truncate sm:whitespace-normal">
                             Äkinoya Visualizer Hub
                           </h2>
                         </div>
+
+                        {/* Back Button on Mobile: Compact and neatly aligned */}
+                        <button
+                          onClick={() => {
+                            setPassSubView('overview');
+                            try {
+                              sessionStorage.setItem('akinoya_portal_pass_subview', 'overview');
+                              const url = new URL(window.location.href);
+                              url.searchParams.delete('subview');
+                              url.searchParams.delete('track');
+                              url.hash = 'pass';
+                              window.history.replaceState(null, '', url.toString());
+                            } catch {}
+                          }}
+                          className="sm:hidden self-center shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-[11px] font-mono transition-colors cursor-pointer active:scale-95"
+                        >
+                          <ArrowLeft className="w-3 h-3" />
+                          <span>Back</span>
+                        </button>
                       </div>
 
+                      {/* Back Button for Tablet / Desktop */}
                       <button
                         onClick={() => {
                           setPassSubView('overview');
@@ -2136,7 +2160,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             window.history.replaceState(null, '', url.toString());
                           } catch {}
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer"
+                        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-mono transition-colors cursor-pointer shrink-0 active:scale-95"
                       >
                         <ArrowLeft className="w-3.5 h-3.5" />
                         <span>Back</span>
@@ -2165,33 +2189,36 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               willChange: 'transform',
                               touchAction: 'manipulation',
                             }}
-                            className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer relative group flex flex-col justify-between ${
-                              isProducedTrack
-                                ? 'bg-gradient-to-br from-emerald-950/20 via-black/60 to-black/80 border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.12)] hover:border-emerald-400'
-                                : 'bg-black/50 border-white/10 hover:border-cyan-400/50 hover:bg-black/70 shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
+                            className={`rounded-xl border transition-all duration-300 cursor-pointer relative group flex flex-col justify-between overflow-hidden ${
+                              hasArtwork
+                                ? 'p-3.5 sm:p-4 bg-gradient-to-br from-[#071120]/90 via-[#040813]/95 to-[#020409] backdrop-blur-xl border-cyan-500/35 hover:border-cyan-400/80 shadow-[0_10px_35px_rgba(0,0,0,0.7),0_0_25px_rgba(56,189,248,0.12)] hover:shadow-[0_14px_45px_rgba(0,0,0,0.85),0_0_35px_rgba(56,189,248,0.28)]'
+                                : 'p-3 sm:p-3.5 bg-gradient-to-br from-[#060c18]/85 via-[#040812]/90 to-[#020409]/95 backdrop-blur-xl border-white/10 hover:border-cyan-400/60 shadow-[0_6px_24px_rgba(0,0,0,0.6),0_0_12px_rgba(56,189,248,0.06)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.75),0_0_24px_rgba(56,189,248,0.22)] gap-2.5'
                             }`}
                           >
-                            {/* Card Header: Track Number, Name & Sleek Stream Button */}
-                            <div className="flex items-center justify-between gap-2.5 mb-2">
+                            {/* Subtle Ambient Top Border Highlight */}
+                            <div className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300" />
+
+                            {/* Card Header: Track Number, Name & Sleek High-End Stream Button */}
+                            <div className="flex items-center justify-between gap-2.5">
                               <div className="flex items-center gap-2 min-w-0">
-                                <span className="text-[11px] font-mono text-cyan-400 font-bold shrink-0">
+                                <span className="text-[10px] sm:text-[11px] font-mono text-cyan-300 font-black px-2 py-0.5 rounded-md bg-cyan-950/80 border border-cyan-400/35 tracking-wider shrink-0 shadow-[0_0_8px_rgba(56,189,248,0.2)]">
                                   #{track.id}
                                 </span>
-                                <h4 className="text-sm sm:text-base font-display font-bold text-white tracking-wide truncate group-hover:text-cyan-200 transition-colors">
+                                <h4 className="text-xs sm:text-sm font-display font-black text-white tracking-wide truncate group-hover:text-cyan-200 transition-colors drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                                   {track.title}
                                 </h4>
                               </div>
 
-                              {/* Sleek Stream Button */}
-                              <div className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/15 group-hover:bg-cyan-500 text-cyan-300 group-hover:text-black border border-cyan-400/40 text-[11px] font-mono font-semibold transition-all shadow-[0_0_10px_rgba(0,240,255,0.1)] group-hover:shadow-[0_0_15px_rgba(0,240,255,0.4)]">
-                                <Play className="w-3 h-3 fill-current ml-0.5" />
+                              {/* High-End Cyberpunk Stream Button */}
+                              <div className="shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-gradient-to-r from-cyan-950/80 via-[#0a1829] to-cyan-950/90 group-hover:from-cyan-400 group-hover:to-cyan-300 text-cyan-300 group-hover:text-black border border-cyan-400/40 group-hover:border-cyan-300 text-[10px] sm:text-[11px] font-mono font-black tracking-wider transition-all duration-300 shadow-[0_0_10px_rgba(0,240,255,0.12),inset_0_1px_0_rgba(255,255,255,0.12)] group-hover:shadow-[0_0_20px_rgba(0,240,255,0.6)]">
+                                <Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current ml-0.5 shrink-0 group-hover:scale-110 transition-transform" />
                                 <span>STREAM</span>
                               </div>
                             </div>
 
                             {/* Active 16:9 Artwork Preview / Video Loop Container */}
                             {hasArtwork && (track.videoUrl || track.artworkUrl) && (
-                              <div className="w-full aspect-video rounded-lg overflow-hidden my-1 relative group/thumb border border-cyan-500/30 bg-black/80 shadow-[0_0_20px_rgba(56,189,248,0.15)]">
+                              <div className="w-full aspect-video rounded-xl overflow-hidden my-2 relative group/thumb border border-cyan-500/35 bg-black/90 shadow-[0_4px_25px_rgba(0,0,0,0.7),0_0_20px_rgba(56,189,248,0.15)]">
                                 {track.videoUrl ? (
                                   <video
                                     ref={(el) => {
@@ -2235,6 +2262,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                   />
                                 )}
 
+                                {/* Cinematic Vignette & 4K Visualizer Overlay Badge */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+                                <div className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md border border-white/15 text-[9.5px] font-mono font-bold text-cyan-300 tracking-wider flex items-center gap-1.5 pointer-events-none shadow-sm">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_6px_rgba(34,211,238,0.8)]" />
+                                  <span>4K REACTIVE VISUALIZER</span>
+                                </div>
+
                                 {!track.videoUrl && (
                                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity pointer-events-none">
                                     <div className="w-10 h-10 rounded-full bg-cyan-950/80 border border-cyan-400/60 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.4)]">
@@ -2242,6 +2276,19 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                     </div>
                                   </div>
                                 )}
+                              </div>
+                            )}
+
+                            {/* Compact Scheduled Track Footer: Subtle Acoustic Log Metadata */}
+                            {!hasArtwork && (
+                              <div className="flex items-center justify-between text-[9.5px] sm:text-[10px] font-mono text-white/45 group-hover:text-cyan-300/80 pt-1.5 border-t border-white/5 transition-colors">
+                                <span className="flex items-center gap-1.5">
+                                  <AudioWaveform className="w-3 h-3 text-cyan-400/70 shrink-0" />
+                                  <span>ACOUSTIC LOG · 4K</span>
+                                </span>
+                                <span className="uppercase text-[9px] tracking-widest text-cyan-400/60 font-bold">
+                                  {track.code || 'STEREO'}
+                                </span>
                               </div>
                             )}
                           </motion.div>
