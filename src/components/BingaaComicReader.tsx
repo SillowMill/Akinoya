@@ -36,6 +36,7 @@ type PDFDoc = Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>;
  */
 const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerified = false }) => {
   const stageRef = useRef<HTMLDivElement>(null);
+  const mobileContainerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ambientCanvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<{ cancel: () => void } | null>(null);
@@ -44,7 +45,10 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
   const [pageNum, setPageNum] = useState(1);
   const [isRendering, setIsRendering] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [stageSize, setStageSize] = useState({ w: 0, h: 0 });
+  const [stageSize, setStageSize] = useState(() => {
+    if (typeof window === 'undefined') return { w: 0, h: 0 };
+    return { w: window.innerWidth, h: window.innerHeight };
+  });
 
   // Dedicated responsive viewport tracking (< 768px: Mobile, >= 768px: Tablet & Desktop)
   const [isMobile, setIsMobile] = useState<boolean>(() => {
@@ -59,6 +63,57 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Dedicated Mobile Auto-Centering & Viewport Alignment (< 768px)
+  useEffect(() => {
+    if (!isMobile) return;
+
+    // Capture user's exact scroll position before opening reader
+    const priorScrollY = window.scrollY || window.pageYOffset || 0;
+    const priorScrollX = window.scrollX || window.pageXOffset || 0;
+
+    // Force immediate programmatic focus/scroll reset to top
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // Ensure mobile container is aligned at top
+    if (mobileContainerRef.current) {
+      mobileContainerRef.current.scrollTop = 0;
+      mobileContainerRef.current.focus?.();
+    }
+
+    // Lock body scroll and prevent rubber-banding on background page
+    const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    const originalTop = document.body.style.top;
+    const originalLeft = document.body.style.left;
+    const originalWidth = document.body.style.width;
+    const originalHeight = document.body.style.height;
+    const originalTouchAction = document.body.style.touchAction;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = '0px';
+    document.body.style.left = '0px';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.touchAction = 'none';
+
+    return () => {
+      // Cleanly restore body styling on exit
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.top = originalTop;
+      document.body.style.left = originalLeft;
+      document.body.style.width = originalWidth;
+      document.body.style.height = originalHeight;
+      document.body.style.touchAction = originalTouchAction;
+
+      // Restore user's previous scroll position seamlessly
+      window.scrollTo({ top: priorScrollY, left: priorScrollX, behavior: 'instant' as ScrollBehavior });
+    };
+  }, [isMobile]);
 
   // Interactive Zoom, Pan & Fluid Swipe States
   const [zoom, setZoom] = useState<number>(1);
@@ -127,7 +182,11 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
-    const update = () => setStageSize({ w: el.clientWidth, h: el.clientHeight });
+    const update = () => {
+      if (el.clientWidth > 0 && el.clientHeight > 0) {
+        setStageSize({ w: el.clientWidth, h: el.clientHeight });
+      }
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
@@ -151,10 +210,14 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     doc.getPage(pageNum).then((page) => {
       if (cancelled || !canvasRef.current) return;
       const base = page.getViewport({ scale: 1 });
-      // Fit calculation: On mobile smartphones (< 768px), fit cleanly within visible viewport with clearance for HUD overlays
+      // Fit calculation: On mobile smartphones (< 768px), scale natively to available mobile screen width
+      const stageW = stageSize.w || window.innerWidth || 390;
+      const stageH = stageSize.h || window.innerHeight || 844;
       const fit = isMobile
-        ? Math.min(Math.max(1, stageSize.w - 16) / base.width, Math.max(1, stageSize.h - 104) / base.height)
-        : Math.min(stageSize.w / base.width, stageSize.h / base.height);
+        ? (stageW > stageH
+            ? Math.min((stageW - 16) / base.width, (stageH - 100) / base.height)
+            : Math.max(0.1, stageW - 16) / base.width)
+        : Math.min(stageW / base.width, stageH / base.height);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const viewport = page.getViewport({ scale: fit * dpr });
 
@@ -246,7 +309,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
     }
   };
 
-  // Keyboard navigation & scroll lock
+  // Keyboard navigation & scroll lock (Desktop & Tablet)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') goPrev();
@@ -257,13 +320,20 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
       else if (e.key === '0') handleResetZoom();
     };
     window.addEventListener('keydown', onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+
+    let prevOverflow = '';
+    if (!isMobile) {
+      prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+    }
+
     return () => {
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
+      if (!isMobile) {
+        document.body.style.overflow = prevOverflow;
+      }
     };
-  }, [goPrev, goNext, onClose, zoom]);
+  }, [goPrev, goNext, onClose, isMobile]);
 
   // Touch handlers for pinch-to-zoom, smooth panning & fluid swipe page-turning
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -406,14 +476,16 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
   // ─────────────────────────────────────────────────────────────────
   // 1. DEDICATED MOBILE-ONLY READER INTERFACE (< 768px SMARTPHONES)
-  // Fit-to-screen PDF container, zero vertical scroll, fixed HUD
+  // Top-centered, width-scaled PDF, instant scroll reset, zero scroll
   // ─────────────────────────────────────────────────────────────────
   if (isMobile) {
     return (
       <div
-        className="fixed inset-0 z-[70] w-full h-[100dvh] flex items-center justify-center bg-[#02050c] select-none overflow-hidden touch-none"
+        ref={mobileContainerRef}
+        className="fixed inset-0 z-[70] w-full h-[100dvh] flex flex-col items-center justify-start bg-[#02050c] select-none overflow-hidden touch-none"
         role="dialog"
         aria-label="Bingäa Issue #1 mobile reader"
+        tabIndex={-1}
       >
         {/* Ambient Dynamic Background Glow */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none select-none flex items-center justify-center">
@@ -432,13 +504,17 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           type="button"
           onClick={onClose}
           aria-label="Close reader"
-          className="fixed top-3 right-3 z-50 flex items-center justify-center w-11 h-11 rounded-full bg-black/85 active:bg-cyan-950 backdrop-blur-2xl border border-white/25 text-white shadow-[0_4px_24px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.35)] cursor-pointer touch-manipulation active:scale-95"
+          style={{ top: 'max(12px, env(safe-area-inset-top, 12px))' }}
+          className="fixed right-3 z-50 flex items-center justify-center w-11 h-11 rounded-full bg-black/85 active:bg-cyan-950 backdrop-blur-2xl border border-white/25 text-white shadow-[0_4px_24px_rgba(0,0,0,0.85),0_0_16px_rgba(56,189,248,0.35)] cursor-pointer touch-manipulation active:scale-95"
         >
           <X className="w-5 h-5 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
         </button>
 
         {/* Top-Left: Fixed Floating Title & Status Badge */}
-        <div className="fixed top-3 left-3 z-40 flex items-center gap-2 pointer-events-auto">
+        <div
+          style={{ top: 'max(12px, env(safe-area-inset-top, 12px))' }}
+          className="fixed left-3 z-40 flex items-center gap-2 pointer-events-auto"
+        >
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
             <span className="text-xs font-display font-bold text-white tracking-wide">Bingäa #1</span>
@@ -489,7 +565,10 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
         {/* Bottom Floating Navigation Dock (Thumb-First Zone) */}
         {!loadError && !isLockedPage && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
+          <div
+            style={{ bottom: 'max(16px, env(safe-area-inset-bottom, 16px))' }}
+            className="fixed left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
+          >
             <div className="flex items-center gap-4 px-4 py-2 rounded-full bg-black/85 backdrop-blur-2xl border border-white/25 shadow-[0_10px_35px_rgba(0,0,0,0.9),0_0_20px_rgba(6,182,212,0.25)]">
               <button
                 type="button"
@@ -524,7 +603,10 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
 
         {/* Subtle First-Load Instruction Hint */}
         {showHint && !loadError && !isLockedPage && (
-          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div
+            style={{ bottom: 'calc(max(16px, env(safe-area-inset-bottom, 16px)) + 58px)' }}
+            className="fixed left-1/2 -translate-x-1/2 z-40 pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-300"
+          >
             <div
               onClick={dismissHint}
               className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a101d]/90 backdrop-blur-xl border border-cyan-400/35 text-white/90 shadow-[0_4px_24px_rgba(0,0,0,0.7),0_0_16px_rgba(6,182,212,0.25)] text-[11px] font-mono cursor-pointer active:scale-95 transition-all select-none whitespace-nowrap"
@@ -546,16 +628,20 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
           </div>
         )}
 
-        {/* ── FIT-TO-SCREEN COMIC STAGE (Single-Screen Container, Zero Scroll) ── */}
+        {/* ── TOP-CENTERED FIT-TO-WIDTH COMIC STAGE (Single-Screen Container, Zero Scroll) ── */}
         <div
           ref={stageRef}
-          className="relative w-full h-full flex items-center justify-center select-none overflow-hidden"
+          style={{
+            paddingTop: 'calc(max(12px, env(safe-area-inset-top, 12px)) + 52px)',
+            paddingBottom: 'calc(max(16px, env(safe-area-inset-bottom, 16px)) + 56px)',
+          }}
+          className="relative w-full h-full flex flex-col items-center justify-start select-none overflow-hidden"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           {loadError ? (
-            <div className="max-w-xs text-center space-y-3 font-mono p-5 rounded-2xl bg-[#080c14]/95 border border-rose-500/30 shadow-[0_0_40px_rgba(244,63,94,0.15)]">
+            <div className="max-w-xs text-center space-y-3 font-mono p-5 rounded-2xl bg-[#080c14]/95 border border-rose-500/30 shadow-[0_0_40px_rgba(244,63,94,0.15)] my-auto">
               <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
               <p className="text-xs text-white/70">{loadError}</p>
               <a
@@ -570,7 +656,7 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
             </div>
           ) : isLockedPage ? (
             /* Non-VIP Page 3 Lock Screen Overlay on Mobile */
-            <div className="w-[90vw] max-w-sm p-5 rounded-2xl bg-[#080c14]/95 border border-amber-500/40 shadow-[0_0_50px_rgba(245,158,11,0.2)] text-center relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-[90vw] max-w-sm p-5 rounded-2xl bg-[#080c14]/95 border border-amber-500/40 shadow-[0_0_50px_rgba(245,158,11,0.2)] text-center relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
               <div className="w-10 h-10 rounded-xl bg-amber-950/70 border border-amber-500/40 text-yellow-400 mx-auto flex items-center justify-center mb-2.5">
                 <Lock className="w-5 h-5 text-yellow-400" />
               </div>
@@ -614,12 +700,12 @@ const BingaaComicReader: React.FC<BingaaComicReaderProps> = ({ onClose, isVerifi
               </button>
             </div>
           ) : (
-            /* Fit-to-Screen Mobile Canvas: Native scale + Pinch-to-zoom */
+            /* Fit-to-Width Mobile Canvas: Native scale + Pinch-to-zoom */
             <div
               className="relative flex items-center justify-center transition-transform shrink-0"
               style={{
                 transform: `translate3d(${pan.x + swipeOffset}px, ${pan.y}px, 0) scale(${zoom})`,
-                transformOrigin: 'center center',
+                transformOrigin: 'top center',
                 willChange: 'transform',
                 transition: isSwiping ? 'none' : 'transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1)',
               }}
