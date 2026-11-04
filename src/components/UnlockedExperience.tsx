@@ -2546,37 +2546,37 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             setShowWaitlistForm(true);
                             soundManager.playTone(580, 0.06);
                           }}
-                          className="w-full p-3.5 sm:px-5 sm:py-4 rounded-xl bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-cyan-500/20 hover:from-cyan-500/30 hover:via-blue-500/25 hover:to-cyan-500/30 border-2 border-cyan-400/50 hover:border-cyan-300 shadow-[0_0_24px_rgba(56,189,248,0.2)] hover:shadow-[0_0_32px_rgba(56,189,248,0.35)] transition-all flex items-center justify-between gap-3 cursor-pointer group min-h-[52px]"
+                          className="w-full p-3.5 sm:px-5 sm:py-4 rounded-xl bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-cyan-500/20 hover:from-cyan-500/30 hover:via-blue-500/25 hover:to-cyan-500/30 border-2 border-cyan-400/50 hover:border-cyan-300 shadow-[0_0_24px_rgba(56,189,248,0.2)] hover:shadow-[0_0_32px_rgba(56,189,248,0.35)] transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer group text-left"
                         >
-                          <div className="flex items-center gap-3 min-w-0 text-left">
-                            <div className="w-9 h-9 rounded-lg bg-cyan-400/20 border border-cyan-300/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.3)] group-hover:scale-105 transition-transform">
+                          <div className="flex items-start sm:items-center gap-3 min-w-0 text-left flex-1">
+                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-cyan-400/20 border border-cyan-300/50 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.3)] group-hover:scale-105 transition-transform mt-0.5 sm:mt-0">
                               <Mail className="w-4 h-4 text-cyan-300 animate-pulse" />
                             </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-cyan-300 uppercase tracking-wider">
-                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping inline-block" />
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] font-mono font-bold text-cyan-300 uppercase tracking-wider">
+                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping inline-block shrink-0" />
                                 <span>STAY UPDATED · DISPATCH LIST</span>
                               </div>
-                              <div className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-cyan-100 tracking-wide truncate">
+                              <div className="text-xs sm:text-[13px] md:text-sm font-sans font-medium text-white/90 group-hover:text-white leading-snug break-words">
                                 Subscribe to the Sillow Mill newsletter for drop alerts and updates
                               </div>
                             </div>
                           </div>
-                          <span className="shrink-0 px-3.5 py-1.5 rounded-lg bg-cyan-400 group-hover:bg-cyan-300 text-black font-mono text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_14px_rgba(56,189,248,0.4)] transition-all">
+                          <span className="w-full sm:w-auto shrink-0 px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-lg bg-cyan-400 group-hover:bg-cyan-300 text-black font-mono text-xs sm:text-[11px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_14px_rgba(56,189,248,0.4)] transition-all min-h-[38px] active:scale-[0.99]">
                             <span>SUBSCRIBE</span>
                             <ArrowRight className="w-3.5 h-3.5" />
                           </span>
                         </button>
                       ) : isWaitlistSubmitted ? (
-                        <div className="p-4 rounded-xl bg-emerald-950/80 border-2 border-emerald-500/50 text-emerald-200 flex items-center gap-3 text-xs font-mono shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                        <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-950/80 border-2 border-emerald-500/50 text-emerald-200 flex flex-col sm:flex-row items-start sm:items-center gap-3 text-xs font-mono shadow-[0_0_20px_rgba(16,185,129,0.2)]">
                           <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center shrink-0">
                             <Check className="w-4 h-4 text-emerald-400" />
                           </div>
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <div className="font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
                               NEWSLETTER SUBSCRIPTION CONFIRMED
                             </div>
-                            <div className="text-white/80 text-[11px] mt-0.5">
+                            <div className="text-white/80 text-[11px] sm:text-xs mt-0.5 leading-relaxed font-sans">
                               You're subscribed to the official Sillow Mill dispatch list! You'll receive drop alerts, production logs, and project updates directly in your inbox.
                             </div>
                           </div>
@@ -2623,21 +2623,25 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               setIsSubmittingWaitlist(false);
                             }
                           }}
-                          className="p-3.5 sm:p-4 rounded-xl bg-[#090e1a] border-2 border-cyan-400/50 shadow-[0_0_24px_rgba(56,189,248,0.2)] space-y-2.5"
+                          className="p-3.5 sm:p-4 rounded-xl bg-[#090e1a] border-2 border-cyan-400/50 shadow-[0_0_24px_rgba(56,189,248,0.2)] space-y-3"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[10.5px] font-mono font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
-                              <Mail className="w-3.5 h-3.5 text-cyan-400" />
+                            <span className="text-[10px] sm:text-[10.5px] font-mono font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
+                              <Mail className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                               <span>STAY UPDATED · DISPATCH LIST</span>
                             </span>
                             <button
                               type="button"
                               onClick={() => setShowWaitlistForm(false)}
-                              className="text-white/40 hover:text-white text-xs font-mono cursor-pointer"
+                              className="text-white/40 hover:text-white text-xs font-mono cursor-pointer p-1"
+                              aria-label="Close newsletter form"
                             >
                               ✕
                             </button>
                           </div>
+                          <p className="text-[11.5px] sm:text-xs text-white/70 font-sans leading-relaxed">
+                            Subscribe to the Sillow Mill newsletter for drop alerts and updates.
+                          </p>
                           <div className="flex flex-col sm:flex-row gap-2">
                             <div className="relative flex-1">
                               <Mail className="w-4 h-4 text-cyan-300/70 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -2649,14 +2653,14 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                   setWaitlistEmail(e.target.value);
                                   if (waitlistError) setWaitlistError(null);
                                 }}
-                                placeholder="Enter your email for drop alerts and updates..."
+                                placeholder="Enter your email address..."
                                 className="w-full bg-black/90 border border-cyan-400/40 focus:border-cyan-300 rounded-xl pl-10 pr-3.5 py-2.5 text-base sm:text-xs text-white placeholder-white/40 outline-none font-mono"
                               />
                             </div>
                             <button
                               type="submit"
                               disabled={isSubmittingWaitlist}
-                              className="px-5 py-2.5 rounded-xl text-xs font-mono font-extrabold uppercase tracking-wider bg-cyan-400 hover:bg-cyan-300 text-black transition-all cursor-pointer whitespace-nowrap min-h-[42px] shadow-[0_0_15px_rgba(56,189,248,0.35)] disabled:opacity-50 flex items-center justify-center gap-1.5"
+                              className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-mono font-extrabold uppercase tracking-wider bg-cyan-400 hover:bg-cyan-300 text-black transition-all cursor-pointer whitespace-nowrap min-h-[42px] shadow-[0_0_15px_rgba(56,189,248,0.35)] disabled:opacity-50 flex items-center justify-center gap-1.5"
                             >
                               {isSubmittingWaitlist ? 'Subscribing...' : 'SUBSCRIBE'}
                             </button>
