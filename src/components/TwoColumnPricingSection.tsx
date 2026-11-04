@@ -270,7 +270,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
         {/* ========================================================= */}
         {/* COLUMN 1: Individual Add-ons & Physical Product            */}
         {/* ========================================================= */}
-        <div className="flex flex-col justify-between rounded-3xl bg-gradient-to-b from-[#090e1a] via-[#060a14] to-[#04070e] border border-white/15 p-4 xs:p-5 sm:p-7 lg:p-8 relative overflow-hidden shadow-2xl">
+        <div className="flex flex-col rounded-3xl bg-gradient-to-b from-[#090e1a] via-[#060a14] to-[#04070e] border border-white/15 p-4 xs:p-5 sm:p-7 lg:p-8 relative overflow-hidden shadow-2xl">
           {/* Subtle Ambient Top Border Highlight */}
           <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent pointer-events-none" />
 
@@ -528,19 +528,20 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Skip A La Carte — Unlock All With Member Pass</span>
                 <ArrowRight className="w-4 h-4 text-amber-300 group-hover/btn:translate-x-0.5 transition-transform shrink-0" />
               </button>
-            </div>
-          </div>
 
-          <div className="pt-4 mt-4 border-t border-white/5 text-[10.5px] font-mono text-white/45 flex items-center justify-between">
-            <span>DRM-Free Personal License</span>
-            <span>All digital items included in Pass →</span>
+              {/* Green Checkmarks Line (Card ends tightly under here) */}
+              <div className="flex items-center justify-center gap-1.5 text-[10.5px] font-mono text-emerald-300 font-bold text-center pt-0.5">
+                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Save €14.96+ instantly vs separate purchases · Instant access</span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* ========================================================= */}
         {/* COLUMN 2: The Membership Pass (€ 60 / year) – All Included */}
         {/* ========================================================= */}
-        <div className="relative flex flex-col justify-between rounded-3xl bg-gradient-to-b from-[#100d05] via-[#090804] to-black border-2 border-amber-400/80 p-4 xs:p-5 sm:p-7 lg:p-8 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.22)]">
+        <div className="relative flex flex-col rounded-3xl bg-gradient-to-b from-[#100d05] via-[#090804] to-black border-2 border-amber-400/80 p-4 xs:p-5 sm:p-7 lg:p-8 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.22)]">
           {/* Top Gold Glowing Highlight Bar */}
           <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 via-yellow-400 to-transparent pointer-events-none" />
 
@@ -714,31 +715,6 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 <ArrowRight className="w-5 h-5 text-black shrink-0" />
               </button>
             </div>
-          </div>
-
-          <div className="pt-4 mt-4 border-t border-amber-500/20 text-[10.5px] font-mono text-amber-200/60 flex items-center justify-between">
-            <span className="whitespace-nowrap inline-flex items-baseline gap-1">
-              <span>Auto-renews annually via Stripe (</span>
-              <span className="whitespace-nowrap inline-flex items-baseline gap-0.5">
-                <span>€</span>
-                <span>60</span>
-              </span>
-              <span>/yr)</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                soundManager.playTone(540, 0.04);
-                if (!isAuthenticated) {
-                  openAuthModal('signin', 'Sign in to access your Account & Billing Settings.');
-                } else {
-                  window.dispatchEvent(new CustomEvent('akinoya-open-billing-settings'));
-                }
-              }}
-              className="hover:text-amber-300 underline underline-offset-2 transition-colors cursor-pointer text-left"
-            >
-              Cancel anytime in Account &amp; Billing
-            </button>
           </div>
         </div>
       </div>
