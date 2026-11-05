@@ -1224,7 +1224,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             MONDAY BATCH DEPLOYMENT
                           </div>
                           <p className="text-xs sm:text-[12.5px] text-amber-100/95 font-sans leading-relaxed font-medium">
-                            Activate with the €15 World Pass to lock your future cinematic visualizer co-creation spot and queue your sector for the upcoming Monday live Galaxy deployment.
+                            Activate with the €14.99 World Pass to lock your future cinematic visualizer co-creation spot and queue your sector for the upcoming Monday live Galaxy deployment.
                           </p>
                         </div>
 
@@ -1235,7 +1235,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs tracking-wide transition-all cursor-pointer shadow-[0_0_25px_rgba(56,189,248,0.5)] flex items-center justify-center gap-2"
                           >
                             <Sparkles className="w-4 h-4 shrink-0" />
-                            <span>Buy €15 World Pass to Activate →</span>
+                            <span>Buy €14.99 World Pass to Activate →</span>
                           </button>
                           <button
                             type="button"
@@ -1329,7 +1329,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                           className="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-[0_0_30px_rgba(56,189,248,0.4)] min-h-[46px]"
                         >
                           <Sparkles className="w-4 h-4 shrink-0" />
-                          <span>Buy €15 World Pass to Activate →</span>
+                          <span>Buy €14.99 World Pass to Activate →</span>
                         </button>
                         <button
                           type="button"
@@ -1576,7 +1576,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             MONDAY BATCH DEPLOYMENT
                           </div>
                           <p className="text-xs sm:text-[12.5px] text-amber-100/95 font-sans leading-relaxed font-medium">
-                            Activate with the €15 World Pass to lock your future cinematic visualizer co-creation spot and queue your sector for the upcoming Monday live Galaxy deployment.
+                            Activate with the €14.99 World Pass to lock your future cinematic visualizer co-creation spot and queue your sector for the upcoming Monday live Galaxy deployment.
                           </p>
                         </div>
 
@@ -1587,7 +1587,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs tracking-wide transition-all cursor-pointer shadow-[0_0_25px_rgba(56,189,248,0.5)] flex items-center justify-center gap-2"
                           >
                             <Sparkles className="w-4 h-4 shrink-0" />
-                            <span>Buy €15 World Pass to Activate →</span>
+                            <span>Buy €14.99 World Pass to Activate →</span>
                           </button>
                           <button
                             type="button"
@@ -1669,7 +1669,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                           className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.4)] min-h-[42px]"
                         >
                           <Sparkles className="w-4 h-4 shrink-0" />
-                          <span>Buy €15 World Pass to Activate →</span>
+                          <span>Buy €14.99 World Pass to Activate →</span>
                         </button>
                         <button
                           type="button"

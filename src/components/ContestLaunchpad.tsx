@@ -1201,7 +1201,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                           className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.4)]"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
-                          <span>Buy €15 World Pass to Activate →</span>
+                          <span>Buy €14.99 World Pass to Activate →</span>
                         </button>
                         <button
                           type="button"

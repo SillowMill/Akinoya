@@ -226,7 +226,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         title: 'Sillow Mill — Synthesize & Feature Your World',
         subtitle: "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and secure your official co-creation spot to feature directly in a future cinematic visualizer once all 11 visualizers are released",
         badge: 'CO-CREATION PASS · LIMITED SECTOR EXPANSION',
-        priceValue: '15.00',
+        priceValue: '14.99',
         isPhysical: false,
         image: akinoyaHeroBg,
         deliveryNotice: 'Instant Access · Asset Vault inside the Hub',

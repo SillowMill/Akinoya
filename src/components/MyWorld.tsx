@@ -235,7 +235,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white text-xs font-mono font-extrabold flex items-center gap-1.5 shadow-[0_0_20px_rgba(56,189,248,0.4)] cursor-pointer min-h-[40px]"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Buy €15 World Pass to Activate →</span>
+                <span>Buy €14.99 World Pass to Activate →</span>
               </button>
               <button
                 type="button"
@@ -361,7 +361,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                   Activate your world to deploy on the Galaxy Navigator &amp; secure your visualizer spot.
                 </h4>
                 <p className="text-xs sm:text-sm text-amber-100/90 font-sans leading-relaxed font-medium max-w-2xl">
-                  Your 5-question draft specs are safely stored in your Vault. Activate with the €15 World Pass to process full 4K renders, queue your sector for the upcoming Monday deployment, and lock your official co-creation spot in a future cinematic visualizer.
+                  Your 5-question draft specs are safely stored in your Vault. Activate with the €14.99 World Pass to process full 4K renders, queue your sector for the upcoming Monday deployment, and lock your official co-creation spot in a future cinematic visualizer.
                 </p>
               </div>
             </div>
@@ -372,7 +372,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                 className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.4)] flex items-center justify-center gap-2 min-h-[44px]"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Buy €15 World Pass to Activate →</span>
+                <span>Buy €14.99 World Pass to Activate →</span>
               </button>
               <button
                 type="button"
@@ -491,7 +491,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                     MONDAY BATCH DEPLOYMENT
                   </div>
                   <p className="text-[11px] sm:text-xs text-amber-100/90 font-sans leading-relaxed font-medium">
-                    Activate with the €15 World Pass to secure your co-creation spot in a future cinematic visualizer and queue your sector for the upcoming Monday live Galaxy deployment.
+                    Activate with the €14.99 World Pass to secure your co-creation spot in a future cinematic visualizer and queue your sector for the upcoming Monday live Galaxy deployment.
                   </p>
                 </div>
 
@@ -502,7 +502,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                     className="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-[11px] tracking-wide transition-all cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.45)] flex items-center justify-center gap-1.5"
                   >
                     <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                    <span>Buy €15 World Pass to Activate →</span>
+                    <span>Buy €14.99 World Pass to Activate →</span>
                   </button>
                   <button
                     type="button"
@@ -525,7 +525,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                 className="w-full py-3 px-4 rounded-xl font-mono text-xs font-extrabold bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-[0_0_20px_rgba(56,189,248,0.4)] cursor-pointer flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4 shrink-0" />
-                <span>Buy €15 World Pass to Activate →</span>
+                <span>Buy €14.99 World Pass to Activate →</span>
               </button>
               <button
                 type="button"

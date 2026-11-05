@@ -176,7 +176,7 @@ export async function createStripeCheckoutSession(params: {
     productName = 'Sillow Mill - Synthesize & Feature Your World';
     productDescription =
       "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and secure your official co-creation spot to feature directly in a future cinematic visualizer once all 11 visualizers are released. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
-    unitAmount = params.amount ? Math.round(params.amount * 100) : 1500;
+    unitAmount = params.amount ? Math.round(params.amount * 100) : 1499;
     productImage = `${baseUrl}/images/akinoya_hero_bg-CiYAZVRx.jpg`;
   } else if (productId === 'membership') {
     productName = 'Sillow Mill - Annual Pioneer Member Pass (All-Inclusive)';

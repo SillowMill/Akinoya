@@ -140,8 +140,8 @@ export const triggerWorldPassCheckout = (planetName?: string) => {
           subtitle: planetName
             ? `Activate ${planetName} & Lock Visualizer Co-Creation`
             : 'Activate World & Lock Visualizer Co-Creation Slot',
-          badge: 'CO-CREATION PASS · €15.00',
-          priceValue: '15.00',
+          badge: 'CO-CREATION PASS · €14.99',
+          priceValue: '14.99',
           isPhysical: false,
           allocationNotice: '5-Photo 4K Dossier · 9:16 Video Loop · Visualizer Slot',
           deliveryNotice: 'Instant Co-Creation Access · Asset Vault inside the Hub',
