@@ -3444,121 +3444,127 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               {isVipMode ? (
                 <>
                   {/* Asset 02: Äkinoya Founding Pass — Physical Limited Edition */}
-                  <div className="bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-6 md:p-7 shadow-xl">
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 02 · Physical Pass</span>
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-emerald-300 whitespace-nowrap">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        CLAIMED &amp; ACTIVE
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-xl bg-cyan-950/70 border border-cyan-400/30 flex items-center justify-center shrink-0">
-                        <ShieldCheck className="w-5 h-5 text-cyan-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-sm sm:text-base font-display font-bold text-white leading-snug">
-                          Äkinoya Founding Pass — Physical Limited Edition
-                        </h3>
-                        <p className="text-[11px] sm:text-xs font-mono text-cyan-300/80">
-                          {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 divide-y divide-white/5 rounded-xl bg-black/40 border border-white/5 px-3 sm:px-4 font-mono text-[11px] sm:text-xs">
-                      <div className="py-2.5 flex items-center justify-between gap-3">
-                        <span className="text-white/45 shrink-0">HOLDER</span>
-                        {holderName ? (
-                          <span className="text-white font-medium truncate">{holderName}</span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => (onNavigateToPassport ? onNavigateToPassport() : onNavigateToVerify?.(activePassId))}
-                            className="text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
-                          >
-                            Register holder name
-                          </button>
-                        )}
-                      </div>
-                      <div className="py-2.5 flex items-center justify-between gap-3">
-                        <span className="text-white/45 shrink-0">PASS ID</span>
-                        <span className="text-white/80 truncate">#{activePassId}</span>
-                      </div>
-                      <div className="py-2.5 flex items-center justify-between gap-3">
-                        <span className="text-white/45 shrink-0">EDITION</span>
-                        <span className="text-white/80">
-                          {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
+                  <div className="relative overflow-hidden bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-6 md:p-7 shadow-xl">
+                    <PlanetCardStarfield particleCount={14} />
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 02 · Physical Pass</span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 text-[9.5px] sm:text-[10.5px] font-mono font-semibold tracking-wider text-emerald-300 whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          CLAIMED &amp; ACTIVE
                         </span>
+                      </div>
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-11 h-11 rounded-xl bg-cyan-950/70 border border-cyan-400/30 flex items-center justify-center shrink-0">
+                          <ShieldCheck className="w-5 h-5 text-cyan-400" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-sm sm:text-base font-display font-bold text-white leading-snug">
+                            Äkinoya Founding Pass — Physical Limited Edition
+                          </h3>
+                          <p className="text-[11px] sm:text-xs font-mono text-cyan-300/80">
+                            {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 divide-y divide-white/5 rounded-xl bg-black/40 border border-white/5 px-3 sm:px-4 font-mono text-[11px] sm:text-xs">
+                        <div className="py-2.5 flex items-center justify-between gap-3">
+                          <span className="text-white/45 shrink-0">HOLDER</span>
+                          {holderName ? (
+                            <span className="text-white font-medium truncate">{holderName}</span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => (onNavigateToPassport ? onNavigateToPassport() : onNavigateToVerify?.(activePassId))}
+                              className="text-cyan-400 hover:text-cyan-300 underline cursor-pointer"
+                            >
+                              Register holder name
+                            </button>
+                          )}
+                        </div>
+                        <div className="py-2.5 flex items-center justify-between gap-3">
+                          <span className="text-white/45 shrink-0">PASS ID</span>
+                          <span className="text-white/80 truncate">#{activePassId}</span>
+                        </div>
+                        <div className="py-2.5 flex items-center justify-between gap-3">
+                          <span className="text-white/45 shrink-0">EDITION</span>
+                          <span className="text-white/80">
+                            {isFoundersPass ? foundersEditionLabel : `#${activeEditionNumber} of ${TOTAL_EDITION_LIMIT}`}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Asset 03: Bingäa Official Artwork / Cover Image & Publication Master */}
-                  <div className="bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-6 md:p-7 space-y-4 shadow-xl">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Official Artwork &amp; Comicbook Master</span>
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-[9.5px] sm:text-[10px] font-mono text-cyan-300">
-                        HI-RES MASTER
-                      </span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 min-w-0">
-                      <button
-                        type="button"
-                        onClick={() => setShowCoverPreview(true)}
-                        className="shrink-0 w-24 sm:w-28 aspect-[3/4] rounded-lg overflow-hidden border border-white/15 hover:border-cyan-400/60 transition-colors cursor-pointer shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-                        aria-label="Preview Bingäa cover artwork"
-                      >
-                        <img src={BINGAA_COVER_URL} alt="Bingäa official cover artwork" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                      </button>
-                      <div className="min-w-0 flex-1 w-full space-y-3 text-center sm:text-left">
-                        <div>
-                          <h3 className="text-base sm:text-lg font-display font-bold text-white leading-snug">
-                            Bingäa Official Artwork / Cover Image &amp; Digital Publication
-                          </h3>
-                          <p className="text-[11px] sm:text-xs font-mono text-white/60 mt-1 leading-relaxed">
-                            <strong className="text-cyan-300">Cover Graphic:</strong> High-resolution master Retina artwork (PNG format).
-                            <br className="hidden sm:inline" />{' '}
-                            <strong className="text-emerald-300">Comicbook PDF:</strong> Complete Issue #1 digital publication (Print-ready master).
-                          </p>
-                        </div>
+                  <div className="relative overflow-hidden bg-[#060a14] border border-white/15 rounded-2xl p-5 sm:p-6 md:p-7 space-y-4 shadow-xl">
+                    <PlanetCardStarfield particleCount={14} />
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Official Artwork &amp; Comicbook Master</span>
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-[9.5px] sm:text-[10px] font-mono text-cyan-300">
+                          HI-RES MASTER
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => setShowCoverPreview(true)}
+                          className="shrink-0 w-24 sm:w-28 aspect-[3/4] rounded-lg overflow-hidden border border-white/15 hover:border-cyan-400/60 transition-colors cursor-pointer shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+                          aria-label="Preview Bingäa cover artwork"
+                        >
+                          <img src={BINGAA_COVER_URL} alt="Bingäa official cover artwork" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                        </button>
+                        <div className="min-w-0 flex-1 w-full space-y-3 text-center sm:text-left">
+                          <div>
+                            <h3 className="text-base sm:text-lg font-display font-bold text-white leading-snug">
+                              Bingäa Official Artwork / Cover Image &amp; Digital Publication
+                            </h3>
+                            <p className="text-[11px] sm:text-xs font-mono text-white/60 mt-1 leading-relaxed">
+                              <strong className="text-cyan-300">Cover Graphic:</strong> High-resolution master Retina artwork (PNG format).
+                              <br className="hidden sm:inline" />{' '}
+                              <strong className="text-emerald-300">Comicbook PDF:</strong> Complete Issue #1 digital publication (Print-ready master).
+                            </p>
+                          </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                          <button
-                            type="button"
-                            onClick={() => setShowCoverPreview(true)}
-                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 transition-all cursor-pointer min-h-[44px]"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>View Cover</span>
-                          </button>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setShowCoverPreview(true)}
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 transition-all cursor-pointer min-h-[44px]"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View Cover</span>
+                            </button>
 
-                          <button
-                            type="button"
-                            onClick={() => setShowComicReader(true)}
-                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-400 bg-emerald-950/40 transition-all cursor-pointer min-h-[44px]"
-                          >
-                            <BookOpen className="w-3.5 h-3.5" />
-                            <span>Read Comic</span>
-                          </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowComicReader(true)}
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-emerald-300 hover:text-white border border-emerald-500/30 hover:border-emerald-400 bg-emerald-950/40 transition-all cursor-pointer min-h-[44px]"
+                            >
+                              <BookOpen className="w-3.5 h-3.5" />
+                              <span>Read Comic</span>
+                            </button>
 
-                          <a
-                            href={BINGAA_COVER_URL}
-                            download={BINGAA_COVER_FILENAME}
-                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-white/80 hover:text-white border border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all min-h-[44px]"
-                          >
-                            <Download className="w-3.5 h-3.5 text-cyan-400" />
-                            <span>Download Cover</span>
-                          </a>
+                            <a
+                              href={BINGAA_COVER_URL}
+                              download={BINGAA_COVER_FILENAME}
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-white/80 hover:text-white border border-white/15 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all min-h-[44px]"
+                            >
+                              <Download className="w-3.5 h-3.5 text-cyan-400" />
+                              <span>Download Cover</span>
+                            </a>
 
-                          <a
-                            href={BINGAA_PDF_URL}
-                            download={BINGAA_PDF_FILENAME}
-                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 hover:bg-cyan-900/60 transition-all min-h-[44px]"
-                          >
-                            <Download className="w-3.5 h-3.5 text-cyan-400" />
-                            <span>Download Comic PDF</span>
-                          </a>
+                            <a
+                              href={BINGAA_PDF_URL}
+                              download={BINGAA_PDF_FILENAME}
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-semibold text-cyan-300 hover:text-white border border-cyan-500/30 hover:border-cyan-400 bg-cyan-950/40 hover:bg-cyan-900/60 transition-all min-h-[44px]"
+                            >
+                              <Download className="w-3.5 h-3.5 text-cyan-400" />
+                              <span>Download Comic PDF</span>
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>

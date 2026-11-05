@@ -42,6 +42,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { formatTitleCaseUserName } from '../utils/holder';
 import { soundManager } from '../utils/audio';
+import { PlanetCardStarfield } from './PlanetCardStarfield';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import {
   deriveWorldVerificationMeta,
@@ -724,6 +725,9 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
       }}
       className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#080d1a] via-[#050914] to-[#02050b] border-2 border-amber-400/50 shadow-[0_20px_70px_rgba(0,0,0,0.85),0_0_40px_rgba(245,158,11,0.18)] p-4 sm:p-6 md:p-8 space-y-6 select-none"
     >
+      {/* Planet & Asset Card Celestial Starfield Animation Layer */}
+      <PlanetCardStarfield />
+
       {/* Ambient Radial Specular Glows */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/80 to-transparent pointer-events-none" />
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-amber-500/12 rounded-full blur-3xl pointer-events-none" />
