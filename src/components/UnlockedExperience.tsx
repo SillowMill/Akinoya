@@ -2740,7 +2740,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         sessionStorage.setItem('galaxy_return_from', 'worlds');
                       } catch {}
                       if (onNavigateToGalaxy) {
-                        onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
+                        onNavigateToGalaxy(undefined, 'worlds');
                       } else if (typeof window !== 'undefined') {
                         window.location.href = `/galaxy?from=worlds`;
                       }
@@ -2804,9 +2804,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             sessionStorage.setItem('galaxy_return_from', 'worlds');
                           } catch {}
                           if (onNavigateToGalaxy) {
-                            onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
+                            onNavigateToGalaxy(undefined, 'worlds');
                           } else if (typeof window !== 'undefined') {
-                            window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
+                            window.location.href = `/galaxy?from=worlds`;
                           }
                         }}
                         className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
@@ -2819,7 +2819,81 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 </div>
               )}
 
-              {/* Official Worlds Master Block: "Explore The 5 Pioneer Worlds" (Single Unified Widget on Mobile) */}
+              {/* Pioneer Worlds Section Header: Clean title & narrative flowing directly on the platform background */}
+              <div className="space-y-4 pb-1 sm:pb-2 flex flex-col items-start md:items-center text-left md:text-center">
+                <div className="space-y-2.5 max-w-3xl md:mx-auto flex flex-col items-start md:items-center">
+                  <div className="flex flex-wrap items-center justify-start md:justify-center gap-1.5 sm:gap-2">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
+                      <Radar className="w-3 h-3 text-cyan-300 shrink-0" />
+                      <span>ÄKINOYA CONSTELLATION NAVIGATOR</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.4)]">
+                      <Sparkles className="w-3 h-3 text-black shrink-0" />
+                      <span>5 PIONEER WORLDS</span>
+                    </span>
+                  </div>
+
+                  <h2 className="text-xl sm:text-3xl md:text-4xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] text-left md:text-center">
+                    Explore Pioneer Worlds
+                  </h2>
+
+                  {/* Concise narrative on mobile to save vertical viewport space; full narrative on desktop */}
+                  <p className="block md:hidden text-[11.5px] font-sans text-cyan-100/85 leading-snug text-left">
+                    The Äkinoya cosmos expands beyond the visualizers. Explore the 5 founding pioneer sectors or craft your own world into the 3D galaxy.
+                  </p>
+
+                  <div className="hidden md:block space-y-1.5 text-xs sm:text-sm font-sans leading-relaxed max-w-2xl lg:max-w-3xl mx-auto text-center">
+                    <p className="font-bold text-white text-center">
+                      Beyond the eleven visualizers, the Äkinoya storyline expands directly into the cosmos you create.
+                    </p>
+                    <p className="italic text-cyan-100/85 text-center">
+                      Here, you can craft and mint your own custom world into the 3D galaxy constellation—with Ämlemi serving as Pioneer World #1 as an inspiring example. In the future, we will use the worlds you build to continue the overarching narrative, allow you to design your own characters, and feature your creations directly within the growing Äkinoya universe.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Primary Action Buttons: Compact row on mobile, centered on desktop */}
+                <div className="flex flex-row items-center justify-start md:justify-center gap-2 sm:gap-3 pt-0.5 sm:pt-1 w-full md:w-auto">
+                  {/* Button 1: View in Äkinoya Galaxy (Direct Galaxy Constellation Overview without World Zoom) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playTone(620, 0.05);
+                      try {
+                        sessionStorage.setItem('galaxy_return_from', 'worlds');
+                      } catch {}
+                      if (onNavigateToGalaxy) {
+                        onNavigateToGalaxy(undefined, 'worlds');
+                      } else if (typeof window !== 'undefined') {
+                        window.location.href = `/galaxy?from=worlds`;
+                      }
+                    }}
+                    className="flex-1 sm:flex-initial px-3 sm:px-5 py-2 sm:py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-[11px] sm:text-xs md:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2.5 min-h-[38px] sm:min-h-[48px]"
+                  >
+                    <Radar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-300 shrink-0" />
+                    <span>Äkinoya Galaxy</span>
+                  </button>
+
+                  {/* Button 2: Create Your World */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playTone(660, 0.05);
+                      if (onNavigateToContest) {
+                        onNavigateToContest();
+                      } else if (typeof window !== 'undefined') {
+                        window.location.href = '/contest';
+                      }
+                    }}
+                    className="flex-1 sm:flex-initial px-3 sm:px-6 py-2 sm:py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-[11px] sm:text-xs md:text-sm shadow-[0_0_30px_rgba(245,158,11,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2.5 min-h-[38px] sm:min-h-[48px]"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black shrink-0" />
+                    <span>Create World</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Official Worlds Master Block: Pioneer Selector & Active Dossier */}
               <div
                 className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060c1d] bg-gradient-to-b from-[#0a132c] via-[#060c1d] to-[#040814] border-2 border-cyan-400/50 p-4 sm:p-6 md:p-8 shadow-lg md:shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(56,189,248,0.22)]"
               >
@@ -2835,78 +2909,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none rounded-full" />
 
                 <div className="relative z-10 space-y-5 sm:space-y-6">
-                  {/* Header Block: Title, Vision Narrative & Action Buttons Centered on Desktop, Left-Aligned on Mobile */}
-                  <div className="space-y-4 pb-1 flex flex-col items-start md:items-center text-left md:text-center">
-                    <div className="space-y-2.5 max-w-3xl md:mx-auto flex flex-col items-start md:items-center">
-                      <div className="flex flex-wrap items-center justify-start md:justify-center gap-1.5 sm:gap-2">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-300 border border-cyan-400/50 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
-                          <Radar className="w-3 h-3 text-cyan-300 shrink-0" />
-                          <span>ÄKINOYA CONSTELLATION NAVIGATOR</span>
-                        </span>
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.4)]">
-                          <Sparkles className="w-3 h-3 text-black shrink-0" />
-                          <span>5 PIONEER WORLDS</span>
-                        </span>
-                      </div>
-
-                      <h2 className="text-xl sm:text-3xl md:text-4xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] text-left md:text-center">
-                        Explore The 5 Pioneer Worlds
-                      </h2>
-
-                      {/* Concise narrative on mobile to save vertical viewport space; full narrative on desktop */}
-                      <p className="block md:hidden text-[11.5px] font-sans text-cyan-100/85 leading-snug text-left">
-                        The Äkinoya cosmos expands beyond the visualizers. Explore the 5 founding pioneer sectors or craft your own world into the 3D galaxy.
-                      </p>
-
-                      <div className="hidden md:block space-y-1.5 text-xs sm:text-sm font-sans leading-relaxed max-w-2xl lg:max-w-3xl mx-auto text-center">
-                        <p className="font-bold text-white text-center">
-                          Beyond the eleven visualizers, the Äkinoya storyline expands directly into the cosmos you create.
-                        </p>
-                        <p className="italic text-cyan-100/85 text-center">
-                          Here, you can craft and mint your own custom world into the 3D galaxy constellation—with Ämlemi serving as Pioneer World #1 as an inspiring example. In the future, we will use the worlds you build to continue the overarching narrative, allow you to design your own characters, and feature your creations directly within the growing Äkinoya universe.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Primary Action Buttons: Compact row on mobile, centered on desktop */}
-                    <div className="flex flex-row items-center justify-start md:justify-center gap-2 sm:gap-3 pt-0.5 sm:pt-1 w-full md:w-auto">
-                      {/* Button 1: View in Äkinoya Galaxy */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          soundManager.playTone(620, 0.05);
-                          try {
-                            sessionStorage.setItem('galaxy_return_from', 'worlds');
-                          } catch {}
-                          if (onNavigateToGalaxy) {
-                            onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
-                          } else if (typeof window !== 'undefined') {
-                            window.location.href = `/galaxy?planet=${encodeURIComponent(activeWorldDossier?.id || 'planet-amlemi-genesis-01')}&from=worlds`;
-                          }
-                        }}
-                        className="flex-1 sm:flex-initial px-3 sm:px-5 py-2 sm:py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-[11px] sm:text-xs md:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2.5 min-h-[38px] sm:min-h-[48px]"
-                      >
-                        <Radar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-300 shrink-0" />
-                        <span>Äkinoya Galaxy</span>
-                      </button>
-
-                      {/* Button 2: Create Your World */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          soundManager.playTone(660, 0.05);
-                          if (onNavigateToContest) {
-                            onNavigateToContest();
-                          } else if (typeof window !== 'undefined') {
-                            window.location.href = '/contest';
-                          }
-                        }}
-                        className="flex-1 sm:flex-initial px-3 sm:px-6 py-2 sm:py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-[11px] sm:text-xs md:text-sm shadow-[0_0_30px_rgba(245,158,11,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2.5 min-h-[38px] sm:min-h-[48px]"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black shrink-0" />
-                        <span>Create World</span>
-                      </button>
-                    </div>
 
                     {/* Mobile Fluid Swipe Carousel (<768px): smooth swipe with auto-select on swipe ("tjak, tjak, tjak") */}
                     <div
@@ -3294,7 +3296,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               )}
             </div>
           </div>
-        </div>
 
         {/* 3 Live Social Engagement Metric Cards & Conversion — Directly Beneath Master Unified Widget */}
         {activeWorldDossier && (

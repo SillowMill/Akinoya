@@ -181,8 +181,7 @@
   -webkit-backface-visibility: hidden;
 }
 
-/* GPU Hardware-Versnelling (Offloading): widgets, cards, planet nodes & galaxy container */
-.widget-container,
+/* GPU Hardware-Versnelling (Offloading): cards, planet nodes & galaxy container */
 .community-card,
 .planet-node,
 .galaxy-container,
@@ -193,6 +192,17 @@
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+
+/* Strict Container Corner & Border Integrity Protection across Desktop, Tablet & Mobile */
+.widget-container {
+  isolation: isolate;
+  background-clip: padding-box;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: none;
+  -webkit-transform: none;
+  will-change: auto;
 }
 
 /* Kristalheldere Tekst-Rendering (Sharp Typography op Safari) */
@@ -235,9 +245,7 @@
   .community-card {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
     isolation: isolate;
-    -webkit-mask-image: none !important;
-    mask-image: none !important;
-    background-clip: border-box !important;
+    background-clip: padding-box !important;
   }
 
   .widget-container > * {
@@ -695,16 +703,21 @@ div[role="dialog"],
 .video-viewport-wrapper,
 div[role="dialog"],
 [aria-modal="true"],
-.page-transition-container,
-.tab-transition-container,
 .card-interactive {
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   will-change: transform, opacity;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  -webkit-perspective: 1000px;
-  perspective: 1000px;
+}
+
+/* Page & Tab transition wrappers: zero 3D perspective to guarantee pristine 2D rounded border integrity */
+.page-transition-container,
+.tab-transition-container {
+  will-change: opacity;
+  isolation: isolate;
+  perspective: none;
+  -webkit-perspective: none;
 }
 
 /* Smooth 60 FPS transitions without layout jitter or micro-stutters */
