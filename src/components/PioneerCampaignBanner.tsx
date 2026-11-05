@@ -103,10 +103,10 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ is
             <span>[VISUALIZER HUB]</span>
           </div>
 
-          {/* Headline */}
-          <p className="text-[10.5px] sm:text-xs text-white/90 font-mono leading-tight min-w-0 truncate">
+          {/* Target Date Headline: Hidden on mobile (<sm) to prevent ugly truncation ('Jan...') */}
+          <p className="hidden sm:block text-[11px] sm:text-xs text-white/90 font-mono leading-tight min-w-0 truncate">
             <span className="font-semibold text-cyan-200 tracking-wide">
-              <span className="hidden md:inline">Official Visualizer Hub Launch: </span>
+              <span className="hidden lg:inline">Official Visualizer Hub Launch: </span>
               <span>January 9, 2027</span>
             </span>
           </p>

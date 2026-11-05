@@ -216,7 +216,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
   return (
     <section
       aria-label="Pricing and Membership Options"
-      className={`w-full max-w-7xl mx-auto space-y-6 transform-gpu ${className}`}
+      className={`w-full max-w-7xl mx-auto space-y-6 ${className}`}
     >
       {/* Reservation Toast Notice */}
       <AnimatePresence>
@@ -242,11 +242,11 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
         )}
       </AnimatePresence>
 
-      {/* Upgraded Solid Frosted Glass Header Banner: Optimal Rich Dark Backing, Zero Typography Bleed */}
+      {/* Upgraded Solid Frosted Glass Header Banner: Optimal Rich Dark Backing, Zero Typography Bleed, Preserved Smooth Tablet Corner Radius */}
       {!isLoungeView && (
-        <div className="rounded-3xl bg-[#060a14]/95 backdrop-blur-2xl border border-cyan-500/30 p-5 sm:p-6 md:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(56,189,248,0.12)] relative overflow-hidden">
+        <div className="rounded-3xl bg-[#060a14]/95 backdrop-blur-2xl border border-cyan-500/30 p-5 sm:p-6 md:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(56,189,248,0.12)] relative isolate">
           {/* Subtle Ambient Gold & Cyan Dual-Glow Beam */}
-          <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none rounded-full" />
 
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
             <div className="space-y-2 flex-1 min-w-0 max-w-2xl xl:max-w-3xl">
@@ -683,10 +683,14 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 </button>
               </div>
 
-              {/* Green Checkmarks Line */}
-              <div className="flex items-center justify-center gap-1.5 text-[10.5px] font-mono text-emerald-300 font-bold text-center pt-0.5">
-                <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Save €14.96+ instantly vs separate purchases · Instant access</span>
+              {/* Green Confirmation Subtext (Clean Two-Line Mobile Layout, Single-Line Desktop) */}
+              <div className="flex items-center justify-center gap-1 xs:gap-1.5 text-[8.5px] min-[360px]:text-[9px] xs:text-[9.5px] sm:text-[10px] font-mono text-emerald-300 font-bold text-center pt-0.5 leading-tight sm:leading-snug tracking-tighter min-[360px]:tracking-tight sm:tracking-normal max-w-sm sm:max-w-none mx-auto">
+                <Check className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-emerald-400 shrink-0 self-center" />
+                <span className="text-center">
+                  <span className="block sm:inline">Save €14.96+ instantly vs separate purchases</span>
+                  <span className="hidden sm:inline"> · </span>
+                  <span className="block sm:inline">Instant access</span>
+                </span>
               </div>
             </div>
           </div>
