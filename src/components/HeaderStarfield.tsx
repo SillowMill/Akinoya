@@ -6,7 +6,7 @@ import React, { useEffect, useRef } from 'react';
 interface HeaderStar {
   xPct: number;       // Horizontal position (0..1 percentage of header width)
   yPct: number;       // Vertical position (0..1 percentage of header height)
-  radius: number;     // Micro-radius in CSS pixels (0.5px to 1.5px)
+  radius: number;     // Micro-radius in CSS pixels (0.4px to 2.5px depending on tier)
   baseAlpha: number;  // Minimum breathing opacity (>= 0.20)
   maxAlpha: number;   // Maximum twinkling opacity (<= 0.90)
   speed: number;      // Twinkle pulsation frequency
@@ -54,24 +54,44 @@ export const HeaderStarfield: React.FC = () => {
     let dpr = 1;
     let stars: HeaderStar[] = [];
 
-    // Initialize stars constellation scaled to container width
+    // Initialize stars constellation with three-tier responsive scaling
     const initStars = (w: number) => {
-      // Conditional mobile viewport check (< 768px)
-      const isMobile =
-        (typeof window !== 'undefined' && window.innerWidth < 768) || w < 768;
+      // Determine viewport tier based on window width or canvas container width
+      const screenW = typeof window !== 'undefined' ? window.innerWidth : w;
 
-      // On mobile viewports, scale down star radius by 55% (sizeMultiplier = 0.45)
-      // Desktop (>= 1024px) and tablet (768px - 1023px) remain exactly at 1.0 multiplier
-      const sizeMultiplier = isMobile ? 0.45 : 1.0;
-
-      // Adaptive particle density based on viewport & performance tier
-      let count = 62;
-      if (isMobile) {
-        count = isLitePerf ? 18 : 26;
-      } else if (w < 1024) {
-        count = isLitePerf ? 28 : 42;
+      let tier: 'desktop' | 'tablet' | 'mobile';
+      if (screenW >= 1024) {
+        tier = 'desktop';
+      } else if (screenW >= 768) {
+        tier = 'tablet';
       } else {
-        count = isLitePerf ? 38 : 62;
+        tier = 'mobile';
+      }
+
+      // Three-Tier Responsive Configuration:
+      // Desktop (>= 1024px): 45-60 stars, 1.0px - 2.5px radius
+      // Tablet (768px - 1023px): 25-35 stars, 0.7px - 1.6px radius
+      // Mobile (< 768px): 15-20 stars, 0.4px - 1.0px radius
+      let count: number;
+      let minRadius: number;
+      let maxRadius: number;
+      let guideStarCount: number;
+
+      if (tier === 'desktop') {
+        count = isLitePerf ? 38 : 52; // ~45–60 stars
+        minRadius = 1.0;
+        maxRadius = 2.5;
+        guideStarCount = 4;
+      } else if (tier === 'tablet') {
+        count = isLitePerf ? 20 : 30; // ~25–35 stars
+        minRadius = 0.7;
+        maxRadius = 1.6;
+        guideStarCount = 3;
+      } else {
+        count = isLitePerf ? 14 : 18; // ~15–20 stars
+        minRadius = 0.4;
+        maxRadius = 1.0;
+        guideStarCount = 2;
       }
 
       const generated: HeaderStar[] = [];
@@ -79,6 +99,7 @@ export const HeaderStarfield: React.FC = () => {
       for (let i = 0; i < count; i++) {
         const rand = Math.random();
         let color: 'white' | 'cyan' | 'gold' = 'white';
+        // Universe palette hierarchy: 55% Starlight White, 30% Faint Cyan, 15% Celestial Gold
         if (rand < 0.55) {
           color = 'white';
         } else if (rand < 0.85) {
@@ -87,12 +108,11 @@ export const HeaderStarfield: React.FC = () => {
           color = 'gold';
         }
 
-        // Guide stars have subtle halo (first ~4 stars)
-        const isGuideStar = i < 4;
-        const baseRadius = isGuideStar
-          ? 1.25 + Math.random() * 0.35
-          : 0.55 + Math.random() * 0.65;
-        const radius = Math.max(0.25, baseRadius * sizeMultiplier);
+        // Guide stars take the upper radius tier; regular stars span the micro-to-mid range
+        const isGuideStar = i < guideStarCount;
+        const radius = isGuideStar
+          ? maxRadius - (maxRadius - minRadius) * 0.25 * Math.random()
+          : minRadius + Math.random() * (maxRadius - minRadius) * 0.75;
 
         generated.push({
           xPct: Math.random(),
@@ -194,6 +214,8 @@ export const HeaderStarfield: React.FC = () => {
     });
     resizeObserver.observe(canvas);
 
+    window.addEventListener('resize', handleResize, { passive: true });
+
     handleResize();
 
     if (!reducedMotion) {
@@ -217,6 +239,7 @@ export const HeaderStarfield: React.FC = () => {
 
     return () => {
       if (animId) cancelAnimationFrame(animId);
+      window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       resizeObserver.disconnect();
     };
