@@ -16,6 +16,9 @@ import {
 import { soundManager } from '../utils/audio';
 import { useAuth } from '../context/AuthContext';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
+import akinoyaPassCard from '../assets/images/akinoya_pass_card_1790852652003.jpg';
+import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
+import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
 
 export interface CheckoutProductInfo {
   id: string;
@@ -49,6 +52,14 @@ export interface SecureOrderCheckoutModalProps {
   onClose?: () => void;
   product?: Partial<CheckoutProductInfo>;
 }
+
+export const getResolvedProductImage = (product: CheckoutProductInfo): string => {
+  if (product.image) return product.image;
+  if (product.id === 'membership') return akinoyaPassCard;
+  if (product.id === 'workflow' || product.id === 'logic-visualizer') return stage03Img;
+  if (product.id === 'vocal') return stage05Img;
+  return bingaaComicCover;
+};
 
 export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> = ({
   isOpen: controlledIsOpen,
@@ -404,11 +415,13 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                     {/* Dynamic Order Summary Card */}
                     <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-black/60 border border-white/10 mb-4">
                       <div className="flex items-center gap-3.5 min-w-0">
-                        <img
-                          src={checkoutProduct.image || bingaaComicCover}
-                          alt={checkoutProduct.title}
-                          className="w-12 h-15 object-cover rounded-lg border border-cyan-500/30 shrink-0"
-                        />
+                        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-cyan-500/35 bg-black/80 shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.2)]">
+                          <img
+                            src={getResolvedProductImage(checkoutProduct)}
+                            alt={checkoutProduct.title}
+                            className="w-full h-full object-cover object-center"
+                          />
+                        </div>
                         <div className="min-w-0">
                           <div className="text-xs sm:text-sm font-semibold text-white truncate">
                             {checkoutProduct.subtitle}

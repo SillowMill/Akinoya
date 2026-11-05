@@ -24,6 +24,9 @@ import { soundManager } from '../utils/audio';
 import { openMembershipGateModal } from '../utils/pioneer';
 import { useAuth } from '../context/AuthContext';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
+import akinoyaPassCard from '../assets/images/akinoya_pass_card_1790852652003.jpg';
+import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
+import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
 
 export interface CheckoutProductPayload {
   id: string;
@@ -160,6 +163,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
         badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
         priceValue: '60.00',
         isPhysical: true,
+        image: akinoyaPassCard,
         allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
         deliveryNotice: 'Free Express Delivery · Physical Shipping + Digital Sync',
       });
@@ -552,7 +556,14 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                                     badge: addon.badge,
                                     priceValue: addon.priceValue,
                                     isPhysical: false,
-                                    image: addon.id === 'comic-digital' ? bingaaComicCover : undefined,
+                                    image:
+                                      addon.id === 'comic-digital'
+                                        ? bingaaComicCover
+                                        : addon.id === 'vocal'
+                                        ? stage05Img
+                                        : addon.id === 'workflow' || addon.id === 'logic-visualizer'
+                                        ? stage03Img
+                                        : undefined,
                                     allocationNotice:
                                       addon.id === 'vocal'
                                         ? 'Instant Master Stems · 24-bit / 48kHz WAV'
@@ -607,17 +618,17 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 </div>
               </div>
 
-              {/* High-End Cyberpunk Glassmorphic CTA Button (Desktop Single-Line Forced Layout, Zero Line-Wrap) */}
+              {/* High-End Cyberpunk Glassmorphic CTA Button (Mobile, Tablet & Desktop Responsive Layout, Zero Text-Wrap) */}
               <button
                 type="button"
                 onClick={handleJoinPassClick}
-                className="group relative w-full py-3.5 px-2.5 xs:px-3 sm:px-4 lg:px-2.5 xl:px-4 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-[10.5px] xs:text-[11.5px] sm:text-xs lg:text-[10.5px] xl:text-[11.5px] 2xl:text-xs shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-1.5 xs:gap-2 lg:gap-1.5 xl:gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98] min-h-[46px]"
+                className="group relative w-full py-3 sm:py-3.5 px-2 xs:px-2.5 sm:px-3 md:px-4 lg:px-2 xl:px-3 2xl:px-4 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-[8.5px] min-[380px]:text-[9.5px] xs:text-[10px] sm:text-[11.5px] md:text-xs lg:text-[9.5px] xl:text-[11px] 2xl:text-xs shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98] min-h-[44px]"
               >
-                <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                <span className="tracking-tight sm:tracking-normal lg:tracking-tight xl:tracking-tight 2xl:tracking-normal uppercase text-center whitespace-nowrap">
+                <Crown className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                <span className="tracking-tighter min-[380px]:tracking-tight sm:tracking-normal lg:tracking-tighter xl:tracking-tight 2xl:tracking-normal uppercase text-center whitespace-nowrap select-none">
                   Skip A La Carte — Unlock All With Member Pass
                 </span>
-                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
+                <ArrowRight className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
               </button>
 
               {/* Green Checkmarks Line */}

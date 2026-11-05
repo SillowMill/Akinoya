@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Folder,
@@ -47,6 +47,7 @@ import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
 import stage04Img from '../assets/images/stage_04_cybernetic_prompt_datastream.jpg';
 import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
+import akinoyaPassCard from '../assets/images/akinoya_pass_card_1790852652003.jpg';
 
 // Character Locking Master Assets (from Character Locking folder)
 import millCharacterImg from '../assets/images/character_locking/MilLLL.PNG';
@@ -111,23 +112,39 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
   const [selectedFileForPreview, setSelectedFileForPreview] = useState<DriveFile | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
 
-  // Check if item or folder is unlocked for the user
-  const isItemUnlocked = (item?: { isLocked?: boolean; productId?: string } | null): boolean => {
-    if (!item) return false;
-    if (isMember) return true;
-    if (!item.isLocked) return true;
+  // Owned products set memoized to eliminate redundant localStorage JSON parsing loops
+  const ownedProductsSet = useMemo(() => {
     try {
       const owned = localStorage.getItem('akinoya_owned_products');
       if (owned) {
-        const list: string[] = JSON.parse(owned);
-        if (list.includes('membership') || list.includes('all-inclusive')) return true;
-        if (item.productId && list.includes(item.productId)) return true;
-        if ((item.productId === 'comic' || item.productId === 'comic-digital') && (list.includes('comic') || list.includes('comic-digital'))) return true;
-        if ((item.productId === 'workflow' || item.productId === 'logic-visualizer') && (list.includes('workflow') || list.includes('logic-visualizer'))) return true;
+        return new Set<string>(JSON.parse(owned));
       }
     } catch {}
-    return false;
-  };
+    return new Set<string>();
+  }, []);
+
+  // Check if item or folder is unlocked for the user
+  const isItemUnlocked = useCallback(
+    (item?: { isLocked?: boolean; productId?: string } | null): boolean => {
+      if (!item) return false;
+      if (isMember) return true;
+      if (!item.isLocked) return true;
+      if (ownedProductsSet.has('membership') || ownedProductsSet.has('all-inclusive')) return true;
+      if (item.productId && ownedProductsSet.has(item.productId)) return true;
+      if (
+        (item.productId === 'comic' || item.productId === 'comic-digital') &&
+        (ownedProductsSet.has('comic') || ownedProductsSet.has('comic-digital'))
+      )
+        return true;
+      if (
+        (item.productId === 'workflow' || item.productId === 'logic-visualizer') &&
+        (ownedProductsSet.has('workflow') || ownedProductsSet.has('logic-visualizer'))
+      )
+        return true;
+      return false;
+    },
+    [isMember, ownedProductsSet]
+  );
 
   // Trigger Checkout for Gated Deliverables
   const handleTriggerCheckoutForProduct = (productId?: string) => {
@@ -142,6 +159,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         badge: 'VOCAL ACAPELLAS & STEMS · €19.99',
         priceValue: '19.99',
         isPhysical: false,
+        image: stage05Img,
         deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
         allocationNotice: 'Instant Master Stems · 24-bit / 48kHz WAV',
       };
@@ -177,6 +195,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         badge: 'WORKFLOW & LOGIC PRO · €29.99',
         priceValue: '29.99',
         isPhysical: false,
+        image: stage03Img,
         deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
         allocationNotice: 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template',
       };
@@ -188,6 +207,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
         priceValue: '60.00',
         isPhysical: true,
+        image: akinoyaPassCard,
         allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
         deliveryNotice: 'Free Express Delivery · Physical Shipping + Instant Vault Access',
       };
@@ -200,6 +220,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         badge: 'WORKFLOW & LOGIC PRO · €29.99',
         priceValue: '29.99',
         isPhysical: false,
+        image: stage03Img,
         deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
         allocationNotice: 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template',
       };
@@ -874,31 +895,39 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     }
   };
 
-  // Get current items to render
-  const subfoldersToRender = currentFolder
-    ? currentFolder.subfolders || []
-    : DRIVE_HIERARCHY;
+  // Get current items to render with memoization for 60 FPS touch navigation
+  const subfoldersToRender = useMemo(() => {
+    return currentFolder ? currentFolder.subfolders || [] : DRIVE_HIERARCHY;
+  }, [currentFolder]);
 
-  const filesToRender = currentFolder
-    ? currentFolder.files || []
-    : [];
+  const filesToRender = useMemo(() => {
+    return currentFolder ? currentFolder.files || [] : [];
+  }, [currentFolder]);
+
+  const allHierarchyFiles = useMemo(() => {
+    return DRIVE_HIERARCHY.flatMap((r) => [
+      ...(r.files || []),
+      ...(r.subfolders?.flatMap((s) => s.files || []) || []),
+    ]);
+  }, []);
 
   // Filter with search query if active
-  const filteredFolders = searchQuery.trim()
-    ? subfoldersToRender.filter((f) =>
-        f.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : subfoldersToRender;
+  const filteredFolders = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return subfoldersToRender;
+    return subfoldersToRender.filter((f) =>
+      f.displayName.toLowerCase().includes(q) || f.category.toLowerCase().includes(q)
+    );
+  }, [searchQuery, subfoldersToRender]);
 
-  const filteredFiles = searchQuery.trim()
-    ? (currentFolder
-        ? filesToRender
-        : DRIVE_HIERARCHY.flatMap((r) => [
-            ...(r.files || []),
-            ...(r.subfolders?.flatMap((s) => s.files || []) || []),
-          ])
-      ).filter((f) => f.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : filesToRender;
+  const filteredFiles = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return filesToRender;
+    const source = currentFolder ? filesToRender : allHierarchyFiles;
+    return source.filter((f) =>
+      f.name.toLowerCase().includes(q) || f.extension.toLowerCase().includes(q)
+    );
+  }, [searchQuery, currentFolder, filesToRender, allHierarchyFiles]);
 
   return (
     <div className="relative w-full text-white font-sans space-y-5">
@@ -1128,30 +1157,96 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                 className={
                   viewMode === 'grid'
                     ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5'
-                    : 'space-y-2'
+                    : 'space-y-2.5'
                 }
               >
                 {filteredFolders.map((folder) => {
                   const isUnlocked = isItemUnlocked(folder);
 
+                  if (viewMode === 'grid') {
+                    return (
+                      <div
+                        key={folder.id}
+                        onClick={() => handleOpenFolder(folder)}
+                        className={`group rounded-2xl border transition-all cursor-pointer flex flex-col justify-between p-4 sm:p-5 ${
+                          !isUnlocked
+                            ? 'bg-black/50 border-white/10 hover:border-amber-400/50 shadow-md'
+                            : 'bg-[#0a0f1e]/90 border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_24px_rgba(0,242,254,0.18)] hover:scale-[1.015]'
+                        }`}
+                        style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
+                      >
+                        <div className="flex items-start gap-3.5 min-w-0 mb-3.5">
+                          {/* Rich Folder Emoji / Icon */}
+                          <div
+                            className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 text-xl sm:text-2xl transition-transform group-hover:scale-105 ${
+                              !isUnlocked
+                                ? 'bg-amber-950/40 border border-amber-400/30 shadow-sm'
+                                : 'bg-cyan-950/60 border border-cyan-400/40 shadow-[0_0_12px_rgba(0,242,254,0.25)]'
+                            }`}
+                          >
+                            {folder.richIcon}
+                          </div>
+
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <h4 className="text-xs sm:text-sm font-mono font-bold text-white group-hover:text-cyan-200 truncate">
+                              {folder.displayName}
+                            </h4>
+                            <div className="text-[10px] sm:text-[10.5px] font-mono text-cyan-300/80 truncate">
+                              {folder.category}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2 mt-auto">
+                          <div className="text-[10px] font-mono text-white/50 flex items-center gap-1.5 truncate">
+                            <span>{folder.itemCount} items</span>
+                            <span>·</span>
+                            <span>{folder.totalSize}</span>
+                          </div>
+
+                          <div className="shrink-0">
+                            {isUnlocked ? (
+                              <span className="text-[9.5px] sm:text-[10px] font-mono px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold flex items-center gap-1 shadow-sm whitespace-nowrap">
+                                <Unlock className="w-3 h-3 text-emerald-400 shrink-0" />
+                                <span>UNLOCKED</span>
+                              </span>
+                            ) : (
+                              <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold flex items-center gap-1 whitespace-nowrap">
+                                  <Lock className="w-3 h-3 text-amber-400 shrink-0" />
+                                  <span>LOCKED</span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTriggerCheckoutForProduct(folder.productId)}
+                                  className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-mono font-bold text-[10px] shadow-[0_0_10px_rgba(56,189,248,0.3)] transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                >
+                                  <ShoppingBag className="w-3 h-3 shrink-0" />
+                                  <span>BUY</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // List View
                   return (
                     <div
                       key={folder.id}
                       onClick={() => handleOpenFolder(folder)}
-                      className={`group rounded-2xl border transition-all cursor-pointer ${
-                        viewMode === 'grid'
-                          ? 'p-4 space-y-3'
-                          : 'p-3.5 flex items-center justify-between gap-3'
-                      } ${
+                      className={`group rounded-2xl border transition-all cursor-pointer p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                         !isUnlocked
-                          ? 'bg-black/40 border-white/10 hover:border-amber-400/40 opacity-80 hover:opacity-100'
-                          : 'bg-[#0a0e1b]/80 border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(0,242,254,0.15)] hover:scale-[1.01]'
+                          ? 'bg-black/50 border-white/10 hover:border-amber-400/40'
+                          : 'bg-[#0a0e1b]/80 border-cyan-500/30 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(0,242,254,0.15)]'
                       }`}
+                      style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
-                        {/* Rich Folder Emoji / Icon */}
                         <div
-                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl transition-transform group-hover:scale-105 ${
+                          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 text-xl transition-transform group-hover:scale-105 ${
                             !isUnlocked
                               ? 'bg-amber-950/40 border border-amber-400/30 shadow-sm'
                               : 'bg-cyan-950/60 border border-cyan-400/40 shadow-[0_0_12px_rgba(0,242,254,0.2)]'
@@ -1162,11 +1257,10 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
 
                         <div className="min-w-0 space-y-0.5">
                           <div className="text-xs sm:text-sm font-mono font-bold text-white group-hover:text-cyan-200 truncate">
-                            <span className="sm:hidden">{folder.shortName || folder.displayName}</span>
-                            <span className="hidden sm:inline">{folder.displayName}</span>
+                            {folder.displayName}
                           </div>
                           <div className="text-[10px] font-mono text-white/50 flex flex-wrap items-center gap-1.5 sm:gap-2">
-                            <span className="truncate max-w-[140px] sm:max-w-none">{folder.category}</span>
+                            <span className="text-cyan-300/80 truncate">{folder.category}</span>
                             <span>·</span>
                             <span>{folder.itemCount} items</span>
                             <span className="hidden xs:inline">·</span>
@@ -1175,24 +1269,27 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                        <span className="sm:hidden text-[10px] font-mono text-white/40">
+                          {folder.totalSize}
+                        </span>
                         {isUnlocked ? (
-                          <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                            <Unlock className="w-3 h-3 text-emerald-400" />
+                          <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.2)] whitespace-nowrap">
+                            <Unlock className="w-3 h-3 text-emerald-400 shrink-0" />
                             <span>UNLOCKED</span>
                           </span>
                         ) : (
                           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold flex items-center gap-1">
-                              <Lock className="w-3 h-3 text-amber-400" />
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold flex items-center gap-1 whitespace-nowrap">
+                              <Lock className="w-3 h-3 text-amber-400 shrink-0" />
                               <span>STILL LOCKED</span>
                             </span>
                             <button
                               type="button"
                               onClick={() => handleTriggerCheckoutForProduct(folder.productId)}
-                              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-mono font-bold text-[10px] shadow-[0_0_12px_rgba(56,189,248,0.3)] transition-all flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-mono font-bold text-[10px] shadow-[0_0_12px_rgba(56,189,248,0.3)] transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap"
                             >
-                              <ShoppingBag className="w-3 h-3" />
+                              <ShoppingBag className="w-3 h-3 shrink-0" />
                               <span>BUY NOW</span>
                             </button>
                           </div>
@@ -1217,24 +1314,160 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                 className={
                   viewMode === 'grid'
                     ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5'
-                    : 'space-y-2'
+                    : 'space-y-2.5'
                 }
               >
                 {filteredFiles.map((file) => {
                   const isFileUnlocked = isItemUnlocked(file);
 
+                  if (viewMode === 'grid') {
+                    return (
+                      <div
+                        key={file.id}
+                        className="group rounded-2xl border transition-all p-3.5 sm:p-4 flex flex-col justify-between bg-[#0a0f1e]/90 border-white/10 hover:border-cyan-400/50 shadow-md hover:shadow-[0_0_24px_rgba(0,242,254,0.15)]"
+                        style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
+                      >
+                        <div>
+                          {/* Proportional Preview Image Thumbnail */}
+                          {file.previewImg && (
+                            <div
+                              onClick={() => setSelectedFileForPreview(file)}
+                              className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/80 border border-white/10 group-hover:border-cyan-400/40 mb-3 cursor-pointer group/thumb"
+                            >
+                              <img
+                                src={file.previewImg}
+                                alt={file.name}
+                                loading="lazy"
+                                decoding="async"
+                                className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300 pointer-events-none"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover/thumb:opacity-30 transition-opacity" />
+                              <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/80 border border-white/20 text-[9px] font-mono text-cyan-300 flex items-center gap-1 backdrop-blur-sm shadow-sm">
+                                <Eye className="w-3 h-3 shrink-0" />
+                                <span>PREVIEW</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* File Header */}
+                          <div className="flex items-start gap-3 min-w-0 mb-3">
+                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
+                              {file.extension === 'PDF' && <FileText className="w-5 h-5 text-red-400" />}
+                              {file.extension === 'PNG' && <Film className="w-5 h-5 text-cyan-400" />}
+                              {file.extension === 'JPG' && <Film className="w-5 h-5 text-purple-400" />}
+                              {file.extension === 'BLEND' && <Layers className="w-5 h-5 text-amber-400" />}
+                              {file.extension === 'JSON' && <FileCode className="w-5 h-5 text-emerald-400" />}
+                              {file.extension === 'CUBE' && <Sliders className="w-5 h-5 text-purple-400" />}
+                              {file.extension === 'WAV' && <Music className="w-5 h-5 text-teal-400" />}
+                              {file.extension === 'ALS' && <Disc className="w-5 h-5 text-amber-400" />}
+                              {file.extension === 'LOGICX' && <Music className="w-5 h-5 text-indigo-400" />}
+                              {file.extension === 'TIFF' && <Film className="w-5 h-5 text-purple-400" />}
+                              {file.extension === 'ZIP' && <Box className="w-5 h-5 text-teal-400" />}
+                              {file.extension !== 'PDF' &&
+                                file.extension !== 'PNG' &&
+                                file.extension !== 'JPG' &&
+                                file.extension !== 'BLEND' &&
+                                file.extension !== 'JSON' &&
+                                file.extension !== 'CUBE' &&
+                                file.extension !== 'WAV' &&
+                                file.extension !== 'ALS' &&
+                                file.extension !== 'LOGICX' &&
+                                file.extension !== 'TIFF' &&
+                                file.extension !== 'ZIP' && (
+                                  <File className="w-5 h-5 text-white/60" />
+                                )}
+                            </div>
+
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <h4 className="text-xs sm:text-sm font-mono font-bold text-white group-hover:text-cyan-200 truncate">
+                                {file.name}
+                              </h4>
+                              <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-mono text-white/50">
+                                <span className={`px-1.5 py-0.2 rounded border text-[9px] font-bold ${file.badgeColor}`}>
+                                  {file.typeBadge}
+                                </span>
+                                <span>{file.size}</span>
+                                {file.isAudio && (
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-teal-500/20 text-teal-300 border border-teal-400/30 font-bold">
+                                    AUDIO
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* File Action Bar */}
+                        <div className="pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 mt-auto">
+                          <div className="flex items-center gap-1.5">
+                            {file.isAudio && (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleAudio(file.id)}
+                                className="px-2 py-1 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/40 text-teal-300 text-[10px] font-mono font-bold transition-colors cursor-pointer flex items-center gap-1"
+                              >
+                                {playingAudioId === file.id ? (
+                                  <>
+                                    <Pause className="w-3 h-3 fill-teal-300" />
+                                    <span>Playing</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Play className="w-3 h-3 fill-teal-300 ml-0.5" />
+                                    <span>Listen</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+
+                            {file.previewImg && !file.isAudio && (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedFileForPreview(file)}
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
+                                title="Quick Preview"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1.5 ml-auto">
+                            {isFileUnlocked ? (
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadFile(file)}
+                                className="px-2.5 py-1 rounded-lg font-mono text-[10.5px] font-bold transition-all cursor-pointer flex items-center gap-1 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-300 whitespace-nowrap"
+                              >
+                                <Download className="w-3 h-3 text-cyan-400 shrink-0" />
+                                <span>DOWNLOAD</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleTriggerCheckoutForProduct(file.productId)}
+                                className="px-2.5 py-1 rounded-lg font-mono text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-[0_0_10px_rgba(56,189,248,0.3)] whitespace-nowrap"
+                              >
+                                <Lock className="w-3 h-3 text-amber-300 shrink-0" />
+                                <span>UNLOCK</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // List View
                   return (
                     <div
                       key={file.id}
-                      className={`group rounded-2xl border transition-all ${
-                        viewMode === 'grid'
-                          ? 'p-4 space-y-3 bg-[#0a0f1e]/80 border-white/10 hover:border-cyan-400/40'
-                          : 'p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/60 border-white/10 hover:border-cyan-400/40'
-                      }`}
+                      className="group rounded-2xl border transition-all p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/60 border-white/10 hover:border-cyan-400/40"
+                      style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}
                     >
-                      <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="flex items-center gap-3 min-w-0">
                         {/* File Format Icon */}
-                        <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
                           {file.extension === 'PDF' && <FileText className="w-5 h-5 text-red-400" />}
                           {file.extension === 'PNG' && <Film className="w-5 h-5 text-cyan-400" />}
                           {file.extension === 'JPG' && <Film className="w-5 h-5 text-purple-400" />}
@@ -1262,15 +1495,15 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                         </div>
 
                         <div className="min-w-0 space-y-0.5">
-                          <div className="text-xs sm:text-sm font-mono font-bold text-white group-hover:text-cyan-200 truncate flex items-center gap-2">
+                          <div className="text-xs sm:text-sm font-mono font-bold text-white group-hover:text-cyan-200 truncate flex items-center gap-1.5">
                             <span className="truncate">{file.name}</span>
                             {file.isAudio && (
-                              <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-teal-500/20 text-teal-300 border border-teal-400/30">
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-teal-500/20 text-teal-300 border border-teal-400/30 shrink-0">
                                 AUDIO
                               </span>
                             )}
                           </div>
-                          <div className="text-[10px] font-mono text-white/50 flex flex-wrap items-center gap-2">
+                          <div className="text-[10px] font-mono text-white/50 flex flex-wrap items-center gap-1.5 sm:gap-2">
                             <span className={`px-1.5 py-0.2 rounded border text-[9px] font-bold ${file.badgeColor}`}>
                               {file.typeBadge}
                             </span>
@@ -1282,22 +1515,22 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                       </div>
 
                       {/* Action Bar */}
-                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                      <div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-1.5 sm:gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5 w-full sm:w-auto">
                         {file.isAudio && (
                           <button
                             type="button"
                             onClick={() => handleToggleAudio(file.id)}
-                            className="p-2 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/40 text-teal-300 text-xs font-mono font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                            className="px-2.5 py-1 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/40 text-teal-300 text-[10.5px] font-mono font-bold transition-colors cursor-pointer flex items-center gap-1.5"
                             title="Preview Audio"
                           >
                             {playingAudioId === file.id ? (
                               <>
-                                <Pause className="w-3.5 h-3.5 fill-teal-300" />
+                                <Pause className="w-3 h-3 fill-teal-300 shrink-0" />
                                 <span>Playing</span>
                               </>
                             ) : (
                               <>
-                                <Play className="w-3.5 h-3.5 fill-teal-300 ml-0.5" />
+                                <Play className="w-3 h-3 fill-teal-300 ml-0.5 shrink-0" />
                                 <span>Listen</span>
                               </>
                             )}
@@ -1308,41 +1541,41 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                           <button
                             type="button"
                             onClick={() => setSelectedFileForPreview(file)}
-                            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
+                            className="p-1.5 sm:p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
                             title="Quick Preview"
                           >
-                            <Eye className="w-3.5 h-3.5" />
+                            <Eye className="w-3.5 h-3.5 shrink-0" />
                           </button>
                         )}
 
                         {isFileUnlocked ? (
                           <>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold flex items-center gap-1">
-                              <Unlock className="w-3 h-3 text-emerald-400" />
+                            <span className="text-[9.5px] sm:text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-bold flex items-center gap-1 whitespace-nowrap">
+                              <Unlock className="w-3 h-3 text-emerald-400 shrink-0" />
                               <span className="hidden sm:inline">UNLOCKED</span>
                             </span>
                             <button
                               type="button"
                               onClick={() => handleDownloadFile(file)}
-                              className="px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-300"
+                              className="px-2.5 sm:px-3 py-1.5 rounded-xl font-mono text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-300 whitespace-nowrap"
                             >
-                              <Download className="w-3 h-3 text-cyan-400" />
+                              <Download className="w-3 h-3 text-cyan-400 shrink-0" />
                               <span>DOWNLOAD</span>
                             </button>
                           </>
                         ) : (
                           <>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold flex items-center gap-1">
-                              <Lock className="w-3 h-3 text-amber-400" />
-                              <span className="hidden sm:inline">STILL LOCKED</span>
+                            <span className="text-[9.5px] sm:text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold flex items-center gap-1 whitespace-nowrap">
+                              <Lock className="w-3 h-3 text-amber-400 shrink-0" />
+                              <span className="hidden sm:inline">LOCKED</span>
                             </span>
                             <button
                               type="button"
                               onClick={() => handleTriggerCheckoutForProduct(file.productId)}
-                              className="px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-[0_0_15px_rgba(56,189,248,0.35)]"
+                              className="px-2.5 sm:px-3 py-1.5 rounded-xl font-mono text-[10.5px] sm:text-xs font-bold transition-all cursor-pointer flex items-center gap-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-[0_0_12px_rgba(56,189,248,0.35)] whitespace-nowrap"
                             >
-                              <ShoppingBag className="w-3 h-3" />
-                              <span>GET ACCESS NOW</span>
+                              <ShoppingBag className="w-3 h-3 shrink-0" />
+                              <span>GET ACCESS</span>
                             </button>
                           </>
                         )}
@@ -1412,12 +1645,27 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                   selectedFileForPreview.previewImg === odiCharacterImg ||
                   selectedFileForPreview.previewImg === sillowCharacterImg;
 
+                const isBookOrComic =
+                  selectedFileForPreview.name.toLowerCase().includes('comic') ||
+                  selectedFileForPreview.name.toLowerCase().includes('graphic novel') ||
+                  selectedFileForPreview.name.toLowerCase().includes('bingäa') ||
+                  selectedFileForPreview.extension === 'PDF' ||
+                  selectedFileForPreview.previewImg === bingaaComicCover;
+
                 return (
-                  <div className="relative rounded-2xl overflow-hidden border border-white/15 aspect-[16/9] bg-black select-none">
+                  <div
+                    className={`relative rounded-2xl overflow-hidden border border-white/15 bg-black select-none ${
+                      isBookOrComic
+                        ? 'aspect-[3/4] max-h-[60vh] max-w-sm mx-auto shadow-[0_12px_40px_rgba(0,0,0,0.85)]'
+                        : 'aspect-video w-full shadow-[0_12px_40px_rgba(0,0,0,0.7)]'
+                    }`}
+                  >
                     <img
                       src={selectedFileForPreview.previewImg}
                       alt={selectedFileForPreview.name}
-                      className={`w-full h-full object-cover select-none pointer-events-none ${
+                      className={`w-full h-full ${
+                        isBookOrComic ? 'object-contain' : 'object-cover'
+                      } select-none pointer-events-none ${
                         isCharPlate ? 'filter blur-[8px] scale-[1.02]' : ''
                       }`}
                     />
