@@ -471,24 +471,24 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                         )}
 
                         {/* Right Column: Category Badge, Price Tag, Title, Subtitle, and Desktop CTA Button */}
-                        <div className="space-y-1.5 sm:space-y-1.5 min-w-0 flex-1">
+                        <div className="space-y-1 sm:space-y-1.5 min-w-0 flex-1">
                           {/* Row 1: Badge & Price aligned cleanly */}
-                          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
-                            <span className="text-[9.5px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
+                          <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
+                            <span className="text-[9px] sm:text-[9.5px] font-mono font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
                               {addon.category}
                             </span>
-                            <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
+                            <span className="text-[13.5px] xs:text-sm sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-0.5 sm:gap-1">
                               <span>€</span>
                               <span>{addon.priceValue}</span>
                             </span>
                           </div>
 
-                          {/* Row 2: Title & Subtitle with full width */}
-                          <div className="space-y-0.5">
-                            <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide leading-snug group-hover:text-cyan-200 transition-colors">
+                          {/* Row 2: Title & Subtitle with full width and zero ellipsis truncation */}
+                          <div className="space-y-0.5 sm:space-y-1">
+                            <h4 className="text-[13px] xs:text-[13.5px] sm:text-base font-display font-black text-white tracking-wide leading-tight sm:leading-snug group-hover:text-cyan-200 transition-colors">
                               {addon.title}
                             </h4>
-                            <p className="text-[11px] sm:text-xs font-sans text-white/70 leading-normal line-clamp-2 sm:line-clamp-none">
+                            <p className="text-[11px] sm:text-xs font-sans text-white/75 sm:text-white/70 leading-relaxed">
                               {addon.subtitle}
                             </p>
                           </div>
