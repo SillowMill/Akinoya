@@ -423,174 +423,113 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </div>
             </div>
 
-            {/* 2. INDIVIDUAL DIGITAL ADD-ONS: 3 Distinct Cards with Clean Inline Drawer Expansion */}
-            <div className="space-y-3">
+            {/* 2. INDIVIDUAL DIGITAL ADD-ONS: 3 Distinct Cards with Clean Inline Drawer Expansion (Bingäa-Style Architecture) */}
+            <div className="space-y-3.5">
               {ADDON_PRODUCTS.map((addon) => {
                 const isExpanded = expandedAddonId === addon.id;
                 const isComic = addon.id === 'comic-digital';
                 return (
                   <div
                     key={addon.id}
-                    className={`relative p-3.5 sm:p-4 rounded-2xl border transition-all space-y-3 group overflow-hidden ${
-                      isComic
-                        ? 'bg-gradient-to-b from-[#091526]/90 via-[#060e1c]/95 to-[#040812] border-cyan-500/40 hover:border-cyan-400/70 shadow-[0_4px_24px_rgba(0,0,0,0.6)]'
-                        : 'bg-white/[0.03] border-white/10 hover:border-cyan-400/40 shadow-lg'
-                    }`}
+                    className="rounded-2xl bg-gradient-to-b from-[#09152b] via-[#061122] to-[#040c1a] border-2 border-cyan-400/40 hover:border-cyan-300/70 p-3.5 sm:p-5 shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(56,189,248,0.15)] relative overflow-hidden group transition-all"
                   >
-                    {/* Full-bleed background cover artwork */}
-                    {isComic ? (
-                      <>
-                        <div
-                          className="absolute inset-0 bg-cover bg-center opacity-15 pointer-events-none filter blur-sm scale-105 transition-opacity duration-500 group-hover:opacity-25"
-                          style={{ backgroundImage: `url(${addon.thumbnailImg})` }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#050b14]/95 via-[#060e1d]/85 to-[#040812]/95 pointer-events-none" />
-                        <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent pointer-events-none" />
-                      </>
-                    ) : (
-                      <>
-                        <div
-                          className="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none filter blur-sm scale-105 transition-opacity duration-500 group-hover:opacity-20"
-                          style={{ backgroundImage: `url(${addon.thumbnailImg})` }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#060a14]/95 via-[#060a14]/85 to-[#04070e]/95 pointer-events-none" />
-                      </>
-                    )}
+                    {/* Luminous Top Cyan Glow Beam (Matching Bingäa physical card) */}
+                    <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent pointer-events-none" />
 
-                    {/* Responsive Card Layout: Spacious Horizontal Flow on Desktop/Tablet, Preserved Mobile Flow */}
-                    <div className="relative z-10">
-                      {/* Mobile Layout (< sm) */}
-                      <div className="sm:hidden flex flex-col gap-3">
-                        <div className="flex items-start gap-3.5 min-w-0">
-                          {isComic ? (
-                            <div className="relative w-20 xs:w-24 aspect-[3/4] rounded-xl overflow-hidden border border-cyan-400/50 shadow-[0_0_20px_rgba(56,189,248,0.25)] shrink-0">
-                              <img
-                                src={addon.thumbnailImg}
-                                alt={addon.title}
-                                loading="lazy"
-                                decoding="async"
-                                className="w-full h-full object-cover object-center"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-                            </div>
-                          ) : (
-                            <div className="relative w-24 xs:w-28 aspect-[16/9] rounded-xl overflow-hidden border border-cyan-400/40 bg-black/60 shadow-[0_0_16px_rgba(56,189,248,0.2)] shrink-0">
-                              <img
-                                src={addon.thumbnailImg}
-                                alt={addon.title}
-                                loading="lazy"
-                                decoding="async"
-                                className="w-full h-full object-cover object-center"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-                            </div>
-                          )}
+                    {/* Ambient Artwork Backdrop */}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none filter blur-sm scale-105 transition-opacity duration-500 group-hover:opacity-20"
+                      style={{ backgroundImage: `url(${addon.thumbnailImg})` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#09152b]/90 via-[#061122]/95 to-[#040c1a] pointer-events-none" />
 
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="text-xs sm:text-sm font-display font-bold text-white">
-                                {addon.title}
-                              </h4>
-                              <span className="text-[9.5px] font-mono text-cyan-300/90 bg-cyan-950/70 px-2 py-0.5 rounded-full border border-cyan-500/30">
-                                {addon.category}
-                              </span>
-                            </div>
-                            <p className="text-[11px] sm:text-xs text-white/65 font-sans leading-relaxed">
-                              {addon.subtitle}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-3 shrink-0 pt-2 border-t border-white/10">
-                          <span className="text-sm font-mono font-bold text-white whitespace-nowrap inline-flex items-baseline gap-1">
-                            <span>€</span>
-                            <span>{addon.priceValue}</span>
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => toggleExpandAddon(addon.id)}
-                            className={`px-3.5 py-2 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] flex items-center gap-1.5 ${
-                              isExpanded
-                                ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200'
-                                : 'bg-white/5 hover:bg-cyan-500/15 border-white/15 hover:border-cyan-400/50 text-white hover:text-cyan-200'
-                            }`}
-                          >
-                            <span>{isExpanded ? 'Hide Details' : 'Details & Order'}</span>
-                            {isExpanded ? (
-                              <ChevronUp className="w-3.5 h-3.5" />
-                            ) : (
-                              <ChevronDown className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Desktop & Tablet Spacious Horizontal Flow (sm+) */}
-                      <div className="hidden sm:flex sm:items-center sm:gap-4 md:gap-5 justify-between">
-                        {/* Left: Full-Bleed Edge-to-Edge Artwork Thumbnail */}
+                    {/* Card Content: Bingäa-Style Horizontal Flex / Grid */}
+                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4">
+                      {/* Top Row on Mobile / Left Column on Desktop: Fixed Prominent Artwork Thumbnail */}
+                      <div className="flex items-center gap-3 xs:gap-3.5 sm:gap-4 flex-1 min-w-0">
+                        {/* Left Column: Fixed, prominent width full-bleed artwork */}
                         {isComic ? (
-                          <div className="relative w-20 sm:w-22 md:w-24 lg:w-22 xl:w-24 aspect-[3/4] rounded-xl overflow-hidden border border-cyan-400/50 shadow-[0_0_20px_rgba(56,189,248,0.25)] shrink-0 group-hover:scale-105 transition-transform duration-300">
+                          <div className="shrink-0 rounded-xl overflow-hidden text-left shadow-[0_0_20px_rgba(56,189,248,0.3)]">
                             <img
                               src={addon.thumbnailImg}
                               alt={addon.title}
+                              className="w-20 xs:w-22 sm:w-20 md:w-24 h-auto aspect-[3/4] rounded-xl object-cover border border-cyan-400/60 group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
                               decoding="async"
-                              className="w-full h-full object-cover object-center"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                           </div>
                         ) : (
-                          <div className="relative w-32 sm:w-36 md:w-40 lg:w-36 xl:w-40 aspect-[16/9] rounded-xl overflow-hidden border border-cyan-400/40 bg-black/60 shadow-[0_0_16px_rgba(56,189,248,0.2)] shrink-0 group-hover:scale-105 transition-transform duration-300">
+                          <div className="shrink-0 rounded-xl overflow-hidden text-left shadow-[0_0_20px_rgba(56,189,248,0.25)]">
                             <img
                               src={addon.thumbnailImg}
                               alt={addon.title}
+                              className="w-24 xs:w-28 sm:w-36 md:w-40 lg:w-36 xl:w-44 h-auto aspect-[16/9] rounded-xl object-cover border border-cyan-400/60 group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
                               decoding="async"
-                              className="w-full h-full object-cover object-center"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                           </div>
                         )}
 
-                        {/* Middle: Expanded Content Block with Sufficient Width */}
-                        <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
-                          <div className="flex items-center gap-2.5 flex-wrap">
-                            <h4 className="text-sm sm:text-base font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
-                              {addon.title}
-                            </h4>
-                            <span className="text-[9.5px] font-mono text-cyan-300/90 bg-cyan-950/70 px-2.5 py-0.5 rounded-full border border-cyan-500/30 font-semibold uppercase tracking-wider">
+                        {/* Right Column: Category Badge, Price Tag, Title, Subtitle, and Desktop CTA Button */}
+                        <div className="space-y-1.5 sm:space-y-1.5 min-w-0 flex-1">
+                          {/* Row 1: Badge & Price aligned cleanly */}
+                          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+                            <span className="text-[9.5px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
                               {addon.category}
                             </span>
+                            <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
+                              <span>€</span>
+                              <span>{addon.priceValue}</span>
+                            </span>
                           </div>
-                          <p className="text-xs sm:text-[12.5px] lg:text-xs xl:text-[12.5px] text-white/70 font-sans leading-relaxed">
-                            {addon.subtitle}
-                          </p>
-                        </div>
 
-                        {/* Right: Pricing Tag & Action Button Neatly Aligned Alongside Content */}
-                        <div className="flex flex-col items-end justify-center gap-2 shrink-0 pl-2">
-                          <span className="text-base sm:text-lg lg:text-xl font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.3)] whitespace-nowrap inline-flex items-baseline gap-1">
-                            <span>€</span>
-                            <span>{addon.priceValue}</span>
-                          </span>
+                          {/* Row 2: Title & Subtitle with full width */}
+                          <div className="space-y-0.5">
+                            <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide leading-snug group-hover:text-cyan-200 transition-colors">
+                              {addon.title}
+                            </h4>
+                            <p className="text-[11px] sm:text-xs font-sans text-white/70 leading-normal line-clamp-2 sm:line-clamp-none">
+                              {addon.subtitle}
+                            </p>
+                          </div>
+
+                          {/* Desktop / Tablet CTA Button (Preserved inside right column on sm+) */}
                           <button
                             type="button"
                             onClick={() => toggleExpandAddon(addon.id)}
-                            className={`px-3.5 py-2 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] flex items-center gap-1.5 whitespace-nowrap shadow-sm ${
+                            className={`hidden sm:flex w-full mt-1 py-2 px-4 rounded-xl border font-mono font-extrabold text-xs transition-all cursor-pointer items-center justify-center gap-2 min-h-[38px] transform-gpu hover:scale-[1.01] ${
                               isExpanded
-                                ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
-                                : 'bg-white/5 hover:bg-cyan-500/15 border-white/15 hover:border-cyan-400/50 text-white hover:text-cyan-200'
+                                ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200 shadow-[0_0_15px_rgba(56,189,248,0.35)]'
+                                : 'bg-gradient-to-r from-cyan-950/70 via-[#0a1829] to-cyan-950/70 hover:from-cyan-900/80 hover:to-[#0c1f38] text-cyan-200 hover:text-white border-cyan-400/40 hover:border-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                             }`}
                           >
                             <span>{isExpanded ? 'Hide Details' : 'Details & Order'}</span>
                             {isExpanded ? (
-                              <ChevronUp className="w-3.5 h-3.5" />
+                              <ChevronUp className="w-3.5 h-3.5 shrink-0" />
                             ) : (
-                              <ChevronDown className="w-3.5 h-3.5" />
+                              <ChevronDown className="w-3.5 h-3.5 shrink-0" />
                             )}
                           </button>
                         </div>
                       </div>
+
+                      {/* Mobile Full-Width CTA Button (Exclusively on mobile < sm, large touch-friendly target) */}
+                      <button
+                        type="button"
+                        onClick={() => toggleExpandAddon(addon.id)}
+                        className={`sm:hidden w-full mt-1 py-3 px-4 rounded-xl border font-mono font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.99] ${
+                          isExpanded
+                            ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200 shadow-[0_0_15px_rgba(56,189,248,0.35)]'
+                            : 'bg-gradient-to-r from-cyan-950/80 via-[#0a1829] to-cyan-950/80 active:from-cyan-900 active:to-[#0c1f38] text-cyan-200 active:text-white border-cyan-400/40 active:border-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]'
+                        }`}
+                      >
+                        <span>{isExpanded ? 'Hide Details' : 'Details & Order'}</span>
+                        {isExpanded ? (
+                          <ChevronUp className="w-4 h-4 shrink-0" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 shrink-0" />
+                        )}
+                      </button>
                     </div>
 
                     {/* Inline Expandable Drawer: Clean, in-place, zero-modal popup */}
@@ -601,7 +540,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="relative z-10 overflow-hidden pt-3 border-t border-white/10 space-y-3"
+                          className="relative z-10 overflow-hidden pt-3 mt-3 border-t border-cyan-500/20 space-y-3"
                         >
                           <p className="text-xs text-white/80 font-sans leading-relaxed">
                             {addon.description}
