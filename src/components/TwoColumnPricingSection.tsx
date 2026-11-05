@@ -325,7 +325,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
         {/* ========================================================= */}
         <div
           id="alacarte-section"
-          className="flex flex-col rounded-3xl bg-gradient-to-b from-[#090e1a] via-[#060a14] to-[#04070e] border border-white/15 p-4 xs:p-5 sm:p-7 lg:p-8 relative overflow-hidden shadow-2xl scroll-mt-20 sm:scroll-mt-24"
+          className="flex flex-col rounded-3xl bg-gradient-to-b from-[#090e1a] via-[#060a14] to-[#04070e] border border-white/15 p-4 xs:p-5 sm:p-7 lg:p-6 xl:p-8 relative overflow-hidden shadow-2xl scroll-mt-20 sm:scroll-mt-24"
         >
           {/* Subtle Ambient Top Border Highlight */}
           <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent pointer-events-none" />
@@ -578,7 +578,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
             </div>
 
             {/* 3. STREAMLINED MEMBERSHIP UPSELL SECTION (Clean High-End Card Container) */}
-            <div className="rounded-2xl bg-gradient-to-br from-[#120d04]/80 via-[#0a0c16]/90 to-[#04060f]/95 backdrop-blur-md border border-amber-400/40 p-3.5 sm:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.12)] relative overflow-hidden space-y-3">
+            <div className="rounded-2xl bg-gradient-to-br from-[#120d04]/80 via-[#0a0c16]/90 to-[#04060f]/95 backdrop-blur-md border border-amber-400/40 p-3.5 sm:p-4 lg:p-3.5 xl:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.12)] relative overflow-hidden space-y-3">
               {/* Luminous Top Gold Beam */}
               <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/70 to-transparent pointer-events-none" />
 
@@ -591,15 +591,17 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 </div>
               </div>
 
-              {/* High-End Cyberpunk Glassmorphic CTA Button (Mobile-Optimized Typography, Zero Overflow) */}
+              {/* High-End Cyberpunk Glassmorphic CTA Button (Desktop Single-Line Forced Layout, Zero Line-Wrap) */}
               <button
                 type="button"
                 onClick={handleJoinPassClick}
-                className="group relative w-full py-3.5 px-3 sm:px-5 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-[11px] xs:text-xs sm:text-[13px] tracking-wide shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98] min-h-[46px]"
+                className="group relative w-full py-3.5 px-2.5 xs:px-3 sm:px-4 lg:px-2.5 xl:px-4 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-[10.5px] xs:text-[11.5px] sm:text-xs lg:text-[10.5px] xl:text-[11.5px] 2xl:text-xs shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-1.5 xs:gap-2 lg:gap-1.5 xl:gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98] min-h-[46px]"
               >
-                <Crown className="w-4 h-4 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                <span className="tracking-wider uppercase text-center leading-tight">Skip A La Carte — Unlock All With Member Pass</span>
-                <ArrowRight className="w-4 h-4 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
+                <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                <span className="tracking-tight sm:tracking-normal lg:tracking-tight xl:tracking-tight 2xl:tracking-normal uppercase text-center whitespace-nowrap">
+                  Skip A La Carte — Unlock All With Member Pass
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
               </button>
 
               {/* Green Checkmarks Line */}
