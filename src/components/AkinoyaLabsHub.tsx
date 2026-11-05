@@ -847,7 +847,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
           <div className="flex items-center gap-2.5 min-w-0">
             <Lock className="w-4 h-4 text-amber-400 shrink-0" />
             <span className="font-bold tracking-wide">
-              ANNUAL PASS REQUIRED — Downloads unlock for Paid Annual Members on January 9, 2027 (€60/year).
+              ANNUAL PASS REQUIRED — Instantly unlocked in Asset Vault for Paid Annual Members (€60/year).
             </span>
           </div>
           <span className="text-[10px] text-amber-400/90 font-bold tracking-wider shrink-0 uppercase">

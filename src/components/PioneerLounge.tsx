@@ -256,7 +256,7 @@ export const PioneerLounge: React.FC<PioneerLoungeProps> = ({
             Exclusive Lounge Behind Active Login
           </h2>
           <p className="text-xs sm:text-sm text-white/70 font-sans max-w-xl mx-auto leading-relaxed">
-            The Pioneer Lounge is an exclusive, quiet space with monthly drops in <strong className="text-cyan-300">#announcements</strong>, instant downloads in <strong className="text-cyan-300">#the-vault</strong>, and weekly feedback reviews in <strong className="text-cyan-300">#community-feedback</strong>. Active membership is required to enter.
+            The Pioneer Lounge is an exclusive, quiet space with instant vault downloads in <strong className="text-cyan-300">#the-vault</strong>, announcements in <strong className="text-cyan-300">#announcements</strong>, and weekly feedback reviews in <strong className="text-cyan-300">#community-feedback</strong>. Active membership is required to enter.
           </p>
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             {!isAuthenticated && (
@@ -307,7 +307,7 @@ export const PioneerLounge: React.FC<PioneerLoungeProps> = ({
                 MODULE 04 · PIONEER LOUNGE
               </span>
               <span className="text-[10px] font-mono text-cyan-300 font-semibold">
-                ASYNC · CURATED · MONTHLY DROPS
+                ASYNC · CURATED · INSTANT VAULT ACCESS
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-extrabold text-white tracking-wide">
@@ -394,7 +394,7 @@ export const PioneerLounge: React.FC<PioneerLoungeProps> = ({
           </ul>
           {savings > 0 && (
             <div className="text-[11px] font-mono font-bold text-emerald-300">
-              You save {formatEuro(savings)} on the packs alone. Every monthly drop is a bonus.
+              You save {formatEuro(savings)} on the packs alone with instant full access.
             </div>
           )}
         </div>
@@ -551,7 +551,7 @@ export const PioneerLounge: React.FC<PioneerLoungeProps> = ({
               <p className="text-xs font-sans text-white/75">
                 The three digital packs alone add up to{' '}
                 <strong className="text-white">{formatEuro(separateTotal)}</strong>. Pioneer Membership is{' '}
-                <strong className="text-amber-300">€{PIONEER_MEMBERSHIP.pricePerYear}/year</strong>, with every monthly drop included.
+                <strong className="text-amber-300">€{PIONEER_MEMBERSHIP.pricePerYear}/year</strong>, with instant full library access included.
               </p>
               <MemberCta compact />
             </div>

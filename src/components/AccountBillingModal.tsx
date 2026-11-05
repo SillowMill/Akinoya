@@ -351,7 +351,7 @@ export const AccountBillingModal: React.FC<AccountBillingModalProps> = ({ isOpen
                     <span>Pioneer Member Entitlements</span>
                   </div>
                   <p className="text-[11px] text-white/70 leading-relaxed">
-                    Your active membership pass includes full Pioneer Lounge channel access (#announcements, #the-vault, #community-feedback), unreleased audio masters, and all monthly curated drops throughout the year.
+                    Your active membership pass includes full Pioneer Lounge channel access (#announcements, #the-vault, #community-feedback), unreleased audio masters, and complete instant vault access throughout the year.
                   </p>
                 </div>
 
@@ -381,7 +381,7 @@ export const AccountBillingModal: React.FC<AccountBillingModalProps> = ({ isOpen
                       <span>Confirm Cancellation of Auto-Renewal?</span>
                     </div>
                     <p className="text-[11px] text-red-200/80 leading-relaxed">
-                      Your access will remain active until {renewalDateText}. After that date, you will not receive new monthly drops or Pioneer Lounge updates. All previously unlocked assets remain yours forever.
+                      Your access will remain active until {renewalDateText}. After that date, you will not receive new Pioneer Lounge updates or member perks. All previously unlocked assets remain yours forever.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">

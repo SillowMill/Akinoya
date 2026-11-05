@@ -625,8 +625,8 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                             </div>
                             <p className="text-white/70 font-sans text-[11.5px]">
                               {addon.id === 'world-synthesis'
-                                ? 'Get this co-creation pass plus all 4 digital production packs, unreleased audio masters, and monthly drops bundled into the Annual Member Pass (€60 per year) at no extra cost.'
-                                : 'Get this pack plus all digital extras, stems, and monthly drops bundled into the Annual Member Pass (€60 per year) at a lower overall price.'}
+                                ? 'Get this co-creation pass plus all 4 digital production packs, unreleased audio masters, and complete vault access bundled into the Annual Member Pass (€60 per year) at no extra cost.'
+                                : 'Get this pack plus all digital extras, stems, and complete vault access bundled into the Annual Member Pass (€60 per year) at a lower overall price.'}
                             </p>
                           </div>
 
@@ -686,7 +686,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                                   return;
                                 }
                                 setReservationNotice(
-                                  `${addon.title} (€ ${addon.priceValue}) has been reserved and linked to your account with our 'Never Lose Your Files' guarantee. Complete download bundle unlocks on January 9, 2027.`
+                                  `${addon.title} (€ ${addon.priceValue}) has been reserved and linked to your account with our 'Never Lose Your Files' guarantee. Complete download bundle unlocks instantly in your Vault.`
                                 );
                                 setTimeout(() => setReservationNotice(null), 6000);
                               }}
@@ -717,7 +717,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-[11.5px] sm:text-xs">
                   <strong className="text-white font-medium">Why buy separately? </strong>
-                  Get <strong className="text-amber-300">EVERYTHING</strong> unlocked instantly—including all 4 digital production packs, world synthesis, unreleased audio masters, visualizer workflows, and fresh drops for just <strong className="text-white">€60 per year</strong> (Save €29.95+ on day one!).
+                  Get <strong className="text-amber-300">EVERYTHING</strong> unlocked instantly—including all 4 digital production packs, world synthesis, unreleased audio masters, visualizer workflows, and full vault access for just <strong className="text-white">€60 per year</strong> (Save €29.95+ on day one!).
                 </div>
               </div>
 
@@ -740,9 +740,9 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               <div className="flex items-center justify-center gap-1 xs:gap-1.5 text-[8.5px] min-[360px]:text-[9px] xs:text-[9.5px] sm:text-[10px] font-mono text-emerald-300 font-bold text-center pt-0.5 leading-tight sm:leading-snug tracking-tighter min-[360px]:tracking-tight sm:tracking-normal max-w-sm sm:max-w-none mx-auto">
                 <Check className="w-3 h-3 xs:w-3.5 xs:h-3.5 text-emerald-400 shrink-0 self-center" />
                 <span className="text-center">
-                  <span className="block sm:inline">Save €14.96+ instantly vs separate purchases</span>
+                  <span className="block sm:inline">Save €29.95+ instantly vs separate purchases</span>
                   <span className="hidden sm:inline"> · </span>
-                  <span className="block sm:inline">Instant access</span>
+                  <span className="block sm:inline">Instant full access</span>
                 </span>
               </div>
             </div>
@@ -779,7 +779,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 The Membership Pass
               </h3>
               <p className="text-xs sm:text-sm font-sans text-amber-100/70 mt-1 leading-relaxed">
-                Everything unlocked in one single pass. All digital extras and monthly drops included.
+                Everything unlocked in one single pass. All digital extras, stems, and full vault access included.
               </p>
             </div>
 
@@ -903,7 +903,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     ✓
                   </span>
                   <span>
-                    <strong className="text-white">Monthly Curated Drops</strong> (Fresh drops every month starting January 9, 2027)
+                    <strong className="text-white">Instant Full Library Access</strong> (All production packs, stems &amp; workflows unlocked on day one)
                   </span>
                 </li>
               </ul>
@@ -916,7 +916,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     Instant Access &amp; Hub Vault Storage:
                   </strong>
                   <span>
-                    Instant Access: Instantly unlocked and securely stored in your <strong>Asset Vault inside the Hub</strong> upon purchase. All production stems, DAW presets, 4K graphic novel, and monthly curated drops stay permanently tied to your account profile.
+                    Instant Access: Instantly unlocked and securely stored in your <strong>Asset Vault inside the Hub</strong> upon purchase. All production stems, DAW presets, 4K graphic novel, and complete vault assets stay permanently tied to your account profile.
                   </span>
                 </div>
               </div>

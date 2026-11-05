@@ -787,7 +787,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   // Paywall Upgrade Modal state
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [upgradeModalReason, setUpgradeModalReason] = useState<string>(
-    'Exclusive Annual Membership Pass (€60/year, equivalent to just €5/month). Unlocks full 3D visualizer breakdowns, unreleased audio masters, lore governance & 4K assets on January 9, 2027.'
+    'Exclusive Annual Membership Pass (€60/year, equivalent to just €5/month). Unlocks full 3D visualizer breakdowns, unreleased audio masters, lore governance & 4K assets instantly in your Vault.'
   );
   const [isSubscribing, setIsSubscribing] = useState(false);
 
