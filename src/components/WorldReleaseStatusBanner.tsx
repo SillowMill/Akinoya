@@ -49,7 +49,7 @@ export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> =
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-300/70 text-[10px] sm:text-[10.5px] font-mono font-extrabold tracking-widest uppercase text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                {hasPass ? '✓ WORLD VERIFIED & QUEUED' : 'PENDING ACTIVATION · UNPAID DRAFT'}
+                {hasPass ? '✓ WORLD VERIFIED & QUEUED' : '· PENDING ACTIVATION · UNPAID DRAFT'}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-[10px] sm:text-[10.5px] font-mono font-bold tracking-wider uppercase text-cyan-200">
                 <Calendar className="w-3 h-3 text-cyan-400" />
@@ -64,13 +64,13 @@ export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> =
             <h3 className="text-sm sm:text-base font-display font-black text-white tracking-wide">
               {hasPass
                 ? 'World Verified & Queued for Deployment'
-                : 'The Galaxy Navigator is updated every Monday morning with new custom sector batches.'}
+                : 'Activate Your World & Secure Visualizer Co-Creation'}
             </h3>
 
             <p className="text-[11.5px] sm:text-xs text-amber-100/90 font-sans leading-relaxed max-w-2xl font-medium">
               {hasPass
                 ? 'Your planetary specs and visualizer feature slot are locked. Your world will be processed and deployed to the live Galaxy Navigator during the upcoming Monday morning cluster update.'
-                : 'Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.'}
+                : 'The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your draft planetary specs are stored in your Vault. Activate with the €14.99 World Pass to process full 4K renders, lock your official co-creation spot in a future cinematic visualizer, and queue your world for the upcoming Monday deployment.'}
             </p>
           </div>
         </div>

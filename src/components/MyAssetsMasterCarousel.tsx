@@ -744,7 +744,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
             {isPendingActivation ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-500/20 text-amber-300 border border-amber-400/60 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-                <span>PENDING ACTIVATION · UNPAID DRAFT</span>
+                <span>· PENDING ACTIVATION · UNPAID DRAFT</span>
               </span>
             ) : isVerifiedQueued ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-amber-500/25 via-yellow-400/30 to-amber-500/25 border-2 border-amber-400 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.45)]">
@@ -1212,7 +1212,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         <div className="flex flex-col items-center gap-2 pt-3">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-                            PENDING ACTIVATION · UNPAID DRAFT
+                            · PENDING ACTIVATION · UNPAID DRAFT
                           </span>
                           <h4 className="text-lg sm:text-xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                             Your world is synthesized!
@@ -1224,7 +1224,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             MONDAY BATCH DEPLOYMENT
                           </div>
                           <p className="text-xs sm:text-[12.5px] text-amber-100/95 font-sans leading-relaxed font-medium">
-                            Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.
+                            The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your draft planetary specs are stored in your Vault. Activate with the €14.99 World Pass to process full 4K renders, lock your official co-creation spot in a future cinematic visualizer, and queue your world for the upcoming Monday deployment.
                           </p>
                         </div>
 
@@ -1564,7 +1564,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         <div className="flex flex-col items-center gap-2 pt-3">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-                            PENDING ACTIVATION · UNPAID DRAFT
+                            · PENDING ACTIVATION · UNPAID DRAFT
                           </span>
                           <h4 className="text-lg sm:text-xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                             Your world is synthesized!
@@ -1576,7 +1576,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             MONDAY BATCH DEPLOYMENT
                           </div>
                           <p className="text-xs sm:text-[12.5px] text-amber-100/95 font-sans leading-relaxed font-medium">
-                            Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.
+                            The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your draft planetary specs are stored in your Vault. Activate with the €14.99 World Pass to process full 4K renders, lock your official co-creation spot in a future cinematic visualizer, and queue your world for the upcoming Monday deployment.
                           </p>
                         </div>
 

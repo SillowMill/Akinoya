@@ -37,6 +37,7 @@ import {
 } from './WorldStoryVerificationBadge';
 import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
 import { formatTitleCaseUserName } from '../utils/holder';
+import { WorldReleaseStatusBanner } from './WorldReleaseStatusBanner';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
 
@@ -298,92 +299,9 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
         </div>
       </div>
 
-      {/* Post-Payment Gold Verification State & Monday Queue Confirmation Banner */}
-      {isVerifiedQueued && (
-        <div className="relative z-10 overflow-hidden rounded-2xl bg-gradient-to-r from-[#1c1404]/95 via-[#0b1424]/95 to-[#1c1404]/95 border-2 border-amber-400 p-4 sm:p-5 shadow-[0_12px_40px_rgba(0,0,0,0.8),0_0_35px_rgba(245,158,11,0.35)]">
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 to-transparent pointer-events-none" />
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-start sm:items-center gap-3.5">
-              <span className="p-2.5 rounded-xl bg-amber-400 text-black shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.6)]">
-                <CheckCircle2 className="w-5 h-5 text-black" />
-              </span>
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500/25 via-yellow-400/30 to-amber-500/25 border-2 border-amber-400 text-amber-300 text-[10px] sm:text-[11px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_15px_rgba(245,158,11,0.4)]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span>✓ WORLD VERIFIED &amp; QUEUED</span>
-                  </span>
-                  <span className="text-[10px] font-mono text-cyan-300">
-                    UPDATED EVERY MONDAY MORNING
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-300">
-                    VISUALIZER CO-CREATION LOCKED
-                  </span>
-                </div>
-                <h4 className="text-base sm:text-lg font-display font-black text-white">
-                  World Verified &amp; Queued for Deployment
-                </h4>
-                <p className="text-xs sm:text-sm text-amber-100/90 font-sans leading-relaxed font-medium max-w-2xl">
-                  Your planetary specs and visualizer feature slot are locked. Your world will be processed and deployed to the live Galaxy Navigator during the upcoming Monday morning cluster update.
-                </p>
-              </div>
-            </div>
-            <div className="shrink-0 flex items-center gap-2">
-              <div className="px-4 py-2 rounded-xl bg-amber-400/15 border border-amber-400/60 text-amber-300 font-mono text-xs font-bold shadow-[0_0_15px_rgba(245,158,11,0.25)] flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>Feature Slot Secured</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Pending Activation Notification Banner (Unpaid State) */}
-      {isPendingActivation && (
-        <div className="relative z-10 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/80 via-[#071126]/90 to-cyan-950/80 border-2 border-amber-400/50 p-4 sm:p-5 shadow-[0_10px_35px_rgba(0,0,0,0.7),0_0_25px_rgba(245,158,11,0.25)]">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300 to-transparent pointer-events-none" />
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-start sm:items-center gap-3">
-              <span className="p-2.5 rounded-xl bg-amber-400 text-black shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.5)]">
-                <Sparkles className="w-4 h-4 fill-black text-black" />
-              </span>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider uppercase">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-                    PENDING ACTIVATION · UNPAID DRAFT
-                  </span>
-                  <span className="text-[10px] font-mono text-cyan-300">
-                    UPDATED EVERY MONDAY MORNING
-                  </span>
-                </div>
-                <h4 className="text-sm sm:text-base font-display font-black text-white">
-                  Activate your world to deploy on the Galaxy Navigator &amp; secure your visualizer spot.
-                </h4>
-                <p className="text-xs sm:text-sm text-amber-100/90 font-sans leading-relaxed font-medium max-w-2xl">
-                  Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0">
-              <button
-                type="button"
-                onClick={() => triggerWorldPassCheckout(dossier?.planetName)}
-                className="px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.4)] flex items-center justify-center gap-2 min-h-[44px]"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Buy €14.99 World Pass to Activate →</span>
-              </button>
-              <button
-                type="button"
-                onClick={triggerMemberPassCheckout}
-                className="px-4 py-3 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px]"
-              >
-                <span>Unlock via Member Pass →</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* World Release Status Banner (Pending Activation or Verified Queued) */}
+      {dossier && !isLive && (
+        <WorldReleaseStatusBanner dossier={dossier} />
       )}
 
       {/* Main Layout: 9:16 Vertical Video Trailer + 5 Photo Cards */}
@@ -479,7 +397,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                 <div className="flex flex-col items-center gap-2 pt-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[9.5px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-                    PENDING ACTIVATION · UNPAID DRAFT
+                    · PENDING ACTIVATION · UNPAID DRAFT
                   </span>
                   <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                     Your world is synthesized!
@@ -491,7 +409,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                     MONDAY BATCH DEPLOYMENT
                   </div>
                   <p className="text-[11px] sm:text-xs text-amber-100/90 font-sans leading-relaxed font-medium">
-                    Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.
+                    The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your draft planetary specs are stored in your Vault. Activate with the €14.99 World Pass to process full 4K renders, lock your official co-creation spot in a future cinematic visualizer, and queue your world for the upcoming Monday deployment.
                   </p>
                 </div>
 
