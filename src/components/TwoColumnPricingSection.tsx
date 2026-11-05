@@ -28,6 +28,7 @@ import akinoyaPassCard from '../assets/images/akinoya_pass_card_1790852652003.jp
 import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
 import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
 import vocalAcapellaImg from '../assets/images/vocal_acapella_remix_pack.png';
+import planetAkinoyaImg from '../assets/images/planet_akinoya_1790852629401.jpg';
 
 export interface CheckoutProductPayload {
   id: string;
@@ -123,6 +124,24 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       'Instant browser reader + DRM-free 4K download',
     ],
     thumbnailImg: bingaaComicCover,
+  },
+  {
+    id: 'world-synthesis',
+    title: 'Synthesize & Feature Your World',
+    badge: 'CO-CREATION PASS · LIMITED SECTOR EXPANSION',
+    priceValue: '15.00',
+    category: 'CO-CREATION PASS · LIMITED SECTOR EXPANSION',
+    subtitle: "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and lock your official co-creation collaboration to feature directly inside Mill's Äkinoya universe.",
+    description: "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and lock your official co-creation collaboration to feature directly inside Mill's Äkinoya universe. Includes 5-photo 4K architectural dossier synthesis, 9:16 vertical video trailer loop, and queue priority for the Monday batch deployment on the live Galaxy Navigator.",
+    features: [
+      'Instant Access: Direct 5-question Mill wizard co-creation access',
+      'Full 4K planetary render generation (5-photo architectural dossier)',
+      '9:16 vertical viral video trailer loop with synchronized audio',
+      'Deterministic sector coordinates & lore registration in the Äkinoya universe',
+      'Queue priority for the upcoming Monday batch deployment on the live Galaxy Navigator',
+      'Collaboration with Mill: official co-creator accreditation in the cosmology',
+    ],
+    thumbnailImg: planetAkinoyaImg,
   },
 ];
 
@@ -377,17 +396,15 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   </button>
 
                   {/* Title, Badge, Price & Desktop CTA */}
-                  <div className="space-y-2 sm:space-y-1.5 min-w-0 flex-1">
+                  <div className="space-y-1 sm:space-y-1.5 min-w-0 flex-1">
+                    {/* Row 1: Top Badge */}
                     <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
                       <span className="text-[9.5px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
                         PHYSICAL PRINT · COLLECTOR'S ITEM
                       </span>
-                      <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
-                        <span>€</span>
-                        <span>14.99</span>
-                      </span>
                     </div>
 
+                    {/* Row 2: Title & Description / Subtitle */}
                     <div className="space-y-0.5">
                       <h4 className="text-sm sm:text-base font-display font-black text-white tracking-wide leading-snug">
                         Sillow Mill — Bingäa
@@ -395,6 +412,14 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                       <p className="text-[11px] sm:text-xs font-mono font-medium text-cyan-200/80 leading-normal">
                         Collector's Graphic Novel
                       </p>
+                    </div>
+
+                    {/* Row 3: Dedicated Price Tag */}
+                    <div className="flex items-baseline gap-1 pt-0.5">
+                      <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
+                        <span>€</span>
+                        <span>14.99</span>
+                      </span>
                     </div>
 
                     {/* Desktop / Tablet CTA Button (Preserved inside right column on sm+) */}
@@ -470,16 +495,12 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                           </div>
                         )}
 
-                        {/* Right Column: Category Badge, Price Tag, Title, Subtitle, and Desktop CTA Button */}
+                        {/* Right Column: Category Badge, Title, Subtitle, Dedicated Price Tag, and Desktop CTA Button */}
                         <div className="space-y-1 sm:space-y-1.5 min-w-0 flex-1">
-                          {/* Row 1: Badge & Price aligned cleanly */}
+                          {/* Row 1: Top Badge */}
                           <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
                             <span className="text-[9px] sm:text-[9.5px] font-mono font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
                               {addon.category}
-                            </span>
-                            <span className="text-[13.5px] xs:text-sm sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-0.5 sm:gap-1">
-                              <span>€</span>
-                              <span>{addon.priceValue}</span>
                             </span>
                           </div>
 
@@ -493,6 +514,14 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                             </p>
                           </div>
 
+                          {/* Row 3: Dedicated Price Tag */}
+                          <div className="flex items-baseline gap-1 pt-0.5">
+                            <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-0.5 sm:gap-1">
+                              <span>€</span>
+                              <span>{addon.priceValue}</span>
+                            </span>
+                          </div>
+
                           {/* Desktop / Tablet CTA Button (Preserved inside right column on sm+) */}
                           <button
                             type="button"
@@ -503,7 +532,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                                 : 'bg-gradient-to-r from-cyan-950/70 via-[#0a1829] to-cyan-950/70 hover:from-cyan-900/80 hover:to-[#0c1f38] text-cyan-200 hover:text-white border-cyan-400/40 hover:border-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
                             }`}
                           >
-                            <span>{isExpanded ? 'Hide Details' : 'Details & Order'}</span>
+                            <span>
+                              {isExpanded
+                                ? 'Hide Details'
+                                : addon.id === 'world-synthesis'
+                                ? 'Details & Synthesize World →'
+                                : 'Details & Order'}
+                            </span>
                             {isExpanded ? (
                               <ChevronUp className="w-3.5 h-3.5 shrink-0" />
                             ) : (
@@ -523,7 +558,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                             : 'bg-gradient-to-r from-cyan-950/80 via-[#0a1829] to-cyan-950/80 active:from-cyan-900 active:to-[#0c1f38] text-cyan-200 active:text-white border-cyan-400/40 active:border-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]'
                         }`}
                       >
-                        <span>{isExpanded ? 'Hide Details' : 'Details & Order'}</span>
+                        <span>
+                          {isExpanded
+                            ? 'Hide Details'
+                            : addon.id === 'world-synthesis'
+                            ? 'Details & Synthesize World →'
+                            : 'Details & Order'}
+                        </span>
                         {isExpanded ? (
                           <ChevronUp className="w-4 h-4 shrink-0" />
                         ) : (
@@ -568,7 +609,9 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                                 Instant Access · Hub Delivery:
                               </strong>
                               <span>
-                                Instantly unlocked and securely stored in your <strong>Asset Vault inside the Hub</strong> upon purchase. Stream or download anytime across desktop, tablet, and mobile with zero expiration.
+                                {addon.id === 'world-synthesis'
+                                  ? 'Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase. Unlocks the 5-question personality wizard, 4K planetary render generation, 9:16 viral video trailer loop, and queue priority for the upcoming Monday batch deployment.'
+                                  : 'Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase. Stream or download anytime across desktop, tablet, and mobile with zero expiration.'}
                               </span>
                             </div>
                           </div>
@@ -580,7 +623,9 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                               <span>Smart Choice: Bundled with Member Pass</span>
                             </div>
                             <p className="text-white/70 font-sans text-[11.5px]">
-                              Get this pack plus all digital extras, stems, and monthly drops bundled into the Annual Member Pass (€60 per year) at a lower overall price.
+                              {addon.id === 'world-synthesis'
+                                ? 'Get this co-creation pass plus all 4 digital production packs, unreleased audio masters, and monthly drops bundled into the Annual Member Pass (€60 per year) at no extra cost.'
+                                : 'Get this pack plus all digital extras, stems, and monthly drops bundled into the Annual Member Pass (€60 per year) at a lower overall price.'}
                             </p>
                           </div>
 
@@ -615,12 +660,17 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                                     isPhysical: false,
                                     image: addon.thumbnailImg,
                                     allocationNotice:
-                                      addon.id === 'vocal'
+                                      addon.id === 'world-synthesis'
+                                        ? '5-Photo 4K Dossier · 9:16 Video Loop · Monday Batch Priority'
+                                        : addon.id === 'vocal'
                                         ? 'Instant Master Stems · 24-bit / 48kHz WAV'
                                         : addon.id === 'workflow' || addon.id === 'logic-visualizer'
                                         ? 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template'
                                         : 'Pristine 4K Resolution · Web Reader + Offline PDF',
-                                    deliveryNotice: 'Instant Digital Delivery · Vault Access',
+                                    deliveryNotice:
+                                      addon.id === 'world-synthesis'
+                                        ? 'Instant Co-Creation Access · Asset Vault inside the Hub'
+                                        : 'Instant Digital Delivery · Vault Access',
                                   });
                                   return;
                                 }
@@ -641,7 +691,9 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                               }}
                               className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-mono text-xs cursor-pointer text-center min-h-[40px] whitespace-nowrap inline-flex items-center justify-center gap-1"
                             >
-                              <span>Order Pack Only (</span>
+                              <span>
+                                {addon.id === 'world-synthesis' ? 'Synthesize & Order (' : 'Order Pack Only ('}
+                              </span>
                               <span>€</span>
                               <span>{addon.priceValue})</span>
                             </button>
@@ -664,7 +716,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-[11.5px] sm:text-xs">
                   <strong className="text-white font-medium">Why buy separately? </strong>
-                  Get <strong className="text-amber-300">EVERYTHING</strong> unlocked instantly—including all 3 digital production packs, unreleased audio masters, visualizer workflows, exclusive Pioneer Lounge access, and fresh monthly drops starting January 9, 2027—for just <strong className="text-white">€60 per year</strong> (Save €14.96+ on day one!).
+                  Get <strong className="text-amber-300">EVERYTHING</strong> unlocked instantly—including all 4 digital production packs, world synthesis, unreleased audio masters, visualizer workflows, and fresh drops for just <strong className="text-white">€60 per year</strong> (Save €29.95+ on day one!).
                 </div>
               </div>
 
@@ -753,7 +805,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
               <div className="text-[11.5px] sm:text-xs font-mono text-emerald-300 flex items-center gap-1.5 font-bold">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Save €14.96+ vs separate prices · All extras bundled into one pass</span>
+                <span>Save €29.95+ vs separate prices · All extras bundled into one pass</span>
               </div>
             </div>
 
@@ -770,6 +822,15 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   </span>
                   <span>
                     <strong className="text-cyan-300">Instant Access:</strong> Instantly unlocked and securely stored in your <strong className="text-white">Asset Vault inside the Hub</strong> upon purchase.
+                  </span>
+                </li>
+
+                <li className="flex items-start gap-2.5">
+                  <span className="w-4 h-4 rounded-full bg-amber-400/20 border border-amber-400/70 text-amber-300 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-black">
+                    ✓
+                  </span>
+                  <span>
+                    <strong className="text-white">Synthesize &amp; Feature Your World</strong> (Custom planet co-creation, 4K render dossier &amp; video trailer loop included)
                   </span>
                 </li>
 

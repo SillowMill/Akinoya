@@ -97,6 +97,35 @@ export const hasPaidMembership = (
   return false;
 };
 
+export const hasWorldSynthesisPass = (
+  user?: any,
+  profile?: any,
+  role?: string,
+  isVip?: boolean
+): boolean => {
+  if (hasPaidMembership(user, profile, role, isVip)) return true;
+  if (profile?.has_world_synthesis === true || user?.has_world_synthesis === true) return true;
+  if (typeof window !== 'undefined') {
+    try {
+      const ownedStr = localStorage.getItem('akinoya_owned_products');
+      if (ownedStr) {
+        const owned = JSON.parse(ownedStr);
+        if (
+          Array.isArray(owned) &&
+          (owned.includes('world-synthesis') ||
+            owned.includes('membership') ||
+            owned.includes('all-inclusive'))
+        ) {
+          return true;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return false;
+};
+
 export const triggerMemberPassCheckout = () => {
   soundManager.playTone(660, 0.08);
   if (typeof window !== 'undefined') {

@@ -49,6 +49,7 @@ import stage05Img from '../assets/images/stage_05_cinematic_color_grading_wavefo
 import vocalAcapellaImg from '../assets/images/vocal_acapella_remix_pack.png';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import akinoyaPassCard from '../assets/images/akinoya_pass_card_1790852652003.jpg';
+import planetAkinoyaImg from '../assets/images/planet_akinoya_1790852629401.jpg';
 
 // Character Locking Master Assets (from Character Locking folder)
 import millCharacterImg from '../assets/images/character_locking/MilLLL.PNG';
@@ -142,6 +143,13 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         (ownedProductsSet.has('workflow') || ownedProductsSet.has('logic-visualizer'))
       )
         return true;
+      if (
+        item.productId === 'world-synthesis' &&
+        (ownedProductsSet.has('world-synthesis') ||
+          ownedProductsSet.has('membership') ||
+          ownedProductsSet.has('all-inclusive'))
+      )
+        return true;
       return false;
     },
     [isMember, ownedProductsSet]
@@ -211,6 +219,18 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         image: akinoyaPassCard,
         allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
         deliveryNotice: 'Free Express Delivery · Physical Shipping + Instant Vault Access',
+      };
+    } else if (productId === 'world-synthesis') {
+      productDetails = {
+        id: 'world-synthesis',
+        title: 'Sillow Mill — Synthesize & Feature Your World',
+        subtitle: "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and lock your official co-creation collaboration to feature directly inside Mill's Äkinoya universe",
+        badge: 'CO-CREATION PASS · LIMITED SECTOR EXPANSION',
+        priceValue: '15.00',
+        isPhysical: false,
+        image: planetAkinoyaImg,
+        deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
+        allocationNotice: '5-Photo 4K Dossier · 9:16 Video Loop · Monday Batch Priority',
       };
     } else {
       // Default / Folder 1 -> Workflow add-on (€29.99, digital)

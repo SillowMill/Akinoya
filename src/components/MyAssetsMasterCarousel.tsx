@@ -34,6 +34,7 @@ import {
   isVipPioneerPlanet,
   getPioneerMasterVideoUrl,
   hasPaidMembership,
+  hasWorldSynthesisPass,
   triggerMemberPassCheckout,
 } from '../utils/pioneer';
 import { useAuth } from '../context/AuthContext';
@@ -383,7 +384,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
   const isPendingActivation = useMemo(() => {
     if (isSimulationMode) return false;
     if (isLiveGalaxyWorld(dossier)) return false;
-    if (hasPaidMembership(user, profile, role, isVip)) return false;
+    if (hasWorldSynthesisPass(user, profile, role, isVip)) return false;
     return true;
   }, [dossier, isSimulationMode, user, profile, role, isVip]);
 

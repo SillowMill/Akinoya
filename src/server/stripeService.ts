@@ -172,6 +172,12 @@ export async function createStripeCheckoutSession(params: {
     productName = 'Sillow Mill - Digital Copy of Bingaa';
     productDescription = 'Complete graphic novel with interactive dual-page flipbook reader & DRM-free 4K download. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.';
     unitAmount = params.amount ? Math.round(params.amount * 100) : 999;
+  } else if (productId === 'world-synthesis') {
+    productName = 'Sillow Mill - Synthesize & Feature Your World';
+    productDescription =
+      "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and lock your official co-creation collaboration to feature directly inside Mill's Äkinoya universe. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
+    unitAmount = params.amount ? Math.round(params.amount * 100) : 1500;
+    productImage = `${baseUrl}/images/planet_akinoya_1790852629401.jpg`;
   } else if (productId === 'membership') {
     productName = 'Sillow Mill - Annual Pioneer Member Pass (All-Inclusive)';
     productDescription = 'Annual Pioneer Member Pass with Physical Welcome Booklet, Collector Pass Card, Signed Bookmark & Full Digital Vault Access instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.';

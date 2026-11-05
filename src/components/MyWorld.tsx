@@ -25,7 +25,7 @@ import {
 } from '../data/contest';
 import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
-import { getPioneerMasterVideoUrl, hasPaidMembership, triggerMemberPassCheckout } from '../utils/pioneer';
+import { getPioneerMasterVideoUrl, hasPaidMembership, hasWorldSynthesisPass, triggerMemberPassCheckout } from '../utils/pioneer';
 import {
   useDynamicWorldVideo,
   isMobileOrTabletDevice,
@@ -67,7 +67,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
   const { user, profile, role, isVip } = useAuth();
   const isPendingActivation = useMemo(() => {
     if (isLiveGalaxyWorld(dossier)) return false;
-    if (hasPaidMembership(user, profile, role, isVip)) return false;
+    if (hasWorldSynthesisPass(user, profile, role, isVip)) return false;
     return true;
   }, [dossier, user, profile, role, isVip]);
   const photoCards = useMemo(() => getPlanetPhotoCards(dossier), [dossier]);
