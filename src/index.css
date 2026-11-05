@@ -234,6 +234,14 @@
   .widget-container,
   .community-card {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    isolation: isolate;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+    background-clip: border-box !important;
+  }
+
+  .widget-container > * {
+    max-width: 100%;
   }
 }
 
