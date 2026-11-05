@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="build-version" content="1.0.1-20261105-1945" />
     <title>Sillow Mill — Äkinoya</title>
     <meta name="description" content="An atmospheric coming-soon portal to Äkinoya. Enter your VIP access code to unlock the hidden pass perks and exclusive lore." />
     <meta property="og:title" content="Sillow Mill — Äkinoya" />
@@ -17,6 +21,13 @@
   </head>
   <body class="bg-[#050505] text-white selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden antialiased">
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var r of registrations) { r.unregister(); }
+        });
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

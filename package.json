@@ -7,7 +7,7 @@
     "url": "https://github.com/SillowMill/Akinoya.git"
   },
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts & vite --port=3000 --host=0.0.0.0",

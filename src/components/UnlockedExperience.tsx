@@ -2755,8 +2755,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 </div>
               </div>
               {/* Dynamic Status Widget when a new/custom world beyond the 5 Pioneer Worlds has been created */}
-              {isQueuedWorld && userDossier && !isLiveGalaxyWorld(userDossier) && (
-                <WorldReleaseStatusBanner dossier={userDossier} />
+              {(accountBoundDossier || userDossier) && (
+                <WorldReleaseStatusBanner dossier={accountBoundDossier || userDossier!} />
               )}
 
               {/* Official Worlds Master Block: Solid Dark-Blue Opaque Widget ("Explore Pioneer Worlds") */}
@@ -3400,8 +3400,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
               {/* Asset 01: Differentiated Master Multi-Media Carousel (4K Archive, 9:16 Story Card, 9:16 MP4 Trailer) */}
               <div className="space-y-4">
-                {accountBoundDossier && isQueuedWorld && !isLiveGalaxyWorld(accountBoundDossier) && (
-                  <WorldReleaseStatusBanner dossier={accountBoundDossier} />
+                {(accountBoundDossier || userDossier) && (
+                  <WorldReleaseStatusBanner dossier={accountBoundDossier || userDossier!} />
                 )}
                 {accountBoundDossier && (
                   <MyAssetsMasterCarousel

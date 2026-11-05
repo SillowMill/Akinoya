@@ -1,4 +1,5 @@
 import React from 'react';
+// Build Version: 1.0.1-20261105-1945 - Force Safari Cache Invalidation
 import { motion } from 'motion/react';
 import { Sparkles, ShieldCheck, ArrowRight, Zap, Calendar, CheckCircle2 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';

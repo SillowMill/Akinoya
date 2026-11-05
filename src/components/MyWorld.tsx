@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+// Build Version: 1.0.1-20261105-1945 - Force Safari Cache Invalidation
 import {
   Camera,
   Video,
