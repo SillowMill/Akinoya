@@ -1,9 +1,7 @@
 import React from 'react';
-import { Radar, Sparkles, Users } from 'lucide-react';
 import { SoundtrackButton } from './SoundtrackButton';
 import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
-import { openClaimWorldModal } from '../utils/pioneer';
 import { getUserStatusConfig } from '../utils/statusPill';
 import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
@@ -19,7 +17,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   isUnlocked: _isUnlocked,
   isVip = false,
   onNavigateHome,
-  onNavigateToGalaxy,
+  onNavigateToGalaxy: _onNavigateToGalaxy,
 }) => {
   const { user, isVip: authIsVip, profile, role, isAuthenticated } = useAuth();
   const effectiveIsVip = Boolean(
@@ -98,7 +96,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             />
           </div>
 
-          {/* Minimalist Reflective Chrome / Brushed Metal Vertical Divider (Tussenschotje) */}
+          {/* Minimalist Reflective Chrome / Brushed Metal Vertical Divider */}
           <div
             className="h-3.5 sm:h-4 lg:h-4.5 w-[1px] bg-gradient-to-b from-white/10 via-white/45 to-white/10 shadow-[0_0_6px_rgba(255,255,255,0.3)] shrink-0"
             aria-hidden="true"
@@ -110,55 +108,15 @@ export const TopBar: React.FC<TopBarProps> = ({
           </span>
         </a>
 
-        {/* Zone 2: Single-line typography navigation links with dedicated brand colors and subtle dividers */}
-        <nav className="hidden md:flex items-center justify-center gap-1.5 md:gap-2 lg:gap-3 xl:gap-5 font-mono text-[10px] md:text-[10.5px] lg:text-[11px] xl:text-xs uppercase tracking-normal lg:tracking-tight xl:tracking-wide whitespace-nowrap min-w-0 shrink">
-          <a
-            href="/galaxy"
-            onClick={(e) => {
-              if (onNavigateToGalaxy) {
-                e.preventDefault();
-                onNavigateToGalaxy();
-              }
-            }}
-            className="inline-flex items-center gap-1 lg:gap-1.5 text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
-          >
-            <Radar className="w-3 h-3 lg:w-3.5 lg:h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-            <span className="hidden xl:inline">Galaxy Navigator</span>
-            <span className="xl:hidden">Galaxy</span>
-          </a>
-
-          <span className="text-white/20 select-none text-[10px] lg:text-[11px]" aria-hidden="true">|</span>
-
-          <button
-            type="button"
-            onClick={() => openClaimWorldModal()}
-            className="inline-flex items-center gap-1 lg:gap-1.5 text-[#f59e0b] hover:text-[#fbbf24] font-semibold whitespace-nowrap transition-colors cursor-pointer"
-          >
-            <Sparkles className="w-3 h-3 lg:w-3.5 lg:h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-            <span>Claim World</span>
-          </button>
-
-          <span className="text-white/20 select-none text-[10px] lg:text-[11px]" aria-hidden="true">|</span>
-
-          <a
-            href="/community"
-            className="inline-flex items-center gap-1 lg:gap-1.5 text-[#38bdf8] hover:text-[#22d3ee] font-bold whitespace-nowrap transition-colors cursor-pointer"
-          >
-            <Users className="w-3 h-3 lg:w-3.5 lg:h-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-            <span className="hidden xl:inline">Community Hub</span>
-            <span className="xl:hidden">Community</span>
-          </a>
-        </nav>
-
-        {/* Zone 3: Actions (iPad Portrait & mobile optimized to prevent clipping) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Zone 2: Actions & Essential System Status Tags (Streamlined Ultra-Clean Header) */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           <SoundtrackButton />
           <AuthHeaderButton />
 
-          {/* ACCESS GRANTED / PUBLIC ACCESS Indicator Box (Desktop >=1280px to avoid crowding iPad landscape) */}
+          {/* ACCESS GRANTED / PUBLIC ACCESS Indicator Box */}
           <div
             title={statusConfig.indicatorLabel}
-            className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1 text-[10.5px] rounded-xl whitespace-nowrap shrink-0 ${statusConfig.indicatorClassName}`}
+            className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 text-[10.5px] rounded-xl whitespace-nowrap shrink-0 ${statusConfig.indicatorClassName}`}
           >
             <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusConfig.dotColorClassName}`} />
             <span className="tracking-wide font-bold">{statusConfig.indicatorLabel}</span>
@@ -168,4 +126,3 @@ export const TopBar: React.FC<TopBarProps> = ({
     </header>
   );
 };
-

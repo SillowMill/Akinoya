@@ -83,18 +83,18 @@ export const PioneerCampaignBanner: React.FC<PioneerCampaignBannerProps> = ({ is
   return (
     <aside
       aria-label="Visualizer Hub Launch Countdown"
-      className="relative z-40 w-full bg-[#030712]/95 border-b border-cyan-500/20 px-2.5 xs:px-3 sm:px-4 md:px-6 py-1 sm:py-1.5 backdrop-blur-xl shadow-[0_2px_15px_rgba(0,0,0,0.6)] overflow-hidden"
+      className="relative z-40 w-full bg-[#030712]/95 border-b border-cyan-500/20 px-3 sm:px-4 md:px-6 py-1 sm:py-1.5 backdrop-blur-xl shadow-[0_2px_15px_rgba(0,0,0,0.6)] overflow-hidden"
     >
       {/* Avant-Garde Ambient Cyan Glow Lines */}
       <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-cyan-400/5 to-cyan-500/10 pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-3 min-w-0">
         {/* Left: Beacon, Badge, & Headline (Ultra-Compact Single Row) */}
-        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1 overflow-hidden">
-          {/* Cyan Beacon */}
-          <div className="relative shrink-0 flex items-center justify-center">
-            <span className="absolute w-2.5 h-2.5 rounded-full bg-cyan-400/40 animate-ping" />
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(0,240,255,1)]" />
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+          {/* Cyan Beacon: Generous container bounds and margins to render full 360° circle and cyan glow without edge clipping */}
+          <div className="relative shrink-0 w-4 h-4 flex items-center justify-center ml-0.5 sm:ml-1">
+            <span className="absolute w-3.5 h-3.5 rounded-full bg-cyan-400/40 animate-ping pointer-events-none" />
+            <span className="relative w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(0,240,255,1)]" />
           </div>
 
           {/* Badge */}
