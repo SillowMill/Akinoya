@@ -469,110 +469,224 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-[#09152b]/90 via-[#061122]/95 to-[#040c1a] pointer-events-none" />
 
-                    {/* Card Content: Bingäa-Style Horizontal Flex / Grid */}
-                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4">
-                      {/* Top Row on Mobile / Left Column on Desktop: Fixed Prominent Artwork Thumbnail */}
-                      <div className="flex items-center gap-3 xs:gap-3.5 sm:gap-4 flex-1 min-w-0">
-                        {/* Left Column: Fixed, prominent width full-bleed artwork */}
-                        {isComic ? (
-                          <div className="shrink-0 rounded-xl overflow-hidden text-left shadow-[0_0_20px_rgba(56,189,248,0.3)]">
-                            <img
-                              src={addon.thumbnailImg}
-                              alt={addon.title}
-                              className="w-20 xs:w-22 sm:w-20 md:w-24 h-auto aspect-[3/4] rounded-xl object-cover border border-cyan-400/60 group-hover:scale-105 transition-transform duration-300"
-                              loading="lazy"
-                              decoding="async"
-                            />
-                          </div>
-                        ) : (
-                          <div className="shrink-0 rounded-xl overflow-hidden text-left shadow-[0_0_20px_rgba(56,189,248,0.25)]">
-                            <img
-                              src={addon.thumbnailImg}
-                              alt={addon.title}
-                              className="w-24 xs:w-28 sm:w-36 md:w-40 lg:w-36 xl:w-44 h-auto aspect-[16/9] rounded-xl object-cover border border-cyan-400/60 group-hover:scale-105 transition-transform duration-300"
-                              loading="lazy"
-                              decoding="async"
-                            />
-                          </div>
-                        )}
+                    {/* Card Content: Bingäa-Style Horizontal Flex / Grid (With Mobile-Only Responsive Stack for World Synthesis) */}
+                    {addon.id === 'world-synthesis' ? (
+                      <>
+                        {/* 1. Desktop & Tablet Layout (>= 768px): Completely Untouched */}
+                        <div className="synthesize-card-desktop-tablet relative z-10 flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4">
+                          <div className="flex items-center gap-3 xs:gap-3.5 sm:gap-4 flex-1 min-w-0">
+                            {/* Left Column: Fixed, prominent width full-bleed artwork */}
+                            <div className="shrink-0 rounded-xl overflow-hidden text-left shadow-[0_0_20px_rgba(56,189,248,0.25)]">
+                              <img
+                                src={addon.thumbnailImg}
+                                alt={addon.title}
+                                className="w-24 xs:w-28 sm:w-36 md:w-40 lg:w-36 xl:w-44 h-auto aspect-[16/9] rounded-xl object-cover border border-cyan-400/60 group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            </div>
 
-                        {/* Right Column: Category Badge, Title, Subtitle, Dedicated Price Tag, and Desktop CTA Button */}
-                        <div className="space-y-1 sm:space-y-1.5 min-w-0 flex-1">
-                          {/* Row 1: Top Badge */}
-                          <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
-                            <span className="text-[9px] sm:text-[9.5px] font-mono font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
+                            {/* Right Column: Category Badge, Title, Subtitle, Dedicated Price Tag, and Desktop CTA Button */}
+                            <div className="space-y-1 sm:space-y-1.5 min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
+                                <span className="text-[9px] sm:text-[9.5px] font-mono font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
+                                  {addon.category}
+                                </span>
+                              </div>
+
+                              <div className="space-y-0.5 sm:space-y-1">
+                                <h4 className="text-[13px] xs:text-[13.5px] sm:text-base font-display font-black text-white tracking-wide leading-tight sm:leading-snug group-hover:text-cyan-200 transition-colors">
+                                  {addon.title}
+                                </h4>
+                                <p className="text-[11px] sm:text-xs font-sans text-white/75 sm:text-white/70 leading-relaxed">
+                                  {addon.subtitle}
+                                </p>
+                              </div>
+
+                              <div className="flex items-baseline gap-1 pt-0.5">
+                                <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-0.5 sm:gap-1">
+                                  <span>€</span>
+                                  <span>{addon.priceValue}</span>
+                                </span>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => toggleExpandAddon(addon.id)}
+                                className={`hidden sm:flex w-full mt-1 py-2 px-4 rounded-xl border font-mono font-extrabold text-xs transition-all cursor-pointer items-center justify-center gap-2 min-h-[38px] transform-gpu hover:scale-[1.01] ${
+                                  isExpanded
+                                    ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200 shadow-[0_0_15px_rgba(56,189,248,0.35)]'
+                                    : 'bg-gradient-to-r from-cyan-950/70 via-[#0a1829] to-cyan-950/70 hover:from-cyan-900/80 hover:to-[#0c1f38] text-cyan-200 hover:text-white border-cyan-400/40 hover:border-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                                }`}
+                              >
+                                <span>{isExpanded ? 'Hide Details' : 'Details & Synthesize World →'}</span>
+                                {isExpanded ? (
+                                  <ChevronUp className="w-3.5 h-3.5 shrink-0" />
+                                ) : (
+                                  <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 2. Mobile-Only Responsive Stack (< 768px): Enforced Vertical Column Direction & Centering */}
+                        <div className="synthesize-card-mobile-container relative z-10 flex flex-col items-center text-center w-full gap-2.5 py-1 box-border">
+                          {/* 1. Top Badge */}
+                          <div className="flex items-center justify-center w-full">
+                            <span className="text-[9.5px] font-mono font-extrabold uppercase px-2.5 py-1 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
                               {addon.category}
                             </span>
                           </div>
 
-                          {/* Row 2: Title & Subtitle with full width and zero ellipsis truncation */}
-                          <div className="space-y-0.5 sm:space-y-1">
-                            <h4 className="text-[13px] xs:text-[13.5px] sm:text-base font-display font-black text-white tracking-wide leading-tight sm:leading-snug group-hover:text-cyan-200 transition-colors">
-                              {addon.title}
-                            </h4>
-                            <p className="text-[11px] sm:text-xs font-sans text-white/75 sm:text-white/70 leading-relaxed">
-                              {addon.subtitle}
-                            </p>
+                          {/* 2. Title */}
+                          <h4 className="text-base xs:text-lg font-display font-black text-white tracking-wide leading-snug text-center group-hover:text-cyan-200 transition-colors px-1 whitespace-normal break-words">
+                            {addon.title}
+                          </h4>
+
+                          {/* 3. Description */}
+                          <p className="text-xs text-white/80 font-sans leading-relaxed text-center px-2 xs:px-4 max-w-md mx-auto">
+                            {addon.subtitle}
+                          </p>
+
+                          {/* 4. Image Thumbnail (akinoya_hero_bg-CiYAZVRx.jpg) */}
+                          <div className="w-full max-w-[280px] xs:max-w-[320px] aspect-[16/9] rounded-xl overflow-hidden border border-cyan-400/60 shadow-[0_0_20px_rgba(56,189,248,0.25)] my-1 mx-auto shrink-0">
+                            <img
+                              src={addon.thumbnailImg}
+                              alt={addon.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                              decoding="async"
+                            />
                           </div>
 
-                          {/* Row 3: Dedicated Price Tag */}
-                          <div className="flex items-baseline gap-1 pt-0.5">
-                            <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-0.5 sm:gap-1">
+                          {/* 5. Price Tag */}
+                          <div className="flex items-baseline justify-center gap-1 pt-0.5">
+                            <span className="text-xl xs:text-2xl font-display font-black text-cyan-300 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)] whitespace-nowrap inline-flex items-baseline gap-1">
                               <span>€</span>
                               <span>{addon.priceValue}</span>
                             </span>
                           </div>
 
-                          {/* Desktop / Tablet CTA Button (Preserved inside right column on sm+) */}
+                          {/* 6. Action CTA Button */}
                           <button
                             type="button"
                             onClick={() => toggleExpandAddon(addon.id)}
-                            className={`hidden sm:flex w-full mt-1 py-2 px-4 rounded-xl border font-mono font-extrabold text-xs transition-all cursor-pointer items-center justify-center gap-2 min-h-[38px] transform-gpu hover:scale-[1.01] ${
+                            className={`w-full mt-1 py-3 px-4 rounded-xl border font-mono font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.99] ${
                               isExpanded
                                 ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200 shadow-[0_0_15px_rgba(56,189,248,0.35)]'
-                                : 'bg-gradient-to-r from-cyan-950/70 via-[#0a1829] to-cyan-950/70 hover:from-cyan-900/80 hover:to-[#0c1f38] text-cyan-200 hover:text-white border-cyan-400/40 hover:border-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                                : 'bg-gradient-to-r from-cyan-950/80 via-[#0a1829] to-cyan-950/80 active:from-cyan-900 active:to-[#0c1f38] text-cyan-200 active:text-white border-cyan-400/40 active:border-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]'
                             }`}
                           >
                             <span>
-                              {isExpanded
-                                ? 'Hide Details'
-                                : addon.id === 'world-synthesis'
-                                ? 'Details & Synthesize World →'
-                                : 'Details & Order'}
+                              {isExpanded ? 'Hide Details' : 'Details & Synthesize World →'}
                             </span>
                             {isExpanded ? (
-                              <ChevronUp className="w-3.5 h-3.5 shrink-0" />
+                              <ChevronUp className="w-4 h-4 shrink-0" />
                             ) : (
-                              <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                              <ChevronDown className="w-4 h-4 shrink-0" />
                             )}
                           </button>
                         </div>
-                      </div>
+                      </>
+                    ) : (
+                      /* Default Layout for Standard Addon Cards */
+                      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4">
+                        {/* Top Row on Mobile / Left Column on Desktop: Fixed Prominent Artwork Thumbnail */}
+                        <div className="flex items-center gap-3 xs:gap-3.5 sm:gap-4 flex-1 min-w-0">
+                          {/* Left Column: Fixed, prominent width full-bleed artwork */}
+                          {isComic ? (
+                            <div className="shrink-0 rounded-xl overflow-hidden text-left shadow-[0_0_20px_rgba(56,189,248,0.3)]">
+                              <img
+                                src={addon.thumbnailImg}
+                                alt={addon.title}
+                                className="w-20 xs:w-22 sm:w-20 md:w-24 h-auto aspect-[3/4] rounded-xl object-cover border border-cyan-400/60 group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            </div>
+                          ) : (
+                            <div className="shrink-0 rounded-xl overflow-hidden text-left shadow-[0_0_20px_rgba(56,189,248,0.25)]">
+                              <img
+                                src={addon.thumbnailImg}
+                                alt={addon.title}
+                                className="w-24 xs:w-28 sm:w-36 md:w-40 lg:w-36 xl:w-44 h-auto aspect-[16/9] rounded-xl object-cover border border-cyan-400/60 group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            </div>
+                          )}
 
-                      {/* Mobile Full-Width CTA Button (Exclusively on mobile < sm, large touch-friendly target) */}
-                      <button
-                        type="button"
-                        onClick={() => toggleExpandAddon(addon.id)}
-                        className={`sm:hidden w-full mt-1 py-3 px-4 rounded-xl border font-mono font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.99] ${
-                          isExpanded
-                            ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200 shadow-[0_0_15px_rgba(56,189,248,0.35)]'
-                            : 'bg-gradient-to-r from-cyan-950/80 via-[#0a1829] to-cyan-950/80 active:from-cyan-900 active:to-[#0c1f38] text-cyan-200 active:text-white border-cyan-400/40 active:border-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]'
-                        }`}
-                      >
-                        <span>
-                          {isExpanded
-                            ? 'Hide Details'
-                            : addon.id === 'world-synthesis'
-                            ? 'Details & Synthesize World →'
-                            : 'Details & Order'}
-                        </span>
-                        {isExpanded ? (
-                          <ChevronUp className="w-4 h-4 shrink-0" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 shrink-0" />
-                        )}
-                      </button>
-                    </div>
+                          {/* Right Column: Category Badge, Title, Subtitle, Dedicated Price Tag, and Desktop CTA Button */}
+                          <div className="space-y-1 sm:space-y-1.5 min-w-0 flex-1">
+                            {/* Row 1: Top Badge */}
+                            <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
+                              <span className="text-[9px] sm:text-[9.5px] font-mono font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
+                                {addon.category}
+                              </span>
+                            </div>
+
+                            {/* Row 2: Title & Subtitle with full width and zero ellipsis truncation */}
+                            <div className="space-y-0.5 sm:space-y-1">
+                              <h4 className="text-[13px] xs:text-[13.5px] sm:text-base font-display font-black text-white tracking-wide leading-tight sm:leading-snug group-hover:text-cyan-200 transition-colors">
+                                {addon.title}
+                              </h4>
+                              <p className="text-[11px] sm:text-xs font-sans text-white/75 sm:text-white/70 leading-relaxed">
+                                {addon.subtitle}
+                              </p>
+                            </div>
+
+                            {/* Row 3: Dedicated Price Tag */}
+                            <div className="flex items-baseline gap-1 pt-0.5">
+                              <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-0.5 sm:gap-1">
+                                <span>€</span>
+                                <span>{addon.priceValue}</span>
+                              </span>
+                            </div>
+
+                            {/* Desktop / Tablet CTA Button (Preserved inside right column on sm+) */}
+                            <button
+                              type="button"
+                              onClick={() => toggleExpandAddon(addon.id)}
+                              className={`hidden sm:flex w-full mt-1 py-2 px-4 rounded-xl border font-mono font-extrabold text-xs transition-all cursor-pointer items-center justify-center gap-2 min-h-[38px] transform-gpu hover:scale-[1.01] ${
+                                isExpanded
+                                  ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200 shadow-[0_0_15px_rgba(56,189,248,0.35)]'
+                                  : 'bg-gradient-to-r from-cyan-950/70 via-[#0a1829] to-cyan-950/70 hover:from-cyan-900/80 hover:to-[#0c1f38] text-cyan-200 hover:text-white border-cyan-400/40 hover:border-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]'
+                              }`}
+                            >
+                              <span>
+                                {isExpanded ? 'Hide Details' : 'Details & Order'}
+                              </span>
+                              {isExpanded ? (
+                                <ChevronUp className="w-3.5 h-3.5 shrink-0" />
+                              ) : (
+                                <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Mobile Full-Width CTA Button (Exclusively on mobile < sm, large touch-friendly target) */}
+                        <button
+                          type="button"
+                          onClick={() => toggleExpandAddon(addon.id)}
+                          className={`sm:hidden w-full mt-1 py-3 px-4 rounded-xl border font-mono font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.99] ${
+                            isExpanded
+                              ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200 shadow-[0_0_15px_rgba(56,189,248,0.35)]'
+                              : 'bg-gradient-to-r from-cyan-950/80 via-[#0a1829] to-cyan-950/80 active:from-cyan-900 active:to-[#0c1f38] text-cyan-200 active:text-white border-cyan-400/40 active:border-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]'
+                          }`}
+                        >
+                          <span>
+                            {isExpanded ? 'Hide Details' : 'Details & Order'}
+                          </span>
+                          {isExpanded ? (
+                            <ChevronUp className="w-4 h-4 shrink-0" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 shrink-0" />
+                          )}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Inline Expandable Drawer: Clean, in-place, zero-modal popup */}
                     <AnimatePresence>
