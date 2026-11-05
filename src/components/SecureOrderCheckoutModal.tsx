@@ -19,7 +19,7 @@ import akinoyaPassCard from '../assets/images/akinoya_pass_card_1790852652003.jp
 import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
 import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
 import vocalAcapellaImg from '../assets/images/vocal_acapella_remix_pack.png';
-import planetAkinoyaImg from '../assets/images/planet_akinoya_1790852629401.jpg';
+import akinoyaHeroBg from '../assets/images/akinoya_hero_bg-CiYAZVRx.jpg';
 
 export interface CheckoutProductInfo {
   id: string;
@@ -63,7 +63,7 @@ export interface SecureOrderCheckoutModalProps {
 export const getResolvedProductImage = (product: CheckoutProductInfo): string => {
   if (product.image) return product.image;
   if (product.id === 'membership') return akinoyaPassCard;
-  if (product.id === 'world-synthesis') return planetAkinoyaImg;
+  if (product.id === 'world-synthesis') return akinoyaHeroBg;
   if (product.id === 'workflow' || product.id === 'logic-visualizer') return stage03Img;
   if (product.id === 'vocal') return vocalAcapellaImg;
   return bingaaComicCover;

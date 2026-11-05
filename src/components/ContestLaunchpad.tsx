@@ -67,6 +67,7 @@ import {
   isPostLaunch,
   isPreLaunch,
   hasPaidMembership,
+  hasWorldSynthesisPass,
   openMembershipGateModal,
   openClaimWorldModal,
   isFoundingPioneerPlanet,
@@ -74,6 +75,7 @@ import {
   isVipAccount,
   isVipPioneerPlanet,
   triggerMemberPassCheckout,
+  triggerWorldPassCheckout,
 } from '../utils/pioneer';
 import { isFounderEmail, PRIMARY_FOUNDER_EMAIL } from '../data/vipTokens';
 import { PRELAUNCH_GENERATION_LOCKED, PRELAUNCH_MESSAGE } from '../config/prelaunch';
@@ -1176,14 +1178,41 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={triggerMemberPassCheckout}
-                    className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(245,158,11,0.45)]"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 fill-black text-black" />
-                    <span>Activate World &amp; Join Member Pass →</span>
-                  </button>
+                  {(() => {
+                    const hasPass = hasWorldSynthesisPass(user, profile, role, isVip);
+                    if (hasPass) {
+                      return (
+                        <div className="p-3.5 rounded-xl bg-[#1c1404]/90 border border-amber-400/60 space-y-1.5 shadow-[0_0_15px_rgba(245,158,11,0.25)]">
+                          <div className="flex items-center gap-1.5 text-xs font-mono font-extrabold text-amber-300">
+                            <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+                            <span>✓ WORLD VERIFIED &amp; QUEUED</span>
+                          </div>
+                          <p className="text-[11px] text-amber-100/90 font-sans leading-relaxed">
+                            Your planetary specs and visualizer feature slot are locked. Your world will be processed and deployed to the live Galaxy Navigator during the upcoming Monday morning cluster update.
+                          </p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => triggerWorldPassCheckout(activeSubmission?.planetName)}
+                          className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.4)]"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Buy €15 World Pass to Activate →</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={triggerMemberPassCheckout}
+                          className="w-full min-h-[38px] py-2 px-3 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <span>Unlock via Member Pass →</span>
+                        </button>
+                      </div>
+                    );
+                  })()}
 
                   <div className="flex items-center justify-between text-xs font-mono text-white/60 px-1">
                     <span>Live Votes:</span>

@@ -107,6 +107,9 @@ export const hasWorldSynthesisPass = (
   if (profile?.has_world_synthesis === true || user?.has_world_synthesis === true) return true;
   if (typeof window !== 'undefined') {
     try {
+      if (localStorage.getItem('akinoya_world_pass_verified') === 'true') {
+        return true;
+      }
       const ownedStr = localStorage.getItem('akinoya_owned_products');
       if (ownedStr) {
         const owned = JSON.parse(ownedStr);
@@ -124,6 +127,28 @@ export const hasWorldSynthesisPass = (
     }
   }
   return false;
+};
+
+export const triggerWorldPassCheckout = (planetName?: string) => {
+  soundManager.playTone(660, 0.08);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('akinoya-open-checkout', {
+        detail: {
+          id: 'world-synthesis',
+          title: 'Sillow Mill — Synthesize & Feature Your World',
+          subtitle: planetName
+            ? `Activate ${planetName} & Lock Visualizer Co-Creation`
+            : 'Activate World & Lock Visualizer Co-Creation Slot',
+          badge: 'CO-CREATION PASS · €15.00',
+          priceValue: '15.00',
+          isPhysical: false,
+          allocationNotice: '5-Photo 4K Dossier · 9:16 Video Loop · Visualizer Slot',
+          deliveryNotice: 'Instant Co-Creation Access · Asset Vault inside the Hub',
+        },
+      })
+    );
+  }
 };
 
 export const triggerMemberPassCheckout = () => {

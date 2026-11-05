@@ -465,7 +465,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
         const finalMsg: ChatMessage = {
           id: `mill-done-${Date.now()}`,
           sender: 'mill',
-          text: `Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.\n\nAll 5 Worldbuilding Protocol answers recorded for ${completeAnswers.planetName}.\n\nSynthesizing 4K sci-fi planetary dossier and registered lore archive...`,
+          text: `Your draft world is synthesized! All 5 Worldbuilding Protocol answers recorded for ${completeAnswers.planetName}.\n\nYour planetary specs have been stored in your Vault (My Assets). To activate your planet for the live Galaxy Navigator and secure your official co-creation spot in a future cinematic visualizer once all 11 tracks drop, activate your world with the €15 World Pass (or Member Pass).\n\nSynthesizing 4K sci-fi planetary dossier and registered lore archive...`,
           timestamp: 'Just now',
         };
         setMessages((prev) => [...prev, finalMsg]);

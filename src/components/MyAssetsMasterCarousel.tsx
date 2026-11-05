@@ -15,6 +15,7 @@ import {
   VolumeX,
   Copy,
   Check,
+  CheckCircle2,
   Layers,
   Eye,
   Lock,
@@ -36,6 +37,7 @@ import {
   hasPaidMembership,
   hasWorldSynthesisPass,
   triggerMemberPassCheckout,
+  triggerWorldPassCheckout,
 } from '../utils/pioneer';
 import { useAuth } from '../context/AuthContext';
 import { formatTitleCaseUserName } from '../utils/holder';
@@ -381,12 +383,22 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
   );
 
   const { user, profile, role, isVip } = useAuth();
+  const isLive = useMemo(() => isLiveGalaxyWorld(dossier), [dossier]);
+  const hasPass = useMemo(
+    () => hasWorldSynthesisPass(user, profile, role, isVip),
+    [user, profile, role, isVip]
+  );
   const isPendingActivation = useMemo(() => {
     if (isSimulationMode) return false;
-    if (isLiveGalaxyWorld(dossier)) return false;
-    if (hasWorldSynthesisPass(user, profile, role, isVip)) return false;
+    if (isLive) return false;
+    if (hasPass) return false;
     return true;
-  }, [dossier, isSimulationMode, user, profile, role, isVip]);
+  }, [isSimulationMode, isLive, hasPass]);
+  const isVerifiedQueued = useMemo(() => {
+    if (isSimulationMode) return false;
+    if (isLive) return false;
+    return hasPass;
+  }, [isSimulationMode, isLive, hasPass]);
 
   const activePhoto = photoCards[activePhotoIdx] || photoCards[0];
   const rawPlanetName = dossier?.planetName;
@@ -732,7 +744,12 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
             {isPendingActivation ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-500/20 text-amber-300 border border-amber-400/60 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-                <span>PENDING ACTIVATION</span>
+                <span>PENDING ACTIVATION · UNPAID DRAFT</span>
+              </span>
+            ) : isVerifiedQueued ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-extrabold tracking-widest uppercase bg-gradient-to-r from-amber-500/25 via-yellow-400/30 to-amber-500/25 border-2 border-amber-400 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.45)]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>✓ WORLD VERIFIED &amp; QUEUED</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-emerald-950/80 text-emerald-300 border border-emerald-400/40">
@@ -795,6 +812,46 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
           </div>
         </div>
       </div>
+
+      {/* Post-Payment Gold Verification State & Monday Queue Confirmation */}
+      {isVerifiedQueued && (
+        <div className="relative z-10 overflow-hidden rounded-2xl bg-gradient-to-r from-[#1c1404]/95 via-[#0b1424]/95 to-[#1c1404]/95 border-2 border-amber-400 p-4 sm:p-5 shadow-[0_12px_40px_rgba(0,0,0,0.8),0_0_35px_rgba(245,158,11,0.35)] my-1">
+          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 to-transparent pointer-events-none" />
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <span className="p-2.5 rounded-xl bg-amber-400 text-black shrink-0 shadow-[0_0_20px_rgba(245,158,11,0.6)]">
+                <CheckCircle2 className="w-5 h-5 text-black" />
+              </span>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500/25 via-yellow-400/30 to-amber-500/25 border-2 border-amber-400 text-amber-300 text-[10px] sm:text-[11px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_15px_rgba(245,158,11,0.4)]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>✓ WORLD VERIFIED &amp; QUEUED</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-cyan-300">
+                    UPDATED EVERY MONDAY MORNING
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-300">
+                    VISUALIZER CO-CREATION LOCKED
+                  </span>
+                </div>
+                <h4 className="text-base sm:text-lg font-display font-black text-white">
+                  World Verified &amp; Queued for Deployment
+                </h4>
+                <p className="text-xs sm:text-sm text-amber-100/90 font-sans leading-relaxed font-medium max-w-2xl">
+                  Your planetary specs and visualizer feature slot are locked. Your world will be processed and deployed to the live Galaxy Navigator during the upcoming Monday morning cluster update.
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0 flex items-center gap-2">
+              <div className="px-4 py-2 rounded-xl bg-amber-400/15 border border-amber-400/60 text-amber-300 font-mono text-xs font-bold shadow-[0_0_15px_rgba(245,158,11,0.25)] flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>Feature Slot Secured</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── 2. CAROUSEL MAIN VIEWPORT (ZERO OVERLAY ARROWS) ─── */}
       <div
@@ -1149,13 +1206,13 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       }}
                     />
 
-                    {/* Exclusive Membership Upsell Overlay */}
+                    {/* Exclusive Activation Overlay (Unpaid State) */}
                     {isPendingActivation && (
                       <div className="absolute inset-0 z-20 flex flex-col items-center justify-between p-5 bg-gradient-to-b from-black/85 via-black/80 to-black/95 backdrop-blur-[6px] text-center border-2 border-amber-400/60 shadow-inner">
                         <div className="flex flex-col items-center gap-2 pt-3">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-                            PENDING ACTIVATION
+                            PENDING ACTIVATION · UNPAID DRAFT
                           </span>
                           <h4 className="text-lg sm:text-xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                             Your world is synthesized!
@@ -1167,18 +1224,25 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             MONDAY BATCH DEPLOYMENT
                           </div>
                           <p className="text-xs sm:text-[12.5px] text-amber-100/95 font-sans leading-relaxed font-medium">
-                            The Galaxy Navigator is updated every Monday morning with new custom sector batches. As part of our curated co-creation process with Mill, upgrading to the Annual Member Pass queues your sector for the upcoming Monday live deployment and unlocks full 4K visuals.
+                            Activate with the €15 World Pass to lock your future cinematic visualizer co-creation spot and queue your sector for the upcoming Monday live Galaxy deployment.
                           </p>
                         </div>
 
-                        <div className="w-full pb-2">
+                        <div className="w-full pb-2 space-y-2">
+                          <button
+                            type="button"
+                            onClick={() => triggerWorldPassCheckout(dossier?.planetName)}
+                            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs tracking-wide transition-all cursor-pointer shadow-[0_0_25px_rgba(56,189,248,0.5)] flex items-center justify-center gap-2"
+                          >
+                            <Sparkles className="w-4 h-4 shrink-0" />
+                            <span>Buy €15 World Pass to Activate →</span>
+                          </button>
                           <button
                             type="button"
                             onClick={triggerMemberPassCheckout}
-                            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs tracking-wide transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2"
+                            className="w-full py-2 px-3 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono font-bold text-[11px] tracking-wide transition-all cursor-pointer flex items-center justify-center gap-1.5"
                           >
-                            <Sparkles className="w-4 h-4 fill-black text-black shrink-0" />
-                            <span>Activate World &amp; Join Member Pass →</span>
+                            <span>Unlock via Member Pass →</span>
                           </button>
                         </div>
                       </div>
@@ -1258,14 +1322,23 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                   {/* Video Download Action Button */}
                   <div className="space-y-2.5 pt-1">
                     {isPendingActivation ? (
-                      <button
-                        type="button"
-                        onClick={triggerMemberPassCheckout}
-                        className="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-[0_0_30px_rgba(245,158,11,0.5)] min-h-[46px]"
-                      >
-                        <Sparkles className="w-4 h-4 fill-black text-black" />
-                        <span>Activate World &amp; Join Member Pass →</span>
-                      </button>
+                      <div className="space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => triggerWorldPassCheckout(dossier?.planetName)}
+                          className="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-[0_0_30px_rgba(56,189,248,0.4)] min-h-[46px]"
+                        >
+                          <Sparkles className="w-4 h-4 shrink-0" />
+                          <span>Buy €15 World Pass to Activate →</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={triggerMemberPassCheckout}
+                          className="w-full py-2 px-3 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono font-bold text-[11px] cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <span>Unlock via Member Pass →</span>
+                        </button>
+                      </div>
                     ) : (
                       <button
                         type="button"
@@ -1485,13 +1558,13 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                       }}
                     />
 
-                    {/* Exclusive Membership Upsell Overlay */}
+                    {/* Exclusive Activation Overlay (Unpaid State) */}
                     {isPendingActivation && (
                       <div className="absolute inset-0 z-20 flex flex-col items-center justify-between p-5 bg-gradient-to-b from-black/85 via-black/80 to-black/95 backdrop-blur-[6px] text-center border-2 border-amber-400/60 shadow-inner">
                         <div className="flex flex-col items-center gap-2 pt-3">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-                            PENDING ACTIVATION
+                            PENDING ACTIVATION · UNPAID DRAFT
                           </span>
                           <h4 className="text-lg sm:text-xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                             Your world is synthesized!
@@ -1503,18 +1576,25 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             MONDAY BATCH DEPLOYMENT
                           </div>
                           <p className="text-xs sm:text-[12.5px] text-amber-100/95 font-sans leading-relaxed font-medium">
-                            The Galaxy Navigator is updated every Monday morning with new custom sector batches. As part of our curated co-creation process with Mill, upgrading to the Annual Member Pass queues your sector for the upcoming Monday live deployment and unlocks full 4K visuals.
+                            Activate with the €15 World Pass to lock your future cinematic visualizer co-creation spot and queue your sector for the upcoming Monday live Galaxy deployment.
                           </p>
                         </div>
 
-                        <div className="w-full pb-2">
+                        <div className="w-full pb-2 space-y-2">
+                          <button
+                            type="button"
+                            onClick={() => triggerWorldPassCheckout(dossier?.planetName)}
+                            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs tracking-wide transition-all cursor-pointer shadow-[0_0_25px_rgba(56,189,248,0.5)] flex items-center justify-center gap-2"
+                          >
+                            <Sparkles className="w-4 h-4 shrink-0" />
+                            <span>Buy €15 World Pass to Activate →</span>
+                          </button>
                           <button
                             type="button"
                             onClick={triggerMemberPassCheckout}
-                            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs tracking-wide transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2"
+                            className="w-full py-2 px-3 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono font-bold text-[11px] tracking-wide transition-all cursor-pointer flex items-center justify-center gap-1.5"
                           >
-                            <Sparkles className="w-4 h-4 fill-black text-black shrink-0" />
-                            <span>Activate World &amp; Join Member Pass →</span>
+                            <span>Unlock via Member Pass →</span>
                           </button>
                         </div>
                       </div>
@@ -1579,17 +1659,29 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                 <div className="flex items-center gap-2.5 w-full sm:w-auto">
                   {fullscreenSlide === 'video_trailer' && (
                     isPendingActivation ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsFullscreenModalOpen(false);
-                          triggerMemberPassCheckout();
-                        }}
-                        className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
-                      >
-                        <Sparkles className="w-4 h-4 fill-black text-black" />
-                        <span>Activate World &amp; Join Member Pass →</span>
-                      </button>
+                      <div className="flex items-center gap-2 flex-1 sm:flex-none">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsFullscreenModalOpen(false);
+                            triggerWorldPassCheckout(dossier?.planetName);
+                          }}
+                          className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.4)] min-h-[42px]"
+                        >
+                          <Sparkles className="w-4 h-4 shrink-0" />
+                          <span>Buy €15 World Pass to Activate →</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsFullscreenModalOpen(false);
+                            triggerMemberPassCheckout();
+                          }}
+                          className="px-3 py-2.5 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center min-h-[42px]"
+                        >
+                          <span>Unlock via Member Pass →</span>
+                        </button>
+                      </div>
                     ) : (
                       <button
                         type="button"

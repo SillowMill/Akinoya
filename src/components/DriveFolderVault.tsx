@@ -49,7 +49,7 @@ import stage05Img from '../assets/images/stage_05_cinematic_color_grading_wavefo
 import vocalAcapellaImg from '../assets/images/vocal_acapella_remix_pack.png';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import akinoyaPassCard from '../assets/images/akinoya_pass_card_1790852652003.jpg';
-import planetAkinoyaImg from '../assets/images/planet_akinoya_1790852629401.jpg';
+import akinoyaHeroBg from '../assets/images/akinoya_hero_bg-CiYAZVRx.jpg';
 
 // Character Locking Master Assets (from Character Locking folder)
 import millCharacterImg from '../assets/images/character_locking/MilLLL.PNG';
@@ -224,13 +224,13 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       productDetails = {
         id: 'world-synthesis',
         title: 'Sillow Mill — Synthesize & Feature Your World',
-        subtitle: "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and lock your official co-creation collaboration to feature directly inside Mill's Äkinoya universe",
+        subtitle: "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and secure your official co-creation spot to feature directly in a future cinematic visualizer once all 11 visualizers are released",
         badge: 'CO-CREATION PASS · LIMITED SECTOR EXPANSION',
         priceValue: '15.00',
         isPhysical: false,
-        image: planetAkinoyaImg,
+        image: akinoyaHeroBg,
         deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
-        allocationNotice: '5-Photo 4K Dossier · 9:16 Video Loop · Monday Batch Priority',
+        allocationNotice: '5-Photo 4K Dossier · 9:16 Video Loop · Visualizer Slot',
       };
     } else {
       // Default / Folder 1 -> Workflow add-on (€29.99, digital)

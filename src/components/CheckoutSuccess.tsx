@@ -86,6 +86,25 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
                 list.push(prod);
                 localStorage.setItem('akinoya_owned_products', JSON.stringify(list));
               }
+
+              if (prod === 'world-synthesis' || prod === 'membership') {
+                localStorage.setItem('akinoya_world_pass_verified', 'true');
+                try {
+                  const rawSubs = localStorage.getItem('akinoya_planet_submissions');
+                  if (rawSubs) {
+                    const parsedSubs = JSON.parse(rawSubs);
+                    if (Array.isArray(parsedSubs)) {
+                      const updated = parsedSubs.map((s: any) => ({
+                        ...s,
+                        isVerifiedQueued: true,
+                      }));
+                      localStorage.setItem('akinoya_planet_submissions', JSON.stringify(updated));
+                    }
+                  }
+                } catch {
+                  // ignore
+                }
+              }
             } catch {
               // ignore
             }
@@ -150,7 +169,37 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
         </div>
 
         {/* Specific Post-Purchase Account & Delivery Success Banners */}
-        {!isComic ? (
+        {orderDetails.product === 'world-synthesis' ? (
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#1c1404]/95 via-[#0b1424]/95 to-[#1c1404]/95 border-2 border-amber-400 text-left space-y-3 shadow-[0_0_35px_rgba(245,158,11,0.35)]">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="flex items-center gap-2 font-extrabold text-amber-300">
+                <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                <span>✓ WORLD VERIFIED &amp; QUEUED</span>
+              </span>
+              <span className="px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-400/50 text-[9px] font-semibold">
+                MONDAY BATCH
+              </span>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm sm:text-base font-display font-black text-white">
+                World Verified &amp; Queued for Deployment
+              </h3>
+              <p className="text-xs font-sans text-amber-100/95 leading-relaxed">
+                Your planetary specs and visualizer feature slot are locked. Your world will be processed and deployed to the live Galaxy Navigator during the upcoming Monday morning cluster update.
+              </p>
+            </div>
+            <div className="pt-1">
+              <a
+                href="/assets"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)] cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>VIEW IN MY ASSETS</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        ) : !isComic ? (
           /* Add-ons & Memberships Banner */
           <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-[#071318]/90 to-emerald-950/80 border border-emerald-400/50 text-left space-y-2 shadow-[0_0_25px_rgba(16,185,129,0.2)]">
             <div className="flex items-center justify-between text-xs font-mono">

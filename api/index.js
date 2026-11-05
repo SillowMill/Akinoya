@@ -2844,9 +2844,9 @@ async function createStripeCheckoutSession(params) {
     unitAmount = params.amount ? Math.round(params.amount * 100) : 999;
   } else if (productId === "world-synthesis") {
     productName = "Sillow Mill - Synthesize & Feature Your World";
-    productDescription = "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and lock your official co-creation collaboration to feature directly inside Mill's \xC4kinoya universe. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
+    productDescription = "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and secure your official co-creation spot to feature directly in a future cinematic visualizer once all 11 visualizers are released. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
     unitAmount = params.amount ? Math.round(params.amount * 100) : 1500;
-    productImage = `${baseUrl}/images/planet_akinoya_1790852629401.jpg`;
+    productImage = `${baseUrl}/images/akinoya_hero_bg-CiYAZVRx.jpg`;
   } else if (productId === "membership") {
     productName = "Sillow Mill - Annual Pioneer Member Pass (All-Inclusive)";
     productDescription = "Annual Pioneer Member Pass with Physical Welcome Booklet, Collector Pass Card, Signed Bookmark & Full Digital Vault Access instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";

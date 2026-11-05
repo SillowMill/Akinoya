@@ -28,7 +28,7 @@ import akinoyaPassCard from '../assets/images/akinoya_pass_card_1790852652003.jp
 import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
 import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
 import vocalAcapellaImg from '../assets/images/vocal_acapella_remix_pack.png';
-import planetAkinoyaImg from '../assets/images/planet_akinoya_1790852629401.jpg';
+import akinoyaHeroBg from '../assets/images/akinoya_hero_bg-CiYAZVRx.jpg';
 
 export interface CheckoutProductPayload {
   id: string;
@@ -131,9 +131,10 @@ const ADDON_PRODUCTS: AddonProduct[] = [
     badge: 'CO-CREATION PASS · LIMITED SECTOR EXPANSION',
     priceValue: '15.00',
     category: 'CO-CREATION PASS · LIMITED SECTOR EXPANSION',
-    subtitle: "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and lock your official co-creation collaboration to feature directly inside Mill's Äkinoya universe.",
-    description: "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and lock your official co-creation collaboration to feature directly inside Mill's Äkinoya universe. Includes 5-photo 4K architectural dossier synthesis, 9:16 vertical video trailer loop, and queue priority for the Monday batch deployment on the live Galaxy Navigator.",
+    subtitle: "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and secure your official co-creation spot to feature directly in a future cinematic visualizer once all 11 visualizers are released.",
+    description: "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and secure your official co-creation spot to feature directly in a future cinematic visualizer once all 11 visualizers are released. Includes 5-photo 4K architectural dossier synthesis, 9:16 vertical video trailer loop, and queue priority for the Monday batch deployment on the live Galaxy Navigator.",
     features: [
+      'Future Visualizer Inclusion: Direct eligibility to be featured in upcoming Äkinoya visualizers upon full 11-track rollout.',
       'Instant Access: Direct 5-question Mill wizard co-creation access',
       'Full 4K planetary render generation (5-photo architectural dossier)',
       '9:16 vertical viral video trailer loop with synchronized audio',
@@ -141,7 +142,7 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       'Queue priority for the upcoming Monday batch deployment on the live Galaxy Navigator',
       'Collaboration with Mill: official co-creator accreditation in the cosmology',
     ],
-    thumbnailImg: planetAkinoyaImg,
+    thumbnailImg: akinoyaHeroBg,
   },
 ];
 
@@ -830,7 +831,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     ✓
                   </span>
                   <span>
-                    <strong className="text-white">Synthesize &amp; Feature Your World</strong> (Custom planet co-creation, 4K render dossier &amp; video trailer loop included)
+                    <strong className="text-white">Synthesize &amp; Feature Your World</strong> (Custom planet co-creation, 4K render dossier, video trailer loop &amp; future cinematic visualizer co-creation feature slot included)
                   </span>
                 </li>
 

@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Sparkles, ShieldCheck, ArrowRight, Zap, Calendar, CheckCircle2 } from 'lucide-react';
 import { PlanetSubmission } from '../types/contest';
 import { isLiveGalaxyWorld } from '../data/contest';
-import { triggerMemberPassCheckout, hasPaidMembership } from '../utils/pioneer';
+import { triggerMemberPassCheckout, triggerWorldPassCheckout, hasWorldSynthesisPass } from '../utils/pioneer';
 import { useAuth } from '../context/AuthContext';
 
 interface WorldReleaseStatusBannerProps {
@@ -15,11 +15,11 @@ interface WorldReleaseStatusBannerProps {
  * Release status banner for newly synthesized user worlds.
  * Rendered above the generated media in My World & My Assets.
  * Communicates the Monday Batch Update Schedule, co-creation reassurance,
- * and Member Pass activation flow. Strictly excludes the initial 5 Pioneer Worlds.
+ * and World Pass / Member Pass activation flow. Strictly excludes the initial 5 Pioneer Worlds.
  */
 export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> = ({ dossier, className = '' }) => {
   const { user, profile, role, isVip } = useAuth();
-  const isMember = hasPaidMembership(user, profile, role, isVip);
+  const hasPass = hasWorldSynthesisPass(user, profile, role, isVip);
 
   if (!dossier || isLiveGalaxyWorld(dossier)) {
     return null;
@@ -49,7 +49,7 @@ export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> =
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-300/70 text-[10px] sm:text-[10.5px] font-mono font-extrabold tracking-widest uppercase text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                {isMember ? 'QUEUED FOR MONDAY BATCH DEPLOYMENT' : 'PENDING ACTIVATION'}
+                {hasPass ? '✓ WORLD VERIFIED & QUEUED' : 'PENDING ACTIVATION · UNPAID DRAFT'}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-[10px] sm:text-[10.5px] font-mono font-bold tracking-wider uppercase text-cyan-200">
                 <Calendar className="w-3 h-3 text-cyan-400" />
@@ -62,33 +62,43 @@ export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> =
             </div>
 
             <h3 className="text-sm sm:text-base font-display font-black text-white tracking-wide">
-              The Galaxy Navigator is updated every Monday morning with new custom sector batches.
+              {hasPass
+                ? 'World Verified & Queued for Deployment'
+                : 'The Galaxy Navigator is updated every Monday morning with new custom sector batches.'}
             </h3>
 
             <p className="text-[11.5px] sm:text-xs text-amber-100/90 font-sans leading-relaxed max-w-2xl font-medium">
-              {isMember
-                ? 'Your Member Pass is active! As part of our curated co-creation process with Mill, your sector is safely preserved in your Vault and queued for calibration and live deployment in the upcoming Monday batch session.'
-                : 'As part of our curated co-creation process with Mill, every custom world undergoes astronomical calibration and high-resolution rendering before joining the live 3D constellation. To activate your planet for the upcoming Monday deployment and unlock full 4K visuals, upgrade to the Annual Member Pass.'}
+              {hasPass
+                ? 'Your planetary specs and visualizer feature slot are locked. Your world will be processed and deployed to the live Galaxy Navigator during the upcoming Monday morning cluster update.'
+                : 'Your draft planetary specs are stored in your Vault. Activate with the €15 World Pass to process full 4K renders, lock your official co-creation spot in a future cinematic visualizer, and queue your world for the upcoming Monday deployment.'}
             </p>
           </div>
         </div>
 
         <div className="shrink-0 pt-1 md:pt-0">
-          {isMember ? (
+          {hasPass ? (
             <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-950/80 border border-emerald-400/60 text-emerald-300 font-mono text-xs font-bold shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               <span>Queued for Monday Batch ✓</span>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={triggerMemberPassCheckout}
-              className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs shadow-[0_0_25px_rgba(245,158,11,0.45)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.98]"
-            >
-              <Zap className="w-3.5 h-3.5 fill-black text-black" />
-              <span>Activate World &amp; Join Member Pass</span>
-              <ArrowRight className="w-3.5 h-3.5 text-black" />
-            </button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <button
+                type="button"
+                onClick={() => triggerWorldPassCheckout(dossier?.planetName)}
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px]"
+              >
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span>Buy €15 World Pass to Activate →</span>
+              </button>
+              <button
+                type="button"
+                onClick={triggerMemberPassCheckout}
+                className="w-full sm:w-auto px-4 py-3 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center min-h-[44px]"
+              >
+                <span>Unlock via Member Pass →</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
