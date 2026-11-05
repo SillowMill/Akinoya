@@ -1850,9 +1850,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
             {...getNavButtonTouchHandlers('hub')}
             className="py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation select-none text-cyan-300/85 hover:text-white hover:bg-cyan-950/50"
           >
-            <Users className="w-3.5 h-3.5 text-cyan-400 shrink-0 pointer-events-none" />
-            <span className="sm:hidden truncate pointer-events-none">Hub</span>
-            <span className="hidden sm:inline truncate pointer-events-none">Community Hub</span>
+            <Users className="w-3.5 h-3.5 text-cyan-400 shrink-0 pointer-events-none vault-hub-icon-glow" />
+            <span className="sm:hidden truncate pointer-events-none whitespace-nowrap">Vault Hub</span>
+            <span className="hidden sm:inline truncate pointer-events-none whitespace-nowrap">Vault Hub</span>
           </button>
         </div>
 
@@ -3830,7 +3830,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   { id: 'edition' as const, label: 'Comic', Icon: BookOpen },
                   { id: 'my-world' as const, label: 'Worlds', Icon: Globe2 },
                   { id: 'assets' as const, label: 'My Assets', Icon: Gem },
-                  { id: 'hub' as const, label: 'Hub', desktopLabel: 'Community Hub', Icon: Users },
+                  { id: 'hub' as const, label: 'Vault Hub', desktopLabel: 'Vault Hub', Icon: Users },
                 ] as const
               ).map((item) => {
                 const { id, label, Icon } = item;
@@ -3846,27 +3846,43 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       isActive ? 'is-active text-cyan-300' : 'text-white/55 hover:text-white/85'
                     } ${isTapping ? 'is-tapping' : ''}`}
                   >
-                    <Icon
-                      className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
-                        isActive
-                          ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.75)]'
-                          : id === 'hub'
-                          ? 'text-cyan-400/90'
-                          : 'text-white/60'
-                      }`}
-                    />
+                    <div className="relative flex items-center justify-center">
+                      {id === 'hub' && (
+                        <span
+                          className="absolute -inset-1 rounded-full bg-cyan-400/15 blur-[4px] pointer-events-none vault-hub-glow-disc"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <Icon
+                        className={`w-4 h-4 shrink-0 transition-transform duration-150 relative z-10 ${
+                          isActive
+                            ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.75)]'
+                            : id === 'hub'
+                            ? 'text-cyan-300 vault-hub-icon-glow'
+                            : 'text-white/60'
+                        }`}
+                      />
+                    </div>
                     {'desktopLabel' in item ? (
                       <>
                         <span
-                          className={`sm:hidden text-[9.5px] xs:text-[10px] font-mono tracking-tight leading-none truncate max-w-full ${
-                            isActive ? 'font-bold text-cyan-200' : 'font-medium text-white/60'
+                          className={`sm:hidden text-[9px] xs:text-[9.5px] sm:text-[10px] font-mono tracking-tight leading-none whitespace-nowrap truncate max-w-full ${
+                            isActive
+                              ? 'font-bold text-cyan-200'
+                              : id === 'hub'
+                              ? 'font-medium text-cyan-300/90'
+                              : 'font-medium text-white/60'
                           }`}
                         >
                           {item.label}
                         </span>
                         <span
-                          className={`hidden sm:inline text-[10px] font-mono tracking-tight leading-none truncate max-w-full ${
-                            isActive ? 'font-bold text-cyan-200' : 'font-medium text-white/60'
+                          className={`hidden sm:inline text-[9.5px] sm:text-[10px] font-mono tracking-tight leading-none whitespace-nowrap truncate max-w-full ${
+                            isActive
+                              ? 'font-bold text-cyan-200'
+                              : id === 'hub'
+                              ? 'font-medium text-cyan-300/90'
+                              : 'font-medium text-white/60'
                           }`}
                         >
                           {item.desktopLabel}
@@ -3874,7 +3890,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </>
                     ) : (
                       <span
-                        className={`text-[9.5px] xs:text-[10px] font-mono tracking-tight leading-none truncate max-w-full ${
+                        className={`text-[9px] xs:text-[9.5px] sm:text-[10px] font-mono tracking-tight leading-none whitespace-nowrap truncate max-w-full ${
                           isActive ? 'font-bold text-cyan-200' : 'font-medium text-white/60'
                         }`}
                       >

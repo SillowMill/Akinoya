@@ -1113,6 +1113,50 @@ video::-internal-media-controls-overlay-cast-button {
   }
 }
 
+/* Vault Hub Navigation Ambient Icon Glow & Shimmer Pulse (3.5s smooth loop) */
+@keyframes vaultHubGlowPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px rgba(0, 240, 255, 0.4));
+    opacity: 0.88;
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.85)) drop-shadow(0 0 14px rgba(0, 240, 255, 0.35));
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes vaultHubDiscPulse {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.2);
+  }
+}
+
+.vault-hub-icon-glow {
+  animation: vaultHubGlowPulse 3.5s ease-in-out infinite;
+  will-change: filter, transform, opacity;
+}
+
+.vault-hub-glow-disc {
+  animation: vaultHubDiscPulse 3.5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vault-hub-icon-glow,
+  .vault-hub-glow-disc {
+    animation: none !important;
+    filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.5));
+  }
+}
+
+
 
 
 
