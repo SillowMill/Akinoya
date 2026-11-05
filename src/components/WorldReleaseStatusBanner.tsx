@@ -70,7 +70,7 @@ export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> =
             <p className="text-[11.5px] sm:text-xs text-amber-100/90 font-sans leading-relaxed max-w-2xl font-medium">
               {hasPass
                 ? 'Your planetary specs and visualizer feature slot are locked. Your world will be processed and deployed to the live Galaxy Navigator during the upcoming Monday morning cluster update.'
-                : 'Your draft planetary specs are stored in your Vault. Activate with the €14.99 World Pass to process full 4K renders, lock your official co-creation spot in a future cinematic visualizer, and queue your world for the upcoming Monday deployment.'}
+                : 'Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.'}
             </p>
           </div>
         </div>

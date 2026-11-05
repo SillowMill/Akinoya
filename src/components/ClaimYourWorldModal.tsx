@@ -35,6 +35,7 @@ import {
   openMembershipGateModal,
   isVipAccount,
   triggerMemberPassCheckout,
+  triggerWorldPassCheckout,
 } from '../utils/pioneer';
 import { formatAkinoyaPlanetName } from '../data/contest';
 import { validatePlanetName } from '../utils/profanityFilter';
@@ -501,12 +502,23 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   type="button"
                   onClick={() => {
                     handleClose();
+                    triggerWorldPassCheckout(confirmedClaim?.sectorName || sectorName);
+                  }}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(56,189,248,0.45)] flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <span>Buy €14.99 World Pass to Activate →</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleClose();
                     triggerMemberPassCheckout();
                   }}
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono font-bold text-xs tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <Sparkles className="w-4 h-4 fill-black text-black" />
-                  <span>Activate World &amp; Join Member Pass →</span>
+                  <span>Unlock via Member Pass →</span>
                 </button>
 
                 <button

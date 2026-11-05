@@ -1187,11 +1187,11 @@ video::-internal-media-controls-overlay-cast-button {
 }
 
 /* ==========================================================================
-   Mobile-Only Responsive Stack (< 768px): Synthesize & Feature Your World Card
-   Enforces clean vertical centering & exact element sequence on mobile viewports
-   while desktop & tablet (>= 768px) remain 100% untouched.
+   Mobile & Tablet Responsive Stack (< 1024px): Synthesize & Feature Your World Card
+   Enforces clean vertical centering & exact element sequence on mobile/tablet viewports
+   while desktop (>= 1024px) rendering remains 100% untouched.
    ========================================================================== */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .synthesize-card-mobile-container {
     display: flex !important;
     flex-direction: column !important;
@@ -1205,7 +1205,7 @@ video::-internal-media-controls-overlay-cast-button {
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .synthesize-card-mobile-container {
     display: none !important;
   }

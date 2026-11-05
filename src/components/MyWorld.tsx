@@ -361,7 +361,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                   Activate your world to deploy on the Galaxy Navigator &amp; secure your visualizer spot.
                 </h4>
                 <p className="text-xs sm:text-sm text-amber-100/90 font-sans leading-relaxed font-medium max-w-2xl">
-                  Your 5-question draft specs are safely stored in your Vault. Activate with the €14.99 World Pass to process full 4K renders, queue your sector for the upcoming Monday deployment, and lock your official co-creation spot in a future cinematic visualizer.
+                  Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.
                 </p>
               </div>
             </div>
@@ -491,7 +491,7 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                     MONDAY BATCH DEPLOYMENT
                   </div>
                   <p className="text-[11px] sm:text-xs text-amber-100/90 font-sans leading-relaxed font-medium">
-                    Activate with the €14.99 World Pass to secure your co-creation spot in a future cinematic visualizer and queue your sector for the upcoming Monday live Galaxy deployment.
+                    Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.
                   </p>
                 </div>
 

@@ -530,27 +530,27 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                           </div>
                         </div>
 
-                        {/* 2. Mobile-Only Responsive Stack (< 768px): Enforced Vertical Column Direction & Centering */}
-                        <div className="synthesize-card-mobile-container relative z-10 flex flex-col items-center text-center w-full gap-2.5 py-1 box-border">
+                        {/* 2. Mobile & Tablet Responsive Stack (< 1024px): Enforced Vertical Column Direction & Centering */}
+                        <div className="synthesize-card-mobile-container relative z-10 flex flex-col items-center text-center w-full gap-3 py-1 box-border">
                           {/* 1. Top Badge */}
                           <div className="flex items-center justify-center w-full">
-                            <span className="text-[9.5px] font-mono font-extrabold uppercase px-2.5 py-1 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
+                            <span className="text-[9.5px] sm:text-[10.5px] font-mono font-extrabold uppercase px-2.5 sm:px-3 py-1 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 tracking-wider">
                               {addon.category}
                             </span>
                           </div>
 
-                          {/* 2. Title */}
-                          <h4 className="text-base xs:text-lg font-display font-black text-white tracking-wide leading-snug text-center group-hover:text-cyan-200 transition-colors px-1 whitespace-normal break-words">
+                          {/* 2. Card Title */}
+                          <h4 className="text-base xs:text-lg sm:text-xl font-display font-black text-white tracking-wide leading-snug text-center group-hover:text-cyan-200 transition-colors px-1 whitespace-normal break-words">
                             {addon.title}
                           </h4>
 
-                          {/* 3. Description */}
-                          <p className="text-xs text-white/80 font-sans leading-relaxed text-center px-2 xs:px-4 max-w-md mx-auto">
+                          {/* 3. Full Description Paragraph */}
+                          <p className="text-xs sm:text-[13px] text-white/80 font-sans leading-relaxed text-center px-2 xs:px-4 sm:px-6 max-w-xl mx-auto">
                             {addon.subtitle}
                           </p>
 
-                          {/* 4. Image Thumbnail (akinoya_hero_bg-CiYAZVRx.jpg) */}
-                          <div className="w-full max-w-[280px] xs:max-w-[320px] aspect-[16/9] rounded-xl overflow-hidden border border-cyan-400/60 shadow-[0_0_20px_rgba(56,189,248,0.25)] my-1 mx-auto shrink-0">
+                          {/* 4. Thumbnail Image (akinoya_hero_bg-CiYAZVRx.jpg) */}
+                          <div className="w-full max-w-[280px] xs:max-w-[320px] sm:max-w-sm md:max-w-md aspect-[16/9] rounded-xl sm:rounded-2xl overflow-hidden border border-cyan-400/60 shadow-[0_0_20px_rgba(56,189,248,0.25)] my-1.5 mx-auto shrink-0">
                             <img
                               src={addon.thumbnailImg}
                               alt={addon.title}
@@ -562,7 +562,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
                           {/* 5. Price Tag */}
                           <div className="flex items-baseline justify-center gap-1 pt-0.5">
-                            <span className="text-xl xs:text-2xl font-display font-black text-cyan-300 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)] whitespace-nowrap inline-flex items-baseline gap-1">
+                            <span className="text-xl xs:text-2xl sm:text-3xl font-display font-black text-cyan-300 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)] whitespace-nowrap inline-flex items-baseline gap-1">
                               <span>€</span>
                               <span>{addon.priceValue}</span>
                             </span>
@@ -572,10 +572,10 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                           <button
                             type="button"
                             onClick={() => toggleExpandAddon(addon.id)}
-                            className={`w-full mt-1 py-3 px-4 rounded-xl border font-mono font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.99] ${
+                            className={`w-full sm:max-w-md mx-auto mt-1 py-3 px-5 rounded-xl border font-mono font-extrabold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] active:scale-[0.99] shadow-[0_0_15px_rgba(56,189,248,0.25)] ${
                               isExpanded
                                 ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200 shadow-[0_0_15px_rgba(56,189,248,0.35)]'
-                                : 'bg-gradient-to-r from-cyan-950/80 via-[#0a1829] to-cyan-950/80 active:from-cyan-900 active:to-[#0c1f38] text-cyan-200 active:text-white border-cyan-400/40 active:border-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]'
+                                : 'bg-gradient-to-r from-cyan-950/80 via-[#0a1829] to-cyan-950/80 active:from-cyan-900 active:to-[#0c1f38] text-cyan-200 active:text-white border-cyan-400/40 active:border-cyan-300'
                             }`}
                           >
                             <span>

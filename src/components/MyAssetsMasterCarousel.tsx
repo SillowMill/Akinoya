@@ -1224,7 +1224,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             MONDAY BATCH DEPLOYMENT
                           </div>
                           <p className="text-xs sm:text-[12.5px] text-amber-100/95 font-sans leading-relaxed font-medium">
-                            Activate with the €14.99 World Pass to lock your future cinematic visualizer co-creation spot and queue your sector for the upcoming Monday live Galaxy deployment.
+                            Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.
                           </p>
                         </div>
 
@@ -1576,7 +1576,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                             MONDAY BATCH DEPLOYMENT
                           </div>
                           <p className="text-xs sm:text-[12.5px] text-amber-100/95 font-sans leading-relaxed font-medium">
-                            Activate with the €14.99 World Pass to lock your future cinematic visualizer co-creation spot and queue your sector for the upcoming Monday live Galaxy deployment.
+                            Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.
                           </p>
                         </div>
 

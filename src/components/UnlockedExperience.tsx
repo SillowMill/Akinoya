@@ -87,6 +87,7 @@ import {
   isOdiFounderAccount,
   isVipAccount,
   triggerMemberPassCheckout,
+  triggerWorldPassCheckout,
 } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { VisualizerPlayerModal } from './VisualizerPlayerModal';
@@ -2774,7 +2775,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-500/20 text-amber-300 border border-amber-400/60 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
                           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                          <span>PENDING ACTIVATION · ANNUAL MEMBER PASS</span>
+                          <span>PENDING ACTIVATION · UNPAID DRAFT</span>
                         </span>
                         {(userDossier?.planetName || claimedSector?.sectorName) && (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-cyan-950/90 text-cyan-300 border border-cyan-400/50">
@@ -2793,18 +2794,26 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </h2>
 
                       <p className="text-xs sm:text-sm font-sans text-amber-100/90 leading-relaxed font-medium">
-                        As part of our curated co-creation process with Mill, every custom planet is safely stored in your Vault and queued for calibration and live deployment in the upcoming Monday batch session. Upgrade to the Annual Member Pass to activate your world and unlock full 4K visuals.
+                        Your draft planetary specs zijn veilig opgeslagen in je Vault. Activeer direct met de €14.99 World Pass om 4K-renders te starten en je co-creatie spot veilig te stellen, of unlock alles direct via de Member Pass.
                       </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => triggerWorldPassCheckout(userDossier?.planetName || claimedSector?.sectorName)}
+                        className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.45)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 min-h-[48px]"
+                      >
+                        <Sparkles className="w-4 h-4 shrink-0" />
+                        <span>Buy €14.99 World Pass to Activate →</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={triggerMemberPassCheckout}
-                        className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_30px_rgba(245,158,11,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                        className="group relative px-4 py-3.5 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono font-bold text-xs sm:text-sm shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 min-h-[48px]"
                       >
-                        <Sparkles className="w-4 h-4 fill-black text-black shrink-0" />
-                        <span>Activate World &amp; Join Member Pass →</span>
+                        <span>Unlock via Member Pass →</span>
                       </button>
 
                       <button
