@@ -21,9 +21,11 @@ import {
   COMMUNITY_SHARE_VIDEO_MESSAGE,
   VIRAL_VIDEO_MOTION_PROMPT,
   copyPlanetGalaxyLink,
+  isLiveGalaxyWorld,
 } from '../data/contest';
+import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
-import { getPioneerMasterVideoUrl } from '../utils/pioneer';
+import { getPioneerMasterVideoUrl, hasPaidMembership, triggerMemberPassCheckout } from '../utils/pioneer';
 import {
   useDynamicWorldVideo,
   isMobileOrTabletDevice,
@@ -62,6 +64,12 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
   const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() =>
     typeof window !== 'undefined' ? isMobileOrTabletDevice() : false
   );
+  const { user, profile, role, isVip } = useAuth();
+  const isPendingActivation = useMemo(() => {
+    if (isLiveGalaxyWorld(dossier)) return false;
+    if (hasPaidMembership(user, profile, role, isVip)) return false;
+    return true;
+  }, [dossier, user, profile, role, isVip]);
   const photoCards = useMemo(() => getPlanetPhotoCards(dossier), [dossier]);
   const meta = useMemo(() => deriveWorldVerificationMeta(dossier), [dossier]);
   const formattedAuthor = useMemo(() => formatTitleCaseUserName(dossier.authorName), [dossier.authorName]);
@@ -210,11 +218,15 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
         </div>
 
         <div className="hidden sm:flex items-center gap-2.5 flex-wrap shrink-0">
-          {dossier.status === 'QUEUED' || (dossier as any).isWaitlist ? (
-            <span className="px-3.5 py-2 rounded-xl bg-amber-950/80 border border-amber-400/50 text-amber-300 text-xs font-mono font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.25)] animate-pulse">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Your world is loading, will be revealed 9 January</span>
-            </span>
+          {isPendingActivation ? (
+            <button
+              type="button"
+              onClick={triggerMemberPassCheckout}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black text-xs font-mono font-extrabold flex items-center gap-1.5 shadow-[0_0_20px_rgba(245,158,11,0.4)] cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-black text-black" />
+              <span>Activate World &amp; Join Member Pass →</span>
+            </button>
           ) : (
             <>
               <button
@@ -251,27 +263,38 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
         </div>
       </div>
 
-      {/* Queued / Waitlist Reveal Notification Banner */}
-      {(dossier.status === 'QUEUED' || (dossier as any).isWaitlist) && (
+      {/* Pending Activation Notification Banner */}
+      {isPendingActivation && (
         <div className="relative z-10 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950/80 via-[#071126]/90 to-cyan-950/80 border-2 border-amber-400/50 p-4 sm:p-5 shadow-[0_10px_35px_rgba(0,0,0,0.7),0_0_25px_rgba(245,158,11,0.25)]">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300 to-transparent pointer-events-none" />
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="p-2 rounded-xl bg-amber-400 text-black shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.5)]">
-                <Sparkles className="w-4 h-4" />
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3">
+              <span className="p-2.5 rounded-xl bg-amber-400 text-black shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.5)]">
+                <Sparkles className="w-4 h-4 fill-black text-black" />
               </span>
-              <div>
-                <div className="text-[11px] font-mono font-extrabold uppercase tracking-widest text-amber-300">
-                  PRIVATE PREVIEW · EXPANSION QUEUE
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider uppercase">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
+                    PENDING ACTIVATION
+                  </span>
                 </div>
-                <div className="text-xs sm:text-sm text-white/90 font-sans mt-0.5">
-                  Your custom planetary coordinates are safely locked. Full constellation reveal occurs on <strong className="text-amber-300">January 9, 2027</strong>.
-                </div>
+                <h4 className="text-sm sm:text-base font-display font-black text-white">
+                  Your world is synthesized!
+                </h4>
+                <p className="text-xs sm:text-sm text-amber-100/90 font-sans leading-relaxed font-medium max-w-2xl">
+                  To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                </p>
               </div>
             </div>
-            <span className="shrink-0 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider whitespace-nowrap">
-              PRIVATE UNTIL RELEASE
-            </span>
+            <button
+              type="button"
+              onClick={triggerMemberPassCheckout}
+              className="w-full md:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2 shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-black text-black" />
+              <span>Activate World &amp; Join Member Pass →</span>
+            </button>
           </div>
         </div>
       )}
@@ -362,26 +385,69 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                 </div>
               </div>
             )}
+
+            {/* Exclusive Membership Upsell Overlay */}
+            {isPendingActivation && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-between p-4 sm:p-5 bg-gradient-to-b from-black/85 via-black/75 to-black/95 backdrop-blur-[6px] text-center border-2 border-amber-400/50">
+                <div className="flex flex-col items-center gap-2 pt-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[9.5px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
+                    PENDING ACTIVATION
+                  </span>
+                  <h4 className="text-base sm:text-lg font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                    Your world is synthesized!
+                  </h4>
+                </div>
+
+                <div className="space-y-3 px-1 my-auto">
+                  <p className="text-[11px] sm:text-xs text-amber-100/90 font-sans leading-relaxed font-medium">
+                    To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                  </p>
+                </div>
+
+                <div className="w-full pb-1">
+                  <button
+                    type="button"
+                    onClick={triggerMemberPassCheckout}
+                    className="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-[11px] tracking-wide transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.45)] flex items-center justify-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 fill-black text-black shrink-0" />
+                    <span>Activate World &amp; Join Member Pass →</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Prominent [⬇ Download 9:16 MP4 Trailer] Button */}
-          <button
-            type="button"
-            onClick={handleDownloadTrailer}
-            disabled={!isVideoReady || isDownloading}
-            className={`w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-              isVideoReady
-                ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer'
-                : 'bg-white/5 border border-white/15 text-white/50 cursor-not-allowed'
-            }`}
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>
-              {isDownloading
-                ? (isMobileDevice ? 'Saving Trailer to Photos...' : 'Preparing MP4...')
-                : (isMobileDevice ? 'Save Trailer to Photos' : '⬇ Download 9:16 MP4 Trailer')}
-            </span>
-          </button>
+          {/* Prominent Action Button: Member Pass Activation or Download */}
+          {isPendingActivation ? (
+            <button
+              type="button"
+              onClick={triggerMemberPassCheckout}
+              className="w-full py-3 px-4 rounded-xl font-mono text-xs font-extrabold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 fill-black text-black shrink-0" />
+              <span>Activate World &amp; Join Member Pass →</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleDownloadTrailer}
+              disabled={!isVideoReady || isDownloading}
+              className={`w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                isVideoReady
+                  ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-pointer'
+                  : 'bg-white/5 border border-white/15 text-white/50 cursor-not-allowed'
+              }`}
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>
+                {isDownloading
+                  ? (isMobileDevice ? 'Saving Trailer to Photos...' : 'Preparing MP4...')
+                  : (isMobileDevice ? 'Save Trailer to Photos' : '⬇ Download 9:16 MP4 Trailer')}
+              </span>
+            </button>
+          )}
 
           {/* Galaxy Navigator & Sector Link Quick Actions */}
           <div className="w-full grid grid-cols-2 gap-2">

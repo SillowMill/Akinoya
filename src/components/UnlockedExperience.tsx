@@ -86,6 +86,7 @@ import {
   SectorClaimRecord,
   isOdiFounderAccount,
   isVipAccount,
+  triggerMemberPassCheckout,
 } from '../utils/pioneer';
 import { PlanetDossierModal } from './PlanetDossierModal';
 import { VisualizerPlayerModal } from './VisualizerPlayerModal';
@@ -2771,9 +2772,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
                     <div className="space-y-2.5 max-w-2xl">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-500/20 text-amber-300 border border-amber-400/60">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-500/20 text-amber-300 border border-amber-400/60 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
                           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                          <span>PIONEER SECTOR REGISTERED · LAUNCH QUEUE</span>
+                          <span>PENDING ACTIVATION · ANNUAL MEMBER PASS</span>
                         </span>
                         {(userDossier?.planetName || claimedSector?.sectorName) && (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-cyan-950/90 text-cyan-300 border border-cyan-400/50">
@@ -2788,15 +2789,24 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
 
                       <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide">
-                        Your world is loading, will be revealed 9 January
+                        Your world is synthesized!
                       </h2>
 
-                      <p className="text-xs sm:text-sm font-sans text-cyan-100/80 leading-relaxed">
-                        Your custom planetary coordinates and 4K sector dossier are locked in the Äkinoya Genesis Core ahead of the official January 9, 2027 worldwide launch.
+                      <p className="text-xs sm:text-sm font-sans text-amber-100/90 leading-relaxed font-medium">
+                        To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
                       </p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={triggerMemberPassCheckout}
+                        className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_30px_rgba(245,158,11,0.5)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                      >
+                        <Sparkles className="w-4 h-4 fill-black text-black shrink-0" />
+                        <span>Activate World &amp; Join Member Pass →</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => {
@@ -2810,10 +2820,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             window.location.href = `/galaxy?from=worlds`;
                           }
                         }}
-                        className="group relative px-5 py-3.5 rounded-xl bg-gradient-to-r from-cyan-950/90 via-blue-950/80 to-indigo-950/90 hover:from-cyan-900/90 hover:to-indigo-900/90 border-2 border-cyan-400/60 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-extrabold text-xs sm:text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px]"
+                        className="group relative px-4 py-3.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900/90 border border-cyan-400/50 hover:border-cyan-300 text-cyan-200 hover:text-white font-mono font-bold text-xs sm:text-sm shadow-[0_0_15px_rgba(56,189,248,0.2)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 min-h-[48px]"
                       >
-                        <Radar className="w-4 h-4 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
-                        <span>View in Äkinoya Galaxy</span>
+                        <Radar className="w-3.5 h-3.5 text-cyan-300 group-hover:rotate-45 transition-transform duration-300 shrink-0" />
+                        <span>View Äkinoya Galaxy</span>
                       </button>
                     </div>
                   </div>
@@ -2888,6 +2898,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <button
                         type="button"
                         onClick={() => {
+                          if (!isAuthenticated) {
+                            soundManager.playTone(330, 0.08);
+                            openAuthModal('signup');
+                            return;
+                          }
                           soundManager.playTone(660, 0.05);
                           if (onNavigateToContest) {
                             onNavigateToContest();
@@ -3394,6 +3409,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       <button
                         type="button"
                         onClick={() => {
+                          if (!isAuthenticated) {
+                            soundManager.playTone(330, 0.08);
+                            openAuthModal('signup');
+                            return;
+                          }
                           soundManager.playTone(660, 0.05);
                           if (onNavigateToContest) {
                             onNavigateToContest();

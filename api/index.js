@@ -2604,7 +2604,7 @@ var init_certificateService = __esm({
 import express from "express";
 
 // src/server/falKillSwitch.ts
-var PRELAUNCH_MESSAGE = "Your world will be available on the ninth of January.";
+var PRELAUNCH_MESSAGE = "Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.";
 var isFalGenerationBlocked = () => {
   const flag = String(process.env.FAL_GENERATION_ENABLED || "").trim().toLowerCase();
   return flag !== "true";
@@ -5850,7 +5850,7 @@ apiRouter.post(["/waitlist/submit", "/api/waitlist/submit"], async (req, res) =>
     });
     res.status(200).json({
       success: true,
-      message: "Planet request queued for batch synthesis. World will be revealed 9 January.",
+      message: "Planet request synthesized. Pending Member Pass activation for live Galaxy Navigator map.",
       data: {
         email,
         firstName,
@@ -6098,7 +6098,7 @@ apiRouter.all(["/sync-sheets", "/auth/sync-sheets"], async (req, res) => {
       vipSync,
       prelaunchSync,
       tab: "Subscribers",
-      message: "Your submission has been received! Your world will be available on the ninth of January."
+      message: "Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass."
     });
   } catch (err) {
     console.error("[API] sync-sheets error:", err);
@@ -6449,7 +6449,7 @@ apiRouter.post(["/dossier/submission", "/submission"], async (req, res) => {
     });
     res.status(result.success ? 200 : 400).json({
       ...result,
-      message: "Your submission has been received! Your world will be available on the ninth of January."
+      message: "Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass."
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err?.message || "Failed to save submission" });
@@ -6461,14 +6461,14 @@ apiRouter.post(["/prelaunch/submission", "/worldbuilding/submission"], async (re
     const result = await appendPrelaunchWorldSubmissionToGoogleSheets(record);
     res.status(200).json({
       ...result,
-      message: "Your submission has been received! Your world will be available on the ninth of January."
+      message: "Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass."
     });
   } catch (err) {
     console.warn("[API Prelaunch Submission] Error:", err);
     res.status(200).json({
       success: true,
       savedLocally: true,
-      message: "Your submission has been received! Your world will be available on the ninth of January.",
+      message: "Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.",
       error: err?.message
     });
   }

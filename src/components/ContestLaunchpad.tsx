@@ -73,6 +73,7 @@ import {
   isPioneerPlanet,
   isVipAccount,
   isVipPioneerPlanet,
+  triggerMemberPassCheckout,
 } from '../utils/pioneer';
 import { isFounderEmail, PRIMARY_FOUNDER_EMAIL } from '../data/vipTokens';
 import { PRELAUNCH_GENERATION_LOCKED, PRELAUNCH_MESSAGE } from '../config/prelaunch';
@@ -378,15 +379,9 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
   // Handle launch button: ALWAYS mandate "Create Your Free World" modal first
   const handleStartWorldbuilding = () => {
-    if (isPostLaunch() && !hasPaidMembership(user, profile, role, isVip)) {
-      soundManager.playTone(330, 0.08);
-      openMembershipGateModal();
-      return;
-    }
-
     if (!isAuthenticated) {
       soundManager.playTone(330, 0.08);
-      openAuthModal('signin');
+      openAuthModal('signup');
       return;
     }
     if (hasSubmittedContest) {
@@ -743,13 +738,13 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
         q4: synchronizedDraft.fauna,
         q5: synchronizedDraft.futurePromise,
         humanAnswers: synchronizedDraft.humanAnswers,
-        status: 'Your world will be available on the ninth of January.',
+        status: 'Pending Activation · Annual Member Pass',
       }),
     }).catch((err) => console.warn('[Contest] Pre-launch sheets sync error:', err));
 
     setGenerationProgress(100);
     setGenerationStageName('SYNTHESIS SEQUENCE COMPLETE');
-    setGenerationStageDetails('Your submission has been received! Your world will be available on the ninth of January.');
+    setGenerationStageDetails('Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.');
     setIsGeneratingRenders(false);
     soundManager.playUnlockChime();
   };
@@ -913,7 +908,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
           q4: previewDossier.fauna,
           q5: previewDossier.futurePromise,
           humanAnswers: previewDossier.humanAnswers,
-          status: 'Your world will be available on the ninth of January.',
+          status: 'Pending Activation · Annual Member Pass',
         }),
       }).catch((err) => console.warn('[Contest] Pre-launch sheets sync error:', err));
 
@@ -922,7 +917,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
       // 6. Update local state
       setActiveSubmission(previewDossier);
-      setSubmissionConfirmationNotice('Your submission has been received! Your world will be available on the ninth of January.');
+      setSubmissionConfirmationNotice('Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.');
       setPreviewDossier(null);
       setPendingAnswers(null);
       setAllSubmissions((prev) => [previewDossier, ...prev.filter((p) => p.id !== previewDossier.id)]);
@@ -1139,17 +1134,26 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               {hasSubmittedContest ? (
                 <div className="space-y-3">
                   <div className="p-3.5 rounded-xl bg-amber-950/70 border border-amber-500/50 text-center space-y-1 shadow-lg">
-                    <span className="text-[10px] font-mono text-amber-300 font-bold flex items-center justify-center gap-1.5 uppercase tracking-wider">
-                      <Lock className="w-3.5 h-3.5 text-amber-400" />
-                      ONE-SHOT CLAIMED · 1 OF 1 TICKET USED
+                    <span className="text-[10px] font-mono text-amber-300 font-extrabold flex items-center justify-center gap-1.5 uppercase tracking-wider">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      PENDING ACTIVATION · ANNUAL MEMBER PASS
                     </span>
-                    <div className="text-sm font-display font-bold text-white truncate">
-                      {activeSubmission?.planetName || 'Territory Submitted'}
+                    <div className="text-base font-display font-black text-white truncate">
+                      {activeSubmission?.planetName || 'Territory Synthesized'}
                     </div>
-                    <p className="text-[11px] text-amber-200 font-mono font-medium">
-                      Your submission has been received! Your world will be available on the ninth of January.
+                    <p className="text-[11px] text-amber-200/90 font-sans leading-relaxed font-medium">
+                      To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
                     </p>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={triggerMemberPassCheckout}
+                    className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(245,158,11,0.45)]"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 fill-black text-black" />
+                    <span>Activate World &amp; Join Member Pass →</span>
+                  </button>
 
                   <div className="flex items-center justify-between text-xs font-mono text-white/60 px-1">
                     <span>Live Votes:</span>
@@ -1163,11 +1167,11 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                         soundManager.playTone(660, 0.05);
                         setModalPlanet(activeSubmission);
                       }}
-                      className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                      className="w-full min-h-[42px] py-2.5 px-4 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 font-mono font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
                     >
-                      <Camera className="w-3.5 h-3.5" />
+                      <Camera className="w-3.5 h-3.5 text-cyan-300" />
                       <span>View 5-Photo Planet Dossier</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ArrowRight className="w-3.5 h-3.5 text-cyan-300" />
                     </button>
                   )}
                 </div>

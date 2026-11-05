@@ -27,13 +27,16 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { PlanetSubmission } from '../types/contest';
-import { getPlanetPhotoCards } from '../data/contest';
+import { getPlanetPhotoCards, isLiveGalaxyWorld } from '../data/contest';
 import {
   isFoundingPioneerPlanet,
   isPioneerPlanet,
   isVipPioneerPlanet,
   getPioneerMasterVideoUrl,
+  hasPaidMembership,
+  triggerMemberPassCheckout,
 } from '../utils/pioneer';
+import { useAuth } from '../context/AuthContext';
 import { formatTitleCaseUserName } from '../utils/holder';
 import { soundManager } from '../utils/audio';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
@@ -376,6 +379,14 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
     [dossier, editionRank]
   );
 
+  const { user, profile, role, isVip } = useAuth();
+  const isPendingActivation = useMemo(() => {
+    if (isSimulationMode) return false;
+    if (isLiveGalaxyWorld(dossier)) return false;
+    if (hasPaidMembership(user, profile, role, isVip)) return false;
+    return true;
+  }, [dossier, isSimulationMode, user, profile, role, isVip]);
+
   const activePhoto = photoCards[activePhotoIdx] || photoCards[0];
   const rawPlanetName = dossier?.planetName;
   const isZephyria = !rawPlanetName || rawPlanetName.toLowerCase().includes('zephyria');
@@ -717,9 +728,16 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
               <ShieldCheck className="w-3 h-3 text-cyan-400 shrink-0" />
               <span>100% AUTHENTIC</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-emerald-950/80 text-emerald-300 border border-emerald-400/40">
-              <span>EDITION #{meta.worldNumber}</span>
-            </span>
+            {isPendingActivation ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-extrabold tracking-widest uppercase bg-amber-500/20 text-amber-300 border border-amber-400/60 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
+                <span>PENDING ACTIVATION</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-emerald-950/80 text-emerald-300 border border-emerald-400/40">
+                <span>EDITION #{meta.worldNumber}</span>
+              </span>
+            )}
           </div>
 
           {/* Primary World Identifier Headline with Official Sillow Mill Emblem & Chrome Divider */}
@@ -1129,6 +1147,38 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         videoElementRef.current = el;
                       }}
                     />
+
+                    {/* Exclusive Membership Upsell Overlay */}
+                    {isPendingActivation && (
+                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-between p-5 bg-gradient-to-b from-black/85 via-black/80 to-black/95 backdrop-blur-[6px] text-center border-2 border-amber-400/60 shadow-inner">
+                        <div className="flex flex-col items-center gap-2 pt-3">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
+                            PENDING ACTIVATION
+                          </span>
+                          <h4 className="text-lg sm:text-xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                            Your world is synthesized!
+                          </h4>
+                        </div>
+
+                        <div className="space-y-3 px-1 my-auto">
+                          <p className="text-xs sm:text-[13px] text-amber-100/90 font-sans leading-relaxed font-medium">
+                            To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                          </p>
+                        </div>
+
+                        <div className="w-full pb-2">
+                          <button
+                            type="button"
+                            onClick={triggerMemberPassCheckout}
+                            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs tracking-wide transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2"
+                          >
+                            <Sparkles className="w-4 h-4 fill-black text-black shrink-0" />
+                            <span>Activate World &amp; Join Member Pass →</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Carousel Swipe Indicator Directly Beneath Trailer Card */}
@@ -1203,19 +1253,30 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
 
                   {/* Video Download Action Button */}
                   <div className="space-y-2.5 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleDownloadTrailerMp4}
-                      disabled={isExportingTrailer}
-                      className="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-[0_0_25px_rgba(245,158,11,0.4)] min-h-[46px]"
-                    >
-                      <Download className="w-4 h-4 text-black" />
-                      <span>
-                        {isExportingTrailer
-                          ? (isMobileDevice ? 'SAVING TRAILER TO PHOTOS...' : 'GENERATING MP4 VIDEO...')
-                          : (isMobileDevice ? 'SAVE TRAILER TO PHOTOS' : 'DOWNLOAD 9:16 MP4 TRAILER')}
-                      </span>
-                    </button>
+                    {isPendingActivation ? (
+                      <button
+                        type="button"
+                        onClick={triggerMemberPassCheckout}
+                        className="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-[0_0_30px_rgba(245,158,11,0.5)] min-h-[46px]"
+                      >
+                        <Sparkles className="w-4 h-4 fill-black text-black" />
+                        <span>Activate World &amp; Join Member Pass →</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleDownloadTrailerMp4}
+                        disabled={isExportingTrailer}
+                        className="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-[0_0_25px_rgba(245,158,11,0.4)] min-h-[46px]"
+                      >
+                        <Download className="w-4 h-4 text-black" />
+                        <span>
+                          {isExportingTrailer
+                            ? (isMobileDevice ? 'SAVING TRAILER TO PHOTOS...' : 'GENERATING MP4 VIDEO...')
+                            : (isMobileDevice ? 'SAVE TRAILER TO PHOTOS' : 'DOWNLOAD 9:16 MP4 TRAILER')}
+                        </span>
+                      </button>
+                    )}
 
                     <button
                       type="button"
@@ -1419,6 +1480,38 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                         videoElementRef.current = el;
                       }}
                     />
+
+                    {/* Exclusive Membership Upsell Overlay */}
+                    {isPendingActivation && (
+                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-between p-5 bg-gradient-to-b from-black/85 via-black/80 to-black/95 backdrop-blur-[6px] text-center border-2 border-amber-400/60 shadow-inner">
+                        <div className="flex flex-col items-center gap-2 pt-3">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider uppercase shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
+                            PENDING ACTIVATION
+                          </span>
+                          <h4 className="text-lg sm:text-xl font-display font-black text-white tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                            Your world is synthesized!
+                          </h4>
+                        </div>
+
+                        <div className="space-y-3 px-1 my-auto">
+                          <p className="text-xs sm:text-[13px] text-amber-100/90 font-sans leading-relaxed font-medium">
+                            To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                          </p>
+                        </div>
+
+                        <div className="w-full pb-2">
+                          <button
+                            type="button"
+                            onClick={triggerMemberPassCheckout}
+                            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-extrabold text-xs tracking-wide transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2"
+                          >
+                            <Sparkles className="w-4 h-4 fill-black text-black shrink-0" />
+                            <span>Activate World &amp; Join Member Pass →</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1478,19 +1571,33 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
 
                 <div className="flex items-center gap-2.5 w-full sm:w-auto">
                   {fullscreenSlide === 'video_trailer' && (
-                    <button
-                      type="button"
-                      onClick={handleDownloadTrailerMp4}
-                      disabled={isExportingTrailer}
-                      className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
-                    >
-                      <Download className="w-4 h-4 text-black" />
-                      <span>
-                        {isExportingTrailer
-                          ? (isMobileDevice ? 'SAVING TRAILER TO PHOTOS...' : 'GENERATING MP4...')
-                          : (isMobileDevice ? 'SAVE TRAILER TO PHOTOS' : 'DOWNLOAD 9:16 TRAILER (MP4)')}
-                      </span>
-                    </button>
+                    isPendingActivation ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsFullscreenModalOpen(false);
+                          triggerMemberPassCheckout();
+                        }}
+                        className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
+                      >
+                        <Sparkles className="w-4 h-4 fill-black text-black" />
+                        <span>Activate World &amp; Join Member Pass →</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleDownloadTrailerMp4}
+                        disabled={isExportingTrailer}
+                        className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-xs font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)] min-h-[42px]"
+                      >
+                        <Download className="w-4 h-4 text-black" />
+                        <span>
+                          {isExportingTrailer
+                            ? (isMobileDevice ? 'SAVING TRAILER TO PHOTOS...' : 'GENERATING MP4...')
+                            : (isMobileDevice ? 'SAVE TRAILER TO PHOTOS' : 'DOWNLOAD 9:16 TRAILER (MP4)')}
+                        </span>
+                      </button>
+                    )
                   )}
 
                   {fullscreenSlide === 'story_card' && (

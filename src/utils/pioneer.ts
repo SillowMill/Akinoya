@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { soundManager } from './audio';
+
 export const PIONEER_LAUNCH_DATE_STR = '2027-01-09T00:00:00Z';
 export const PIONEER_LAUNCH_DATE = new Date(PIONEER_LAUNCH_DATE_STR).getTime();
 export const PIONEER_BADGE_TAG = '[PIONEER-2027]';
@@ -69,15 +71,20 @@ export const hasPaidMembership = (
   role?: string,
   _isVip?: boolean
 ): boolean => {
+  if (_isVip) return true;
   const normalizedRole = (role || '').toUpperCase();
-  // VIP_GUEST is strictly confined to VIP Lounge chat and does NOT grant paid membership
-  if (['ANNUAL_PASS', 'SUBSCRIBER', 'CREATOR', 'ADMIN'].includes(normalizedRole)) {
+  if (['ANNUAL_PASS', 'SUBSCRIBER', 'CREATOR', 'ADMIN', 'VIP'].includes(normalizedRole)) {
     return true;
   }
   if (profile?.has_paid_membership === true || user?.has_paid_membership === true) {
     return true;
   }
-  if (profile?.is_annual_member === true || profile?.is_subscriber === true) {
+  if (
+    profile?.is_annual_member === true ||
+    profile?.is_subscriber === true ||
+    profile?.has_vip_pass === true ||
+    profile?.is_vip === true
+  ) {
     return true;
   }
   if (
@@ -88,6 +95,26 @@ export const hasPaidMembership = (
     return true;
   }
   return false;
+};
+
+export const triggerMemberPassCheckout = () => {
+  soundManager.playTone(660, 0.08);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('akinoya-open-checkout', {
+        detail: {
+          id: 'membership',
+          title: 'Sillow Mill — Annual Pioneer Member Pass',
+          subtitle: 'Activate World on Galaxy Navigator & Unlock Full 4K Visuals',
+          badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
+          priceValue: '60.00',
+          isPhysical: true,
+          allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
+          deliveryNotice: 'Free Express Delivery · Physical Shipping + Instant Digital Sync',
+        },
+      })
+    );
+  }
 };
 
 export const openClaimWorldModal = () => {

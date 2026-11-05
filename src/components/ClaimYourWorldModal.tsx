@@ -34,6 +34,7 @@ import {
   hasPaidMembership,
   openMembershipGateModal,
   isVipAccount,
+  triggerMemberPassCheckout,
 } from '../utils/pioneer';
 import { formatAkinoyaPlanetName } from '../data/contest';
 import { validatePlanetName } from '../utils/profanityFilter';
@@ -113,9 +114,10 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
     if (e) e.preventDefault();
     if (isSubmitting) return;
 
-    if (isPostLaunch() && !hasPaidMembership(user, profile, role, isVip)) {
+    if (!isAuthenticated) {
       handleClose();
-      openMembershipGateModal();
+      soundManager.playTone(330, 0.08);
+      openAuthModal('signup');
       return;
     }
 
@@ -179,7 +181,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
         worldName: cleanPlanetName,
         sectorId: coordinates,
         q1: `Atmosphere and terrain calibrated to ${selectedBiome.label}`,
-        status: 'Your world will be available on the ninth of January.',
+        status: 'Pending Activation · Annual Member Pass',
       };
       fetch('/api/prelaunch/submission', {
         method: 'POST',
@@ -461,10 +463,10 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   <span>[PIONEER-2027] WORLD RESERVED &amp; WHITELISTED</span>
                 </div>
                 <h3 className="text-xl sm:text-3xl font-display font-black text-white">
-                  World Claim Confirmed
+                  Your world is synthesized!
                 </h3>
                 <p className="text-[11.5px] sm:text-sm text-amber-200 font-sans max-w-md mx-auto font-medium">
-                  Your submission has been received! Your world will be available on the ninth of January.
+                  To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
                 </p>
               </div>
 
@@ -488,8 +490,8 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                     <span className="text-amber-400 font-bold">[PIONEER-2027] ACTIVE</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-white/50">OFFICIAL RELEASE:</span>
-                    <span className="text-white font-bold">JANUARY 9, 2027</span>
+                    <span className="text-white/50">ACTIVATION STATUS:</span>
+                    <span className="text-amber-300 font-bold">PENDING MEMBER PASS</span>
                   </div>
                 </div>
               )}
@@ -497,17 +499,28 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={handleStartWorldbuilding}
+                  onClick={() => {
+                    handleClose();
+                    triggerMemberPassCheckout();
+                  }}
                   className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-200 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.4)] flex items-center justify-center gap-2"
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4 fill-black text-black" />
+                  <span>Activate World &amp; Join Member Pass →</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleStartWorldbuilding}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400/50 text-cyan-200 font-mono font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
                   <span>Continue to Question 2 with Mill →</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-mono font-bold text-xs transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-mono font-bold text-xs transition-colors cursor-pointer"
                 >
                   Return to Exploration
                 </button>

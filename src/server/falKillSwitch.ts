@@ -16,7 +16,7 @@
  * Read-only CDN asset hosts (e.g. `*.fal.media`, already-generated files) are NOT blocked.
  */
 
-export const PRELAUNCH_MESSAGE = 'Your world will be available on the ninth of January.';
+export const PRELAUNCH_MESSAGE = 'Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.';
 
 export const isFalGenerationBlocked = (): boolean => {
   const flag = String(process.env.FAL_GENERATION_ENABLED || '').trim().toLowerCase();

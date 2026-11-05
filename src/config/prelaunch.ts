@@ -12,4 +12,4 @@
 export const PRELAUNCH_GENERATION_LOCKED =
   String((import.meta as any).env?.VITE_FAL_GENERATION_ENABLED || '').trim().toLowerCase() !== 'true';
 
-export const PRELAUNCH_MESSAGE = 'Your world will be available on the ninth of January.';
+export const PRELAUNCH_MESSAGE = 'Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.';

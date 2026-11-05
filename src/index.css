@@ -181,12 +181,16 @@
   -webkit-backface-visibility: hidden;
 }
 
-/* GPU Hardware-Versnelling (Offloading): cards, planet nodes & galaxy container */
+/* GPU Hardware Acceleration (Offloading): canvas renders, 3D scenes, planet nodes & galaxy container */
 .community-card,
 .planet-node,
 .galaxy-container,
+.galaxy-container canvas,
+.galaxy-starfield-canvas,
+.galaxy-constellation-svg,
 .community-feed,
-.community-hub-container {
+.community-hub-container,
+.video-player-gpu {
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   will-change: transform;
@@ -890,6 +894,11 @@ canvas {
   width: 100% !important;
   box-sizing: border-box !important;
   z-index: 99999 !important;
+  transform: translate3d(0, 0, 0) !important;
+  -webkit-transform: translate3d(0, 0, 0) !important;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   pointer-events: auto !important;
   touch-action: manipulation !important;
   overscroll-behavior: none;

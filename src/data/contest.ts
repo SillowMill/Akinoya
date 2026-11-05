@@ -935,10 +935,10 @@ export const CURATED_GALAXY_WORLD_NAMES = new Set([
   'seppion',
 ]);
 
-export const WORLD_RELEASE_DATE_LABEL = 'JANUARY 9, 2027';
-export const WORLD_QUEUE_STATUS_LABEL = 'PRIVATE UNTIL RELEASE';
+export const WORLD_RELEASE_DATE_LABEL = 'MEMBER PASS ACTIVATION';
+export const WORLD_QUEUE_STATUS_LABEL = 'PENDING ACTIVATION';
 export const WORLD_QUEUE_OFFICIAL_MESSAGE =
-  'Your world is loading, will be revealed 9 January.';
+  'Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.';
 
 /**
  * Strictly verifies whether a planet is one of the 5 official canon pioneer worlds
@@ -954,11 +954,27 @@ export const isOfficialCanonWorld = (planet?: Partial<PlanetSubmission> | null):
   return CURATED_GALAXY_WORLD_NAMES.has(name);
 };
 
-/** True when a world is curated/approved for the public Galaxy Navigator map. */
+/**
+ * True when a world is active and rendered on the live 3D Galaxy Navigator map.
+ * Restricted strictly to official canon pioneer worlds, admin-approved worlds,
+ * or user worlds belonging to active Annual Member Pass accounts.
+ * Unactivated free worlds stay securely stored in the user's Vault awaiting activation.
+ */
 export const isLiveGalaxyWorld = (planet?: Partial<PlanetSubmission> | null): boolean => {
   if (!planet) return false;
   const anyP = planet as any;
   if (anyP.adminApproved === true || anyP.admin_approved === true || anyP.galaxyApproved === true) return true;
+  if (
+    anyP.isActivated === true ||
+    anyP.is_activated === true ||
+    anyP.isVipPioneer === true ||
+    anyP.is_vip_pioneer === true ||
+    anyP.hasPaidMembership === true ||
+    (typeof anyP.pioneerBadge === 'string' && anyP.pioneerBadge.toUpperCase().includes('VIP')) ||
+    (typeof anyP.pioneer_badge === 'string' && anyP.pioneer_badge.toUpperCase().includes('VIP'))
+  ) {
+    return true;
+  }
   const id = String(planet.id || '').trim();
   if (CURATED_GALAXY_WORLD_IDS.has(id)) return true;
   const name = String(planet.planetName || anyP.planet_name || '').trim().toLowerCase();
