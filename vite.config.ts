@@ -4,11 +4,21 @@ import path from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
+  const buildTimestamp = Date.now();
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname || process.cwd(), '.'),
+      },
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          entryFileNames: `assets/[name]-[hash]-${buildTimestamp}.js`,
+          chunkFileNames: `assets/[name]-[hash]-${buildTimestamp}.js`,
+          assetFileNames: `assets/[name]-[hash]-${buildTimestamp}.[ext]`,
+        },
       },
     },
     server: {
