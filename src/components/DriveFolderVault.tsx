@@ -46,6 +46,7 @@ import stage02Img from '../assets/images/stage_02_character_reference_sheet.jpg'
 import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
 import stage04Img from '../assets/images/stage_04_cybernetic_prompt_datastream.jpg';
 import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
+import vocalAcapellaImg from '../assets/images/vocal_acapella_remix_pack.png';
 import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import akinoyaPassCard from '../assets/images/akinoya_pass_card_1790852652003.jpg';
 
@@ -159,7 +160,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         badge: 'VOCAL ACAPELLAS & STEMS · €19.99',
         priceValue: '19.99',
         isPhysical: false,
-        image: stage05Img,
+        image: vocalAcapellaImg,
         deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
         allocationNotice: 'Instant Master Stems · 24-bit / 48kHz WAV',
       };
@@ -640,7 +641,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           isLocked: true,
           isAudio: true,
           productId: 'vocal',
-          previewImg: stage05Img,
+          previewImg: vocalAcapellaImg,
           description: 'Pristine raw studio lead vocal stems recorded through custom tube preamp, 100% dry and uncompressed for remixing.',
         },
         {
@@ -679,7 +680,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           isLocked: true,
           isAudio: true,
           productId: 'vocal',
-          previewImg: stage05Img,
+          previewImg: vocalAcapellaImg,
           description: 'Uncompressed studio master recording featuring modular analog synthesis, 432Hz harmonic drones, and sub-bass impact.',
         },
         {

@@ -27,6 +27,7 @@ import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
 import akinoyaPassCard from '../assets/images/akinoya_pass_card_1790852652003.jpg';
 import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
 import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
+import vocalAcapellaImg from '../assets/images/vocal_acapella_remix_pack.png';
 
 export interface CheckoutProductPayload {
   id: string;
@@ -103,7 +104,7 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       'Harmonies, ad-libs, and backing vocoder tracks',
       '24-bit / 48kHz uncompressed WAV stems',
     ],
-    thumbnailImg: stage05Img,
+    thumbnailImg: vocalAcapellaImg,
   },
   {
     id: 'comic-digital',
@@ -456,69 +457,139 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                       </>
                     )}
 
-                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
-                        {/* Artwork / Thumbnail Frame: Full-bleed immersive layout, sharp proportions across desktop, tablet & mobile */}
-                        {isComic ? (
-                          <div className="relative w-20 xs:w-24 sm:w-20 md:w-24 aspect-[3/4] rounded-xl overflow-hidden border border-cyan-400/50 shadow-[0_0_20px_rgba(56,189,248,0.25)] shrink-0 group-hover:scale-105 transition-transform duration-300">
-                            <img
-                              src={addon.thumbnailImg}
-                              alt={addon.title}
-                              loading="lazy"
-                              decoding="async"
-                              className="w-full h-full object-cover object-center"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-                          </div>
-                        ) : (
-                          <div className="relative w-24 xs:w-28 sm:w-32 md:w-36 aspect-[16/9] rounded-xl overflow-hidden border border-cyan-400/40 bg-black/60 shadow-[0_0_16px_rgba(56,189,248,0.2)] shrink-0 group-hover:scale-105 transition-transform duration-300">
-                            <img
-                              src={addon.thumbnailImg}
-                              alt={addon.title}
-                              loading="lazy"
-                              decoding="async"
-                              className="w-full h-full object-cover object-center"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-                          </div>
-                        )}
+                    {/* Responsive Card Layout: Spacious Horizontal Flow on Desktop/Tablet, Preserved Mobile Flow */}
+                    <div className="relative z-10">
+                      {/* Mobile Layout (< sm) */}
+                      <div className="sm:hidden flex flex-col gap-3">
+                        <div className="flex items-start gap-3.5 min-w-0">
+                          {isComic ? (
+                            <div className="relative w-20 xs:w-24 aspect-[3/4] rounded-xl overflow-hidden border border-cyan-400/50 shadow-[0_0_20px_rgba(56,189,248,0.25)] shrink-0">
+                              <img
+                                src={addon.thumbnailImg}
+                                alt={addon.title}
+                                loading="lazy"
+                                decoding="async"
+                                className="w-full h-full object-cover object-center"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                            </div>
+                          ) : (
+                            <div className="relative w-24 xs:w-28 aspect-[16/9] rounded-xl overflow-hidden border border-cyan-400/40 bg-black/60 shadow-[0_0_16px_rgba(56,189,248,0.2)] shrink-0">
+                              <img
+                                src={addon.thumbnailImg}
+                                alt={addon.title}
+                                loading="lazy"
+                                decoding="async"
+                                className="w-full h-full object-cover object-center"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                            </div>
+                          )}
 
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
-                              {addon.title}
-                            </h4>
-                            <span className="text-[9.5px] font-mono text-cyan-300/90 bg-cyan-950/70 px-2 py-0.5 rounded-full border border-cyan-500/30">
-                              {addon.category}
-                            </span>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-xs sm:text-sm font-display font-bold text-white">
+                                {addon.title}
+                              </h4>
+                              <span className="text-[9.5px] font-mono text-cyan-300/90 bg-cyan-950/70 px-2 py-0.5 rounded-full border border-cyan-500/30">
+                                {addon.category}
+                              </span>
+                            </div>
+                            <p className="text-[11px] sm:text-xs text-white/65 font-sans leading-relaxed">
+                              {addon.subtitle}
+                            </p>
                           </div>
-                          <p className="text-[11px] sm:text-xs text-white/65 font-sans leading-relaxed">
-                            {addon.subtitle}
-                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 shrink-0 pt-2 border-t border-white/10">
+                          <span className="text-sm font-mono font-bold text-white whitespace-nowrap inline-flex items-baseline gap-1">
+                            <span>€</span>
+                            <span>{addon.priceValue}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => toggleExpandAddon(addon.id)}
+                            className={`px-3.5 py-2 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] flex items-center gap-1.5 ${
+                              isExpanded
+                                ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200'
+                                : 'bg-white/5 hover:bg-cyan-500/15 border-white/15 hover:border-cyan-400/50 text-white hover:text-cyan-200'
+                            }`}
+                          >
+                            <span>{isExpanded ? 'Hide Details' : 'Details & Order'}</span>
+                            {isExpanded ? (
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            )}
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 sm:border-none">
-                        <span className="text-sm sm:text-base font-mono font-bold text-white whitespace-nowrap inline-flex items-baseline gap-1">
-                          <span>€</span>
-                          <span>{addon.priceValue}</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => toggleExpandAddon(addon.id)}
-                          className={`px-3.5 py-2 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] flex items-center gap-1.5 ${
-                            isExpanded
-                              ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200'
-                              : 'bg-white/5 hover:bg-cyan-500/15 border-white/15 hover:border-cyan-400/50 text-white hover:text-cyan-200'
-                          }`}
-                        >
-                          <span>{isExpanded ? 'Hide Details' : 'Details & Order'}</span>
-                          {isExpanded ? (
-                            <ChevronUp className="w-3.5 h-3.5" />
-                          ) : (
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          )}
-                        </button>
+                      {/* Desktop & Tablet Spacious Horizontal Flow (sm+) */}
+                      <div className="hidden sm:flex sm:items-center sm:gap-4 md:gap-5 justify-between">
+                        {/* Left: Full-Bleed Edge-to-Edge Artwork Thumbnail */}
+                        {isComic ? (
+                          <div className="relative w-20 sm:w-22 md:w-24 lg:w-22 xl:w-24 aspect-[3/4] rounded-xl overflow-hidden border border-cyan-400/50 shadow-[0_0_20px_rgba(56,189,248,0.25)] shrink-0 group-hover:scale-105 transition-transform duration-300">
+                            <img
+                              src={addon.thumbnailImg}
+                              alt={addon.title}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover object-center"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                          </div>
+                        ) : (
+                          <div className="relative w-32 sm:w-36 md:w-40 lg:w-36 xl:w-40 aspect-[16/9] rounded-xl overflow-hidden border border-cyan-400/40 bg-black/60 shadow-[0_0_16px_rgba(56,189,248,0.2)] shrink-0 group-hover:scale-105 transition-transform duration-300">
+                            <img
+                              src={addon.thumbnailImg}
+                              alt={addon.title}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover object-center"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                          </div>
+                        )}
+
+                        {/* Middle: Expanded Content Block with Sufficient Width */}
+                        <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <h4 className="text-sm sm:text-base font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
+                              {addon.title}
+                            </h4>
+                            <span className="text-[9.5px] font-mono text-cyan-300/90 bg-cyan-950/70 px-2.5 py-0.5 rounded-full border border-cyan-500/30 font-semibold uppercase tracking-wider">
+                              {addon.category}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-[12.5px] lg:text-xs xl:text-[12.5px] text-white/70 font-sans leading-relaxed">
+                            {addon.subtitle}
+                          </p>
+                        </div>
+
+                        {/* Right: Pricing Tag & Action Button Neatly Aligned Alongside Content */}
+                        <div className="flex flex-col items-end justify-center gap-2 shrink-0 pl-2">
+                          <span className="text-base sm:text-lg lg:text-xl font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.3)] whitespace-nowrap inline-flex items-baseline gap-1">
+                            <span>€</span>
+                            <span>{addon.priceValue}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => toggleExpandAddon(addon.id)}
+                            className={`px-3.5 py-2 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] flex items-center gap-1.5 whitespace-nowrap shadow-sm ${
+                              isExpanded
+                                ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
+                                : 'bg-white/5 hover:bg-cyan-500/15 border-white/15 hover:border-cyan-400/50 text-white hover:text-cyan-200'
+                            }`}
+                          >
+                            <span>{isExpanded ? 'Hide Details' : 'Details & Order'}</span>
+                            {isExpanded ? (
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
 

@@ -163,6 +163,7 @@ export async function createStripeCheckoutSession(params: {
     productName = 'Sillow Mill - Vocal Acapella & Remix Pack';
     productDescription = 'Studio Acapellas of the whole "Dream of Akainoya" tracklist. 24-bit / 48kHz uncompressed WAV stems. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.';
     unitAmount = params.amount ? Math.round(params.amount * 100) : 1999;
+    productImage = `${baseUrl}/images/vocal_acapella_remix_pack.png`;
   } else if (productId === 'workflow' || productId === 'logic-visualizer' || productId === 'enerwise') {
     productName = 'Sillow Mill - Workflow';
     productDescription = 'Official 2D visualizer workflow, Enerwise sound architecture, vocal chain & dedicated Logic Pro template. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.';
