@@ -61,7 +61,7 @@ interface AddonProduct {
   subtitle: string;
   description: string;
   features: string[];
-  vaultEmoji: string;
+  vaultEmoji?: string;
   thumbnailImg: string;
 }
 
@@ -86,7 +86,6 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       '04 · Audio Masters & Stems (excludes standalone Acapella Pack)',
       '05 · Prompt Engineering Bibles (VFX & cinematic prompt parameters)',
     ],
-    vaultEmoji: '🎛️',
     thumbnailImg: stage03Img,
   },
   {
@@ -104,7 +103,6 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       'Harmonies, ad-libs, and backing vocoder tracks',
       '24-bit / 48kHz uncompressed WAV stems',
     ],
-    vaultEmoji: '🎙️',
     thumbnailImg: stage05Img,
   },
   {
@@ -112,7 +110,7 @@ const ADDON_PRODUCTS: AddonProduct[] = [
     title: 'Digital Copy of Bingäa',
     badge: '4K GRAPHIC NOVEL',
     priceValue: '9.99',
-    category: '4K PDF',
+    category: 'STANDALONE 4K DIGITAL EDITION',
     subtitle: 'Complete graphic novel with interactive viewer & 4K download.',
     description:
       'The complete digital edition of the Bingäa graphic novel in pristine 4K resolution, readable in browser or downloaded as DRM-free PDF. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.',
@@ -123,7 +121,6 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       'High-DPI PDF storyboard edition',
       'Instant browser reader + DRM-free 4K download',
     ],
-    vaultEmoji: '📖',
     thumbnailImg: bingaaComicCover,
   },
 ];
@@ -429,44 +426,80 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
             <div className="space-y-3">
               {ADDON_PRODUCTS.map((addon) => {
                 const isExpanded = expandedAddonId === addon.id;
+                const isComic = addon.id === 'comic-digital';
                 return (
                   <div
                     key={addon.id}
-                    className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-cyan-400/40 transition-colors space-y-3 group"
+                    className={`relative p-3.5 sm:p-4 rounded-2xl border transition-all space-y-3 group overflow-hidden ${
+                      isComic
+                        ? 'bg-gradient-to-b from-[#091526]/90 via-[#060e1c]/95 to-[#040812] border-cyan-500/40 hover:border-cyan-400/70 shadow-[0_4px_24px_rgba(0,0,0,0.6)]'
+                        : 'bg-white/[0.03] border-white/10 hover:border-cyan-400/40 shadow-lg'
+                    }`}
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-start sm:items-center gap-3.5 min-w-0">
-                        {/* Custom Vault Folder Thumbnail Icon (Replacing Generic Blue Tech Icon) */}
-                        <div className="relative w-12 h-12 sm:w-13 sm:h-13 rounded-xl overflow-hidden border border-cyan-400/40 bg-[#09152b] flex items-center justify-center shrink-0 shadow-[0_0_14px_rgba(56,189,248,0.22)] group-hover:scale-105 transition-transform duration-300">
-                          <img
-                            src={addon.thumbnailImg}
-                            alt={addon.title}
-                            loading="lazy"
-                            decoding="async"
-                            className="w-full h-full object-cover object-center"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent pointer-events-none" />
-                          <span className="absolute bottom-0.5 right-0.5 text-[11px] leading-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] bg-black/80 px-1 py-0.5 rounded-tl-md select-none border-t border-l border-white/15">
-                            {addon.vaultEmoji}
-                          </span>
-                        </div>
-                        <div className="min-w-0 flex-1 space-y-0.5">
+                    {/* Full-bleed background cover artwork */}
+                    {isComic ? (
+                      <>
+                        <div
+                          className="absolute inset-0 bg-cover bg-center opacity-15 pointer-events-none filter blur-sm scale-105 transition-opacity duration-500 group-hover:opacity-25"
+                          style={{ backgroundImage: `url(${addon.thumbnailImg})` }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#050b14]/95 via-[#060e1d]/85 to-[#040812]/95 pointer-events-none" />
+                        <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent pointer-events-none" />
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          className="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none filter blur-sm scale-105 transition-opacity duration-500 group-hover:opacity-20"
+                          style={{ backgroundImage: `url(${addon.thumbnailImg})` }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#060a14]/95 via-[#060a14]/85 to-[#04070e]/95 pointer-events-none" />
+                      </>
+                    )}
+
+                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
+                        {/* Artwork / Thumbnail Frame: Full-bleed immersive layout, sharp proportions across desktop, tablet & mobile */}
+                        {isComic ? (
+                          <div className="relative w-20 xs:w-24 sm:w-20 md:w-24 aspect-[3/4] rounded-xl overflow-hidden border border-cyan-400/50 shadow-[0_0_20px_rgba(56,189,248,0.25)] shrink-0 group-hover:scale-105 transition-transform duration-300">
+                            <img
+                              src={addon.thumbnailImg}
+                              alt={addon.title}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover object-center"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                          </div>
+                        ) : (
+                          <div className="relative w-24 xs:w-28 sm:w-32 md:w-36 aspect-[16/9] rounded-xl overflow-hidden border border-cyan-400/40 bg-black/60 shadow-[0_0_16px_rgba(56,189,248,0.2)] shrink-0 group-hover:scale-105 transition-transform duration-300">
+                            <img
+                              src={addon.thumbnailImg}
+                              alt={addon.title}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover object-center"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                          </div>
+                        )}
+
+                        <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h4 className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
                               {addon.title}
                             </h4>
-                            <span className="text-[9.5px] font-mono text-cyan-300/80 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/20">
+                            <span className="text-[9.5px] font-mono text-cyan-300/90 bg-cyan-950/70 px-2 py-0.5 rounded-full border border-cyan-500/30">
                               {addon.category}
                             </span>
                           </div>
-                          <p className="text-[11px] sm:text-xs text-white/60 font-sans leading-relaxed">
+                          <p className="text-[11px] sm:text-xs text-white/65 font-sans leading-relaxed">
                             {addon.subtitle}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
-                        <span className="text-sm font-mono font-bold text-white whitespace-nowrap inline-flex items-baseline gap-1">
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 sm:border-none">
+                        <span className="text-sm sm:text-base font-mono font-bold text-white whitespace-nowrap inline-flex items-baseline gap-1">
                           <span>€</span>
                           <span>{addon.priceValue}</span>
                         </span>
@@ -497,7 +530,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="overflow-hidden pt-3 border-t border-white/10 space-y-3"
+                          className="relative z-10 overflow-hidden pt-3 border-t border-white/10 space-y-3"
                         >
                           <p className="text-xs text-white/80 font-sans leading-relaxed">
                             {addon.description}

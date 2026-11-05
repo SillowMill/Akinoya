@@ -351,6 +351,8 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
 
   if (!isCheckoutOpen && !controlledIsOpen) return null;
 
+  const isComic = checkoutProduct.id === 'comic' || checkoutProduct.id === 'comic-digital';
+
   return typeof document !== 'undefined'
     ? createPortal(
         <AnimatePresence>
@@ -389,9 +391,13 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                 {/* Pinned Top Bar with Close Button */}
                 <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-white/10 bg-[#070b12]/95 backdrop-blur-md z-20">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-base select-none shrink-0" role="img" aria-label="Product Vault Icon">
-                      {getResolvedProductEmoji(checkoutProduct)}
-                    </span>
+                    {isComic ? (
+                      <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+                    ) : (
+                      <span className="text-base select-none shrink-0" role="img" aria-label="Product Vault Icon">
+                        {getResolvedProductEmoji(checkoutProduct)}
+                      </span>
+                    )}
                     <span className="text-[11px] font-mono text-cyan-300 uppercase tracking-wider font-semibold truncate">
                       SECURE ORDER CHECKOUT · {checkoutProduct.badge}
                     </span>
@@ -421,30 +427,48 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                       {checkoutProduct.title}
                     </h3>
 
-                    {/* Dynamic Order Summary Card */}
-                    <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-black/60 border border-white/10 mb-4">
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="relative w-13 h-13 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-cyan-400/40 bg-[#09152b] shrink-0 flex items-center justify-center shadow-[0_0_15px_rgba(56,189,248,0.25)]">
-                          <img
-                            src={getResolvedProductImage(checkoutProduct)}
-                            alt={checkoutProduct.title}
-                            className="w-full h-full object-cover object-center"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-                          <div className="absolute bottom-1 right-1 w-5 h-5 rounded-md bg-black/80 backdrop-blur-sm border border-cyan-400/40 flex items-center justify-center text-[10px] shadow-sm select-none">
-                            {getResolvedProductEmoji(checkoutProduct)}
+                    {/* Dynamic Order Summary Card: Full-bleed artwork frame, sharp proportions, zero secondary icon overlays */}
+                    <div className="relative flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-black/70 border border-white/10 mb-4 overflow-hidden shadow-lg">
+                      {/* Ambient full-bleed cover background for checkout product */}
+                      <div
+                        className="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none filter blur-sm scale-105"
+                        style={{ backgroundImage: `url(${getResolvedProductImage(checkoutProduct)})` }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#070b12]/95 via-[#070b12]/85 to-[#070b12]/95 pointer-events-none" />
+
+                      <div className="relative z-10 flex items-center gap-3.5 min-w-0 flex-1">
+                        {/* Artwork / Thumbnail Frame: Full-bleed, maintaining sharp proportions across desktop, tablet & mobile */}
+                        {isComic ? (
+                          <div className="relative w-14 xs:w-16 sm:w-18 aspect-[3/4] rounded-xl overflow-hidden border border-cyan-400/50 bg-[#09152b] shrink-0 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
+                            <img
+                              src={getResolvedProductImage(checkoutProduct)}
+                              alt={checkoutProduct.title}
+                              className="w-full h-full object-cover object-center"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                           </div>
-                        </div>
-                        <div className="min-w-0">
+                        ) : (
+                          <div className="relative w-22 xs:w-26 sm:w-28 md:w-32 aspect-[16/9] rounded-xl overflow-hidden border border-cyan-400/40 bg-[#09152b] shrink-0 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
+                            <img
+                              src={getResolvedProductImage(checkoutProduct)}
+                              alt={checkoutProduct.title}
+                              className="w-full h-full object-cover object-center"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                          </div>
+                        )}
+
+                        <div className="min-w-0 flex-1 space-y-0.5">
                           <div className="text-xs sm:text-sm font-semibold text-white truncate">
                             {checkoutProduct.subtitle}
                           </div>
-                          <div className="text-[10px] font-mono text-cyan-300/80 truncate mt-0.5">
+                          <div className="text-[10px] font-mono text-cyan-300/80 truncate">
                             {checkoutProduct.allocationNotice || "Direct Digital Provisioning · Never Lose Your Files Guarantee"}
                           </div>
                         </div>
                       </div>
-                      <div className="text-right shrink-0 pl-3">
+
+                      <div className="relative z-10 text-right shrink-0 pl-3">
                         <div className="text-sm sm:text-base font-display font-bold text-cyan-300 whitespace-nowrap inline-flex items-baseline gap-1">
                           <span>€</span>
                           <span>{checkoutProduct.priceValue}</span>
