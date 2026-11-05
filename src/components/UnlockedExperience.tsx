@@ -1764,10 +1764,6 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               <span className="hidden sm:inline-flex items-center text-cyan-400 font-mono text-[10px] tracking-wider font-semibold whitespace-nowrap shrink-0">
                 PORTAL ACTIVE
               </span>
-              <span className="hidden md:inline text-white/30 text-[10px] shrink-0">·</span>
-              <span className="hidden md:inline text-[10.5px] text-white/65 font-mono truncate">
-                {isVipMode && holderName ? `HOLDER: ${holderName.toUpperCase()}` : 'TOKEN #AKN-2027'}
-              </span>
             </div>
           </div>
         </div>
