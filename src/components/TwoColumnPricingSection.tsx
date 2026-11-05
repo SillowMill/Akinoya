@@ -61,45 +61,11 @@ interface AddonProduct {
   subtitle: string;
   description: string;
   features: string[];
-  icon: React.ComponentType<{ className?: string }>;
+  vaultEmoji: string;
+  thumbnailImg: string;
 }
 
 const ADDON_PRODUCTS: AddonProduct[] = [
-  {
-    id: 'vocal',
-    title: 'Vocal Acapella & Remix Pack',
-    badge: 'STUDIO AUDIO STEMS',
-    priceValue: '19.99',
-    category: 'WAV STEMS',
-    subtitle: 'Studio Acapellas of the whole "Dream of Akainoya" tracklist.',
-    description:
-      'Studio Acapellas of the whole "Dream of Akainoya" tracklist. Dry and wet studio vocal stems, master tempo locked and tuned for remixing and production. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.',
-    features: [
-      'Instant Access: Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase',
-      'Master studio vocal leads (Dry & Wet)',
-      'Harmonies, ad-libs, and backing vocoder tracks',
-      '24-bit / 48kHz uncompressed WAV stems',
-    ],
-    icon: MicVocal,
-  },
-  {
-    id: 'comic-digital',
-    title: 'Digital Copy of Bingäa',
-    badge: '4K GRAPHIC NOVEL',
-    priceValue: '9.99',
-    category: '4K PDF',
-    subtitle: 'Complete graphic novel with interactive viewer & 4K download.',
-    description:
-      'The complete digital edition of the Bingäa graphic novel in pristine 4K resolution, readable in browser or downloaded as DRM-free PDF. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.',
-    features: [
-      'Instant Access: Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase',
-      'Complete full-color graphic novel',
-      'Interactive dual-page flipbook reader',
-      'High-DPI PDF storyboard edition',
-      'Instant browser reader + DRM-free 4K download',
-    ],
-    icon: BookOpen,
-  },
   {
     id: 'workflow',
     title: 'Workflow',
@@ -120,7 +86,45 @@ const ADDON_PRODUCTS: AddonProduct[] = [
       '04 · Audio Masters & Stems (excludes standalone Acapella Pack)',
       '05 · Prompt Engineering Bibles (VFX & cinematic prompt parameters)',
     ],
-    icon: Sliders,
+    vaultEmoji: '🎛️',
+    thumbnailImg: stage03Img,
+  },
+  {
+    id: 'vocal',
+    title: 'Vocal Acapella & Remix Pack',
+    badge: 'STUDIO AUDIO STEMS',
+    priceValue: '19.99',
+    category: 'WAV STEMS',
+    subtitle: 'Studio Acapellas of the whole "Dream of Akainoya" tracklist.',
+    description:
+      'Studio Acapellas of the whole "Dream of Akainoya" tracklist. Dry and wet studio vocal stems, master tempo locked and tuned for remixing and production. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.',
+    features: [
+      'Instant Access: Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase',
+      'Master studio vocal leads (Dry & Wet)',
+      'Harmonies, ad-libs, and backing vocoder tracks',
+      '24-bit / 48kHz uncompressed WAV stems',
+    ],
+    vaultEmoji: '🎙️',
+    thumbnailImg: stage05Img,
+  },
+  {
+    id: 'comic-digital',
+    title: 'Digital Copy of Bingäa',
+    badge: '4K GRAPHIC NOVEL',
+    priceValue: '9.99',
+    category: '4K PDF',
+    subtitle: 'Complete graphic novel with interactive viewer & 4K download.',
+    description:
+      'The complete digital edition of the Bingäa graphic novel in pristine 4K resolution, readable in browser or downloaded as DRM-free PDF. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.',
+    features: [
+      'Instant Access: Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase',
+      'Complete full-color graphic novel',
+      'Interactive dual-page flipbook reader',
+      'High-DPI PDF storyboard edition',
+      'Instant browser reader + DRM-free 4K download',
+    ],
+    vaultEmoji: '📖',
+    thumbnailImg: bingaaComicCover,
   },
 ];
 
@@ -424,7 +428,6 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
             {/* 2. INDIVIDUAL DIGITAL ADD-ONS: 3 Distinct Cards with Clean Inline Drawer Expansion */}
             <div className="space-y-3">
               {ADDON_PRODUCTS.map((addon) => {
-                const IconComponent = addon.icon;
                 const isExpanded = expandedAddonId === addon.id;
                 return (
                   <div
@@ -432,11 +435,22 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-cyan-400/40 transition-colors space-y-3 group"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0 mt-0.5 sm:mt-0">
-                          <IconComponent className="w-4 h-4 text-cyan-300" />
+                      <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                        {/* Custom Vault Folder Thumbnail Icon (Replacing Generic Blue Tech Icon) */}
+                        <div className="relative w-12 h-12 sm:w-13 sm:h-13 rounded-xl overflow-hidden border border-cyan-400/40 bg-[#09152b] flex items-center justify-center shrink-0 shadow-[0_0_14px_rgba(56,189,248,0.22)] group-hover:scale-105 transition-transform duration-300">
+                          <img
+                            src={addon.thumbnailImg}
+                            alt={addon.title}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover object-center"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent pointer-events-none" />
+                          <span className="absolute bottom-0.5 right-0.5 text-[11px] leading-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] bg-black/80 px-1 py-0.5 rounded-tl-md select-none border-t border-l border-white/15">
+                            {addon.vaultEmoji}
+                          </span>
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1 space-y-0.5">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h4 className="text-xs sm:text-sm font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
                               {addon.title}
@@ -556,14 +570,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                                     badge: addon.badge,
                                     priceValue: addon.priceValue,
                                     isPhysical: false,
-                                    image:
-                                      addon.id === 'comic-digital'
-                                        ? bingaaComicCover
-                                        : addon.id === 'vocal'
-                                        ? stage05Img
-                                        : addon.id === 'workflow' || addon.id === 'logic-visualizer'
-                                        ? stage03Img
-                                        : undefined,
+                                    image: addon.thumbnailImg,
                                     allocationNotice:
                                       addon.id === 'vocal'
                                         ? 'Instant Master Stems · 24-bit / 48kHz WAV'
@@ -605,7 +612,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
             </div>
 
             {/* 3. STREAMLINED MEMBERSHIP UPSELL SECTION (Clean High-End Card Container) */}
-            <div className="rounded-2xl bg-gradient-to-br from-[#120d04]/80 via-[#0a0c16]/90 to-[#04060f]/95 backdrop-blur-md border border-amber-400/40 p-3.5 sm:p-4 lg:p-3.5 xl:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.12)] relative overflow-hidden space-y-3">
+            <div className="rounded-2xl bg-gradient-to-br from-[#120d04]/80 via-[#0a0c16]/90 to-[#04060f]/95 backdrop-blur-md border border-amber-400/40 p-3 xs:p-3.5 sm:p-4 lg:p-3.5 xl:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.12)] relative overflow-hidden space-y-3 box-border max-w-full">
               {/* Luminous Top Gold Beam */}
               <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/70 to-transparent pointer-events-none" />
 
@@ -619,17 +626,19 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               </div>
 
               {/* High-End Cyberpunk Glassmorphic CTA Button (Mobile, Tablet & Desktop Responsive Layout, Zero Text-Wrap) */}
-              <button
-                type="button"
-                onClick={handleJoinPassClick}
-                className="group relative w-full py-3 sm:py-3.5 px-2 xs:px-2.5 sm:px-3 md:px-4 lg:px-2 xl:px-3 2xl:px-4 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-[8.5px] min-[380px]:text-[9.5px] xs:text-[10px] sm:text-[11.5px] md:text-xs lg:text-[9.5px] xl:text-[11px] 2xl:text-xs shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98] min-h-[44px]"
-              >
-                <Crown className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                <span className="tracking-tighter min-[380px]:tracking-tight sm:tracking-normal lg:tracking-tighter xl:tracking-tight 2xl:tracking-normal uppercase text-center whitespace-nowrap select-none">
-                  Skip A La Carte — Unlock All With Member Pass
-                </span>
-                <ArrowRight className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
-              </button>
+              <div className="w-full max-w-full box-border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={handleJoinPassClick}
+                  className="group relative w-full py-2.5 xs:py-3 sm:py-3.5 px-1.5 xs:px-2.5 sm:px-3 md:px-4 lg:px-2 xl:px-3.5 2xl:px-4 rounded-xl bg-gradient-to-r from-amber-950/90 via-yellow-950/85 to-amber-950/90 hover:from-amber-900/90 hover:to-yellow-900/90 text-amber-200 hover:text-white border-2 border-amber-400/60 hover:border-amber-300 font-mono font-extrabold text-[7.5px] min-[340px]:text-[8.2px] min-[370px]:text-[8.8px] min-[400px]:text-[9.6px] sm:text-[11px] md:text-xs lg:text-[9px] xl:text-[10.5px] 2xl:text-xs shadow-[0_0_22px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] transition-all flex items-center justify-center gap-1 min-[380px]:gap-1.5 sm:gap-2 cursor-pointer backdrop-blur-xl active:scale-[0.98] min-h-[42px] sm:min-h-[44px] box-border max-w-full overflow-hidden"
+                >
+                  <Crown className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-amber-300 group-hover:scale-110 transition-transform duration-200 shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                  <span className="tracking-tighter min-[400px]:tracking-tight sm:tracking-normal lg:tracking-tighter xl:tracking-tight 2xl:tracking-normal uppercase text-center whitespace-nowrap select-none truncate max-w-full">
+                    Skip A La Carte — Unlock All With Member Pass
+                  </span>
+                  <ArrowRight className="hidden min-[360px]:block w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 text-amber-300/80 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0" />
+                </button>
+              </div>
 
               {/* Green Checkmarks Line */}
               <div className="flex items-center justify-center gap-1.5 text-[10.5px] font-mono text-emerald-300 font-bold text-center pt-0.5">

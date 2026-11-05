@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
-  ShoppingBag,
   Crown,
   ShieldCheck,
   CreditCard,
@@ -59,6 +58,14 @@ export const getResolvedProductImage = (product: CheckoutProductInfo): string =>
   if (product.id === 'workflow' || product.id === 'logic-visualizer') return stage03Img;
   if (product.id === 'vocal') return stage05Img;
   return bingaaComicCover;
+};
+
+export const getResolvedProductEmoji = (product: CheckoutProductInfo): string => {
+  if (product.id === 'membership') return '👑';
+  if (product.id === 'workflow' || product.id === 'logic-visualizer') return '🎛️';
+  if (product.id === 'vocal') return '🎙️';
+  if (product.id === 'comic' || product.id === 'comic-digital') return '📖';
+  return '💎';
 };
 
 export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> = ({
@@ -382,7 +389,9 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                 {/* Pinned Top Bar with Close Button */}
                 <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-white/10 bg-[#070b12]/95 backdrop-blur-md z-20">
                   <div className="flex items-center gap-2 min-w-0">
-                    <ShoppingBag className="w-4 h-4 text-cyan-400 shrink-0" />
+                    <span className="text-base select-none shrink-0" role="img" aria-label="Product Vault Icon">
+                      {getResolvedProductEmoji(checkoutProduct)}
+                    </span>
                     <span className="text-[11px] font-mono text-cyan-300 uppercase tracking-wider font-semibold truncate">
                       SECURE ORDER CHECKOUT · {checkoutProduct.badge}
                     </span>
@@ -415,12 +424,16 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                     {/* Dynamic Order Summary Card */}
                     <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-black/60 border border-white/10 mb-4">
                       <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-cyan-500/35 bg-black/80 shrink-0 flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.2)]">
+                        <div className="relative w-13 h-13 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-cyan-400/40 bg-[#09152b] shrink-0 flex items-center justify-center shadow-[0_0_15px_rgba(56,189,248,0.25)]">
                           <img
                             src={getResolvedProductImage(checkoutProduct)}
                             alt={checkoutProduct.title}
                             className="w-full h-full object-cover object-center"
                           />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                          <div className="absolute bottom-1 right-1 w-5 h-5 rounded-md bg-black/80 backdrop-blur-sm border border-cyan-400/40 flex items-center justify-center text-[10px] shadow-sm select-none">
+                            {getResolvedProductEmoji(checkoutProduct)}
+                          </div>
                         </div>
                         <div className="min-w-0">
                           <div className="text-xs sm:text-sm font-semibold text-white truncate">
