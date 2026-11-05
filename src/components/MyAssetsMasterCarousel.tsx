@@ -1161,9 +1161,12 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                           </h4>
                         </div>
 
-                        <div className="space-y-3 px-1 my-auto">
-                          <p className="text-xs sm:text-[13px] text-amber-100/90 font-sans leading-relaxed font-medium">
-                            To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                        <div className="space-y-2 px-1 my-auto">
+                          <div className="text-[11px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
+                            MONDAY BATCH DEPLOYMENT
+                          </div>
+                          <p className="text-xs sm:text-[12.5px] text-amber-100/95 font-sans leading-relaxed font-medium">
+                            The Galaxy Navigator is updated every Monday morning with new custom sector batches. As part of our curated co-creation process with Mill, upgrading to the Annual Member Pass queues your sector for the upcoming Monday live deployment and unlocks full 4K visuals.
                           </p>
                         </div>
 
@@ -1494,9 +1497,12 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
                           </h4>
                         </div>
 
-                        <div className="space-y-3 px-1 my-auto">
-                          <p className="text-xs sm:text-[13px] text-amber-100/90 font-sans leading-relaxed font-medium">
-                            To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                        <div className="space-y-2 px-1 my-auto">
+                          <div className="text-[11px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
+                            MONDAY BATCH DEPLOYMENT
+                          </div>
+                          <p className="text-xs sm:text-[12.5px] text-amber-100/95 font-sans leading-relaxed font-medium">
+                            The Galaxy Navigator is updated every Monday morning with new custom sector batches. As part of our curated co-creation process with Mill, upgrading to the Annual Member Pass queues your sector for the upcoming Monday live deployment and unlocks full 4K visuals.
                           </p>
                         </div>
 

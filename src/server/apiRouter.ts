@@ -30,6 +30,7 @@ import {
   appendWhitelistEmailToGoogleSheets,
   appendWaitlistSubmissionToGoogleSheets,
   appendPrelaunchWorldSubmissionToGoogleSheets,
+  updateMondayBatchDeploymentInSheets,
   WHITELIST_SPREADSHEET_ID,
 } from '../../api/nfc/_googleSheetsSync.js';
 import {
@@ -59,6 +60,7 @@ import {
   getVotesSummary,
   saveSubmissionRecord,
   getAllSubmissionRecords,
+  deployMondayBatchRecords,
   resetTestAccountData,
 } from './authVoteService';
 
@@ -1369,6 +1371,125 @@ apiRouter.get(['/dossier/submissions', '/submissions'], async (_req: Request, re
     res.status(200).json({ success: true, submissions });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'Failed to fetch submissions' });
+  }
+});
+
+// ─── 15.5. Administrator Weekly Monday Batch Routine Endpoints ───────────────
+apiRouter.get(['/admin/monday-batch', '/admin/batch-queue'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const email = String(req.body?.email || req.query?.email || '').trim();
+    const adminKey = req.body?.adminKey || req.query?.adminKey;
+    const isAuthorized = isFounderEmail(email) || (adminKey && adminKey === process.env.ADMIN_KEY);
+
+    // Calculate upcoming Monday date string
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const daysUntilMonday = dayOfWeek === 1 ? 0 : (8 - dayOfWeek) % 7 || 7;
+    const nextMonday = new Date(now);
+    nextMonday.setDate(now.getDate() + daysUntilMonday);
+    const nextMondayDateStr = nextMonday.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const allSubmissions = getAllSubmissionRecords();
+    const orders = loadOrders();
+    const memberEmails = new Set(
+      orders
+        .filter((o) => o.status === 'paid' && (o.isSubscription || o.product === 'membership'))
+        .map((o) => (o.customerEmail || '').trim().toLowerCase())
+    );
+
+    const pendingBatch: any[] = [];
+    const alreadyDeployed: any[] = [];
+    const unactivatedFree: any[] = [];
+
+    for (const sub of allSubmissions) {
+      const authorEmail = String(sub.authorEmail || sub.humanAnswers?.email || '').trim().toLowerCase();
+      const hasMemberPass =
+        memberEmails.has(authorEmail) ||
+        sub.isVipPioneer === true ||
+        sub.isActivated === true ||
+        (typeof sub.pioneerBadge === 'string' && sub.pioneerBadge.toUpperCase().includes('VIP')) ||
+        isFounderEmail(authorEmail);
+
+      const isLive = sub.adminApproved === true || sub.galaxyApproved === true;
+
+      if (isLive) {
+        alreadyDeployed.push(sub);
+      } else if (hasMemberPass) {
+        pendingBatch.push(sub);
+      } else {
+        unactivatedFree.push(sub);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      isAuthorized,
+      nextMondayDate: nextMondayDateStr,
+      scheduleNotice: 'The Galaxy Navigator is updated every Monday morning with new custom sector batches.',
+      summary: {
+        totalPendingBatch: pendingBatch.length,
+        totalDeployedLive: alreadyDeployed.length,
+        totalUnactivatedFree: unactivatedFree.length,
+      },
+      pendingBatch,
+      alreadyDeployed,
+      unactivatedFree,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to fetch Monday batch queue' });
+  }
+});
+
+apiRouter.post(['/admin/monday-batch/deploy', '/admin/batch-deploy'], async (req: Request, res: Response): Promise<void> => {
+  try {
+    const email = String(req.body?.email || req.query?.email || '').trim();
+    const adminKey = req.body?.adminKey || req.query?.adminKey;
+    const isAuthorized = isFounderEmail(email) || (adminKey && adminKey === process.env.ADMIN_KEY);
+
+    if (!isAuthorized) {
+      res.status(403).json({
+        success: false,
+        error: 'UNAUTHORIZED',
+        message: 'Administrator Monday batch deployment is restricted to founder credentials.',
+      });
+      return;
+    }
+
+    const planetIds: string[] | undefined = Array.isArray(req.body?.planetIds) ? req.body.planetIds : undefined;
+    const { deployedCount, deployedPlanets } = deployMondayBatchRecords(planetIds);
+
+    // Sync deployment to Google Sheets Status column
+    const now = new Date();
+    const nextMondayDateStr = now.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+
+    const identifiers = deployedPlanets.flatMap((p) => [p.authorEmail, p.planetName, p.id, p.sectorId].filter(Boolean));
+    updateMondayBatchDeploymentInSheets(identifiers, nextMondayDateStr).catch((sheetErr) => {
+      console.warn('[Admin Batch] Google Sheets sync warning:', sheetErr);
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully pushed ${deployedCount} custom sector(s) live to the Galaxy Navigator for the Monday batch.`,
+      deployedCount,
+      batchDate: nextMondayDateStr,
+      deployedPlanets: deployedPlanets.map((p) => ({
+        id: p.id,
+        planetName: p.planetName,
+        authorName: p.authorName,
+        sectorId: p.sectorId,
+      })),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to deploy Monday batch' });
   }
 });
 

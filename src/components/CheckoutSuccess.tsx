@@ -209,6 +209,25 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
           </div>
         )}
 
+        {/* Monday Batch Update Schedule & Curated Co-Creation Reassurance */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-950/70 via-[#120e06]/85 to-amber-950/70 border-2 border-amber-400/50 text-left space-y-2.5 shadow-[0_0_30px_rgba(245,158,11,0.25)]">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <span className="flex items-center gap-2 font-extrabold text-amber-300">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>GALAXY NAVIGATOR · MONDAY BATCH DEPLOYMENT</span>
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/60 text-[9.5px] font-extrabold uppercase tracking-wider">
+              WEEKLY SCHEDULE
+            </span>
+          </div>
+          <h3 className="text-sm sm:text-base font-display font-black text-white leading-snug">
+            The Galaxy Navigator is updated every Monday morning with new custom sector batches.
+          </h3>
+          <p className="text-xs font-sans text-amber-100/90 leading-relaxed font-medium">
+            As part of our curated co-creation process with Mill, every custom world undergoes meticulous astronomical calibration and high-resolution rendering before joining the live 3D constellation. Your custom planet is safely stored in your Vault and queued for the upcoming Monday deployment.
+          </p>
+        </div>
+
         {/* Pass ID / Entitlement Badge */}
         <div className="p-4 sm:p-5 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 space-y-2 text-left">
           <div className="flex items-center justify-between text-[11px] font-mono text-cyan-300">

@@ -2789,11 +2789,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       </div>
 
                       <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-wide">
-                        Your world is synthesized!
+                        The Galaxy Navigator is updated every Monday morning with new custom sector batches.
                       </h2>
 
                       <p className="text-xs sm:text-sm font-sans text-amber-100/90 leading-relaxed font-medium">
-                        To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                        As part of our curated co-creation process with Mill, every custom planet is safely stored in your Vault and queued for calibration and live deployment in the upcoming Monday batch session. Upgrade to the Annual Member Pass to activate your world and unlock full 4K visuals.
                       </p>
                     </div>
 

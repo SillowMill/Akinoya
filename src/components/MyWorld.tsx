@@ -276,14 +276,17 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/60 text-amber-300 text-[10px] font-mono font-extrabold tracking-wider uppercase">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
-                    PENDING ACTIVATION
+                    QUEUED FOR MONDAY BATCH DEPLOYMENT
+                  </span>
+                  <span className="text-[10px] font-mono text-cyan-300">
+                    UPDATED EVERY MONDAY MORNING
                   </span>
                 </div>
                 <h4 className="text-sm sm:text-base font-display font-black text-white">
-                  Your world is synthesized!
+                  The Galaxy Navigator is updated every Monday morning with new custom sector batches.
                 </h4>
                 <p className="text-xs sm:text-sm text-amber-100/90 font-sans leading-relaxed font-medium max-w-2xl">
-                  To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                  As part of our curated co-creation process with Mill, every custom world undergoes astronomical calibration and high-resolution rendering before joining the live 3D constellation. Your world is safely stored in your Vault and queued for the upcoming Monday deployment.
                 </p>
               </div>
             </div>
@@ -399,9 +402,12 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
                   </h4>
                 </div>
 
-                <div className="space-y-3 px-1 my-auto">
+                <div className="space-y-2 px-1 my-auto">
+                  <div className="text-[10.5px] font-mono font-extrabold text-amber-300 uppercase tracking-wider">
+                    MONDAY BATCH DEPLOYMENT
+                  </div>
                   <p className="text-[11px] sm:text-xs text-amber-100/90 font-sans leading-relaxed font-medium">
-                    To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                    The Galaxy Navigator is updated every Monday morning with new custom sector batches. As part of our curated co-creation process with Mill, upgrading to the Annual Member Pass activates your planet for the upcoming Monday deployment.
                   </p>
                 </div>
 

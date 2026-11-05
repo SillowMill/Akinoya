@@ -1273,7 +1273,11 @@ export async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) 
     'A sanctuary to process lost memories and restore emotional balance.'
   ).trim();
 
-  const status = 'Your world will be available on the ninth of January.';
+  const status = record.status || (
+    record.isActivated || record.hasPaidMembership || record.role === 'ANNUAL_PASS'
+      ? 'Active on Galaxy Navigator (Monday Batch)'
+      : 'Queued for Monday Batch Deployment'
+  );
 
   const rowValues = [
     timestamp,
@@ -1330,7 +1334,7 @@ export async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) 
       return {
         success: true,
         savedLocally: true,
-        message: 'Your submission has been received! Your world will be available on the ninth of January.',
+        message: 'The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your world is safely stored in your Vault and queued for the upcoming Monday deployment.',
       };
     }
 
@@ -1394,7 +1398,7 @@ export async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) 
           success: true,
           action: 'updated',
           row: targetRowIndex,
-          message: 'Your submission has been received! Your world will be available on the ninth of January.',
+          message: 'The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your world is safely stored in your Vault and queued for the upcoming Monday deployment.',
         };
       }
     }
@@ -1429,7 +1433,7 @@ export async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) 
       return {
         success: true,
         savedLocally: true,
-        message: 'Your submission has been received! Your world will be available on the ninth of January.',
+        message: 'The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your world is safely stored in your Vault and queued for the upcoming Monday deployment.',
       };
     }
 
@@ -1440,7 +1444,7 @@ export async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) 
       success: true,
       action: 'appended',
       range: appendData.updates?.updatedRange,
-      message: 'Your submission has been received! Your world will be available on the ninth of January.',
+      message: 'The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your world is safely stored in your Vault and queued for the upcoming Monday deployment.',
     };
   } catch (err) {
     console.warn('[Pre-Launch Sheets] Exception during sheet append:', err);
@@ -1448,8 +1452,70 @@ export async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) 
       success: true,
       savedLocally: true,
       error: err.message,
-      message: 'Your submission has been received! Your world will be available on the ninth of January.',
+      message: 'The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your world is safely stored in your Vault and queued for the upcoming Monday deployment.',
     };
+  }
+}
+
+/**
+ * Updates the Status column (Column K) in the Pre-launch spreadsheet
+ * to mark worlds as live after a Monday morning batch deployment.
+ */
+export async function updateMondayBatchDeploymentInSheets(identifiers = [], batchLabel = '') {
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) return { success: false, reason: 'NO_TOKEN' };
+
+    const spreadsheetId = PRELAUNCH_SPREADSHEET_ID;
+    let targetTab = 'Blad1';
+
+    const getRes = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`'${targetTab}'!A:K`)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (!getRes.ok) return { success: false, status: getRes.status };
+
+    const data = await getRes.json();
+    const rows = data.values || [];
+    const normalizedIdentifiers = new Set(
+      identifiers.map((id) => String(id || '').trim().toLowerCase()).filter(Boolean)
+    );
+
+    let updatedCount = 0;
+    const nowStr = batchLabel || new Date().toISOString().split('T')[0];
+    const liveStatusText = `Active on Galaxy Navigator (Monday Batch - ${nowStr})`;
+
+    for (let i = 1; i < rows.length; i++) {
+      const email = String(rows[i][2] || '').trim().toLowerCase();
+      const worldName = String(rows[i][3] || '').trim().toLowerCase();
+      const sectorId = String(rows[i][4] || '').trim().toLowerCase();
+
+      const matches =
+        normalizedIdentifiers.has(email) ||
+        normalizedIdentifiers.has(worldName) ||
+        normalizedIdentifiers.has(sectorId);
+
+      if (matches || identifiers.length === 0) {
+        const updateRange = `'${targetTab}'!K${i + 1}`;
+        await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(updateRange)}?valueInputOption=USER_ENTERED`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ values: [[liveStatusText]] }),
+          }
+        );
+        updatedCount++;
+      }
+    }
+
+    return { success: true, updatedCount, batchLabel: liveStatusText };
+  } catch (err) {
+    console.warn('[Sheets Monday Batch Update Exception]:', err);
+    return { success: false, error: err.message };
   }
 }
 

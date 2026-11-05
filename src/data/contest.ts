@@ -935,10 +935,14 @@ export const CURATED_GALAXY_WORLD_NAMES = new Set([
   'seppion',
 ]);
 
-export const WORLD_RELEASE_DATE_LABEL = 'MEMBER PASS ACTIVATION';
-export const WORLD_QUEUE_STATUS_LABEL = 'PENDING ACTIVATION';
+export const WORLD_RELEASE_DATE_LABEL = 'MONDAY MORNING BATCH';
+export const WORLD_QUEUE_STATUS_LABEL = 'QUEUED FOR MONDAY BATCH';
+export const MONDAY_BATCH_SCHEDULE_MESSAGE =
+  'The Galaxy Navigator is updated every Monday morning with new custom sector batches.';
+export const MONDAY_BATCH_REASSURANCE_MESSAGE =
+  'As part of our curated co-creation process with Mill, every custom sector undergoes astronomical calibration and high-resolution rendering before joining the live 3D constellation. Your world is safely stored in your personal Vault and queued for the upcoming Monday deployment.';
 export const WORLD_QUEUE_OFFICIAL_MESSAGE =
-  'Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.';
+  `${MONDAY_BATCH_SCHEDULE_MESSAGE} ${MONDAY_BATCH_REASSURANCE_MESSAGE}`;
 
 /**
  * Strictly verifies whether a planet is one of the 5 official canon pioneer worlds

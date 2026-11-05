@@ -538,6 +538,7 @@ var authVoteService_exports = {};
 __export(authVoteService_exports, {
   castSubmissionVote: () => castSubmissionVote,
   createSessionToken: () => createSessionToken,
+  deployMondayBatchRecords: () => deployMondayBatchRecords,
   getAllSubmissionRecords: () => getAllSubmissionRecords,
   getUserByEmail: () => getUserByEmail,
   getUserByStripeCustomerId: () => getUserByStripeCustomerId,
@@ -717,6 +718,38 @@ function saveSubmissionRecord(sub) {
 function getAllSubmissionRecords() {
   _submissionsStore = loadSubmissionsStore();
   return Object.values(_submissionsStore.submissions || {});
+}
+function deployMondayBatchRecords(planetIds) {
+  _submissionsStore = loadSubmissionsStore();
+  const idSet = planetIds && planetIds.length > 0 ? new Set(planetIds.map((id) => String(id).trim())) : null;
+  const deployedPlanets = [];
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  for (const [key, sub] of Object.entries(_submissionsStore.submissions || {})) {
+    const s = sub;
+    if (idSet) {
+      if (idSet.has(key) || idSet.has(s.id) || idSet.has(s.planetName)) {
+        s.adminApproved = true;
+        s.isActivated = true;
+        s.status = "LIVE_GALAXY";
+        s.deploymentBatchDate = nowIso;
+        s.batchLabel = "Monday Batch Deployment";
+        deployedPlanets.push(s);
+      }
+    } else {
+      if (!s.adminApproved) {
+        s.adminApproved = true;
+        s.isActivated = true;
+        s.status = "LIVE_GALAXY";
+        s.deploymentBatchDate = nowIso;
+        s.batchLabel = "Monday Batch Deployment";
+        deployedPlanets.push(s);
+      }
+    }
+  }
+  if (deployedPlanets.length > 0) {
+    saveSubmissionsStore(_submissionsStore);
+  }
+  return { deployedCount: deployedPlanets.length, deployedPlanets };
 }
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -1165,7 +1198,8 @@ __export(googleSheetsSync_exports, {
   getAccessToken: () => getAccessToken,
   resetPassInGoogleSheets: () => resetPassInGoogleSheets,
   syncPassClaimToGoogleSheets: () => syncPassClaimToGoogleSheets,
-  syncSubscriberRowToGoogleSheets: () => syncSubscriberRowToGoogleSheets
+  syncSubscriberRowToGoogleSheets: () => syncSubscriberRowToGoogleSheets,
+  updateMondayBatchDeploymentInSheets: () => updateMondayBatchDeploymentInSheets
 });
 import fs3 from "fs";
 import path3 from "path";
@@ -2125,7 +2159,7 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
   const q5 = String(
     record.q5 || record.q5_vision_memory_anchor || record.visionMemoryAnchor || humanAnswers.futurePromise || record.futurePromise || humanAnswers.lifePhilosophy || record.lifePhilosophy || humanAnswers.relaxation || record.relaxation || "A sanctuary to process lost memories and restore emotional balance."
   ).trim();
-  const status = "Your world will be available on the ninth of January.";
+  const status = record.status || (record.isActivated || record.hasPaidMembership || record.role === "ANNUAL_PASS" ? "Active on Galaxy Navigator (Monday Batch)" : "Queued for Monday Batch Deployment");
   const rowValues = [
     timestamp,
     userName,
@@ -2178,7 +2212,7 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
       return {
         success: true,
         savedLocally: true,
-        message: "Your submission has been received! Your world will be available on the ninth of January."
+        message: "The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your world is safely stored in your Vault and queued for the upcoming Monday deployment."
       };
     }
     const spreadsheetId = PRELAUNCH_SPREADSHEET_ID;
@@ -2238,7 +2272,7 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
           success: true,
           action: "updated",
           row: targetRowIndex,
-          message: "Your submission has been received! Your world will be available on the ninth of January."
+          message: "The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your world is safely stored in your Vault and queued for the upcoming Monday deployment."
         };
       }
     }
@@ -2270,7 +2304,7 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
       return {
         success: true,
         savedLocally: true,
-        message: "Your submission has been received! Your world will be available on the ninth of January."
+        message: "The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your world is safely stored in your Vault and queued for the upcoming Monday deployment."
       };
     }
     const appendData = await appendRes.json();
@@ -2279,7 +2313,7 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
       success: true,
       action: "appended",
       range: appendData.updates?.updatedRange,
-      message: "Your submission has been received! Your world will be available on the ninth of January."
+      message: "The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your world is safely stored in your Vault and queued for the upcoming Monday deployment."
     };
   } catch (err) {
     console.warn("[Pre-Launch Sheets] Exception during sheet append:", err);
@@ -2287,8 +2321,54 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
       success: true,
       savedLocally: true,
       error: err.message,
-      message: "Your submission has been received! Your world will be available on the ninth of January."
+      message: "The Galaxy Navigator is updated every Monday morning with new custom sector batches. Your world is safely stored in your Vault and queued for the upcoming Monday deployment."
     };
+  }
+}
+async function updateMondayBatchDeploymentInSheets(identifiers = [], batchLabel = "") {
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) return { success: false, reason: "NO_TOKEN" };
+    const spreadsheetId = PRELAUNCH_SPREADSHEET_ID;
+    let targetTab = "Blad1";
+    const getRes = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`'${targetTab}'!A:K`)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (!getRes.ok) return { success: false, status: getRes.status };
+    const data = await getRes.json();
+    const rows = data.values || [];
+    const normalizedIdentifiers = new Set(
+      identifiers.map((id) => String(id || "").trim().toLowerCase()).filter(Boolean)
+    );
+    let updatedCount = 0;
+    const nowStr = batchLabel || (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+    const liveStatusText = `Active on Galaxy Navigator (Monday Batch - ${nowStr})`;
+    for (let i = 1; i < rows.length; i++) {
+      const email = String(rows[i][2] || "").trim().toLowerCase();
+      const worldName = String(rows[i][3] || "").trim().toLowerCase();
+      const sectorId = String(rows[i][4] || "").trim().toLowerCase();
+      const matches = normalizedIdentifiers.has(email) || normalizedIdentifiers.has(worldName) || normalizedIdentifiers.has(sectorId);
+      if (matches || identifiers.length === 0) {
+        const updateRange = `'${targetTab}'!K${i + 1}`;
+        await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(updateRange)}?valueInputOption=USER_ENTERED`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ values: [[liveStatusText]] })
+          }
+        );
+        updatedCount++;
+      }
+    }
+    return { success: true, updatedCount, batchLabel: liveStatusText };
+  } catch (err) {
+    console.warn("[Sheets Monday Batch Update Exception]:", err);
+    return { success: false, error: err.message };
   }
 }
 var SPREADSHEET_ID, WHITELIST_SPREADSHEET_ID, PRELAUNCH_SPREADSHEET_ID, _cachedAccessToken, _tokenExpiresAt;
@@ -6486,6 +6566,101 @@ apiRouter.get(["/dossier/submissions", "/submissions"], async (_req, res) => {
     res.status(200).json({ success: true, submissions });
   } catch (err) {
     res.status(500).json({ success: false, error: err?.message || "Failed to fetch submissions" });
+  }
+});
+apiRouter.get(["/admin/monday-batch", "/admin/batch-queue"], async (req, res) => {
+  try {
+    const email = String(req.body?.email || req.query?.email || "").trim();
+    const adminKey = req.body?.adminKey || req.query?.adminKey;
+    const isAuthorized = isFounderEmail(email) || adminKey && adminKey === process.env.ADMIN_KEY;
+    const now = /* @__PURE__ */ new Date();
+    const dayOfWeek = now.getDay();
+    const daysUntilMonday = dayOfWeek === 1 ? 0 : (8 - dayOfWeek) % 7 || 7;
+    const nextMonday = new Date(now);
+    nextMonday.setDate(now.getDate() + daysUntilMonday);
+    const nextMondayDateStr = nextMonday.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+    const allSubmissions = getAllSubmissionRecords();
+    const orders = loadOrders();
+    const memberEmails = new Set(
+      orders.filter((o) => o.status === "paid" && (o.isSubscription || o.product === "membership")).map((o) => (o.customerEmail || "").trim().toLowerCase())
+    );
+    const pendingBatch = [];
+    const alreadyDeployed = [];
+    const unactivatedFree = [];
+    for (const sub of allSubmissions) {
+      const authorEmail = String(sub.authorEmail || sub.humanAnswers?.email || "").trim().toLowerCase();
+      const hasMemberPass = memberEmails.has(authorEmail) || sub.isVipPioneer === true || sub.isActivated === true || typeof sub.pioneerBadge === "string" && sub.pioneerBadge.toUpperCase().includes("VIP") || isFounderEmail(authorEmail);
+      const isLive = sub.adminApproved === true || sub.galaxyApproved === true;
+      if (isLive) {
+        alreadyDeployed.push(sub);
+      } else if (hasMemberPass) {
+        pendingBatch.push(sub);
+      } else {
+        unactivatedFree.push(sub);
+      }
+    }
+    res.status(200).json({
+      success: true,
+      isAuthorized,
+      nextMondayDate: nextMondayDateStr,
+      scheduleNotice: "The Galaxy Navigator is updated every Monday morning with new custom sector batches.",
+      summary: {
+        totalPendingBatch: pendingBatch.length,
+        totalDeployedLive: alreadyDeployed.length,
+        totalUnactivatedFree: unactivatedFree.length
+      },
+      pendingBatch,
+      alreadyDeployed,
+      unactivatedFree
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err?.message || "Failed to fetch Monday batch queue" });
+  }
+});
+apiRouter.post(["/admin/monday-batch/deploy", "/admin/batch-deploy"], async (req, res) => {
+  try {
+    const email = String(req.body?.email || req.query?.email || "").trim();
+    const adminKey = req.body?.adminKey || req.query?.adminKey;
+    const isAuthorized = isFounderEmail(email) || adminKey && adminKey === process.env.ADMIN_KEY;
+    if (!isAuthorized) {
+      res.status(403).json({
+        success: false,
+        error: "UNAUTHORIZED",
+        message: "Administrator Monday batch deployment is restricted to founder credentials."
+      });
+      return;
+    }
+    const planetIds = Array.isArray(req.body?.planetIds) ? req.body.planetIds : void 0;
+    const { deployedCount, deployedPlanets } = deployMondayBatchRecords(planetIds);
+    const now = /* @__PURE__ */ new Date();
+    const nextMondayDateStr = now.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+    const identifiers = deployedPlanets.flatMap((p) => [p.authorEmail, p.planetName, p.id, p.sectorId].filter(Boolean));
+    updateMondayBatchDeploymentInSheets(identifiers, nextMondayDateStr).catch((sheetErr) => {
+      console.warn("[Admin Batch] Google Sheets sync warning:", sheetErr);
+    });
+    res.status(200).json({
+      success: true,
+      message: `Successfully pushed ${deployedCount} custom sector(s) live to the Galaxy Navigator for the Monday batch.`,
+      deployedCount,
+      batchDate: nextMondayDateStr,
+      deployedPlanets: deployedPlanets.map((p) => ({
+        id: p.id,
+        planetName: p.planetName,
+        authorName: p.authorName,
+        sectorId: p.sectorId
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err?.message || "Failed to deploy Monday batch" });
   }
 });
 apiRouter.all(["/video-pipeline/status", "/generate-planet/video-check"], async (req, res) => {

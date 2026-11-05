@@ -287,6 +287,14 @@ export const AccountBillingModal: React.FC<AccountBillingModalProps> = ({ isOpen
               <span className="font-semibold text-white">Stripe Encrypted (SEPA / Cards)</span>
             </div>
 
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-white/60 font-mono text-[11px] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>Galaxy Navigator Deployment:</span>
+              </span>
+              <span className="font-semibold text-amber-300">Batches Updated Every Monday Morning</span>
+            </div>
+
             <div className="pt-2 border-t border-white/10 flex items-center justify-between">
               <span className="text-[11px] font-mono text-white/50">Direct Debit &amp; Card Management:</span>
               <button

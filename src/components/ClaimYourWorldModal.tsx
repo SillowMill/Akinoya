@@ -466,7 +466,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   Your world is synthesized!
                 </h3>
                 <p className="text-[11.5px] sm:text-sm text-amber-200 font-sans max-w-md mx-auto font-medium">
-                  To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                  The Galaxy Navigator is updated every Monday morning with new custom sector batches. As part of our curated co-creation process with Mill, your world is safely stored in your Vault and queued for the upcoming Monday deployment.
                 </p>
               </div>
 
@@ -491,7 +491,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-white/50">ACTIVATION STATUS:</span>
-                    <span className="text-amber-300 font-bold">PENDING MEMBER PASS</span>
+                    <span className="text-amber-300 font-bold">QUEUED FOR MONDAY BATCH</span>
                   </div>
                 </div>
               )}

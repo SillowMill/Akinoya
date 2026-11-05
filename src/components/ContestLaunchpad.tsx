@@ -190,6 +190,8 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     return localStorage.getItem('akinoya_founder_test_bypass') !== 'false';
   });
   const [adminResetNotice, setAdminResetNotice] = useState<string | null>(null);
+  const [isDeployingMondayBatch, setIsDeployingMondayBatch] = useState<boolean>(false);
+  const [mondayBatchNotice, setMondayBatchNotice] = useState<string | null>(null);
 
   // Live Production Vault.ai / Fal.ai 5-Question Synthesis Flow (official production flow only)
   const [submissionConfirmationNotice, setSubmissionConfirmationNotice] = useState<string | null>(null);
@@ -305,6 +307,34 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
       localStorage.setItem('akinoya_founder_test_bypass', next ? 'true' : 'false');
     }
     soundManager.playTone(next ? 740 : 440, 0.06);
+  };
+
+  const handleDeployMondayBatch = async () => {
+    soundManager.playTone(660, 0.08);
+    setIsDeployingMondayBatch(true);
+    setMondayBatchNotice(null);
+    try {
+      const email = user?.email || profile?.email || PRIMARY_FOUNDER_EMAIL;
+      const res = await fetch('/api/admin/monday-batch/deploy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        soundManager.playUnlockChime();
+        setMondayBatchNotice(`✓ Monday batch deployed! ${data.deployedCount || 0} custom sector(s) pushed live.`);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('akinoya_planet_submissions_updated'));
+        }
+      } else {
+        setMondayBatchNotice(data.message || data.error || 'Deployment notice encountered.');
+      }
+    } catch (err: any) {
+      setMondayBatchNotice(`Deployment error: ${err?.message || 'Network notice'}`);
+    } finally {
+      setIsDeployingMondayBatch(false);
+    }
   };
 
   // Auto-start Mill if coming from Claim modal (Question 2 flow)
@@ -744,7 +774,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
     setGenerationProgress(100);
     setGenerationStageName('SYNTHESIS SEQUENCE COMPLETE');
-    setGenerationStageDetails('Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.');
+    setGenerationStageDetails('The Galaxy Navigator is updated every Monday morning with new custom sector batches. As part of our curated co-creation process with Mill, your world is safely stored in your Vault and queued for the upcoming Monday deployment.');
     setIsGeneratingRenders(false);
     soundManager.playUnlockChime();
   };
@@ -917,7 +947,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
       // 6. Update local state
       setActiveSubmission(previewDossier);
-      setSubmissionConfirmationNotice('Your world is synthesized! To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.');
+      setSubmissionConfirmationNotice('The Galaxy Navigator is updated every Monday morning with new custom sector batches. As part of our curated co-creation process with Mill, your world is safely stored in your Vault and queued for the upcoming Monday deployment.');
       setPreviewDossier(null);
       setPendingAnswers(null);
       setAllSubmissions((prev) => [previewDossier, ...prev.filter((p) => p.id !== previewDossier.id)]);
@@ -1142,7 +1172,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                       {activeSubmission?.planetName || 'Territory Synthesized'}
                     </div>
                     <p className="text-[11px] text-amber-200/90 font-sans leading-relaxed font-medium">
-                      To activate your planet on the live Galaxy Navigator, unlock full 4K visuals, and secure your official co-creation collaboration with Mill, upgrade to the Annual Member Pass.
+                      The Galaxy Navigator is updated every Monday morning with new custom sector batches. As part of our curated co-creation process with Mill, your world is safely stored in your Vault and queued for the upcoming Monday deployment.
                     </p>
                   </div>
 
@@ -1233,6 +1263,45 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                       {adminResetNotice}
                     </div>
                   )}
+
+                  {/* Dedicated Monday Morning Batch Routine Controller */}
+                  <div className="pt-2 border-t border-cyan-500/20 space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-mono">
+                      <span className="font-extrabold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Monday Batch Routine</span>
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] font-bold">
+                        ADMIN
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-white/70 font-sans leading-relaxed">
+                      Deploy newly activated Member Pass worlds live to the Galaxy Navigator and update Google Sheets records in one smooth session.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleDeployMondayBatch}
+                      disabled={isDeployingMondayBatch}
+                      className="w-full py-2.5 px-3 rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-black font-mono text-[11px] font-extrabold tracking-wide transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.4)] disabled:opacity-50"
+                    >
+                      {isDeployingMondayBatch ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 animate-spin text-black" />
+                          <span>Pushing Monday Batch Live...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5 fill-black text-black" />
+                          <span>🚀 Push Monday Batch Live to Galaxy</span>
+                        </>
+                      )}
+                    </button>
+                    {mondayBatchNotice && (
+                      <div className="text-[10px] font-mono text-amber-200 text-center bg-amber-950/60 border border-amber-500/40 rounded-md py-1 px-2">
+                        {mondayBatchNotice}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

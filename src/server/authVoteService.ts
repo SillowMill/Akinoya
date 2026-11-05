@@ -257,6 +257,46 @@ export function getAllSubmissionRecords(): any[] {
   return Object.values(_submissionsStore.submissions || {});
 }
 
+/**
+ * Deploys a batch of custom world submissions to the live Galaxy Navigator.
+ * Part of the Monday morning administrator batch routine.
+ */
+export function deployMondayBatchRecords(planetIds?: string[]): { deployedCount: number; deployedPlanets: any[] } {
+  _submissionsStore = loadSubmissionsStore();
+  const idSet = planetIds && planetIds.length > 0 ? new Set(planetIds.map((id) => String(id).trim())) : null;
+  const deployedPlanets: any[] = [];
+  const nowIso = new Date().toISOString();
+
+  for (const [key, sub] of Object.entries(_submissionsStore.submissions || {})) {
+    const s = sub as any;
+    if (idSet) {
+      if (idSet.has(key) || idSet.has(s.id) || idSet.has(s.planetName)) {
+        s.adminApproved = true;
+        s.isActivated = true;
+        s.status = 'LIVE_GALAXY';
+        s.deploymentBatchDate = nowIso;
+        s.batchLabel = 'Monday Batch Deployment';
+        deployedPlanets.push(s);
+      }
+    } else {
+      if (!s.adminApproved) {
+        s.adminApproved = true;
+        s.isActivated = true;
+        s.status = 'LIVE_GALAXY';
+        s.deploymentBatchDate = nowIso;
+        s.batchLabel = 'Monday Batch Deployment';
+        deployedPlanets.push(s);
+      }
+    }
+  }
+
+  if (deployedPlanets.length > 0) {
+    saveSubmissionsStore(_submissionsStore);
+  }
+
+  return { deployedCount: deployedPlanets.length, deployedPlanets };
+}
+
 // ─── Password Cryptography ───────────────────────────────────────────────────
 export function hashPassword(password: string): { salt: string; hash: string } {
   const salt = crypto.randomBytes(16).toString('hex');
