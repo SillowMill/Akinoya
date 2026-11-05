@@ -11,21 +11,51 @@ import { ComingSoonGate } from './components/ComingSoonGate';
 import { UnlockedExperience } from './components/UnlockedExperience';
 import { TopBar } from './components/TopBar';
 import { FloatingAudioControl } from './components/FloatingAudioControl';
-import { PrivacyPolicy } from './components/PrivacyPolicy';
-import { KycVerification } from './components/KycVerification';
-import { CheckoutSuccess } from './components/CheckoutSuccess';
 import { NfcHudToast } from './components/NfcHudToast';
-import { AkinoyaPassportVerification } from './components/AkinoyaPassportVerification';
+// Code-split heavy routes & interactive modals for ultra-fast initial paint
 const CommunityHub = React.lazy(() =>
   import('./components/CommunityHub').then((m) => ({ default: m.CommunityHub }))
 );
-import { CreatorPortfolioView } from './components/CreatorPortfolioView';
-import { ContestLaunchpad } from './components/ContestLaunchpad';
-import { GalaxyNavigator } from './components/GalaxyNavigator';
+const GalaxyNavigator = React.lazy(() =>
+  import('./components/GalaxyNavigator').then((m) => ({ default: m.GalaxyNavigator }))
+);
+const ContestLaunchpad = React.lazy(() =>
+  import('./components/ContestLaunchpad').then((m) => ({ default: m.ContestLaunchpad }))
+);
+const CreatorPortfolioView = React.lazy(() =>
+  import('./components/CreatorPortfolioView').then((m) => ({ default: m.CreatorPortfolioView }))
+);
+const AkinoyaPassportVerification = React.lazy(() =>
+  import('./components/AkinoyaPassportVerification').then((m) => ({ default: m.AkinoyaPassportVerification }))
+);
+const PrivacyPolicy = React.lazy(() =>
+  import('./components/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy }))
+);
+const KycVerification = React.lazy(() =>
+  import('./components/KycVerification').then((m) => ({ default: m.KycVerification }))
+);
+const CheckoutSuccess = React.lazy(() =>
+  import('./components/CheckoutSuccess').then((m) => ({ default: m.CheckoutSuccess }))
+);
+const ClaimYourWorldModal = React.lazy(() =>
+  import('./components/ClaimYourWorldModal').then((m) => ({ default: m.ClaimYourWorldModal }))
+);
+const MembershipGateModal = React.lazy(() =>
+  import('./components/MembershipGateModal').then((m) => ({ default: m.MembershipGateModal }))
+);
+const SecureOrderCheckoutModal = React.lazy(() =>
+  import('./components/SecureOrderCheckoutModal').then((m) => ({ default: m.SecureOrderCheckoutModal }))
+);
+
+const RouteFallback: React.FC<{ label?: string }> = ({ label = 'PORTAL' }) => (
+  <div className="flex-1 w-full flex flex-col items-center justify-center p-12 space-y-3 min-h-[60vh]">
+    <div className="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" />
+    <span className="text-xs font-mono text-cyan-300 tracking-wider uppercase animate-pulse">
+      LOADING {label}...
+    </span>
+  </div>
+);
 import { PioneerCampaignBanner } from './components/PioneerCampaignBanner';
-import { ClaimYourWorldModal } from './components/ClaimYourWorldModal';
-import { MembershipGateModal } from './components/MembershipGateModal';
-import { SecureOrderCheckoutModal } from './components/SecureOrderCheckoutModal';
 import { useAuth } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { hasAnyStoredCertificate } from './utils/certificate';
@@ -599,54 +629,51 @@ export default function App() {
       <ErrorBoundary>
         {route === 'galaxy' ? (
           <div className="fixed inset-0 z-30 w-full h-full flex flex-col overflow-hidden bg-[#000000]">
-            <GalaxyNavigator
-              onBackToHome={handleNavigateToPassperksHome}
-              onBackToWorlds={handleNavigateToWorlds}
-              onNavigateToContest={() => navigateTo('contest', '/contest')}
-              onNavigateToCommunity={() => navigateTo('community', '/community')}
-              onNavigateToVisualizerHub={handleOpenVisualizerHub}
-              onOpenCreator={(u) => {
-                setCreatorUsername(u);
-                navigateTo('creators', `/creators/${u}`);
-              }}
-            />
+            <React.Suspense fallback={<RouteFallback label="GALAXY NAVIGATOR" />}>
+              <GalaxyNavigator
+                onBackToHome={handleNavigateToPassperksHome}
+                onBackToWorlds={handleNavigateToWorlds}
+                onNavigateToContest={() => navigateTo('contest', '/contest')}
+                onNavigateToCommunity={() => navigateTo('community', '/community')}
+                onNavigateToVisualizerHub={handleOpenVisualizerHub}
+                onOpenCreator={(u) => {
+                  setCreatorUsername(u);
+                  navigateTo('creators', `/creators/${u}`);
+                }}
+              />
+            </React.Suspense>
           </div>
         ) : route === 'contest' ? (
           <div className="relative z-20 flex-1 w-full flex flex-col">
-            <ContestLaunchpad
-              onBackToHome={handleNavigateToPassperksHome}
-              onNavigateToCommunity={() => navigateTo('community', '/community')}
-              onNavigateToGalaxy={(id) => navigateToGalaxy(id)}
-              onNavigateToCreator={(u) => {
-                setCreatorUsername(u);
-                navigateTo('creators', `/creators/${u}`);
-              }}
-            />
+            <React.Suspense fallback={<RouteFallback label="CONTEST LAUNCHPAD" />}>
+              <ContestLaunchpad
+                onBackToHome={handleNavigateToPassperksHome}
+                onNavigateToCommunity={() => navigateTo('community', '/community')}
+                onNavigateToGalaxy={(id) => navigateToGalaxy(id)}
+                onNavigateToCreator={(u) => {
+                  setCreatorUsername(u);
+                  navigateTo('creators', `/creators/${u}`);
+                }}
+              />
+            </React.Suspense>
           </div>
         ) : route === 'creators' ? (
           <div className="relative z-20 flex-1 w-full flex flex-col">
-            <CreatorPortfolioView
-              username={creatorUsername}
-              onBackToCommunity={() => navigateTo('community', '/community')}
-              onBackToHome={handleNavigateToPassperksHome}
-              onNavigateToCreator={(u) => {
-                setCreatorUsername(u);
-                navigateTo('creators', `/creators/${u}`);
-              }}
-            />
+            <React.Suspense fallback={<RouteFallback label="CREATOR PORTFOLIO" />}>
+              <CreatorPortfolioView
+                username={creatorUsername}
+                onBackToCommunity={() => navigateTo('community', '/community')}
+                onBackToHome={handleNavigateToPassperksHome}
+                onNavigateToCreator={(u) => {
+                  setCreatorUsername(u);
+                  navigateTo('creators', `/creators/${u}`);
+                }}
+              />
+            </React.Suspense>
           </div>
         ) : route === 'community' ? (
           <div className="relative z-20 flex-1 w-full flex flex-col">
-            <React.Suspense
-              fallback={
-                <div className="flex-1 w-full flex flex-col items-center justify-center p-12 space-y-3 min-h-[60vh]">
-                  <div className="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" />
-                  <span className="text-xs font-mono text-cyan-300 tracking-wider uppercase animate-pulse">
-                    LOADING COMMUNITY HUB...
-                  </span>
-                </div>
-              }
-            >
+            <React.Suspense fallback={<RouteFallback label="COMMUNITY HUB" />}>
               <CommunityHub
                 onBackToHome={handleNavigateToPassperksHome}
                 onOpenCreator={(u) => {
@@ -658,35 +685,43 @@ export default function App() {
           </div>
         ) : route === 'privacy' ? (
           <div className="relative z-20 flex-1 w-full">
-            <PrivacyPolicy onBackToHome={handleNavigateToPassperksHome} />
+            <React.Suspense fallback={<RouteFallback label="PRIVACY POLICY" />}>
+              <PrivacyPolicy onBackToHome={handleNavigateToPassperksHome} />
+            </React.Suspense>
           </div>
         ) : route === 'kyc' ? (
           <div className="relative z-20 flex-1 w-full">
-            <KycVerification onBackToHome={handleNavigateToPassperksHome} />
+            <React.Suspense fallback={<RouteFallback label="KYC VERIFICATION" />}>
+              <KycVerification onBackToHome={handleNavigateToPassperksHome} />
+            </React.Suspense>
           </div>
         ) : route === 'success' ? (
           <div className="relative z-20 flex-1 w-full">
-            <CheckoutSuccess
-              onEnterPortal={() => {
-                handlePublicUnlockSuccess();
-                handleNavigateToPassperksHome();
-              }}
-              onBackToComic={handleNavigateToPassperksHome}
-            />
+            <React.Suspense fallback={<RouteFallback label="CHECKOUT" />}>
+              <CheckoutSuccess
+                onEnterPortal={() => {
+                  handlePublicUnlockSuccess();
+                  handleNavigateToPassperksHome();
+                }}
+                onBackToComic={handleNavigateToPassperksHome}
+              />
+            </React.Suspense>
           </div>
         ) : route === 'verify' ? (
           /* Exclusive VIP Verification & Personal Portal Route (/verify/[id]) */
           <div className="relative z-20 flex-1 w-full">
             {vipSubView === 'passport' ? (
-              <AkinoyaPassportVerification
-                tokenIdFromRoute={
-                  typeof window !== 'undefined'
-                    ? window.location.pathname.replace(/^\/verify\/?/, '').replace(/\/+$/, '').trim() || undefined
-                    : undefined
-                }
-                onNavigateHome={handleNavigateToPassperksHome}
-                onOpenVisualizerHub={handleOpenVisualizerHub}
-              />
+              <React.Suspense fallback={<RouteFallback label="PASSPORT VERIFICATION" />}>
+                <AkinoyaPassportVerification
+                  tokenIdFromRoute={
+                    typeof window !== 'undefined'
+                      ? window.location.pathname.replace(/^\/verify\/?/, '').replace(/\/+$/, '').trim() || undefined
+                      : undefined
+                  }
+                  onNavigateHome={handleNavigateToPassperksHome}
+                  onOpenVisualizerHub={handleOpenVisualizerHub}
+                />
+              </React.Suspense>
             ) : (
               <div className="flex flex-col items-center justify-start py-5 sm:py-8 md:py-10 lg:py-14 px-4 sm:px-5 md:px-6 lg:px-8 max-w-7xl w-full mx-auto box-border">
                   <UnlockedExperience
@@ -834,18 +869,18 @@ export default function App() {
         <FloatingAudioControl isGalaxy={route === 'galaxy'} />
       )}
 
-      {/* Claim Your World / Pioneer 2027 Early Access Interactive Modal */}
-      <ClaimYourWorldModal
-        isOpen={isClaimWorldOpen}
-        onClose={() => setIsClaimWorldOpen(false)}
-        onNavigateToContest={() => navigateTo('contest', '/contest')}
-      />
-
-      {/* Post-Launch Membership Gate Modal */}
-      <MembershipGateModal />
-
-      {/* Global Unified Dynamic Secure Order Checkout Modal (Driven by akinoya-open-checkout) */}
-      <SecureOrderCheckoutModal />
+      {/* Dynamic Modals (Code-Split via Suspense) */}
+      <React.Suspense fallback={null}>
+        {isClaimWorldOpen && (
+          <ClaimYourWorldModal
+            isOpen={isClaimWorldOpen}
+            onClose={() => setIsClaimWorldOpen(false)}
+            onNavigateToContest={() => navigateTo('contest', '/contest')}
+          />
+        )}
+        <MembershipGateModal />
+        <SecureOrderCheckoutModal />
+      </React.Suspense>
     </main>
   );
 }

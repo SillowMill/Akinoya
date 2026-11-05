@@ -4,6 +4,7 @@ import { AuthHeaderButton } from './AuthHeaderButton';
 import { useAuth } from '../context/AuthContext';
 import { getUserStatusConfig } from '../utils/statusPill';
 import { soundManager } from '../utils/audio';
+import { HeaderStarfield } from './HeaderStarfield';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 
 interface TopBarProps {
@@ -13,7 +14,7 @@ interface TopBarProps {
   onNavigateToGalaxy?: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({
+export const TopBar: React.FC<TopBarProps> = React.memo(({
   isUnlocked: _isUnlocked,
   isVip = false,
   onNavigateHome,
@@ -50,7 +51,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <header
-      className="hub-sticky-header sticky top-0 z-50 isolate w-full max-w-full box-border border-b border-white/15 bg-[#060a14]/98 backdrop-blur-2xl px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 xl:px-10 py-2 sm:py-2.5 lg:py-3 transform-gpu will-change-transform shadow-[0_4px_30px_rgba(0,0,0,0.95)] [backface-visibility:hidden] [-webkit-backface-visibility:hidden]"
+      className="hub-sticky-header sticky top-0 z-50 isolate relative overflow-hidden w-full max-w-full box-border border-b border-white/15 bg-[#060a14]/98 backdrop-blur-2xl px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 xl:px-10 py-2 sm:py-2.5 lg:py-3 transform-gpu will-change-transform shadow-[0_4px_30px_rgba(0,0,0,0.95)] [backface-visibility:hidden] [-webkit-backface-visibility:hidden]"
       style={{
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
@@ -58,7 +59,10 @@ export const TopBar: React.FC<TopBarProps> = ({
         backfaceVisibility: 'hidden',
       }}
     >
-      <div className="max-w-7xl w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-6 min-w-0">
+      {/* Celestial Starfield Animation Layer (Header & Navigation) */}
+      <HeaderStarfield />
+
+      <div className="relative z-10 max-w-7xl w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-6 min-w-0 pointer-events-auto">
         {/* Zone 1: High-End Shimmering Header Logo, Reflective Chrome Divider & Brand Wordmark */}
         <a
           href="/"
@@ -125,4 +129,4 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
     </header>
   );
-};
+});

@@ -18,6 +18,22 @@ export default defineConfig(() => {
           entryFileNames: `assets/[name]-[hash]-${buildTimestamp}.js`,
           chunkFileNames: `assets/[name]-[hash]-${buildTimestamp}.js`,
           assetFileNames: `assets/[name]-[hash]-${buildTimestamp}.[ext]`,
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+                return 'vendor-react';
+              }
+              if (id.includes('motion')) {
+                return 'vendor-motion';
+              }
+              if (id.includes('lucide-react')) {
+                return 'vendor-lucide';
+              }
+              if (id.includes('@supabase') || id.includes('supabase')) {
+                return 'vendor-supabase';
+              }
+            }
+          },
         },
       },
     },
