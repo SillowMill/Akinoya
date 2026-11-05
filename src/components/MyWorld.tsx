@@ -177,12 +177,13 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
 
   return (
     <div
-      className="widget-container relative overflow-hidden p-5 sm:p-6 md:p-8 rounded-3xl bg-gradient-to-b from-[#060c1e]/90 via-[#030612]/92 to-[#01040a]/98 backdrop-blur-none lg:backdrop-blur-2xl border border-cyan-400/35 space-y-6 md:space-y-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(6,182,212,0.18)]"
+      className="widget-container relative overflow-hidden p-4 sm:p-5 md:p-6 lg:p-8 rounded-3xl bg-gradient-to-b from-[#060c1e]/90 via-[#030612]/92 to-[#01040a]/98 backdrop-blur-none lg:backdrop-blur-2xl border border-cyan-400/35 space-y-6 md:space-y-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(6,182,212,0.18)] w-full max-w-full box-border"
       style={{
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
         willChange: 'transform',
         overflowAnchor: 'none',
+        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
       }}
     >
       {/* ─── MULTI-LAYERED RADIAL NEBULA GLOWS (INDIGO, STELLAR GOLD, ELECTRIC CYAN) ─── */}

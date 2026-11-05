@@ -688,7 +688,7 @@ export default function App() {
                 onOpenVisualizerHub={handleOpenVisualizerHub}
               />
             ) : (
-              <div className="flex flex-col items-center justify-start py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto">
+              <div className="flex flex-col items-center justify-start py-5 sm:py-8 md:py-10 lg:py-14 px-4 sm:px-5 md:px-6 lg:px-8 max-w-7xl w-full mx-auto box-border">
                   <UnlockedExperience
                     isVip={true}
                     onLockPortal={() => setVipSubView('passport')}
@@ -705,7 +705,7 @@ export default function App() {
           </div>
         ) : (
           /* Public Root Domain (100% Locked Site) */
-          <div className={`relative z-20 flex-1 flex flex-col items-center ${isSiteUnlocked ? 'justify-start' : 'justify-center'} py-6 sm:py-10 md:py-12 lg:py-14 px-4 xs:px-5 sm:px-6 md:px-8 lg:px-8 max-w-7xl w-full mx-auto`}>
+          <div className={`relative z-20 flex-1 flex flex-col items-center ${isSiteUnlocked ? 'justify-start' : 'justify-center'} py-5 sm:py-8 md:py-10 lg:py-14 px-4 sm:px-5 md:px-6 lg:px-8 max-w-7xl w-full mx-auto box-border`}>
             <AnimatePresence mode="wait">
               {!isSiteUnlocked ? (
                 <motion.div

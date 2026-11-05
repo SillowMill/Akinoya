@@ -64,7 +64,8 @@ export function applyPerformanceTier(): void {
     const memory = nav.deviceMemory || 8;
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const isInApp = checkIsInAppBrowser();
-    const isLite = cores <= 4 || memory <= 4 || Boolean(reducedMotion) || isInApp;
+    const isTouchTablet = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) && (window.innerWidth <= 1024);
+    const isLite = cores <= 4 || memory <= 4 || Boolean(reducedMotion) || isInApp || isTouchTablet;
     document.documentElement.dataset.perf = isLite ? 'lite' : 'full';
     if (isInApp) {
       document.documentElement.dataset.inapp = 'true';

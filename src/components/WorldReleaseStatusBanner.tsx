@@ -29,7 +29,11 @@ export const WorldReleaseStatusBanner: React.FC<WorldReleaseStatusBannerProps> =
   return (
     <div
       role="status"
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0b1730]/95 via-[#070d1d]/95 to-[#1a1206]/95 border-2 border-amber-400/60 p-4 sm:p-5 shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(245,158,11,0.22)] ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0b1730]/95 via-[#070d1d]/95 to-[#1a1206]/95 border-2 border-amber-400/60 p-4 sm:p-5 shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(245,158,11,0.22)] w-full max-w-full box-border ${className}`}
+      style={{
+        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+        transform: 'translateZ(0)',
+      }}
     >
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 via-cyan-400 to-transparent pointer-events-none" />
       {/* Subtle sweeping sheen */}

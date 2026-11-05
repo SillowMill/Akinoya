@@ -955,7 +955,13 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       {/* ======================================================== */}
       {/* APPLE-VIBES MACOS FINDER WINDOW FRAME                    */}
       {/* ======================================================== */}
-      <div className="rounded-3xl bg-gradient-to-b from-[#0f1424]/95 via-[#0b0f1a]/95 to-[#070912]/98 border border-cyan-500/30 shadow-[0_10px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(0,242,254,0.12)] overflow-hidden">
+      <div
+        className="w-full max-w-full box-border rounded-3xl bg-gradient-to-b from-[#0f1424]/95 via-[#0b0f1a]/95 to-[#070912]/98 border border-cyan-500/30 shadow-[0_10px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(0,242,254,0.12)] overflow-hidden"
+        style={{
+          WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+          transform: 'translateZ(0)',
+        }}
+      >
         {/* macOS Title Bar with Window Controls */}
         <div className="px-3 sm:px-5 py-2.5 sm:py-3.5 bg-black/60 border-b border-white/10 flex items-center justify-between gap-2 sm:gap-4 min-w-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -1123,7 +1129,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         </div>
 
         {/* Finder Content Area */}
-        <div className="p-4 sm:p-6 space-y-6 min-h-[420px]">
+        <div className="p-3.5 sm:p-5 md:p-6 space-y-6 min-h-[420px] w-full max-w-full box-border">
           {/* Prominent Directory Return Header: Positioned at top-left of file/folder view when inside any sub-folder */}
           {folderPath.length > 1 && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:px-4 sm:py-3 rounded-2xl bg-gradient-to-r from-cyan-950/70 via-[#091424] to-black border border-cyan-500/40 shadow-[0_0_20px_rgba(56,189,248,0.15)]">
@@ -1136,7 +1142,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                   title="Return to main 3 Master Folders overview"
                 >
                   <ArrowLeft className="w-4 h-4 text-white group-hover:-translate-x-0.5 transition-transform" />
-                  <span>← Back to Vault Folders</span>
+                  <span>Back to Vault Folders</span>
                 </button>
 
                 {/* If nested deeper than 1 level, also provide Up One Level */}

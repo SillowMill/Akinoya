@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 @layer base {
+  *, ::before, ::after {
+    box-sizing: border-box;
+  }
+
   :root {
     --font-display: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -235,21 +239,52 @@
 
 /* Strip expensive WebKit filters within Community Hub, Galaxy Navigator and widgets on mobile & tablet viewports */
 @media (max-width: 1024px) {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
   .widget-container,
   .widget-container *,
   .community-hub-container,
   .community-hub-container *,
   .galaxy-container,
-  .galaxy-container * {
+  .galaxy-container *,
+  [class*='backdrop-blur'] {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
 
   .widget-container,
-  .community-card {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  .community-card,
+  .status-banner-card,
+  [class*="rounded-2xl"],
+  [class*="rounded-3xl"] {
     isolation: isolate;
-    background-clip: padding-box !important;
+    background-clip: border-box !important;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    transform: translateZ(0);
+  }
+
+  .widget-container,
+  .community-card {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  /* Hide huge decorative blur spheres on mobile/tablet to avoid massive GPU fillrate spikes */
+  .blur-3xl,
+  .blur-2xl,
+  [class*='blur-[9'],
+  [class*='blur-[1'] {
+    display: none !important;
+  }
+
+  /* Simplify intense multi-layered glowing shadows on mobile/tablet for smooth 60fps */
+  [class*='shadow-['],
+  .glow-cyan,
+  .glow-cyan-sm {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
   }
 
   .widget-container > * {
@@ -531,7 +566,9 @@ html[data-perf='lite'] .glow-cyan-sm {
 }
 
 html[data-perf='lite'] .blur-3xl,
-html[data-perf='lite'] .blur-2xl {
+html[data-perf='lite'] .blur-2xl,
+html[data-perf='lite'] [class*='blur-[9'],
+html[data-perf='lite'] [class*='blur-[1'] {
   display: none !important;
 }
 

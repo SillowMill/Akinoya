@@ -1741,7 +1741,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         WebkitBackfaceVisibility: 'hidden',
         overflowAnchor: 'none',
       }}
-      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-5 sm:px-7 md:px-10 lg:px-8 py-6 sm:py-8 md:py-9 lg:py-10 page-transition-container"
+      className="relative z-10 w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-5 md:px-6 lg:px-8 py-5 sm:py-7 md:py-8 lg:py-10 page-transition-container box-border"
     >
       {/* Minified Low-Profile Status Bar Header with Inline Service View Toggle */}
       <div className={`relative isolate overflow-hidden flex items-center justify-between gap-1.5 sm:gap-3 mb-4 sm:mb-5 bg-[#060c18] bg-gradient-to-r ${mobileRoleConfig.containerBg} border ${mobileRoleConfig.borderColor} rounded-xl px-2.5 py-1.5 sm:px-4 sm:py-2.5 ${mobileRoleConfig.glowColor}`}>
@@ -1881,11 +1881,15 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   {/* Visualizer Hub Showcase Widget with 16:9 Cinematic Thumbnail */}
                   <div
                     id="visualizer-archive"
-                    className="bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)] scroll-mt-20 sm:scroll-mt-24"
+                    className="w-full max-w-full box-border bg-gradient-to-r from-cyan-950/40 via-black/70 to-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-4 sm:p-5 md:p-6 lg:p-7 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)] scroll-mt-20 sm:scroll-mt-24"
+                    style={{
+                      WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                      transform: 'translateZ(0)',
+                    }}
                   >
                     <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                    <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
+                    <div className="flex flex-col lg:flex-row items-center gap-4 sm:gap-6 lg:gap-8 w-full max-w-full box-border">
                       {/* 16:9 Cinematic Video Container */}
                       <div
                         onClick={() => {
@@ -1896,7 +1900,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             handleDirectGuestUnlockHub();
                           }
                         }}
-                        className="w-full md:w-[360px] lg:w-[420px] aspect-video shrink-0 rounded-xl overflow-hidden relative group border border-cyan-500/40 shadow-[0_0_25px_rgba(56,189,248,0.2)] bg-black/80 cursor-pointer"
+                        className="w-full lg:w-[420px] aspect-video shrink-0 rounded-xl overflow-hidden relative group border border-cyan-500/40 shadow-[0_0_25px_rgba(56,189,248,0.2)] bg-black/80 cursor-pointer max-w-full box-border"
                       >
                         <video
                           ref={(el) => {
@@ -2027,8 +2031,10 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 >
                   <div
                     id="akinoya-visualizer-archive"
-                    className="bg-[#060a14] border border-cyan-500/30 rounded-2xl p-4 sm:p-6 lg:p-7 xl:p-8 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)] scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
+                    className="w-full max-w-full box-border bg-[#060a14] border border-cyan-500/30 rounded-2xl p-4 sm:p-5 md:p-6 lg:p-7 xl:p-8 relative overflow-hidden shadow-[0_0_30px_rgba(56,189,248,0.15)] scroll-mt-20 sm:scroll-mt-24 md:scroll-mt-28"
                     style={{
+                      WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                      transform: 'translateZ(0)',
                       paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 2.5rem))',
                     }}
                   >
@@ -2761,8 +2767,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
 
               {/* Official Worlds Master Block: Solid Dark-Blue Opaque Widget ("Explore Pioneer Worlds") */}
               <div
-                style={{ backgroundColor: '#060a14' }}
-                className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060a14] border border-cyan-500/35 p-4 sm:p-6 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(6,182,212,0.16)]"
+                style={{
+                  backgroundColor: '#060a14',
+                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                  transform: 'translateZ(0)',
+                }}
+                className="widget-container relative isolate overflow-hidden rounded-3xl bg-[#060a14] border border-cyan-500/35 p-4 sm:p-5 md:p-6 lg:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.85),0_0_35px_rgba(6,182,212,0.16)] w-full max-w-full box-border"
               >
                 {/* Ambient top glowing beam inset away from rounded corner arcs */}
                 <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none rounded-full" />
@@ -3034,8 +3044,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     {/* Active World Dossier Header — Single Unified Widget on Mobile & Desktop */}
                     {activeWorldDossier && (
                       <div
-                        style={{ backgroundColor: '#060a14' }}
-                        className="relative overflow-hidden rounded-2xl bg-[#060a14] bg-gradient-to-r from-[#0d1630] via-[#060a14] to-[#09152b] border border-cyan-400/35 p-4 sm:p-6 md:p-7 shadow-md"
+                        style={{
+                          backgroundColor: '#060a14',
+                          WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                          transform: 'translateZ(0)',
+                        }}
+                        className="relative overflow-hidden rounded-2xl bg-[#060a14] bg-gradient-to-r from-[#0d1630] via-[#060a14] to-[#09152b] border border-cyan-400/35 p-4 sm:p-5 md:p-6 shadow-md w-full max-w-full box-border"
                       >
                   {/* Multi-layered radial nebula glows (lightweight on mobile) */}
                   <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/80 via-amber-300/80 to-transparent pointer-events-none" />
@@ -3238,8 +3252,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
         {/* 3 Live Social Engagement Metric Cards & Conversion — Directly Beneath Master Unified Widget */}
         {activeWorldDossier && (
           <div className="space-y-6 md:space-y-7">
-            {/* 3 Live Social Engagement Metric Cards — Calibrated for iPad Portrait (md:grid-cols-3 md:gap-5 md:p-6) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+            {/* 3 Live Social Engagement Metric Cards — Calibrated for iPad Portrait (sm:grid-cols-2 lg:grid-cols-3) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 md:gap-5 w-full max-w-full box-border">
                   {/* Metric 1: Likes / Votes Count */}
                   <div className="relative overflow-hidden p-5 md:p-6 rounded-2xl bg-gradient-to-br from-[#0e172e] via-[#060b17] to-[#03060f] border border-amber-400/40 hover:border-amber-300/70 flex items-center justify-between gap-3.5 shadow-md transition-colors">
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent pointer-events-none" />
@@ -3381,7 +3395,13 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               className="space-y-5 sm:space-y-6 md:space-y-7"
             >
               {/* MY ASSETS Introduction Header — Symmetrical Full-Width Alignment on Mobile & Desktop */}
-              <div className="w-full relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-cyan-950/50 via-[#060c1a]/90 to-[#050812]/95 backdrop-blur-none md:backdrop-blur-xl border border-cyan-400/35 p-4 sm:p-6 md:p-7 shadow-md md:shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.12)]">
+              <div
+                className="w-full max-w-full box-border relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-cyan-950/50 via-[#060c1a]/90 to-[#050812]/95 backdrop-blur-none md:backdrop-blur-xl border border-cyan-400/35 p-4 sm:p-5 md:p-6 lg:p-7 shadow-md md:shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(56,189,248,0.12)]"
+                style={{
+                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                  transform: 'translateZ(0)',
+                }}
+              >
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/70 to-transparent pointer-events-none" />
                 <div className="relative z-10 space-y-2.5">
                   <div className="flex items-center gap-2.5 sm:gap-3">

@@ -264,7 +264,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
       {/* Upgraded Solid Frosted Glass Header Banner: Optimal Rich Dark Backing, Zero Typography Bleed, Preserved Smooth Tablet Corner Radius */}
       {!isLoungeView && (
-        <div className="rounded-3xl bg-[#060a14]/95 backdrop-blur-2xl border border-cyan-500/30 p-5 sm:p-6 md:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(56,189,248,0.12)] relative isolate">
+        <div
+          className="rounded-3xl bg-[#060a14]/95 backdrop-blur-2xl border border-cyan-500/30 p-5 sm:p-6 md:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(56,189,248,0.12)] relative isolate w-full max-w-full box-border"
+          style={{
+            WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+            transform: 'translateZ(0)',
+          }}
+        >
           {/* Subtle Ambient Gold & Cyan Dual-Glow Beam */}
           <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 via-amber-300 to-transparent pointer-events-none rounded-full" />
 
@@ -354,7 +360,11 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
         {/* ========================================================= */}
         <div
           id="alacarte-section"
-          className="flex flex-col rounded-3xl bg-gradient-to-b from-[#090e1a] via-[#060a14] to-[#04070e] border border-white/15 p-4 xs:p-5 sm:p-7 lg:p-6 xl:p-8 relative overflow-hidden shadow-2xl scroll-mt-20 sm:scroll-mt-24"
+          className="flex flex-col rounded-3xl bg-gradient-to-b from-[#090e1a] via-[#060a14] to-[#04070e] border border-white/15 p-4 xs:p-5 sm:p-7 lg:p-6 xl:p-8 relative overflow-hidden shadow-2xl scroll-mt-20 sm:scroll-mt-24 w-full max-w-full box-border"
+          style={{
+            WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+            transform: 'translateZ(0)',
+          }}
         >
           {/* Subtle Ambient Top Border Highlight */}
           <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent pointer-events-none" />
@@ -868,7 +878,11 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
         {/* ========================================================= */}
         <div
           id="membership-pass-section"
-          className="relative flex flex-col rounded-3xl bg-gradient-to-b from-[#100d05] via-[#090804] to-black border-2 border-amber-400/80 p-4 xs:p-5 sm:p-7 lg:p-8 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.22)] scroll-mt-24 self-start h-fit w-full"
+          className="relative flex flex-col rounded-3xl bg-gradient-to-b from-[#100d05] via-[#090804] to-black border-2 border-amber-400/80 p-4 xs:p-5 sm:p-7 lg:p-8 overflow-hidden shadow-[0_0_40px_rgba(245,158,11,0.22)] scroll-mt-24 self-start h-fit w-full max-w-full box-border"
+          style={{
+            WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+            transform: 'translateZ(0)',
+          }}
         >
           {/* Top Gold Glowing Highlight Bar */}
           <div className="absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-300 via-yellow-400 to-transparent pointer-events-none" />
