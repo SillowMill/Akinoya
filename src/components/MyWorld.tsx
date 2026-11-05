@@ -39,6 +39,7 @@ import {
 import { watermarkAndSavePhoto } from '../utils/watermarkPhoto';
 import { formatTitleCaseUserName } from '../utils/holder';
 import { WorldReleaseStatusBanner } from './WorldReleaseStatusBanner';
+import { PlanetCardStarfield } from './PlanetCardStarfield';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
 import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
 
@@ -186,6 +187,9 @@ export const MyWorld: React.FC<MyWorldProps> = React.memo(({
         WebkitMaskImage: '-webkit-radial-gradient(white, black)',
       }}
     >
+      {/* Planet Card Celestial Starfield Animation Layer (Exclusive to Large Planet Showcase) */}
+      <PlanetCardStarfield />
+
       {/* ─── MULTI-LAYERED RADIAL NEBULA GLOWS (INDIGO, STELLAR GOLD, ELECTRIC CYAN) ─── */}
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-amber-400/15 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none" />

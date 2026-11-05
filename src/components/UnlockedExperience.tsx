@@ -93,6 +93,7 @@ import { PlanetDossierModal } from './PlanetDossierModal';
 import { VisualizerPlayerModal } from './VisualizerPlayerModal';
 import { MyAssetsMasterCarousel } from './MyAssetsMasterCarousel';
 import { WorldReleaseStatusBanner } from './WorldReleaseStatusBanner';
+import { PlanetCardStarfield } from './PlanetCardStarfield';
 import { TwoColumnPricingSection } from './TwoColumnPricingSection';
 import {
   BINGAA_PDF_URL,
@@ -3047,6 +3048,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                         }}
                         className="relative overflow-hidden rounded-2xl bg-[#060a14] bg-gradient-to-r from-[#0d1630] via-[#060a14] to-[#09152b] border border-cyan-400/35 p-4 sm:p-5 md:p-6 shadow-md w-full max-w-full box-border"
                       >
+                  {/* Planet Card Celestial Starfield Animation Layer (Exclusive to Large Planet Showcase) */}
+                  <PlanetCardStarfield />
+
                   {/* Multi-layered radial nebula glows (lightweight on mobile) */}
                   <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400/80 via-amber-300/80 to-transparent pointer-events-none" />
                   <div className="hidden md:block absolute top-0 right-0 w-96 h-96 bg-amber-400/15 rounded-full blur-[90px] pointer-events-none" />
