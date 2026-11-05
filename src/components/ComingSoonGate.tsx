@@ -5,7 +5,7 @@ import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
 import { KeyRound, Sparkles, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff, ClipboardPaste } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
+import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.webp';
 
 interface ComingSoonGateProps {
   onUnlockSuccess: () => void;
@@ -303,6 +303,8 @@ export const ComingSoonGate: React.FC<ComingSoonGateProps> = ({
                     <img
                       src={amlemiOrbitalImg}
                       alt="Ämlemi Planet"
+                      fetchPriority="high"
+                      decoding="sync"
                       className="w-full h-full object-cover rounded-full"
                     />
                     <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-400 border-2 border-[#081526] animate-pulse" />

@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { rafThrottle } from '../utils/performance';
-import exactPlanetDesktop from '../assets/images/akinoya_hero_bg.jpg';
-import exactPlanetMobile from '../assets/images/akinoya_hero_bg.jpg';
-import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
+import exactPlanetDesktop from '../assets/images/akinoya_hero_bg.webp';
+import exactPlanetMobile from '../assets/images/akinoya_hero_bg.webp';
+import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.webp';
 
 interface AkinoyaPlanetCanvasProps {
   viewMode?: 'orbit' | 'surface';
@@ -163,6 +163,8 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
                   src={exactPlanetDesktop}
                   alt="Background 1: Planet Äkinoya Locked Landing State"
                   referrerPolicy="no-referrer"
+                  fetchPriority="high"
+                  decoding="sync"
                   className="w-full h-full object-cover object-center filter brightness-[0.92] contrast-[1.05]"
                 />
               </picture>
@@ -180,6 +182,8 @@ export const AkinoyaPlanetCanvas: React.FC<AkinoyaPlanetCanvasProps> = ({
                 src={viewMode === 'orbit' ? akinoyaVistaImg : exactPlanetDesktop}
                 alt="Background 2: Unlocked Äkinoya World State"
                 referrerPolicy="no-referrer"
+                fetchPriority="high"
+                decoding="sync"
                 className="w-full h-full object-cover object-center filter brightness-90 contrast-105"
               />
             </motion.div>

@@ -321,41 +321,50 @@ const persistProfileToSupabase = async (prof: Profile) => {
 };
 
 // Sync profile data to Google Sheets via backend endpoint (VIP GUESTS & Subscribers tabs)
+// Offloaded to requestIdleCallback to guarantee zero main-thread startup blocking
 const syncToGoogleSheets = async (prof: Partial<Profile>, codeUsed?: string) => {
-  try {
-    const cleanEmail = (prof.email || '').trim().toLowerCase();
-    const isFounder = isFounderEmail(cleanEmail);
-    const activeCode = codeUsed || prof.vip_code_redeemed || 'N/A';
-    const founderPassStatus = isFounder
-      ? 'Founder Pass (#0) - Active'
-      : activeCode && activeCode !== 'N/A'
-      ? `Claimed (${activeCode})`
-      : prof.has_vip_pass || prof.role === 'VIP_GUEST'
-      ? 'VIP Pass Active'
-      : 'Standard / Unclaimed';
+  const executeSync = async () => {
+    try {
+      const cleanEmail = (prof.email || '').trim().toLowerCase();
+      const isFounder = isFounderEmail(cleanEmail);
+      const activeCode = codeUsed || prof.vip_code_redeemed || 'N/A';
+      const founderPassStatus = isFounder
+        ? 'Founder Pass (#0) - Active'
+        : activeCode && activeCode !== 'N/A'
+        ? `Claimed (${activeCode})`
+        : prof.has_vip_pass || prof.role === 'VIP_GUEST'
+        ? 'VIP Pass Active'
+        : 'Standard / Unclaimed';
 
-    await fetch('/api/sync-sheets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        timestamp: prof.created_at || new Date().toISOString(),
-        first_name: prof.first_name,
-        last_name: prof.last_name,
-        email: prof.email,
-        founderPassStatus,
-        worldName: prof.claimed_sector || (isFounder ? 'Ämlemi' : 'Unclaimed'),
-        role: prof.role || 'FREE',
-        has_vip_pass: prof.has_vip_pass ?? false,
-        subscription_status: prof.subscription_status || 'inactive',
-        vip_code_redeemed: activeCode,
-        created_at: prof.created_at || new Date().toISOString(),
-        is_pioneer: prof.is_pioneer ?? true,
-        pioneer_badge: prof.pioneer_badge || '[PIONEER-2027]',
-        claimed_sector: prof.claimed_sector || undefined,
-      }),
-    });
-  } catch (err) {
-    console.warn('[AuthContext] Background Google Sheets sync warning:', err);
+      await fetch('/api/sync-sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timestamp: prof.created_at || new Date().toISOString(),
+          first_name: prof.first_name,
+          last_name: prof.last_name,
+          email: prof.email,
+          founderPassStatus,
+          worldName: prof.claimed_sector || (isFounder ? 'Ämlemi' : 'Unclaimed'),
+          role: prof.role || 'FREE',
+          has_vip_pass: prof.has_vip_pass ?? false,
+          subscription_status: prof.subscription_status || 'inactive',
+          vip_code_redeemed: activeCode,
+          created_at: prof.created_at || new Date().toISOString(),
+          is_pioneer: prof.is_pioneer ?? true,
+          pioneer_badge: prof.pioneer_badge || '[PIONEER-2027]',
+          claimed_sector: prof.claimed_sector || undefined,
+        }),
+      });
+    } catch (err) {
+      console.warn('[AuthContext] Background Google Sheets sync warning:', err);
+    }
+  };
+
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(() => { executeSync(); }, { timeout: 3500 });
+  } else {
+    setTimeout(executeSync, 200);
   }
 };
 

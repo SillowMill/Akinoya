@@ -41,7 +41,7 @@ import { formatTitleCaseUserName } from '../utils/holder';
 import { WorldReleaseStatusBanner } from './WorldReleaseStatusBanner';
 import { PlanetCardStarfield } from './PlanetCardStarfield';
 import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
-import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
+import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.webp';
 
 const SLOT_CODES = ['01_main', '02_flora', '03_fauna', '04_atmo', '05_lore'];
 const SLOT_LABELS = ['01 Main', '02 Botanical', '03 Exotic', '04 Atmo', '05 Lore'];

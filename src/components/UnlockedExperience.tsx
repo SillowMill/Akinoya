@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import passCardImg from '../assets/images/akinoya_pass_card_1790852652003.jpg';
-import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
-import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
-import moodboardImg from '../assets/images/Mood.png';
-import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
-import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
+import passCardImg from '../assets/images/akinoya_pass_card_1790852652003.webp';
+import bingaaComicCover from '../assets/images/bingaa_comic_cover.webp';
+import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.webp';
+import moodboardImg from '../assets/images/Mood.webp';
+import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.webp';
+import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.webp';
 import dnVideo from '../assets/videos/DNN.mp4';
-import dnThumbnailImg from '../assets/images/dn_thumbnail.png';
+import dnThumbnailImg from '../assets/images/dn_thumbnail.webp';
 import dontNeedVideo from '../assets/videos/DNN.mp4';
 import bingaaLoopVideo from '../assets/videos/Bingaaloop.mp4';
 import {

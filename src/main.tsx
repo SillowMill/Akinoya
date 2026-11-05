@@ -10,8 +10,8 @@ import { applyPerformanceTier } from './utils/performance';
 // Flag older / low-power devices so CSS can drop heavy blurs, glows & shadows
 applyPerformanceTier();
 
-// Safari / WebKit Hard Cache Invalidator
-if (typeof window !== 'undefined') {
+// Safari / WebKit Cache Invalidator (offloaded to idle thread so startup renders immediately)
+const runCacheInvalidator = () => {
   const BUILD_VERSION = '1.0.2-20261105-1950';
   try {
     const storedVersion = localStorage.getItem('akinoya_app_build_version');
@@ -26,6 +26,14 @@ if (typeof window !== 'undefined') {
       localStorage.setItem('akinoya_app_build_version', BUILD_VERSION);
     }
   } catch {}
+};
+
+if (typeof window !== 'undefined') {
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(runCacheInvalidator, { timeout: 2500 });
+  } else {
+    setTimeout(runCacheInvalidator, 150);
+  }
 }
 
 createRoot(document.getElementById('root')!).render(

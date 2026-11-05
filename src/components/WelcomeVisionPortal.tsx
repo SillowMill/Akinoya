@@ -26,11 +26,11 @@ import {
 import { soundManager } from '../utils/audio';
 import { openClaimWorldModal } from '../utils/pioneer';
 
-import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
-import akinoyaPlanetImg from '../assets/images/akinoya_exact_planet_1790853678690.jpg';
-import moodboardImg from '../assets/images/Mood.png';
-import millAvatar from '../assets/images/mill_photo.jpg';
-import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
+import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.webp';
+import akinoyaPlanetImg from '../assets/images/akinoya_exact_planet_1790853678690.webp';
+import moodboardImg from '../assets/images/Mood.webp';
+import millAvatar from '../assets/images/mill_photo.webp';
+import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.webp';
 
 export interface WelcomeVisionPortalProps {
   isMember?: boolean;

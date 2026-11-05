@@ -1,9 +1,9 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import twilightWorldImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
-import visualizerImg from '../assets/images/visualizer_thumbnail.png';
-import mushroomValleyImg from '../assets/images/akinoya_mushroom_valley.jpg';
-import planetAkinoyaImg from '../assets/images/planet_akinoya_1790852629401.jpg';
-import comicCoverImg from '../assets/images/bingaa_comic_cover.jpg';
+import twilightWorldImg from '../assets/images/akinoya_twilight_world_1790852640934.webp';
+import visualizerImg from '../assets/images/visualizer_thumbnail.webp';
+import mushroomValleyImg from '../assets/images/akinoya_mushroom_valley.webp';
+import planetAkinoyaImg from '../assets/images/planet_akinoya_1790852629401.webp';
+import comicCoverImg from '../assets/images/bingaa_comic_cover.webp';
 
 export interface ShowcaseItem {
   id: string;

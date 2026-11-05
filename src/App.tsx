@@ -47,14 +47,133 @@ const SecureOrderCheckoutModal = React.lazy(() =>
   import('./components/SecureOrderCheckoutModal').then((m) => ({ default: m.SecureOrderCheckoutModal }))
 );
 
+/**
+ * Structural Skeleton Fallback (CLS Elimination):
+ * Enforces rigid CSS aspect ratios, fixed container dimensions, and GPU-accelerated
+ * placeholder skeletons for all dynamic views before content renders.
+ */
 const RouteFallback: React.FC<{ label?: string }> = ({ label = 'PORTAL' }) => (
-  <div className="flex-1 w-full flex flex-col items-center justify-center p-12 space-y-3 min-h-[60vh]">
-    <div className="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shadow-[0_0_15px_rgba(34,211,238,0.4)]" />
-    <span className="text-xs font-mono text-cyan-300 tracking-wider uppercase animate-pulse">
-      LOADING {label}...
-    </span>
+  <div
+    role="status"
+    aria-label={`Loading ${label}`}
+    className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6"
+    style={{ minHeight: 'calc(100vh - 140px)' }}
+  >
+    {/* Breadcrumb / Top Bar Skeleton Placeholder */}
+    <div className="flex items-center justify-between gap-3 w-full border-b border-white/10 pb-4">
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-lg bg-cyan-950/40 border border-cyan-400/20 skeleton-shimmer shrink-0" />
+        <div className="h-4 w-32 rounded bg-white/10 skeleton-shimmer" />
+      </div>
+      <div className="h-4 w-24 rounded bg-cyan-400/20 skeleton-shimmer" />
+    </div>
+
+    {/* Section Header Skeleton */}
+    <div className="space-y-2">
+      <div className="h-7 sm:h-9 w-64 max-w-[80%] rounded-lg bg-white/15 skeleton-shimmer" />
+      <div className="h-4 w-96 max-w-[95%] rounded bg-white/5 skeleton-shimmer" />
+    </div>
+
+    {/* Primary Featured Card Skeleton with Rigid 16:9 Aspect Ratio */}
+    <div className="relative w-full aspect-video sm:aspect-[21/9] max-h-[440px] rounded-2xl bg-[#060a14] border border-cyan-500/20 p-5 sm:p-7 flex flex-col justify-end overflow-hidden shadow-2xl skeleton-shimmer">
+      <div className="space-y-3 z-10">
+        <div className="h-3 w-28 rounded-full bg-cyan-400/30" />
+        <div className="h-6 sm:h-8 w-72 max-w-[85%] rounded bg-white/20" />
+        <div className="h-3.5 w-48 rounded bg-white/10" />
+      </div>
+    </div>
+
+    {/* Grid Skeleton Cards with Rigid Pre-allocated Dimensions */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 pt-2">
+      {[1, 2, 3].map((idx) => (
+        <div
+          key={idx}
+          className="rounded-2xl bg-[#060a14] border border-white/10 p-5 space-y-3 min-h-[160px] flex flex-col justify-between overflow-hidden shadow-lg"
+        >
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-white/5 skeleton-shimmer shrink-0" />
+            <div className="w-16 h-3 rounded bg-cyan-400/20 skeleton-shimmer" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 w-3/4 rounded bg-white/15 skeleton-shimmer" />
+            <div className="h-3 w-1/2 rounded bg-white/5 skeleton-shimmer" />
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Subdued Status Badge Indicator */}
+    <div className="flex items-center justify-center pt-4">
+      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/40 border border-cyan-400/20 text-[10px] font-mono text-cyan-300 uppercase tracking-widest">
+        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+        INITIALIZING {label}
+      </span>
+    </div>
   </div>
 );
+
+/**
+ * Intelligent Background Prefetcher (Full Site Hydration):
+ * Triggers prefetching of all secondary views and heavy chunks the exact millisecond
+ * the main header and app shell finish mounting.
+ */
+function prefetchFullSiteSecondaryViews() {
+  if (typeof window === 'undefined') return;
+
+  const prefetchChunks = () => {
+    // Stage 1: Immediate secondary views (Vault Hub, Galaxy Navigator, Modals)
+    const primaryTier = [
+      () => import('./components/CommunityHub'),
+      () => import('./components/GalaxyNavigator'),
+      () => import('./components/ClaimYourWorldModal'),
+      () => import('./components/MembershipGateModal'),
+      () => import('./components/SecureOrderCheckoutModal'),
+    ];
+
+    // Stage 2: Deep secondary views & nested modules
+    const secondaryTier = [
+      () => import('./components/ContestLaunchpad'),
+      () => import('./components/CreatorPortfolioView'),
+      () => import('./components/AkinoyaPassportVerification'),
+      () => import('./components/BingaaComicReader'),
+      () => import('./components/CheckoutSuccess'),
+      () => import('./components/PrivacyPolicy'),
+      () => import('./components/KycVerification'),
+      () => import('./components/CreatorLeaderboard'),
+      () => import('./components/LoreGovernancePortal'),
+      () => import('./components/AkinoyaLabsHub'),
+      () => import('./components/DriveFolderVault'),
+      () => import('./components/WelcomeVisionPortal'),
+      () => import('./components/PioneerLounge'),
+    ];
+
+    primaryTier.forEach((fn) => {
+      try {
+        fn().catch(() => {});
+      } catch {}
+    });
+
+    const runSecondary = () => {
+      secondaryTier.forEach((fn) => {
+        try {
+          fn().catch(() => {});
+        } catch {}
+      });
+    };
+
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(runSecondary, { timeout: 2000 });
+    } else {
+      setTimeout(runSecondary, 120);
+    }
+  };
+
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(prefetchChunks, { timeout: 1000 });
+  } else {
+    setTimeout(prefetchChunks, 40);
+  }
+}
 import { PioneerCampaignBanner } from './components/PioneerCampaignBanner';
 import { useAuth } from './context/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -121,6 +240,12 @@ export default function App() {
     }
     return false;
   });
+
+  // Intelligent Background Prefetching (Full Site Hydration):
+  // Preloads all secondary views the exact millisecond the app shell mounts
+  useEffect(() => {
+    prefetchFullSiteSecondaryViews();
+  }, []);
 
   // Listen to global logout event & reset state to public landing view
   useEffect(() => {

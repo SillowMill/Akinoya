@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { getUserStatusConfig } from '../utils/statusPill';
 import { soundManager } from '../utils/audio';
 import { HeaderStarfield } from './HeaderStarfield';
-import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.png';
+import sillowMillLogoUrl from '../assets/images/Sillowmilllogo.webp';
 
 interface TopBarProps {
   isUnlocked: boolean;
@@ -96,6 +96,8 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
             <img
               src={sillowMillLogoUrl}
               alt="Sillow Mill Emblem"
+              fetchPriority="high"
+              decoding="sync"
               className="w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(255,255,255,0.6)] group-hover:scale-105 transition-transform duration-300"
             />
           </div>

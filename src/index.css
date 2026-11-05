@@ -1,5 +1,39 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Structural Skeleton Placeholders & Layout Stability (CLS Elimination)
+   Rigid GPU-accelerated skeletons with precise dimensions and aspect ratios
+   ========================================================================== */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(103, 232, 249, 0.09) 50%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  background-size: 250% 100%;
+  animation: skeletonShimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: background-position;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none !important;
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
 @layer base {
   *, ::before, ::after {
     box-sizing: border-box;

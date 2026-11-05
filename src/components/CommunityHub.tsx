@@ -48,10 +48,10 @@ import {
 import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/audio';
 import { rafThrottle } from '../utils/performance';
-import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
-import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
-import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
-import moodboardImg from '../assets/images/Mood.png';
+import bingaaComicCover from '../assets/images/bingaa_comic_cover.webp';
+import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.webp';
+import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.webp';
+import moodboardImg from '../assets/images/Mood.webp';
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME, BINGAA_COVER_URL, BINGAA_COVER_FILENAME } from '../utils/certificate';
 import { useAuth } from '../context/AuthContext';
 import { AuthHeaderButton } from './AuthHeaderButton';

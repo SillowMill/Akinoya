@@ -7,18 +7,18 @@ import { getPioneerMasterVideoUrl } from '../utils/pioneer';
 import planetHeroImg from '../assets/images/planet_akinoya_1790852629401.jpg';
 import exactPlanetImg from '../assets/images/akinoya_exact_planet_1790853678690.jpg';
 import twilightWorldImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
-import mushroomValleyImg from '../assets/images/akinoya_mushroom_valley.jpg';
-import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
-import heroBgImg from '../assets/images/akinoya_hero_bg.jpg';
-import moodboardImg from '../assets/images/Mood.png';
-import mobileBgImg from '../assets/images/akinoya_mobile_bg_1790853703270.jpg';
+import mushroomValleyImg from '../assets/images/akinoya_mushroom_valley.webp';
+import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.webp';
+import heroBgImg from '../assets/images/akinoya_hero_bg.webp';
+import moodboardImg from '../assets/images/Mood.webp';
+import mobileBgImg from '../assets/images/akinoya_mobile_bg_1790853703270.webp';
 
 // 5 Canonical Ämlemi Showcase Renders (from Akinoya_Test_Renders)
-import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
-import amlemiBotanicalImg from '../assets/images/amlemi_renders/02-botanical.png';
-import amlemiFaunaImg from '../assets/images/amlemi_renders/03-fauna.png';
-import amlemiCockpitImg from '../assets/images/amlemi_renders/04-cockpit.png';
-import amlemiMonumentImg from '../assets/images/amlemi_renders/05-monument.png';
+import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.webp';
+import amlemiBotanicalImg from '../assets/images/amlemi_renders/02-botanical.webp';
+import amlemiFaunaImg from '../assets/images/amlemi_renders/03-fauna.webp';
+import amlemiCockpitImg from '../assets/images/amlemi_renders/04-cockpit.webp';
+import amlemiMonumentImg from '../assets/images/amlemi_renders/05-monument.webp';
 
 const LOCAL_SUBMISSIONS_KEY = 'akinoya_planet_submissions_v5';
 const LOCAL_CONTEST_VOTES_KEY = 'akinoya_contest_votes';

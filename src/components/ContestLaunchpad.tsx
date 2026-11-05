@@ -34,12 +34,12 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { soundManager } from '../utils/audio';
 import { formatAuthorName } from '../utils/holder';
-import millAvatar from '../assets/images/mill_photo.jpg';
-import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.png';
-import amlemiBotanicalImg from '../assets/images/amlemi_renders/02-botanical.png';
-import amlemiFaunaImg from '../assets/images/amlemi_renders/03-fauna.png';
-import amlemiCockpitImg from '../assets/images/amlemi_renders/04-cockpit.png';
-import amlemiMonumentImg from '../assets/images/amlemi_renders/05-monument.png';
+import millAvatar from '../assets/images/mill_photo.webp';
+import amlemiOrbitalImg from '../assets/images/amlemi_renders/01-orbital.webp';
+import amlemiBotanicalImg from '../assets/images/amlemi_renders/02-botanical.webp';
+import amlemiFaunaImg from '../assets/images/amlemi_renders/03-fauna.webp';
+import amlemiCockpitImg from '../assets/images/amlemi_renders/04-cockpit.webp';
+import amlemiMonumentImg from '../assets/images/amlemi_renders/05-monument.webp';
 
 import { PlanetGeneratorChat } from './PlanetGeneratorChat';
 import { PlanetDossierModal } from './PlanetDossierModal';

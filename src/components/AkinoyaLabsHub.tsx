@@ -45,24 +45,24 @@ import {
   getVaultFolderIdForStage,
 } from '../utils/drive';
 
-import millAvatar from '../assets/images/mill_photo.jpg';
-import moodboardImg from '../assets/images/Mood.png';
-import bingaaComicCover from '../assets/images/bingaa_comic_cover.jpg';
-import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.jpg';
-import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.png';
-import akinoyaPlanetImg from '../assets/images/akinoya_exact_planet_1790853678690.jpg';
+import millAvatar from '../assets/images/mill_photo.webp';
+import moodboardImg from '../assets/images/Mood.webp';
+import bingaaComicCover from '../assets/images/bingaa_comic_cover.webp';
+import akinoyaVistaImg from '../assets/images/akinoya_twilight_world_1790852640934.webp';
+import visualizerThumbnailImg from '../assets/images/visualizer_thumbnail.webp';
+import akinoyaPlanetImg from '../assets/images/akinoya_exact_planet_1790853678690.webp';
 
 // Bespoke Gemini / Imagen 3 Generated Stage Visuals
-import stage01Img from '../assets/images/stage_01_storyboard_blueprint.jpg';
-import stage02Img from '../assets/images/stage_02_character_reference_sheet.jpg';
-import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.jpg';
-import stage04Img from '../assets/images/stage_04_cybernetic_prompt_datastream.jpg';
-import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.jpg';
+import stage01Img from '../assets/images/stage_01_storyboard_blueprint.webp';
+import stage02Img from '../assets/images/stage_02_character_reference_sheet.webp';
+import stage03Img from '../assets/images/stage_03_cockpit_previs_wireframe.webp';
+import stage04Img from '../assets/images/stage_04_cybernetic_prompt_datastream.webp';
+import stage05Img from '../assets/images/stage_05_cinematic_color_grading_waveform.webp';
 
 // Character Locking Master Assets (from Character Locking folder)
-import millLockingImg from '../assets/images/character_locking/MilLLL.PNG';
-import odiLockingImg from '../assets/images/character_locking/Odi.JPG';
-import sillowLockingImg from '../assets/images/character_locking/Sillow.JPG';
+import millLockingImg from '../assets/images/character_locking/MilLLL.webp';
+import odiLockingImg from '../assets/images/character_locking/Odi.webp';
+import sillowLockingImg from '../assets/images/character_locking/Sillow.webp';
 
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME } from '../utils/certificate';
 

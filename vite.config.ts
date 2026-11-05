@@ -13,6 +13,9 @@ export default defineConfig(() => {
       },
     },
     build: {
+      target: 'es2022',
+      cssCodeSplit: true,
+      chunkSizeWarningLimit: 800,
       rollupOptions: {
         output: {
           entryFileNames: `assets/[name]-[hash]-${buildTimestamp}.js`,
