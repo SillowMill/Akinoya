@@ -2751,19 +2751,19 @@ async function createStripeCheckoutSession(params) {
   let productImage = `${baseUrl}/images/bingaa_comic_cover.jpg`;
   if (productId === "vocal") {
     productName = "Sillow Mill - Vocal Acapella & Remix Pack";
-    productDescription = 'Studio Acapellas of the whole "Dream of Akainoya" tracklist. 24-bit / 48kHz uncompressed WAV stems.';
+    productDescription = 'Studio Acapellas of the whole "Dream of Akainoya" tracklist. 24-bit / 48kHz uncompressed WAV stems. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.';
     unitAmount = params.amount ? Math.round(params.amount * 100) : 1999;
   } else if (productId === "workflow" || productId === "logic-visualizer" || productId === "enerwise") {
     productName = "Sillow Mill - Workflow";
-    productDescription = "Official 2D visualizer workflow, Enerwise sound architecture, vocal chain & dedicated Logic Pro template.";
+    productDescription = "Official 2D visualizer workflow, Enerwise sound architecture, vocal chain & dedicated Logic Pro template. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
     unitAmount = params.amount ? Math.round(params.amount * 100) : 2999;
   } else if (productId === "comic-digital") {
     productName = "Sillow Mill - Digital Copy of Bingaa";
-    productDescription = "Complete graphic novel with interactive dual-page flipbook reader & DRM-free 4K download.";
+    productDescription = "Complete graphic novel with interactive dual-page flipbook reader & DRM-free 4K download. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
     unitAmount = params.amount ? Math.round(params.amount * 100) : 999;
   } else if (productId === "membership") {
     productName = "Sillow Mill - Annual Pioneer Member Pass (All-Inclusive)";
-    productDescription = "Annual Pioneer Member Pass with Physical Welcome Booklet, Collector Pass Card, Signed Bookmark & Full Digital Vault Access";
+    productDescription = "Annual Pioneer Member Pass with Physical Welcome Booklet, Collector Pass Card, Signed Bookmark & Full Digital Vault Access instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
     unitAmount = params.amount ? Math.round(params.amount * 100) : 6e3;
   } else if (params.productTitle && params.amount) {
     productName = sanitizeStripeString(params.productTitle);

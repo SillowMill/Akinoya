@@ -54,6 +54,7 @@ import {
   Sliders,
   Crown,
   EyeOff,
+  Users,
 } from 'lucide-react';
 import { soundManager } from '../utils/audio';
 import { planetSoundtrack } from '../utils/soundtrack';
@@ -1419,19 +1420,22 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     scrollToVisualizerHub(true);
   };
 
-  const [tappingTab, setTappingTab] = useState<'pass' | 'edition' | 'my-world' | 'galaxy' | 'assets' | null>(null);
+  const [tappingTab, setTappingTab] = useState<'pass' | 'edition' | 'my-world' | 'assets' | 'hub' | 'galaxy' | null>(null);
+  const [worldsSubView, setWorldsSubView] = useState<'worlds' | 'galaxy'>('worlds');
   const navTouchStartRef = useRef<{ x: number; y: number; time: number; id: string } | null>(null);
   const lastNavTriggerRef = useRef<number>(0);
 
-  const activateNavItem = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy') => {
-    if (id === 'galaxy') {
+  const activateNavItem = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'hub' | 'galaxy') => {
+    if (id === 'hub') {
+      handleTriggerHubNav();
+    } else if (id === 'galaxy') {
       handleTriggerGalaxyNav();
     } else {
       handleSelectTab(id);
     }
   };
 
-  const triggerNavInstant = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy', e?: React.SyntheticEvent) => {
+  const triggerNavInstant = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'hub' | 'galaxy', e?: React.SyntheticEvent) => {
     const now = Date.now();
     if (now - lastNavTriggerRef.current < 250) {
       return;
@@ -1474,6 +1478,20 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
+  const handleTriggerHubNav = () => {
+    setTappingTab('hub');
+    setTimeout(() => setTappingTab((prev) => (prev === 'hub' ? null : prev)), 155);
+    soundManager.playTone(600, 0.05);
+    if (typeof window !== 'undefined' && document.activeElement instanceof HTMLElement && document.activeElement !== document.body) {
+      document.activeElement.blur();
+    }
+    if (onNavigateToCommunity) {
+      onNavigateToCommunity();
+    } else if (typeof window !== 'undefined') {
+      window.location.href = '/community';
+    }
+  };
+
   const handleTriggerGalaxyNav = () => {
     setTappingTab('galaxy');
     setTimeout(() => setTappingTab((prev) => (prev === 'galaxy' ? null : prev)), 155);
@@ -1488,7 +1506,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     }
   };
 
-  const getNavButtonTouchHandlers = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'galaxy') => ({
+  const getNavButtonTouchHandlers = (id: 'pass' | 'edition' | 'my-world' | 'assets' | 'hub' | 'galaxy') => ({
     onPointerDown: () => {
       setTappingTab(id);
     },
@@ -1829,12 +1847,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
           </button>
           <button
             type="button"
-            {...getNavButtonTouchHandlers('galaxy')}
+            {...getNavButtonTouchHandlers('hub')}
             className="py-2 px-2 text-[11px] sm:text-xs font-medium rounded-lg lg:rounded-xl transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 min-h-[44px] touch-manipulation select-none text-cyan-300/85 hover:text-white hover:bg-cyan-950/50"
           >
-            <Radar className="w-3.5 h-3.5 text-cyan-400 shrink-0 pointer-events-none" />
-            <span className="sm:hidden truncate pointer-events-none">Galaxy</span>
-            <span className="hidden sm:inline truncate pointer-events-none">Galaxy Navigator</span>
+            <Users className="w-3.5 h-3.5 text-cyan-400 shrink-0 pointer-events-none" />
+            <span className="sm:hidden truncate pointer-events-none">Hub</span>
+            <span className="hidden sm:inline truncate pointer-events-none">Community Hub</span>
           </button>
         </div>
 
@@ -2695,6 +2713,45 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
               }}
               className="space-y-6 md:space-y-7"
             >
+              {/* Worlds Tab Sub-View Selector: Pioneer Worlds vs Galaxy Navigator */}
+              <div className="flex items-center justify-between gap-2 p-1.5 sm:p-2 rounded-2xl bg-[#060a18]/90 backdrop-blur-xl border border-cyan-500/30 shadow-[0_4px_25px_rgba(0,0,0,0.7)]">
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2 w-full">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playTone(580, 0.04);
+                      setWorldsSubView('worlds');
+                    }}
+                    className={`py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-mono font-bold flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px] ${
+                      worldsSubView === 'worlds'
+                        ? 'bg-cyan-500 text-black shadow-[0_0_18px_rgba(56,189,248,0.45)]'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Globe2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span>Pioneer Worlds</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playTone(620, 0.05);
+                      try {
+                        sessionStorage.setItem('galaxy_return_from', 'worlds');
+                      } catch {}
+                      if (onNavigateToGalaxy) {
+                        onNavigateToGalaxy(activeWorldDossier?.id || 'planet-amlemi-genesis-01', 'worlds');
+                      } else if (typeof window !== 'undefined') {
+                        window.location.href = `/galaxy?from=worlds`;
+                      }
+                    }}
+                    className="py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-mono font-bold flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[42px] text-cyan-300 hover:text-white hover:bg-cyan-950/60 border border-cyan-400/30 shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                  >
+                    <Radar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-300 shrink-0" />
+                    <span>Galaxy Navigator</span>
+                  </button>
+                </div>
+              </div>
               {/* Dynamic Status Widget when a new/custom world beyond the 5 Pioneer Worlds has been created */}
               {isQueuedWorld && userDossier && !isLiveGalaxyWorld(userDossier) && (
                 <div
@@ -3751,7 +3808,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                 style={{
                   '--scanner-count': 5,
                   '--scanner-index':
-                    tappingTab === 'galaxy'
+                    tappingTab === 'hub'
                       ? 4
                       : activeTab === 'pass'
                       ? 0
@@ -3759,7 +3816,9 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       ? 1
                       : activeTab === 'my-world'
                       ? 2
-                      : 3,
+                      : activeTab === 'assets'
+                      ? 3
+                      : 4,
                 } as React.CSSProperties}
               />
             </div>
@@ -3771,11 +3830,11 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                   { id: 'edition' as const, label: 'Comic', Icon: BookOpen },
                   { id: 'my-world' as const, label: 'Worlds', Icon: Globe2 },
                   { id: 'assets' as const, label: 'My Assets', Icon: Gem },
-                  { id: 'galaxy' as const, label: 'Galaxy', desktopLabel: 'Galaxy Navigator', Icon: Radar },
+                  { id: 'hub' as const, label: 'Hub', desktopLabel: 'Community Hub', Icon: Users },
                 ] as const
               ).map((item) => {
                 const { id, label, Icon } = item;
-                const isActive = id !== 'galaxy' && activeTab === id;
+                const isActive = id !== 'hub' && activeTab === id;
                 const isTapping = tappingTab === id;
                 return (
                   <button
@@ -3791,8 +3850,8 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                       className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
                         isActive
                           ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(0,240,255,0.75)]'
-                          : id === 'galaxy'
-                          ? 'text-cyan-400/80'
+                          : id === 'hub'
+                          ? 'text-cyan-400/90'
                           : 'text-white/60'
                       }`}
                     />

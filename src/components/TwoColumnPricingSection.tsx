@@ -70,8 +70,9 @@ const ADDON_PRODUCTS: AddonProduct[] = [
     category: 'WAV STEMS',
     subtitle: 'Studio Acapellas of the whole "Dream of Akainoya" tracklist.',
     description:
-      'Studio Acapellas of the whole "Dream of Akainoya" tracklist. Dry and wet studio vocal stems, master tempo locked and tuned for remixing and production.',
+      'Studio Acapellas of the whole "Dream of Akainoya" tracklist. Dry and wet studio vocal stems, master tempo locked and tuned for remixing and production. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.',
     features: [
+      'Instant Access: Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase',
       'Master studio vocal leads (Dry & Wet)',
       'Harmonies, ad-libs, and backing vocoder tracks',
       '24-bit / 48kHz uncompressed WAV stems',
@@ -86,8 +87,9 @@ const ADDON_PRODUCTS: AddonProduct[] = [
     category: '4K PDF',
     subtitle: 'Complete graphic novel with interactive viewer & 4K download.',
     description:
-      'The complete digital edition of the Bingäa graphic novel in pristine 4K resolution, readable in browser or downloaded as DRM-free PDF.',
+      'The complete digital edition of the Bingäa graphic novel in pristine 4K resolution, readable in browser or downloaded as DRM-free PDF. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.',
     features: [
+      'Instant Access: Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase',
       'Complete full-color graphic novel',
       'Interactive dual-page flipbook reader',
       'High-DPI PDF storyboard edition',
@@ -103,8 +105,9 @@ const ADDON_PRODUCTS: AddonProduct[] = [
     category: 'WORKFLOW & LOGIC PRO',
     subtitle: 'Official 2D visualizer workflow, Enerwise sound architecture, vocal chain & dedicated Logic Pro template.',
     description:
-      'Full access to the official Community Hub workflow (the Äkinoya workflow), including the 2D visualizer production pipeline, Enerwise sound architecture, vocal chain (my vocal chain), and dedicated Logic Pro template. (Excludes the separate Vocal Acapella & Remix Pack).',
+      'Full access to the official Community Hub workflow (the Äkinoya workflow), including the 2D visualizer production pipeline, Enerwise sound architecture, vocal chain (my vocal chain), and dedicated Logic Pro template. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase. (Excludes the separate Vocal Acapella & Remix Pack).',
     features: [
+      'Instant Access: Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase',
       'Official Community Hub workflow access (the Äkinoya workflow)',
       'Dedicated Logic Pro template with vocal chain (my vocal chain)',
       '2D Visualizer behind-the-scenes production pipeline',
@@ -496,6 +499,19 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                             </ul>
                           </div>
 
+                          {/* High-Contrast Delivery & Asset Vault Notice (Desktop, Tablet & Mobile) */}
+                          <div className="p-3 rounded-xl bg-gradient-to-r from-cyan-950/70 via-[#071324] to-cyan-950/70 border border-cyan-400/50 text-cyan-200 flex items-start gap-2.5 shadow-[0_0_15px_rgba(56,189,248,0.15)]">
+                            <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                            <div className="text-[11px] sm:text-xs leading-relaxed font-sans">
+                              <strong className="text-cyan-300 font-mono font-bold uppercase tracking-wider block text-[10px] sm:text-[10.5px]">
+                                Instant Access · Hub Delivery:
+                              </strong>
+                              <span>
+                                Instantly unlocked and securely stored in your <strong>Asset Vault inside the Hub</strong> upon purchase. Stream or download anytime across desktop, tablet, and mobile with zero expiration.
+                              </span>
+                            </div>
+                          </div>
+
                           {/* Smart Choice: Bundled with Member Pass */}
                           <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-400/30 space-y-1 text-xs">
                             <div className="font-mono font-bold text-amber-300 flex items-center gap-1.5">
@@ -682,6 +698,15 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
               <ul className="space-y-2.5 sm:space-y-2 text-xs sm:text-[13px] text-white/85 font-sans leading-relaxed">
                 <li className="flex items-start gap-2.5">
+                  <span className="w-4 h-4 rounded-full bg-cyan-400/20 border border-cyan-400/70 text-cyan-300 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-black">
+                    ✓
+                  </span>
+                  <span>
+                    <strong className="text-cyan-300">Instant Access:</strong> Instantly unlocked and securely stored in your <strong className="text-white">Asset Vault inside the Hub</strong> upon purchase.
+                  </span>
+                </li>
+
+                <li className="flex items-start gap-2.5">
                   <span className="w-4 h-4 rounded-full bg-amber-400/20 border border-amber-400/70 text-amber-300 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-black">
                     ✓
                   </span>
@@ -753,6 +778,19 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                   </span>
                 </li>
               </ul>
+
+              {/* High-Contrast Vault Delivery Notice (All Viewports: Desktop, Tablet & Mobile) */}
+              <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/70 via-yellow-950/40 to-amber-950/70 border border-amber-400/50 text-amber-200 flex items-start gap-2.5 shadow-[0_0_20px_rgba(245,158,11,0.18)]">
+                <ShieldCheck className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+                <div className="text-[11.5px] sm:text-xs leading-relaxed font-sans">
+                  <strong className="text-amber-300 font-mono font-bold uppercase tracking-wider block text-[10px] sm:text-[10.5px]">
+                    Instant Access &amp; Hub Vault Storage:
+                  </strong>
+                  <span>
+                    Instant Access: Instantly unlocked and securely stored in your <strong>Asset Vault inside the Hub</strong> upon purchase. All production stems, DAW presets, 4K graphic novel, and monthly curated drops stay permanently tied to your account profile.
+                  </span>
+                </div>
+              </div>
 
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-[11px] font-sans text-amber-200/70 italic">
                 * All digital extras are fully all-inclusive (excluding physical shipping of the comic book).

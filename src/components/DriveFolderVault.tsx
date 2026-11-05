@@ -142,7 +142,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         badge: 'VOCAL ACAPELLAS & STEMS · €19.99',
         priceValue: '19.99',
         isPhysical: false,
-        deliveryNotice: 'Instant Digital Delivery · Vault Access',
+        deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
         allocationNotice: 'Instant Master Stems · 24-bit / 48kHz WAV',
       };
     } else if (productId === 'comic-digital') {
@@ -154,7 +154,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         priceValue: '9.99',
         isPhysical: false,
         image: bingaaComicCover,
-        deliveryNotice: 'Instant Digital Delivery · Vault Access',
+        deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
         allocationNotice: 'Pristine 4K Resolution · Web Reader + Offline PDF',
       };
     } else if (productId === 'comic') {
@@ -177,7 +177,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         badge: 'WORKFLOW & LOGIC PRO · €29.99',
         priceValue: '29.99',
         isPhysical: false,
-        deliveryNotice: 'Instant Digital Delivery · Vault Access',
+        deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
         allocationNotice: 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template',
       };
     } else if (productId === 'membership') {
@@ -189,7 +189,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         priceValue: '60.00',
         isPhysical: true,
         allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
-        deliveryNotice: 'Free Express Delivery · Physical Shipping + Digital Sync',
+        deliveryNotice: 'Free Express Delivery · Physical Shipping + Instant Vault Access',
       };
     } else {
       // Default / Folder 1 -> Workflow add-on (€29.99, digital)
@@ -200,7 +200,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         badge: 'WORKFLOW & LOGIC PRO · €29.99',
         priceValue: '29.99',
         isPhysical: false,
-        deliveryNotice: 'Instant Digital Delivery · Vault Access',
+        deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
         allocationNotice: 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template',
       };
     }

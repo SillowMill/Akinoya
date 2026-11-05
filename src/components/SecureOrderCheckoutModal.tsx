@@ -662,9 +662,16 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                             </div>
                           </div>
                         ) : (
-                          <div className="p-2.5 rounded-xl bg-cyan-950/25 border border-cyan-500/20 text-[11px] font-mono text-cyan-300 flex items-center gap-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                            <span>Instant Digital Vault Download · No physical shipping required.</span>
+                          <div className="p-2.5 rounded-xl bg-cyan-950/35 border border-cyan-500/30 text-[11px] sm:text-xs font-sans text-cyan-200 flex items-start gap-2.5">
+                            <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                            <div>
+                              <strong className="text-cyan-300 font-mono font-bold uppercase text-[10px] block">
+                                Instant Access · Hub Delivery:
+                              </strong>
+                              <span>
+                                Instantly unlocked and securely stored in your <strong>Asset Vault inside the Hub</strong> upon purchase. Access anytime across mobile, tablet, and desktop.
+                              </span>
+                            </div>
                           </div>
                         )}
                       </div>
