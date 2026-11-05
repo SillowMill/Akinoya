@@ -56,9 +56,17 @@ export const HeaderStarfield: React.FC = () => {
 
     // Initialize stars constellation scaled to container width
     const initStars = (w: number) => {
+      // Conditional mobile viewport check (< 768px)
+      const isMobile =
+        (typeof window !== 'undefined' && window.innerWidth < 768) || w < 768;
+
+      // On mobile viewports, scale down star radius by 55% (sizeMultiplier = 0.45)
+      // Desktop (>= 1024px) and tablet (768px - 1023px) remain exactly at 1.0 multiplier
+      const sizeMultiplier = isMobile ? 0.45 : 1.0;
+
       // Adaptive particle density based on viewport & performance tier
       let count = 62;
-      if (w < 640) {
+      if (isMobile) {
         count = isLitePerf ? 18 : 26;
       } else if (w < 1024) {
         count = isLitePerf ? 28 : 42;
@@ -81,9 +89,10 @@ export const HeaderStarfield: React.FC = () => {
 
         // Guide stars have subtle halo (first ~4 stars)
         const isGuideStar = i < 4;
-        const radius = isGuideStar
+        const baseRadius = isGuideStar
           ? 1.25 + Math.random() * 0.35
           : 0.55 + Math.random() * 0.65;
+        const radius = Math.max(0.25, baseRadius * sizeMultiplier);
 
         generated.push({
           xPct: Math.random(),
