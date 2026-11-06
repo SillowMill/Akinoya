@@ -51,7 +51,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
 
   return (
     <header
-      className="hub-sticky-header sticky top-0 z-50 isolate relative overflow-hidden w-full max-w-full box-border border-b border-white/15 bg-[#060a14]/98 backdrop-blur-2xl px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 xl:px-10 py-2 sm:py-2.5 lg:py-3 transform-gpu will-change-transform shadow-[0_4px_30px_rgba(0,0,0,0.95)] [backface-visibility:hidden] [-webkit-backface-visibility:hidden]"
+      className="hub-sticky-header sticky top-0 z-[80] relative overflow-visible w-full max-w-full box-border border-b border-white/15 bg-[#060a14]/98 backdrop-blur-2xl px-2.5 xs:px-3 sm:px-4 md:px-5 lg:px-6 xl:px-10 py-2 sm:py-2.5 lg:py-3 transform-gpu will-change-transform shadow-[0_4px_30px_rgba(0,0,0,0.95)] [backface-visibility:hidden] [-webkit-backface-visibility:hidden]"
       style={{
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
@@ -59,9 +59,12 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
         backfaceVisibility: 'hidden',
       }}
     >
-      {/* Celestial Starfield Animation Layer (Header & Navigation) */}
-      <HeaderStarfield />
+      {/* Canvas / Starfield Background Layer: z-0 pointer-events-none */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <HeaderStarfield />
+      </div>
 
+      {/* Header Container Elements / Logos / Buttons: z-10 relative */}
       <div className="relative z-10 max-w-7xl w-full mx-auto flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-6 min-w-0 pointer-events-auto">
         {/* Zone 1: High-End Shimmering Header Logo, Reflective Chrome Divider & Brand Wordmark */}
         <a
@@ -115,7 +118,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
         </a>
 
         {/* Zone 2: Actions & Essential System Status Tags (Streamlined Ultra-Clean Header) */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 relative z-20">
           <SoundtrackButton />
           <AuthHeaderButton />
 
