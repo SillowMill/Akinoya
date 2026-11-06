@@ -1286,6 +1286,44 @@ video::-internal-media-controls-overlay-cast-button {
   }
 }
 
+/* ==========================================================================
+   Header Logo Mobile/Tablet Reset (< 1024px)
+   Disables default mobile touch/button container box, appearance & background
+   while strictly preserving desktop parity (>= 1024px untouched)
+   ========================================================================== */
+.logo-wrapper,
+a.logo-wrapper {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 1023px) {
+  .logo-wrapper,
+  a.logo-wrapper,
+  header .logo-wrapper,
+  .hub-sticky-header .logo-wrapper {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .logo-wrapper .logo-icon-container {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+
+  .logo-wrapper .logo-icon-container .specular-sheen {
+    display: none !important;
+  }
+}
+
+
 
 
 

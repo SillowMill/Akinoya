@@ -89,13 +89,13 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
               }
             }
           }}
-          className="group flex items-center gap-2 xs:gap-2.5 sm:gap-3 shrink-0 cursor-pointer min-w-0"
+          className="logo-wrapper group flex items-center gap-2 xs:gap-2.5 sm:gap-3 shrink-0 cursor-pointer min-w-0 bg-transparent border-0 shadow-none appearance-none select-none"
           title="Sillow Mill — Pass Perks Home"
         >
-          {/* Shimmering Logo with subtle cinematic glow & glass housing */}
-          <div className="relative w-6 h-6 xs:w-6.5 xs:h-6.5 sm:w-7 sm:h-7 lg:w-7.5 lg:h-7.5 rounded-lg bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-1 border border-white/20 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(255,255,255,0.18)] group-hover:shadow-[0_0_20px_rgba(251,191,36,0.35)] group-hover:border-amber-400/50 transition-all duration-300">
-            {/* Cinematic Specular Sheen */}
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-transparent via-white/15 to-transparent pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity" />
+          {/* Shimmering Logo with subtle cinematic glow & glass housing (desktop parity preserved, mobile/tablet container box reset) */}
+          <div className="logo-icon-container relative w-6 h-6 xs:w-6.5 xs:h-6.5 sm:w-7 sm:h-7 lg:w-7.5 lg:h-7.5 rounded-lg bg-transparent border-0 shadow-none lg:bg-gradient-to-br lg:from-white/[0.08] lg:via-white/[0.03] lg:to-transparent p-1 lg:border lg:border-white/20 flex items-center justify-center shrink-0 lg:shadow-[0_0_12px_rgba(255,255,255,0.18)] group-hover:shadow-[0_0_20px_rgba(251,191,36,0.35)] group-hover:border-amber-400/50 transition-all duration-300">
+            {/* Cinematic Specular Sheen (Desktop Only) */}
+            <div className="specular-sheen hidden lg:block absolute inset-0 rounded-lg bg-gradient-to-tr from-transparent via-white/15 to-transparent pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity" />
             <img
               src={sillowMillLogoUrl}
               alt="Sillow Mill Emblem"
