@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { updateUserSubscription, grantWorldCreationSlot } from './authVoteService';
+import { dispatchGelatoOrder } from './gelatoService';
 // @ts-ignore
 import { appendOrderShippingToGoogleSheets } from '../../api/nfc/_googleSheetsSync.js';
 
@@ -366,6 +367,32 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
     appendOrderShippingToGoogleSheets(orderRowData).catch((sheetErr: any) => {
       console.warn('[StripeService] Shipping sheet sync background warning:', sheetErr);
     });
+
+    // Direct Gelato POD Dispatch for physical items (Comic Books or physical Membership bundles)
+    const isPhysicalItem =
+      rawProdId === 'comic' ||
+      rawProdId === 'comic-physical' ||
+      rawProdId === 'membership' ||
+      Boolean((session as any).shipping_details) ||
+      Boolean((session as any).shipping_cost);
+
+    if (isPhysicalItem) {
+      dispatchGelatoOrder({
+        orderReferenceId: piRef || session.id,
+        email,
+        customerName: name || 'Collector',
+        addressLine1: line1 || '-',
+        addressLine2: line2 || '',
+        city,
+        postalCode,
+        country,
+        phone: custDetails?.phone || '',
+        productType: productTypeLabel,
+        quantity: 1,
+      }).catch((gelatoErr: any) => {
+        console.warn('[StripeService] Gelato POD dispatch notice:', gelatoErr);
+      });
+    }
   } catch (sheetSyncErr) {
     console.warn('[StripeService] Error constructing shipping sheet payload:', sheetSyncErr);
   }

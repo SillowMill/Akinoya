@@ -2896,12 +2896,145 @@ installFalNetworkGuard();
 
 // src/server/stripeService.ts
 init_authVoteService();
-init_googleSheetsSync();
 import Stripe from "stripe";
 import fs3 from "fs";
 import path3 from "path";
+import dotenv2 from "dotenv";
+
+// src/server/gelatoService.ts
 import dotenv from "dotenv";
 dotenv.config();
+function normalizeCountryCode(raw) {
+  const clean = (raw || "").trim();
+  if (clean.length === 2) return clean.toUpperCase();
+  const lower = clean.toLowerCase();
+  const map = {
+    netherlands: "NL",
+    nederland: "NL",
+    belgium: "BE",
+    belgi\u00EB: "BE",
+    belgique: "BE",
+    germany: "DE",
+    deutschland: "DE",
+    france: "FR",
+    "united kingdom": "GB",
+    uk: "GB",
+    england: "GB",
+    "united states": "US",
+    usa: "US",
+    spain: "ES",
+    espa\u00F1a: "ES",
+    italy: "IT",
+    italia: "IT",
+    switzerland: "CH",
+    austria: "AT",
+    \u00F6sterreich: "AT",
+    denmark: "DK",
+    sweden: "SE",
+    norway: "NO",
+    finland: "FI",
+    ireland: "IE",
+    portugal: "PT",
+    canada: "CA",
+    australia: "AU",
+    japan: "JP",
+    luxembourg: "LU"
+  };
+  return map[lower] || clean.slice(0, 2).toUpperCase() || "NL";
+}
+async function dispatchGelatoOrder(params) {
+  const apiKey = process.env.GELATO_API_KEY || process.env.GELATO_SECRET_KEY || process.env.GELATO_KEY || "";
+  const orderRef = (params.orderReferenceId || `AKN-${Date.now()}`).trim();
+  const cleanEmail = (params.email || "").trim().toLowerCase();
+  const fullName = (params.customerName || "Collector").trim();
+  const nameParts = fullName.split(" ");
+  const firstName = nameParts[0] || "Collector";
+  const lastName = nameParts.slice(1).join(" ") || "";
+  const countryCode = normalizeCountryCode(params.country);
+  const pdfUrl = params.pdfAssetUrl || process.env.GELATO_COMIC_PDF_URL || "https://sillowmill.com/assets/Bingaa.pdf";
+  const productUid = process.env.GELATO_PRODUCT_UID || "comic_books_softcover_a4_color";
+  const qty = parseInt(String(params.quantity || "1"), 10) || 1;
+  if (!apiKey) {
+    console.log(
+      `[Gelato POD] Order ${orderRef} for ${cleanEmail} logged. Note: GELATO_API_KEY is not configured in environment.`
+    );
+    return {
+      success: true,
+      queued: true,
+      reason: "GELATO_API_KEY_NOT_CONFIGURED"
+    };
+  }
+  const payload = {
+    orderType: "order",
+    orderReferenceId: orderRef,
+    customerReferenceId: cleanEmail,
+    currency: "EUR",
+    items: [
+      {
+        itemReferenceId: `${orderRef}-item-01`,
+        productUid,
+        files: [
+          {
+            type: "default",
+            url: pdfUrl
+          }
+        ],
+        quantity: qty
+      }
+    ],
+    shippingAddress: {
+      firstName,
+      lastName,
+      companyName: "",
+      addressLine1: params.addressLine1 || "-",
+      addressLine2: params.addressLine2 || "",
+      city: params.city || "-",
+      postCode: params.postalCode || "-",
+      state: "",
+      country: countryCode,
+      email: cleanEmail,
+      phone: params.phone || ""
+    }
+  };
+  try {
+    const res = await fetch("https://api.gelato.com/v2/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-KEY": apiKey
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      console.warn(`[Gelato POD] API returned status ${res.status}:`, data);
+      return {
+        success: false,
+        status: String(res.status),
+        error: data.message || `Gelato HTTP ${res.status}`,
+        data
+      };
+    }
+    const gelatoOrderId = data.id || data.orderId || orderRef;
+    console.log(`[Gelato POD] Order successfully dispatched to Gelato:`, gelatoOrderId);
+    return {
+      success: true,
+      gelatoOrderId,
+      status: data.fulfillmentStatus || "created",
+      data
+    };
+  } catch (err) {
+    console.warn(`[Gelato POD] Exception during Gelato API dispatch:`, err);
+    return {
+      success: false,
+      error: err?.message || "Network exception calling Gelato API"
+    };
+  }
+}
+
+// src/server/stripeService.ts
+init_googleSheetsSync();
+dotenv2.config();
 var _stripeInstance = null;
 function getStripe() {
   if (_stripeInstance) return _stripeInstance;
@@ -3185,6 +3318,24 @@ async function processCompletedCheckout(session) {
     appendOrderShippingToGoogleSheets(orderRowData).catch((sheetErr) => {
       console.warn("[StripeService] Shipping sheet sync background warning:", sheetErr);
     });
+    const isPhysicalItem = rawProdId === "comic" || rawProdId === "comic-physical" || rawProdId === "membership" || Boolean(session.shipping_details) || Boolean(session.shipping_cost);
+    if (isPhysicalItem) {
+      dispatchGelatoOrder({
+        orderReferenceId: piRef || session.id,
+        email,
+        customerName: name || "Collector",
+        addressLine1: line1 || "-",
+        addressLine2: line2 || "",
+        city,
+        postalCode,
+        country,
+        phone: custDetails?.phone || "",
+        productType: productTypeLabel,
+        quantity: 1
+      }).catch((gelatoErr) => {
+        console.warn("[StripeService] Gelato POD dispatch notice:", gelatoErr);
+      });
+    }
   } catch (sheetSyncErr) {
     console.warn("[StripeService] Error constructing shipping sheet payload:", sheetSyncErr);
   }
@@ -3652,12 +3803,12 @@ init_googleSheetsSync();
 // api/_generatePlanet.ts
 import fs5 from "fs";
 import path5 from "path";
-import dotenv2 from "dotenv";
+import dotenv3 from "dotenv";
 import { createClient as createClient2 } from "@supabase/supabase-js";
 try {
-  dotenv2.config();
-  dotenv2.config({ path: path5.resolve(process.cwd(), ".env.local") });
-  dotenv2.config({ path: path5.resolve(process.cwd(), ".env.production.local") });
+  dotenv3.config();
+  dotenv3.config({ path: path5.resolve(process.cwd(), ".env.local") });
+  dotenv3.config({ path: path5.resolve(process.cwd(), ".env.production.local") });
 } catch {
 }
 var QUEUED_PENDING_STATUS = "QUEUED_PENDING";

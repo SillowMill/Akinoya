@@ -946,6 +946,15 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
 
               <ul className="space-y-2.5 sm:space-y-2 text-xs sm:text-[13px] text-white/85 font-sans leading-relaxed">
                 <li className="flex items-start gap-2.5">
+                  <span className="w-4 h-4 rounded-full bg-cyan-400/25 border border-cyan-400/80 text-cyan-300 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-black shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+                    ✓
+                  </span>
+                  <span>
+                    <strong className="text-cyan-300">Continuous Vault Hub Access:</strong> Automatic, real-time inclusion of all future releases, new production workflows, vocal acapella &amp; remix packs, and upcoming comic book chapters pushed directly to your account asset vault — a perpetually growing ecosystem without ever needing to re-purchase or manually sync future updates.
+                  </span>
+                </li>
+
+                <li className="flex items-start gap-2.5">
                   <span className="w-4 h-4 rounded-full bg-cyan-400/20 border border-cyan-400/70 text-cyan-300 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-black">
                     ✓
                   </span>
