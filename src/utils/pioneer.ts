@@ -103,7 +103,7 @@ export const hasWorldSynthesisPass = (
   role?: string,
   isVip?: boolean
 ): boolean => {
-  if (hasPaidMembership(user, profile, role, isVip)) return true;
+  if (profile?.world_creation_slots && profile.world_creation_slots > 0) return true;
   if (profile?.has_world_synthesis === true || user?.has_world_synthesis === true) return true;
   if (typeof window !== 'undefined') {
     try {
@@ -116,8 +116,8 @@ export const hasWorldSynthesisPass = (
         if (
           Array.isArray(owned) &&
           (owned.includes('world-synthesis') ||
-            owned.includes('membership') ||
-            owned.includes('all-inclusive'))
+            owned.includes('world-pass') ||
+            owned.includes('pioneer-world-pass'))
         ) {
           return true;
         }
@@ -136,15 +136,18 @@ export const triggerWorldPassCheckout = (planetName?: string) => {
       new CustomEvent('akinoya-open-checkout', {
         detail: {
           id: 'world-synthesis',
-          title: 'Sillow Mill — Synthesize & Feature Your World',
+          productId: 'world-synthesis',
+          title: 'Äkinoya Pioneer World Pass',
           subtitle: planetName
-            ? `Activate ${planetName} & Lock Visualizer Co-Creation`
-            : 'Activate World & Lock Visualizer Co-Creation Slot',
-          badge: 'CO-CREATION PASS · €14.99',
+            ? `Synthesize ${planetName} & Lock Visualizer Co-Creation`
+            : 'Synthesize World & Lock Visualizer Co-Creation Slot',
+          badge: 'PIONEER WORLD PASS · €14.99',
           priceValue: '14.99',
+          amount: 14.99,
+          currency: 'eur',
           isPhysical: false,
           allocationNotice: '5-Photo 4K Dossier · 9:16 Video Loop · Visualizer Slot',
-          deliveryNotice: 'Instant Co-Creation Access · Asset Vault inside the Hub',
+          deliveryNotice: 'Instant Co-Creation Access · Unlimited Custom Worlds Under Profile',
         },
       })
     );

@@ -2,7 +2,9 @@ import Stripe from 'stripe';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { updateUserSubscription } from './authVoteService';
+import { updateUserSubscription, grantWorldCreationSlot } from './authVoteService';
+// @ts-ignore
+import { appendOrderShippingToGoogleSheets } from '../../api/nfc/_googleSheetsSync.js';
 
 dotenv.config();
 
@@ -172,11 +174,11 @@ export async function createStripeCheckoutSession(params: {
     productName = 'Sillow Mill - Digital Copy of Bingaa';
     productDescription = 'Complete graphic novel with interactive dual-page flipbook reader & DRM-free 4K download. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.';
     unitAmount = params.amount ? Math.round(params.amount * 100) : 999;
-  } else if (productId === 'world-synthesis') {
-    productName = 'Sillow Mill - Synthesize & Feature Your World';
+  } else if (productId === 'world-synthesis' || productId === 'world-pass' || productId === 'pioneer-world-pass') {
+    productName = 'Äkinoya Pioneer World Pass';
     productDescription =
       "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and secure your official co-creation spot to feature directly in a future cinematic visualizer once all 11 visualizers are released. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
-    unitAmount = params.amount ? Math.round(params.amount * 100) : 1499;
+    unitAmount = 1499; // €14.99 per world instance
     productImage = `${baseUrl}/images/akinoya_hero_bg-CiYAZVRx.jpg`;
   } else if (productId === 'membership') {
     productName = 'Sillow Mill - Annual Pioneer Member Pass (All-Inclusive)';
@@ -321,6 +323,65 @@ export async function processCompletedCheckout(session: Stripe.Checkout.Session)
 
   orders.push(newOrder);
   saveOrders(orders);
+
+  // Automated Google Sheets sync for Customer Orders & Membership Shipping Directory
+  try {
+    const rawProdId = (productId || '').toLowerCase();
+    let productTypeLabel = session.metadata?.product_title || 'Comic Book';
+    if (rawProdId === 'comic' || rawProdId === 'comic-physical') {
+      productTypeLabel = 'Comic Book';
+    } else if (rawProdId === 'membership') {
+      productTypeLabel = 'Membership';
+    } else if (rawProdId === 'world-synthesis' || rawProdId === 'world-pass' || rawProdId === 'pioneer-world-pass') {
+      productTypeLabel = 'Äkinoya Pioneer World Pass';
+    }
+
+    const shipDetails = (session as any).shipping_details;
+    const custDetails = session.customer_details;
+
+    const line1 = shipDetails?.address?.line1 || custDetails?.address?.line1 || session.metadata?.shipping_address || '';
+    const line2 = shipDetails?.address?.line2 || custDetails?.address?.line2 || session.metadata?.apartment_bus || '';
+    const fullStreet = [line1, line2].filter(Boolean).join(', ') || '-';
+    const city = shipDetails?.address?.city || custDetails?.address?.city || session.metadata?.shipping_city || '-';
+    const postalCode = shipDetails?.address?.postal_code || custDetails?.address?.postal_code || session.metadata?.shipping_postal || '-';
+    const country = shipDetails?.address?.country || custDetails?.address?.country || '-';
+    const piRef = typeof session.payment_intent === 'string' ? session.payment_intent : (session.payment_intent as any)?.id || session.id;
+
+    const orderRowData = {
+      orderDate: new Date().toISOString().split('T')[0],
+      orderId: piRef || session.id,
+      customerName: name || 'Collector',
+      email,
+      productType: productTypeLabel,
+      quantity: '1',
+      streetAddress: fullStreet,
+      city,
+      postalCode,
+      country,
+      paymentStatus: 'Paid',
+      fulfillmentStatus: 'Unfulfilled',
+      notes: `Stripe Ref: ${session.id}`,
+    };
+
+    appendOrderShippingToGoogleSheets(orderRowData).catch((sheetErr: any) => {
+      console.warn('[StripeService] Shipping sheet sync background warning:', sheetErr);
+    });
+  } catch (sheetSyncErr) {
+    console.warn('[StripeService] Error constructing shipping sheet payload:', sheetSyncErr);
+  }
+
+  // Grant world creation slot / token on verified World Pass purchase (€14.99)
+  if (
+    productId === 'world-synthesis' ||
+    productId === 'world-pass' ||
+    productId === 'pioneer-world-pass'
+  ) {
+    try {
+      grantWorldCreationSlot(email, session.id);
+    } catch (wErr) {
+      console.warn('[StripeService] World pass slot grant notice:', wErr);
+    }
+  }
 
   // Automatically grant Annual Pass entitlements and record renewal schedule
   if (isSubscription || productId === 'membership') {

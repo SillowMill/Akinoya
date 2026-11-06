@@ -228,7 +228,7 @@ export const AuthHeaderButton: React.FC = () => {
         )}
       </div>
 
-      {/* Direct Claim Your Free World Modal Trigger */}
+      {/* Direct Synthesize Your World Modal Trigger */}
       <button
         type="button"
         onClick={handleClaimWorld}
@@ -236,7 +236,7 @@ export const AuthHeaderButton: React.FC = () => {
       >
         <span className="flex items-center gap-2">
           <Globe2 className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-          <span>Claim Your Free World</span>
+          <span>Synthesize Your World [€14.99]</span>
         </span>
         <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-400 text-black font-extrabold uppercase shrink-0">
           [PIONEER-2027]

@@ -62,6 +62,7 @@ import {
   getAllSubmissionRecords,
   deployMondayBatchRecords,
   resetTestAccountData,
+  getUserWorldCreationSlots,
 } from './authVoteService';
 
 export const apiApp = express();
@@ -84,7 +85,7 @@ apiApp.use('/api', (_req: Request, res: Response, next: NextFunction) => {
 
 // ─── Stripe Webhook (raw body BEFORE json parser) ─────────────────────────────
 apiApp.post(
-  '/api/webhooks/stripe',
+  ['/api/webhooks/stripe', '/api/stripe-webhook', '/webhooks/stripe', '/stripe-webhook'],
   express.raw({ type: '*/*' }),
   async (req: Request, res: Response): Promise<void> => {
     const sig = req.headers['stripe-signature'];
@@ -262,6 +263,12 @@ apiRouter.post('/create-checkout-session', async (req: Request, res: Response): 
       error: err?.message || 'Failed to initialize Stripe Checkout session',
     });
   }
+});
+
+apiRouter.get('/user/world-slots', async (req: Request, res: Response): Promise<void> => {
+  const email = ((req.query.email as string) || '').trim().toLowerCase();
+  const slots = email ? getUserWorldCreationSlots(email) : 0;
+  res.status(200).json({ success: true, email, slots });
 });
 
 // ─── 2. Inventory Status ──────────────────────────────────────────────────────

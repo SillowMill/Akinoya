@@ -68,10 +68,10 @@ export const HeaderStarfield: React.FC = () => {
         tier = 'mobile';
       }
 
-      // Three-Tier Responsive Configuration:
-      // Desktop (>= 1024px): 45-60 stars, 1.0px - 2.5px radius
-      // Tablet (768px - 1023px): 25-35 stars, 0.7px - 1.6px radius
-      // Mobile (< 768px): 15-20 stars, 0.4px - 1.0px radius
+      // Three-Tier Ultra-Fine Responsive Configuration:
+      // Desktop (>= 1024px): 45-60 stars, 0.8px - 1.8px radius
+      // Tablet (768px - 1023px): 25-35 stars, 0.5px - 1.2px radius
+      // Mobile (< 768px): 15-20 stars, 0.3px - 0.8px radius
       let count: number;
       let minRadius: number;
       let maxRadius: number;
@@ -79,18 +79,18 @@ export const HeaderStarfield: React.FC = () => {
 
       if (tier === 'desktop') {
         count = isLitePerf ? 38 : 52; // ~45–60 stars
-        minRadius = 1.0;
-        maxRadius = 2.5;
+        minRadius = 0.8;
+        maxRadius = 1.8;
         guideStarCount = 4;
       } else if (tier === 'tablet') {
         count = isLitePerf ? 20 : 30; // ~25–35 stars
-        minRadius = 0.7;
-        maxRadius = 1.6;
+        minRadius = 0.5;
+        maxRadius = 1.2;
         guideStarCount = 3;
       } else {
         count = isLitePerf ? 14 : 18; // ~15–20 stars
-        minRadius = 0.4;
-        maxRadius = 1.0;
+        minRadius = 0.3;
+        maxRadius = 0.8;
         guideStarCount = 2;
       }
 
@@ -253,7 +253,7 @@ export const HeaderStarfield: React.FC = () => {
       style={{
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
-        willChange: 'transform',
+        willChange: 'transform, opacity',
         opacity: 0.95,
       }}
     />

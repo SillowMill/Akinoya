@@ -155,6 +155,33 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
     saveSectorClaim(claimRecord);
     setConfirmedClaim(claimRecord);
 
+    // Auto-advance Mill directly to Question 2 with user's planet inputs (handover data)
+    const handoverPayload = {
+      planetName: cleanPlanetName,
+      biome: selectedBiome.label,
+      email: emailToUse,
+      coordinates,
+      initialStep: 2,
+    };
+    sessionStorage.setItem('akinoya_start_mill', 'true');
+    sessionStorage.setItem('akinoya_mill_start_step', '2');
+    sessionStorage.setItem('akinoya_worldbuild_handover', JSON.stringify(handoverPayload));
+
+    // Check if user already has an active world creation slot
+    const hasSlot = Boolean(
+      (profile?.world_creation_slots && profile.world_creation_slots > 0) ||
+      localStorage.getItem('akinoya_world_pass_verified') === 'true'
+    );
+
+    if (!hasSlot) {
+      // Strictly mandate €14.99 Stripe checkout for world creation instance
+      soundManager.playTone(660, 0.08);
+      setIsSubmitting(false);
+      handleClose();
+      triggerWorldPassCheckout(cleanPlanetName);
+      return;
+    }
+
     // Direct Sync to Google Sheets if email is present
     if (emailToUse) {
       const syncPayload = {
@@ -191,17 +218,6 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
       }).catch((err) => console.warn('[Pioneer Modal] Pre-launch sheets sync notice:', err));
     }
 
-    // Auto-advance Mill directly to Question 2 with user's planet inputs (handover data)
-    const handoverPayload = {
-      planetName: cleanPlanetName,
-      biome: selectedBiome.label,
-      email: emailToUse,
-      coordinates,
-      initialStep: 2,
-    };
-    sessionStorage.setItem('akinoya_start_mill', 'true');
-    sessionStorage.setItem('akinoya_mill_start_step', '2');
-    sessionStorage.setItem('akinoya_worldbuild_handover', JSON.stringify(handoverPayload));
     window.dispatchEvent(
       new CustomEvent('akinoya-start-mill', {
         detail: handoverPayload,
@@ -277,7 +293,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-amber-950/80 border border-amber-400/60 text-amber-300 font-mono text-[10px] sm:text-xs font-bold tracking-wider shadow-[0_0_15px_rgba(245,158,11,0.3)]">
                     <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 animate-pulse" />
-                    <span>[PIONEER-2027] EARLY ACCESS WHITELIST</span>
+                    <span>[PIONEER-2027] UNLIMITED WORLD SYNTHESIS</span>
                   </span>
                   <span className="text-[9.5px] sm:text-[10px] font-mono px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-cyan-300 tracking-wider font-semibold">
                     OFFICIAL LAUNCH: JAN 9, 2027
@@ -285,11 +301,11 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                 </div>
 
                 <h2 className="text-xl sm:text-3xl font-display font-black text-white tracking-tight uppercase">
-                  Create Your Free World
+                  Synthesize Your World
                 </h2>
 
                 <p className="text-[11.5px] sm:text-sm text-white/75 font-sans leading-relaxed">
-                  Official Launch: <span className="text-amber-300 font-semibold">January 9, 2027</span>. <strong className="text-amber-300 font-semibold">Create your free world before 09/01/2027</strong> to unlock planetary sector claims, full community channels, and permanent Pioneer status.
+                  Official Launch: <span className="text-amber-300 font-semibold">January 9, 2027</span>. <strong className="text-amber-300 font-semibold">Activate your custom world for €14.99</strong> to unlock planetary sector claims, 3D rendering &amp; video generation, and permanent Pioneer status. Unlimited custom worlds permitted per account.
                 </p>
               </div>
 
@@ -301,10 +317,10 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   </div>
                   <div className="space-y-0.5 sm:space-y-1 text-xs font-sans">
                     <span className="font-mono font-bold text-amber-300 block text-[10.5px] sm:text-[11px] uppercase tracking-wider">
-                      Membership-Gated Exclusivity
+                      €14.99 Pioneer World Pass · Unlimited Worlds
                     </span>
                     <p className="text-white/80 leading-relaxed text-[11px] sm:text-xs">
-                      Custom planetary sector claims, official Worldbuilding Contest entry, and the opportunity to be featured in the official Sillow Mill visualizer releases with Odi Selis require an active membership. All accounts registered during this pre-launch phase receive irrevocable <strong className="text-amber-300">[PIONEER-2027]</strong> status.
+                      Custom planetary sector claims, official Worldbuilding Contest entry, and the opportunity to be featured in the official Sillow Mill visualizer releases with Odi Selis require an active world pass. You can craft, mint, and retain unlimited worlds under your profile at €14.99 per world instance. All accounts registered during this pre-launch phase receive permanent <strong className="text-amber-300">[PIONEER-2027]</strong> status.
                     </p>
                   </div>
                 </div>
@@ -321,7 +337,7 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   </div>
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <Layers className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                    <span>Worldbuilding Contest Priority</span>
+                    <span>Unlimited Worlds Per Account</span>
                   </div>
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <Crown className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
@@ -424,7 +440,12 @@ export const ClaimYourWorldModal: React.FC<ClaimYourWorldModalProps> = ({
                   >
                     <Sparkles className="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
                     <span>
-                      {isSubmitting ? 'CONNECTING TO MILL...' : 'WORLDBUILD WITH MILL →'}
+                      {isSubmitting
+                        ? 'CONNECTING TO MILL...'
+                        : (profile?.world_creation_slots && profile.world_creation_slots > 0) ||
+                          (typeof window !== 'undefined' && localStorage.getItem('akinoya_world_pass_verified') === 'true')
+                        ? 'WORLDBUILD WITH MILL →'
+                        : 'SYNTHESIZE WORLD WITH MILL [€14.99] →'}
                     </span>
                   </button>
                 </div>

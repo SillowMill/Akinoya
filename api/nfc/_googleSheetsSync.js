@@ -11,6 +11,10 @@ export const WHITELIST_SPREADSHEET_ID =
 export const PRELAUNCH_SPREADSHEET_ID =
   process.env.GOOGLE_SHEETS_PRELAUNCH_SPREADSHEET_ID || '1F5mHO-JtYFVaxfFuyyP0Xbu2HpiCiVFnJtz213OvqrU';
 
+export const ORDERS_SHIPPING_SPREADSHEET_ID =
+  process.env.GOOGLE_SHEETS_ORDERS_SPREADSHEET_ID || '1rJ09Xqb9ccuHuYIjrrB2oQ7zsSvomWDNSHOfipPuiN0';
+
+
 let _cachedAccessToken = null;
 let _tokenExpiresAt = 0;
 
@@ -1518,6 +1522,115 @@ export async function updateMondayBatchDeploymentInSheets(identifiers = [], batc
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Appends a verified customer order and shipping record to the
+ * "Orders & Shipping" tab in the Customer Orders & Membership Shipping Directory spreadsheet.
+ * 
+ * Column mapping matching row 7 headers:
+ * [Order Date, Order ID / Reference, Customer Name, Email Address, Product Type, Quantity,
+ *  Street Address, City, Postal Code, Country, Stripe Payment Status, Fulfillment / Shipping Status, Notes]
+ */
+export async function appendOrderShippingToGoogleSheets(orderData = {}) {
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.warn('[Orders & Shipping Sheets] Aborted: No valid Google access token available.');
+      return { success: false, reason: 'NO_TOKEN' };
+    }
+
+    const spreadsheetId = ORDERS_SHIPPING_SPREADSHEET_ID;
+    const targetTab = 'Orders & Shipping';
+
+    const orderId = String(orderData.orderId || orderData.id || '').trim();
+    const orderDate = String(orderData.orderDate || new Date().toISOString().split('T')[0]).trim();
+    const customerName = String(orderData.customerName || orderData.name || 'Collector').trim();
+    const email = String(orderData.email || orderData.customerEmail || '').trim().toLowerCase();
+    const productType = String(orderData.productType || orderData.product || 'Comic Book').trim();
+    const quantity = String(orderData.quantity || '1').trim();
+    const streetAddress = String(orderData.streetAddress || orderData.shippingAddress || '-').trim();
+    const city = String(orderData.city || orderData.shippingCity || '-').trim();
+    const postalCode = String(orderData.postalCode || orderData.shippingPostal || '-').trim();
+    const country = String(orderData.country || '-').trim();
+    const paymentStatus = String(orderData.paymentStatus || 'Paid').trim();
+    const fulfillmentStatus = String(orderData.fulfillmentStatus || 'Unfulfilled').trim();
+    const notes = String(orderData.notes || '').trim();
+
+    // Idempotency: verify if orderId already exists in Column B (Order ID / Reference)
+    if (orderId) {
+      try {
+        const lookupUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
+          `'${targetTab}'!B7:B2000`
+        )}`;
+        const checkRes = await fetch(lookupUrl, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          const existingIds = (checkData.values || []).map((row) => String(row[0] || '').trim().toLowerCase());
+          if (existingIds.includes(orderId.toLowerCase())) {
+            console.log(`[Orders & Shipping Sheets] Order ${orderId} already present in sheet. Skipping duplicate append.`);
+            return { success: true, alreadyExists: true, orderId };
+          }
+        }
+      } catch (checkErr) {
+        console.warn('[Orders & Shipping Sheets] Warning during duplicate check:', checkErr);
+      }
+    }
+
+    const rowValues = [
+      orderDate,
+      orderId,
+      customerName,
+      email,
+      productType,
+      quantity,
+      streetAddress,
+      city,
+      postalCode,
+      country,
+      paymentStatus,
+      fulfillmentStatus,
+      notes,
+    ];
+
+    const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
+      `'${targetTab}'!A:M`
+    )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+
+    const appendRes = await fetch(appendUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        values: [rowValues],
+      }),
+    });
+
+    if (!appendRes.ok) {
+      const errText = await appendRes.text();
+      console.warn('[Orders & Shipping Sheets] Append failed:', appendRes.status, errText);
+      return { success: false, status: appendRes.status, error: errText };
+    }
+
+    const appendData = await appendRes.json();
+    console.log(`[Orders & Shipping Sheets] Appended order ${orderId} (${customerName}):`, appendData.updates?.updatedRange);
+
+    return {
+      success: true,
+      action: 'appended',
+      range: appendData.updates?.updatedRange,
+      orderId,
+    };
+  } catch (err) {
+    console.warn('[Orders & Shipping Sheets] Exception during sheet append:', err);
+    return { success: false, error: err.message };
+  }
+}
+
 
 
 

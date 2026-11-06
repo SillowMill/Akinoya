@@ -342,20 +342,18 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
   // Auto-start Mill if coming from Claim modal (Question 2 flow)
   useEffect(() => {
     const shouldStart = sessionStorage.getItem('akinoya_start_mill') === 'true';
-    if (shouldStart && !hasSubmittedContest) {
+    if (shouldStart) {
       sessionStorage.removeItem('akinoya_start_mill');
       setIsChatOpen(true);
     }
 
     const handleEventStart = () => {
-      if (!hasSubmittedContest) {
-        setIsChatOpen(true);
-      }
+      setIsChatOpen(true);
     };
 
     window.addEventListener('akinoya-start-mill', handleEventStart);
     return () => window.removeEventListener('akinoya-start-mill', handleEventStart);
-  }, [hasSubmittedContest]);
+  }, []);
 
   // Load submissions, check user's ticket status, and subscribe to realtime updates
   useEffect(() => {
@@ -409,33 +407,19 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     return () => unsubscribe();
   }, [isAuthenticated, user?.id, user?.email, profile?.id, profile?.contest_submission_id]);
 
-  // Handle launch button: ALWAYS mandate "Create Your Free World" modal first
+  // Handle launch button: Mandate World Synthesis modal first (€14.99 per world instance, unlimited worlds permitted)
   const handleStartWorldbuilding = () => {
     if (!isAuthenticated) {
       soundManager.playTone(330, 0.08);
       openAuthModal('signup');
       return;
     }
-    if (hasSubmittedContest) {
-      soundManager.playTone(330, 0.08);
-      alert('You have already claimed your 1 generation attempt.');
-      if (activeSubmission) {
-        setModalPlanet(activeSubmission);
-      }
-      return;
-    }
     soundManager.playTone(660, 0.08);
-    // Explicitly mandate the "Create Your Free World" modal first before launching Mill
     openClaimWorldModal();
   };
 
   // Called when Mill completes the 8 questions (Step 1: 5 Photos -> Step 2: 9:16 Viral Video Trailer -> Step 3: Atomic Supabase Sync)
   const handleWizardComplete = async (answers: WizardAnswers) => {
-    if (hasSubmittedContest) {
-      soundManager.playError();
-      alert('You have already claimed your 1 generation attempt.');
-      return;
-    }
     const planetName = formatAkinoyaPlanetName(answers.planetName, false) || answers.planetName || 'Äkinoya Frontier Sector';
     const answersWithFormattedName = { ...answers, planetName };
     setPendingAnswers(answersWithFormattedName);

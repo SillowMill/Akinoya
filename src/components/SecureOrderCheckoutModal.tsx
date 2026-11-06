@@ -43,7 +43,9 @@ export const isPhysicalProduct = (product?: Partial<CheckoutProductInfo> | null)
     product.id === 'vocal' ||
     product.id === 'workflow' ||
     product.id === 'logic-visualizer' ||
-    product.id === 'world-synthesis'
+    product.id === 'world-synthesis' ||
+    product.id === 'world-pass' ||
+    product.id === 'pioneer-world-pass'
   ) {
     return false;
   }
@@ -63,7 +65,7 @@ export interface SecureOrderCheckoutModalProps {
 export const getResolvedProductImage = (product: CheckoutProductInfo): string => {
   if (product.image) return product.image;
   if (product.id === 'membership') return akinoyaPassCard;
-  if (product.id === 'world-synthesis') return akinoyaHeroBg;
+  if (product.id === 'world-synthesis' || product.id === 'world-pass' || product.id === 'pioneer-world-pass') return akinoyaHeroBg;
   if (product.id === 'workflow' || product.id === 'logic-visualizer') return stage03Img;
   if (product.id === 'vocal') return vocalAcapellaImg;
   return bingaaComicCover;
@@ -71,7 +73,7 @@ export const getResolvedProductImage = (product: CheckoutProductInfo): string =>
 
 export const getResolvedProductEmoji = (product: CheckoutProductInfo): string => {
   if (product.id === 'membership') return '👑';
-  if (product.id === 'world-synthesis') return '🪐';
+  if (product.id === 'world-synthesis' || product.id === 'world-pass' || product.id === 'pioneer-world-pass') return '🪐';
   if (product.id === 'workflow' || product.id === 'logic-visualizer') return '🎛️';
   if (product.id === 'vocal') return '🎙️';
   if (product.id === 'comic' || product.id === 'comic-digital') return '📖';

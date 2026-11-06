@@ -45,6 +45,9 @@ export interface AuthUserRecord {
   stripeSubscriptionId?: string;
   subscriptionRenewalDate?: string;
   subscriptionCancelAtPeriodEnd?: boolean;
+  worldPassCount?: number;
+  worldCreationSlots?: number;
+  hasWorldSynthesis?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -375,6 +378,8 @@ function recordToProfile(u: AuthUserRecord): Profile {
     is_pioneer: u.isPioneer,
     pioneer_badge: u.pioneerBadge || (u.hasVipPass || u.role === 'VIP_GUEST' || u.role === 'CREATOR' ? '[VIP-PIONEER-2027]' : '[PIONEER-2027]'),
     claimed_sector: u.claimedSector || null,
+    world_creation_slots: u.worldCreationSlots || u.worldPassCount || 0,
+    has_world_synthesis: Boolean(u.hasWorldSynthesis || (u.worldCreationSlots && u.worldCreationSlots > 0)),
     created_at: u.createdAt,
     updated_at: u.updatedAt,
   };
@@ -462,6 +467,87 @@ export function updateUserSubscription(
   saveUsersStore(_userStore);
   return true;
 }
+
+/**
+ * Grants an official Äkinoya Pioneer World Pass creation slot to a user profile upon verified payment (€14.99).
+ * Users are allowed to craft, mint, and retain unlimited custom worlds under a single account profile.
+ */
+export function grantWorldCreationSlot(email: string, passReference?: string): boolean {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (!cleanEmail) return false;
+
+  _userStore = loadUsersStore();
+  let user = _userStore.users[cleanEmail];
+  const now = new Date().toISOString();
+
+  if (!user) {
+    const userId = `usr_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const namePart = cleanEmail.split('@')[0] || 'Collector';
+    const { salt, hash } = hashPassword(crypto.randomBytes(16).toString('hex'));
+
+    user = {
+      id: userId,
+      email: cleanEmail,
+      firstName: namePart,
+      lastName: '',
+      fullName: namePart,
+      salt,
+      passwordHash: hash,
+      role: 'VIP_GUEST',
+      hasVipPass: true,
+      subscriptionStatus: 'active',
+      isPioneer: true,
+      pioneerBadge: '[VIP-PIONEER-2027]',
+      worldCreationSlots: 1,
+      worldPassCount: 1,
+      hasWorldSynthesis: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+  } else {
+    user.worldCreationSlots = (user.worldCreationSlots || 0) + 1;
+    user.worldPassCount = (user.worldPassCount || 0) + 1;
+    user.hasWorldSynthesis = true;
+    user.updatedAt = now;
+  }
+
+  _userStore.users[cleanEmail] = user;
+  saveUsersStore(_userStore);
+  return true;
+}
+
+/**
+ * Consumes 1 world creation slot when a user mints a world into the system.
+ */
+export function consumeWorldCreationSlot(email: string): boolean {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (!cleanEmail) return false;
+
+  _userStore = loadUsersStore();
+  const user = _userStore.users[cleanEmail];
+  if (!user) return false;
+
+  if (user.worldCreationSlots && user.worldCreationSlots > 0) {
+    user.worldCreationSlots -= 1;
+    user.updatedAt = new Date().toISOString();
+    _userStore.users[cleanEmail] = user;
+    saveUsersStore(_userStore);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Returns available world creation slots for a user.
+ */
+export function getUserWorldCreationSlots(email: string): number {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (!cleanEmail) return 0;
+  _userStore = loadUsersStore();
+  const user = _userStore.users[cleanEmail];
+  return user?.worldCreationSlots || 0;
+}
+
 
 // ─── Authentication Operations ────────────────────────────────────────────────
 export async function registerUserCredentials(params: {

@@ -169,12 +169,12 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
         </div>
 
         {/* Specific Post-Purchase Account & Delivery Success Banners */}
-        {orderDetails.product === 'world-synthesis' ? (
+        {orderDetails.product === 'world-synthesis' || orderDetails.product === 'world-pass' || orderDetails.product === 'pioneer-world-pass' ? (
           <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#1c1404]/95 via-[#0b1424]/95 to-[#1c1404]/95 border-2 border-amber-400 text-left space-y-3 shadow-[0_0_35px_rgba(245,158,11,0.35)]">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="flex items-center gap-2 font-extrabold text-amber-300">
                 <CheckCircle2 className="w-4 h-4 text-amber-400" />
-                <span>✓ WORLD VERIFIED &amp; QUEUED</span>
+                <span>✓ WORLD PASS UNLOCKED &amp; QUEUED</span>
               </span>
               <span className="px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-400/50 text-[9px] font-semibold">
                 MONDAY BATCH
@@ -188,14 +188,26 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
                 Your planetary specs and visualizer feature slot are locked. Your world will be processed and deployed to the live Galaxy Navigator during the upcoming Monday morning cluster update.
               </p>
             </div>
-            <div className="pt-1">
-              <a
-                href="/assets"
+            <div className="pt-1 flex items-center gap-2.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem('akinoya_start_mill', 'true');
+                  } catch {}
+                  window.location.href = '/contest';
+                }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-black font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)] cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>VIEW IN MY ASSETS</span>
+                <span>LAUNCH CREATION WIZARD</span>
                 <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <a
+                href="/assets"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-mono font-semibold text-xs transition-all border border-white/15 cursor-pointer"
+              >
+                <span>VIEW IN MY ASSETS</span>
               </a>
             </div>
           </div>

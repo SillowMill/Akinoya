@@ -21,6 +21,8 @@ export interface Profile {
   subscription_renewal_date?: string;
   subscription_cancel_at_period_end?: boolean;
   unlocked_assets?: string[];
+  world_creation_slots?: number;
+  has_world_synthesis?: boolean;
   contest_submission_id?: string | null;
   has_submitted_contest?: boolean;
   // Creator Portfolios & Artist Verification

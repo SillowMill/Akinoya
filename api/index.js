@@ -537,13 +537,16 @@ var init_vipTokens2 = __esm({
 var authVoteService_exports = {};
 __export(authVoteService_exports, {
   castSubmissionVote: () => castSubmissionVote,
+  consumeWorldCreationSlot: () => consumeWorldCreationSlot,
   createSessionToken: () => createSessionToken,
   deployMondayBatchRecords: () => deployMondayBatchRecords,
   getAllSubmissionRecords: () => getAllSubmissionRecords,
   getUserByEmail: () => getUserByEmail,
   getUserByStripeCustomerId: () => getUserByStripeCustomerId,
   getUserFromSessionToken: () => getUserFromSessionToken,
+  getUserWorldCreationSlots: () => getUserWorldCreationSlots,
   getVotesSummary: () => getVotesSummary,
+  grantWorldCreationSlot: () => grantWorldCreationSlot,
   hashPassword: () => hashPassword,
   loginUserCredentials: () => loginUserCredentials,
   registerUserCredentials: () => registerUserCredentials,
@@ -814,6 +817,8 @@ function recordToProfile(u) {
     is_pioneer: u.isPioneer,
     pioneer_badge: u.pioneerBadge || (u.hasVipPass || u.role === "VIP_GUEST" || u.role === "CREATOR" ? "[VIP-PIONEER-2027]" : "[PIONEER-2027]"),
     claimed_sector: u.claimedSector || null,
+    world_creation_slots: u.worldCreationSlots || u.worldPassCount || 0,
+    has_world_synthesis: Boolean(u.hasWorldSynthesis || u.worldCreationSlots && u.worldCreationSlots > 0),
     created_at: u.createdAt,
     updated_at: u.updatedAt
   };
@@ -881,6 +886,67 @@ function updateUserSubscription(email, updates) {
   _userStore.users[cleanEmail] = user;
   saveUsersStore(_userStore);
   return true;
+}
+function grantWorldCreationSlot(email, passReference) {
+  const cleanEmail = (email || "").trim().toLowerCase();
+  if (!cleanEmail) return false;
+  _userStore = loadUsersStore();
+  let user = _userStore.users[cleanEmail];
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  if (!user) {
+    const userId = `usr_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const namePart = cleanEmail.split("@")[0] || "Collector";
+    const { salt, hash } = hashPassword(crypto.randomBytes(16).toString("hex"));
+    user = {
+      id: userId,
+      email: cleanEmail,
+      firstName: namePart,
+      lastName: "",
+      fullName: namePart,
+      salt,
+      passwordHash: hash,
+      role: "VIP_GUEST",
+      hasVipPass: true,
+      subscriptionStatus: "active",
+      isPioneer: true,
+      pioneerBadge: "[VIP-PIONEER-2027]",
+      worldCreationSlots: 1,
+      worldPassCount: 1,
+      hasWorldSynthesis: true,
+      createdAt: now,
+      updatedAt: now
+    };
+  } else {
+    user.worldCreationSlots = (user.worldCreationSlots || 0) + 1;
+    user.worldPassCount = (user.worldPassCount || 0) + 1;
+    user.hasWorldSynthesis = true;
+    user.updatedAt = now;
+  }
+  _userStore.users[cleanEmail] = user;
+  saveUsersStore(_userStore);
+  return true;
+}
+function consumeWorldCreationSlot(email) {
+  const cleanEmail = (email || "").trim().toLowerCase();
+  if (!cleanEmail) return false;
+  _userStore = loadUsersStore();
+  const user = _userStore.users[cleanEmail];
+  if (!user) return false;
+  if (user.worldCreationSlots && user.worldCreationSlots > 0) {
+    user.worldCreationSlots -= 1;
+    user.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+    _userStore.users[cleanEmail] = user;
+    saveUsersStore(_userStore);
+    return true;
+  }
+  return false;
+}
+function getUserWorldCreationSlots(email) {
+  const cleanEmail = (email || "").trim().toLowerCase();
+  if (!cleanEmail) return 0;
+  _userStore = loadUsersStore();
+  const user = _userStore.users[cleanEmail];
+  return user?.worldCreationSlots || 0;
 }
 async function registerUserCredentials(params) {
   const cleanEmail = params.email.trim().toLowerCase();
@@ -1188,9 +1254,11 @@ var init_authVoteService = __esm({
 // api/nfc/_googleSheetsSync.js
 var googleSheetsSync_exports = {};
 __export(googleSheetsSync_exports, {
+  ORDERS_SHIPPING_SPREADSHEET_ID: () => ORDERS_SHIPPING_SPREADSHEET_ID,
   PRELAUNCH_SPREADSHEET_ID: () => PRELAUNCH_SPREADSHEET_ID,
   SPREADSHEET_ID: () => SPREADSHEET_ID,
   WHITELIST_SPREADSHEET_ID: () => WHITELIST_SPREADSHEET_ID,
+  appendOrderShippingToGoogleSheets: () => appendOrderShippingToGoogleSheets,
   appendPrelaunchWorldSubmissionToGoogleSheets: () => appendPrelaunchWorldSubmissionToGoogleSheets,
   appendVipGuestRecordToSheets: () => appendVipGuestRecordToSheets,
   appendWaitlistSubmissionToGoogleSheets: () => appendWaitlistSubmissionToGoogleSheets,
@@ -1201,8 +1269,8 @@ __export(googleSheetsSync_exports, {
   syncSubscriberRowToGoogleSheets: () => syncSubscriberRowToGoogleSheets,
   updateMondayBatchDeploymentInSheets: () => updateMondayBatchDeploymentInSheets
 });
-import fs3 from "fs";
-import path3 from "path";
+import fs2 from "fs";
+import path2 from "path";
 import crypto2 from "crypto";
 function sanitizePrivateKey(rawKey) {
   if (!rawKey) return "";
@@ -1271,15 +1339,15 @@ function getOAuthCredentials() {
   let refreshToken = cleanEnvValue(process.env.GOOGLE_SHEETS_REFRESH_TOKEN);
   if (!clientId || !clientSecret || !refreshToken) {
     const envFiles = [
-      path3.resolve(process.cwd(), ".env.vercel"),
-      path3.resolve(process.cwd(), ".env.production.local"),
-      path3.resolve(process.cwd(), ".env.local"),
-      path3.resolve(process.cwd(), ".env")
+      path2.resolve(process.cwd(), ".env.vercel"),
+      path2.resolve(process.cwd(), ".env.production.local"),
+      path2.resolve(process.cwd(), ".env.local"),
+      path2.resolve(process.cwd(), ".env")
     ];
     for (const envPath of envFiles) {
       try {
-        if (fs3.existsSync(envPath)) {
-          const content = fs3.readFileSync(envPath, "utf8");
+        if (fs2.existsSync(envPath)) {
+          const content = fs2.readFileSync(envPath, "utf8");
           for (const line of content.split(/\r?\n/)) {
             const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
             if (!match) continue;
@@ -1298,12 +1366,12 @@ function getOAuthCredentials() {
   if (!clientId || !clientSecret || !refreshToken) {
     const localTokenPaths = [
       "/Users/odi/.gemini/antigravity/plugin_data/gsheets/token.json",
-      path3.resolve(process.cwd(), ".gsheets_token.json")
+      path2.resolve(process.cwd(), ".gsheets_token.json")
     ];
     for (const p of localTokenPaths) {
       try {
-        if (fs3.existsSync(p)) {
-          const data = JSON.parse(fs3.readFileSync(p, "utf8"));
+        if (fs2.existsSync(p)) {
+          const data = JSON.parse(fs2.readFileSync(p, "utf8"));
           clientId = clientId || cleanEnvValue(data.client_id);
           clientSecret = clientSecret || cleanEnvValue(data.client_secret);
           refreshToken = refreshToken || cleanEnvValue(data.token && data.token.refresh_token);
@@ -1867,14 +1935,14 @@ async function appendWhitelistEmailToGoogleSheets({
     status: "Whitelisted \u2014 Wave 2 Priority",
     notes
   };
-  for (const filePath of ["/tmp/sillow_whitelist.json", path3.resolve(process.cwd(), "data", "whitelist.json")]) {
+  for (const filePath of ["/tmp/sillow_whitelist.json", path2.resolve(process.cwd(), "data", "whitelist.json")]) {
     try {
-      const dir = path3.dirname(filePath);
-      if (fs3.existsSync(dir)) {
+      const dir = path2.dirname(filePath);
+      if (fs2.existsSync(dir)) {
         let list = [];
-        if (fs3.existsSync(filePath)) {
+        if (fs2.existsSync(filePath)) {
           try {
-            list = JSON.parse(fs3.readFileSync(filePath, "utf8"));
+            list = JSON.parse(fs2.readFileSync(filePath, "utf8"));
             if (!Array.isArray(list)) list = [];
           } catch {
             list = [];
@@ -1886,7 +1954,7 @@ async function appendWhitelistEmailToGoogleSheets({
         } else {
           list.push(entry);
         }
-        fs3.writeFileSync(filePath, JSON.stringify(list, null, 2), "utf8");
+        fs2.writeFileSync(filePath, JSON.stringify(list, null, 2), "utf8");
       }
     } catch {
     }
@@ -2020,14 +2088,14 @@ async function appendWaitlistSubmissionToGoogleSheets({
   const cleanFirst = String(firstName || "").trim();
   const cleanLastInitial = String(lastInitial || "").trim().toUpperCase().replace(/\.$/, "");
   const responsesJson = typeof questionnaireResponses === "string" ? questionnaireResponses : JSON.stringify(questionnaireResponses || {});
-  const waitlistFile = path3.resolve(process.cwd(), "data/waitlist_store.json");
+  const waitlistFile = path2.resolve(process.cwd(), "data/waitlist_store.json");
   try {
-    const dir = path3.dirname(waitlistFile);
-    if (!fs3.existsSync(dir)) fs3.mkdirSync(dir, { recursive: true });
+    const dir = path2.dirname(waitlistFile);
+    if (!fs2.existsSync(dir)) fs2.mkdirSync(dir, { recursive: true });
     let existingEntries = [];
-    if (fs3.existsSync(waitlistFile)) {
+    if (fs2.existsSync(waitlistFile)) {
       try {
-        existingEntries = JSON.parse(fs3.readFileSync(waitlistFile, "utf8"));
+        existingEntries = JSON.parse(fs2.readFileSync(waitlistFile, "utf8"));
       } catch {
       }
     }
@@ -2042,7 +2110,7 @@ async function appendWaitlistSubmissionToGoogleSheets({
     };
     const filtered = existingEntries.filter((e) => e && e.email !== cleanEmail);
     filtered.push(newEntry);
-    fs3.writeFileSync(waitlistFile, JSON.stringify(filtered, null, 2), "utf8");
+    fs2.writeFileSync(waitlistFile, JSON.stringify(filtered, null, 2), "utf8");
     console.log(`[Waitlist Store] Recorded submission for ${cleanEmail} in ${waitlistFile}`);
   } catch (storeErr) {
     console.warn("[Waitlist Store Notice]:", storeErr);
@@ -2173,14 +2241,14 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
     q5,
     status
   ];
-  const localFile = path3.resolve(process.cwd(), "data/prelaunch_submissions.json");
+  const localFile = path2.resolve(process.cwd(), "data/prelaunch_submissions.json");
   try {
-    const dir = path3.dirname(localFile);
-    if (!fs3.existsSync(dir)) fs3.mkdirSync(dir, { recursive: true });
+    const dir = path2.dirname(localFile);
+    if (!fs2.existsSync(dir)) fs2.mkdirSync(dir, { recursive: true });
     let existingList = [];
-    if (fs3.existsSync(localFile)) {
+    if (fs2.existsSync(localFile)) {
       try {
-        existingList = JSON.parse(fs3.readFileSync(localFile, "utf8"));
+        existingList = JSON.parse(fs2.readFileSync(localFile, "utf8"));
       } catch {
       }
     }
@@ -2200,7 +2268,7 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
     };
     const filtered = existingList.filter((e) => !(e.email === cleanEmail && e.worldName === worldName));
     filtered.push(storeEntry);
-    fs3.writeFileSync(localFile, JSON.stringify(filtered, null, 2), "utf8");
+    fs2.writeFileSync(localFile, JSON.stringify(filtered, null, 2), "utf8");
     console.log(`[Pre-Launch Store] Recorded entry for ${cleanEmail} (${worldName}) in ${localFile}`);
   } catch (storeErr) {
     console.warn("[Pre-Launch Store Notice]:", storeErr);
@@ -2292,13 +2360,13 @@ async function appendPrelaunchWorldSubmissionToGoogleSheets(record = {}) {
       const errText = await appendRes.text();
       console.warn("[Pre-Launch Sheets] Append failed:", appendRes.status, errText);
       try {
-        const failQueueFile = path3.resolve(process.cwd(), "data/prelaunch_queue_failed.json");
+        const failQueueFile = path2.resolve(process.cwd(), "data/prelaunch_queue_failed.json");
         let failedList = [];
-        if (fs3.existsSync(failQueueFile)) {
-          failedList = JSON.parse(fs3.readFileSync(failQueueFile, "utf8"));
+        if (fs2.existsSync(failQueueFile)) {
+          failedList = JSON.parse(fs2.readFileSync(failQueueFile, "utf8"));
         }
         failedList.push({ timestamp: (/* @__PURE__ */ new Date()).toISOString(), record, rowValues, error: errText });
-        fs3.writeFileSync(failQueueFile, JSON.stringify(failedList, null, 2), "utf8");
+        fs2.writeFileSync(failQueueFile, JSON.stringify(failedList, null, 2), "utf8");
       } catch {
       }
       return {
@@ -2371,12 +2439,101 @@ async function updateMondayBatchDeploymentInSheets(identifiers = [], batchLabel 
     return { success: false, error: err.message };
   }
 }
-var SPREADSHEET_ID, WHITELIST_SPREADSHEET_ID, PRELAUNCH_SPREADSHEET_ID, _cachedAccessToken, _tokenExpiresAt;
+async function appendOrderShippingToGoogleSheets(orderData = {}) {
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.warn("[Orders & Shipping Sheets] Aborted: No valid Google access token available.");
+      return { success: false, reason: "NO_TOKEN" };
+    }
+    const spreadsheetId = ORDERS_SHIPPING_SPREADSHEET_ID;
+    const targetTab = "Orders & Shipping";
+    const orderId = String(orderData.orderId || orderData.id || "").trim();
+    const orderDate = String(orderData.orderDate || (/* @__PURE__ */ new Date()).toISOString().split("T")[0]).trim();
+    const customerName = String(orderData.customerName || orderData.name || "Collector").trim();
+    const email = String(orderData.email || orderData.customerEmail || "").trim().toLowerCase();
+    const productType = String(orderData.productType || orderData.product || "Comic Book").trim();
+    const quantity = String(orderData.quantity || "1").trim();
+    const streetAddress = String(orderData.streetAddress || orderData.shippingAddress || "-").trim();
+    const city = String(orderData.city || orderData.shippingCity || "-").trim();
+    const postalCode = String(orderData.postalCode || orderData.shippingPostal || "-").trim();
+    const country = String(orderData.country || "-").trim();
+    const paymentStatus = String(orderData.paymentStatus || "Paid").trim();
+    const fulfillmentStatus = String(orderData.fulfillmentStatus || "Unfulfilled").trim();
+    const notes = String(orderData.notes || "").trim();
+    if (orderId) {
+      try {
+        const lookupUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
+          `'${targetTab}'!B7:B2000`
+        )}`;
+        const checkRes = await fetch(lookupUrl, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          const existingIds = (checkData.values || []).map((row) => String(row[0] || "").trim().toLowerCase());
+          if (existingIds.includes(orderId.toLowerCase())) {
+            console.log(`[Orders & Shipping Sheets] Order ${orderId} already present in sheet. Skipping duplicate append.`);
+            return { success: true, alreadyExists: true, orderId };
+          }
+        }
+      } catch (checkErr) {
+        console.warn("[Orders & Shipping Sheets] Warning during duplicate check:", checkErr);
+      }
+    }
+    const rowValues = [
+      orderDate,
+      orderId,
+      customerName,
+      email,
+      productType,
+      quantity,
+      streetAddress,
+      city,
+      postalCode,
+      country,
+      paymentStatus,
+      fulfillmentStatus,
+      notes
+    ];
+    const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
+      `'${targetTab}'!A:M`
+    )}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+    const appendRes = await fetch(appendUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        values: [rowValues]
+      })
+    });
+    if (!appendRes.ok) {
+      const errText = await appendRes.text();
+      console.warn("[Orders & Shipping Sheets] Append failed:", appendRes.status, errText);
+      return { success: false, status: appendRes.status, error: errText };
+    }
+    const appendData = await appendRes.json();
+    console.log(`[Orders & Shipping Sheets] Appended order ${orderId} (${customerName}):`, appendData.updates?.updatedRange);
+    return {
+      success: true,
+      action: "appended",
+      range: appendData.updates?.updatedRange,
+      orderId
+    };
+  } catch (err) {
+    console.warn("[Orders & Shipping Sheets] Exception during sheet append:", err);
+    return { success: false, error: err.message };
+  }
+}
+var SPREADSHEET_ID, WHITELIST_SPREADSHEET_ID, PRELAUNCH_SPREADSHEET_ID, ORDERS_SHIPPING_SPREADSHEET_ID, _cachedAccessToken, _tokenExpiresAt;
 var init_googleSheetsSync = __esm({
   "api/nfc/_googleSheetsSync.js"() {
     SPREADSHEET_ID = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || "1gCYEDFNCZ2QlStvE2IuJiq4gUxrAJ08spaOvZM6Ke_0";
     WHITELIST_SPREADSHEET_ID = process.env.GOOGLE_SHEETS_WHITELIST_SPREADSHEET_ID || "1SivG6Sh9mdr3_1b_YInB5JR2Ol_SiqNkw9GtITE6gnY";
     PRELAUNCH_SPREADSHEET_ID = process.env.GOOGLE_SHEETS_PRELAUNCH_SPREADSHEET_ID || "1F5mHO-JtYFVaxfFuyyP0Xbu2HpiCiVFnJtz213OvqrU";
+    ORDERS_SHIPPING_SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ORDERS_SPREADSHEET_ID || "1rJ09Xqb9ccuHuYIjrrB2oQ7zsSvomWDNSHOfipPuiN0";
     _cachedAccessToken = null;
     _tokenExpiresAt = 0;
   }
@@ -2739,9 +2896,10 @@ installFalNetworkGuard();
 
 // src/server/stripeService.ts
 init_authVoteService();
+init_googleSheetsSync();
 import Stripe from "stripe";
-import fs2 from "fs";
-import path2 from "path";
+import fs3 from "fs";
+import path3 from "path";
 import dotenv from "dotenv";
 dotenv.config();
 var _stripeInstance = null;
@@ -2758,12 +2916,12 @@ function getStripe() {
   });
   return _stripeInstance;
 }
-var ORDERS_FILE = path2.resolve(process.cwd(), "data/orders.json");
+var ORDERS_FILE = path3.resolve(process.cwd(), "data/orders.json");
 var INITIAL_WAVE_INVENTORY = 100;
 function loadOrders() {
   try {
-    if (fs2.existsSync(ORDERS_FILE)) {
-      const data = fs2.readFileSync(ORDERS_FILE, "utf-8");
+    if (fs3.existsSync(ORDERS_FILE)) {
+      const data = fs3.readFileSync(ORDERS_FILE, "utf-8");
       return JSON.parse(data);
     }
   } catch (err) {
@@ -2773,11 +2931,11 @@ function loadOrders() {
 }
 function saveOrders(orders) {
   try {
-    const dir = path2.dirname(ORDERS_FILE);
-    if (!fs2.existsSync(dir)) {
-      fs2.mkdirSync(dir, { recursive: true });
+    const dir = path3.dirname(ORDERS_FILE);
+    if (!fs3.existsSync(dir)) {
+      fs3.mkdirSync(dir, { recursive: true });
     }
-    fs2.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
+    fs3.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
   } catch (err) {
     console.warn("[StripeService] Read-only filesystem, skipped file write:", err);
   }
@@ -2842,10 +3000,10 @@ async function createStripeCheckoutSession(params) {
     productName = "Sillow Mill - Digital Copy of Bingaa";
     productDescription = "Complete graphic novel with interactive dual-page flipbook reader & DRM-free 4K download. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
     unitAmount = params.amount ? Math.round(params.amount * 100) : 999;
-  } else if (productId === "world-synthesis") {
-    productName = "Sillow Mill - Synthesize & Feature Your World";
+  } else if (productId === "world-synthesis" || productId === "world-pass" || productId === "pioneer-world-pass") {
+    productName = "\xC4kinoya Pioneer World Pass";
     productDescription = "Synthesize your custom planet, cover full 3D rendering & video trailer generation costs, and secure your official co-creation spot to feature directly in a future cinematic visualizer once all 11 visualizers are released. Instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
-    unitAmount = params.amount ? Math.round(params.amount * 100) : 1499;
+    unitAmount = 1499;
     productImage = `${baseUrl}/images/akinoya_hero_bg-CiYAZVRx.jpg`;
   } else if (productId === "membership") {
     productName = "Sillow Mill - Annual Pioneer Member Pass (All-Inclusive)";
@@ -2990,6 +3148,53 @@ async function processCompletedCheckout(session) {
   };
   orders.push(newOrder);
   saveOrders(orders);
+  try {
+    const rawProdId = (productId || "").toLowerCase();
+    let productTypeLabel = session.metadata?.product_title || "Comic Book";
+    if (rawProdId === "comic" || rawProdId === "comic-physical") {
+      productTypeLabel = "Comic Book";
+    } else if (rawProdId === "membership") {
+      productTypeLabel = "Membership";
+    } else if (rawProdId === "world-synthesis" || rawProdId === "world-pass" || rawProdId === "pioneer-world-pass") {
+      productTypeLabel = "\xC4kinoya Pioneer World Pass";
+    }
+    const shipDetails = session.shipping_details;
+    const custDetails = session.customer_details;
+    const line1 = shipDetails?.address?.line1 || custDetails?.address?.line1 || session.metadata?.shipping_address || "";
+    const line2 = shipDetails?.address?.line2 || custDetails?.address?.line2 || session.metadata?.apartment_bus || "";
+    const fullStreet = [line1, line2].filter(Boolean).join(", ") || "-";
+    const city = shipDetails?.address?.city || custDetails?.address?.city || session.metadata?.shipping_city || "-";
+    const postalCode = shipDetails?.address?.postal_code || custDetails?.address?.postal_code || session.metadata?.shipping_postal || "-";
+    const country = shipDetails?.address?.country || custDetails?.address?.country || "-";
+    const piRef = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || session.id;
+    const orderRowData = {
+      orderDate: (/* @__PURE__ */ new Date()).toISOString().split("T")[0],
+      orderId: piRef || session.id,
+      customerName: name || "Collector",
+      email,
+      productType: productTypeLabel,
+      quantity: "1",
+      streetAddress: fullStreet,
+      city,
+      postalCode,
+      country,
+      paymentStatus: "Paid",
+      fulfillmentStatus: "Unfulfilled",
+      notes: `Stripe Ref: ${session.id}`
+    };
+    appendOrderShippingToGoogleSheets(orderRowData).catch((sheetErr) => {
+      console.warn("[StripeService] Shipping sheet sync background warning:", sheetErr);
+    });
+  } catch (sheetSyncErr) {
+    console.warn("[StripeService] Error constructing shipping sheet payload:", sheetSyncErr);
+  }
+  if (productId === "world-synthesis" || productId === "world-pass" || productId === "pioneer-world-pass") {
+    try {
+      grantWorldCreationSlot(email, session.id);
+    } catch (wErr) {
+      console.warn("[StripeService] World pass slot grant notice:", wErr);
+    }
+  }
   if (isSubscription || productId === "membership") {
     try {
       const renewalDate = /* @__PURE__ */ new Date();
@@ -5466,7 +5671,7 @@ apiApp.use("/api", (_req, res, next) => {
   next();
 });
 apiApp.post(
-  "/api/webhooks/stripe",
+  ["/api/webhooks/stripe", "/api/stripe-webhook", "/webhooks/stripe", "/stripe-webhook"],
   express.raw({ type: "*/*" }),
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
@@ -5624,6 +5829,11 @@ apiRouter.post("/create-checkout-session", async (req, res) => {
       error: err?.message || "Failed to initialize Stripe Checkout session"
     });
   }
+});
+apiRouter.get("/user/world-slots", async (req, res) => {
+  const email = (req.query.email || "").trim().toLowerCase();
+  const slots = email ? getUserWorldCreationSlots(email) : 0;
+  res.status(200).json({ success: true, email, slots });
 });
 apiRouter.get("/inventory/status", (_req, res) => {
   try {
