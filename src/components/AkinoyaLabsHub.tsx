@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -190,6 +190,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
   // Deep-Dive Modal State & Stage Persistence
   const [selectedStageForModal, setSelectedStageForModal] = useState<StageDetail | null>(null);
   const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null);
+  const modalScrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [activeStageId] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.toLowerCase().replace('#', '');
@@ -210,12 +211,20 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     }
   }, [activeStageId]);
 
-  // Lock body scroll and handle Escape key when stage modal or lightbox is active
+  // Reset Deep-Dive scroll position to top whenever opening a stage
+  useEffect(() => {
+    if (selectedStageForModal && modalScrollContainerRef.current) {
+      modalScrollContainerRef.current.scrollTop = 0;
+    }
+  }, [selectedStageForModal]);
+
+  // Lock background scroll, hide portrait bottom tray, and handle Escape key when modal or lightbox is active
   useEffect(() => {
     if (typeof document === 'undefined') return;
     if (selectedStageForModal || selectedPreviewImage) {
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('workflow-modal-open');
 
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -230,6 +239,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
       window.addEventListener('keydown', handleKeyDown);
       return () => {
         document.body.style.overflow = originalOverflow;
+        document.body.classList.remove('workflow-modal-open');
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
@@ -887,12 +897,12 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                 <div
                   key={stage.id}
                   id={`stage-${stage.id}`}
-                  className={`relative z-10 pt-4 pb-6 transition-all duration-300 ${
+                  className={`relative z-10 pt-6 pb-6 overflow-visible transition-all duration-300 ${
                     isStageLocked ? 'group/locked' : 'group/active'
                   }`}
                 >
                   {/* Desktop Center Node Footstep Marker (>= 1024px) */}
-                  <div className="hidden lg:flex absolute left-1/2 top-10 -translate-x-1/2 -translate-y-1/2 z-20 flex-col items-center gap-1">
+                  <div className="hidden lg:flex absolute left-1/2 top-10 -translate-x-1/2 -translate-y-1/2 z-30 flex-col items-center gap-1 pointer-events-auto">
                     <button
                       type="button"
                       onClick={() => handleOpenStageModal(stage)}
@@ -909,7 +919,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         <FootstepIcon className="w-6 h-6" isActive pulse />
                       )}
                     </button>
-                    <span className="hidden lg:inline-block px-2 py-0.5 rounded bg-black/80 border border-white/20 text-[10px] font-mono font-bold text-white/60">
+                    <span className="hidden lg:inline-block px-2 py-0.5 rounded bg-black/85 border border-white/20 text-[10px] font-mono font-bold text-white/75 whitespace-nowrap shadow-sm">
                       STEP {stage.stageNumber}
                     </span>
                   </div>
@@ -917,13 +927,13 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                   {/* Mobile & iPad Portrait Top Accent Footstep Badge (< 1024px) */}
                   <div
                     onClick={() => handleOpenStageModal(stage)}
-                    className="lg:hidden flex items-center justify-between gap-2 p-3.5 rounded-2xl bg-[#090e1c]/95 border border-cyan-500/40 mb-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.6)] cursor-pointer hover:border-cyan-400 transition-all transform-gpu"
+                    className="lg:hidden flex flex-wrap xs:flex-nowrap items-center justify-between gap-2.5 p-3.5 rounded-2xl bg-[#090e1c]/95 border border-cyan-500/40 mb-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.6)] cursor-pointer hover:border-cyan-400 transition-all"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="w-8 h-8 rounded-xl bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center shrink-0">
                         <FootstepIcon className="w-4 h-4" isActive pulse />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <span className="text-xs font-mono font-bold text-cyan-300 block truncate">
                           STEP {stage.stageNumber} · {stage.richIcon} {stage.navLabel}
                         </span>
@@ -940,9 +950,9 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           e.stopPropagation();
                           handleOpenStageModal(stage);
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 text-white/90 text-[10.5px] font-mono font-bold cursor-pointer shrink-0 flex items-center gap-1"
+                        className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 text-white/90 text-[10.5px] font-mono font-bold cursor-pointer shrink-0 ml-auto flex items-center gap-1 whitespace-nowrap"
                       >
-                        <Lock className="w-2.5 h-2.5 text-amber-400" />
+                        <Lock className="w-2.5 h-2.5 text-amber-400 shrink-0" />
                         <span>Inspect Step</span>
                       </button>
                     ) : (
@@ -952,7 +962,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           e.stopPropagation();
                           handleOpenStageModal(stage);
                         }}
-                        className="px-3 py-1 rounded-lg bg-cyan-400 text-black text-[10.5px] font-mono font-bold cursor-pointer shrink-0 shadow-sm"
+                        className="px-3 py-1.5 rounded-lg bg-cyan-400 text-black text-[10.5px] font-mono font-bold cursor-pointer shrink-0 ml-auto shadow-sm whitespace-nowrap"
                       >
                         Deep Dive →
                       </button>
@@ -962,18 +972,17 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                   {/* Responsive Grid: Single-Column for Mobile/iPad Portrait (< 1024px) & Alternating 2-Column Desktop (>= 1024px) */}
                   <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-14 items-center">
                     {/* Visual Card Column */}
-                    <div className={`space-y-4 ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
+                    <div className={`space-y-4 overflow-visible ${isEven ? 'lg:order-1' : 'lg:order-2'}`}>
                       <div
                         onClick={() => handleOpenStageModal(stage)}
-                        style={{ willChange: 'opacity, transform' }}
-                        className={`relative rounded-3xl overflow-hidden border transition-transform duration-200 cursor-pointer shadow-[0_4px_35px_rgba(0,0,0,0.7)] transform-gpu ${
+                        className={`relative rounded-3xl overflow-visible border transition-transform duration-200 cursor-pointer shadow-[0_4px_35px_rgba(0,0,0,0.7)] ${
                           isStageLocked
-                            ? 'bg-[#060a15] border-white/10 hover:border-amber-400/40 opacity-75 hover:opacity-90'
+                            ? 'bg-[#060a15] border-white/10 hover:border-amber-400/40 opacity-85 hover:opacity-100'
                             : 'bg-[#070d1e] border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_35px_rgba(0,242,254,0.25)] hover:scale-[1.01]'
                         }`}
                       >
-                        {/* Bespoke 16:9 Gemini/Imagen Visual Banner with Solid Skeletal Base */}
-                        <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#050811] group/banner">
+                        {/* Bespoke 16:9 Visual Banner with Rounded Image Clipping & Crisp Stacked Overlays */}
+                        <div className="relative aspect-[16/9] w-full rounded-t-3xl overflow-hidden bg-[#050811] group/banner">
                           {/* Lightweight GPU-accelerated skeletal base */}
                           <div className="absolute inset-0 bg-[#070d1a] pointer-events-none" />
                           <img
@@ -987,42 +996,44 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             }`}
                           />
                           {stage.id === 4 && (
-                            <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/85 border border-purple-400/50 text-[10px] font-mono font-bold text-purple-200 shadow-lg backdrop-blur-md pointer-events-none">
-                              <ShieldCheck className="w-3.5 h-3.5 text-purple-300" />
-                              <span>SECURITY BLUR ACTIVE</span>
+                            <div className="absolute inset-0 z-25 flex items-center justify-center p-3 pointer-events-none">
+                              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/90 border border-purple-400/60 text-[10px] font-mono font-bold text-purple-200 shadow-lg backdrop-blur-md">
+                                <ShieldCheck className="w-3.5 h-3.5 text-purple-300 shrink-0" />
+                                <span>SECURITY BLUR ACTIVE</span>
+                              </div>
                             </div>
                           )}
-                          {/* Desktop-Only Image Gradient & Overlays (Hidden on Mobile & iPad <1280px to keep photography 100% clean) */}
-                          <div className="hidden xl:block absolute inset-0 z-20 bg-gradient-to-t from-black via-black/30 to-transparent pointer-events-none" />
+                          {/* Desktop-Only Image Gradient (z-20) */}
+                          <div className="hidden xl:block absolute inset-0 z-20 bg-gradient-to-t from-black via-black/35 to-black/25 pointer-events-none" />
 
-                          {/* Top Overlay Badges (Desktop Only >= 1280px) */}
-                          <div className="hidden xl:flex absolute top-4 left-4 right-4 items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="px-2.5 py-1 rounded-lg bg-cyan-400 text-black font-mono font-extrabold text-xs tracking-wider shadow-md">
+                          {/* Top Overlay Badges (Desktop Only >= 1280px, strictly z-30 above image & gradient) */}
+                          <div className="hidden xl:flex flex-wrap items-center justify-between gap-2 absolute top-4 left-4 right-4 z-30 pointer-events-none">
+                            <div className="flex flex-wrap items-center gap-2 min-w-0">
+                              <span className="px-2.5 py-1 rounded-lg bg-cyan-400 text-black font-mono font-extrabold text-xs tracking-wider shadow-md shrink-0">
                                 STEP {stage.stageNumber}
                               </span>
-                              <span className="text-[10.5px] font-mono px-2.5 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300 font-bold uppercase tracking-wider">
+                              <span className="text-[10.5px] font-mono px-2.5 py-0.5 rounded bg-black/80 border border-cyan-400/50 text-cyan-300 font-bold uppercase tracking-wider shrink-0">
                                 {stage.tag}
                               </span>
                             </div>
 
                             {isStageLocked ? (
-                              <span className="text-[10.5px] font-mono px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 font-bold flex items-center gap-1.5 shadow-sm">
-                                <Lock className="w-3 h-3 text-amber-400" />
-                                LOCKED · JAN 9, 2027
+                              <span className="text-[10.5px] font-mono px-2.5 py-1 rounded-full bg-amber-950/90 border border-amber-400/60 text-amber-300 font-bold flex items-center gap-1.5 shadow-sm shrink-0 ml-auto">
+                                <Lock className="w-3 h-3 text-amber-400 shrink-0" />
+                                <span>LOCKED · JAN 9, 2027</span>
                               </span>
                             ) : (
-                              <span className="text-[10.5px] font-mono px-2.5 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-cyan-300 font-bold flex items-center gap-1 shadow-sm">
-                                <Eye className="w-3 h-3" />
-                                DEEP-DIVE MODAL
+                              <span className="text-[10.5px] font-mono px-2.5 py-1 rounded-full bg-cyan-950/90 border border-cyan-400/50 text-cyan-300 font-bold flex items-center gap-1 shadow-sm shrink-0 ml-auto">
+                                <Eye className="w-3 h-3 shrink-0" />
+                                <span>DEEP-DIVE MODAL</span>
                               </span>
                             )}
                           </div>
 
-                          {/* Bottom Overlay Title & Action Indicator (Desktop Only >= 1280px) */}
-                          <div className="hidden xl:flex absolute bottom-4 left-4 right-4 items-end justify-between">
-                            <div className="space-y-0.5 max-w-[80%]">
-                              <span className="text-[10px] font-mono text-cyan-300/80 uppercase tracking-wider">
+                          {/* Bottom Overlay Title & Action Indicator (Desktop Only >= 1280px, strictly z-30) */}
+                          <div className="hidden xl:flex absolute bottom-4 left-4 right-4 z-30 items-end justify-between gap-3">
+                            <div className="space-y-0.5 min-w-0 flex-1">
+                              <span className="text-[10px] font-mono text-cyan-300/90 uppercase tracking-wider block">
                                 {stage.timeframe}
                               </span>
                               <h3 className="text-base sm:text-xl font-display font-bold text-white leading-tight">
@@ -1036,7 +1047,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                                 e.stopPropagation();
                                 handleOpenStageModal(stage);
                               }}
-                              className="w-9 h-9 rounded-xl bg-cyan-400/20 hover:bg-cyan-400 hover:text-black border border-cyan-400/40 flex items-center justify-center text-cyan-300 group-hover/banner:bg-cyan-400 group-hover/banner:text-black transition-all cursor-pointer"
+                              className="w-9 h-9 rounded-xl bg-cyan-400/20 hover:bg-cyan-400 hover:text-black border border-cyan-400/40 flex items-center justify-center text-cyan-300 group-hover/banner:bg-cyan-400 group-hover/banner:text-black transition-all cursor-pointer shrink-0"
                               title={`Inspect Step ${stage.stageNumber} Deep-Dive`}
                             >
                               <ChevronRight className="w-5 h-5" />
@@ -1046,26 +1057,26 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
                         {/* Card Body Brief */}
                         <div className="p-4 sm:p-5 space-y-3">
-                          {/* Mobile & iPad Header Block (Positioned neatly below visual container on < 1280px) */}
-                          <div className="xl:hidden space-y-1.5 pb-2 border-b border-white/10">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-1.5">
-                                <span className="px-2 py-0.5 rounded bg-cyan-400 text-black font-mono font-extrabold text-[10px] tracking-wider shadow-sm">
+                          {/* Mobile & Tablet Header Block (< 1280px, wrapping badge row prevents right-edge clipping) */}
+                          <div className="xl:hidden space-y-2 pb-2.5 border-b border-white/10">
+                            <div className="flex flex-wrap items-center justify-between gap-1.5 min-w-0">
+                              <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                                <span className="px-2 py-0.5 rounded bg-cyan-400 text-black font-mono font-extrabold text-[10px] tracking-wider shadow-sm shrink-0">
                                   STEP {stage.stageNumber}
                                 </span>
-                                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded bg-black/60 border border-cyan-400/40 text-cyan-300 font-bold uppercase">
+                                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded bg-black/60 border border-cyan-400/40 text-cyan-300 font-bold uppercase max-w-full truncate">
                                   {stage.tag}
                                 </span>
                               </div>
                               {isStageLocked ? (
-                                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold flex items-center gap-1">
-                                  <Lock className="w-2.5 h-2.5 text-amber-400" />
-                                  LOCKED
+                                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold flex items-center gap-1 shrink-0 ml-auto">
+                                  <Lock className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                                  <span>LOCKED</span>
                                 </span>
                               ) : (
-                                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold flex items-center gap-1">
-                                  <Eye className="w-2.5 h-2.5" />
-                                  DEEP DIVE
+                                <span className="text-[9.5px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/40 text-cyan-300 font-bold flex items-center gap-1 shrink-0 ml-auto">
+                                  <Eye className="w-2.5 h-2.5 shrink-0" />
+                                  <span>DEEP DIVE</span>
                                 </span>
                               )}
                             </div>
@@ -1259,38 +1270,45 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         createPortal(
           <AnimatePresence>
             {selectedStageForModal && (
-              <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-                {/* Backdrop Blur */}
+              <div
+                className="fixed inset-0 z-[100000] flex items-center justify-center p-2.5 sm:p-5 overflow-hidden select-none"
+                style={{
+                  touchAction: 'none',
+                  paddingBottom: 'max(16px, env(safe-area-inset-bottom, 0px))',
+                }}
+              >
+                {/* Backdrop Blur (touchAction: none stops background hub bleed on iOS/mobile) */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setSelectedStageForModal(null)}
-                  style={{ transform: 'translate3d(0,0,0)', willChange: 'opacity' }}
-                  className="fixed inset-0 bg-black/85 backdrop-blur-xl z-0"
+                  style={{ touchAction: 'none' }}
+                  className="fixed inset-0 bg-black/85 backdrop-blur-md z-0 cursor-pointer"
                 />
 
-                {/* Modal Dialog Window */}
+                {/* Modal Dialog Shell (Flex column: pinned header + independent touch-scrolling body) */}
                 <motion.div
                   role="dialog"
                   aria-modal="true"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity' }}
-                  className="relative m-auto w-full max-w-4xl max-h-[88vh] overflow-y-auto rounded-3xl bg-[#070b16]/95 border-2 border-cyan-400/60 shadow-[0_20px_70px_rgba(0,0,0,0.9),0_0_50px_rgba(0,242,254,0.3)] z-10 text-white font-sans space-y-6 p-6 sm:p-8"
+                  initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="workflow-deepdive-card relative z-10 w-full max-w-4xl flex flex-col rounded-3xl bg-[#070b16]/98 border-2 border-cyan-400/60 shadow-[0_20px_70px_rgba(0,0,0,0.9),0_0_50px_rgba(0,242,254,0.3)] text-white font-sans overflow-hidden overscroll-contain select-text"
+                  style={{ touchAction: 'pan-y' }}
                 >
-                  {/* Sticky Modal Header Bar */}
-                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 rounded-lg bg-cyan-400 text-black font-mono font-extrabold text-xs tracking-wider shadow-[0_0_12px_rgba(0,242,254,0.4)]">
+                  {/* Pinned Modal Header Bar (Never scrolls away or traps user) */}
+                  <div className="shrink-0 flex items-center justify-between gap-2 border-b border-white/10 px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 bg-[#070b16]/98 z-20">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+                      <span className="px-2.5 sm:px-3 py-1 rounded-lg bg-cyan-400 text-black font-mono font-extrabold text-[11px] sm:text-xs tracking-wider shadow-[0_0_12px_rgba(0,242,254,0.4)] shrink-0">
                         STEP {selectedStageForModal.stageNumber}
                       </span>
-                      <span className="text-xs font-mono text-cyan-300 font-bold uppercase tracking-wider">
+                      <span className="text-[11px] sm:text-xs font-mono text-cyan-300 font-bold uppercase tracking-wider truncate">
                         {selectedStageForModal.tag}
                       </span>
-                      <span className="hidden sm:inline text-xs font-mono text-white/50">
+                      <span className="hidden sm:inline text-xs font-mono text-white/50 truncate">
                         · {selectedStageForModal.timeframe}
                       </span>
                     </div>
@@ -1301,51 +1319,62 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         soundManager.playTone(440, 0.05);
                         setSelectedStageForModal(null);
                       }}
-                      className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer"
+                      className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer shrink-0 touch-manipulation"
                       title="Close Modal"
+                      aria-label="Close Deep Dive"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
 
-                  {/* Modal Hero Visual & Banner */}
-                  <div className="relative rounded-2xl overflow-hidden border border-cyan-500/30 group/hero aspect-[21/9] sm:aspect-[2.39/1] bg-black/90">
-                    <img
-                      src={selectedStageForModal.heroImage}
-                      alt={selectedStageForModal.heroImageAlt}
-                      className={`w-full h-full object-cover transition-all duration-300 ${
-                        selectedStageForModal.id === 4 ? 'filter blur-[13px] scale-[1.04]' : ''
-                      }`}
-                    />
-                    {selectedStageForModal.id === 4 && (
-                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
-                        <div className="px-4 py-2.5 rounded-xl bg-black/85 border border-purple-500/50 backdrop-blur-md shadow-[0_0_30px_rgba(168,85,247,0.4)] flex items-center gap-2 text-purple-200 font-mono text-xs font-bold uppercase tracking-wider">
-                          <ShieldCheck className="w-4 h-4 text-purple-300" />
-                          <span>CANONICAL @TAG SHEET · PROTECTED</span>
+                  {/* Kinetic Touch-Scrollable Content Body */}
+                  <div
+                    ref={modalScrollContainerRef}
+                    className="workflow-deepdive-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y px-4 sm:px-6 lg:px-8 py-5 space-y-6 [scrollbar-width:thin]"
+                    style={{
+                      WebkitOverflowScrolling: 'touch',
+                      overscrollBehaviorY: 'contain',
+                      paddingBottom: 'max(28px, calc(env(safe-area-inset-bottom, 0px) + 24px))',
+                    }}
+                  >
+                    {/* Modal Hero Visual & Banner */}
+                    <div className="relative rounded-2xl overflow-hidden border border-cyan-500/30 group/hero aspect-[16/9] sm:aspect-[2.39/1] bg-black/90">
+                      <img
+                        src={selectedStageForModal.heroImage}
+                        alt={selectedStageForModal.heroImageAlt}
+                        className={`relative z-10 w-full h-full object-cover transition-all duration-300 ${
+                          selectedStageForModal.id === 4 ? 'filter blur-[13px] scale-[1.04]' : ''
+                        }`}
+                      />
+                      {selectedStageForModal.id === 4 && (
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
+                          <div className="px-4 py-2.5 rounded-xl bg-black/85 border border-purple-500/50 backdrop-blur-md shadow-[0_0_30px_rgba(168,85,247,0.4)] flex items-center gap-2 text-purple-200 font-mono text-xs font-bold uppercase tracking-wider">
+                            <ShieldCheck className="w-4 h-4 text-purple-300 shrink-0" />
+                            <span>CANONICAL @TAG SHEET · PROTECTED</span>
+                          </div>
+                        </div>
+                      )}
+                      {/* Desktop-Only Image Gradient & Title Overlay (z-25 above blur/img, below button) */}
+                      <div className="hidden xl:flex absolute inset-0 z-25 bg-gradient-to-t from-black/90 via-black/20 to-transparent items-end p-5 pointer-events-none">
+                        <div className="space-y-1 w-full">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300">
+                            3D-TO-AI PIPELINE SPECIFICATION · VAULT MAPPED
+                          </span>
+                          <h2 className="text-xl sm:text-3xl font-display font-extrabold text-white">
+                            {selectedStageForModal.title}
+                          </h2>
                         </div>
                       </div>
-                    )}
-                    {/* Desktop-Only Image Gradient & Title Overlay (Hidden on Mobile & iPad <1280px) */}
-                    <div className="hidden xl:flex absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent items-end p-5">
-                      <div className="space-y-1 w-full">
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300">
-                          3D-TO-AI PIPELINE SPECIFICATION · VAULT MAPPED
-                        </span>
-                        <h2 className="text-xl sm:text-3xl font-display font-extrabold text-white">
-                          {selectedStageForModal.title}
-                        </h2>
-                      </div>
-                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPreviewImage(selectedStageForModal.heroImage)}
-                      className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/70 hover:bg-black/90 border border-white/20 text-white font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <Maximize2 className="w-3.5 h-3.5 text-cyan-300" />
-                      <span>Expand Visual</span>
-                    </button>
-                  </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPreviewImage(selectedStageForModal.heroImage)}
+                        className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 px-2.5 sm:px-3 py-1.5 rounded-lg bg-black/75 hover:bg-black/95 border border-white/25 text-white font-mono text-[11px] sm:text-xs flex items-center gap-1.5 transition-colors cursor-pointer touch-manipulation"
+                      >
+                        <Maximize2 className="w-3.5 h-3.5 text-cyan-300" />
+                        <span>Expand Visual</span>
+                      </button>
+                    </div>
 
                   {/* Mobile & iPad Header Block (Clean Visual Below Imagery for < 1280px) */}
                   <div className="xl:hidden p-4 rounded-2xl bg-black/60 border border-white/10 space-y-1.5">
@@ -1663,6 +1692,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                       ))}
                     </div>
                   </div>
+                  </div>
                 </motion.div>
               </div>
             )}
@@ -1680,8 +1710,8 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setSelectedPreviewImage(null)}
-                style={{ transform: 'translate3d(0,0,0)', willChange: 'opacity' }}
-                className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 cursor-zoom-out"
+                style={{ touchAction: 'none' }}
+                className="fixed inset-0 z-[100010] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-8 overflow-hidden cursor-zoom-out select-none"
               >
                 {(() => {
                   const isCharacterPlate =
@@ -1692,18 +1722,18 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
                   return (
                     <div
-                      style={{ transform: 'translate3d(0,0,0)', willChange: 'transform, opacity' }}
-                      className="relative m-auto max-w-5xl max-h-[90vh] rounded-2xl overflow-hidden border border-cyan-500/40 shadow-[0_0_50px_rgba(0,242,254,0.3)] bg-black"
+                      onClick={(e) => e.stopPropagation()}
+                      className="relative m-auto max-w-5xl max-h-[88dvh] rounded-2xl overflow-hidden border border-cyan-500/40 shadow-[0_0_50px_rgba(0,242,254,0.3)] bg-black cursor-default"
                     >
                       <img
                         src={selectedPreviewImage}
                         alt="Enlarged Case Study Asset"
-                        className={`w-full h-full object-contain max-h-[85vh] select-none pointer-events-none ${
+                        className={`w-full h-full object-contain max-h-[85dvh] select-none pointer-events-none ${
                           isCharacterPlate ? 'filter blur-[13px] scale-[1.04]' : ''
                         }`}
                       />
                       {isCharacterPlate && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
                           <div className="px-5 py-3.5 rounded-2xl bg-black/85 border border-purple-500/50 backdrop-blur-md shadow-[0_0_40px_rgba(168,85,247,0.5)] space-y-1.5 max-w-md">
                             <div className="flex items-center justify-center gap-2 text-purple-300 font-mono text-xs font-bold uppercase tracking-widest">
                               <ShieldCheck className="w-4 h-4 text-purple-400" />
@@ -1718,7 +1748,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                       <button
                         type="button"
                         onClick={() => setSelectedPreviewImage(null)}
-                        className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/80 border border-white/20 text-white font-mono text-xs hover:bg-white/20 transition-colors cursor-pointer"
+                        className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 px-3 py-1.5 rounded-lg bg-black/85 border border-white/25 text-white font-mono text-xs hover:bg-white/20 transition-colors cursor-pointer touch-manipulation"
                       >
                         Close ✕
                       </button>

@@ -79,12 +79,25 @@
   background: rgba(103, 232, 249, 0.4);
 }
 
-/* Auth Gateway Mobile Viewport & Scroll Containment */
+/* Auth Gateway & Workflow Deep-Dive Mobile Viewport & Scroll Containment */
 .auth-gateway {
   max-height: 92vh;
   max-height: 92dvh;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+
+.workflow-deepdive-card {
+  max-height: min(86vh, calc(100vh - 72px));
+  max-height: min(86dvh, calc(100dvh - 72px));
+  overscroll-behavior: contain;
+}
+
+.workflow-deepdive-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 
 /* Bioluminescent cyan glow utilities */
@@ -989,9 +1002,10 @@ canvas {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Ensure mobile bottom navigation stays completely hidden when Auth Gateway or Checkout modal is active */
+/* Ensure mobile bottom navigation stays completely hidden when Auth Gateway, Checkout, or Workflow Deep-Dive modal is active */
 body.auth-modal-open .scifi-bottom-nav,
-body.checkout-modal-open .scifi-bottom-nav {
+body.checkout-modal-open .scifi-bottom-nav,
+body.workflow-modal-open .scifi-bottom-nav {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
