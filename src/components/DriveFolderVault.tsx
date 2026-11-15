@@ -252,10 +252,10 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     }
   };
 
-  // Reorganized Top-Level Master Folders & Dissected Pipeline Structure
+  // Standardized 5-Step 3D-to-AI + Logic Pro DAW Asset Vault Hierarchy
   const DRIVE_HIERARCHY: DriveFolder[] = [
     // ═══════════════════════════════════════════════════════════════════════
-    // MASTER FOLDER 1: Workflow
+    // MASTER FOLDER 1: Workflow (3D-to-AI Pipeline + Logic Pro DAW)
     // ═══════════════════════════════════════════════════════════════════════
     {
       id: 'folder-01',
@@ -263,372 +263,455 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       displayName: 'Folder 1 · Workflow',
       shortName: '01 · Workflow',
       richIcon: '🎛️',
-      category: 'Dissected 5-Stage Production Pipeline, Storyboards & DAW Templates',
-      itemCount: 23,
-      totalSize: '1.28 GB',
+      category: '5-Step 3D-to-AI Production Pipeline & Logic Pro DAW Templates',
+      itemCount: 5,
+      totalSize: '1.31 GB',
       isLocked: true,
       productId: 'workflow',
       subfolders: [
         {
           id: 'stage-01',
-          name: '01_Storyboards_Script_Blueprints',
-          displayName: '01 · Storyboards & Script Blueprints',
-          shortName: '01 · Storyboards',
-          richIcon: '🎬',
-          category: 'Storyboards & 2.39:1 framing specs',
-          itemCount: 6,
-          totalSize: '33.1 MB',
+          name: '01_Blender_Greybox_Base',
+          displayName: '01_Blender_Greybox_Base/',
+          shortName: '01 · Blender Greybox Base',
+          richIcon: '🏗️',
+          category: 'Raw .blend environments, terrain geometry & architecture blockouts',
+          itemCount: 4,
+          totalSize: '184.6 MB',
           isLocked: true,
           productId: 'workflow',
           files: [
             {
               id: 'file-01-1',
-              name: 'Bingäa_Issue01_Director_Script.pdf',
-              extension: 'PDF',
-              size: '12.4 MB',
-              typeBadge: 'PDF Document',
-              badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
-              modified: 'Oct 12, 2026',
+              name: 'Akainoya_Landscape_Greybox_Base.blend',
+              extension: 'BLEND',
+              size: '96.4 MB',
+              typeBadge: 'Blender 4.2 Environment',
+              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+              modified: 'Nov 12, 2026',
               isLocked: true,
               productId: 'workflow',
-              previewImg: stage01Img,
-              description: 'Official 18-panel director breakdown with scene annotations, camera focal notes, and timing charts.',
+              previewImg: akinoyaVistaImg,
+              description: 'Raw 3D environment .blend file for Akainoya spire valleys and horizon terrain at calibrated 1 BU = 1m metric scale.',
             },
             {
               id: 'file-01-2',
-              name: 'Scene_Blocking_Director_Notes.txt',
-              extension: 'TXT',
-              size: '48 KB',
-              typeBadge: 'Script Notes',
-              badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-              modified: 'Oct 11, 2026',
+              name: 'Spaceship_Interior_Architecture_Blockout.blend',
+              extension: 'BLEND',
+              size: '64.2 MB',
+              typeBadge: 'Spaceship Hull Blockout',
+              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+              modified: 'Nov 11, 2026',
               isLocked: true,
               productId: 'workflow',
               previewImg: stage01Img,
-              description: 'Raw text notes from Odi detailing character motivation, pacing beats, and cinematic lighting cues.',
+              description: 'Modular spaceship corridor, bulkhead doorway, and command deck architectural greybox blockout ready for spatial staging.',
             },
             {
               id: 'file-01-3',
-              name: 'Anamorphic_Keyframe_Grids.png',
-              extension: 'PNG',
-              size: '8.2 MB',
-              typeBadge: '2.39:1 Grid',
+              name: 'Akainoya_Terrain_Displacement_Mesh.fbx',
+              extension: 'FBX',
+              size: '22.8 MB',
+              typeBadge: '3D Terrain Geometry',
               badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
-              modified: 'Oct 10, 2026',
+              modified: 'Nov 10, 2026',
               isLocked: true,
               productId: 'workflow',
-              previewImg: stage01Img,
-              description: 'High-resolution CinemaScope letterbox keyframe grids with safety margins and title-safe overlays.',
+              previewImg: akinoyaVistaImg,
+              description: 'Clean quad-topology terrain geometry exported for multi-DCC compatibility and AI depth projection.',
             },
             {
               id: 'file-01-4',
-              name: 'Leuven_Snow_Dance_Sequence_Sheet.pdf',
+              name: 'World_Greybox_Team_Handoff_Spec.pdf',
               extension: 'PDF',
-              size: '6.8 MB',
-              typeBadge: 'Beat Sheet',
-              badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
-              modified: 'Oct 09, 2026',
-              isLocked: true,
-              productId: 'workflow',
-              previewImg: stage01Img,
-              description: 'Frame-by-frame beat breakdown of the emotional dance in the snow, translated into camera focal lengths.',
-            },
-            {
-              id: 'file-01-5',
-              name: 'Pacing_Tension_Timeline_2.39.xlsx',
-              extension: 'XLSX',
               size: '1.2 MB',
-              typeBadge: 'Timing Chart',
-              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-              modified: 'Oct 08, 2026',
-              isLocked: true,
-              productId: 'workflow',
-              previewImg: stage01Img,
-              description: 'Mathematical tension curve tracking shot duration, camera velocity, and audio frequency peaks.',
-            },
-            {
-              id: 'file-01-6',
-              name: 'Story_Beat_Breakdown_18_Panels.pdf',
-              extension: 'PDF',
-              size: '4.5 MB',
-              typeBadge: 'Story Beats',
+              typeBadge: 'Pipeline Spec (Mac Lee)',
               badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
-              modified: 'Oct 07, 2026',
+              modified: 'Nov 09, 2026',
               isLocked: true,
               productId: 'workflow',
               previewImg: stage01Img,
-              description: 'Visual storyboard summary with shot descriptions, camera directions, and scene transitions.',
+              description: 'Collection naming, origin pivot, and Blender world-scale protocol for internal team (Mac Lee) and community collaborators.',
             },
           ],
         },
         {
           id: 'stage-02',
-          name: '02_ArtDirection_Character_Anchors',
-          displayName: '02 · Art Direction & Character Anchors',
-          shortName: '02 · Art Direction',
-          richIcon: '🎨',
-          category: 'Character Turnarounds, Mood Anchors & Swatches',
-          itemCount: 6,
-          totalSize: '52.6 MB',
+          name: '02_Spatial_Blocking_Rigs',
+          displayName: '02_Spatial_Blocking_Rigs/',
+          shortName: '02 · Spatial Blocking Rigs',
+          richIcon: '🧍',
+          category: 'Character proxies, vehicle rigs & prop placement setups',
+          itemCount: 4,
+          totalSize: '216.0 MB',
           isLocked: true,
           productId: 'workflow',
           files: [
             {
               id: 'file-02-1',
-              name: 'Sillow — Lead Planetary Explorer',
-              extension: 'JPG',
-              size: '280 KB',
-              typeBadge: 'Explorer Sheet',
-              badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
-              modified: 'Oct 14, 2026',
+              name: 'Mill_Odi_Sillow_Character_Proxies.blend',
+              extension: 'BLEND',
+              size: '34.0 MB',
+              typeBadge: 'Character Proxy Rigs',
+              badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+              modified: 'Nov 14, 2026',
               isLocked: true,
               productId: 'workflow',
-              previewImg: sillowCharacterImg,
-              description: 'The lead planetary explorer styled with distinct dreadlocks and a tactical harness.',
+              previewImg: stage03Img,
+              description: 'Proportion-locked 3D stand-in armatures for Mill, Odi, and Sillow to lock down scale, eyelines, and gravity before rendering.',
             },
             {
               id: 'file-02-2',
-              name: 'Odi — Scout Mechanic',
-              extension: 'JPG',
-              size: '275 KB',
-              typeBadge: 'Scout Rig',
+              name: 'Cockpit_Camera_Velocity_Rig.blend',
+              extension: 'BLEND',
+              size: '148.0 MB',
+              typeBadge: 'Vehicle & Cockpit Rig',
               badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-              modified: 'Oct 14, 2026',
+              modified: 'Nov 14, 2026',
               isLocked: true,
               productId: 'workflow',
-              previewImg: odiCharacterImg,
-              description: 'The scout mechanic without dreadlocks, wearing tactical reconnaissance armor.',
+              previewImg: stage03Img,
+              description: 'Rigged spaceship cockpit seating cage with constrained pilot ergonomics, control yoke arcs, and camera mount splines.',
             },
             {
               id: 'file-02-3',
-              name: 'Mill — Alien Bio-Analyst',
-              extension: 'PNG',
-              size: '6.7 MB',
-              typeBadge: '4K Master Anchor',
-              badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-              modified: 'Oct 14, 2026',
+              name: 'Transport_Vehicle_Scale_Proxies.fbx',
+              extension: 'FBX',
+              size: '18.6 MB',
+              typeBadge: 'Vehicle Proxy Cage',
+              badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+              modified: 'Nov 12, 2026',
               isLocked: true,
               productId: 'workflow',
-              previewImg: millCharacterImg,
-              description: 'The alien bio-analyst in her environmental suit with the mushroom helmet archetype.',
+              previewImg: stage03Img,
+              description: 'Low-poly vehicle rigs and landing skid proxy bounds anchored to ground collision planes.',
             },
             {
               id: 'file-02-4',
-              name: 'Mood_Primary_Atmospheric_Anchor.png',
-              extension: 'PNG',
-              size: '8.25 MB',
-              typeBadge: 'Master Style Anchor',
-              badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
-              modified: 'Oct 10, 2026',
+              name: 'Scene_Prop_Placement_Gravity_Setups.blend',
+              extension: 'BLEND',
+              size: '15.4 MB',
+              typeBadge: 'Prop Blocking Pack',
+              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+              modified: 'Nov 11, 2026',
               isLocked: true,
               productId: 'workflow',
-              previewImg: moodboardImg,
-              description: 'Official Mood.png reference used to condition all atmospheric lighting and creature designs.',
-            },
-            {
-              id: 'file-02-5',
-              name: 'Twilight_World_Master_Vista.jpg',
-              extension: 'JPG',
-              size: '3.2 MB',
-              typeBadge: 'Planetary Horizon',
-              badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-              modified: 'Oct 09, 2026',
-              isLocked: true,
-              productId: 'workflow',
-              previewImg: akinoyaVistaImg,
-              description: 'Master orbital perspective reference for Äkinoya twilight atmospheric curvature.',
-            },
-            {
-              id: 'file-02-6',
-              name: 'Akinoya_Cosmic_Cyan_Palette_Swatches.ase',
-              extension: 'ASE',
-              size: '512 KB',
-              typeBadge: 'Adobe Swatch',
-              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-              modified: 'Oct 08, 2026',
-              isLocked: true,
-              productId: 'workflow',
-              description: 'Digital color swatch palette containing locked hex values: #00f2fe (Cyan Galaxy), #b142f0 (Purple Void).',
+              description: 'Modular field instruments, console terminals, and cargo props locked to Z-surface contact rules for zero floating artifacts.',
             },
           ],
         },
         {
           id: 'stage-03',
-          name: '03_Logic_Pro_Sound_Architecture',
-          displayName: '03 · Logic Pro Project & DAW Architecture',
-          shortName: '03 · DAW Architecture',
-          richIcon: '🎹',
-          category: 'Logic Pro Template, Enerwise Architecture & Presets',
-          itemCount: 3,
-          totalSize: '108.5 MB',
+          name: '03_24fps_Camera_Previz',
+          displayName: '03_24fps_Camera_Previz/',
+          shortName: '03 · 24fps Camera Previz',
+          richIcon: '🎥',
+          category: 'Light Workbench renders, camera animation passes & timing timelines',
+          itemCount: 4,
+          totalSize: '425.2 MB',
           isLocked: true,
           productId: 'workflow',
           files: [
             {
               id: 'file-03-1',
-              name: 'Akinoya_Vocal_Chain_Logic_Pro_Template.logicx',
-              extension: 'LOGICX',
-              size: '56.0 MB',
-              typeBadge: 'Logic Pro Project',
-              badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
-              modified: 'Oct 14, 2026',
+              name: 'Akainoya_24fps_Workbench_Previz.mp4',
+              extension: 'MP4',
+              size: '42.0 MB',
+              typeBadge: '24fps Workbench Edit',
+              badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+              modified: 'Nov 14, 2026',
               isLocked: true,
               productId: 'workflow',
-              description: 'Dedicated Logic Pro project template featuring Enerwise sound architecture, my vocal chain routing, bus compression, and spatial imaging.',
+              previewImg: stage01Img,
+              description: 'Lightweight 24fps Blender Workbench skeletal timeline timed directly to Logic Pro WAV_Stems/ musical beat markers.',
             },
             {
               id: 'file-03-2',
-              name: 'Akinoya_Modular_Synth_Ableton_Template.als',
-              extension: 'ALS',
-              size: '48.0 MB',
-              typeBadge: 'Ableton Live 11/12',
-              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-              modified: 'Oct 12, 2026',
+              name: 'Multicam_Lens_Animation_Passes.json',
+              extension: 'JSON',
+              size: '1.8 MB',
+              typeBadge: 'Camera Trajectory Data',
+              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+              modified: 'Nov 13, 2026',
               isLocked: true,
               productId: 'workflow',
-              description: 'Production DAW project file with routing, custom operator chains, and analog saturation racks ready to load.',
+              description: 'Virtual multicam focal length switches (24mm/35mm/50mm/85mm) and baked CAM_TRAJ_A animation passes.',
             },
             {
               id: 'file-03-3',
-              name: 'Enerwise_Mastering_Channel_Strip_Preset.cst',
-              extension: 'CST',
-              size: '4.5 MB',
-              typeBadge: 'Channel Strip',
-              badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
-              modified: 'Oct 11, 2026',
+              name: 'Audio_Synced_24fps_Timing_Timeline.edl',
+              extension: 'EDL',
+              size: '420 KB',
+              typeBadge: 'Scene Marker EDL',
+              badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+              modified: 'Nov 12, 2026',
               isLocked: true,
               productId: 'workflow',
-              description: 'Official Enerwise sound architecture channel strip preset for Logic Pro, delivering pristine spectral clarity and warmth.',
+              description: 'Frame-accurate 24.000 FPS edit decision list driven by "Dream of Akainoya" WAV stem bar markers from folder 05.',
+            },
+            {
+              id: 'file-03-4',
+              name: '16bit_ZDepth_Normal_Pass_Sequence.exr',
+              extension: 'EXR',
+              size: '381.0 MB',
+              typeBadge: 'OpenEXR Depth Pass',
+              badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+              modified: 'Nov 11, 2026',
+              isLocked: true,
+              productId: 'workflow',
+              previewImg: stage03Img,
+              description: 'Uncompressed 16-bit Z-depth and normal maps exported alongside Workbench previz to anchor Step 5 neural rendering.',
             },
           ],
         },
         {
           id: 'stage-04',
-          name: '04_Blender_3D_Previs_Cockpit_Rigs',
-          displayName: '04 · Blender 3D Previs & Cockpit Rigs',
-          shortName: '04 · 3D Previs & Rigs',
-          richIcon: '🧊',
-          category: '3D Cockpit, EXR Sequences & Camera Trajectories',
-          itemCount: 4,
-          totalSize: '601.4 MB',
+          name: '04_Canonical_Tag_References',
+          displayName: '04_Canonical_Tag_References/',
+          shortName: '04 · Canonical @TAG Refs',
+          richIcon: '🏷️',
+          category: 'Master image sheets, lighting guides, texture packages & @TAG look-ups',
+          itemCount: 6,
+          totalSize: '58.4 MB',
           isLocked: true,
           productId: 'workflow',
           files: [
             {
               id: 'file-04-1',
-              name: 'Cockpit_Camera_Velocity_Rig.blend',
-              extension: 'BLEND',
-              size: '148 MB',
-              typeBadge: 'Blender 3.6+ Project',
-              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-              modified: 'Oct 14, 2026',
+              name: '@MILL_SUIT_V1 — Mill (Alien Bio-Analyst Sheet)',
+              extension: 'PNG',
+              size: '6.7 MB',
+              typeBadge: 'Canonical @TAG Plate',
+              badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+              modified: 'Nov 14, 2026',
               isLocked: true,
               productId: 'workflow',
-              previewImg: stage03Img,
-              description: 'Fully rigged 3D cockpit scene with animated camera tracking curves (CAM_TRAJ_A) and forward velocity paths.',
+              previewImg: millCharacterImg,
+              description: 'Canonical @TAG visual anchor sheet for Mill in her environmental suit with mushroom helmet archetype.',
             },
             {
               id: 'file-04-2',
-              name: 'Warp_Tunnel_Kinematic_Curves.fbx',
-              extension: 'FBX',
-              size: '32 MB',
-              typeBadge: '3D Geometry',
+              name: '@ODI_SCOUT_V1 — Odi (Scout Mechanic Sheet)',
+              extension: 'JPG',
+              size: '275 KB',
+              typeBadge: 'Canonical @TAG Plate',
               badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-              modified: 'Oct 12, 2026',
+              modified: 'Nov 14, 2026',
               isLocked: true,
               productId: 'workflow',
-              previewImg: stage03Img,
-              description: 'High-speed hyperspace warp tunnel polygonal mesh with vertex color coordinates for emissive shader passes.',
+              previewImg: odiCharacterImg,
+              description: 'Canonical @TAG turnaround sheet for Odi (scout mechanic without dreadlocks, tactical reconnaissance armor).',
             },
             {
               id: 'file-04-3',
-              name: '16bit_ZDepth_Normal_Pass_Sequence.exr',
-              extension: 'EXR',
-              size: '420 MB',
-              typeBadge: 'OpenEXR Sequence',
-              badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
-              modified: 'Oct 11, 2026',
+              name: '@SILLOW_EXPLORER_V1 — Sillow (Planetary Explorer Sheet)',
+              extension: 'JPG',
+              size: '280 KB',
+              typeBadge: 'Canonical @TAG Plate',
+              badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+              modified: 'Nov 14, 2026',
               isLocked: true,
               productId: 'workflow',
-              previewImg: stage03Img,
-              description: 'Uncompressed 16-bit float depth and normal map sequence for multi-modal ControlNet video conditioning.',
+              previewImg: sillowCharacterImg,
+              description: 'Canonical @TAG sheet for Sillow styled with distinct dreadlocks and tactical explorer harness.',
             },
             {
               id: 'file-04-4',
-              name: 'Anamorphic_Lens_Camera_Tracking_Data.json',
-              extension: 'JSON',
-              size: '1.4 MB',
-              typeBadge: 'Tracker Data',
-              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-              modified: 'Oct 10, 2026',
+              name: 'Mood_Lighting_Direction_Master_Sheet.png',
+              extension: 'PNG',
+              size: '18.4 MB',
+              typeBadge: 'Character Lighting Guide',
+              badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+              modified: 'Nov 12, 2026',
               isLocked: true,
               productId: 'workflow',
-              description: 'Synthesized camera tracking coordinate points formatted for import into Nuke, After Effects, and Blender.',
+              previewImg: moodboardImg,
+              description: 'Master lighting ratio guide and key/rim keyframe sheet guaranteeing cut-to-cut atmospheric continuity.',
+            },
+            {
+              id: 'file-04-5',
+              name: 'Akainoya_PBR_Texture_Palette_Package.ase',
+              extension: 'ASE',
+              size: '31.5 MB',
+              typeBadge: 'Texture & Swatch Pack',
+              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+              modified: 'Nov 10, 2026',
+              isLocked: true,
+              productId: 'workflow',
+              description: 'Curated texture material swatches and locked palette values (#00f2fe Cyan Galaxy, #b142f0 Purple Void) for asset shaders.',
+            },
+            {
+              id: 'file-04-6',
+              name: 'Canonical_Tag_Lookup_Registry.json',
+              extension: 'JSON',
+              size: '1.2 MB',
+              typeBadge: '@TAG Look-Up Sheet',
+              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+              modified: 'Nov 09, 2026',
+              isLocked: true,
+              productId: 'workflow',
+              previewImg: stage04Img,
+              description: 'Shot-by-shot lookup sheet linking 24fps Workbench cuts to canonical character, lighting, and material @TAG identifiers.',
             },
           ],
         },
         {
           id: 'stage-05',
-          name: '05_Prompt_Engineering_Bibles',
-          displayName: '05 · Prompt Engineering Bibles & LUTs',
-          shortName: '05 · Prompt Bibles',
-          richIcon: '⚡',
-          category: 'Multi-Block Prompt Databases & ACEScc 3D LUTs',
-          itemCount: 4,
-          totalSize: '90.7 MB',
+          name: '05_Audio_DAW_Templates_Stems',
+          displayName: '05_Audio_DAW_Templates_Stems/',
+          shortName: '05 · Audio & Logic Pro DAW',
+          richIcon: '🎹',
+          category: 'Logic_Pro_Master_Template.logicx, WAV_Stems/ & Visualizer_Logic_Assets/',
+          itemCount: 5,
+          totalSize: '425.0 MB',
           isLocked: true,
           productId: 'workflow',
+          subfolders: [
+            {
+              id: 'stage-05-wav-stems',
+              name: 'WAV_Stems',
+              displayName: 'WAV_Stems/',
+              shortName: 'WAV_Stems/',
+              richIcon: '🔊',
+              category: 'Acapellas, mix stems & unreleased audio masters aligned to scene markers',
+              itemCount: 3,
+              totalSize: '342.0 MB',
+              isLocked: true,
+              productId: 'workflow',
+              files: [
+                {
+                  id: 'file-05-wav-1',
+                  name: 'Dream_of_Akainoya_Master_Mix_Stems_96kHz.wav',
+                  extension: 'WAV',
+                  size: '164.0 MB',
+                  typeBadge: '24-bit 96kHz Mix Stems',
+                  badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+                  modified: 'Nov 14, 2026',
+                  isLocked: true,
+                  isAudio: true,
+                  productId: 'workflow',
+                  previewImg: stage05Img,
+                  description: 'Uncompressed 24-bit / 96kHz mix stems & unreleased master aligned frame-for-frame to Step 3 24fps scene markers.',
+                },
+                {
+                  id: 'file-05-wav-2',
+                  name: 'Dream_of_Akainoya_Vocal_Stem_Reference.wav',
+                  extension: 'WAV',
+                  size: '92.0 MB',
+                  typeBadge: 'Scene-Aligned Vocal Stem',
+                  badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+                  modified: 'Nov 14, 2026',
+                  isLocked: true,
+                  isAudio: true,
+                  productId: 'workflow',
+                  previewImg: vocalAcapellaImg,
+                  description: 'Tempo-locked reference vocal stem & phrasing cue track synced to Logic_Pro_Master_Template.logicx bar markers.',
+                },
+                {
+                  id: 'file-05-wav-3',
+                  name: 'Sillow_Mill_SubBass_Modular_Drones_128BPM.wav',
+                  extension: 'WAV',
+                  size: '86.0 MB',
+                  typeBadge: '128 BPM Synth Stem',
+                  badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+                  modified: 'Nov 12, 2026',
+                  isLocked: true,
+                  isAudio: true,
+                  productId: 'workflow',
+                  description: 'Isolated 432Hz analog synth bass & atmospheric drone stem dictating Step 3 camera cut energy transitions.',
+                },
+              ],
+            },
+            {
+              id: 'stage-05-visualizer-assets',
+              name: 'Visualizer_Logic_Assets',
+              displayName: 'Visualizer_Logic_Assets/',
+              shortName: 'Visualizer_Logic_Assets/',
+              richIcon: '⚡',
+              category: 'Reactive audio triggers & MIDI data linked to visualizer reactivity',
+              itemCount: 3,
+              totalSize: '21.8 MB',
+              isLocked: true,
+              productId: 'workflow',
+              files: [
+                {
+                  id: 'file-05-vis-1',
+                  name: 'Visualizer_Audio_Reactive_Triggers.mid',
+                  extension: 'MID',
+                  size: '1.4 MB',
+                  typeBadge: 'MIDI Reactive Triggers',
+                  badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+                  modified: 'Nov 14, 2026',
+                  isLocked: true,
+                  productId: 'workflow',
+                  previewImg: stage05Img,
+                  description: 'Timecode-locked MIDI note triggers driving camera shake, emission blooms, and cut switches inside the 2D Visualizer pipeline.',
+                },
+                {
+                  id: 'file-05-vis-2',
+                  name: 'Logic_Pro_Visualizer_Automation_Curves.json',
+                  extension: 'JSON',
+                  size: '2.4 MB',
+                  typeBadge: 'Telemetry Automation',
+                  badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+                  modified: 'Nov 13, 2026',
+                  isLocked: true,
+                  productId: 'workflow',
+                  description: 'Sub-bass envelope curves exported from Logic Pro to sync AI shader modulation and audio-reactive visualizer telemetry.',
+                },
+                {
+                  id: 'file-05-vis-3',
+                  name: 'Akinoya_ACEScc_Finishing_LUT.cube',
+                  extension: 'CUBE',
+                  size: '18.0 MB',
+                  typeBadge: 'ACEScc Finishing LUT',
+                  badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+                  modified: 'Nov 11, 2026',
+                  isLocked: true,
+                  productId: 'workflow',
+                  previewImg: stage05Img,
+                  description: 'Official finishing 3D LUT cube applied over Step 5 neural renders to unify contrast and cosmic cyan/violet highlight rolloff.',
+                },
+              ],
+            },
+          ],
           files: [
             {
               id: 'file-05-1',
-              name: 'Master_Prompt_Vault_120_Templates.json',
-              extension: 'JSON',
-              size: '2.1 MB',
-              typeBadge: 'JSON Schema',
-              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-              modified: 'Oct 14, 2026',
-              isLocked: true,
-              productId: 'workflow',
-              previewImg: stage04Img,
-              description: 'Centralized database containing 120 production-tested 4-block syntax prompts for Gemini 1.5 Pro and Imagen 3.',
-            },
-            {
-              id: 'file-05-2',
-              name: 'Negative_Token_Suppression_Dictionary.txt',
-              extension: 'TXT',
-              size: '180 KB',
-              typeBadge: 'Negative Token Dictionary',
-              badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-              modified: 'Oct 12, 2026',
-              isLocked: true,
-              productId: 'workflow',
-              previewImg: stage04Img,
-              description: 'Weighted negative token array designed to suppress digital plastic shaders, deformed geometry, and edge noise.',
-            },
-            {
-              id: 'file-05-3',
-              name: 'Gemini_Imagen3_Seed_Matrix.json',
-              extension: 'JSON',
-              size: '840 KB',
-              typeBadge: 'Seed Matrix',
-              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-              modified: 'Oct 10, 2026',
-              isLocked: true,
-              productId: 'workflow',
-              description: 'Verified deterministic seed numbers yielding photorealistic results across Äkinoya cosmic planetary landscapes.',
-            },
-            {
-              id: 'file-05-4',
-              name: 'Akinoya_ACEScc_PrintFilm_Emulation.cube',
-              extension: 'CUBE',
-              size: '84.2 MB',
-              typeBadge: '3D LUT Cube',
-              badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-              modified: 'Oct 09, 2026',
+              name: 'Logic_Pro_Master_Template.logicx',
+              extension: 'LOGICX',
+              size: '56.0 MB',
+              typeBadge: 'Core Logic Pro Template',
+              badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+              modified: 'Nov 14, 2026',
               isLocked: true,
               productId: 'workflow',
               previewImg: stage05Img,
-              description: 'Official 65x65x65 3D LUT cube calibrated for ACEScc and Rec.709 color spaces with custom film print density.',
+              description: 'The core Logic Pro production template featuring pre-routed vocal chains (my vocal chain), Enerwise stem busses, "Dream of Akainoya" tracklist specs, and 24fps telemetry automation markers.',
+            },
+            {
+              id: 'file-05-2',
+              name: 'Enerwise_Vocal_Chain_Channel_Strip.cst',
+              extension: 'CST',
+              size: '4.5 MB',
+              typeBadge: 'Logic Pro Channel Strip',
+              badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+              modified: 'Nov 13, 2026',
+              isLocked: true,
+              productId: 'workflow',
+              description: 'Standardized vocal chain & bus compression channel strip preset powering Logic_Pro_Master_Template.logicx.',
+            },
+            {
+              id: 'file-05-3',
+              name: 'Dream_of_Akainoya_DAW_Scene_Markers.pdf',
+              extension: 'PDF',
+              size: '700 KB',
+              typeBadge: 'Tempo & Cut Map',
+              badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
+              modified: 'Nov 12, 2026',
+              isLocked: true,
+              productId: 'workflow',
+              description: 'Tracklist specs & scene-marker timing bridge explaining how Logic Pro bars drive Step 3 24fps previz cuts and feed the 2D Visualizer Production bundle.',
             },
           ],
         },
@@ -726,7 +809,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
           modified: 'Oct 10, 2026',
           isLocked: true,
           productId: 'vocal',
-          description: 'MIDI files, chord progressions, tempo maps, and vocal tuning guides for Ableton, FL Studio, and Logic Pro.',
+          description: 'MIDI files, chord progressions, tempo maps, and vocal tuning guides ready for Logic Pro (Logic_Pro_Master_Template.logicx) and major DAWs.',
         },
       ],
     },
@@ -804,24 +887,42 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
     },
   ];
 
+  // Recursive directory lookup (supports 3-level nested paths such as 05_Audio_DAW_Templates_Stems/WAV_Stems/)
+  const findFolderWithTrail = useCallback(
+    (
+      folders: DriveFolder[],
+      predicate: (f: DriveFolder) => boolean,
+      trail: Array<{ id: string; name: string }> = [{ id: 'root', name: 'Sillow Mill Drive' }]
+    ): { folder: DriveFolder; trail: Array<{ id: string; name: string }> } | null => {
+      for (const f of folders) {
+        const nextTrail = [...trail, { id: f.id, name: f.displayName }];
+        if (predicate(f)) return { folder: f, trail: nextTrail };
+        if (f.subfolders) {
+          const found = findFolderWithTrail(f.subfolders, predicate, nextTrail);
+          if (found) return found;
+        }
+      }
+      return null;
+    },
+    []
+  );
+
+  const collectAllFiles = useCallback((folders: DriveFolder[]): DriveFile[] => {
+    return folders.flatMap((f) => [
+      ...(f.files || []),
+      ...(f.subfolders ? collectAllFiles(f.subfolders) : []),
+    ]);
+  }, []);
+
   // Helper: Find current folder object or return null (root)
   const getCurrentFolder = (): DriveFolder | null => {
     if (currentFolderId === 'root') return null;
-
-    for (const root of DRIVE_HIERARCHY) {
-      if (root.id === currentFolderId) return root;
-      if (root.subfolders) {
-        for (const sub of root.subfolders) {
-          if (sub.id === currentFolderId) return sub;
-        }
-      }
-    }
-    return null;
+    return findFolderWithTrail(DRIVE_HIERARCHY, (f) => f.id === currentFolderId)?.folder || null;
   };
 
   const currentFolder = getCurrentFolder();
 
-  // Sync with initialFolderId (e.g. when navigated from workflow stages 01-05)
+  // Sync with initialFolderId (e.g. when navigated from workflow steps 01-05)
   useEffect(() => {
     if (!initialFolderId) return;
 
@@ -831,40 +932,20 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
       return;
     }
 
-    // Match initialFolderId against top-level master folders and subfolders
-    for (const root of DRIVE_HIERARCHY) {
-      if (
-        root.id === initialFolderId ||
-        root.name.toLowerCase().includes(initialFolderId.toLowerCase()) ||
-        root.displayName.toLowerCase().includes(initialFolderId.toLowerCase()) ||
-        root.shortName?.toLowerCase().includes(initialFolderId.toLowerCase())
-      ) {
-        setCurrentFolderId(root.id);
-        setFolderPath([
-          { id: 'root', name: 'Sillow Mill Drive' },
-          { id: root.id, name: root.displayName },
-        ]);
-        return;
-      }
+    const q = initialFolderId.toLowerCase();
+    const match =
+      findFolderWithTrail(DRIVE_HIERARCHY, (f) => f.id === initialFolderId) ||
+      findFolderWithTrail(
+        DRIVE_HIERARCHY,
+        (f) =>
+          f.name.toLowerCase().includes(q) ||
+          f.displayName.toLowerCase().includes(q) ||
+          Boolean(f.shortName?.toLowerCase().includes(q))
+      );
 
-      if (root.subfolders) {
-        for (const sub of root.subfolders) {
-          if (
-            sub.id === initialFolderId ||
-            sub.name.toLowerCase().includes(initialFolderId.toLowerCase()) ||
-            sub.displayName.toLowerCase().includes(initialFolderId.toLowerCase()) ||
-            sub.shortName?.toLowerCase().includes(initialFolderId.toLowerCase())
-          ) {
-            setCurrentFolderId(sub.id);
-            setFolderPath([
-              { id: 'root', name: 'Sillow Mill Drive' },
-              { id: root.id, name: root.displayName },
-              { id: sub.id, name: sub.displayName },
-            ]);
-            return;
-          }
-        }
-      }
+    if (match) {
+      setCurrentFolderId(match.folder.id);
+      setFolderPath(match.trail);
     }
   }, [initialFolderId]);
 
@@ -926,11 +1007,42 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
   }, [currentFolder]);
 
   const allHierarchyFiles = useMemo(() => {
-    return DRIVE_HIERARCHY.flatMap((r) => [
-      ...(r.files || []),
-      ...(r.subfolders?.flatMap((s) => s.files || []) || []),
-    ]);
-  }, []);
+    return collectAllFiles(DRIVE_HIERARCHY);
+  }, [collectAllFiles]);
+
+  const renderFileExtensionIcon = (extension: string) => {
+    switch (extension) {
+      case 'PDF':
+        return <FileText className="w-5 h-5 text-red-400" />;
+      case 'PNG':
+      case 'MP4':
+        return <Film className="w-5 h-5 text-cyan-400" />;
+      case 'JPG':
+      case 'TIFF':
+        return <Film className="w-5 h-5 text-purple-400" />;
+      case 'BLEND':
+      case 'FBX':
+      case 'EXR':
+        return <Layers className="w-5 h-5 text-amber-400" />;
+      case 'JSON':
+      case 'EDL':
+        return <FileCode className="w-5 h-5 text-emerald-400" />;
+      case 'CUBE':
+        return <Sliders className="w-5 h-5 text-purple-400" />;
+      case 'WAV':
+      case 'MID':
+        return <Music className="w-5 h-5 text-teal-400" />;
+      case 'ALS':
+        return <Disc className="w-5 h-5 text-amber-400" />;
+      case 'LOGICX':
+      case 'CST':
+        return <Music className="w-5 h-5 text-indigo-400" />;
+      case 'ZIP':
+        return <Box className="w-5 h-5 text-teal-400" />;
+      default:
+        return <File className="w-5 h-5 text-white/60" />;
+    }
+  };
 
   // Filter with search query if active
   const filteredFolders = useMemo(() => {
@@ -1379,30 +1491,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                           {/* File Header */}
                           <div className="flex items-start gap-3 min-w-0 mb-3">
                             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
-                              {file.extension === 'PDF' && <FileText className="w-5 h-5 text-red-400" />}
-                              {file.extension === 'PNG' && <Film className="w-5 h-5 text-cyan-400" />}
-                              {file.extension === 'JPG' && <Film className="w-5 h-5 text-purple-400" />}
-                              {file.extension === 'BLEND' && <Layers className="w-5 h-5 text-amber-400" />}
-                              {file.extension === 'JSON' && <FileCode className="w-5 h-5 text-emerald-400" />}
-                              {file.extension === 'CUBE' && <Sliders className="w-5 h-5 text-purple-400" />}
-                              {file.extension === 'WAV' && <Music className="w-5 h-5 text-teal-400" />}
-                              {file.extension === 'ALS' && <Disc className="w-5 h-5 text-amber-400" />}
-                              {file.extension === 'LOGICX' && <Music className="w-5 h-5 text-indigo-400" />}
-                              {file.extension === 'TIFF' && <Film className="w-5 h-5 text-purple-400" />}
-                              {file.extension === 'ZIP' && <Box className="w-5 h-5 text-teal-400" />}
-                              {file.extension !== 'PDF' &&
-                                file.extension !== 'PNG' &&
-                                file.extension !== 'JPG' &&
-                                file.extension !== 'BLEND' &&
-                                file.extension !== 'JSON' &&
-                                file.extension !== 'CUBE' &&
-                                file.extension !== 'WAV' &&
-                                file.extension !== 'ALS' &&
-                                file.extension !== 'LOGICX' &&
-                                file.extension !== 'TIFF' &&
-                                file.extension !== 'ZIP' && (
-                                  <File className="w-5 h-5 text-white/60" />
-                                )}
+                              {renderFileExtensionIcon(file.extension)}
                             </div>
 
                             <div className="min-w-0 flex-1 space-y-1">
@@ -1495,30 +1584,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                       <div className="flex items-center gap-3 min-w-0">
                         {/* File Format Icon */}
                         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center shrink-0">
-                          {file.extension === 'PDF' && <FileText className="w-5 h-5 text-red-400" />}
-                          {file.extension === 'PNG' && <Film className="w-5 h-5 text-cyan-400" />}
-                          {file.extension === 'JPG' && <Film className="w-5 h-5 text-purple-400" />}
-                          {file.extension === 'BLEND' && <Layers className="w-5 h-5 text-amber-400" />}
-                          {file.extension === 'JSON' && <FileCode className="w-5 h-5 text-emerald-400" />}
-                          {file.extension === 'CUBE' && <Sliders className="w-5 h-5 text-purple-400" />}
-                          {file.extension === 'WAV' && <Music className="w-5 h-5 text-teal-400" />}
-                          {file.extension === 'ALS' && <Disc className="w-5 h-5 text-amber-400" />}
-                          {file.extension === 'LOGICX' && <Music className="w-5 h-5 text-indigo-400" />}
-                          {file.extension === 'TIFF' && <Film className="w-5 h-5 text-purple-400" />}
-                          {file.extension === 'ZIP' && <Box className="w-5 h-5 text-teal-400" />}
-                          {file.extension !== 'PDF' &&
-                            file.extension !== 'PNG' &&
-                            file.extension !== 'JPG' &&
-                            file.extension !== 'BLEND' &&
-                            file.extension !== 'JSON' &&
-                            file.extension !== 'CUBE' &&
-                            file.extension !== 'WAV' &&
-                            file.extension !== 'ALS' &&
-                            file.extension !== 'LOGICX' &&
-                            file.extension !== 'TIFF' &&
-                            file.extension !== 'ZIP' && (
-                              <File className="w-5 h-5 text-white/60" />
-                            )}
+                          {renderFileExtensionIcon(file.extension)}
                         </div>
 
                         <div className="min-w-0 space-y-0.5">
@@ -1668,6 +1734,9 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
                   selectedFileForPreview.name.includes('Mill') ||
                   selectedFileForPreview.name.includes('Odi') ||
                   selectedFileForPreview.name.includes('Sillow') ||
+                  selectedFileForPreview.name.includes('@MILL') ||
+                  selectedFileForPreview.name.includes('@ODI') ||
+                  selectedFileForPreview.name.includes('@SILLOW') ||
                   selectedFileForPreview.previewImg === millCharacterImg ||
                   selectedFileForPreview.previewImg === odiCharacterImg ||
                   selectedFileForPreview.previewImg === sillowCharacterImg;

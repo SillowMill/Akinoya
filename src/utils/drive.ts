@@ -1,6 +1,6 @@
 /**
  * Internal Sillow Mill Production Asset Vault Configuration & Mappings
- * Maps the 3 top-level master folders and the dissected 5-stage production pipeline.
+ * Maps the 3 top-level master folders and the standardized 5-step 3D-to-AI + Logic Pro DAW pipeline.
  */
 
 export const MASTER_VAULT_FOLDER_IDS = {
@@ -18,12 +18,17 @@ export const VAULT_STAGE_FOLDER_IDS: Record<string, string> = {
   '05': 'stage-05',
 };
 
+export const VAULT_AUDIO_SUBFOLDER_IDS = {
+  WAV_STEMS: 'stage-05-wav-stems',
+  VISUALIZER_LOGIC_ASSETS: 'stage-05-visualizer-assets',
+} as const;
+
 export const VAULT_STAGE_NAMES: Record<string, string> = {
-  '01': '01 Storyboards & Script Blueprints',
-  '02': '02 Art Direction & Character Anchors',
-  '03': '03 Logic Pro Project & DAW Architecture',
-  '04': '04 Blender 3D Previs & Camera Trajectories',
-  '05': '05 Prompt Engineering Bibles & LUTs',
+  '01': '01_Blender_Greybox_Base',
+  '02': '02_Spatial_Blocking_Rigs',
+  '03': '03_24fps_Camera_Previz',
+  '04': '04_Canonical_Tag_References',
+  '05': '05_Audio_DAW_Templates_Stems',
 };
 
 /**

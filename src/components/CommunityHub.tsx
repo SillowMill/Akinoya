@@ -352,13 +352,13 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
 
   const isInitialMountRef = useRef(true);
 
-  // Workflow Pipeline Stages for Left Sidebar Sub-Menu
+  // Standardized 5-Step 3D-to-AI Workflow Stages for Left Sidebar & Mobile Quick-Jump Strip
   const WORKFLOW_STAGES = [
-    { id: 1, num: '01', title: 'Storyboards & Framing' },
-    { id: 2, num: '02', title: 'Character & World Specs' },
-    { id: 3, num: '03', title: 'Blender 4.2 & Octane 3D' },
-    { id: 4, num: '04', title: 'Prompts & Diffusion Matrix' },
-    { id: 5, num: '05', title: 'DaVinci Grading & Ableton' },
+    { id: 1, num: '01', title: 'World Greyboxing' },
+    { id: 2, num: '02', title: 'Spatial Blocking & Proxies' },
+    { id: 3, num: '03', title: '24fps Workbench Previz' },
+    { id: 4, num: '04', title: '@TAG Scene Direction' },
+    { id: 5, num: '05', title: 'Neural Render & Logic DAW' },
   ];
 
   const [tappingHubTab, setTappingHubTab] = useState<string | null>(null);
@@ -827,14 +827,14 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     },
     {
       id: 'asset-audio-master',
-      title: 'Sub-Orbital Drift — Studio Audio Master & DAW Template',
-      category: 'UNRELEASED MUSIC & DAW TEMPLATE',
-      fileFormat: 'AUDIO MASTER + ABLETON .ALS',
-      fileSize: '348.2 MB · 24-BIT / 96kHz WAV',
+      title: 'Dream of Akainoya — Logic Pro Master Template & WAV Stems',
+      category: 'LOGIC PRO DAW & STUDIO STEMS',
+      fileFormat: 'LOGIC_PRO_MASTER_TEMPLATE.LOGICX + 24-BIT WAV',
+      fileSize: '425.0 MB · 24-BIT / 96kHz WAV',
       description:
-        'Full DAW session template with unreleased studio audio masters and project files for production study.',
+        'Core Logic_Pro_Master_Template.logicx with pre-routed vocal chains, stem busses, telemetry markers, and WAV_Stems/ synced to Step 3 previz cuts.',
       downloadUrl: '/assets/SubOrbitalDrift_AudioMaster.zip',
-      fileName: 'SubOrbitalDrift_AudioMaster_96kHz.zip',
+      fileName: 'Logic_Pro_Master_Template_Stems.zip',
       heroBannerUrl: visualizerThumbnailImg,
       isAudio: true,
     },
@@ -956,15 +956,15 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     {
       id: 'wf-step-04',
       stepNumber: '04',
-      tag: 'AUDIO & EDITING',
-      title: 'Music Sync & DaVinci Post-Processing',
-      subtitle: 'Audio-reactive animation sync & 4K master export',
-      toolstack: 'DaVinci Resolve Studio · Ableton Live 12 · ACEScc',
+      tag: 'AUDIO & FINISHING',
+      title: 'Logic Pro DAW & Neural Finishing',
+      subtitle: 'Audio-reactive visualizer sync & 4K master export',
+      toolstack: 'Logic Pro (.logicx) · DaVinci Resolve Studio · ACEScc',
       duration: '20:05 Breakdown',
       description:
-        'Aligning visual cuts to analog synthesizer transients, sub-bass 808 drops, and atmospheric risers. Final ACEScc color science grading, anamorphic halation, organic 35mm film grain overlays, and master delivery in uncompressed 4K 60FPS ProRes 4444 XQ with 24-bit 96kHz LPCM audio.',
+        'Aligning Step 3 24fps Workbench cuts directly to WAV_Stems/ transients inside Logic_Pro_Master_Template.logicx, then marrying Step 5 neural renders with vocal chains and Visualizer_Logic_Assets/ reactive MIDI triggers.',
       heroBannerUrl: bingaaComicCover,
-      metrics: { fps: '60 FPS', engine: 'ACEScc COLOR SCIENCE', resolution: '4K PRORES 4444 XQ' },
+      metrics: { fps: '24 FPS LOCK', engine: 'LOGIC PRO + NEURAL AI', resolution: '4K PRORES 4444 XQ' },
       comments: [
         {
           id: 'wfc-7',
@@ -1821,7 +1821,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span>Full Ableton Live &amp; Modular Synth DAW Project Templates (.ALS)</span>
+                  <span>Full Logic Pro Master Templates (.LOGICX), Vocal Chains &amp; 3D Greybox Files</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -1940,7 +1940,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
               ) : (
                 <form onSubmit={handleArtistVerificationSubmit} className="space-y-4">
                   <p className="text-xs text-white/70 font-sans leading-relaxed">
-                    Verified artists, music producers, and sound designers receive lifetime access to curated VST/AU discounts (FabFilter, UAD), custom Ableton 12 / Bitwig racks, and production stems.
+                    Verified artists, music producers, and sound designers receive lifetime access to curated VST/AU discounts (FabFilter, UAD), Logic_Pro_Master_Template.logicx vocal chains, and &ldquo;Dream of Akainoya&rdquo; WAV stems.
                   </p>
 
                   <div className="space-y-1.5">

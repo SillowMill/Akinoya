@@ -146,7 +146,7 @@ export const DROP_SCHEDULE: PioneerDrop[] = [
     description: 'Dry and wet acapellas of Track 1 & 2 from the EP, ready to remix.',
     releaseDate: '2027-01-09',
     kind: 'audio',
-    vaultFolderId: 'folder-03',
+    vaultFolderId: 'folder-02',
   },
   {
     id: 'drop-02-workflow-breakdown',

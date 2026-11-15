@@ -295,9 +295,9 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
                 5-Folder Drive Vault Directory
               </h3>
               <p className="text-xs sm:text-sm text-white/75 font-sans leading-relaxed">
-                Inspect every asset from pre-production to post-mastering. Explore original character
-                turnaround model sheets, Ableton Live .als templates, Blender .blend cockpit rigs,
-                and 120+ structured prompt JSON databases.
+                Inspect every asset from greybox to final neural finishing. Explore raw Blender
+                .blend greybox environments, 24fps Workbench previz timelines, canonical @TAG
+                reference sheets, and Logic_Pro_Master_Template.logicx + WAV stems.
               </p>
             </div>
 
@@ -369,9 +369,9 @@ export const WelcomeVisionPortal: React.FC<WelcomeVisionPortalProps> = ({
               className="p-4 sm:p-5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-[0_0_25px_rgba(0,242,254,0.5)] flex flex-col items-center justify-center gap-2 group hover:scale-[1.02]"
             >
               <Sliders className="w-6 h-6 text-black" />
-              <span>Explore 5-Stage Workflow →</span>
+              <span>Explore 5-Step Workflow →</span>
               <span className="text-[10px] font-sans font-normal text-black/70">
-                Storyboards, 3D Rigs, Prompts
+                3D Greybox, 24fps Previz, Logic Pro
               </span>
             </button>
 

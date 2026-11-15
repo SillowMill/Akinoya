@@ -304,399 +304,410 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
     };
   }, []);
 
-  // Comprehensive 5-Stage Data Architecture (Mapped to Drive Vault Folders)
+  // Standardized 5-Step 3D-to-AI + Logic Pro DAW Pipeline (1-to-1 Vault Mapping)
   const STAGES: StageDetail[] = [
     {
       id: 1,
       stageNumber: '01',
-      tag: 'PRE-PRODUCTION',
-      navLabel: 'Pre-Production',
-      richIcon: '🎬',
-      timeframe: 'WEEK 01 · NARRATIVE BEDROCK',
-      title: 'Pre-Production & Storyboards',
-      subtitle: 'Translating narrative scripts into 2.39:1 anamorphic storyboards',
-      vaultFolderMapping: '01 · Storyboards',
+      tag: '3D GREYBOXING',
+      navLabel: 'World Greyboxing',
+      richIcon: '🏗️',
+      timeframe: 'STEP 01 · BLENDER + AI ENV',
+      title: 'World Greyboxing (AI-Assisted 3D Environment)',
+      subtitle:
+        'Converting concept art and world-building sketches of Sillow Mill locations (Akainoya landscapes, spaceship interiors) into precise 3D greybox environments via Blender + AI tooling.',
+      vaultFolderMapping: '01_Blender_Greybox_Base/',
       isAdvancedLocked: false,
-      heroImage: stage01Img,
-      heroImageAlt: 'Sci-fi cinematic storyboard blueprint under a cosmic teal sky',
-      themeDescription: 'Sci-fi cinematic storyboard blueprint under a cosmic teal sky (Gemini/Imagen 3)',
+      heroImage: akinoyaVistaImg,
+      heroImageAlt: '3D greybox environment terrain and spaceship hull architecture for Akainoya locations',
+      themeDescription: 'Blender + AI-assisted 3D greybox environments for Akainoya landscapes and ship interiors',
       millTransmission:
-        'Narrative clarity always precedes pixels! If your storyboard lacks compositional tension, no generative video model can fix it.',
+        'Stop prompting from blank frames! Build the spatial truth in Blender first—Akainoya canyons and starship corridors need real 3D perspective before neural styling.',
       millProTip:
-        'Standardize strictly on 2.39:1 Anamorphic ratio to prevent AI perspective stretching and aspect drift.',
+        'For internal handoffs (Mac Lee & env artists) and community builds alike: enforce 1 BU = 1m real-world scale and snap the floor plane to Z=0 before blocking corridors.',
       universalTheory: {
-        heading: 'Translating Scripts into Structural Storyboards',
+        heading: 'From Concept Sketch to Metric 3D Greybox',
         description:
-          'In professional hybrid pipelines, visual pacing and spatial geometry must be locked before firing generative video passes or setting 3D keyframes.',
+          'Concept art establishes mood, while a Blender greybox establishes immutable geometry, horizon sightlines, and ceiling heights that keep multi-cut neural renders physically coherent.',
         bullets: [
           {
-            title: '2.39:1 Anamorphic Framing',
+            title: 'AI-Assisted Environment Blockout',
             detail:
-              'Establishes hard horizontal letterboxing constraints that keep AI models anchored to cinematic film ratios rather than square social crops.',
+              'Translate Sillow Mill sketches and Akainoya concept plates into rough sculptural terrains, monolith volumes, and bulkhead bays in Blender.',
           },
           {
-            title: 'The Hybrid Previs Fork',
+            title: 'Modular Architecture Shells',
             detail:
-              'Determines early which scenes require gray-box Blender camera rigs versus direct image-to-video generative synthesis.',
+              'Build clean low-poly interior shells for spaceships, cockpits, and outposts with real door widths, viewport frames, and walkable deck grids.',
           },
           {
-            title: '3-Second Tension Intervals',
+            title: 'Clean Scene Hygiene for Team Handoff',
             detail:
-              'Subdivides sequences into 3-second narrative beats matching current generative AI temporal coherence windows.',
+              'Separate Collections by Terrain, Architecture, and Sky Dome so Mac Lee and collaborators can inspect or swap layout modules in seconds.',
           },
         ],
       },
       odiCaseStudy: {
-        title: 'How Odi Mapped Bingäa',
+        title: 'Greyboxing Akainoya Landscapes & Starship Interiors',
         summary:
-          'Deconstructing the initial Leuven snow dance script and 18 comic panels of Bingäa.',
+          'Translating hand-drawn Sillow Mill sketches into raw .blend environment blockouts.',
         deepDiveNarrative:
-          'Odi began by writing the narrative core—a poetic sequence exploring isolation, monolithic ruins, and the celestial return to Bingäa. Rather than prompting scenes blindly, Odi hand-drafted 18 key comic panels establishing camera angles, character proportions, and atmospheric mist densities. This storyboard blueprint served as the non-negotiable anchor for every subsequent 3D setup and AI video pass.',
+          'Instead of chasing unstable text-to-video prompts, Odi starts in Blender with raw world-building blockouts of Akainoya obsidian spires and ship corridors. Using AI-assisted depth projection onto simple low-poly geometry, every cliff overhang and corridor bulkhead stays 100% locked across wide, medium, and reverse angles.',
         previewThumbnails: [
-          { img: bingaaComicCover, caption: 'Bingäa Comic Book Cover & Visual Beat Sheet' },
-          { img: stage01Img, caption: 'Cosmic Core Descent 2.39:1 Storyboard Blueprint' },
+          { img: akinoyaVistaImg, caption: 'Akainoya Twilight Terrain Greybox Baseline' },
+          { img: stage01Img, caption: 'Architectural Corridor & Horizon Blockout Framing' },
         ],
       },
       masterAsset: {
-        title: 'Bingäa Storyboard Blueprint PDF Package',
-        fileName: 'Bingäa_Issue01_Director_Script.pdf',
-        fileSize: '12.4 MB',
-        fileFormat: 'PDF Document (Vector + 300 DPI)',
-        vaultPath: 'Drive / 01_PreProduction_Storyboards / Bingaa_Comic_Script_Breakdown',
-        description: 'Official 18-panel director breakdown with scene annotations, camera focal notes, and timing charts.',
+        title: '01_Blender_Greybox_Base/ Master Package',
+        fileName: 'Akainoya_Greybox_Environment_Base.blend',
+        fileSize: '184 MB',
+        fileFormat: '.blend (Blender 3.6 LTS / 4.2)',
+        vaultPath: 'Vault / 01_Workflow / 01_Blender_Greybox_Base/',
+        description:
+          'Raw 3D environment .blend files, procedural Akainoya terrain geometry, and spaceship interior architecture blockouts.',
         specs: [
-          { key: 'Framing Ratio', val: '2.39:1 CinemaScope Anamorphic' },
-          { key: 'Panel Count', val: '18 Director Plates' },
-          { key: 'Format', val: 'Print-Ready Vector PDF + 300 DPI' },
-          { key: 'Access Tier', val: 'Locked · Jan 9, 2027 (Annual Pass)' },
+          { key: 'Deliverables', val: 'Raw .blend + Terrain + Hulls' },
+          { key: 'World Scale', val: 'Metric 1 BU = 1 Meter' },
+          { key: 'Workflow Role', val: 'Environment Bedrock (Team + Community)' },
+          { key: 'Vault Folder', val: '01_Blender_Greybox_Base/' },
         ],
       },
       technicalSpecs: [
-        { label: 'Aspect Ratio', value: '2.39:1 Anamorphic' },
-        { label: 'Camera Lens', value: '35mm / 50mm Prime' },
-        { label: 'Temporal Window', value: '3.0s coherent beats' },
-        { label: 'Primary Engine', value: 'Gemini Lore + 2D Figma' },
+        { label: 'Unit System', value: 'Metric (1.0 BU = 1m)' },
+        { label: 'Geometry Budget', value: 'Clean Low-Poly Greybox' },
+        { label: 'Handoff Format', value: '.blend + Collection Tree' },
+        { label: 'Vault Directory', value: '01_Blender_Greybox_Base/' },
       ],
     },
     {
       id: 2,
       stageNumber: '02',
-      tag: 'ART DIRECTION',
-      navLabel: 'Art Direction',
-      richIcon: '🎨',
-      timeframe: 'WEEK 02 · AESTHETIC FOUNDATION',
-      title: 'Art Direction & Character Locking',
-      subtitle: 'Multi-modal conditioning and character turnaround sheets',
-      vaultFolderMapping: '02 · Art Direction',
+      tag: 'SPATIAL BLOCKING',
+      navLabel: 'Spatial Blocking & Proxies',
+      richIcon: '🧍',
+      timeframe: 'STEP 02 · PROXIES & RIGS',
+      title: 'Spatial Blocking & Character Proxies',
+      subtitle:
+        'Placing 3D stand-ins for characters, vehicles, and props to lock down scale, perspective, gravity, and composition before any neural rendering occurs.',
+      vaultFolderMapping: '02_Spatial_Blocking_Rigs/',
       isAdvancedLocked: false,
-      heroImage: millLockingImg,
-      heroImageAlt: 'Character locking hero visual featuring Mill in biological exploration suit with mushroom helmet archetype',
-      themeDescription: 'Master character locking turnaround plate — Mill, Alien Bio-Analyst',
+      heroImage: stage03Img,
+      heroImageAlt: '3D character proxy stand-ins, vehicle cockpit rig, and spatial blocking guides in Blender',
+      themeDescription: '3D character proxies, vehicle rigs, and prop setups locking composition and gravity',
       millTransmission:
-        'Style drift is the silent killer of AI cinema! Anchor your character sheets and color palettes before rendering a single final frame.',
+        'Scale drift ruins immersion! Drop calibrated character proxies, vehicle cockpits, and grounded props into the greybox before you ever touch a shader or neural pass.',
       millProTip:
-        'Inject reference turnaround plates into image-to-image conditioning nodes at 0.65 to 0.75 denoising strength.',
+        'Check eye-line height (~1.7m standing stand-in) and contact shadows on deck plates so characters feel anchored by real gravity—zero floating feet.',
       universalTheory: {
-        heading: 'Asset-First Art Direction & Multi-Modal Anchoring',
+        heading: 'Scale, Gravity & Composition Prior to Rendering',
         description:
-          'Generative diffusion models naturally regress toward generic averages unless anchored by high-resolution reference assets with strict chromatic constraints.',
+          'Spatial blocking treats 3D stand-in armatures, ship rigs, and prop bounds as non-negotiable physical anchors—eliminating warped anatomy and shifting prop sizes between shots.',
         bullets: [
           {
-            title: 'Turnaround Model Sheets',
+            title: 'Calibrated Character Proxies',
             detail:
-              'Generate 360-degree turnaround views (front, 3/4, side, rear) for all hero characters, suits, and hero props.',
+              'Place proportion-accurate 3D stand-in rigs for Mill, Odi, and Sillow inside scenes to validate shoulder width, reach, and camera sightlines.',
           },
           {
-            title: 'Multi-Modal Conditioning',
+            title: 'Vehicle Rigs & Cockpit Ergonomics',
             detail:
-              'Bind master reference imagery directly into conditioning latents, ensuring facial geometry and suit fabrics remain identical across cuts.',
+              'Snap transport skiffs, dropship hulls, and console seats onto constrained motion splines with locked pilot clearance.',
           },
           {
-            title: 'Three-Tone Chromatic Restraint',
+            title: 'Gravity & Prop Placement Locks',
             detail:
-              'Enforce a strict 3-color palette (e.g., #00f2fe Cyan Galaxy, #b142f0 Purple Void Nebula, #404040 Obsidian Grey) to prevent digital rainbow artifacts.',
+              'Verify every crate, instrument console, and geological prop rests flush against floor colliders with accurate perspective foreshortening.',
           },
         ],
       },
       odiCaseStudy: {
-        title: 'Locking the Äkinoya Style & Core Cast',
-        summary: 'How Mill, Odi, and Sillow were locked using high-resolution turnaround plates.',
+        title: 'Locking Cockpit & Explorer Blocking Before Previz',
+        summary:
+          'How character proxies and rigged vehicle cages stabilize fast camera moves and multi-character scenes.',
         deepDiveNarrative:
-          'To achieve a signature aesthetic across hundreds of experimental generation passes, Odi locked three foundational character reference sheets from the Character Locking vault: Mill in her environmental bio-analyst suit with the mushroom helmet archetype, Odi as the scout mechanic without dreadlocks wearing tactical reconnaissance armor, and Sillow as the lead planetary explorer styled with distinct dreadlocks and a tactical harness. Character sheets were formalized, freezing their visors, harnesses, and cyan/purple palette swatches.',
+          'Before animating any final shot, Odi and internal collaborators (including Mac Lee) stage every explorer beat using greybox stand-in rigs and vehicle cages. Cockpit control sticks, visor clearances, and over-the-shoulder staging are verified directly inside Blender so downstream 24fps Workbench renders preserve exact human-to-ship scale.',
         previewThumbnails: [
-          { img: millLockingImg, caption: 'Mill — Alien Bio-Analyst (Mushroom Helmet Archetype)' },
-          { img: odiLockingImg, caption: 'Odi — Scout Mechanic (Tactical Recon Armor, No Dreadlocks)' },
-          { img: sillowLockingImg, caption: 'Sillow — Lead Planetary Explorer (Dreadlocks & Tactical Harness)' },
+          { img: stage03Img, caption: 'Cockpit Velocity Rig & Proxy Pilot Clearance' },
+          { img: visualizerThumbnailImg, caption: 'Composition Check Against Locked Foreground Scale' },
         ],
       },
-      characterDownloads: [
-        {
-          name: 'Mill',
-          role: 'Bio-Biologist',
-          fileName: 'Mill — Master Character Plate',
-          size: '6.7 MB',
-          format: '4K Lossless Plate',
-          img: millLockingImg,
-          downloadUrl: '',
-          description: 'The alien bio-biologist in her environmental suit with the mushroom helmet archetype.',
-        },
-        {
-          name: 'Odi',
-          role: 'Scout Mechanic',
-          fileName: 'Odi — Tactical Recon Sheet',
-          size: '275 KB',
-          format: 'High-Res Model Plate',
-          img: odiLockingImg,
-          downloadUrl: '',
-          description: 'The scout mechanic without dreadlocks, wearing tactical reconnaissance armor.',
-        },
-        {
-          name: 'Sillow',
-          role: 'Lead Planetary Explorer',
-          fileName: 'Sillow — Explorer Master Turnaround',
-          size: '280 KB',
-          format: 'High-Res Model Plate',
-          img: sillowLockingImg,
-          downloadUrl: '',
-          description: 'The lead planetary explorer styled with distinct dreadlocks and a tactical harness.',
-        },
-      ],
       masterAsset: {
-        title: 'Äkinoya Character Locking Master Pack (Mill, Odi, Sillow)',
-        fileName: 'Character_Locking_Master_Pack.zip',
-        fileSize: '7.3 MB',
-        fileFormat: 'Lossless Master Set',
-        vaultPath: 'Drive / 02 · Art Direction & Character Anchors / Character_Sheets_Sillow_Odi_Mill',
-        description: 'Complete 3-character high-resolution reference locking plates: Mill (Alien Bio-Analyst), Odi (Scout Mechanic), and Sillow (Lead Planetary Explorer).',
+        title: '02_Spatial_Blocking_Rigs/ Master Archive',
+        fileName: 'Cockpit_Camera_Velocity_Rig.blend',
+        fileSize: '216 MB',
+        fileFormat: '.blend + .fbx Proxy Rigs',
+        vaultPath: 'Vault / 01_Workflow / 02_Spatial_Blocking_Rigs/',
+        description:
+          'Calibrated 3D character proxy rigs, rigged cockpit & vehicle assemblies, and standardized prop placement setups.',
         specs: [
-          { key: 'Resolution', val: '4096 x 2160 (4K UHD)' },
-          { key: 'Lead Character', val: 'Mill (Alien Bio-Analyst)' },
-          { key: 'Scout Rig', val: 'Odi (Scout Mechanic)' },
-          { key: 'Explorer Sheet', val: 'Sillow (Lead Planetary Explorer)' },
+          { key: 'Proxy Rig Spec', val: 'Mill / Odi / Sillow Scale Cages' },
+          { key: 'Vehicle Rigs', val: 'Cockpit + Warp Tunnel Mesh' },
+          { key: 'Constraint Check', val: 'Gravity & Floor Snap Active' },
+          { key: 'Vault Folder', val: '02_Spatial_Blocking_Rigs/' },
         ],
       },
       technicalSpecs: [
-        { label: 'Conditioning Denoise', value: '0.65 – 0.72' },
-        { label: 'Palette Swatches', value: '#00f2fe / #b142f0' },
-        { label: 'Character Locking', value: 'Mill, Odi, Sillow' },
-        { label: 'Diffusion Model', value: 'Imagen 3 Multi-Modal' },
+        { label: 'Proxy Rig Height', value: 'Calibrated Human / Suit' },
+        { label: 'Prop Grounding', value: 'Surface-Snap Validated' },
+        { label: 'Rig Exports', value: '.blend + .fbx Proxies' },
+        { label: 'Vault Directory', value: '02_Spatial_Blocking_Rigs/' },
       ],
     },
     {
       id: 3,
       stageNumber: '03',
-      tag: 'AUDIO & DAW',
-      navLabel: 'Audio & DAW',
-      richIcon: '🎵',
-      timeframe: 'WEEK 03 · SONIC MASTERING',
-      title: 'Studio Audio Masters & DAW Templates',
-      subtitle: 'Uncompressed 24-bit 96kHz audio masters and Ableton Live .als projects',
-      vaultFolderMapping: '03 · Audio Masters',
+      tag: '24FPS PREVIZ · AUDIO SYNC',
+      navLabel: '24fps Workbench Previz',
+      richIcon: '🎥',
+      timeframe: 'STEP 03 · MULTICAM + AUDIO TIMING',
+      title: 'Cinematic Multicam & 24fps Workbench Previz',
+      subtitle:
+        'Setting up virtual camera rigs and lens framing timed directly to the musical rhythm and tempo. Exporting light, fast 24fps Workbench previz renders to serve as the exact skeletal timeline.',
+      vaultFolderMapping: '03_24fps_Camera_Previz/',
       isAdvancedLocked: true,
-      heroImage: stage05Img,
-      heroImageAlt: 'Studio audio master visualizer and Ableton modular synthesis chain',
-      themeDescription: 'Studio audio masters & Ableton modular synthesis DAW templates (Sillow Mill Audio)',
+      heroImage: stage01Img,
+      heroImageAlt: 'Multicam 24fps Blender Workbench previz timeline locked to audio beat markers',
+      themeDescription: '24fps Blender Workbench multicam previz timed directly to Logic Pro WAV stems',
       millTransmission:
-        'Sound is half the cinematic picture! Low-frequency modular drones and analog synthesizers give the Äkinoya universe its true weight.',
+        'Music and audio stems dictate the timeline! Drop the "Dream of Akainoya" WAV stem markers straight into Blender VSE so every 24fps Workbench cut lands on the exact bar.',
       millProTip:
-        'Anchor your sub-bass fundamental to 432Hz harmonic tuning to complement volumetric cosmic visuals.',
+        'Render pure Blender Workbench (flat MatCap / Wireframe + Camera Safe Frame) at true 24.000 FPS—fast iteration beats heavy Cycles renders during edit lock.',
       universalTheory: {
-        heading: 'Cinematic Sonic Architecture & Stem Groups',
+        heading: 'Audio-Driven Multicam Timing & 24fps Skeleton',
         description:
-          'A cinematic sci-fi world requires tactile sonic engineering. Stems are grouped into Sub-Bass, Analog Arp, Modular Drones, and Granular Atmospheric FX.',
+          'Your Step 3 Workbench edit is the immutable skeletal timeline of the entire film. Virtual camera focal lengths and cut points are driven directly by musical phrasing from Step 5 DAW stems.',
         bullets: [
           {
-            title: '24-bit / 96kHz Resolution',
+            title: 'Tempo-Locked Timeline Markers',
             detail:
-              'Preserves extreme dynamic headroom and high-frequency harmonics essential for theatrical space acoustics.',
+              'Import WAV stems from 05_Audio_DAW_Templates_Stems/WAV_Stems/ into Blender VSE so kick transients, risers, and "Dream of Akainoya" vocal cues dictate cut points.',
           },
           {
-            title: 'Modular DAW Routing',
+            title: 'Multicam Lens & Trajectory Rigs',
             detail:
-              'Pre-configured Ableton Live .als project files with routing for analog saturation, tape delays, and sidechain compression.',
+              'Switch cleanly across 24mm wide establishing cameras, 35mm anamorphic tracking dollies, and 85mm close-up rigs without breaking eyeline.',
           },
           {
-            title: 'Atmospheric Granular Textures',
+            title: 'Fast 24fps Workbench Exports',
             detail:
-              'Real physical foley layered with granular resynthesis, echoing the crystalline winds of Bingäa.',
+              'Output lightweight 24fps MP4/EXR previz passes in minutes so Mac Lee, Odi, and community remixers can approve rhythm before expensive neural passes.',
           },
         ],
       },
       odiCaseStudy: {
-        title: 'Mastering the Teaser Soundtrack at 128 BPM',
-        summary: 'How analog synthesis and sub-bass drones were sculpted in Ableton Live.',
+        title: 'Synchronizing 24fps Camera Cuts to "Dream of Akainoya"',
+        summary:
+          'How Logic Pro bar markers and WAV stems dictate the exact cut points in the 24fps Workbench edit.',
         deepDiveNarrative:
-          'Odi crafted the official Sillow Mill sonic identity using vintage analog synths and granular foley. The main teaser audio was mastered at 96kHz with distinct stem groups. Community members can inspect the full DAW arrangement and audition uncompressed masters directly in the vault.',
+          'Before generating a single stylized frame, Odi imports the tempo-locked WAV stems from 05_Audio_DAW_Templates_Stems/WAV_Stems/ into the timing timeline. Every multicam switch in Blender is keyed to transient hits and lyrical phrases at 24.000 FPS—creating a lightweight skeletal Workbench edit that downstream Step 4 @TAG direction and Step 5 neural rendering obey down to the frame.',
         previewThumbnails: [
-          { img: stage05Img, caption: 'Studio Audio Master Console & ACEScc Monitor' },
+          { img: stage01Img, caption: '24fps Anamorphic Framing & Cut Sheet' },
+          { img: stage03Img, caption: 'Multicam Trajectory Curves (CAM_TRAJ_A)' },
         ],
       },
       masterAsset: {
-        title: 'Sillow Mill Studio Audio Master & Ableton Pack',
-        fileName: 'Sillow_Mill_Teaser_Audio_Master_96kHz.wav',
-        fileSize: '185 MB',
-        fileFormat: '24-bit 96kHz WAV + .als Project',
-        vaultPath: 'Drive / 03 · Audio Masters & DAW Templates',
-        description: 'Uncompressed master recording and Ableton Live 11/12 project template with operator chains and stem groups.',
+        title: '03_24fps_Camera_Previz/ Timeline Bundle',
+        fileName: 'Akainoya_24fps_Workbench_Previz_Pack.zip',
+        fileSize: '420 MB',
+        fileFormat: '24fps MP4 + Camera JSON + EXR Depth',
+        vaultPath: 'Vault / 01_Workflow / 03_24fps_Camera_Previz/',
+        description:
+          'Light Blender Workbench previz renders, multicam animation passes, lens metadata, and audio-synced timing timelines.',
         specs: [
-          { key: 'Audio Resolution', val: '24-bit / 96kHz Stereo' },
-          { key: 'Tempo / Key', val: '128 BPM / D-Minor' },
-          { key: 'DAW Template', val: 'Ableton Live 11.3+ / 12' },
-          { key: 'Access Tier', val: 'Paid Monthly Subscriber / VIP' },
+          { key: 'Frame Rate', val: '24.000 FPS Native Timeline' },
+          { key: 'Render Engine', val: 'Blender Workbench (Fast Pass)' },
+          { key: 'Cut Driver', val: 'DAW Stem Markers (WAV_Stems/)' },
+          { key: 'Vault Folder', val: '03_24fps_Camera_Previz/' },
         ],
       },
       technicalSpecs: [
-        { label: 'Sample Rate', value: '96,000 Hz 24-bit' },
-        { label: 'Tuning Reference', value: '432 Hz Celestial' },
-        { label: 'DAW Engine', value: 'Ableton Live Studio' },
-        { label: 'Stem Groups', value: '5 Discrete Bands' },
+        { label: 'Playback Rate', value: '24.000 FPS Strict' },
+        { label: 'Camera Lenses', value: '24mm / 35mm / 50mm / 85mm' },
+        { label: 'Timing Lock', value: 'WAV_Stems/ Scene Markers' },
+        { label: 'Vault Directory', value: '03_24fps_Camera_Previz/' },
       ],
     },
     {
       id: 4,
       stageNumber: '04',
-      tag: '3D PREVIS',
-      navLabel: '3D Previs',
-      richIcon: '🧊',
-      timeframe: 'WEEK 04 · KINEMATIC STAGING',
-      title: 'Blender 3D Previs & Motion Control',
-      subtitle: 'Gray-box camera rigs, lens physics, and depth-map conditioning',
-      vaultFolderMapping: '04 · 3D Previs & Rigs',
+      tag: '@TAG DIRECTION',
+      navLabel: '@TAG Scene Direction',
+      richIcon: '🏷️',
+      timeframe: 'STEP 04 · VISUAL CONTINUITY',
+      title: 'Canonical @TAG Reference & Scene Direction',
+      subtitle:
+        'Linking the 24fps previz to approved visual anchor sheets (@TAG for character looks, lighting parameters, and asset materials) to guarantee absolute visual continuity across cuts.',
+      vaultFolderMapping: '04_Canonical_Tag_References/',
       isAdvancedLocked: true,
-      heroImage: stage03Img,
-      heroImageAlt: '3D wireframe & gray-box spaceship cockpit staging with cyan volumetric light',
-      themeDescription: '3D wireframe & gray-box spaceship cockpit staging with cyan volumetric light (Gemini/Imagen 3)',
+      heroImage: millLockingImg,
+      heroImageAlt: 'Canonical @TAG character turnaround sheet and scene direction visual anchor for Mill',
+      themeDescription: 'Canonical @TAG visual anchor sheets for character continuity, lighting guides & textures',
       millTransmission:
-        'Never let generative AI hallucinate camera trajectories! Animate a gray-box in Blender first, render a depth pass, and let AI illuminate the frame.',
+        'Every cut reads from the exact same visual bible! Bind each 24fps Workbench shot to canonical @TAG look-up sheets so suits, faces, and rim lighting never morph.',
       millProTip:
-        'Lock virtual camera focal lengths to 35mm anamorphic prime lenses with fixed sensor dimensions matching ARRI Alexa LF.',
+        'Always cite canonical @TAG tokens (@MILL_SUIT_V1, @ODI_SCOUT_V1, @SILLOW_EXPLORER_V1) alongside locked lighting ratios and material sheets for zero look-drift.',
       universalTheory: {
-        heading: 'Kinematic 3D Geometry as Generative Conditioning',
+        heading: 'Deterministic @TAG Look-Up Direction',
         description:
-          'Generative video models lack intrinsic three-dimensional spatial awareness. By staging scenes in Blender 3D first, creators enforce mathematically perfect camera moves.',
+          'Replacing brittle text-only descriptions, canonical @TAG anchors tie approved 4K character sheets, shader swatches, and lighting diagrams directly onto Step 3 previz shots.',
         bullets: [
           {
-            title: 'Gray-Box Mesh Proxies',
+            title: 'Canonical Character @TAG Sheets',
             detail:
-              'Low-polygon structural proxies define walls, ship canopies, and cockpit chairs, providing exact collision and occlusion boundaries.',
+              'Reference locked turnaround plates (@MILL_SUIT_V1 mushroom helmet bio-analyst, @ODI_SCOUT_V1 tactical scout, @SILLOW_EXPLORER_V1 dreadlocks & harness).',
           },
           {
-            title: 'Z-Depth & Normal Pass Ingestion',
+            title: 'Scene Lighting & Atmospheric Guides',
             detail:
-              'Render 16-bit Z-depth and surface normal passes from Blender Cycles to guide ControlNet video generation without temporal tearing.',
+              'Lock key/rim light direction, #00f2fe Cyan Galaxy / #b142f0 Purple Void values, and fog density per scene before neural synthesis.',
           },
           {
-            title: 'Camera Velocity Matching',
+            title: 'Texture Packages & Shot Matrix',
             detail:
-              'Smooth acceleration curves (CAM_TRAJ_A and VEL_PATH) prevent erratic camera jumps that destroy cinematic immersion.',
+              'Pair 3D proxy IDs from Step 2 with surface PBR references and @TAG look-up tables so Mac Lee and the team share one deterministic vocabulary.',
           },
         ],
       },
       odiCaseStudy: {
-        title: 'Ship Warp Sequences & Cockpit Lighting Dynamics',
-        summary: 'Deconstructing the 3D cockpit rig and warp velocity transitions.',
+        title: 'Binding 24fps Previz Cuts to Canonical @TAG Anchors',
+        summary:
+          'How master image sheets, lighting guides, and texture packages keep Mill, Odi, and Sillow identical across every angle.',
         deepDiveNarrative:
-          'For the intense approach toward Bingäa, Odi modeled a high-precision cockpit gray-box in Blender. The camera was animated traversing along a forward trajectory with subtle cockpit chassis vibration. Odi extracted the 16-bit depth pass and fed it into the AI video engine, ensuring the cockpit canopy remained razor-sharp while the hyperspace streak blurred outside.',
+          'To eliminate AI style drift across complex edits, Odi formalized every hero asset into canonical @TAG look-up sheets inside 04_Canonical_Tag_References/. Each shot in the Step 3 Workbench edit tags exact character plates, lighting direction cards, and shader swatches so Step 5 neural rendering preserves every buckle, visor tint, and fabric weave.',
         previewThumbnails: [
-          { img: stage03Img, caption: 'Blender 3.6+ Cockpit Previs & Camera Tracker Gizmos' },
-          { img: visualizerThumbnailImg, caption: 'Cinematic Visualizer Final Cockpit Composite' },
+          { img: millLockingImg, caption: '@MILL_SUIT_V1 — Alien Bio-Analyst Anchor Sheet' },
+          { img: odiLockingImg, caption: '@ODI_SCOUT_V1 — Scout Mechanic Tactical Sheet' },
+          { img: sillowLockingImg, caption: '@SILLOW_EXPLORER_V1 — Explorer Turnaround Sheet' },
         ],
       },
+      characterDownloads: [
+        {
+          name: 'Mill',
+          role: '@MILL_SUIT_V1 · Bio-Analyst',
+          fileName: '@MILL_SUIT_V1 — Master Character Plate',
+          size: '6.7 MB',
+          format: '4K Canonical @TAG Plate',
+          img: millLockingImg,
+          downloadUrl: '',
+          description: 'Canonical @TAG turnaround sheet: alien bio-analyst in environmental suit with mushroom helmet archetype.',
+        },
+        {
+          name: 'Odi',
+          role: '@ODI_SCOUT_V1 · Scout Mechanic',
+          fileName: '@ODI_SCOUT_V1 — Tactical Recon Sheet',
+          size: '275 KB',
+          format: 'Canonical @TAG Plate',
+          img: odiLockingImg,
+          downloadUrl: '',
+          description: 'Canonical @TAG turnaround sheet: scout mechanic without dreadlocks wearing tactical reconnaissance armor.',
+        },
+        {
+          name: 'Sillow',
+          role: '@SILLOW_EXPLORER_V1 · Lead Explorer',
+          fileName: '@SILLOW_EXPLORER_V1 — Explorer Turnaround',
+          size: '280 KB',
+          format: 'Canonical @TAG Plate',
+          img: sillowLockingImg,
+          downloadUrl: '',
+          description: 'Canonical @TAG turnaround sheet: lead planetary explorer styled with distinct dreadlocks and tactical harness.',
+        },
+      ],
       masterAsset: {
-        title: 'Warp Previs .blend Scene Archive',
-        fileName: 'Cockpit_Camera_Velocity_Rig.blend',
-        fileSize: '148 MB',
-        fileFormat: '.blend File (Blender 3.6 LTS / 4.2)',
-        vaultPath: 'Drive / 04 · Blender 3D Previs & Cockpit Rigs',
-        description: 'Complete Blender 3.6+ project containing animated cockpit geometry, camera rigs, and depth render passes.',
+        title: '04_Canonical_Tag_References/ Master Kit',
+        fileName: 'Canonical_Tag_Reference_Bible.zip',
+        fileSize: '58.4 MB',
+        fileFormat: '4K PNG Sheets + Lighting Guides + @TAG Lookup',
+        vaultPath: 'Vault / 01_Workflow / 04_Canonical_Tag_References/',
+        description:
+          'Approved master image sheets, character lighting guides, PBR texture packages, and canonical @TAG look-up tables.',
         specs: [
-          { key: 'Software', val: 'Blender 3.6 LTS / 4.2' },
-          { key: 'Render Engine', val: 'Cycles / Eevee Next' },
-          { key: 'Camera Tracker', val: 'Baked Kinematic Curves' },
-          { key: 'Access Tier', val: 'Locked · Jan 9, 2027 (Subscribers)' },
+          { key: 'Cast @TAGs', val: '@MILL / @ODI / @SILLOW' },
+          { key: 'Palette Lock', val: '#00f2fe Cyan / #b142f0 Void' },
+          { key: 'Includes', val: 'Lighting Guides + Textures' },
+          { key: 'Vault Folder', val: '04_Canonical_Tag_References/' },
         ],
       },
       technicalSpecs: [
-        { label: 'Virtual Lens', value: '35mm Anamorphic Prime' },
-        { label: 'Pass Formats', value: '16-bit Z-Depth + Normals' },
-        { label: 'Frame Rate', value: '24.000 FPS Cinematic' },
-        { label: 'Rig Trajectory', value: 'CAM_TRAJ_A / VEL_PATH' },
+        { label: '@TAG Vocabulary', value: 'Strict Look-Up Registry' },
+        { label: 'Palette Swatches', value: '#00f2fe / #b142f0' },
+        { label: 'Reference Tier', value: '4K Master Image Sheets' },
+        { label: 'Vault Directory', value: '04_Canonical_Tag_References/' },
       ],
     },
     {
       id: 5,
       stageNumber: '05',
-      tag: 'PROMPTS & FINISHING',
-      navLabel: 'Prompt Engine',
-      richIcon: '⚡',
-      timeframe: 'WEEK 05 · GENERATIVE PRECISION',
-      title: 'Prompt Engineering Bibles & LUTs',
-      subtitle: 'The 4-block syntax token pipeline for Gemini & Imagen generative engines',
-      vaultFolderMapping: '05 · Prompt Bibles',
+      tag: 'NEURAL + LOGIC DAW',
+      navLabel: 'Neural Render & Logic DAW',
+      richIcon: '🎛️',
+      timeframe: 'STEP 05 · AUDIO-VISUAL MASTERING',
+      title: 'Neural Rendering & Audio-Visual Finishing (DAW Integration)',
+      subtitle:
+        'Final AI neural rendering over the 3D-previz skeleton, seamlessly married with the master audio track, Logic Pro DAW template, and WAV stems.',
+      vaultFolderMapping: '05_Audio_DAW_Templates_Stems/',
       isAdvancedLocked: true,
-      heroImage: stage04Img,
-      heroImageAlt: 'Cybernetic data-stream interface showing 4-block structured syntax tokens',
-      themeDescription: 'Cybernetic data-stream interface showing 4-block structured syntax tokens (Gemini/Imagen 3)',
+      heroImage: stage05Img,
+      heroImageAlt: 'Final neural render composite paired with Logic Pro Master Template waveform and stem busses',
+      themeDescription: 'Final 3D-to-AI neural rendering integrated directly with Logic_Pro_Master_Template.logicx and WAV stems',
       millTransmission:
-        'Random prompts yield random results! Master prompts treat language like structured parameter code grouped into four functional partitions.',
+        'This is where sight and sound fuse into the final master! Drive neural render passes strictly over your Step 3 previz skeleton, then marry them inside Logic_Pro_Master_Template.logicx.',
       millProTip:
-        'Always specify negative constraints to suppress plastic digital skin, oversaturated neon, and warped geometry.',
+        'Open Logic_Pro_Master_Template.logicx first—its telemetry automation markers, vocal chains, and "Dream of Akainoya" WAV stems feed straight into the 2D Visualizer Production & Logic Pro Asset bundle.',
       universalTheory: {
-        heading: 'The 4-Block Structured Prompt Architecture',
+        heading: '3D-Locked Neural Synthesis & Logic Pro DAW Mastering',
         description:
-          'Modern generative models respond with highest coherence when prompts are partitioned into clear semantic domains rather than prose paragraphs.',
+          'Unlike unstable raw video prompts, Step 5 uses Step 3 24fps previz geometry + Step 4 @TAG anchors to render cinema-grade frames synced sample-for-frame to Logic Pro audio stems.',
         bullets: [
           {
-            title: '[01_SUBJECT_ACTION]',
+            title: '3D-Skeleton Neural Rendering',
             detail:
-              'Defines core actor, posture, spatial movement, and environmental interaction with zero stylistic fluff.',
+              'Condition final AI diffusion & ACEScc film grading strictly over the Step 3 24fps Workbench timeline and Step 4 @TAG visual anchors.',
           },
           {
-            title: '[02_LIGHTING_ATMOSPHERE]',
+            title: 'Logic_Pro_Master_Template.logicx Integration',
             detail:
-              'Dictates key-to-fill ratio, volumetric mist, color temperature, and specific rim light hues (#00f2fe, #b142f0).',
+              'Pre-routed vocal chains (my vocal chain), Enerwise sound architecture busses, sub-bass sidechains, and telemetry scene markers locked to 24fps edits.',
           },
           {
-            title: '[03_CAMERA_OPTICS_2.39:1]',
+            title: 'WAV_Stems/ & Visualizer_Logic_Assets/',
             detail:
-              'Specifies optical physics: Panavision C-series anamorphic flare, shallow depth of field, 35mm film grain, shutter angle.',
-          },
-          {
-            title: '[04_NEGATIVE_CONSTRAINTS]',
-            detail:
-              'Explicitly excludes digital plastic shaders, deformed geometry, lens distortion artifacts, and over-sharpening.',
+              'Full "Dream of Akainoya" acapellas, remix stems, reactive audio triggers, and MIDI data powering both the final audio mix and 2D Visualizer reactive parameters.',
           },
         ],
       },
       odiCaseStudy: {
-        title: 'Master Prompt Templates for Äkinoya & Bingäa',
-        summary: 'The exact syntax tables used across Gemini 1.5 Pro and Imagen 3.',
+        title: 'Marrying Neural Renders with Logic Pro & "Dream of Akainoya" Stems',
+        summary:
+          'How the Logic_Pro_Master_Template.logicx project, vocal chain, and reactive MIDI assets complete the 2D Visualizer bundle.',
         deepDiveNarrative:
-          'Odi developed a centralized JSON prompt repository where every scene was mapped into standardized 4-block templates. By locking Block 2 (Lighting & Palette) and Block 3 (Camera Optics), Odi could swap Block 1 (Subject) while retaining 100% visual and optical uniformity across every render.',
+          'Every Step 3 cut point already originates from the tempo markers inside 05_Audio_DAW_Templates_Stems/. Once Step 5 neural rendering completes over the 24fps skeleton, the visuals drop right back beside Logic_Pro_Master_Template.logicx—giving internal collaborators (Mac Lee) and Vault members the complete vocal chain, "Dream of Akainoya" tracklist stems in WAV_Stems/, and reactive triggers in Visualizer_Logic_Assets/.',
         previewThumbnails: [
-          { img: stage04Img, caption: 'Cybernetic Prompt Terminal & Token Weight Nodes' },
-          { img: akinoyaPlanetImg, caption: 'Final 4K Master Deliverable Frame' },
+          { img: stage05Img, caption: 'Logic_Pro_Master_Template.logicx & ACEScc Mastering' },
+          { img: visualizerThumbnailImg, caption: '2D Visualizer Reactive Audio-Visual Output' },
+          { img: akinoyaPlanetImg, caption: '4K Final Neural Master Frame' },
         ],
       },
       masterAsset: {
-        title: 'Master Prompt Vault .json & DaVinci LUT Pack',
-        fileName: 'Master_Prompt_Vault_120_Templates.json',
-        fileSize: '90.7 MB',
-        fileFormat: '.json Database + .cube 3D LUTs',
-        vaultPath: 'Drive / 05_Prompt_Engineering_Bibles',
-        description: 'Over 120 production-tested prompt templates, negative token weight tables, and ACEScc 3D LUT cubes.',
+        title: '05_Audio_DAW_Templates_Stems/ & Logic Pro Pack',
+        fileName: 'Logic_Pro_Master_Template.logicx',
+        fileSize: '425 MB',
+        fileFormat: '.logicx + 24-bit WAV_Stems + MIDI + .cube LUT',
+        vaultPath: 'Vault / 01_Workflow / 05_Audio_DAW_Templates_Stems/',
+        description:
+          'Core Logic_Pro_Master_Template.logicx (vocal chain, stem busses, telemetry markers), WAV_Stems/ aligned to scene markers, and Visualizer_Logic_Assets/ reactive MIDI triggers.',
         specs: [
-          { key: 'Templates', val: '120+ Scene Formulas' },
-          { key: 'Color LUTs', val: '65x65x65 .cube ACEScc' },
-          { key: 'Engines', val: 'Gemini 1.5 / Imagen 3' },
-          { key: 'Access Tier', val: 'Locked · Jan 9, 2027 (Subscribers)' },
+          { key: 'Core DAW File', val: 'Logic_Pro_Master_Template.logicx' },
+          { key: 'Stem Library', val: 'WAV_Stems/ ("Dream of Akainoya")' },
+          { key: 'Visualizer Bundle', val: 'Visualizer_Logic_Assets/ + MIDI' },
+          { key: 'Vault Folder', val: '05_Audio_DAW_Templates_Stems/' },
         ],
       },
       technicalSpecs: [
-        { label: 'Prompt Formula', value: '4-Block Semantic Syntax' },
-        { label: 'Negative Weighting', value: '-1.85 Artifact Suppression' },
-        { label: 'Color Space', value: 'ACEScc v1.3 DaVinci' },
-        { label: 'Seed Locking', value: 'Strict Deterministic Seeds' },
+        { label: 'DAW Standard', value: 'Logic Pro (.logicx)' },
+        { label: 'Vocal & Mix Chain', value: 'Enerwise + Telemetry Busses' },
+        { label: 'Audio Stems', value: '24-bit WAV_Stems/ Scene-Synced' },
+        { label: 'Vault Directory', value: '05_Audio_DAW_Templates_Stems/' },
       ],
     },
   ];
@@ -745,7 +756,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
     setSelectedStageForModal(null);
     if (onNavigateToVault) {
-      onNavigateToVault('folder-02');
+      onNavigateToVault(VAULT_STAGE_FOLDER_IDS['04']);
     }
   };
 
@@ -773,10 +784,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-cyan-300 font-bold tracking-wider flex items-center gap-1 shadow-sm">
                   <Cpu className="w-3 h-3 text-cyan-400" />
-                  ÄKINOYA LABS · ARCHITECTURE &amp; VAULT DIRECTORY
+                  ÄKINOYA LABS · 3D-TO-AI &amp; LOGIC PRO PIPELINE
                 </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-950/80 border border-purple-400/40 text-purple-300 font-bold tracking-wider">
-                  PRODUCTION PIPELINE
+                  TEAM (MAC LEE) &amp; COMMUNITY WORKFLOW
                 </span>
                 {isMember ? (
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-bold tracking-wider flex items-center gap-1">
@@ -792,14 +803,16 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               </div>
 
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-black text-white tracking-tight leading-tight">
-                The <em>Äkinoya</em> &amp; <em>Bingäa</em> Production Pipeline
+                The 5-Step 3D-to-AI <em>Sillow Mill</em> &amp; <em>Bingäa</em> Pipeline
               </h1>
 
               <p className="text-xs sm:text-sm text-white/75 font-sans leading-relaxed">
-                Welcome to the creative engine of Sillow Mill. This 5-stage roadmap is the exact
-                battle-tested hybrid AI &amp; Blender workflow developed to produce the <em>Äkinoya</em> cinematic
-                universe and <em>Bingäa</em> narrative. Every stage below maps <strong>1-to-1</strong> with
-                production deliverables inside our <strong>Drive Asset Vault</strong>.
+                Standardized for both our internal production crew (Mac Lee &amp; 3D team) and
+                community members. Every scene locks 3D greybox geometry, spatial proxies, and{' '}
+                <strong>24fps Workbench previz</strong> timed to <strong>&ldquo;Dream of Akainoya&rdquo;</strong>{' '}
+                stems before <strong>@TAG direction</strong> and{' '}
+                <strong>Logic Pro DAW finishing</strong>—mapped <strong>1-to-1</strong> inside the{' '}
+                <strong>Asset Vault Hub</strong>.
               </p>
             </div>
 
@@ -816,7 +829,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               <div className="text-[11px] leading-snug font-sans">
                 <span className="font-mono font-bold text-cyan-300 block">Mill (Pipeline Guide):</span>
                 <span className="text-white/80">
-                  &ldquo;Inspect timeline specifications freely. All full asset downloads &amp; master archives unlock on January 9, 2027.&rdquo;
+                  &ldquo;Music stems set Step 3 cut points, @TAG anchors Step 4 continuity, and Logic_Pro_Master_Template.logicx finishes Step 5.&rdquo;
                 </span>
               </div>
             </div>
@@ -824,7 +837,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
           <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-[11px] font-mono text-white/60">
-              Master project files, Blender 3D rigs, DAW stems, and PDFs are organized inside the Sillow Mill Production Vault.
+              Vault Tree: 01_Blender_Greybox_Base/ · 02_Spatial_Blocking_Rigs/ · 03_24fps_Camera_Previz/ · 04_Canonical_Tag_References/ · 05_Audio_DAW_Templates_Stems/
             </span>
             <div className="flex items-center gap-2 shrink-0">
               <button
@@ -851,7 +864,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
             </span>
           </div>
           <span className="text-[10px] text-amber-400/90 font-bold tracking-wider shrink-0 uppercase">
-            STAGES 01–05 LOCKED PRIOR TO LAUNCH
+            STEPS 01–05 LOCKED PRIOR TO LAUNCH
           </span>
         </div>
 
@@ -888,7 +901,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           ? 'bg-[#090b14] border-2 border-amber-500/40 shadow-none hover:scale-105'
                           : 'bg-[#090e1c] border-2 border-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.6)] hover:scale-110'
                       }`}
-                      title={isStageLocked ? 'Stage Locked (Subscribers Only)' : `Open Stage ${stage.stageNumber} Deep-Dive`}
+                      title={isStageLocked ? 'Step Locked (Subscribers Only)' : `Open Step ${stage.stageNumber} Deep-Dive`}
                     >
                       {isStageLocked ? (
                         <Lock className="w-5 h-5 text-amber-400" />
@@ -897,7 +910,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                       )}
                     </button>
                     <span className="hidden lg:inline-block px-2 py-0.5 rounded bg-black/80 border border-white/20 text-[10px] font-mono font-bold text-white/60">
-                      STAGE {stage.stageNumber}
+                      STEP {stage.stageNumber}
                     </span>
                   </div>
 
@@ -912,7 +925,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                       </div>
                       <div className="min-w-0">
                         <span className="text-xs font-mono font-bold text-cyan-300 block truncate">
-                          STAGE {stage.stageNumber} · {stage.richIcon} {stage.navLabel}
+                          STEP {stage.stageNumber} · {stage.richIcon} {stage.navLabel}
                         </span>
                         <span className="text-[10px] font-mono text-white/50 block truncate">
                           {stage.timeframe}
@@ -930,7 +943,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                         className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 text-white/90 text-[10.5px] font-mono font-bold cursor-pointer shrink-0 flex items-center gap-1"
                       >
                         <Lock className="w-2.5 h-2.5 text-amber-400" />
-                        <span>Inspect Stage</span>
+                        <span>Inspect Step</span>
                       </button>
                     ) : (
                       <button
@@ -970,10 +983,10 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             decoding="async"
                             style={{ willChange: 'opacity, transform' }}
                             className={`relative z-10 w-full h-full object-cover transition-all duration-300 group-hover/banner:scale-105 opacity-90 group-hover/banner:opacity-100 transform-gpu ${
-                              stage.id === 2 ? 'filter blur-[13px] group-hover/banner:blur-[10px] scale-[1.04]' : ''
+                              stage.id === 4 ? 'filter blur-[13px] group-hover/banner:blur-[10px] scale-[1.04]' : ''
                             }`}
                           />
-                          {stage.id === 2 && (
+                          {stage.id === 4 && (
                             <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/85 border border-purple-400/50 text-[10px] font-mono font-bold text-purple-200 shadow-lg backdrop-blur-md pointer-events-none">
                               <ShieldCheck className="w-3.5 h-3.5 text-purple-300" />
                               <span>SECURITY BLUR ACTIVE</span>
@@ -986,7 +999,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           <div className="hidden xl:flex absolute top-4 left-4 right-4 items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <span className="px-2.5 py-1 rounded-lg bg-cyan-400 text-black font-mono font-extrabold text-xs tracking-wider shadow-md">
-                                STAGE {stage.stageNumber}
+                                STEP {stage.stageNumber}
                               </span>
                               <span className="text-[10.5px] font-mono px-2.5 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300 font-bold uppercase tracking-wider">
                                 {stage.tag}
@@ -1024,7 +1037,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                                 handleOpenStageModal(stage);
                               }}
                               className="w-9 h-9 rounded-xl bg-cyan-400/20 hover:bg-cyan-400 hover:text-black border border-cyan-400/40 flex items-center justify-center text-cyan-300 group-hover/banner:bg-cyan-400 group-hover/banner:text-black transition-all cursor-pointer"
-                              title={`Inspect Stage ${stage.stageNumber} Deep-Dive`}
+                              title={`Inspect Step ${stage.stageNumber} Deep-Dive`}
                             >
                               <ChevronRight className="w-5 h-5" />
                             </button>
@@ -1038,7 +1051,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex items-center gap-1.5">
                                 <span className="px-2 py-0.5 rounded bg-cyan-400 text-black font-mono font-extrabold text-[10px] tracking-wider shadow-sm">
-                                  STAGE {stage.stageNumber}
+                                  STEP {stage.stageNumber}
                                 </span>
                                 <span className="text-[9.5px] font-mono px-2 py-0.5 rounded bg-black/60 border border-cyan-400/40 text-cyan-300 font-bold uppercase">
                                   {stage.tag}
@@ -1112,7 +1125,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                               <FootstepIcon className="w-3.5 h-3.5" isActive />
                             </div>
                             <span className="text-[10px] font-mono text-white/50">
-                              STAGE {stage.stageNumber} ARCHITECTURE
+                              STEP {stage.stageNumber} ARCHITECTURE
                             </span>
                           </div>
                         </div>
@@ -1121,14 +1134,14 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                           &ldquo;{stage.millTransmission}&rdquo;
                         </p>
 
-                        {/* Master Asset Delivery Spec Box (Clickable to Inspect Stage Deliverables) */}
+                        {/* Master Asset Delivery Spec Box (Clickable to Inspect Step Deliverables) */}
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
                             handleOpenStageModal(stage);
                           }}
                           className="p-3.5 rounded-2xl bg-black/50 hover:bg-black/70 border border-cyan-500/30 hover:border-cyan-400/60 transition-all cursor-pointer space-y-2 group/asset"
-                          title="Click to Inspect Stage Deliverables & Architecture"
+                          title="Click to Inspect Step Deliverables & Architecture"
                         >
                           <div className="flex items-center justify-between text-xs font-mono">
                             <span className="font-bold text-white flex items-center gap-1.5 group-hover/asset:text-cyan-300 transition-colors">
@@ -1168,11 +1181,11 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                             {isStageLocked ? (
                               <>
                                 <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                <span>Inspect Stage</span>
+                                <span>Inspect Step</span>
                               </>
                             ) : (
                               <>
-                                <span>Inspect Stage</span>
+                                <span>Inspect Step</span>
                                 <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                               </>
                             )}
@@ -1182,7 +1195,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     </div>
                   </div>
 
-                  {/* Midway Checkpoint: 50% Member Wall Banner after Stage 03 */}
+                  {/* Midway Checkpoint: 50% Member Wall Banner after Step 03 */}
                   {stage.id === 3 && (
                     <div className="relative my-12 sm:my-16 z-30">
                       <div
@@ -1196,15 +1209,14 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
 
                         <div className="space-y-2 max-w-3xl mx-auto">
                           <h2 className="text-2xl sm:text-4xl font-display font-black text-white tracking-tight">
-                            Full Asset Downloads &amp; Advanced Stages Release{' '}
+                            Full Asset Downloads &amp; Advanced Steps Release{' '}
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-amber-300">
                               January 9, 2027
                             </span>
                           </h2>
                           <p className="text-xs sm:text-base text-white/75 font-sans leading-relaxed">
-                            All users have view-only access to inspect the professional theory and
-                            visual specifications across all 5 workflow stages. Master 3D Blender camera rigs,
-                            master prompt databases, and DaVinci color LUTs unlock on{' '}
+                            All users have view-only access to inspect the 5-step 3D-to-AI architecture and
+                            visual specs. Raw greybox `.blend` bases, 24fps Workbench rigs, canonical `@TAG` look-up sheets, and `Logic_Pro_Master_Template.logicx` audio stems unlock on{' '}
                             <strong>January 9, 2027</strong>.
                           </p>
                         </div>
@@ -1273,7 +1285,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                   <div className="flex items-center justify-between border-b border-white/10 pb-4">
                     <div className="flex items-center gap-3">
                       <span className="px-3 py-1 rounded-lg bg-cyan-400 text-black font-mono font-extrabold text-xs tracking-wider shadow-[0_0_12px_rgba(0,242,254,0.4)]">
-                        STAGE {selectedStageForModal.stageNumber}
+                        STEP {selectedStageForModal.stageNumber}
                       </span>
                       <span className="text-xs font-mono text-cyan-300 font-bold uppercase tracking-wider">
                         {selectedStageForModal.tag}
@@ -1302,14 +1314,14 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                       src={selectedStageForModal.heroImage}
                       alt={selectedStageForModal.heroImageAlt}
                       className={`w-full h-full object-cover transition-all duration-300 ${
-                        selectedStageForModal.id === 2 ? 'filter blur-[13px] scale-[1.04]' : ''
+                        selectedStageForModal.id === 4 ? 'filter blur-[13px] scale-[1.04]' : ''
                       }`}
                     />
-                    {selectedStageForModal.id === 2 && (
+                    {selectedStageForModal.id === 4 && (
                       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 text-center pointer-events-none">
                         <div className="px-4 py-2.5 rounded-xl bg-black/85 border border-purple-500/50 backdrop-blur-md shadow-[0_0_30px_rgba(168,85,247,0.4)] flex items-center gap-2 text-purple-200 font-mono text-xs font-bold uppercase tracking-wider">
                           <ShieldCheck className="w-4 h-4 text-purple-300" />
-                          <span>PROPRIETARY GENERATION LAYER · PROTECTED</span>
+                          <span>CANONICAL @TAG SHEET · PROTECTED</span>
                         </div>
                       </div>
                     )}
@@ -1317,7 +1329,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     <div className="hidden xl:flex absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent items-end p-5">
                       <div className="space-y-1 w-full">
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300">
-                          BESPOKE GEMINI / IMAGEN 3 PIPELINE VISUAL
+                          3D-TO-AI PIPELINE SPECIFICATION · VAULT MAPPED
                         </span>
                         <h2 className="text-xl sm:text-3xl font-display font-extrabold text-white">
                           {selectedStageForModal.title}
@@ -1338,7 +1350,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                   {/* Mobile & iPad Header Block (Clean Visual Below Imagery for < 1280px) */}
                   <div className="xl:hidden p-4 rounded-2xl bg-black/60 border border-white/10 space-y-1.5">
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/70 border border-cyan-400/40 text-cyan-300">
-                      STAGE {selectedStageForModal.stageNumber} · {selectedStageForModal.tag}
+                      STEP {selectedStageForModal.stageNumber} · {selectedStageForModal.tag}
                     </span>
                     <h2 className="text-lg sm:text-xl font-display font-extrabold text-white">
                       {selectedStageForModal.title}
@@ -1431,7 +1443,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                       {/* Case Study Image Thumbnails */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                         {selectedStageForModal.odiCaseStudy.previewThumbnails.map((th) => {
-                          const isStage2 = selectedStageForModal.id === 2;
+                          const isProtectedTagStage = selectedStageForModal.id === 4;
                           return (
                             <div
                               key={th.caption}
@@ -1442,12 +1454,12 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                                 src={th.img}
                                 alt={th.caption}
                                 className={`w-full h-full object-cover transition-all duration-300 pointer-events-none select-none ${
-                                  isStage2
+                                  isProtectedTagStage
                                     ? 'filter blur-[12px] group-hover/thumb:blur-[9px] scale-105'
                                     : 'group-hover/thumb:scale-105'
                                 }`}
                               />
-                              {isStage2 && (
+                              {isProtectedTagStage && (
                                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center p-2 pointer-events-none">
                                   <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-black/80 border border-purple-400/50 text-purple-200 uppercase tracking-wider shadow-sm flex items-center gap-1 backdrop-blur-sm">
                                     <ShieldCheck className="w-3 h-3 text-purple-300" />
@@ -1482,14 +1494,14 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                     </div>
                   </div>
 
-                  {/* Character Locking Download Plates (Stage 02 Custom Master Files) */}
+                  {/* Canonical @TAG Reference Plates (Step 04 Custom Master Files) */}
                   {selectedStageForModal.characterDownloads && (
                     <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#0e1222]/90 to-black/90 border border-purple-500/40 space-y-4 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
                       <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
                         <div className="flex items-center gap-2">
                           <Crown className="w-4 h-4 text-purple-400" />
                           <h4 className="text-sm font-mono font-bold text-purple-200 tracking-wider uppercase">
-                            Character Locking Turnaround Plates (Mill · Odi · Sillow)
+                            Canonical @TAG Reference Sheets (Mill · Odi · Sillow)
                           </h4>
                         </div>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-400/30">
@@ -1498,7 +1510,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                       </div>
 
                       <p className="text-xs text-white/70 font-sans">
-                        Official character turnaround sheets and visual anchors from the Character Locking vault, ready for direct multi-modal conditioning and pipeline study.
+                        Official canonical @TAG visual anchor sheets from 04_Canonical_Tag_References/, ready for lighting calibration and cut-to-cut continuity.
                       </p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 pt-1">
@@ -1579,7 +1591,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
                               type="button"
                               onClick={() => {
                                 soundManager.playTone(580, 0.05);
-                                if (onNavigateToVault) onNavigateToVault('folder-02');
+                                if (onNavigateToVault) onNavigateToVault(VAULT_STAGE_FOLDER_IDS['04']);
                               }}
                               className="w-full min-h-[42px] py-2.5 px-4 mt-4 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-200 font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm shrink-0"
                             >
@@ -1673,7 +1685,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
               >
                 {(() => {
                   const isCharacterPlate =
-                    selectedStageForModal?.id === 2 ||
+                    selectedStageForModal?.id === 4 ||
                     selectedPreviewImage === millLockingImg ||
                     selectedPreviewImage === odiLockingImg ||
                     selectedPreviewImage === sillowLockingImg;
