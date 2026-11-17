@@ -55,6 +55,7 @@ import moodboardImg from '../assets/images/Mood.webp';
 import { BINGAA_PDF_URL, BINGAA_PDF_FILENAME, BINGAA_COVER_URL, BINGAA_COVER_FILENAME } from '../utils/certificate';
 import { useAuth } from '../context/AuthContext';
 import { AuthHeaderButton } from './AuthHeaderButton';
+import { SiteFooter } from './SiteFooter';
 const CreatorLeaderboard = React.lazy(() =>
   import('./CreatorLeaderboard').then((m) => ({ default: m.CreatorLeaderboard }))
 );
@@ -1724,50 +1725,8 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
           </motion.div>
         )}
 
-        {/* Stable Compliance Footer inside Community Hub Scroller */}
-        <footer
-          style={{ overflowAnchor: 'none' }}
-          className="relative z-10 w-full shrink-0 border-t border-white/10 bg-[#050811]/95 rounded-2xl py-4 px-4 sm:px-6 mt-8 text-center space-y-2"
-        >
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-white/50">
-            <div>
-              © 2027 SILLOW MILL <span className="text-white/25">/</span> ALL RIGHTS RESERVED
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] sm:text-[11px]">
-              <a
-                href="/privacy"
-                className="text-white/65 hover:text-cyan-300 transition-colors underline-offset-4 hover:underline"
-              >
-                Privacy Policy
-              </a>
-              <span className="text-white/25">·</span>
-              <a
-                href="/kyc"
-                className="text-white/65 hover:text-cyan-300 transition-colors underline-offset-4 hover:underline"
-              >
-                KYC Verification
-              </a>
-              <span className="text-white/25">·</span>
-              <span className="text-cyan-400/90">ÄKINOYA LIVE PROTOCOL</span>
-              <span className="text-white/25">·</span>
-              <span>ARCHIVE ACCESS SECURED</span>
-            </div>
-          </div>
-
-          <div className="max-w-7xl mx-auto pt-2 border-t border-white/10 text-[10px] sm:text-[11px] font-mono text-white/45 flex flex-wrap items-center justify-center gap-1 sm:gap-2 leading-relaxed">
-            <span>Sillow Mill</span>
-            <span className="text-white/25">·</span>
-            <span>Enterprise No. (KBO): 1041.720.513</span>
-            <span className="text-white/25">·</span>
-            <span>VAT: BE 1041.720.513</span>
-            <span className="text-white/25">·</span>
-            <a href="mailto:Odi@sillowmill.com" className="text-white/60 hover:text-cyan-300 transition-colors">
-              Odi@sillowmill.com
-            </a>
-            <span className="text-white/25">·</span>
-            <span>KBC BE97 7460 3951 7915</span>
-          </div>
-        </footer>
+        {/* Stable Compliance & IP Protection Footer inside Community Hub Scroller */}
+        <SiteFooter variant="hub" />
       </main>
       </div>
           </>

@@ -2071,6 +2071,24 @@ export const GalaxyNavigator: React.FC<GalaxyNavigatorProps> = ({
             </span>
           </span>
         </div>
+        <div className="pt-1.5 mt-1 border-t border-white/10 flex items-center justify-between gap-2 text-[9.5px] text-white/45">
+          <span>© 2026 Odi Selis</span>
+          <a
+            href="/licensing"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+              e.preventDefault();
+              window.dispatchEvent(
+                new CustomEvent('akinoya-navigate-route', {
+                  detail: { route: 'licensing', path: '/licensing' },
+                })
+              );
+            }}
+            className="text-cyan-300/80 hover:text-cyan-200 underline underline-offset-2"
+          >
+            License &amp; @TAG Usage
+          </a>
+        </div>
       </div>
 
       {/* FLOATING ACTION CONTROLS (Bottom Right) */}

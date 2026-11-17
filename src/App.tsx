@@ -12,6 +12,7 @@ import { UnlockedExperience } from './components/UnlockedExperience';
 import { TopBar } from './components/TopBar';
 import { FloatingAudioControl } from './components/FloatingAudioControl';
 import { NfcHudToast } from './components/NfcHudToast';
+import { SiteFooter } from './components/SiteFooter';
 // Code-split heavy routes & interactive modals for ultra-fast initial paint
 const CommunityHub = React.lazy(() =>
   import('./components/CommunityHub').then((m) => ({ default: m.CommunityHub }))
@@ -30,6 +31,9 @@ const AkinoyaPassportVerification = React.lazy(() =>
 );
 const PrivacyPolicy = React.lazy(() =>
   import('./components/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy }))
+);
+const LicensingPolicy = React.lazy(() =>
+  import('./components/LicensingPolicy').then((m) => ({ default: m.LicensingPolicy }))
 );
 const KycVerification = React.lazy(() =>
   import('./components/KycVerification').then((m) => ({ default: m.KycVerification }))
@@ -138,6 +142,7 @@ function prefetchFullSiteSecondaryViews() {
       () => import('./components/BingaaComicReader'),
       () => import('./components/CheckoutSuccess'),
       () => import('./components/PrivacyPolicy'),
+      () => import('./components/LicensingPolicy'),
       () => import('./components/KycVerification'),
       () => import('./components/CreatorLeaderboard'),
       () => import('./components/LoreGovernancePortal'),
@@ -317,7 +322,7 @@ export default function App() {
     return 'odi';
   });
 
-  const [route, setRoute] = useState<'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest' | 'galaxy'>(() => {
+  const [route, setRoute] = useState<'home' | 'privacy' | 'licensing' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest' | 'galaxy'>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
       const searchParams = new URLSearchParams(window.location.search);
@@ -343,6 +348,7 @@ export default function App() {
         return 'home';
       }
       if (path === '/privacy' || path.startsWith('/privacy/')) return 'privacy';
+      if (path === '/licensing' || path.startsWith('/licensing/')) return 'licensing';
       if (path === '/kyc' || path.startsWith('/kyc/')) return 'kyc';
       if (path === '/success' || path.startsWith('/success/')) return 'success';
       if (path === '/unlocked' || path.startsWith('/unlocked') || path === '/visualizers' || path === '/visualizer-hub') {
@@ -456,6 +462,8 @@ export default function App() {
         setRoute('community');
       } else if (path === '/privacy' || path.startsWith('/privacy/')) {
         setRoute('privacy');
+      } else if (path === '/licensing' || path.startsWith('/licensing/')) {
+        setRoute('licensing');
       } else if (path === '/kyc' || path.startsWith('/kyc/')) {
         setRoute('kyc');
       } else if (path === '/success' || path.startsWith('/success/')) {
@@ -536,7 +544,7 @@ export default function App() {
   }, []);
 
   const navigateTo = (
-    newRoute: 'home' | 'privacy' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest' | 'galaxy',
+    newRoute: 'home' | 'privacy' | 'licensing' | 'kyc' | 'success' | 'verify' | 'community' | 'creators' | 'contest' | 'galaxy',
     path: string
   ) => {
     try {
@@ -547,6 +555,32 @@ export default function App() {
     setRoute(newRoute);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Global custom navigation listener (used by embedded components such as CommunityHub footer & GalaxyNavigator)
+  useEffect(() => {
+    const handleCustomRoute = (e: Event) => {
+      const detail = (e as CustomEvent<{ route?: 'licensing' | 'privacy' | 'kyc'; path?: string }>).detail;
+      if (detail?.route && detail?.path) {
+        navigateTo(detail.route, detail.path);
+      }
+    };
+    window.addEventListener('akinoya-navigate-route', handleCustomRoute);
+    return () => window.removeEventListener('akinoya-navigate-route', handleCustomRoute);
+  }, []);
+
+  // Keep browser document title aligned with active view
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (route === 'licensing') {
+      document.title = 'License & @TAG Usage — Sillow Mill';
+    } else if (route === 'privacy') {
+      document.title = 'Privacy Policy — Sillow Mill';
+    } else if (route === 'kyc') {
+      document.title = 'KYC Verification — Sillow Mill';
+    } else {
+      document.title = 'Sillow Mill — Äkinoya';
+    }
+  }, [route]);
 
   const handleNavigateToWorlds = () => {
     soundManager.playTone(600, 0.04);
@@ -814,6 +848,12 @@ export default function App() {
               <PrivacyPolicy onBackToHome={handleNavigateToPassperksHome} />
             </React.Suspense>
           </div>
+        ) : route === 'licensing' ? (
+          <div className="relative z-20 flex-1 w-full">
+            <React.Suspense fallback={<RouteFallback label="LICENSING & @TAG POLICY" />}>
+              <LicensingPolicy onBackToHome={handleNavigateToPassperksHome} />
+            </React.Suspense>
+          </div>
         ) : route === 'kyc' ? (
           <div className="relative z-20 flex-1 w-full">
             <React.Suspense fallback={<RouteFallback label="KYC VERIFICATION" />}>
@@ -939,54 +979,9 @@ export default function App() {
         )}
       </ErrorBoundary>
 
-      {/* Luxury Minimalist Footer — Stable, Non-Shifting & Positioned Cleanly Above Sticky Bottom Navigation */}
-      {!backdropOnly && route !== 'community' && route !== 'creators' && route !== 'contest' && route !== 'galaxy' && (
-        <footer
-          style={{ overflowAnchor: 'none' }}
-          className="site-footer-safe relative z-10 w-full shrink-0 border-t border-white/10 bg-[#050811]/95 py-5 px-4 sm:px-6 text-center space-y-2.5"
-        >
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs font-mono text-white/50">
-            <div>
-              © 2027 SILLOW MILL <span className="text-white/25">/</span> ALL RIGHTS RESERVED
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] sm:text-[11px]">
-              <button
-                type="button"
-                onClick={() => navigateTo('privacy', '/privacy')}
-                className="text-white/65 hover:text-cyan-300 transition-colors underline-offset-4 hover:underline cursor-pointer"
-              >
-                Privacy Policy
-              </button>
-              <span className="text-white/25">·</span>
-              <button
-                type="button"
-                onClick={() => navigateTo('kyc', '/kyc')}
-                className="text-white/65 hover:text-cyan-300 transition-colors underline-offset-4 hover:underline cursor-pointer"
-              >
-                KYC Verification
-              </button>
-              <span className="text-white/25">·</span>
-              <span className="text-cyan-400/90">ÄKINOYA LIVE PROTOCOL</span>
-              <span className="text-white/25">·</span>
-              <span>ARCHIVE ACCESS SECURED</span>
-            </div>
-          </div>
-
-          {/* Sub-footer Legal Imprint Line */}
-          <div className="max-w-7xl mx-auto pt-2.5 border-t border-white/10 text-[10px] sm:text-[11px] font-mono text-white/45 flex flex-wrap items-center justify-center gap-1 sm:gap-2 leading-relaxed">
-            <span>Sillow Mill</span>
-            <span className="text-white/25">·</span>
-            <span>Enterprise No. (KBO): 1041.720.513</span>
-            <span className="text-white/25">·</span>
-            <span>VAT: BE 1041.720.513</span>
-            <span className="text-white/25">·</span>
-            <a href="mailto:Odi@sillowmill.com" className="text-white/60 hover:text-cyan-300 transition-colors">
-              Odi@sillowmill.com
-            </a>
-            <span className="text-white/25">·</span>
-            <span>KBC BE97 7460 3951 7915</span>
-          </div>
-        </footer>
+      {/* Luxury Minimalist IP Protection & Legal Footer across all scrollable routes */}
+      {!backdropOnly && route !== 'community' && route !== 'galaxy' && (
+        <SiteFooter variant="global" onNavigate={(r, p) => navigateTo(r, p)} />
       )}
 
       {/* Floating Audio Stop/Play Control (Always accessible while scrolling) */}
