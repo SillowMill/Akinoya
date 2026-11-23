@@ -24,31 +24,31 @@ const TELEMETRY_STAGES: TelemetryStage[] = [
   {
     threshold: 0,
     stageName: 'GENERATING ORBITAL HERO (1/5)...',
-    details: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Najno Banajna Pro...',
+    details: 'Synthesizing planetary curvature, atmospheric halo, and orbital disk via Äkinoya 8K Master Engine...',
     icon: Globe2,
   },
   {
     threshold: 20,
     stageName: 'RENDERING BOTANICAL FLORA (2/5)...',
-    details: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Najno Banajna...',
+    details: 'Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Äkinoya 8K Master Engine...',
     icon: Trees,
   },
   {
     threshold: 40,
     stageName: 'PAINTING EXOTIC FAUNA (3/5)...',
-    details: 'Synthesizing xenobiological wildlife, soaring pack lifeforms, and apex creatures via Najno Banajna...',
+    details: 'Synthesizing xenobiological wildlife, soaring pack lifeforms, and apex creatures via Äkinoya 8K Master Engine...',
     icon: Compass,
   },
   {
     threshold: 60,
     stageName: 'SIMULATING ATMOSPHERIC TROPOSPHERE (4/5)...',
-    details: 'Framing high-altitude troposphere, cloud density, and auroral sky phenomena via Najno Banajna...',
+    details: 'Framing high-altitude troposphere, cloud density, and auroral sky phenomena via Äkinoya 8K Master Engine...',
     icon: Layers,
   },
   {
     threshold: 80,
     stageName: 'INSCRIBING LORE MONUMENT (5/5)...',
-    details: 'Erecting monumental architectural landmark and sealing official lore dossier cover via Najno Banajna...',
+    details: 'Erecting monumental architectural landmark and sealing official lore dossier cover via Äkinoya 8K Master Engine...',
     icon: ShieldCheck,
   },
 ];
@@ -92,7 +92,7 @@ export const AkinoyaSciFiLoader: React.FC<AkinoyaSciFiLoaderProps> = ({
             </span>
             <div>
               <span className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase font-bold">
-                NAJNO BANAJNA · NAJNO BANAJNA 4K PHOTOREALISTIC ENGINE
+                ÄKINOYA 8K MASTER · PHOTOREALISTIC SYNTHESIS ENGINE
               </span>
               <h2 className="text-base sm:text-lg font-display font-extrabold text-white tracking-wide truncate">
                 {planetName}

@@ -3140,7 +3140,7 @@ async function createStripeCheckoutSession(params) {
     productImage = `${baseUrl}/images/akinoya_hero_bg-CiYAZVRx.jpg`;
   } else if (productId === "membership") {
     productName = "Sillow Mill - Annual Pioneer Member Pass (All-Inclusive)";
-    productDescription = "Annual Pioneer Member Pass with Physical Welcome Booklet, Collector Pass Card, Signed Bookmark & Full Digital Vault Access instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
+    productDescription = "Annual Pioneer Member Pass with All Digital Extras & Continuous Vault Hub Access instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.";
     unitAmount = params.amount ? Math.round(params.amount * 100) : 6e3;
   } else if (params.productTitle && params.amount) {
     productName = sanitizeStripeString(params.productTitle);
@@ -5019,37 +5019,37 @@ var SLOT_METADATA = {
     index: 1,
     label: "01 \xB7 Orbital Hero (01_main)",
     actionText: "GENERATING ORBITAL HERO (1/5)...",
-    detailText: "Synthesizing planetary curvature, atmospheric halo, and orbital disk via Najno Banajna..."
+    detailText: "Synthesizing planetary curvature, atmospheric halo, and orbital disk via \xC4kinoya 8K Master Engine..."
   },
   flora: {
     index: 2,
     label: "02 \xB7 Botanical Flora System (02_flora)",
     actionText: "RENDERING BOTANICAL FLORA (2/5)...",
-    detailText: "Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via Najno Banajna..."
+    detailText: "Synthesizing bioluminescent alien foliage, spore towers, and botanical ecology via \xC4kinoya 8K Master Engine..."
   },
   fauna: {
     index: 3,
     label: "03 \xB7 Exotic Fauna & Wildlife (03_fauna)",
     actionText: "PAINTING EXOTIC FAUNA (3/5)...",
-    detailText: "Rendering xenobiological apex wildlife, soaring lifeforms, and planetary creatures via Najno Banajna..."
+    detailText: "Rendering xenobiological apex wildlife, soaring lifeforms, and planetary creatures via \xC4kinoya 8K Master Engine..."
   },
   atmosphere: {
     index: 4,
     label: "04 \xB7 Atmospheric Troposphere & Sky Phenomena (04_atmo)",
     actionText: "SIMULATING ATMOSPHERIC TROPOSPHERE (4/5)...",
-    detailText: "Synthesizing high-altitude troposphere, ionized cloud canyons, and auroral sky phenomena via Najno Banajna..."
+    detailText: "Synthesizing high-altitude troposphere, ionized cloud canyons, and auroral sky phenomena via \xC4kinoya 8K Master Engine..."
   },
   landmark: {
     index: 5,
     label: "05 \xB7 Lore Dossier Cover & Monument (05_lore)",
     actionText: "INSCRIBING LORE MONUMENT (5/5)...",
-    detailText: "Erecting monumental architectural landmark and sealing official lore dossier cover via Najno Banajna..."
+    detailText: "Erecting monumental architectural landmark and sealing official lore dossier cover via \xC4kinoya 8K Master Engine..."
   },
   video: {
     index: 6,
     label: "06 \xB7 Viral 9:16 Video Trailer (5s)",
     actionText: "SYNTHESIZING 9:16 FPV DRONE VIRAL TRAILER...",
-    detailText: "Rendering 5-second continuous low-altitude FPV drone shot with 24fps motion blur via Seedance 2.5 / Val.ai..."
+    detailText: "Rendering 5-second continuous low-altitude FPV drone shot with 24fps motion blur via \xC4kinoya 8K Master Video..."
   }
 };
 var _slotRenderCache = /* @__PURE__ */ new Map();

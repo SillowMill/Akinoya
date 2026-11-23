@@ -794,7 +794,7 @@ export const MyAssetsMasterCarousel: React.FC<MyAssetsMasterCarouselProps> = Rea
             <span>·</span>
             <span className="text-amber-300 font-semibold">{meta.verificationCode}</span>
             <span>·</span>
-            <span className="text-white/50">ENGINE: NAJNO BANAJNA 8K</span>
+            <span className="text-white/50">ENGINE: ÄKINOYA 8K MASTER</span>
           </div>
         </div>
 

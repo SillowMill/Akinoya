@@ -853,12 +853,12 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
     },
     {
       id: 'asset-cover-art',
-      title: 'Bingäa Official Cover Art & Character Sheet — High-Res Vector Vectors',
+      title: 'Bingäa Official Cover Art & Character Sheet — High-Res Masters',
       category: 'OFFICIAL ARTWORK & PROMPTS',
       fileFormat: 'PNG + SVG + PROMPT MATRIX',
       fileSize: '18.2 MB · ULTRA-RES',
       description:
-        'Original digital painting, layer comp, and Midjourney/SD prompt matrix comp for the official graphic novel cover, suitable for large format poster prints and digital wallpaper collections.',
+        'Original digital painting, layered master composition, and visual direction matrix for the official graphic novel cover, suitable for large-format poster prints and digital wallpaper collections.',
       downloadUrl: BINGAA_COVER_URL,
       fileName: BINGAA_COVER_FILENAME,
       heroBannerUrl: bingaaComicCover,
@@ -994,7 +994,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
   const handleStripeUpgrade = async () => {
     if (isMembershipLaunchLocked) {
       soundManager.playTone(330, 0.08);
-      setUpgradeNotice('Hé, de Annual Member Pass (€60/jaar) wordt officieel gelanceerd op 9 januari 2027.');
+      setUpgradeNotice('The Annual Member Pass (€60/year) officially launches on January 9, 2027.');
       return;
     }
     setIsSubscribing(true);
@@ -1022,7 +1022,7 @@ export const CommunityHub: React.FC<CommunityHubProps> = ({
         setUpgradeNotice(`Checkout Notice: ${data.error}`);
       }
     } catch {
-      setUpgradeNotice('Stripe subscription endpoint initialiseert voor launch.');
+      setUpgradeNotice('Initializing Stripe subscription checkout...');
     } finally {
       setIsSubscribing(false);
     }

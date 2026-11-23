@@ -181,13 +181,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
       onOpenCheckout({
         id: 'membership',
         title: 'Sillow Mill — Annual Pioneer Member Pass',
-        subtitle: 'Pioneer Pass, Physical Welcome Booklet & Signed Bookmark',
+        subtitle: 'Annual Pioneer Member Pass · All Digital Extras',
         badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
         priceValue: '60.00',
         isPhysical: true,
         image: akinoyaPassCard,
-        allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
-        deliveryNotice: 'Free Express Delivery · Physical Shipping + Digital Sync',
+        allocationNotice: 'All Digital Production Packs, Vocal Stems & 4K Vault Included',
+        deliveryNotice: 'Instant Digital Access • Incl. VAT',
       });
       return;
     }
@@ -426,10 +426,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                     </div>
 
                     {/* Row 3: Dedicated Price Tag */}
-                    <div className="flex items-baseline gap-1 pt-0.5">
+                    <div className="flex flex-wrap items-baseline gap-2 pt-0.5">
                       <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-1">
                         <span>€</span>
                         <span>14.99</span>
+                      </span>
+                      <span className="text-[10px] sm:text-[11px] font-mono text-emerald-300/90">
+                        Free Global Shipping • Incl. VAT
                       </span>
                     </div>
 
@@ -513,10 +516,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                                 </p>
                               </div>
 
-                              <div className="flex items-baseline gap-1 pt-0.5">
+                              <div className="flex flex-wrap items-baseline gap-2 pt-0.5">
                                 <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-0.5 sm:gap-1">
                                   <span>€</span>
                                   <span>{addon.priceValue}</span>
+                                </span>
+                                <span className="text-[10px] sm:text-[11px] font-mono text-emerald-300/90">
+                                  Instant Digital Access • Incl. VAT
                                 </span>
                               </div>
 
@@ -571,10 +577,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                           </div>
 
                           {/* 5. Price Tag */}
-                          <div className="flex items-baseline justify-center gap-1 pt-0.5">
+                          <div className="flex flex-col items-center gap-0.5 pt-0.5">
                             <span className="text-xl xs:text-2xl sm:text-3xl font-display font-black text-cyan-300 drop-shadow-[0_0_12px_rgba(56,189,248,0.45)] whitespace-nowrap inline-flex items-baseline gap-1">
                               <span>€</span>
                               <span>{addon.priceValue}</span>
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] font-mono text-cyan-300/80 tracking-wide">
+                              Instant Digital Access • Incl. VAT
                             </span>
                           </div>
 
@@ -647,10 +656,13 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                             </div>
 
                             {/* Row 3: Dedicated Price Tag */}
-                            <div className="flex items-baseline gap-1 pt-0.5">
+                            <div className="flex flex-col items-start gap-0.5 pt-0.5">
                               <span className="text-base sm:text-lg font-display font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.4)] whitespace-nowrap inline-flex items-baseline gap-0.5 sm:gap-1">
                                 <span>€</span>
                                 <span>{addon.priceValue}</span>
+                              </span>
+                              <span className="text-[10px] font-mono text-white/60">
+                                Instant Digital Access • Incl. VAT
                               </span>
                             </div>
 
@@ -792,10 +804,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                                         : addon.id === 'workflow' || addon.id === 'logic-visualizer'
                                         ? 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template'
                                         : 'Pristine 4K Resolution · Web Reader + Offline PDF',
-                                    deliveryNotice:
-                                      addon.id === 'world-synthesis'
-                                        ? 'Instant Co-Creation Access · Asset Vault inside the Hub'
-                                        : 'Instant Digital Delivery · Vault Access',
+                                    deliveryNotice: 'Instant Digital Access • Incl. VAT',
                                   });
                                   return;
                                 }
@@ -935,6 +944,9 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
               <div className="text-[11.5px] sm:text-xs font-mono text-emerald-300 flex items-center gap-1.5 font-bold">
                 <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>Save €29.95+ vs separate prices · All extras bundled into one pass</span>
+              </div>
+              <div className="text-[11px] font-mono text-cyan-300/90 font-semibold">
+                Instant Digital Access • Incl. VAT
               </div>
             </div>
 

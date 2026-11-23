@@ -523,7 +523,7 @@ export const AkinoyaLabsHub: React.FC<AkinoyaLabsHubProps> = ({
         fileFormat: '24fps MP4 + Camera JSON + EXR Depth',
         vaultPath: 'Vault / 01_Workflow / 03_24fps_Camera_Previz/',
         description:
-          'Light Blender Workbench previz renders, multicam animation passes, lens metadata, and audio-synced timing timelines.',
+          'Light Blender Workbench previz renders, multicam animation passes, lens metadata, and audio-synced edit timelines.',
         specs: [
           { key: 'Frame Rate', val: '24.000 FPS Native Timeline' },
           { key: 'Render Engine', val: 'Blender Workbench (Fast Pass)' },

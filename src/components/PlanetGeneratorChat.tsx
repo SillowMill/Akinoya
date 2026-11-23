@@ -241,7 +241,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
 
       if (hasHandover) {
         // Form-to-Mill Handover: Mill directly acknowledges the known planet & biome and immediately asks Question 2
-        const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nAh, ik zie dat je "${initialPlanetName}" hebt gekoppeld met de ${initialBiome} biome. Laten we de coördinaten en details verder vormgeven!\n\nQuestion 02 of 05 (${WIZARD_STEPS[1].title}):\n${WIZARD_STEPS[1].prompt}`;
+        const greetingText = `Greetings ${userDisplayName || 'Architect'}. I am Mill, your AI worldbuilding companion for Planet Äkinoya.\n\nI see you have paired "${initialPlanetName}" with the ${initialBiome} biome. Let us shape its coordinates and details further!\n\nQuestion 02 of 05 (${WIZARD_STEPS[1].title}):\n${WIZARD_STEPS[1].prompt}`;
 
         setMessages([
           {
@@ -522,7 +522,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           {
             id: `reset-${Date.now()}`,
             sender: 'mill',
-            text: `Protocol recalibrated for "${pName}". Ah, ik zie dat je "${pName}" hebt gekoppeld met de ${bName} biome. Laten we verder gaan met:\n\nQuestion 02 of 05 (${WIZARD_STEPS[1].title}):\n${WIZARD_STEPS[1].prompt}`,
+            text: `Protocol recalibrated for "${pName}". I see you have paired "${pName}" with the ${bName} biome. Let us continue with:\n\nQuestion 02 of 05 (${WIZARD_STEPS[1].title}):\n${WIZARD_STEPS[1].prompt}`,
             step: 2,
             exampleToCopy: WIZARD_STEPS[1].helperExample,
             timestamp: 'Just now',
@@ -749,7 +749,7 @@ export const PlanetGeneratorChat: React.FC<PlanetGeneratorChatProps> = ({
           {isSynthesizing && (
             <div className="flex items-center gap-3 p-4 rounded-xl bg-cyan-950/40 border border-cyan-400/30 text-cyan-300 text-xs font-mono animate-pulse">
               <Sparkles className="w-4 h-4 animate-spin text-cyan-400 shrink-0" />
-              <span>Mill is aligning your 5 personality answers with Nano Banana 4K AI &amp; Seedance 2.5 to synthesize your 5-photo dossier...</span>
+              <span>Mill is aligning your 5 personality answers with the Äkinoya 8K Master Engine to synthesize your 5-photo dossier...</span>
             </div>
           )}
         </div>

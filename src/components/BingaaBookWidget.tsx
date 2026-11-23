@@ -379,7 +379,7 @@ export const BingaaBookWidget: React.FC<BingaaBookWidgetProps> = ({
               <span>Full 10-Page Collector&apos;s Edition</span>
             </div>
             <p className="text-[11px] sm:text-xs text-white/70 font-sans">
-              Includes physical holographic volume with bioluminescent foil stamping + instant 4K digital reader.
+              Includes physical holographic volume with bioluminescent foil stamping + instant 4K digital reader. <span className="font-mono text-emerald-300/90 font-semibold">Free Global Shipping • Incl. VAT</span>
             </p>
           </div>
 

@@ -152,7 +152,7 @@ const VISUALIZER_TRACKS: VisualizerTrack[] = [
   { id: '04', title: "Memories", code: 'MEMORIES' },
   { id: '05', title: "Hurry", code: 'HURRY' },
   { id: '06', title: "Know Me", code: 'KNOWME' },
-  { id: '07', title: "Bignäa II", code: 'BIGNAA2' },
+  { id: '07', title: "Bingäa II", code: 'BIGNAA2' },
   { id: '08', title: "Everyday", code: 'EVERYDAY' },
   { id: '09', title: "Yea Yeah Yeah", code: 'YEAYEAHYEAH' },
   { id: '10', title: "Sideways", code: 'SIDEWAYS' },
@@ -1604,12 +1604,12 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
     handleOpenCheckout({
       id: 'membership',
       title: 'Sillow Mill — Annual Pioneer Member Pass',
-      subtitle: 'Pioneer Pass, Physical Welcome Booklet & Signed Bookmark',
+      subtitle: 'Annual Pioneer Member Pass · All Digital Extras',
       badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
       priceValue: '60.00',
       isPhysical: true,
-      allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
-      deliveryNotice: 'Free Express Delivery · Physical Shipping + Digital Sync',
+      allocationNotice: 'All Digital Production Packs, Vocal Stems & 4K Vault Included',
+      deliveryNotice: 'Instant Digital Access • Incl. VAT',
     });
   };
 
@@ -2219,7 +2219,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             </div>
                           )}
 
-                          {/* Compact Scheduled Tracks (Collapsed clean proportions for Could Forget, Memories, Hurry, Know Me, Bignäa II, etc.) */}
+                          {/* Compact Scheduled Tracks (Collapsed clean proportions for Could Forget, Memories, Hurry, Know Me, Bingäa II, etc.) */}
                           {scheduledTracks.length > 0 && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                               {scheduledTracks.map((track, index) =>
@@ -2502,7 +2502,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                               <span>14.99</span>
                             </span>
                             <span className="text-[11px] font-mono text-white/50">
-                              incl. VAT · Free Global Shipping
+                              Free Global Shipping • Incl. VAT
                             </span>
                           </div>
                         </div>
@@ -2519,7 +2519,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                                 isPhysical: true,
                                 image: bingaaComicCover,
                                 allocationNotice: "Wave 2 Allocation · QR Code Verified",
-                                deliveryNotice: "Free Express Delivery",
+                                deliveryNotice: "Free Global Shipping • Incl. VAT",
                               });
                             }}
                             className="flex-1 py-3.5 px-6 rounded-xl text-xs sm:text-sm font-mono font-semibold bg-cyan-500 hover:bg-cyan-400 text-black transition-all cursor-pointer min-h-[44px] shadow-[0_0_20px_rgba(56,189,248,0.35)] flex items-center justify-center gap-2 group hover:scale-[1.01]"
@@ -3502,7 +3502,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                     <PlanetCardStarfield particleCount={14} />
                     <div className="relative z-10 space-y-4">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Official Artwork &amp; Comicbook Master</span>
+                        <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase">Asset 03 · Official Artwork &amp; Comic Book Master</span>
                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-400/30 text-[9.5px] sm:text-[10px] font-mono text-cyan-300">
                           HI-RES MASTER
                         </span>
@@ -3524,7 +3524,7 @@ export const UnlockedExperience: React.FC<UnlockedExperienceProps> = ({
                             <p className="text-[11px] sm:text-xs font-mono text-white/60 mt-1 leading-relaxed">
                               <strong className="text-cyan-300">Cover Graphic:</strong> High-resolution master Retina artwork (PNG format).
                               <br className="hidden sm:inline" />{' '}
-                              <strong className="text-emerald-300">Comicbook PDF:</strong> Complete Issue #1 digital publication (Print-ready master).
+                              <strong className="text-emerald-300">Comic Book PDF:</strong> Complete Issue #1 digital publication (Print-ready master).
                             </p>
                           </div>
 

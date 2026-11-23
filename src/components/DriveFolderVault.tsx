@@ -169,7 +169,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         priceValue: '19.99',
         isPhysical: false,
         image: vocalAcapellaImg,
-        deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
+        deliveryNotice: 'Instant Digital Access • Incl. VAT',
         allocationNotice: 'Instant Master Stems · 24-bit / 48kHz WAV',
       };
     } else if (productId === 'comic-digital') {
@@ -181,7 +181,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         priceValue: '9.99',
         isPhysical: false,
         image: bingaaComicCover,
-        deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
+        deliveryNotice: 'Instant Digital Access • Incl. VAT',
         allocationNotice: 'Pristine 4K Resolution · Web Reader + Offline PDF',
       };
     } else if (productId === 'comic') {
@@ -194,7 +194,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         isPhysical: true,
         image: bingaaComicCover,
         allocationNotice: 'Pristine 4K Resolution + Physical Collector Softcover Book',
-        deliveryNotice: 'Free Express Delivery · Physical Shipping + Instant Digital Sync',
+        deliveryNotice: 'Free Global Shipping • Incl. VAT',
       };
     } else if (productId === 'workflow' || productId === 'logic-visualizer') {
       productDetails = {
@@ -205,20 +205,20 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         priceValue: '29.99',
         isPhysical: false,
         image: stage03Img,
-        deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
+        deliveryNotice: 'Instant Digital Access • Incl. VAT',
         allocationNotice: 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template',
       };
     } else if (productId === 'membership') {
       productDetails = {
         id: 'membership',
         title: 'Sillow Mill — Annual Pioneer Member Pass',
-        subtitle: 'Folder 1 (Workflow), all 3 Master Folders + Physical Welcome Booklet',
+        subtitle: 'Folder 1 (Workflow), all 3 Master Folders + Pioneer Lounge Access',
         badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
         priceValue: '60.00',
         isPhysical: true,
         image: akinoyaPassCard,
-        allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
-        deliveryNotice: 'Free Express Delivery · Physical Shipping + Instant Vault Access',
+        allocationNotice: 'All Production Packs, Vocal Stems & 4K Graphic Novel Included',
+        deliveryNotice: 'Instant Digital Access • Incl. VAT',
       };
     } else if (productId === 'world-synthesis') {
       productDetails = {
@@ -229,7 +229,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         priceValue: '14.99',
         isPhysical: false,
         image: akinoyaHeroBg,
-        deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
+        deliveryNotice: 'Instant Digital Access • Incl. VAT',
         allocationNotice: '5-Photo 4K Dossier · 9:16 Video Loop · Visualizer Slot',
       };
     } else {
@@ -242,7 +242,7 @@ export const DriveFolderVault: React.FC<DriveFolderVaultProps> = ({
         priceValue: '29.99',
         isPhysical: false,
         image: stage03Img,
-        deliveryNotice: 'Instant Access · Asset Vault inside the Hub',
+        deliveryNotice: 'Instant Digital Access • Incl. VAT',
         allocationNotice: 'Complete Äkinoya Workflow · Blender Previs & Logic Pro Template',
       };
     }

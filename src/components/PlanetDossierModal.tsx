@@ -546,7 +546,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                                 : (isMobileDevice
                                     ? 'Save Trailer to Photos'
                                     : dynamicVideo.isAiVideo
-                                    ? '⬇ Download Fal.ai 9:16 MP4 Trailer'
+                                    ? '⬇ Download 9:16 MP4 Trailer'
                                     : '⬇ Download 9:16 MP4 Trailer')}
                             </span>
                           </button>
@@ -723,7 +723,7 @@ export const PlanetDossierModal: React.FC<PlanetDossierModalProps> = React.memo(
                         🎥 9:16 Trailer
                       </span>
                       <span className="text-[7.5px] font-mono text-cyan-300/90 uppercase">
-                        FAL.AI FPV
+                        CINEMATIC FPV
                       </span>
                     </div>
                   </button>

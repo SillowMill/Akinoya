@@ -427,7 +427,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
     setIsGeneratingRenders(true);
     setGenerationProgress(0);
     setGenerationStageName('INITIALIZING REAL-TIME 4K SYNTHESIS...');
-    setGenerationStageDetails(`Connecting to Fal.ai Flux Schnell & 9:16 Video Engine for ${planetName}...`);
+    setGenerationStageDetails(`Connecting to Äkinoya 8K Master & 9:16 Video Engine for ${planetName}...`);
     soundManager.playTone(660, 0.08);
 
     // Initialize all 5 slots as PENDING in queue with no placeholder images
@@ -640,7 +640,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
 
       // Step 2: Viral 9:16 Video Trailer Synthesis (from all 5 newly rendered photos)
       setGenerationStageName('SYNTHESIZING 9:16 VIRAL VIDEO TRAILER (5S)...');
-      setGenerationStageDetails(`Fusing all 5 rendered photos (${planetName}) into a dynamic continuous FPV drone flight via Seedance 2.5...`);
+      setGenerationStageDetails(`Fusing all 5 rendered photos (${planetName}) into a dynamic continuous FPV drone flight via Äkinoya 8K Master Video...`);
 
       if (collectedRenders.hero) {
         try {
@@ -1331,7 +1331,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-1.5">
                   <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-400/40 font-bold uppercase tracking-wider">
-                    Live Dossier Preview · Nano Banana 4K &amp; Seedance 2.5 Engine
+                    Live Dossier Preview · Äkinoya 8K Master Engine
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -1498,7 +1498,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
                               SYNTHESIZING 4K ASSET
                             </span>
                             <span className="text-[10px] font-mono text-white/50 block">
-                              Fal.ai Flux Schnell 4K
+                              Äkinoya 8K Master Engine
                             </span>
                           </div>
                         </div>
@@ -1568,7 +1568,7 @@ export const ContestLaunchpad: React.FC<ContestLaunchpadProps> = ({
             {previewDossier?.generatedLore && (
               <div className="p-5 rounded-2xl bg-[#070b16] border border-white/10 space-y-2">
                 <span className="text-[10.5px] font-mono text-amber-300 font-bold uppercase">
-                  AI-SYNTHESIZED PLANETARY LORE · FAL.AI FLUX SCHNELL &amp; 9:16 TRAILER
+                  AI-SYNTHESIZED PLANETARY LORE · ÄKINOYA 8K MASTER &amp; 9:16 TRAILER
                 </span>
                 <p className="text-xs sm:text-sm text-white/85 font-sans leading-relaxed whitespace-pre-line">
                   {previewDossier.generatedLore}

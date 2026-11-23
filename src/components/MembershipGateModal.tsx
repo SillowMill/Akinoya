@@ -60,12 +60,12 @@ export const MembershipGateModal: React.FC<MembershipGateModalProps> = ({
           detail: {
             id: 'membership',
             title: 'Sillow Mill — Annual Pioneer Member Pass',
-            subtitle: 'Pioneer Pass, Physical Welcome Booklet & Signed Bookmark',
+            subtitle: 'Annual Pioneer Member Pass · All Digital Extras',
             badge: 'ANNUAL ALL-INCLUSIVE PASS · €60/YR',
             priceValue: '60.00',
             isPhysical: true,
             allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
-            deliveryNotice: 'Free Express Delivery · Physical Shipping + Digital Sync',
+            deliveryNotice: 'Instant Digital Access • Incl. VAT',
           },
         })
       );

@@ -70,6 +70,9 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
           <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
           <span>Perpetual ecosystem · Never pay for individual releases</span>
         </div>
+        <div className="text-[11px] font-mono text-cyan-300/90 font-semibold">
+          Instant Digital Access • Incl. VAT
+        </div>
       </div>
 
       {/* Bullet List */}

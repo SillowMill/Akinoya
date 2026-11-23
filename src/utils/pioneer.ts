@@ -147,7 +147,7 @@ export const triggerWorldPassCheckout = (planetName?: string) => {
           currency: 'eur',
           isPhysical: false,
           allocationNotice: '5-Photo 4K Dossier · 9:16 Video Loop · Visualizer Slot',
-          deliveryNotice: 'Instant Co-Creation Access · Unlimited Custom Worlds Under Profile',
+          deliveryNotice: 'Instant Digital Access • Incl. VAT',
         },
       })
     );
@@ -167,7 +167,7 @@ export const triggerMemberPassCheckout = () => {
           priceValue: '60.00',
           isPhysical: true,
           allocationNotice: 'Wave 2 Physical Booklet & Collector Pass Card Included',
-          deliveryNotice: 'Free Express Delivery · Physical Shipping + Instant Digital Sync',
+          deliveryNotice: 'Instant Digital Access • Incl. VAT',
         },
       })
     );

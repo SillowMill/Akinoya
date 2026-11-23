@@ -252,7 +252,7 @@ export const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ onEnterPortal,
             <p className="text-xs font-sans text-cyan-100/90 leading-relaxed">
               {isAuthenticated
                 ? "Your official Certificate of Authenticity has been bound to your active account profile."
-                : "Create an account to get your certificate linked to your official digital ownership certificate."}
+                : "Create an account to link your purchase to your official digital ownership certificate."}
             </p>
             {!isAuthenticated && (
               <div className="pt-1">

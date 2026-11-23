@@ -99,7 +99,7 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
     isPhysical: true,
     image: bingaaComicCover,
     allocationNotice: "Wave 2 Allocation · QR Code Verified",
-    deliveryNotice: "Free Express Delivery",
+    deliveryNotice: "Free Global Shipping • Incl. VAT",
   });
 
   const [checkoutName, setCheckoutName] = useState("");
@@ -486,12 +486,12 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                           <span>{checkoutProduct.priceValue}</span>
                         </div>
                         <div className="text-[10px] font-mono text-emerald-400">
-                          {checkoutProduct.deliveryNotice || (checkoutProduct.isPhysical ? "Free Express Delivery" : "Instant Digital Sync")}
+                          {checkoutProduct.deliveryNotice || (checkoutProduct.isPhysical ? "Free Global Shipping • Incl. VAT" : "Instant Digital Access • Incl. VAT")}
                         </div>
                       </div>
                     </div>
 
-                    {/* Membership Physical Welcome Booklet & Pass Assurance */}
+                    {/* Pioneer Member Pass Instant Vault Assurance */}
                     {checkoutProduct.id === 'membership' && (
                       <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/80 via-yellow-950/50 to-amber-950/80 border border-amber-400/50 text-amber-200 flex items-start gap-3 shadow-[0_0_20px_rgba(245,158,11,0.2)] mb-4">
                         <div className="p-1.5 rounded-lg bg-amber-400/20 text-amber-400 shrink-0 mt-0.5">
@@ -499,10 +499,10 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                         </div>
                         <div className="text-left text-xs leading-relaxed space-y-0.5">
                           <span className="font-mono font-bold uppercase tracking-wider text-amber-300 block text-[11px]">
-                            Annual Member Pass · Physical Collector Edition
+                            Annual Member Pass · Instant Digital Access • Incl. VAT
                           </span>
                           <span className="text-amber-100/90 font-sans text-[11.5px] block leading-normal">
-                            Your Annual Pioneer Membership includes the physical collector welcome booklet, pass card &amp; signed bookmark shipped directly to your address, plus instant digital vault linking.
+                            Your Annual Pioneer Membership unlocks instant digital access to all production workflows, vocal stems, 4K graphic novel releases, and exclusive vault drops linked directly to your account.
                           </span>
                         </div>
                       </div>

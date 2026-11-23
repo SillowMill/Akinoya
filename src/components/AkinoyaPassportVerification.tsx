@@ -770,7 +770,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                 <span>AI! DEZE VIP-PAS IS AL GECLAIMD</span>
               </span>
               <span className="text-[10px] font-mono text-rose-400/90 font-bold tracking-wider">
-                GEBLOKKEERD
+                BLOCKED
               </span>
             </div>
 
@@ -997,12 +997,12 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                   {isClaiming ? (
                     <>
                       <Sparkles className="w-5 h-5 animate-spin text-black shrink-0" />
-                      <span>BEZIG MET CLAIMEN...</span>
+                      <span>CLAIMING PASS...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5 text-black shrink-0" />
-                      <span>Claim nu!</span>
+                      <span>Claim Now</span>
                     </>
                   )}
                 </button>
@@ -1017,10 +1017,10 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                 <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-950/60 to-yellow-950/40 border border-amber-500/40 text-amber-200 text-xs font-mono space-y-1 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
                   <div className="font-bold text-amber-300 flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Maak een account aan om te claimen</span>
+                    <span>Create an account to claim</span>
                   </div>
                   <p className="text-[11px] text-amber-200/90 leading-relaxed">
-                    Heb je nog geen account? Maak er eerst een aan om deze VIP-pas automatisch te claimen en permanent te koppelen aan je nieuwe profiel.
+                    Don't have an account yet? Create one first to automatically claim and permanently link this VIP pass to your new profile.
                   </p>
                 </div>
 
@@ -1031,7 +1031,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                   className="w-full py-4 px-6 rounded-xl font-mono text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 hover:from-amber-300 hover:to-yellow-300 text-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] min-h-[50px]"
                 >
                   <Sparkles className="w-4 h-4 text-black shrink-0" />
-                  <span>MAAK ACCOUNT &amp; CLAIM VIP-PAS →</span>
+                  <span>CREATE ACCOUNT &amp; CLAIM VIP PASS →</span>
                 </button>
 
                 <button
@@ -1047,7 +1047,7 @@ export const AkinoyaPassportVerification: React.FC<AkinoyaPassportVerificationPr
                   className="w-full py-3 px-4 rounded-xl font-mono text-xs font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-white/10 border border-white/15 hover:border-amber-400/40 flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[44px]"
                 >
                   <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>AL EEN ACCOUNT? INLOGGEN OM TE CLAIMEN</span>
+                  <span>ALREADY HAVE AN ACCOUNT? SIGN IN TO CLAIM</span>
                 </button>
 
                 <p className="text-[10px] font-mono text-white/40 text-center leading-relaxed pt-1">

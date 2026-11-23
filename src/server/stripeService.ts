@@ -183,7 +183,7 @@ export async function createStripeCheckoutSession(params: {
     productImage = `${baseUrl}/images/akinoya_hero_bg-CiYAZVRx.jpg`;
   } else if (productId === 'membership') {
     productName = 'Sillow Mill - Annual Pioneer Member Pass (All-Inclusive)';
-    productDescription = 'Annual Pioneer Member Pass with Physical Welcome Booklet, Collector Pass Card, Signed Bookmark & Full Digital Vault Access instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.';
+    productDescription = 'Annual Pioneer Member Pass with All Digital Extras & Continuous Vault Hub Access instantly unlocked and securely stored in your Asset Vault inside the Hub upon purchase.';
     unitAmount = params.amount ? Math.round(params.amount * 100) : 6000;
   } else if (params.productTitle && params.amount) {
     productName = sanitizeStripeString(params.productTitle);
