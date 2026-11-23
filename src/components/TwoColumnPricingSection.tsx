@@ -933,7 +933,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-300 font-mono text-xs font-bold uppercase tracking-wider shadow-sm flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                    <span>€60 PER YEAR</span>
+                    <span>BILLED ANNUALLY (€60)</span>
                   </span>
                   <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-amber-200/80 font-mono text-xs font-semibold tracking-wide">
                     ~ €5 PER MONTH
@@ -946,7 +946,7 @@ export const TwoColumnPricingSection: React.FC<TwoColumnPricingSectionProps> = (
                 <span>Save €29.95+ vs separate prices · All extras bundled into one pass</span>
               </div>
               <div className="text-[11px] font-mono text-cyan-300/90 font-semibold">
-                Instant Digital Access • Incl. VAT
+                Single upfront payment of €60/year · Instant Digital Access · Incl. VAT
               </div>
             </div>
 

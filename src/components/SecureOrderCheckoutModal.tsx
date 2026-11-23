@@ -499,7 +499,7 @@ export const SecureOrderCheckoutModal: React.FC<SecureOrderCheckoutModalProps> =
                         </div>
                         <div className="text-left text-xs leading-relaxed space-y-0.5">
                           <span className="font-mono font-bold uppercase tracking-wider text-amber-300 block text-[11px]">
-                            Annual Member Pass · Instant Digital Access • Incl. VAT
+                            Annual Member Pass · Single upfront payment of €60/year · Instant Digital Access · Incl. VAT
                           </span>
                           <span className="text-amber-100/90 font-sans text-[11.5px] block leading-normal">
                             Your Annual Pioneer Membership unlocks instant digital access to all production workflows, vocal stems, 4K graphic novel releases, and exclusive vault drops linked directly to your account.

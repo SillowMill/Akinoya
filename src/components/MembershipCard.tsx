@@ -60,7 +60,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
             €60
           </span>
           <span className="px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-300 font-mono text-xs font-bold uppercase">
-            €60 PER YEAR
+            BILLED ANNUALLY (€60)
           </span>
           <span className="text-amber-200/70 font-mono text-xs">
             (~ €5 PER MONTH)
@@ -71,7 +71,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
           <span>Perpetual ecosystem · Never pay for individual releases</span>
         </div>
         <div className="text-[11px] font-mono text-cyan-300/90 font-semibold">
-          Instant Digital Access • Incl. VAT
+          Single upfront payment of €60/year · Instant Digital Access · Incl. VAT
         </div>
       </div>
 
